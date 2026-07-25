@@ -42,7 +42,10 @@ if _WARP_CORE not in sys.path:
     sys.path.insert(0, _WARP_CORE)
 
 try:
-    from aurora_warp_protocol import WarpCapable, WarpComponent, CoverageGap, axes_to_istates
+    from aurora_warp_protocol import (
+        WarpCapable, WarpComponent, CoverageGap, axes_to_istates,
+        warp_guard, WarpTrigger,
+    )
     _WARP_AVAILABLE = True
 except Exception:
     WarpCapable = object  # type: ignore[misc,assignment]
@@ -501,11 +504,14 @@ class LanguageField(WarpCapable):
         mng = float(cry.get("meaning", (t + b + a) / 3.0))
         self_directed = mng > 0.30 or reasoning_level > 0.30
 
-        comparison_type = self._infer_comparison_type(
+        comparison_type, matched = self._infer_comparison_type(
             dominant, a, t, b,
             reasoning_level, reflection_level, emotion_level,
             user_text,
         )
+        if not matched:
+            self._confess_comparison_uncertainty(
+                dominant, {"X": x, "T": t, "N": n, "B": b, "A": a}, user_text)
 
         proto = ProtoLanguage(
             dominant_axes=dominant,
@@ -534,35 +540,77 @@ class LanguageField(WarpCapable):
         reflection_level: float,
         emotion_level: float,
         text: str,
-    ) -> str:
+    ) -> Tuple[str, bool]:
+        """Returns (comparison_type, matched). matched is False only
+        when every explicit rule below AND the WARP-derived-type lookup
+        missed, so "assertion" is being returned as a bare default
+        guess rather than a genuinely reasoned classification -- see
+        _confess_comparison_uncertainty(), which the caller invokes
+        exactly when matched is False (WARP Universalization Directive
+        Phase 3a, 2026-07-25)."""
         tl = (text or "").lower()
         if "?" in tl or any(q in tl for q in _QUESTION_TOKENS):
-            return "question"
+            return "question", True
         # Reflection dominant → self_reflection (field observing itself)
         if reflection_level > 0.50 and "X" in dominant:
-            return "self_reflection"
+            return "self_reflection", True
         # Emotion dominant (high N) + B presence → empathy
         if emotion_level > 0.55 and b > 0.35:
-            return "empathy"
+            return "empathy", True
         # Reasoning dominant (B-axis definition work) + A → assertion
         if reasoning_level > 0.45 and a > 0.40:
-            return "assertion"
+            return "assertion", True
         # T + N dominant → change (temporal pressure)
         if "T" in dominant and "N" in dominant:
-            return "change"
+            return "change", True
         # B + A → relation (defining edges between things)
         if "B" in dominant and "A" in dominant:
-            return "relation"
+            return "relation", True
         # X + T, low drive → state description
         if "X" in dominant and "T" in dominant and a < 0.35:
-            return "state"
+            return "state", True
         # Check WARP-derived comparison types by dominant axis match
         if _WARP_AVAILABLE and LanguageField._warp_comparison_types:
             dominant_set = set(dominant)
             for wtype, waxes in LanguageField._warp_comparison_types.items():
                 if set(waxes) & dominant_set == set(waxes):
-                    return wtype
-        return "assertion"
+                    return wtype, True
+        return "assertion", False
+
+    def _confess_comparison_uncertainty(
+        self,
+        dominant: List[str],
+        raw_axes: Dict[str, float],
+        text: str,
+    ) -> None:
+        """WARP Universalization Directive Phase 3a (2026-07-25,
+        ratified priority #1 of 4): _infer_comparison_type() found no
+        explicit rule match and no WARP-derived comparison type either
+        -- "assertion" is being returned as a bare default, not a
+        reasoned classification. That is exactly the directive's
+        candidate #3 moment: "I can compare these but I'm not
+        confident in the comparison." Confesses through the real,
+        universal WarpField (NO_LANGUAGE_FORM -- no confident language
+        form exists yet for this comparison) instead of silently
+        guessing behind a plausible-looking default. Purely an honest
+        signal alongside the existing fallback -- never changes what
+        comparison_type ends up being used downstream, and (like every
+        other confession call site in this campaign) never allowed to
+        break the caller: isolated in its own try/except, silent no-op
+        if WARP isn't available."""
+        if not _WARP_AVAILABLE:
+            return
+        try:
+            warp_guard(
+                source="language_field", layer="infer_comparison_type",
+                trigger=WarpTrigger.NO_LANGUAGE_FORM,
+                unresolved_text=(text or f"dominant_axes={dominant}"),
+                profile=dict(raw_axes),
+                severity=0.4,
+                persistence_key="comparison_type:" + "".join(sorted(dominant)),
+            )
+        except Exception:
+            pass
 
     # ── Lexical-Semantic Archive: Two-Factor Gate ─────────────────────────────
 

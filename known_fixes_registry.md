@@ -6292,3 +6292,60 @@ the discovered edge case that a *totally empty* crystal system trips
 persistent gap -- pre-existing `WarpGenerator` behavior, unrelated to
 this phase, so the test seeds one unrelated crystal to exercise the
 ordinary path instead).
+
+## WARP Universalization Directive, Phase 3a — LanguageField comparison confession, 2026-07-25
+
+Directive (Sunni & Cael, 2026-07-24), Section 4, candidate #3 (Sunni's
+ratified priority #1 of 4): `LanguageField`'s one existing WARP call
+(`_check_comparison_coverage`, line ~294, `language_ignite` source)
+only fires on structural axis-coverage gaps -- it says nothing about
+"I can compare these but I'm not confident in the comparison."
+`_infer_comparison_type()` is a chain of explicit rules (question,
+self_reflection, empathy, assertion-via-reasoning, change, relation,
+state, WARP-derived types) that falls all the way through to a bare
+`return "assertion"` when NOTHING matches -- a guess dressed as a
+confident classification, with nowhere honest to go.
+
+**Changed:** `_infer_comparison_type()` now returns `(comparison_type,
+matched)` instead of a bare string -- `matched` is `False` only on
+that final unconditional fallback, `True` on every genuine rule hit
+(including the existing WARP-derived-type lookup). Single call site
+(`extract_proto_language()`), confirmed via repo-wide grep before
+changing the signature. **Added:** `_confess_comparison_uncertainty()`,
+called from `extract_proto_language()` exactly when `matched` is
+`False`, right after `_infer_comparison_type()` returns -- confesses
+through the real, universal `WarpField` via `warp_guard(source=
+"language_field", layer="infer_comparison_type",
+trigger=WarpTrigger.NO_LANGUAGE_FORM, unresolved_text=<user text or a
+dominant-axes description>, profile=<the real 5-axis {X,T,N,B,A} state
+already computed in extract_proto_language>, severity=0.4,
+persistence_key="comparison_type:" + sorted dominant axes)`.
+`NO_LANGUAGE_FORM` was chosen over `AMBIGUITY`/`GAP` because the
+pathway it maps to (`GENERATE_FORM` -- "no language / representation
+exists") is the honest description of what's actually missing: a
+confident comparison-type label, not just an ambiguous signal.
+`aurora_language_field.py` gained one import (`warp_guard,
+WarpTrigger` added to the existing guarded `aurora_warp_protocol`
+import block, same `_WARP_AVAILABLE` fallback posture already used for
+`WarpCapable`/`WarpComponent`/`CoverageGap`/`axes_to_istates`). Purely
+additive: `comparison_type` itself is never changed by this -- the
+fallback still returns `"assertion"` exactly as before, this only adds
+an honest signal alongside it. Isolated in its own try/except, silent
+no-op if WARP isn't available or the call itself fails -- a
+confession-path failure must never break proto-language extraction.
+
+**Tests:** `tests/test_warp_phase3a_language_field_confession.py` (7)
+-- direct coverage of `_infer_comparison_type()`'s `matched` flag
+(explicit rule hit, unconditional fallback, WARP-derived-type hit, the
+last two of which previously had no test coverage under the old
+bare-string return either), plus `extract_proto_language()` end-to-end
+with a spy matching `warp_guard`'s REAL signature exactly (same
+regression-catching posture as the Phase 2 tests): confesses with the
+correct source/layer/trigger/unresolved_text/profile/persistence_key
+on the unmatched fallback, does NOT confess when a rule genuinely
+matched, confession exceptions are swallowed without breaking
+extraction, and the whole path no-ops cleanly when `_WARP_AVAILABLE`
+is `False`. Also re-ran `tests/test_cpm.py` and
+`tests/test_lifecycle_catalog.py` (the only other files touching
+`LanguageField`) to confirm the `_infer_comparison_type()` return-type
+change caused no regression -- both still pass in full (80 total).
