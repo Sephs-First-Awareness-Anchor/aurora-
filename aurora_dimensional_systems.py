@@ -1658,6 +1658,7 @@ class DimensionalRecall:
                             found[node.node_id] = pkt
 
         if not found:
+            self._confess_recall_miss(signals)
             return []
 
         # Sort: A-axis (intent/action) first, then composite score desc
@@ -1669,6 +1670,32 @@ class DimensionalRecall:
         results = sorted(found.values(), key=_sort_key)[:self.MAX_RESULTS]
         self.tracker.record('recall', 'packets', float(len(results)))
         return results
+
+    def _confess_recall_miss(self, signals: List[ConceptSignal]) -> None:
+        """WARP Universalization Directive Phase 3c (2026-07-25,
+        ratified priority #3 of 4): a real recall attempt (real
+        signals, gate already passed) that surfaces nothing at all --
+        neither a direct concept match nor any dimension-tag hit
+        cleared ALIGNMENT_FLOOR -- is a textbook WarpTrigger.NO_MEMORY
+        confession (directive Section 4, candidate #2) that previously
+        had nowhere to go; recall_for_signals() just returned [] and
+        every caller treated that identically to "nothing was worth
+        recalling" and "she has no memory of this at all." Confesses
+        through the real, universal WarpField instead. Isolated in its
+        own try/except, same swallow-on-failure posture as every other
+        confession call site in this campaign -- a confession-path
+        failure must never break recall."""
+        try:
+            concepts = [s.concept for s in signals]
+            warp_guard(
+                source="dimensional_recall", layer="recall_for_signals",
+                trigger=WarpTrigger.NO_MEMORY,
+                unresolved_text=", ".join(concepts),
+                severity=0.4,
+                persistence_key="recall_miss:" + ",".join(sorted(set(concepts))),
+            )
+        except Exception:
+            pass
 
     def _to_packet(
         self,

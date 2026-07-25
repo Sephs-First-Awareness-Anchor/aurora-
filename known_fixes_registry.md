@@ -6404,3 +6404,50 @@ breaking `resonant_lookup()`; and an end-to-end run through
 fires on every miss attempt AND the real `check_and_extend()` gap
 still fires exactly as it did before this phase (Phase 4's own tests
 unchanged, re-run clean alongside this file).
+
+## WARP Universalization Directive, Phase 3c — memory recall miss confession, 2026-07-25
+
+Directive (Sunni & Cael, 2026-07-24), Section 4, candidate #2 (Sunni's
+ratified priority #3 of 4): `DimensionalRecall.recall_for_signals()`
+(`aurora_dimensional_systems.py:1628`) surfaces `MemoryNode`s relevant
+to a turn's `ConceptSignal`s via direct concept recall + dimension-tag
+recall. A real attempt (real signals, gate already passed) that comes
+back with nothing at all -- neither a direct match nor any
+dimension-tag hit cleared `ALIGNMENT_FLOOR` (0.30) -- previously just
+returned `[]`, indistinguishable from "nothing here was worth
+recalling." That is a textbook `WarpTrigger.NO_MEMORY` confession with
+nowhere to go, per the directive's own framing.
+
+**Added:** `DimensionalRecall._confess_recall_miss(signals)`, called
+from `recall_for_signals()` exactly when the `found` dict ends up
+empty after checking every signal -- NOT at the pre-existing `not
+signals or mode < GATE` short-circuit at the top, which is a different
+thing (nothing was searched at all, so nothing to confess, same
+fail-quiet-vs-genuine-miss distinction Phase 3b drew for
+`resonant_lookup()`). Confesses via `warp_guard(source=
+"dimensional_recall", layer="recall_for_signals",
+trigger=WarpTrigger.NO_MEMORY, unresolved_text=<comma-joined
+concepts>, severity=0.4, persistence_key="recall_miss:" + sorted
+unique concepts)`. No new import needed -- `warp_guard`/`WarpTrigger`
+were already added to `aurora_dimensional_systems.py`'s import line in
+Phase 3b, and `DimensionalRecall` lives in the same file. Isolated in
+its own try/except -- a confession-path failure must never break
+recall. `recall_for_signals()`'s own return behavior is completely
+unchanged (still `[]` on a miss) -- purely an honest signal alongside
+it. Confirmed via repo-wide grep that `recall_for_signals()` has no
+other callers yet (not wired into `aurora.py`'s live turn pipeline),
+so this addition carries no live-behavior regression risk beyond the
+method's own test coverage.
+
+**Tests:**
+`tests/test_warp_phase3c_memory_recall_confession.py` (6) -- a spy
+matching `warp_guard`'s REAL signature exactly (same posture as every
+other confession-call-site test in this campaign). Covers: empty
+signals list does NOT confess (nothing searched); mode below `GATE`
+does NOT confess; a genuine miss (real signal, empty `DMC`) confesses
+with the correct source/layer/trigger/unresolved_text/persistence_key;
+multiple missed signals join their concepts correctly in both
+`unresolved_text` and the sorted, deduplicated `persistence_key`; a
+successful recall (a real `MemoryNode` seeded directly into `dmc.
+nodes`/`concept_index`) does NOT confess; and confession exceptions
+are swallowed without breaking recall.
