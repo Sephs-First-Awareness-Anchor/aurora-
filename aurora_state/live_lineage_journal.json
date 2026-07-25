@@ -1,8 +1,32 @@
 {
-  "updated_at": 1784938062.116335,
+  "updated_at": 1784944732.3722782,
   "events": [
     {
-      "timestamp": 1784937671.4648032,
+      "timestamp": 1784944353.3293319,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "X:CODE_LINEAGE_ea333df508",
+      "axis": "X",
+      "summary": "Manual code change in aurora_internal/dual_strata/surface_channel.py attached to X:CODE_LINEAGE_ea333df508"
+    },
+    {
+      "timestamp": 1784944354.6950402,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "X:CODE_LINEAGE_ea333df508",
+      "axis": "X",
+      "summary": "Manual code change in aurora_internal/dual_strata/surface_continuity_feed.py attached to X:CODE_LINEAGE_ea333df508"
+    },
+    {
+      "timestamp": 1784944356.395626,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "X:CODE_LINEAGE_ea333df508",
+      "axis": "X",
+      "summary": "Manual code change in aurora_internal/dual_strata/surface_sensory_proxy.py attached to X:CODE_LINEAGE_ea333df508"
+    },
+    {
+      "timestamp": 1784944358.247316,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_ea333df508",
@@ -10,7 +34,7 @@
       "summary": "Manual code change in aurora_internal/dual_strata/topological_semantic_coordinator.py attached to X:CODE_LINEAGE_ea333df508"
     },
     {
-      "timestamp": 1784937672.9428544,
+      "timestamp": 1784944359.9521291,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_ea333df508",
@@ -18,7 +42,7 @@
       "summary": "Manual code change in aurora_internal/dual_strata/topology_frame.py attached to X:CODE_LINEAGE_ea333df508"
     },
     {
-      "timestamp": 1784937674.5747592,
+      "timestamp": 1784944361.728969,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_ea333df508",
@@ -26,7 +50,7 @@
       "summary": "Manual code change in aurora_internal/dual_strata/topology_tracker.py attached to X:CODE_LINEAGE_ea333df508"
     },
     {
-      "timestamp": 1784937676.1867752,
+      "timestamp": 1784944363.1319237,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_ea333df508",
@@ -34,7 +58,7 @@
       "summary": "Manual code change in aurora_internal/dual_strata/variant_transition_predictor.py attached to X:CODE_LINEAGE_ea333df508"
     },
     {
-      "timestamp": 1784937677.6525958,
+      "timestamp": 1784944364.711974,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_20d92d2573",
@@ -42,7 +66,7 @@
       "summary": "Manual code change in aurora_internal/lineage_canonical.py attached to X:CODE_LINEAGE_20d92d2573"
     },
     {
-      "timestamp": 1784937679.2168908,
+      "timestamp": 1784944366.1236742,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1d71b273d8",
@@ -50,7 +74,7 @@
       "summary": "Manual code change in aurora_internal/quasiarch_observer/__init__.py attached to X:CODE_LINEAGE_1d71b273d8"
     },
     {
-      "timestamp": 1784937680.8049407,
+      "timestamp": 1784944367.7145472,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1d71b273d8",
@@ -58,7 +82,7 @@
       "summary": "Manual code change in aurora_internal/quasiarch_observer/crystal_engine.py attached to X:CODE_LINEAGE_1d71b273d8"
     },
     {
-      "timestamp": 1784937682.2947924,
+      "timestamp": 1784944369.4547992,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1d71b273d8",
@@ -66,7 +90,7 @@
       "summary": "Manual code change in aurora_internal/quasiarch_observer/dimensional_memory.py attached to X:CODE_LINEAGE_1d71b273d8"
     },
     {
-      "timestamp": 1784937683.8728454,
+      "timestamp": 1784944370.997548,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1d71b273d8",
@@ -74,7 +98,7 @@
       "summary": "Manual code change in aurora_internal/quasiarch_observer/dimensional_processing.py attached to X:CODE_LINEAGE_1d71b273d8"
     },
     {
-      "timestamp": 1784937685.4868708,
+      "timestamp": 1784944372.8115556,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1d71b273d8",
@@ -82,7 +106,7 @@
       "summary": "Manual code change in aurora_internal/quasiarch_observer/ghost_relics.py attached to X:CODE_LINEAGE_1d71b273d8"
     },
     {
-      "timestamp": 1784937687.052432,
+      "timestamp": 1784944374.4296093,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e369297b16",
@@ -90,7 +114,7 @@
       "summary": "Manual code change in aurora_internal/sleep_cycle.py attached to X:CODE_LINEAGE_e369297b16"
     },
     {
-      "timestamp": 1784937688.6747003,
+      "timestamp": 1784944375.974377,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_2b9095cc5c",
@@ -98,7 +122,7 @@
       "summary": "Manual code change in aurora_internal/surface_channel.py attached to X:CODE_LINEAGE_2b9095cc5c"
     },
     {
-      "timestamp": 1784937690.2809057,
+      "timestamp": 1784944377.8516436,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_632ba9bda4",
@@ -106,7 +130,7 @@
       "summary": "Manual code change in aurora_internal/surface_continuity_feed.py attached to X:CODE_LINEAGE_632ba9bda4"
     },
     {
-      "timestamp": 1784937691.752945,
+      "timestamp": 1784944379.241091,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_3ff29b4041",
@@ -114,7 +138,7 @@
       "summary": "Manual code change in aurora_internal/tool_registry.py attached to X:CODE_LINEAGE_3ff29b4041"
     },
     {
-      "timestamp": 1784937693.366819,
+      "timestamp": 1784944380.8620644,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d01b4a4cd3",
@@ -122,7 +146,7 @@
       "summary": "Manual code change in aurora_istate_operations.py attached to X:CODE_LINEAGE_d01b4a4cd3"
     },
     {
-      "timestamp": 1784937694.9507654,
+      "timestamp": 1784944382.3683515,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_96c1b34d10",
@@ -130,7 +154,7 @@
       "summary": "Manual code change in aurora_ivm.py attached to X:CODE_LINEAGE_96c1b34d10"
     },
     {
-      "timestamp": 1784937696.5793595,
+      "timestamp": 1784944383.6698565,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_fe6449189d",
@@ -138,7 +162,7 @@
       "summary": "Manual code change in aurora_language_field.py attached to X:CODE_LINEAGE_fe6449189d"
     },
     {
-      "timestamp": 1784937698.060806,
+      "timestamp": 1784944385.3817494,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_656969636d",
@@ -146,7 +170,7 @@
       "summary": "Manual code change in aurora_language_structure_fitness.py attached to X:CODE_LINEAGE_656969636d"
     },
     {
-      "timestamp": 1784937699.6550362,
+      "timestamp": 1784944387.0084248,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d1fff0a91c",
@@ -154,7 +178,7 @@
       "summary": "Manual code change in aurora_learning_report.py attached to X:CODE_LINEAGE_d1fff0a91c"
     },
     {
-      "timestamp": 1784937701.258917,
+      "timestamp": 1784944388.4566658,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b94a8dba09",
@@ -162,7 +186,7 @@
       "summary": "Manual code change in aurora_live_vision.py attached to X:CODE_LINEAGE_b94a8dba09"
     },
     {
-      "timestamp": 1784937702.753013,
+      "timestamp": 1784944389.8968124,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_cbbc23fcba",
@@ -170,7 +194,7 @@
       "summary": "Manual code change in aurora_manifold_directory/__init__.py attached to X:CODE_LINEAGE_cbbc23fcba"
     },
     {
-      "timestamp": 1784937704.3512027,
+      "timestamp": 1784944391.379328,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_70b3735e01",
@@ -178,7 +202,7 @@
       "summary": "Manual code change in aurora_manifold_directory/noncomp_field.py attached to X:CODE_LINEAGE_70b3735e01"
     },
     {
-      "timestamp": 1784937705.8270476,
+      "timestamp": 1784944392.8291757,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_bd53c2975c",
@@ -186,7 +210,7 @@
       "summary": "Manual code change in aurora_manifold_directory_reader.py attached to X:CODE_LINEAGE_bd53c2975c"
     },
     {
-      "timestamp": 1784937707.394971,
+      "timestamp": 1784944394.203419,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_42bffd7d11",
@@ -194,7 +218,7 @@
       "summary": "Manual code change in aurora_manifold_lookup.py attached to X:CODE_LINEAGE_42bffd7d11"
     },
     {
-      "timestamp": 1784937708.9851062,
+      "timestamp": 1784944395.6865203,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8bb3a4feb6",
@@ -202,7 +226,7 @@
       "summary": "Manual code change in aurora_metabolic_distiller.py attached to X:CODE_LINEAGE_8bb3a4feb6"
     },
     {
-      "timestamp": 1784937710.5830123,
+      "timestamp": 1784944397.1361713,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_52cfbcada8",
@@ -210,7 +234,7 @@
       "summary": "Manual code change in aurora_noncomp_layer_compiler.py attached to X:CODE_LINEAGE_52cfbcada8"
     },
     {
-      "timestamp": 1784937712.0530996,
+      "timestamp": 1784944398.5201306,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b3584972d3",
@@ -218,7 +242,7 @@
       "summary": "Manual code change in aurora_noncomp_manifold_compiler.py attached to X:CODE_LINEAGE_b3584972d3"
     },
     {
-      "timestamp": 1784937713.658975,
+      "timestamp": 1784944400.0339684,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a98fb8a010",
@@ -226,7 +250,7 @@
       "summary": "Manual code change in aurora_offline_resilience.py attached to X:CODE_LINEAGE_a98fb8a010"
     },
     {
-      "timestamp": 1784937715.2610528,
+      "timestamp": 1784944401.3205395,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_4765e7e74b",
@@ -234,7 +258,7 @@
       "summary": "Manual code change in aurora_perception_primitives.py attached to X:CODE_LINEAGE_4765e7e74b"
     },
     {
-      "timestamp": 1784937716.7369378,
+      "timestamp": 1784944402.9464383,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f93c477b28",
@@ -242,7 +266,7 @@
       "summary": "Manual code change in aurora_persistence_utils.py attached to X:CODE_LINEAGE_f93c477b28"
     },
     {
-      "timestamp": 1784937718.3151321,
+      "timestamp": 1784944404.57264,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e14c299b70",
@@ -250,7 +274,7 @@
       "summary": "Manual code change in aurora_possibility_selves.py attached to X:CODE_LINEAGE_e14c299b70"
     },
     {
-      "timestamp": 1784937719.9293144,
+      "timestamp": 1784944406.07601,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_be7771432a",
@@ -258,7 +282,7 @@
       "summary": "Manual code change in aurora_pressure_ontology.py attached to T:CODE_LINEAGE_be7771432a"
     },
     {
-      "timestamp": 1784937721.4050395,
+      "timestamp": 1784944407.567416,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_4609173be4",
@@ -266,7 +290,7 @@
       "summary": "Manual code change in aurora_quantum_dream_substrate.py attached to X:CODE_LINEAGE_4609173be4"
     },
     {
-      "timestamp": 1784937722.9790936,
+      "timestamp": 1784944408.9350293,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_856de43640",
@@ -274,7 +298,7 @@
       "summary": "Manual code change in aurora_reasoning_games.py attached to X:CODE_LINEAGE_856de43640"
     },
     {
-      "timestamp": 1784937724.600258,
+      "timestamp": 1784944410.4501936,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e71274853b",
@@ -282,7 +306,7 @@
       "summary": "Manual code change in aurora_recommendation_hub.py attached to X:CODE_LINEAGE_e71274853b"
     },
     {
-      "timestamp": 1784937726.0810611,
+      "timestamp": 1784944411.895986,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6103bccdb5",
@@ -290,7 +314,7 @@
       "summary": "Manual code change in aurora_reflexive_interpreter.py attached to X:CODE_LINEAGE_6103bccdb5"
     },
     {
-      "timestamp": 1784937727.6611574,
+      "timestamp": 1784944413.4585645,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0732ed4091",
@@ -298,7 +322,7 @@
       "summary": "Manual code change in aurora_response_teacher.py attached to X:CODE_LINEAGE_0732ed4091"
     },
     {
-      "timestamp": 1784937729.2407722,
+      "timestamp": 1784944415.081681,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_d182be0d54",
@@ -306,7 +330,7 @@
       "summary": "Manual code change in aurora_runtime.py attached to T:CODE_LINEAGE_d182be0d54"
     },
     {
-      "timestamp": 1784937730.695049,
+      "timestamp": 1784944416.853746,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_dc3b68463a",
@@ -314,7 +338,7 @@
       "summary": "Manual code change in aurora_sedimemory.py attached to X:CODE_LINEAGE_dc3b68463a"
     },
     {
-      "timestamp": 1784937732.2467554,
+      "timestamp": 1784944418.3398552,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_89de485281",
@@ -322,7 +346,7 @@
       "summary": "Manual code change in aurora_self_grounding.py attached to X:CODE_LINEAGE_89de485281"
     },
     {
-      "timestamp": 1784937733.8327653,
+      "timestamp": 1784944420.2009544,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_25cf243adf",
@@ -330,7 +354,7 @@
       "summary": "Manual code change in aurora_semantic_intention_bridge.py attached to B:CODE_LINEAGE_25cf243adf"
     },
     {
-      "timestamp": 1784937735.4150586,
+      "timestamp": 1784944421.6339467,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9e5e2fb674",
@@ -338,7 +362,7 @@
       "summary": "Manual code change in aurora_sensory_fallback.py attached to X:CODE_LINEAGE_9e5e2fb674"
     },
     {
-      "timestamp": 1784937736.8988755,
+      "timestamp": 1784944423.1062844,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_01612e732b",
@@ -346,7 +370,7 @@
       "summary": "Manual code change in aurora_simulation_engine.py attached to T:CODE_LINEAGE_01612e732b"
     },
     {
-      "timestamp": 1784937738.4729655,
+      "timestamp": 1784944424.5451186,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_682ef69b06",
@@ -354,7 +378,7 @@
       "summary": "Manual code change in aurora_streaming_expression.py attached to X:CODE_LINEAGE_682ef69b06"
     },
     {
-      "timestamp": 1784937740.086347,
+      "timestamp": 1784944425.9373055,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_171df84331",
@@ -362,7 +386,7 @@
       "summary": "Manual code change in aurora_subsurface_daemon.py attached to X:CODE_LINEAGE_171df84331"
     },
     {
-      "timestamp": 1784937741.5791757,
+      "timestamp": 1784944427.4170747,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9cb997b130",
@@ -370,7 +394,7 @@
       "summary": "Manual code change in aurora_support_stack.py attached to X:CODE_LINEAGE_9cb997b130"
     },
     {
-      "timestamp": 1784937743.3619485,
+      "timestamp": 1784944429.1279352,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9b8cae1583",
@@ -378,7 +402,7 @@
       "summary": "Manual code change in aurora_surface_daemon.py attached to X:CODE_LINEAGE_9b8cae1583"
     },
     {
-      "timestamp": 1784937744.8310003,
+      "timestamp": 1784944430.7949913,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9106b5a197",
@@ -386,7 +410,7 @@
       "summary": "Manual code change in aurora_telemetry.py attached to X:CODE_LINEAGE_9106b5a197"
     },
     {
-      "timestamp": 1784937746.4429166,
+      "timestamp": 1784944432.2550101,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_02d290c3f2",
@@ -394,7 +418,7 @@
       "summary": "Manual code change in aurora_thought_formation.py attached to X:CODE_LINEAGE_02d290c3f2"
     },
     {
-      "timestamp": 1784937748.0373127,
+      "timestamp": 1784944434.0164776,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e9dfbcfa5e",
@@ -402,7 +426,7 @@
       "summary": "Manual code change in aurora_tool_mind.py attached to X:CODE_LINEAGE_e9dfbcfa5e"
     },
     {
-      "timestamp": 1784937749.7778237,
+      "timestamp": 1784944435.7354078,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9b3c99b3b5",
@@ -410,7 +434,7 @@
       "summary": "Manual code change in aurora_toroidal_circulation.py attached to X:CODE_LINEAGE_9b3c99b3b5"
     },
     {
-      "timestamp": 1784937751.3834624,
+      "timestamp": 1784944437.1952543,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0947f5012d",
@@ -418,7 +442,7 @@
       "summary": "Manual code change in aurora_training_pulse.py attached to X:CODE_LINEAGE_0947f5012d"
     },
     {
-      "timestamp": 1784937753.0930614,
+      "timestamp": 1784944438.7777693,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a5942babd2",
@@ -426,7 +450,7 @@
       "summary": "Manual code change in aurora_training_run.py attached to X:CODE_LINEAGE_a5942babd2"
     },
     {
-      "timestamp": 1784937754.7961006,
+      "timestamp": 1784944440.757605,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a12adfafe3",
@@ -434,7 +458,7 @@
       "summary": "Manual code change in aurora_understanding_sediment.py attached to X:CODE_LINEAGE_a12adfafe3"
     },
     {
-      "timestamp": 1784937756.4692254,
+      "timestamp": 1784944442.275959,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e75513870a",
@@ -442,7 +466,7 @@
       "summary": "Manual code change in aurora_vision_clustering.py attached to X:CODE_LINEAGE_e75513870a"
     },
     {
-      "timestamp": 1784937758.0328422,
+      "timestamp": 1784944444.6947823,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_dacec7b25b",
@@ -450,7 +474,7 @@
       "summary": "Manual code change in aurora_voice.py attached to X:CODE_LINEAGE_dacec7b25b"
     },
     {
-      "timestamp": 1784937759.6468246,
+      "timestamp": 1784944446.5235767,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_04368b604f",
@@ -458,7 +482,7 @@
       "summary": "Manual code change in aurora_warp_protocol.py attached to X:CODE_LINEAGE_04368b604f"
     },
     {
-      "timestamp": 1784937761.123278,
+      "timestamp": 1784944448.1241212,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_93936636e5",
@@ -466,7 +490,7 @@
       "summary": "Manual code change in aurora_waveform_pressure.py attached to T:CODE_LINEAGE_93936636e5"
     },
     {
-      "timestamp": 1784937762.7193177,
+      "timestamp": 1784944450.1809294,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_2d22da4526",
@@ -474,7 +498,7 @@
       "summary": "Manual code change in aurora_working_memory.py attached to X:CODE_LINEAGE_2d22da4526"
     },
     {
-      "timestamp": 1784937764.3431685,
+      "timestamp": 1784944451.6080203,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d401435f8d",
@@ -482,7 +506,7 @@
       "summary": "Manual code change in backfill_concept_associations.py attached to X:CODE_LINEAGE_d401435f8d"
     },
     {
-      "timestamp": 1784937765.8190243,
+      "timestamp": 1784944453.0230868,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_35cb2ebd59",
@@ -490,7 +514,7 @@
       "summary": "Manual code change in concept_crystal.py attached to X:CODE_LINEAGE_35cb2ebd59"
     },
     {
-      "timestamp": 1784937767.3931491,
+      "timestamp": 1784944454.398352,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f11259287a",
@@ -498,7 +522,7 @@
       "summary": "Manual code change in concepts/arena_compare.py attached to X:CODE_LINEAGE_f11259287a"
     },
     {
-      "timestamp": 1784937768.9835856,
+      "timestamp": 1784944456.217022,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_866d587c7c",
@@ -506,7 +530,7 @@
       "summary": "Manual code change in concepts/aurora_code_evolution_stack.py attached to X:CODE_LINEAGE_866d587c7c"
     },
     {
-      "timestamp": 1784937770.4910448,
+      "timestamp": 1784944457.5465014,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_744eb9d88a",
@@ -514,7 +538,7 @@
       "summary": "Manual code change in concepts/aurora_room.py attached to X:CODE_LINEAGE_744eb9d88a"
     },
     {
-      "timestamp": 1784937772.2212927,
+      "timestamp": 1784944459.126658,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_4651b2d50e",
@@ -522,7 +546,7 @@
       "summary": "Manual code change in concepts/crystalzip_batch.py attached to X:CODE_LINEAGE_4651b2d50e"
     },
     {
-      "timestamp": 1784937773.7914839,
+      "timestamp": 1784944460.8757908,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_2bf2d90a3f",
@@ -530,7 +554,7 @@
       "summary": "Manual code change in concepts/dce_10state.py attached to X:CODE_LINEAGE_2bf2d90a3f"
     },
     {
-      "timestamp": 1784937775.4033813,
+      "timestamp": 1784944462.2931612,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_20348525f6",
@@ -538,7 +562,7 @@
       "summary": "Manual code change in concepts/dce_obligation_gate.py attached to X:CODE_LINEAGE_20348525f6"
     },
     {
-      "timestamp": 1784937777.027309,
+      "timestamp": 1784944463.8882108,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_827fe52b61",
@@ -546,7 +570,7 @@
       "summary": "Manual code change in concepts/force_evolve.py attached to X:CODE_LINEAGE_827fe52b61"
     },
     {
-      "timestamp": 1784937778.75091,
+      "timestamp": 1784944465.4375236,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_5096b34ed4",
@@ -554,7 +578,7 @@
       "summary": "Manual code change in concepts/generate_phase_b.py attached to T:CODE_LINEAGE_5096b34ed4"
     },
     {
-      "timestamp": 1784937780.357364,
+      "timestamp": 1784944466.7913632,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_ba1a5003d1",
@@ -562,7 +586,7 @@
       "summary": "Manual code change in concepts/poedex_intro.py attached to X:CODE_LINEAGE_ba1a5003d1"
     },
     {
-      "timestamp": 1784937781.8513916,
+      "timestamp": 1784944468.204143,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_53caa351d1",
@@ -570,7 +594,7 @@
       "summary": "Manual code change in concepts/quasiarch_bridge.py attached to B:CODE_LINEAGE_53caa351d1"
     },
     {
-      "timestamp": 1784937783.4713807,
+      "timestamp": 1784944469.8235755,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_87810a0a57",
@@ -578,7 +602,7 @@
       "summary": "Manual code change in concepts/quasiarch_diag.py attached to X:CODE_LINEAGE_87810a0a57"
     },
     {
-      "timestamp": 1784937784.9574318,
+      "timestamp": 1784944471.3557723,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_32de575213",
@@ -586,7 +610,7 @@
       "summary": "Manual code change in concepts/quasiarch_observer.py attached to X:CODE_LINEAGE_32de575213"
     },
     {
-      "timestamp": 1784937786.6013796,
+      "timestamp": 1784944472.9056573,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b27ac3f6d3",
@@ -594,7 +618,7 @@
       "summary": "Manual code change in concepts/sentinel.py attached to X:CODE_LINEAGE_b27ac3f6d3"
     },
     {
-      "timestamp": 1784937788.2495823,
+      "timestamp": 1784944474.809512,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1856b103db",
@@ -602,7 +626,7 @@
       "summary": "Manual code change in concepts/sentinel_gui.py attached to X:CODE_LINEAGE_1856b103db"
     },
     {
-      "timestamp": 1784937790.0850508,
+      "timestamp": 1784944476.6295638,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_0fdd020ee8",
@@ -610,7 +634,7 @@
       "summary": "Manual code change in constraint_evolutionary_sim.py attached to T:CODE_LINEAGE_0fdd020ee8"
     },
     {
-      "timestamp": 1784937791.561364,
+      "timestamp": 1784944477.924107,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f4b88f6b80",
@@ -618,7 +642,7 @@
       "summary": "Manual code change in corpus_runner.py attached to X:CODE_LINEAGE_f4b88f6b80"
     },
     {
-      "timestamp": 1784937793.1614902,
+      "timestamp": 1784944479.9400191,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6fd18be35d",
@@ -626,7 +650,7 @@
       "summary": "Manual code change in crystalzip.py attached to X:CODE_LINEAGE_6fd18be35d"
     },
     {
-      "timestamp": 1784937794.8212926,
+      "timestamp": 1784944481.2416205,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_f984ea53ea",
@@ -634,7 +658,7 @@
       "summary": "Manual code change in flutter_app/android/app/src/main/python/aurora_bridge.py attached to B:CODE_LINEAGE_f984ea53ea"
     },
     {
-      "timestamp": 1784937796.2952552,
+      "timestamp": 1784944483.1866128,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b84d367d98",
@@ -642,7 +666,7 @@
       "summary": "Manual code change in flutter_app/android/app/src/main/python/cv2.py attached to X:CODE_LINEAGE_b84d367d98"
     },
     {
-      "timestamp": 1784937797.8775032,
+      "timestamp": 1784944484.8862872,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_fc6e0f1952",
@@ -650,7 +674,7 @@
       "summary": "Manual code change in foundational_contract.py attached to X:CODE_LINEAGE_fc6e0f1952"
     },
     {
-      "timestamp": 1784937799.4853249,
+      "timestamp": 1784944486.5911174,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_8749014546",
@@ -658,7 +682,7 @@
       "summary": "Manual code change in genealogy_signature_bridge.py attached to B:CODE_LINEAGE_8749014546"
     },
     {
-      "timestamp": 1784937801.039353,
+      "timestamp": 1784944487.9097512,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7e0e678d9e",
@@ -666,7 +690,7 @@
       "summary": "Manual code change in geological_baseline.py attached to X:CODE_LINEAGE_7e0e678d9e"
     },
     {
-      "timestamp": 1784937802.8475716,
+      "timestamp": 1784944489.9013624,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_501c097317",
@@ -674,7 +698,7 @@
       "summary": "Manual code change in reply_aurora.py attached to X:CODE_LINEAGE_501c097317"
     },
     {
-      "timestamp": 1784937804.4893188,
+      "timestamp": 1784944492.0532782,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8c75c11ac5",
@@ -682,7 +706,7 @@
       "summary": "Manual code change in run_aurora.py attached to X:CODE_LINEAGE_8c75c11ac5"
     },
     {
-      "timestamp": 1784937805.9514341,
+      "timestamp": 1784944493.4772887,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_d07d7daff2",
@@ -690,7 +714,7 @@
       "summary": "Manual code change in run_chain.py attached to T:CODE_LINEAGE_d07d7daff2"
     },
     {
-      "timestamp": 1784937807.5274613,
+      "timestamp": 1784944495.1456187,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b8687740ca",
@@ -698,7 +722,7 @@
       "summary": "Manual code change in run_corpus.py attached to X:CODE_LINEAGE_b8687740ca"
     },
     {
-      "timestamp": 1784937809.125362,
+      "timestamp": 1784944496.79895,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_ff3d3693ad",
@@ -706,7 +730,7 @@
       "summary": "Manual code change in run_full_competency_gauntlet.py attached to X:CODE_LINEAGE_ff3d3693ad"
     },
     {
-      "timestamp": 1784937810.599319,
+      "timestamp": 1784944498.118438,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c52bb378e4",
@@ -714,7 +738,7 @@
       "summary": "Manual code change in run_gauntlet.py attached to X:CODE_LINEAGE_c52bb378e4"
     },
     {
-      "timestamp": 1784937812.1795015,
+      "timestamp": 1784944499.5447485,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5576fe4b42",
@@ -722,7 +746,7 @@
       "summary": "Manual code change in run_intensive_intervals.py attached to X:CODE_LINEAGE_5576fe4b42"
     },
     {
-      "timestamp": 1784937813.7854137,
+      "timestamp": 1784944501.1270282,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b1138dfb77",
@@ -730,7 +754,7 @@
       "summary": "Manual code change in run_probe_battery.py attached to X:CODE_LINEAGE_b1138dfb77"
     },
     {
-      "timestamp": 1784937815.3955007,
+      "timestamp": 1784944502.5610614,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5df1459d8d",
@@ -738,7 +762,7 @@
       "summary": "Manual code change in scripts/append_to_doc.py attached to X:CODE_LINEAGE_5df1459d8d"
     },
     {
-      "timestamp": 1784937816.868685,
+      "timestamp": 1784944504.0302186,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_d635cfeb1a",
@@ -746,7 +770,7 @@
       "summary": "Manual code change in scripts/audit_actual_runtime_turn.py attached to T:CODE_LINEAGE_d635cfeb1a"
     },
     {
-      "timestamp": 1784937818.4554121,
+      "timestamp": 1784944505.5967066,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_50278d178e",
@@ -754,7 +778,7 @@
       "summary": "Manual code change in scripts/audit_unified_response_regression.py attached to X:CODE_LINEAGE_50278d178e"
     },
     {
-      "timestamp": 1784937820.0472808,
+      "timestamp": 1784944506.8875473,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f1c1e00020",
@@ -762,7 +786,7 @@
       "summary": "Manual code change in scripts/aurora_ci_segment.py attached to X:CODE_LINEAGE_f1c1e00020"
     },
     {
-      "timestamp": 1784937821.5272822,
+      "timestamp": 1784944508.2475488,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_fc757095f5",
@@ -770,7 +794,7 @@
       "summary": "Manual code change in scripts/aurora_cold_archive.py attached to X:CODE_LINEAGE_fc757095f5"
     },
     {
-      "timestamp": 1784937823.1096091,
+      "timestamp": 1784944510.2207472,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b038268c20",
@@ -778,7 +802,7 @@
       "summary": "Manual code change in scripts/aurora_stack_exporter.py attached to X:CODE_LINEAGE_b038268c20"
     },
     {
-      "timestamp": 1784937824.5815222,
+      "timestamp": 1784944511.799285,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f3e58eaddc",
@@ -786,7 +810,7 @@
       "summary": "Manual code change in scripts/aurora_state_compress.py attached to X:CODE_LINEAGE_f3e58eaddc"
     },
     {
-      "timestamp": 1784937826.279139,
+      "timestamp": 1784944513.1547985,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_e5a5b3631e",
@@ -794,7 +818,7 @@
       "summary": "Manual code change in scripts/bridge_ledger_to_noncomps.py attached to B:CODE_LINEAGE_e5a5b3631e"
     },
     {
-      "timestamp": 1784937827.9981585,
+      "timestamp": 1784944514.6168191,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_f7f886f780",
@@ -802,7 +826,7 @@
       "summary": "Manual code change in scripts/bridge_tensor_occupancy_to_warp.py attached to B:CODE_LINEAGE_f7f886f780"
     },
     {
-      "timestamp": 1784937829.6634784,
+      "timestamp": 1784944516.3146038,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_2362dcff39",
@@ -810,7 +834,7 @@
       "summary": "Manual code change in scripts/chain_dossier_codec.py attached to T:CODE_LINEAGE_2362dcff39"
     },
     {
-      "timestamp": 1784937831.311604,
+      "timestamp": 1784944517.6939473,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b698256e01",
@@ -818,7 +842,7 @@
       "summary": "Manual code change in scripts/characterize_pf16_residue.py attached to X:CODE_LINEAGE_b698256e01"
     },
     {
-      "timestamp": 1784937833.055403,
+      "timestamp": 1784944519.1567159,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_87d057ac86",
@@ -826,7 +850,7 @@
       "summary": "Manual code change in scripts/chat_daemon.py attached to X:CODE_LINEAGE_87d057ac86"
     },
     {
-      "timestamp": 1784937834.6293035,
+      "timestamp": 1784944520.4752212,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_df6408d431",
@@ -834,7 +858,7 @@
       "summary": "Manual code change in scripts/chatscriber.py attached to X:CODE_LINEAGE_df6408d431"
     },
     {
-      "timestamp": 1784937836.1128907,
+      "timestamp": 1784944522.1655195,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f1bd365b73",
@@ -842,7 +866,7 @@
       "summary": "Manual code change in scripts/clean_corpus.py attached to X:CODE_LINEAGE_f1bd365b73"
     },
     {
-      "timestamp": 1784937837.6856008,
+      "timestamp": 1784944523.8169417,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_59bd4a61a2",
@@ -850,7 +874,7 @@
       "summary": "Manual code change in scripts/generate_nc_lineage_docs.py attached to X:CODE_LINEAGE_59bd4a61a2"
     },
     {
-      "timestamp": 1784937839.3061583,
+      "timestamp": 1784944525.3427277,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_aad0288227",
@@ -858,7 +882,7 @@
       "summary": "Manual code change in scripts/inject_math_forms_v2.py attached to B:CODE_LINEAGE_aad0288227"
     },
     {
-      "timestamp": 1784937840.8131678,
+      "timestamp": 1784944526.9806297,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b7e22c90b8",
@@ -866,7 +890,7 @@
       "summary": "Manual code change in scripts/m1_1a_tier1_backfill.py attached to X:CODE_LINEAGE_b7e22c90b8"
     },
     {
-      "timestamp": 1784937842.4609876,
+      "timestamp": 1784944528.593393,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f0129a707f",
@@ -874,7 +898,7 @@
       "summary": "Manual code change in scripts/m1_2_provenance_hygiene.py attached to X:CODE_LINEAGE_f0129a707f"
     },
     {
-      "timestamp": 1784937844.3932598,
+      "timestamp": 1784944530.3946114,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8c8a28fc4f",
@@ -882,7 +906,7 @@
       "summary": "Manual code change in scripts/m1_3_v0_rerun.py attached to X:CODE_LINEAGE_8c8a28fc4f"
     },
     {
-      "timestamp": 1784937845.9913218,
+      "timestamp": 1784944531.7544372,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_4aa5c22a5b",
@@ -890,7 +914,7 @@
       "summary": "Manual code change in scripts/noncomp_actuation_shadow_audit.py attached to X:CODE_LINEAGE_4aa5c22a5b"
     },
     {
-      "timestamp": 1784937847.7097104,
+      "timestamp": 1784944533.2327702,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_ed4a4dffb7",
@@ -898,7 +922,7 @@
       "summary": "Manual code change in scripts/pf1_0_attribution_run.py attached to X:CODE_LINEAGE_ed4a4dffb7"
     },
     {
-      "timestamp": 1784937849.2973046,
+      "timestamp": 1784944534.6403317,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8b9415a769",
@@ -906,7 +930,7 @@
       "summary": "Manual code change in scripts/pf1_5_instrument_revalidation.py attached to X:CODE_LINEAGE_8b9415a769"
     },
     {
-      "timestamp": 1784937850.7555988,
+      "timestamp": 1784944535.9314141,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_30ea21811f",
@@ -914,7 +938,7 @@
       "summary": "Manual code change in scripts/pf1_6_acceptance.py attached to X:CODE_LINEAGE_30ea21811f"
     },
     {
-      "timestamp": 1784937852.3238137,
+      "timestamp": 1784944537.5686305,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7cf0724f59",
@@ -922,7 +946,7 @@
       "summary": "Manual code change in scripts/populate_fgae_semantics.py attached to X:CODE_LINEAGE_7cf0724f59"
     },
     {
-      "timestamp": 1784937853.933978,
+      "timestamp": 1784944538.9733326,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_fccaeab57a",
@@ -930,7 +954,7 @@
       "summary": "Manual code change in scripts/process_docs.py attached to X:CODE_LINEAGE_fccaeab57a"
     },
     {
-      "timestamp": 1784937855.5797255,
+      "timestamp": 1784944540.5156286,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5c5c3a8578",
@@ -938,7 +962,7 @@
       "summary": "Manual code change in scripts/prove_learning.py attached to X:CODE_LINEAGE_5c5c3a8578"
     },
     {
-      "timestamp": 1784937857.0815237,
+      "timestamp": 1784944541.9334648,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_86dc3510f0",
@@ -946,7 +970,7 @@
       "summary": "Manual code change in scripts/run_growth_session.py attached to X:CODE_LINEAGE_86dc3510f0"
     },
     {
-      "timestamp": 1784937858.6674817,
+      "timestamp": 1784944543.3948567,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c338e2d09f",
@@ -954,7 +978,7 @@
       "summary": "Manual code change in scripts/rw7_attribution_run.py attached to X:CODE_LINEAGE_c338e2d09f"
     },
     {
-      "timestamp": 1784937860.2495425,
+      "timestamp": 1784944544.7494745,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_862ba7aebc",
@@ -962,7 +986,7 @@
       "summary": "Manual code change in scripts/scan_lineage_25x25.py attached to X:CODE_LINEAGE_862ba7aebc"
     },
     {
-      "timestamp": 1784937861.7314534,
+      "timestamp": 1784944546.269747,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_58f241fb9f",
@@ -970,7 +994,7 @@
       "summary": "Manual code change in scripts/seed_abstract_regions_s1.py attached to X:CODE_LINEAGE_58f241fb9f"
     },
     {
-      "timestamp": 1784937863.3235128,
+      "timestamp": 1784944547.7806673,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_fb5b461568",
@@ -978,7 +1002,7 @@
       "summary": "Manual code change in scripts/seed_oets_aurora_vocabulary.py attached to X:CODE_LINEAGE_fb5b461568"
     },
     {
-      "timestamp": 1784937864.787799,
+      "timestamp": 1784944549.4471211,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5adc37cf56",
@@ -986,7 +1010,7 @@
       "summary": "Manual code change in scripts/seed_sensory_crystals.py attached to X:CODE_LINEAGE_5adc37cf56"
     },
     {
-      "timestamp": 1784937866.3621714,
+      "timestamp": 1784944550.9295464,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c1402ad3d0",
@@ -994,7 +1018,7 @@
       "summary": "Manual code change in scripts/source_conversation_corpora.py attached to X:CODE_LINEAGE_c1402ad3d0"
     },
     {
-      "timestamp": 1784937867.94743,
+      "timestamp": 1784944552.398561,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_cd1e915503",
@@ -1002,7 +1026,7 @@
       "summary": "Manual code change in scripts/stamp_authorship_headers.py attached to X:CODE_LINEAGE_cd1e915503"
     },
     {
-      "timestamp": 1784937869.551539,
+      "timestamp": 1784944553.9804695,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_2e0e7667e5",
@@ -1010,7 +1034,7 @@
       "summary": "Manual code change in scripts/termux_voice_bridge.py attached to B:CODE_LINEAGE_2e0e7667e5"
     },
     {
-      "timestamp": 1784937871.0075233,
+      "timestamp": 1784944555.3831797,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_666233db74",
@@ -1018,7 +1042,7 @@
       "summary": "Manual code change in scripts/trace_live_response_pipeline.py attached to X:CODE_LINEAGE_666233db74"
     },
     {
-      "timestamp": 1784937872.7237737,
+      "timestamp": 1784944557.031633,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9614593ecd",
@@ -1026,7 +1050,7 @@
       "summary": "Manual code change in scripts/w1_reentrancy_trace.py attached to X:CODE_LINEAGE_9614593ecd"
     },
     {
-      "timestamp": 1784937874.3206997,
+      "timestamp": 1784944558.338272,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a9b206d0cf",
@@ -1034,7 +1058,7 @@
       "summary": "Manual code change in scripts/w1_thought_state_diagnostic.py attached to X:CODE_LINEAGE_a9b206d0cf"
     },
     {
-      "timestamp": 1784937875.91052,
+      "timestamp": 1784944559.7691674,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c780e0c587",
@@ -1042,7 +1066,7 @@
       "summary": "Manual code change in tensor_occupancy_hook.py attached to X:CODE_LINEAGE_c780e0c587"
     },
     {
-      "timestamp": 1784937877.7751958,
+      "timestamp": 1784944561.59841,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_ff000e2e37",
@@ -1050,7 +1074,7 @@
       "summary": "Manual code change in tensor_occupancy_warp_bridge.py attached to B:CODE_LINEAGE_ff000e2e37"
     },
     {
-      "timestamp": 1784937879.472543,
+      "timestamp": 1784944563.2026236,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_3741d2ba6a",
@@ -1058,7 +1082,7 @@
       "summary": "Manual code change in test_constraint_reasoner.py attached to B:CODE_LINEAGE_3741d2ba6a"
     },
     {
-      "timestamp": 1784937880.9937034,
+      "timestamp": 1784944564.5985718,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_596bca61c8",
@@ -1066,7 +1090,7 @@
       "summary": "Manual code change in tests/_engine_integration_test.py attached to X:CODE_LINEAGE_596bca61c8"
     },
     {
-      "timestamp": 1784937882.5538754,
+      "timestamp": 1784944565.97462,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e8a7ef475c",
@@ -1074,7 +1098,7 @@
       "summary": "Manual code change in tests/_pipeline_test.py attached to X:CODE_LINEAGE_e8a7ef475c"
     },
     {
-      "timestamp": 1784937884.1534386,
+      "timestamp": 1784944567.648113,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_25e33f0dfb",
@@ -1082,7 +1106,7 @@
       "summary": "Manual code change in tests/run_intelligence_test_surface.py attached to X:CODE_LINEAGE_25e33f0dfb"
     },
     {
-      "timestamp": 1784937885.7394023,
+      "timestamp": 1784944568.9428837,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_19ae8dfc7a",
@@ -1090,7 +1114,7 @@
       "summary": "Manual code change in tests/run_interaction_test.py attached to X:CODE_LINEAGE_19ae8dfc7a"
     },
     {
-      "timestamp": 1784937887.3869128,
+      "timestamp": 1784944570.4526415,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "A:CODE_LINEAGE_aab4a95cb0",
@@ -1098,7 +1122,7 @@
       "summary": "Manual code change in tests/test_alignment.py attached to A:CODE_LINEAGE_aab4a95cb0"
     },
     {
-      "timestamp": 1784937889.1099823,
+      "timestamp": 1784944571.890344,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7a4c0e4b78",
@@ -1106,7 +1130,7 @@
       "summary": "Manual code change in tests/test_articulation_semantic_strategy.py attached to X:CODE_LINEAGE_7a4c0e4b78"
     },
     {
-      "timestamp": 1784937890.5799847,
+      "timestamp": 1784944573.3088894,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_093f5ec629",
@@ -1114,7 +1138,7 @@
       "summary": "Manual code change in tests/test_autoevolver_syntax_gate.py attached to X:CODE_LINEAGE_093f5ec629"
     },
     {
-      "timestamp": 1784937892.3038342,
+      "timestamp": 1784944574.77069,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0302700d6c",
@@ -1122,7 +1146,7 @@
       "summary": "Manual code change in tests/test_b1_1_envelope_shadow.py attached to X:CODE_LINEAGE_0302700d6c"
     },
     {
-      "timestamp": 1784937893.8861573,
+      "timestamp": 1784944576.2609801,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d144e667d4",
@@ -1130,7 +1154,7 @@
       "summary": "Manual code change in tests/test_battery_relevance_metric.py attached to X:CODE_LINEAGE_d144e667d4"
     },
     {
-      "timestamp": 1784937895.4960606,
+      "timestamp": 1784944577.5732393,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_e00345b49d",
@@ -1138,7 +1162,7 @@
       "summary": "Manual code change in tests/test_cers_bridge_tensor_trace_integration.py attached to B:CODE_LINEAGE_e00345b49d"
     },
     {
-      "timestamp": 1784937896.9979343,
+      "timestamp": 1784944579.0905788,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a77ced49c0",
@@ -1146,7 +1170,7 @@
       "summary": "Manual code change in tests/test_cers_conflict_monitoring_veto.py attached to X:CODE_LINEAGE_a77ced49c0"
     },
     {
-      "timestamp": 1784937898.6699848,
+      "timestamp": 1784944580.5321531,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e3df64bce4",
@@ -1154,7 +1178,7 @@
       "summary": "Manual code change in tests/test_cers_geometry_deviation.py attached to X:CODE_LINEAGE_e3df64bce4"
     },
     {
-      "timestamp": 1784937900.3440168,
+      "timestamp": 1784944582.0465188,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a0587e8a9e",
@@ -1162,7 +1186,7 @@
       "summary": "Manual code change in tests/test_cers_shadow_error_logging.py attached to X:CODE_LINEAGE_a0587e8a9e"
     },
     {
-      "timestamp": 1784937901.866186,
+      "timestamp": 1784944583.4711823,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7766cd1d94",
@@ -1170,7 +1194,7 @@
       "summary": "Manual code change in tests/test_cers_surface_salience.py attached to X:CODE_LINEAGE_7766cd1d94"
     },
     {
-      "timestamp": 1784937903.4900618,
+      "timestamp": 1784944584.8535767,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5483b174e7",
@@ -1178,7 +1202,7 @@
       "summary": "Manual code change in tests/test_cers_tensor_locator.py attached to X:CODE_LINEAGE_5483b174e7"
     },
     {
-      "timestamp": 1784937905.0471437,
+      "timestamp": 1784944586.3846672,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6070b4e742",
@@ -1186,7 +1210,7 @@
       "summary": "Manual code change in tests/test_cers_topology_context.py attached to X:CODE_LINEAGE_6070b4e742"
     },
     {
-      "timestamp": 1784937906.6321037,
+      "timestamp": 1784944587.6710505,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_29ff18491f",
@@ -1194,7 +1218,7 @@
       "summary": "Manual code change in tests/test_ci_segment_dev_index_rolling_cap.py attached to X:CODE_LINEAGE_29ff18491f"
     },
     {
-      "timestamp": 1784937908.3593178,
+      "timestamp": 1784944589.2886288,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "A:CODE_LINEAGE_c2b10cf275",
@@ -1202,7 +1226,7 @@
       "summary": "Manual code change in tests/test_classroom_behavior_modes_wiring.py attached to A:CODE_LINEAGE_c2b10cf275"
     },
     {
-      "timestamp": 1784937909.9741044,
+      "timestamp": 1784944590.6843793,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c4157c91e4",
@@ -1210,7 +1234,7 @@
       "summary": "Manual code change in tests/test_classroom_curriculum_seeding.py attached to X:CODE_LINEAGE_c4157c91e4"
     },
     {
-      "timestamp": 1784937911.5313346,
+      "timestamp": 1784944591.9711833,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_b0f19c093e",
@@ -1218,7 +1242,7 @@
       "summary": "Manual code change in tests/test_classroom_perspective_rotation_and_watchdog.py attached to T:CODE_LINEAGE_b0f19c093e"
     },
     {
-      "timestamp": 1784937913.224254,
+      "timestamp": 1784944593.3708875,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8d5879158f",
@@ -1226,7 +1250,7 @@
       "summary": "Manual code change in tests/test_composer_relevance_selection.py attached to X:CODE_LINEAGE_8d5879158f"
     },
     {
-      "timestamp": 1784937914.8480072,
+      "timestamp": 1784944594.6745572,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9191216c2b",
@@ -1234,7 +1258,7 @@
       "summary": "Manual code change in tests/test_concept_image_ingestion_import.py attached to X:CODE_LINEAGE_9191216c2b"
     },
     {
-      "timestamp": 1784937916.3422,
+      "timestamp": 1784944596.036645,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7619914f4b",
@@ -1242,7 +1266,7 @@
       "summary": "Manual code change in tests/test_concept_imager_cycle.py attached to X:CODE_LINEAGE_7619914f4b"
     },
     {
-      "timestamp": 1784937918.269449,
+      "timestamp": 1784944597.4353395,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_80b0722d47",
@@ -1250,7 +1274,7 @@
       "summary": "Manual code change in tests/test_conversation_desktop.py attached to X:CODE_LINEAGE_80b0722d47"
     },
     {
-      "timestamp": 1784937919.896565,
+      "timestamp": 1784944598.905897,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8e254b8677",
@@ -1258,7 +1282,7 @@
       "summary": "Manual code change in tests/test_correspondence_loop.py attached to X:CODE_LINEAGE_8e254b8677"
     },
     {
-      "timestamp": 1784937921.4042,
+      "timestamp": 1784944600.2065709,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_139e53808e",
@@ -1266,7 +1290,7 @@
       "summary": "Manual code change in tests/test_cpm.py attached to X:CODE_LINEAGE_139e53808e"
     },
     {
-      "timestamp": 1784937923.0402913,
+      "timestamp": 1784944601.867058,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b415797ade",
@@ -1274,7 +1298,7 @@
       "summary": "Manual code change in tests/test_d1_device_path_attribution.py attached to X:CODE_LINEAGE_b415797ade"
     },
     {
-      "timestamp": 1784937924.7686052,
+      "timestamp": 1784944603.7675648,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c425a0c6ec",
@@ -1282,7 +1306,7 @@
       "summary": "Manual code change in tests/test_d2_2_corpus_fragment_nesting.py attached to X:CODE_LINEAGE_c425a0c6ec"
     },
     {
-      "timestamp": 1784937926.260456,
+      "timestamp": 1784944605.0992324,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5939ba90aa",
@@ -1290,7 +1314,7 @@
       "summary": "Manual code change in tests/test_d2_2_live_turn_reentrancy_guard.py attached to X:CODE_LINEAGE_5939ba90aa"
     },
     {
-      "timestamp": 1784937927.8441935,
+      "timestamp": 1784944606.5815644,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_da97426d60",
@@ -1298,7 +1322,7 @@
       "summary": "Manual code change in tests/test_d2_3_delivery_boundary_telemetry_rejection.py attached to X:CODE_LINEAGE_da97426d60"
     },
     {
-      "timestamp": 1784937929.4540424,
+      "timestamp": 1784944608.0017598,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9c570a9392",
@@ -1306,7 +1330,7 @@
       "summary": "Manual code change in tests/test_d2_4_probe_battery_measures_resp_a.py attached to X:CODE_LINEAGE_9c570a9392"
     },
     {
-      "timestamp": 1784937930.920033,
+      "timestamp": 1784944609.9462562,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6a8ca3870c",
@@ -1314,7 +1338,7 @@
       "summary": "Manual code change in tests/test_d2_condition2_abstain_sanity.py attached to X:CODE_LINEAGE_6a8ca3870c"
     },
     {
-      "timestamp": 1784937932.4880958,
+      "timestamp": 1784944611.8355381,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_83fb99210a",
@@ -1322,7 +1346,7 @@
       "summary": "Manual code change in tests/test_daemon_classroom_cycle.py attached to X:CODE_LINEAGE_83fb99210a"
     },
     {
-      "timestamp": 1784937934.0979362,
+      "timestamp": 1784944613.3357646,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_11402cd1f3",
@@ -1330,7 +1354,7 @@
       "summary": "Manual code change in tests/test_daemon_subsurface_and_ambient.py attached to X:CODE_LINEAGE_11402cd1f3"
     },
     {
-      "timestamp": 1784937935.7042034,
+      "timestamp": 1784944614.6078787,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a614dd6948",
@@ -1338,7 +1362,7 @@
       "summary": "Manual code change in tests/test_direct_address_formulation.py attached to X:CODE_LINEAGE_a614dd6948"
     },
     {
-      "timestamp": 1784937937.1805434,
+      "timestamp": 1784944615.962421,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9606c0e333",
@@ -1346,7 +1370,7 @@
       "summary": "Manual code change in tests/test_directed_training_corpus_cache_trust.py attached to X:CODE_LINEAGE_9606c0e333"
     },
     {
-      "timestamp": 1784937938.9061728,
+      "timestamp": 1784944617.3953593,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_763f9f5e5e",
@@ -1354,7 +1378,7 @@
       "summary": "Manual code change in tests/test_emitter_crash.py attached to X:CODE_LINEAGE_763f9f5e5e"
     },
     {
-      "timestamp": 1784937940.7275734,
+      "timestamp": 1784944619.1238232,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_14abc6978b",
@@ -1362,7 +1386,7 @@
       "summary": "Manual code change in tests/test_episode_to_entity_experience.py attached to T:CODE_LINEAGE_14abc6978b"
     },
     {
-      "timestamp": 1784937942.2682538,
+      "timestamp": 1784944620.790255,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d73734ee7a",
@@ -1370,7 +1394,7 @@
       "summary": "Manual code change in tests/test_f5_register_exploration_plumbing.py attached to X:CODE_LINEAGE_d73734ee7a"
     },
     {
-      "timestamp": 1784937943.8462908,
+      "timestamp": 1784944622.250342,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_81176214ea",
@@ -1378,7 +1402,7 @@
       "summary": "Manual code change in tests/test_failure_shape_tracing.py attached to X:CODE_LINEAGE_81176214ea"
     },
     {
-      "timestamp": 1784937945.4038513,
+      "timestamp": 1784944624.097123,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b4ea28d161",
@@ -1386,7 +1410,7 @@
       "summary": "Manual code change in tests/test_flow_audit_and_tcl_wiring.py attached to X:CODE_LINEAGE_b4ea28d161"
     },
     {
-      "timestamp": 1784937947.029004,
+      "timestamp": 1784944625.6612859,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0f0a2cb007",
@@ -1394,7 +1418,7 @@
       "summary": "Manual code change in tests/test_full_reasoning_pipeline.py attached to X:CODE_LINEAGE_0f0a2cb007"
     },
     {
-      "timestamp": 1784937948.6682715,
+      "timestamp": 1784944627.3893683,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7724db79c9",
@@ -1402,7 +1426,7 @@
       "summary": "Manual code change in tests/test_function_word_gate_golden.py attached to X:CODE_LINEAGE_7724db79c9"
     },
     {
-      "timestamp": 1784937950.381841,
+      "timestamp": 1784944629.162198,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_70f7da7332",
@@ -1410,7 +1434,7 @@
       "summary": "Manual code change in tests/test_genealogy_atomic_writes.py attached to X:CODE_LINEAGE_70f7da7332"
     },
     {
-      "timestamp": 1784937951.872022,
+      "timestamp": 1784944630.6113088,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_bb5863ff74",
@@ -1418,7 +1442,7 @@
       "summary": "Manual code change in tests/test_generation_collapse_regression.py attached to X:CODE_LINEAGE_bb5863ff74"
     },
     {
-      "timestamp": 1784937953.4239166,
+      "timestamp": 1784944632.0732894,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_72f2b6daa9",
@@ -1426,7 +1450,7 @@
       "summary": "Manual code change in tests/test_golden_transcript_validation.py attached to X:CODE_LINEAGE_72f2b6daa9"
     },
     {
-      "timestamp": 1784937955.0999248,
+      "timestamp": 1784944633.496928,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_59b810ba21",
@@ -1434,7 +1458,7 @@
       "summary": "Manual code change in tests/test_governance_liveness.py attached to X:CODE_LINEAGE_59b810ba21"
     },
     {
-      "timestamp": 1784937956.5902119,
+      "timestamp": 1784944634.9106865,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c992e5c94e",
@@ -1442,7 +1466,7 @@
       "summary": "Manual code change in tests/test_grammar_motif_depletion_check.py attached to X:CODE_LINEAGE_c992e5c94e"
     },
     {
-      "timestamp": 1784937958.14242,
+      "timestamp": 1784944636.2918427,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_591d9a5d35",
@@ -1450,7 +1474,7 @@
       "summary": "Manual code change in tests/test_i_state_channel_reweighting.py attached to X:CODE_LINEAGE_591d9a5d35"
     },
     {
-      "timestamp": 1784937959.7463198,
+      "timestamp": 1784944637.692432,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_efcd1b5ed0",
@@ -1458,7 +1482,7 @@
       "summary": "Manual code change in tests/test_icc_ledger.py attached to X:CODE_LINEAGE_efcd1b5ed0"
     },
     {
-      "timestamp": 1784937961.218011,
+      "timestamp": 1784944638.9860215,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_716052eead",
@@ -1466,7 +1490,7 @@
       "summary": "Manual code change in tests/test_l1_skeleton_validity_gate.py attached to X:CODE_LINEAGE_716052eead"
     },
     {
-      "timestamp": 1784937962.7737908,
+      "timestamp": 1784944640.4509993,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d09e821b6d",
@@ -1474,7 +1498,7 @@
       "summary": "Manual code change in tests/test_l2_pos_gating.py attached to X:CODE_LINEAGE_d09e821b6d"
     },
     {
-      "timestamp": 1784937964.3721108,
+      "timestamp": 1784944641.9039655,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e42617eec1",
@@ -1482,7 +1506,7 @@
       "summary": "Manual code change in tests/test_l3_conjugation_wiring.py attached to X:CODE_LINEAGE_e42617eec1"
     },
     {
-      "timestamp": 1784937965.8400857,
+      "timestamp": 1784944643.2337263,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_845b3994ac",
@@ -1490,7 +1514,7 @@
       "summary": "Manual code change in tests/test_l3b_determiner_preposition_slots.py attached to X:CODE_LINEAGE_845b3994ac"
     },
     {
-      "timestamp": 1784937967.3998897,
+      "timestamp": 1784944644.612135,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_293a77e709",
@@ -1498,7 +1522,7 @@
       "summary": "Manual code change in tests/test_l4_grounded_motif_fitness.py attached to X:CODE_LINEAGE_293a77e709"
     },
     {
-      "timestamp": 1784937968.9738257,
+      "timestamp": 1784944646.0644872,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_cd04b690b6",
@@ -1506,7 +1530,7 @@
       "summary": "Manual code change in tests/test_layer_acyclicity.py attached to X:CODE_LINEAGE_cd04b690b6"
     },
     {
-      "timestamp": 1784937970.4648097,
+      "timestamp": 1784944647.3376658,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_aa04ee52ef",
@@ -1514,7 +1538,7 @@
       "summary": "Manual code change in tests/test_lifecycle_catalog.py attached to X:CODE_LINEAGE_aa04ee52ef"
     },
     {
-      "timestamp": 1784937972.125969,
+      "timestamp": 1784944648.801624,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a13b77411b",
@@ -1522,7 +1546,7 @@
       "summary": "Manual code change in tests/test_lineage_runtime_activation.py attached to X:CODE_LINEAGE_a13b77411b"
     },
     {
-      "timestamp": 1784937974.2979965,
+      "timestamp": 1784944650.1790361,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f541dd4be7",
@@ -1530,7 +1554,7 @@
       "summary": "Manual code change in tests/test_m1_1a_relation_pairs.py attached to X:CODE_LINEAGE_f541dd4be7"
     },
     {
-      "timestamp": 1784937975.9678643,
+      "timestamp": 1784944651.505851,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f4f3abc162",
@@ -1538,7 +1562,7 @@
       "summary": "Manual code change in tests/test_m1_2_provenance_hygiene.py attached to X:CODE_LINEAGE_f4f3abc162"
     },
     {
-      "timestamp": 1784937977.4663184,
+      "timestamp": 1784944652.90276,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_540176ba92",
@@ -1546,7 +1570,7 @@
       "summary": "Manual code change in tests/test_mobile_tools_aurora.py attached to X:CODE_LINEAGE_540176ba92"
     },
     {
-      "timestamp": 1784937979.2540421,
+      "timestamp": 1784944654.6102805,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_63a5df91cd",
@@ -1554,7 +1578,7 @@
       "summary": "Manual code change in tests/test_mtsl_acceptance_report.py attached to X:CODE_LINEAGE_63a5df91cd"
     },
     {
-      "timestamp": 1784937981.1719701,
+      "timestamp": 1784944655.9226372,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e7facd65a9",
@@ -1562,7 +1586,7 @@
       "summary": "Manual code change in tests/test_mtsl_live_wiring.py attached to X:CODE_LINEAGE_e7facd65a9"
     },
     {
-      "timestamp": 1784937982.6299772,
+      "timestamp": 1784944657.6539125,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d1ed0fff5b",
@@ -1570,7 +1594,7 @@
       "summary": "Manual code change in tests/test_mtsl_perturbation_live_wiring.py attached to X:CODE_LINEAGE_d1ed0fff5b"
     },
     {
-      "timestamp": 1784937984.543246,
+      "timestamp": 1784944659.1656673,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_8ec8357862",
@@ -1578,7 +1602,7 @@
       "summary": "Manual code change in tests/test_mtsl_phase0_plumbing.py attached to T:CODE_LINEAGE_8ec8357862"
     },
     {
-      "timestamp": 1784937986.2124434,
+      "timestamp": 1784944660.5879676,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_d87a54fb23",
@@ -1586,7 +1610,7 @@
       "summary": "Manual code change in tests/test_mtsl_phase7_extensions.py attached to T:CODE_LINEAGE_d87a54fb23"
     },
     {
-      "timestamp": 1784937987.9642668,
+      "timestamp": 1784944662.3128018,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_416e06d17d",
@@ -1594,7 +1618,7 @@
       "summary": "Manual code change in tests/test_mtsl_warp_gap_proposal.py attached to X:CODE_LINEAGE_416e06d17d"
     },
     {
-      "timestamp": 1784937989.5179348,
+      "timestamp": 1784944664.297069,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_17b2c0154a",
@@ -1602,7 +1626,7 @@
       "summary": "Manual code change in tests/test_n21_hardened_reacceptance.py attached to X:CODE_LINEAGE_17b2c0154a"
     },
     {
-      "timestamp": 1784937991.0958543,
+      "timestamp": 1784944665.6973212,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7165f4519b",
@@ -1610,7 +1634,7 @@
       "summary": "Manual code change in tests/test_n3_correspondence_daemon_wiring.py attached to X:CODE_LINEAGE_7165f4519b"
     },
     {
-      "timestamp": 1784937992.5541475,
+      "timestamp": 1784944667.2096052,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_24e7b5ee9f",
@@ -1618,7 +1642,7 @@
       "summary": "Manual code change in tests/test_oets.py attached to X:CODE_LINEAGE_24e7b5ee9f"
     },
     {
-      "timestamp": 1784937994.12431,
+      "timestamp": 1784944668.8736584,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_440b6a24be",
@@ -1626,7 +1650,7 @@
       "summary": "Manual code change in tests/test_oets_comprehension_confidence_growth.py attached to X:CODE_LINEAGE_440b6a24be"
     },
     {
-      "timestamp": 1784937995.9569416,
+      "timestamp": 1784944670.355041,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_3691803c2c",
@@ -1634,7 +1658,7 @@
       "summary": "Manual code change in tests/test_oets_conf.py attached to X:CODE_LINEAGE_3691803c2c"
     },
     {
-      "timestamp": 1784937997.4425185,
+      "timestamp": 1784944672.30789,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6f49eeaca7",
@@ -1642,7 +1666,7 @@
       "summary": "Manual code change in tests/test_operator_composer.py attached to X:CODE_LINEAGE_6f49eeaca7"
     },
     {
-      "timestamp": 1784937999.1964862,
+      "timestamp": 1784944673.7168748,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_cf1adb1e33",
@@ -1650,7 +1674,7 @@
       "summary": "Manual code change in tests/test_p1_track_cp_contradiction.py attached to X:CODE_LINEAGE_cf1adb1e33"
     },
     {
-      "timestamp": 1784938000.8345208,
+      "timestamp": 1784944675.3066216,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_dbb2018dc0",
@@ -1658,7 +1682,7 @@
       "summary": "Manual code change in tests/test_perturbation_probe.py attached to X:CODE_LINEAGE_dbb2018dc0"
     },
     {
-      "timestamp": 1784938002.3985877,
+      "timestamp": 1784944676.855879,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_95a60e7e5d",
@@ -1666,7 +1690,7 @@
       "summary": "Manual code change in tests/test_pf1_1_proposition_frame.py attached to X:CODE_LINEAGE_95a60e7e5d"
     },
     {
-      "timestamp": 1784938004.0276241,
+      "timestamp": 1784944678.7569556,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f8d405548a",
@@ -1674,7 +1698,7 @@
       "summary": "Manual code change in tests/test_pf1_2_transport.py attached to X:CODE_LINEAGE_f8d405548a"
     },
     {
-      "timestamp": 1784938005.903663,
+      "timestamp": 1784944680.7259102,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7b70b2c8f2",
@@ -1682,7 +1706,7 @@
       "summary": "Manual code change in tests/test_pf1_3_motif_selection.py attached to X:CODE_LINEAGE_7b70b2c8f2"
     },
     {
-      "timestamp": 1784938007.4901958,
+      "timestamp": 1784944682.113409,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9b8cfca648",
@@ -1690,7 +1714,7 @@
       "summary": "Manual code change in tests/test_pf1_4_slot_binding.py attached to X:CODE_LINEAGE_9b8cfca648"
     },
     {
-      "timestamp": 1784938009.0665445,
+      "timestamp": 1784944683.9955173,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7acc15e1bb",
@@ -1698,7 +1722,7 @@
       "summary": "Manual code change in tests/test_pf1_5_instruments.py attached to X:CODE_LINEAGE_7acc15e1bb"
     },
     {
-      "timestamp": 1784938010.6440594,
+      "timestamp": 1784944685.8566809,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e926086abc",
@@ -1706,7 +1730,7 @@
       "summary": "Manual code change in tests/test_pipeline2.py attached to X:CODE_LINEAGE_e926086abc"
     },
     {
-      "timestamp": 1784938012.10248,
+      "timestamp": 1784944687.358263,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1be3b086b0",
@@ -1714,7 +1738,7 @@
       "summary": "Manual code change in tests/test_prediction_field_manifold.py attached to X:CODE_LINEAGE_1be3b086b0"
     },
     {
-      "timestamp": 1784938013.6708174,
+      "timestamp": 1784944689.0612648,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0778ef2cb4",
@@ -1722,7 +1746,7 @@
       "summary": "Manual code change in tests/test_ps1_2_persistence_arbitration.py attached to X:CODE_LINEAGE_0778ef2cb4"
     },
     {
-      "timestamp": 1784938015.450567,
+      "timestamp": 1784944690.7131865,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_59093a9557",
@@ -1730,7 +1754,7 @@
       "summary": "Manual code change in tests/test_reflexive_interpreter_deposition_integration.py attached to X:CODE_LINEAGE_59093a9557"
     },
     {
-      "timestamp": 1784938017.0727556,
+      "timestamp": 1784944692.0601473,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_601fc5583e",
@@ -1738,7 +1762,7 @@
       "summary": "Manual code change in tests/test_round.py attached to X:CODE_LINEAGE_601fc5583e"
     },
     {
-      "timestamp": 1784938018.5807838,
+      "timestamp": 1784944693.7211003,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f29f937289",
@@ -1746,7 +1770,7 @@
       "summary": "Manual code change in tests/test_rw7_attribution_trace.py attached to X:CODE_LINEAGE_f29f937289"
     },
     {
-      "timestamp": 1784938020.168816,
+      "timestamp": 1784944695.159126,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_82d256a78a",
@@ -1754,7 +1778,7 @@
       "summary": "Manual code change in tests/test_scheduled_run_state_persistence.py attached to X:CODE_LINEAGE_82d256a78a"
     },
     {
-      "timestamp": 1784938021.814058,
+      "timestamp": 1784944696.905644,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_85c79e9b7b",
@@ -1762,7 +1786,7 @@
       "summary": "Manual code change in tests/test_scheduler_balance.py attached to X:CODE_LINEAGE_85c79e9b7b"
     },
     {
-      "timestamp": 1784938023.2863796,
+      "timestamp": 1784944698.819302,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_743d969c41",
@@ -1770,7 +1794,7 @@
       "summary": "Manual code change in tests/test_semantic_intention_bridge.py attached to B:CODE_LINEAGE_743d969c41"
     },
     {
-      "timestamp": 1784938024.8601205,
+      "timestamp": 1784944700.5014231,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7e37a31b78",
@@ -1778,7 +1802,7 @@
       "summary": "Manual code change in tests/test_semantic_probe_battery.py attached to X:CODE_LINEAGE_7e37a31b78"
     },
     {
-      "timestamp": 1784938026.314568,
+      "timestamp": 1784944701.9557886,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_512e0f179e",
@@ -1786,7 +1810,7 @@
       "summary": "Manual code change in tests/test_semantic_variant_registry.py attached to X:CODE_LINEAGE_512e0f179e"
     },
     {
-      "timestamp": 1784938028.697401,
+      "timestamp": 1784944703.2693958,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_853dcece19",
@@ -1794,7 +1818,7 @@
       "summary": "Manual code change in tests/test_strategic_horizon.py attached to X:CODE_LINEAGE_853dcece19"
     },
     {
-      "timestamp": 1784938030.27661,
+      "timestamp": 1784944704.7024386,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8487158cef",
@@ -1802,7 +1826,7 @@
       "summary": "Manual code change in tests/test_stratified_wellformedness.py attached to X:CODE_LINEAGE_8487158cef"
     },
     {
-      "timestamp": 1784938032.0082748,
+      "timestamp": 1784944706.2047086,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d04afe6234",
@@ -1810,7 +1834,7 @@
       "summary": "Manual code change in tests/test_surface_boundary.py attached to X:CODE_LINEAGE_d04afe6234"
     },
     {
-      "timestamp": 1784938033.5301797,
+      "timestamp": 1784944707.6645248,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6afcddf61b",
@@ -1818,7 +1842,7 @@
       "summary": "Manual code change in tests/test_topological_semantic_coordinator.py attached to X:CODE_LINEAGE_6afcddf61b"
     },
     {
-      "timestamp": 1784938035.080535,
+      "timestamp": 1784944709.3851469,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6298d3887a",
@@ -1826,7 +1850,7 @@
       "summary": "Manual code change in tests/test_topology_cycle_decomposition.py attached to X:CODE_LINEAGE_6298d3887a"
     },
     {
-      "timestamp": 1784938036.6724446,
+      "timestamp": 1784944711.0516284,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_4ff0189b71",
@@ -1834,7 +1858,7 @@
       "summary": "Manual code change in tests/test_topology_frame.py attached to X:CODE_LINEAGE_4ff0189b71"
     },
     {
-      "timestamp": 1784938038.2257454,
+      "timestamp": 1784944712.5100887,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0158445334",
@@ -1842,7 +1866,7 @@
       "summary": "Manual code change in tests/test_topology_tracker.py attached to X:CODE_LINEAGE_0158445334"
     },
     {
-      "timestamp": 1784938039.802501,
+      "timestamp": 1784944714.1076062,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_3d274939b7",
@@ -1850,7 +1874,7 @@
       "summary": "Manual code change in tests/test_toroidal_circulation_layer.py attached to X:CODE_LINEAGE_3d274939b7"
     },
     {
-      "timestamp": 1784938041.384653,
+      "timestamp": 1784944715.4832017,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_898cc56049",
@@ -1858,7 +1882,7 @@
       "summary": "Manual code change in tests/test_understanding_sediment_overlay.py attached to X:CODE_LINEAGE_898cc56049"
     },
     {
-      "timestamp": 1784938042.850395,
+      "timestamp": 1784944716.8362882,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9f1230ae5c",
@@ -1866,7 +1890,7 @@
       "summary": "Manual code change in tests/test_up.py attached to X:CODE_LINEAGE_9f1230ae5c"
     },
     {
-      "timestamp": 1784938044.404675,
+      "timestamp": 1784944718.210593,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6545964560",
@@ -1874,7 +1898,7 @@
       "summary": "Manual code change in tests/test_variant_transition_predictor.py attached to X:CODE_LINEAGE_6545964560"
     },
     {
-      "timestamp": 1784938045.9968789,
+      "timestamp": 1784944719.6351776,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1f2ab935eb",
@@ -1882,7 +1906,7 @@
       "summary": "Manual code change in tests/test_w1_turn_content_context.py attached to X:CODE_LINEAGE_1f2ab935eb"
     },
     {
-      "timestamp": 1784938047.476498,
+      "timestamp": 1784944720.99687,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_40845a8aaa",
@@ -1890,66 +1914,12 @@
       "summary": "Manual code change in tests/test_w2_claim_gate_widening.py attached to X:CODE_LINEAGE_40845a8aaa"
     },
     {
-      "timestamp": 1784938049.0767043,
+      "timestamp": 1784944722.647868,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_cec6767245",
       "axis": "T",
       "summary": "Manual code change in tests/test_waveform_pressure.py attached to T:CODE_LINEAGE_cec6767245"
-    },
-    {
-      "timestamp": 1784938058.414469,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_dc2cdbe2ab",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:7d719d4270e110; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1784938058.414469,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_f90705198e",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:10c2f12daba35a; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1784938061.0535674,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_bd97fbef70",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:467fe7e60596f8; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     }
   ],
   "seen_abilities": {

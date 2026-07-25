@@ -48441,9 +48441,153 @@
   "experiments": {
     "trials": [
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0678c01e5314",
+        "change_id": "MC:e9868ba6a49b",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.dual_strata.downward_traversal"
+        ],
+        "target_files": [
+          "aurora_internal/dual_strata/downward_traversal.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_ea333df508",
+        "adopted": true
+      },
+      {
+        "tick": 127844,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:f4b100d0e23c",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.dual_strata.lifecycle_catalog"
+        ],
+        "target_files": [
+          "aurora_internal/dual_strata/lifecycle_catalog.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_ea333df508",
+        "adopted": true
+      },
+      {
+        "tick": 127844,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:ee41645d33a2",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.dual_strata.micro_reasoning"
+        ],
+        "target_files": [
+          "aurora_internal/dual_strata/micro_reasoning.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_ea333df508",
+        "adopted": true
+      },
+      {
+        "tick": 127844,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:57bd3df5c45b",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.dual_strata.mtsl_acceptance_report"
+        ],
+        "target_files": [
+          "aurora_internal/dual_strata/mtsl_acceptance_report.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_ea333df508",
+        "adopted": true
+      },
+      {
+        "tick": 127844,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:306398148644",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.dual_strata.perturbation_probe"
+        ],
+        "target_files": [
+          "aurora_internal/dual_strata/perturbation_probe.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_ea333df508",
+        "adopted": true
+      },
+      {
+        "tick": 127844,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:d7cdefdca38f",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.dual_strata.prediction_field"
+        ],
+        "target_files": [
+          "aurora_internal/dual_strata/prediction_field.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_ea333df508",
+        "adopted": true
+      },
+      {
+        "tick": 127844,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:657d798c7ebc",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.dual_strata.predictive_stager"
+        ],
+        "target_files": [
+          "aurora_internal/dual_strata/predictive_stager.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_ea333df508",
+        "adopted": true
+      },
+      {
+        "tick": 127844,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:831a023818ad",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.dual_strata.semantic_intention_bridge"
+        ],
+        "target_files": [
+          "aurora_internal/dual_strata/semantic_intention_bridge.py"
+        ],
+        "matched_ability_id": "B:CODE_LINEAGE_4138751dd3",
+        "matched_score": 1.0,
+        "ability_id": "B:CODE_LINEAGE_4138751dd3",
+        "adopted": true
+      },
+      {
+        "tick": 127844,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:99fe24b64c5d",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.dual_strata.semantic_variant_registry"
+        ],
+        "target_files": [
+          "aurora_internal/dual_strata/semantic_variant_registry.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_ea333df508",
+        "adopted": true
+      },
+      {
+        "tick": 127844,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:7ddd7db1e0a7",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.sensory_control_channel"
@@ -48457,9 +48601,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2ff0281d87f0",
+        "change_id": "MC:929dc5309eae",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.sensory_observation"
@@ -48473,9 +48617,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d4c6f7d15290",
+        "change_id": "MC:fe312cc8ef73",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.sensory_snapshot_channel"
@@ -48489,9 +48633,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:23403b2e6f41",
+        "change_id": "MC:d850ee2968e2",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.sleep_cycle"
@@ -48505,9 +48649,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:82a1df3ab5e5",
+        "change_id": "MC:ee2e70fad248",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.subsurface_projection"
@@ -48521,9 +48665,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:fba2d99518ba",
+        "change_id": "MC:58476e8bfec9",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.subsurface_state"
@@ -48537,9 +48681,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:325ce37a1ca3",
+        "change_id": "MC:31d27346b065",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.subsystem_waveforms"
@@ -48553,9 +48697,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a14f29d5e31a",
+        "change_id": "MC:67ba2453bdf7",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.surface_channel"
@@ -48569,9 +48713,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:df47ff977621",
+        "change_id": "MC:446650a0fe02",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.surface_continuity_feed"
@@ -48585,9 +48729,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f50571572cd8",
+        "change_id": "MC:b32fcd6ff73f",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.surface_sensory_proxy"
@@ -48601,9 +48745,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:824d4cb57277",
+        "change_id": "MC:c6b356cee228",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.topological_semantic_coordinator"
@@ -48617,9 +48761,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c57cd65d15aa",
+        "change_id": "MC:1a6acee8644a",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.topology_frame"
@@ -48633,9 +48777,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:11bd12cba5ed",
+        "change_id": "MC:df7ef189dbd3",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.topology_tracker"
@@ -48649,9 +48793,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:db88909b2b5c",
+        "change_id": "MC:330d76105634",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.dual_strata.variant_transition_predictor"
@@ -48665,9 +48809,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:1eaf3725d775",
+        "change_id": "MC:d48858d1314f",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.lineage_canonical"
@@ -48681,9 +48825,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d53fb095309a",
+        "change_id": "MC:7d4179fc2f1a",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.quasiarch_observer.__init__"
@@ -48697,9 +48841,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5f419d5594b2",
+        "change_id": "MC:622439c7a22f",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.quasiarch_observer.crystal_engine"
@@ -48713,9 +48857,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:bd63132fbe65",
+        "change_id": "MC:48db7217f7f3",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.quasiarch_observer.dimensional_memory"
@@ -48729,9 +48873,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c560d393da10",
+        "change_id": "MC:aaf8019cf63d",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.quasiarch_observer.dimensional_processing"
@@ -48745,9 +48889,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:3998d9810caf",
+        "change_id": "MC:b30edd62d1cb",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.quasiarch_observer.ghost_relics"
@@ -48761,9 +48905,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:44a7e47c06bc",
+        "change_id": "MC:d29a510c2fab",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.sleep_cycle"
@@ -48777,9 +48921,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ed7666dc6af6",
+        "change_id": "MC:1c9a38ee297f",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.surface_channel"
@@ -48793,9 +48937,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b72ef3554a84",
+        "change_id": "MC:13c8993a2b13",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.surface_continuity_feed"
@@ -48809,9 +48953,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:564a506545b0",
+        "change_id": "MC:d40552f05ee1",
         "shape": "generic",
         "target_modules": [
           "aurora_internal.tool_registry"
@@ -48825,9 +48969,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:87610f48d180",
+        "change_id": "MC:d723028a58fd",
         "shape": "generic",
         "target_modules": [
           "aurora_istate_operations"
@@ -48841,9 +48985,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b600d631c934",
+        "change_id": "MC:68d2d1fb9d2b",
         "shape": "generic",
         "target_modules": [
           "aurora_ivm"
@@ -48857,9 +49001,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:153b08a64ade",
+        "change_id": "MC:d6c6bee28176",
         "shape": "generic",
         "target_modules": [
           "aurora_language_field"
@@ -48873,9 +49017,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c7e499b740b8",
+        "change_id": "MC:550af6baadb9",
         "shape": "generic",
         "target_modules": [
           "aurora_language_structure_fitness"
@@ -48889,9 +49033,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b7d34db6428e",
+        "change_id": "MC:3e9975fd3666",
         "shape": "generic",
         "target_modules": [
           "aurora_learning_report"
@@ -48905,9 +49049,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:1abb1f3c1c24",
+        "change_id": "MC:1787670aa7da",
         "shape": "generic",
         "target_modules": [
           "aurora_live_vision"
@@ -48921,9 +49065,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a9c145bf6de1",
+        "change_id": "MC:73d7ff408bc4",
         "shape": "generic",
         "target_modules": [
           "aurora_manifold_directory.__init__"
@@ -48937,9 +49081,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:74f6ed39de9f",
+        "change_id": "MC:5fc376666bef",
         "shape": "generic",
         "target_modules": [
           "aurora_manifold_directory.noncomp_field"
@@ -48953,9 +49097,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:925834173f3f",
+        "change_id": "MC:69795684e77d",
         "shape": "generic",
         "target_modules": [
           "aurora_manifold_directory_reader"
@@ -48969,9 +49113,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f36732cb22aa",
+        "change_id": "MC:88e6f638fe34",
         "shape": "generic",
         "target_modules": [
           "aurora_manifold_lookup"
@@ -48985,9 +49129,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:bc4530f705c0",
+        "change_id": "MC:1119ea7fe9e4",
         "shape": "generic",
         "target_modules": [
           "aurora_metabolic_distiller"
@@ -49001,9 +49145,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:55112c521ab4",
+        "change_id": "MC:128a323333b2",
         "shape": "generic",
         "target_modules": [
           "aurora_noncomp_layer_compiler"
@@ -49017,9 +49161,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a7bfaf75269e",
+        "change_id": "MC:b79a90897779",
         "shape": "generic",
         "target_modules": [
           "aurora_noncomp_manifold_compiler"
@@ -49033,9 +49177,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2da12c87b3e5",
+        "change_id": "MC:7a8609ea5f68",
         "shape": "generic",
         "target_modules": [
           "aurora_offline_resilience"
@@ -49049,9 +49193,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:dc25d2cf15b4",
+        "change_id": "MC:6f80bc7a3d6f",
         "shape": "generic",
         "target_modules": [
           "aurora_perception_primitives"
@@ -49065,9 +49209,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e2e47b4354f1",
+        "change_id": "MC:41fd86d5ee39",
         "shape": "generic",
         "target_modules": [
           "aurora_persistence_utils"
@@ -49081,9 +49225,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:53bb37e7dc4d",
+        "change_id": "MC:2c92720152aa",
         "shape": "generic",
         "target_modules": [
           "aurora_possibility_selves"
@@ -49097,9 +49241,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:3bcbf1114cf4",
+        "change_id": "MC:43ce5d6a7db2",
         "shape": "generic",
         "target_modules": [
           "aurora_pressure_ontology"
@@ -49113,9 +49257,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:de4cad8cd6f3",
+        "change_id": "MC:6d86c0bc4589",
         "shape": "generic",
         "target_modules": [
           "aurora_quantum_dream_substrate"
@@ -49129,9 +49273,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f25b3439a5ab",
+        "change_id": "MC:2d1b9d4d2f0d",
         "shape": "generic",
         "target_modules": [
           "aurora_reasoning_games"
@@ -49145,9 +49289,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:af7d115f8a6b",
+        "change_id": "MC:c227f47bc88a",
         "shape": "generic",
         "target_modules": [
           "aurora_recommendation_hub"
@@ -49161,9 +49305,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:db276351a6c0",
+        "change_id": "MC:56d3b15b0362",
         "shape": "generic",
         "target_modules": [
           "aurora_reflexive_interpreter"
@@ -49177,9 +49321,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:75e6e48ad876",
+        "change_id": "MC:f60f4783c1fa",
         "shape": "generic",
         "target_modules": [
           "aurora_response_teacher"
@@ -49193,9 +49337,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6dc9f3e80227",
+        "change_id": "MC:be5deffda6b6",
         "shape": "generic",
         "target_modules": [
           "aurora_runtime"
@@ -49209,9 +49353,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:69db2b11a968",
+        "change_id": "MC:ab1241da7aa2",
         "shape": "generic",
         "target_modules": [
           "aurora_sedimemory"
@@ -49225,9 +49369,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4fd05ab9f3de",
+        "change_id": "MC:d729b19894c2",
         "shape": "generic",
         "target_modules": [
           "aurora_self_grounding"
@@ -49241,9 +49385,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:17712e84baf5",
+        "change_id": "MC:e35b0c02200d",
         "shape": "generic",
         "target_modules": [
           "aurora_semantic_intention_bridge"
@@ -49257,9 +49401,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:65401a00328d",
+        "change_id": "MC:71737c63e421",
         "shape": "generic",
         "target_modules": [
           "aurora_sensory_fallback"
@@ -49273,9 +49417,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:8bc53f403599",
+        "change_id": "MC:1066decc6f14",
         "shape": "generic",
         "target_modules": [
           "aurora_simulation_engine"
@@ -49289,9 +49433,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:adfa44407a59",
+        "change_id": "MC:d8ac460f4df5",
         "shape": "generic",
         "target_modules": [
           "aurora_streaming_expression"
@@ -49305,9 +49449,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:bd09ddc00d18",
+        "change_id": "MC:155a89fb2b2a",
         "shape": "generic",
         "target_modules": [
           "aurora_subsurface_daemon"
@@ -49321,9 +49465,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7fb051a378b7",
+        "change_id": "MC:0c5797621428",
         "shape": "generic",
         "target_modules": [
           "aurora_support_stack"
@@ -49337,9 +49481,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d76513001113",
+        "change_id": "MC:8f58579b5e52",
         "shape": "generic",
         "target_modules": [
           "aurora_surface_daemon"
@@ -49353,9 +49497,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4f10655034e1",
+        "change_id": "MC:7357d179b38b",
         "shape": "generic",
         "target_modules": [
           "aurora_telemetry"
@@ -49369,9 +49513,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:43b03490cc7a",
+        "change_id": "MC:2daf8ede4b0d",
         "shape": "generic",
         "target_modules": [
           "aurora_thought_formation"
@@ -49385,9 +49529,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:db8080f515a5",
+        "change_id": "MC:0d7ce07cc0d9",
         "shape": "generic",
         "target_modules": [
           "aurora_tool_mind"
@@ -49401,9 +49545,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e5610a3d36e2",
+        "change_id": "MC:54caa60201d8",
         "shape": "generic",
         "target_modules": [
           "aurora_toroidal_circulation"
@@ -49417,9 +49561,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:50aedb24c85a",
+        "change_id": "MC:a328f83edf09",
         "shape": "generic",
         "target_modules": [
           "aurora_training_pulse"
@@ -49433,9 +49577,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d045cddf2190",
+        "change_id": "MC:c0e9db623b64",
         "shape": "generic",
         "target_modules": [
           "aurora_training_run"
@@ -49449,9 +49593,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:10a6b5f4a51b",
+        "change_id": "MC:18bf10ae48ad",
         "shape": "generic",
         "target_modules": [
           "aurora_understanding_sediment"
@@ -49465,9 +49609,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:048e4cfb8819",
+        "change_id": "MC:ce1e2910f596",
         "shape": "generic",
         "target_modules": [
           "aurora_vision_clustering"
@@ -49481,9 +49625,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:435d0b30ebff",
+        "change_id": "MC:a8585ab50838",
         "shape": "generic",
         "target_modules": [
           "aurora_voice"
@@ -49497,9 +49641,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:06779a70f963",
+        "change_id": "MC:f1ac938dd39d",
         "shape": "generic",
         "target_modules": [
           "aurora_warp_protocol"
@@ -49513,9 +49657,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2dd4c6c98387",
+        "change_id": "MC:b73e95a35ba2",
         "shape": "generic",
         "target_modules": [
           "aurora_waveform_pressure"
@@ -49529,9 +49673,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:665a347f75e4",
+        "change_id": "MC:5b45c9b8590e",
         "shape": "generic",
         "target_modules": [
           "aurora_working_memory"
@@ -49545,9 +49689,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:88f4cbe995ce",
+        "change_id": "MC:6e46d899ec10",
         "shape": "generic",
         "target_modules": [
           "backfill_concept_associations"
@@ -49561,9 +49705,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b083bb4ed4df",
+        "change_id": "MC:1f49b452e9b5",
         "shape": "generic",
         "target_modules": [
           "concept_crystal"
@@ -49577,9 +49721,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:8deea978e3ec",
+        "change_id": "MC:9348323a80fa",
         "shape": "generic",
         "target_modules": [
           "concepts.arena_compare"
@@ -49593,9 +49737,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6810647a1f9b",
+        "change_id": "MC:f676790c0361",
         "shape": "generic",
         "target_modules": [
           "concepts.aurora_code_evolution_stack"
@@ -49609,9 +49753,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6f3a879c539d",
+        "change_id": "MC:38f743ed84f5",
         "shape": "generic",
         "target_modules": [
           "concepts.aurora_room"
@@ -49625,9 +49769,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:9254df74bef4",
+        "change_id": "MC:de2480b82f5b",
         "shape": "generic",
         "target_modules": [
           "concepts.crystalzip_batch"
@@ -49641,9 +49785,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:fee229358bd1",
+        "change_id": "MC:d384457e8db0",
         "shape": "generic",
         "target_modules": [
           "concepts.dce_10state"
@@ -49657,9 +49801,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:92abdaf6f57c",
+        "change_id": "MC:cef41a860dbf",
         "shape": "generic",
         "target_modules": [
           "concepts.dce_obligation_gate"
@@ -49673,9 +49817,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2cee694e45d6",
+        "change_id": "MC:92c51b91462c",
         "shape": "generic",
         "target_modules": [
           "concepts.force_evolve"
@@ -49689,9 +49833,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d4634475ab46",
+        "change_id": "MC:75f0793de2c3",
         "shape": "generic",
         "target_modules": [
           "concepts.generate_phase_b"
@@ -49705,9 +49849,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:906b9f0ed471",
+        "change_id": "MC:b4e416813c1c",
         "shape": "generic",
         "target_modules": [
           "concepts.poedex_intro"
@@ -49721,9 +49865,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f7a9625ccf6a",
+        "change_id": "MC:d03e993e24fa",
         "shape": "generic",
         "target_modules": [
           "concepts.quasiarch_bridge"
@@ -49737,9 +49881,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ae28ec8903db",
+        "change_id": "MC:17450daaafc0",
         "shape": "generic",
         "target_modules": [
           "concepts.quasiarch_diag"
@@ -49753,9 +49897,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:69f7da4276db",
+        "change_id": "MC:d2ea5b54eeeb",
         "shape": "generic",
         "target_modules": [
           "concepts.quasiarch_observer"
@@ -49769,9 +49913,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:95cb8429f07a",
+        "change_id": "MC:cfdd00b8bea1",
         "shape": "generic",
         "target_modules": [
           "concepts.sentinel"
@@ -49785,9 +49929,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:31b2ee72fca8",
+        "change_id": "MC:6e79a9253efa",
         "shape": "generic",
         "target_modules": [
           "concepts.sentinel_gui"
@@ -49801,9 +49945,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:bc6ea3981444",
+        "change_id": "MC:ffd61c82cb9c",
         "shape": "generic",
         "target_modules": [
           "constraint_evolutionary_sim"
@@ -49817,9 +49961,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:8b0cf584bf8d",
+        "change_id": "MC:e69086147364",
         "shape": "generic",
         "target_modules": [
           "corpus_runner"
@@ -49833,9 +49977,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6dc15bc88023",
+        "change_id": "MC:011551cdc2a0",
         "shape": "generic",
         "target_modules": [
           "crystalzip"
@@ -49849,9 +49993,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7b8e28b2d53c",
+        "change_id": "MC:5e5e52924656",
         "shape": "generic",
         "target_modules": [
           "flutter_app.android.app.src.main.python.aurora_bridge"
@@ -49865,9 +50009,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:34c104c135d0",
+        "change_id": "MC:54eb11de0aa0",
         "shape": "generic",
         "target_modules": [
           "flutter_app.android.app.src.main.python.cv2"
@@ -49881,9 +50025,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4a42eb6fcd1b",
+        "change_id": "MC:5f17c32cf007",
         "shape": "generic",
         "target_modules": [
           "foundational_contract"
@@ -49897,9 +50041,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2f10031b10d6",
+        "change_id": "MC:e5b48f9deecb",
         "shape": "generic",
         "target_modules": [
           "genealogy_signature_bridge"
@@ -49913,9 +50057,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a62a5561e66d",
+        "change_id": "MC:10fa9e8f8bfb",
         "shape": "generic",
         "target_modules": [
           "geological_baseline"
@@ -49929,9 +50073,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c038ce847f37",
+        "change_id": "MC:c686e6c5a4c7",
         "shape": "generic",
         "target_modules": [
           "reply_aurora"
@@ -49945,9 +50089,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b79c7fbf906d",
+        "change_id": "MC:b40f5542f84a",
         "shape": "generic",
         "target_modules": [
           "run_aurora"
@@ -49961,9 +50105,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b1b9027d39d5",
+        "change_id": "MC:e5e879fbad5c",
         "shape": "generic",
         "target_modules": [
           "run_chain"
@@ -49977,9 +50121,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:497e2bde461d",
+        "change_id": "MC:550b4a5879b6",
         "shape": "generic",
         "target_modules": [
           "run_corpus"
@@ -49993,9 +50137,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:66b9d41c6c3d",
+        "change_id": "MC:c606c2423ed4",
         "shape": "generic",
         "target_modules": [
           "run_full_competency_gauntlet"
@@ -50009,9 +50153,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:101b8614de3e",
+        "change_id": "MC:d59f63d00f49",
         "shape": "generic",
         "target_modules": [
           "run_gauntlet"
@@ -50025,9 +50169,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:21196cdc54f2",
+        "change_id": "MC:f3e24a4b8c90",
         "shape": "generic",
         "target_modules": [
           "run_intensive_intervals"
@@ -50041,9 +50185,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f0f5a0d629ab",
+        "change_id": "MC:61ae5a104580",
         "shape": "generic",
         "target_modules": [
           "run_probe_battery"
@@ -50057,9 +50201,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:9442c7432fc7",
+        "change_id": "MC:a2cb82c4d99e",
         "shape": "generic",
         "target_modules": [
           "scripts.append_to_doc"
@@ -50073,9 +50217,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:fe42312c9c36",
+        "change_id": "MC:4112c4e90e64",
         "shape": "generic",
         "target_modules": [
           "scripts.audit_actual_runtime_turn"
@@ -50089,9 +50233,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:1bbfc1bb63d2",
+        "change_id": "MC:3d30a56f461c",
         "shape": "generic",
         "target_modules": [
           "scripts.audit_unified_response_regression"
@@ -50105,9 +50249,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ddeb0eb61e3d",
+        "change_id": "MC:e3268d428bf9",
         "shape": "generic",
         "target_modules": [
           "scripts.aurora_ci_segment"
@@ -50121,9 +50265,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0dd228ca9128",
+        "change_id": "MC:f9f4e891aafa",
         "shape": "generic",
         "target_modules": [
           "scripts.aurora_cold_archive"
@@ -50137,9 +50281,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5bbb8a6a1971",
+        "change_id": "MC:27575b6a003d",
         "shape": "generic",
         "target_modules": [
           "scripts.aurora_stack_exporter"
@@ -50153,9 +50297,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:90b177491fab",
+        "change_id": "MC:445595463aa1",
         "shape": "generic",
         "target_modules": [
           "scripts.aurora_state_compress"
@@ -50169,9 +50313,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e642b684420f",
+        "change_id": "MC:5b4c3d77907e",
         "shape": "generic",
         "target_modules": [
           "scripts.bridge_ledger_to_noncomps"
@@ -50185,9 +50329,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a2da07c2e8dd",
+        "change_id": "MC:b6aeaf206559",
         "shape": "generic",
         "target_modules": [
           "scripts.bridge_tensor_occupancy_to_warp"
@@ -50201,9 +50345,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:8f962561fffe",
+        "change_id": "MC:917744c7b2d2",
         "shape": "generic",
         "target_modules": [
           "scripts.chain_dossier_codec"
@@ -50217,9 +50361,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f21c6e180b5c",
+        "change_id": "MC:39adf1d61822",
         "shape": "generic",
         "target_modules": [
           "scripts.characterize_pf16_residue"
@@ -50233,9 +50377,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5093c733d108",
+        "change_id": "MC:c8ae9e0f02e7",
         "shape": "generic",
         "target_modules": [
           "scripts.chat_daemon"
@@ -50249,9 +50393,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:dc9de8cabb98",
+        "change_id": "MC:f7b310edc262",
         "shape": "generic",
         "target_modules": [
           "scripts.chatscriber"
@@ -50265,9 +50409,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f97bc6c319d2",
+        "change_id": "MC:8d38bd349f77",
         "shape": "generic",
         "target_modules": [
           "scripts.clean_corpus"
@@ -50281,9 +50425,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ef67cce058fd",
+        "change_id": "MC:afdf68874676",
         "shape": "generic",
         "target_modules": [
           "scripts.generate_nc_lineage_docs"
@@ -50297,9 +50441,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e52456985bc6",
+        "change_id": "MC:0cc381236098",
         "shape": "generic",
         "target_modules": [
           "scripts.inject_math_forms_v2"
@@ -50313,9 +50457,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:40ce26fac71a",
+        "change_id": "MC:fc083329a224",
         "shape": "generic",
         "target_modules": [
           "scripts.m1_1a_tier1_backfill"
@@ -50329,9 +50473,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:cdf60354735e",
+        "change_id": "MC:75c6971bd605",
         "shape": "generic",
         "target_modules": [
           "scripts.m1_2_provenance_hygiene"
@@ -50345,9 +50489,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c6ec18586509",
+        "change_id": "MC:a2a572417ed2",
         "shape": "generic",
         "target_modules": [
           "scripts.m1_3_v0_rerun"
@@ -50361,9 +50505,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d392cf69cfd0",
+        "change_id": "MC:b8bd1964f546",
         "shape": "generic",
         "target_modules": [
           "scripts.noncomp_actuation_shadow_audit"
@@ -50377,9 +50521,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:04ec460203ef",
+        "change_id": "MC:0c66fd521e85",
         "shape": "generic",
         "target_modules": [
           "scripts.pf1_0_attribution_run"
@@ -50393,9 +50537,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6731daba8257",
+        "change_id": "MC:acb83302f185",
         "shape": "generic",
         "target_modules": [
           "scripts.pf1_5_instrument_revalidation"
@@ -50409,9 +50553,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7ef293bf13fd",
+        "change_id": "MC:a15a03a1e77e",
         "shape": "generic",
         "target_modules": [
           "scripts.pf1_6_acceptance"
@@ -50425,9 +50569,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5261e1cec914",
+        "change_id": "MC:711ff6522bc0",
         "shape": "generic",
         "target_modules": [
           "scripts.populate_fgae_semantics"
@@ -50441,9 +50585,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f536e4dcc647",
+        "change_id": "MC:170e1d111792",
         "shape": "generic",
         "target_modules": [
           "scripts.process_docs"
@@ -50457,9 +50601,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4935b59d3db3",
+        "change_id": "MC:f468fc0d0ebb",
         "shape": "generic",
         "target_modules": [
           "scripts.prove_learning"
@@ -50473,9 +50617,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ac4cdac61360",
+        "change_id": "MC:cef3f69d1008",
         "shape": "generic",
         "target_modules": [
           "scripts.run_growth_session"
@@ -50489,9 +50633,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ec56633ffb50",
+        "change_id": "MC:ea1273dbaa8b",
         "shape": "generic",
         "target_modules": [
           "scripts.rw7_attribution_run"
@@ -50505,9 +50649,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:79202f52dcfe",
+        "change_id": "MC:176b53ac4d3f",
         "shape": "generic",
         "target_modules": [
           "scripts.scan_lineage_25x25"
@@ -50521,9 +50665,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:afab6f4e1fc1",
+        "change_id": "MC:d462efceebae",
         "shape": "generic",
         "target_modules": [
           "scripts.seed_abstract_regions_s1"
@@ -50537,9 +50681,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0cc4a6146bd2",
+        "change_id": "MC:45734586c4c1",
         "shape": "generic",
         "target_modules": [
           "scripts.seed_oets_aurora_vocabulary"
@@ -50553,9 +50697,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b664fe94bb4f",
+        "change_id": "MC:f0a55bfc665e",
         "shape": "generic",
         "target_modules": [
           "scripts.seed_sensory_crystals"
@@ -50569,9 +50713,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5b718778dad4",
+        "change_id": "MC:78e9f976717c",
         "shape": "generic",
         "target_modules": [
           "scripts.source_conversation_corpora"
@@ -50585,9 +50729,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:16aee2284186",
+        "change_id": "MC:7493ad99bf57",
         "shape": "generic",
         "target_modules": [
           "scripts.stamp_authorship_headers"
@@ -50601,9 +50745,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4abce5d9c25d",
+        "change_id": "MC:8c63b6c0f9c5",
         "shape": "generic",
         "target_modules": [
           "scripts.termux_voice_bridge"
@@ -50617,9 +50761,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a93f194bb3ab",
+        "change_id": "MC:76cc434b7cde",
         "shape": "generic",
         "target_modules": [
           "scripts.trace_live_response_pipeline"
@@ -50633,9 +50777,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0d50db0fe787",
+        "change_id": "MC:2a72956c97b6",
         "shape": "generic",
         "target_modules": [
           "scripts.w1_reentrancy_trace"
@@ -50649,9 +50793,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7c252e7db210",
+        "change_id": "MC:17b07b4c013c",
         "shape": "generic",
         "target_modules": [
           "scripts.w1_thought_state_diagnostic"
@@ -50665,9 +50809,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4a120b918e36",
+        "change_id": "MC:899b04969433",
         "shape": "generic",
         "target_modules": [
           "tensor_occupancy_hook"
@@ -50681,9 +50825,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:92fd8176ff4f",
+        "change_id": "MC:207526271d80",
         "shape": "generic",
         "target_modules": [
           "tensor_occupancy_warp_bridge"
@@ -50697,9 +50841,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b9166532c3d3",
+        "change_id": "MC:6aca0e5984c3",
         "shape": "generic",
         "target_modules": [
           "test_constraint_reasoner"
@@ -50713,9 +50857,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2203f25e68f6",
+        "change_id": "MC:3cd238c0f850",
         "shape": "generic",
         "target_modules": [
           "tests._engine_integration_test"
@@ -50729,9 +50873,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c6312ce2c757",
+        "change_id": "MC:4189e3e3984e",
         "shape": "generic",
         "target_modules": [
           "tests._pipeline_test"
@@ -50745,9 +50889,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5b309a428f97",
+        "change_id": "MC:be8768b26901",
         "shape": "generic",
         "target_modules": [
           "tests.run_intelligence_test_surface"
@@ -50761,9 +50905,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5814f6ec5f42",
+        "change_id": "MC:0ae643ee5bfe",
         "shape": "generic",
         "target_modules": [
           "tests.run_interaction_test"
@@ -50777,9 +50921,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0b00af63849b",
+        "change_id": "MC:a19af24a185e",
         "shape": "generic",
         "target_modules": [
           "tests.test_alignment"
@@ -50793,9 +50937,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5756cd1b367a",
+        "change_id": "MC:d35942f0178f",
         "shape": "generic",
         "target_modules": [
           "tests.test_articulation_semantic_strategy"
@@ -50809,9 +50953,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d10b0117f256",
+        "change_id": "MC:62384b4e63fe",
         "shape": "generic",
         "target_modules": [
           "tests.test_autoevolver_syntax_gate"
@@ -50825,9 +50969,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:13f64426d0cd",
+        "change_id": "MC:a3296979e746",
         "shape": "generic",
         "target_modules": [
           "tests.test_b1_1_envelope_shadow"
@@ -50841,9 +50985,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a38fd19c6865",
+        "change_id": "MC:75e95316cc62",
         "shape": "generic",
         "target_modules": [
           "tests.test_battery_relevance_metric"
@@ -50857,9 +51001,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ae66bc43bd1d",
+        "change_id": "MC:4abeff54f6ce",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_bridge_tensor_trace_integration"
@@ -50873,9 +51017,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4f7d5f4c0339",
+        "change_id": "MC:4f936ed7288a",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_conflict_monitoring_veto"
@@ -50889,9 +51033,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:358ed63e2a4d",
+        "change_id": "MC:cf2906ea01f4",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_geometry_deviation"
@@ -50905,9 +51049,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2970c104b4d5",
+        "change_id": "MC:a582d814a8f4",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_shadow_error_logging"
@@ -50921,9 +51065,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:dd6ef0951485",
+        "change_id": "MC:9365071d4348",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_surface_salience"
@@ -50937,9 +51081,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:491c3f0dda41",
+        "change_id": "MC:2a1ae6c3a2a3",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_tensor_locator"
@@ -50953,9 +51097,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e64b66fcb577",
+        "change_id": "MC:0c9feae41377",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_topology_context"
@@ -50969,9 +51113,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2e7cfdc3e369",
+        "change_id": "MC:03dccf6e309c",
         "shape": "generic",
         "target_modules": [
           "tests.test_ci_segment_dev_index_rolling_cap"
@@ -50985,9 +51129,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b7df7271b648",
+        "change_id": "MC:1c3b1164067d",
         "shape": "generic",
         "target_modules": [
           "tests.test_classroom_behavior_modes_wiring"
@@ -51001,9 +51145,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2979085229d8",
+        "change_id": "MC:c4f586488821",
         "shape": "generic",
         "target_modules": [
           "tests.test_classroom_curriculum_seeding"
@@ -51017,9 +51161,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d73085d4c75e",
+        "change_id": "MC:d6f8c194dd52",
         "shape": "generic",
         "target_modules": [
           "tests.test_classroom_perspective_rotation_and_watchdog"
@@ -51033,9 +51177,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7501fe588390",
+        "change_id": "MC:3acf67bfefbe",
         "shape": "generic",
         "target_modules": [
           "tests.test_composer_relevance_selection"
@@ -51049,9 +51193,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:92373a5deecc",
+        "change_id": "MC:27c532565390",
         "shape": "generic",
         "target_modules": [
           "tests.test_concept_image_ingestion_import"
@@ -51065,9 +51209,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:17a6c6f0c46a",
+        "change_id": "MC:591cb0db3155",
         "shape": "generic",
         "target_modules": [
           "tests.test_concept_imager_cycle"
@@ -51081,9 +51225,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:325fd95ffa60",
+        "change_id": "MC:8db58a1c75c9",
         "shape": "generic",
         "target_modules": [
           "tests.test_conversation_desktop"
@@ -51097,9 +51241,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4b38ae30fd31",
+        "change_id": "MC:3728caf26d5e",
         "shape": "generic",
         "target_modules": [
           "tests.test_correspondence_loop"
@@ -51113,9 +51257,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5f87f34d8107",
+        "change_id": "MC:ba67dffb315d",
         "shape": "generic",
         "target_modules": [
           "tests.test_cpm"
@@ -51129,9 +51273,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:49b1c9587dfe",
+        "change_id": "MC:2347b3755d3c",
         "shape": "generic",
         "target_modules": [
           "tests.test_d1_device_path_attribution"
@@ -51145,9 +51289,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:1ed95db99488",
+        "change_id": "MC:a6f4052a4e4a",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_2_corpus_fragment_nesting"
@@ -51161,9 +51305,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:3998c9a22539",
+        "change_id": "MC:00bbc22a16b9",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_2_live_turn_reentrancy_guard"
@@ -51177,9 +51321,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ba0056a593de",
+        "change_id": "MC:db97239d1f94",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_3_delivery_boundary_telemetry_rejection"
@@ -51193,9 +51337,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c0954cc977ef",
+        "change_id": "MC:5a3304eba363",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_4_probe_battery_measures_resp_a"
@@ -51209,9 +51353,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:caff720505ad",
+        "change_id": "MC:01f527843eac",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_condition2_abstain_sanity"
@@ -51225,9 +51369,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:af2beeff33e6",
+        "change_id": "MC:874a65c203fb",
         "shape": "generic",
         "target_modules": [
           "tests.test_daemon_classroom_cycle"
@@ -51241,9 +51385,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:22b965ef2182",
+        "change_id": "MC:193c003dbc84",
         "shape": "generic",
         "target_modules": [
           "tests.test_daemon_subsurface_and_ambient"
@@ -51257,9 +51401,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:210ae8954036",
+        "change_id": "MC:a025e2cd2f38",
         "shape": "generic",
         "target_modules": [
           "tests.test_direct_address_formulation"
@@ -51273,9 +51417,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2e5debbddfed",
+        "change_id": "MC:a3db74a08031",
         "shape": "generic",
         "target_modules": [
           "tests.test_directed_training_corpus_cache_trust"
@@ -51289,9 +51433,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ca209d543faa",
+        "change_id": "MC:29968ca374b3",
         "shape": "generic",
         "target_modules": [
           "tests.test_emitter_crash"
@@ -51305,9 +51449,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ea6258cfb608",
+        "change_id": "MC:ba3ba8652265",
         "shape": "generic",
         "target_modules": [
           "tests.test_episode_to_entity_experience"
@@ -51321,9 +51465,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f5e9f1910e8c",
+        "change_id": "MC:feea62cdf51a",
         "shape": "generic",
         "target_modules": [
           "tests.test_f5_register_exploration_plumbing"
@@ -51337,9 +51481,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0dc35d546f33",
+        "change_id": "MC:dd80e835b245",
         "shape": "generic",
         "target_modules": [
           "tests.test_failure_shape_tracing"
@@ -51353,9 +51497,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7ca320f91bb2",
+        "change_id": "MC:9a9aeeaf4416",
         "shape": "generic",
         "target_modules": [
           "tests.test_flow_audit_and_tcl_wiring"
@@ -51369,9 +51513,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0e2ad24902a8",
+        "change_id": "MC:560a83a1a058",
         "shape": "generic",
         "target_modules": [
           "tests.test_full_reasoning_pipeline"
@@ -51385,9 +51529,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:8bc7ea61406f",
+        "change_id": "MC:ea965bba9114",
         "shape": "generic",
         "target_modules": [
           "tests.test_function_word_gate_golden"
@@ -51401,9 +51545,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:682194b1c5e7",
+        "change_id": "MC:b16d3263ebfd",
         "shape": "generic",
         "target_modules": [
           "tests.test_genealogy_atomic_writes"
@@ -51417,9 +51561,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:463203376d16",
+        "change_id": "MC:9633889d166a",
         "shape": "generic",
         "target_modules": [
           "tests.test_generation_collapse_regression"
@@ -51433,9 +51577,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e067b26fbe9e",
+        "change_id": "MC:ed6415ec4314",
         "shape": "generic",
         "target_modules": [
           "tests.test_golden_transcript_validation"
@@ -51449,9 +51593,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2e290aa34b8f",
+        "change_id": "MC:3bcb7efd957b",
         "shape": "generic",
         "target_modules": [
           "tests.test_governance_liveness"
@@ -51465,9 +51609,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c8a235b3d002",
+        "change_id": "MC:6c6331bdbeaa",
         "shape": "generic",
         "target_modules": [
           "tests.test_grammar_motif_depletion_check"
@@ -51481,9 +51625,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6b91d138e3cc",
+        "change_id": "MC:bc098a7b3751",
         "shape": "generic",
         "target_modules": [
           "tests.test_i_state_channel_reweighting"
@@ -51497,9 +51641,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:18941a7e652d",
+        "change_id": "MC:c382807d9b63",
         "shape": "generic",
         "target_modules": [
           "tests.test_icc_ledger"
@@ -51513,9 +51657,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b2daca5476f5",
+        "change_id": "MC:b3e4c45dfc92",
         "shape": "generic",
         "target_modules": [
           "tests.test_l1_skeleton_validity_gate"
@@ -51529,9 +51673,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:53f1b86edbf9",
+        "change_id": "MC:ad436f00cc5f",
         "shape": "generic",
         "target_modules": [
           "tests.test_l2_pos_gating"
@@ -51545,9 +51689,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:553b854207cb",
+        "change_id": "MC:68f304e22b6b",
         "shape": "generic",
         "target_modules": [
           "tests.test_l3_conjugation_wiring"
@@ -51561,9 +51705,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6dd1c3afd7bb",
+        "change_id": "MC:07580fbdb8e5",
         "shape": "generic",
         "target_modules": [
           "tests.test_l3b_determiner_preposition_slots"
@@ -51577,9 +51721,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:66ac3917e030",
+        "change_id": "MC:67f6947f07ec",
         "shape": "generic",
         "target_modules": [
           "tests.test_l4_grounded_motif_fitness"
@@ -51593,9 +51737,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a7d4bf9d7288",
+        "change_id": "MC:1f2b70e7dcaf",
         "shape": "generic",
         "target_modules": [
           "tests.test_layer_acyclicity"
@@ -51609,9 +51753,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5c7181e62f7f",
+        "change_id": "MC:218158cd18d7",
         "shape": "generic",
         "target_modules": [
           "tests.test_lifecycle_catalog"
@@ -51625,9 +51769,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:afc270fc8352",
+        "change_id": "MC:d95a9fbbf6f4",
         "shape": "generic",
         "target_modules": [
           "tests.test_lineage_runtime_activation"
@@ -51641,9 +51785,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:26bb0865a3a5",
+        "change_id": "MC:e9bc33509ebc",
         "shape": "generic",
         "target_modules": [
           "tests.test_m1_1a_relation_pairs"
@@ -51657,9 +51801,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a4d09b8af5d7",
+        "change_id": "MC:337ca00457c8",
         "shape": "generic",
         "target_modules": [
           "tests.test_m1_2_provenance_hygiene"
@@ -51673,9 +51817,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:65b1e1752df9",
+        "change_id": "MC:641b82d4e164",
         "shape": "generic",
         "target_modules": [
           "tests.test_mobile_tools_aurora"
@@ -51689,9 +51833,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e22e158a86eb",
+        "change_id": "MC:93b3d131e878",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_acceptance_report"
@@ -51705,9 +51849,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2a681529c786",
+        "change_id": "MC:4046bacca0be",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_live_wiring"
@@ -51721,9 +51865,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7a91a121e00e",
+        "change_id": "MC:437068d9da20",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_perturbation_live_wiring"
@@ -51737,9 +51881,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7804a7ac01e8",
+        "change_id": "MC:8779bbd7c7a1",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_phase0_plumbing"
@@ -51753,9 +51897,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:81e0baaf8278",
+        "change_id": "MC:94de8a78c1aa",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_phase7_extensions"
@@ -51769,9 +51913,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:cca906d7a0e1",
+        "change_id": "MC:9c73286d7e24",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_warp_gap_proposal"
@@ -51785,9 +51929,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:3b8b043339d4",
+        "change_id": "MC:5f5486003eda",
         "shape": "generic",
         "target_modules": [
           "tests.test_n21_hardened_reacceptance"
@@ -51801,9 +51945,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ca6691e4fa57",
+        "change_id": "MC:c2f710180b79",
         "shape": "generic",
         "target_modules": [
           "tests.test_n3_correspondence_daemon_wiring"
@@ -51817,9 +51961,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:9db45f4d4eeb",
+        "change_id": "MC:a1a8f88b2e75",
         "shape": "generic",
         "target_modules": [
           "tests.test_oets"
@@ -51833,9 +51977,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:99b5f43ebd5d",
+        "change_id": "MC:c575297d6293",
         "shape": "generic",
         "target_modules": [
           "tests.test_oets_comprehension_confidence_growth"
@@ -51849,9 +51993,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:aab2b0f7e0a2",
+        "change_id": "MC:fc7870f1076f",
         "shape": "generic",
         "target_modules": [
           "tests.test_oets_conf"
@@ -51865,9 +52009,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:1346286044a8",
+        "change_id": "MC:dbee271e1495",
         "shape": "generic",
         "target_modules": [
           "tests.test_operator_composer"
@@ -51881,9 +52025,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0385939df97f",
+        "change_id": "MC:b18ca576bda0",
         "shape": "generic",
         "target_modules": [
           "tests.test_p1_track_cp_contradiction"
@@ -51897,9 +52041,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e03a778d257b",
+        "change_id": "MC:0e8a34dfa939",
         "shape": "generic",
         "target_modules": [
           "tests.test_perturbation_probe"
@@ -51913,9 +52057,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:dda8816e7292",
+        "change_id": "MC:3f6ed5a9a656",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_1_proposition_frame"
@@ -51929,9 +52073,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:47e49f2f04c3",
+        "change_id": "MC:cc5621dbda47",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_2_transport"
@@ -51945,9 +52089,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:8bf54371ce0c",
+        "change_id": "MC:4ffb8bec97b7",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_3_motif_selection"
@@ -51961,9 +52105,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:072a9b8c7694",
+        "change_id": "MC:2432a8f6082b",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_4_slot_binding"
@@ -51977,9 +52121,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0553343aadff",
+        "change_id": "MC:7ba81237f34c",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_5_instruments"
@@ -51993,9 +52137,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5b627ba829cf",
+        "change_id": "MC:b2db5a5b51d9",
         "shape": "generic",
         "target_modules": [
           "tests.test_pipeline2"
@@ -52009,9 +52153,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:afbdf46fc65e",
+        "change_id": "MC:a93c0b61f2c8",
         "shape": "generic",
         "target_modules": [
           "tests.test_prediction_field_manifold"
@@ -52025,9 +52169,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6c0cabd87e06",
+        "change_id": "MC:1b4143bb9189",
         "shape": "generic",
         "target_modules": [
           "tests.test_ps1_2_persistence_arbitration"
@@ -52041,9 +52185,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f3376abb28c9",
+        "change_id": "MC:6a4b024252b0",
         "shape": "generic",
         "target_modules": [
           "tests.test_reflexive_interpreter_deposition_integration"
@@ -52057,9 +52201,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6b69f0267083",
+        "change_id": "MC:daafe2a05e66",
         "shape": "generic",
         "target_modules": [
           "tests.test_round"
@@ -52073,9 +52217,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d3147dd58010",
+        "change_id": "MC:9630022a0158",
         "shape": "generic",
         "target_modules": [
           "tests.test_rw7_attribution_trace"
@@ -52089,9 +52233,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:82ffd671346b",
+        "change_id": "MC:f4afaac7e304",
         "shape": "generic",
         "target_modules": [
           "tests.test_scheduled_run_state_persistence"
@@ -52105,9 +52249,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:658a167a7848",
+        "change_id": "MC:ef343bf203c8",
         "shape": "generic",
         "target_modules": [
           "tests.test_scheduler_balance"
@@ -52121,9 +52265,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:bc24cb6656b3",
+        "change_id": "MC:e73bbee749de",
         "shape": "generic",
         "target_modules": [
           "tests.test_semantic_intention_bridge"
@@ -52137,9 +52281,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f95ababb2b53",
+        "change_id": "MC:95d730db06d3",
         "shape": "generic",
         "target_modules": [
           "tests.test_semantic_probe_battery"
@@ -52153,9 +52297,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:9ade92b74254",
+        "change_id": "MC:9be986fff9db",
         "shape": "generic",
         "target_modules": [
           "tests.test_semantic_variant_registry"
@@ -52169,9 +52313,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:aea688da82ce",
+        "change_id": "MC:c38c6a9dd5ff",
         "shape": "generic",
         "target_modules": [
           "tests.test_strategic_horizon"
@@ -52185,9 +52329,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e53ef3a9358c",
+        "change_id": "MC:d9702851be90",
         "shape": "generic",
         "target_modules": [
           "tests.test_stratified_wellformedness"
@@ -52201,9 +52345,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d4f13e413729",
+        "change_id": "MC:8b98c879261d",
         "shape": "generic",
         "target_modules": [
           "tests.test_surface_boundary"
@@ -52217,9 +52361,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:fb1af27440e8",
+        "change_id": "MC:d03acd94bcb8",
         "shape": "generic",
         "target_modules": [
           "tests.test_topological_semantic_coordinator"
@@ -52233,9 +52377,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b71ba87d82a7",
+        "change_id": "MC:d31d92e931fa",
         "shape": "generic",
         "target_modules": [
           "tests.test_topology_cycle_decomposition"
@@ -52249,9 +52393,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ce0c5f0d70a7",
+        "change_id": "MC:91c7bac61eee",
         "shape": "generic",
         "target_modules": [
           "tests.test_topology_frame"
@@ -52265,9 +52409,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:62cce434313d",
+        "change_id": "MC:31d792a87f92",
         "shape": "generic",
         "target_modules": [
           "tests.test_topology_tracker"
@@ -52281,9 +52425,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:13442319481a",
+        "change_id": "MC:1079a722ac29",
         "shape": "generic",
         "target_modules": [
           "tests.test_toroidal_circulation_layer"
@@ -52297,9 +52441,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:eb6908622e7c",
+        "change_id": "MC:821d382bb20b",
         "shape": "generic",
         "target_modules": [
           "tests.test_understanding_sediment_overlay"
@@ -52313,9 +52457,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:3a597b8b132f",
+        "change_id": "MC:2b7d6c99de40",
         "shape": "generic",
         "target_modules": [
           "tests.test_up"
@@ -52329,9 +52473,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:82228119b1a7",
+        "change_id": "MC:9d931fba42a6",
         "shape": "generic",
         "target_modules": [
           "tests.test_variant_transition_predictor"
@@ -52345,9 +52489,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7ddacd8af27d",
+        "change_id": "MC:9a99e17b829b",
         "shape": "generic",
         "target_modules": [
           "tests.test_w1_turn_content_context"
@@ -52361,9 +52505,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:73213471779f",
+        "change_id": "MC:9201ba66282e",
         "shape": "generic",
         "target_modules": [
           "tests.test_w2_claim_gate_widening"
@@ -52377,9 +52521,9 @@
         "adopted": true
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:57724e2e0130",
+        "change_id": "MC:2ef1afc26f1b",
         "shape": "generic",
         "target_modules": [
           "tests.test_waveform_pressure"
@@ -52391,178 +52535,13 @@
         "matched_score": 1.0,
         "ability_id": "T:CODE_LINEAGE_cec6767245",
         "adopted": true
-      },
-      {
-        "tick": 127828,
-        "trigger_mode": "exploratory",
-        "shape": "A1+B1",
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.95,
-        "trial_score": 0.95,
-        "improvement": 0.0,
-        "adopted": false
-      },
-      {
-        "tick": 127828,
-        "trigger_mode": "exploratory",
-        "shape": "A1+B1",
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_params": {
-          "dup_redist": 0.45,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.95,
-        "trial_score": 0.93,
-        "improvement": -0.02,
-        "adopted": false
-      },
-      {
-        "tick": 127828,
-        "trigger_mode": "exploratory",
-        "shape": "A1+B1",
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8500000000000001
-        },
-        "base_score": 0.95,
-        "trial_score": 0.95,
-        "improvement": 0.0,
-        "adopted": false
-      },
-      {
-        "tick": 127828,
-        "trigger_mode": "exploratory",
-        "shape": "A1+B1",
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.75
-        },
-        "base_score": 0.95,
-        "trial_score": 0.940625,
-        "improvement": -0.009375,
-        "adopted": false
-      },
-      {
-        "tick": 127828,
-        "trigger_mode": "exploratory",
-        "shape": "A1+B1",
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_params": {
-          "dup_redist": 0.53,
-          "scope_alpha": 0.8300000000000001
-        },
-        "base_score": 0.95,
-        "trial_score": 0.95,
-        "improvement": 0.0,
-        "adopted": false
-      },
-      {
-        "tick": 127828,
-        "trigger_mode": "exploratory",
-        "shape": "A1+B1",
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_params": {
-          "dup_redist": 0.47,
-          "scope_alpha": 0.77
-        },
-        "base_score": 0.95,
-        "trial_score": 0.932375,
-        "improvement": -0.017625,
-        "adopted": false
-      },
-      {
-        "tick": 127830,
-        "trigger_mode": "code_evolution",
-        "mutation_id": "DREAM:7d719d4270e110",
-        "operator_key": "dream_dream_evidence",
-        "accepted": false,
-        "shape": "dream_evidence",
-        "target_modules": [],
-        "target_files": [],
-        "changed_files": [],
-        "score": 0.35,
-        "avg_fitness": 0.0,
-        "genealogy_pressure": 0.0,
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "apply_duration_s": 0.0,
-        "agency_time_credit": 0.35,
-        "temporal_overhead_penalty": 0.0,
-        "ability_id": "A:CODE_EVOLVE_dc2cdbe2ab",
-        "adopted": false
-      },
-      {
-        "tick": 127831,
-        "trigger_mode": "code_evolution",
-        "mutation_id": "DREAM:10c2f12daba35a",
-        "operator_key": "dream_dream_evidence",
-        "accepted": false,
-        "shape": "dream_evidence",
-        "target_modules": [],
-        "target_files": [],
-        "changed_files": [],
-        "score": 0.35,
-        "avg_fitness": 0.0,
-        "genealogy_pressure": 0.0,
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "apply_duration_s": 0.0,
-        "agency_time_credit": 0.35,
-        "temporal_overhead_penalty": 0.0,
-        "ability_id": "A:CODE_EVOLVE_f90705198e",
-        "adopted": false
-      },
-      {
-        "tick": 127838,
-        "trigger_mode": "code_evolution",
-        "mutation_id": "DREAM:467fe7e60596f8",
-        "operator_key": "dream_dream_evidence",
-        "accepted": false,
-        "shape": "dream_evidence",
-        "target_modules": [],
-        "target_files": [],
-        "changed_files": [],
-        "score": 0.35,
-        "avg_fitness": 0.0,
-        "genealogy_pressure": 0.0,
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "apply_duration_s": 0.0,
-        "agency_time_credit": 0.35,
-        "temporal_overhead_penalty": 0.0,
-        "ability_id": "A:CODE_EVOLVE_bd97fbef70",
-        "adopted": false
       }
     ],
     "adoptions": [
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c6ec18586509",
+        "change_id": "MC:a2a572417ed2",
         "shape": "generic",
         "target_modules": [
           "scripts.m1_3_v0_rerun"
@@ -52571,9 +52550,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d392cf69cfd0",
+        "change_id": "MC:b8bd1964f546",
         "shape": "generic",
         "target_modules": [
           "scripts.noncomp_actuation_shadow_audit"
@@ -52582,9 +52561,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:04ec460203ef",
+        "change_id": "MC:0c66fd521e85",
         "shape": "generic",
         "target_modules": [
           "scripts.pf1_0_attribution_run"
@@ -52593,9 +52572,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6731daba8257",
+        "change_id": "MC:acb83302f185",
         "shape": "generic",
         "target_modules": [
           "scripts.pf1_5_instrument_revalidation"
@@ -52604,9 +52583,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7ef293bf13fd",
+        "change_id": "MC:a15a03a1e77e",
         "shape": "generic",
         "target_modules": [
           "scripts.pf1_6_acceptance"
@@ -52615,9 +52594,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5261e1cec914",
+        "change_id": "MC:711ff6522bc0",
         "shape": "generic",
         "target_modules": [
           "scripts.populate_fgae_semantics"
@@ -52626,9 +52605,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f536e4dcc647",
+        "change_id": "MC:170e1d111792",
         "shape": "generic",
         "target_modules": [
           "scripts.process_docs"
@@ -52637,9 +52616,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4935b59d3db3",
+        "change_id": "MC:f468fc0d0ebb",
         "shape": "generic",
         "target_modules": [
           "scripts.prove_learning"
@@ -52648,9 +52627,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ac4cdac61360",
+        "change_id": "MC:cef3f69d1008",
         "shape": "generic",
         "target_modules": [
           "scripts.run_growth_session"
@@ -52659,9 +52638,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ec56633ffb50",
+        "change_id": "MC:ea1273dbaa8b",
         "shape": "generic",
         "target_modules": [
           "scripts.rw7_attribution_run"
@@ -52670,9 +52649,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:79202f52dcfe",
+        "change_id": "MC:176b53ac4d3f",
         "shape": "generic",
         "target_modules": [
           "scripts.scan_lineage_25x25"
@@ -52681,9 +52660,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:afab6f4e1fc1",
+        "change_id": "MC:d462efceebae",
         "shape": "generic",
         "target_modules": [
           "scripts.seed_abstract_regions_s1"
@@ -52692,9 +52671,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0cc4a6146bd2",
+        "change_id": "MC:45734586c4c1",
         "shape": "generic",
         "target_modules": [
           "scripts.seed_oets_aurora_vocabulary"
@@ -52703,9 +52682,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b664fe94bb4f",
+        "change_id": "MC:f0a55bfc665e",
         "shape": "generic",
         "target_modules": [
           "scripts.seed_sensory_crystals"
@@ -52714,9 +52693,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5b718778dad4",
+        "change_id": "MC:78e9f976717c",
         "shape": "generic",
         "target_modules": [
           "scripts.source_conversation_corpora"
@@ -52725,9 +52704,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:16aee2284186",
+        "change_id": "MC:7493ad99bf57",
         "shape": "generic",
         "target_modules": [
           "scripts.stamp_authorship_headers"
@@ -52736,9 +52715,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4abce5d9c25d",
+        "change_id": "MC:8c63b6c0f9c5",
         "shape": "generic",
         "target_modules": [
           "scripts.termux_voice_bridge"
@@ -52747,9 +52726,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a93f194bb3ab",
+        "change_id": "MC:76cc434b7cde",
         "shape": "generic",
         "target_modules": [
           "scripts.trace_live_response_pipeline"
@@ -52758,9 +52737,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0d50db0fe787",
+        "change_id": "MC:2a72956c97b6",
         "shape": "generic",
         "target_modules": [
           "scripts.w1_reentrancy_trace"
@@ -52769,9 +52748,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7c252e7db210",
+        "change_id": "MC:17b07b4c013c",
         "shape": "generic",
         "target_modules": [
           "scripts.w1_thought_state_diagnostic"
@@ -52780,9 +52759,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4a120b918e36",
+        "change_id": "MC:899b04969433",
         "shape": "generic",
         "target_modules": [
           "tensor_occupancy_hook"
@@ -52791,9 +52770,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:92fd8176ff4f",
+        "change_id": "MC:207526271d80",
         "shape": "generic",
         "target_modules": [
           "tensor_occupancy_warp_bridge"
@@ -52802,9 +52781,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b9166532c3d3",
+        "change_id": "MC:6aca0e5984c3",
         "shape": "generic",
         "target_modules": [
           "test_constraint_reasoner"
@@ -52813,9 +52792,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2203f25e68f6",
+        "change_id": "MC:3cd238c0f850",
         "shape": "generic",
         "target_modules": [
           "tests._engine_integration_test"
@@ -52824,9 +52803,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c6312ce2c757",
+        "change_id": "MC:4189e3e3984e",
         "shape": "generic",
         "target_modules": [
           "tests._pipeline_test"
@@ -52835,9 +52814,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5b309a428f97",
+        "change_id": "MC:be8768b26901",
         "shape": "generic",
         "target_modules": [
           "tests.run_intelligence_test_surface"
@@ -52846,9 +52825,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5814f6ec5f42",
+        "change_id": "MC:0ae643ee5bfe",
         "shape": "generic",
         "target_modules": [
           "tests.run_interaction_test"
@@ -52857,9 +52836,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0b00af63849b",
+        "change_id": "MC:a19af24a185e",
         "shape": "generic",
         "target_modules": [
           "tests.test_alignment"
@@ -52868,9 +52847,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5756cd1b367a",
+        "change_id": "MC:d35942f0178f",
         "shape": "generic",
         "target_modules": [
           "tests.test_articulation_semantic_strategy"
@@ -52879,9 +52858,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d10b0117f256",
+        "change_id": "MC:62384b4e63fe",
         "shape": "generic",
         "target_modules": [
           "tests.test_autoevolver_syntax_gate"
@@ -52890,9 +52869,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:13f64426d0cd",
+        "change_id": "MC:a3296979e746",
         "shape": "generic",
         "target_modules": [
           "tests.test_b1_1_envelope_shadow"
@@ -52901,9 +52880,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a38fd19c6865",
+        "change_id": "MC:75e95316cc62",
         "shape": "generic",
         "target_modules": [
           "tests.test_battery_relevance_metric"
@@ -52912,9 +52891,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ae66bc43bd1d",
+        "change_id": "MC:4abeff54f6ce",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_bridge_tensor_trace_integration"
@@ -52923,9 +52902,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4f7d5f4c0339",
+        "change_id": "MC:4f936ed7288a",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_conflict_monitoring_veto"
@@ -52934,9 +52913,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:358ed63e2a4d",
+        "change_id": "MC:cf2906ea01f4",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_geometry_deviation"
@@ -52945,9 +52924,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2970c104b4d5",
+        "change_id": "MC:a582d814a8f4",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_shadow_error_logging"
@@ -52956,9 +52935,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:dd6ef0951485",
+        "change_id": "MC:9365071d4348",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_surface_salience"
@@ -52967,9 +52946,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:491c3f0dda41",
+        "change_id": "MC:2a1ae6c3a2a3",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_tensor_locator"
@@ -52978,9 +52957,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e64b66fcb577",
+        "change_id": "MC:0c9feae41377",
         "shape": "generic",
         "target_modules": [
           "tests.test_cers_topology_context"
@@ -52989,9 +52968,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2e7cfdc3e369",
+        "change_id": "MC:03dccf6e309c",
         "shape": "generic",
         "target_modules": [
           "tests.test_ci_segment_dev_index_rolling_cap"
@@ -53000,9 +52979,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b7df7271b648",
+        "change_id": "MC:1c3b1164067d",
         "shape": "generic",
         "target_modules": [
           "tests.test_classroom_behavior_modes_wiring"
@@ -53011,9 +52990,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2979085229d8",
+        "change_id": "MC:c4f586488821",
         "shape": "generic",
         "target_modules": [
           "tests.test_classroom_curriculum_seeding"
@@ -53022,9 +53001,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d73085d4c75e",
+        "change_id": "MC:d6f8c194dd52",
         "shape": "generic",
         "target_modules": [
           "tests.test_classroom_perspective_rotation_and_watchdog"
@@ -53033,9 +53012,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7501fe588390",
+        "change_id": "MC:3acf67bfefbe",
         "shape": "generic",
         "target_modules": [
           "tests.test_composer_relevance_selection"
@@ -53044,9 +53023,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:92373a5deecc",
+        "change_id": "MC:27c532565390",
         "shape": "generic",
         "target_modules": [
           "tests.test_concept_image_ingestion_import"
@@ -53055,9 +53034,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:17a6c6f0c46a",
+        "change_id": "MC:591cb0db3155",
         "shape": "generic",
         "target_modules": [
           "tests.test_concept_imager_cycle"
@@ -53066,9 +53045,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:325fd95ffa60",
+        "change_id": "MC:8db58a1c75c9",
         "shape": "generic",
         "target_modules": [
           "tests.test_conversation_desktop"
@@ -53077,9 +53056,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:4b38ae30fd31",
+        "change_id": "MC:3728caf26d5e",
         "shape": "generic",
         "target_modules": [
           "tests.test_correspondence_loop"
@@ -53088,9 +53067,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5f87f34d8107",
+        "change_id": "MC:ba67dffb315d",
         "shape": "generic",
         "target_modules": [
           "tests.test_cpm"
@@ -53099,9 +53078,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:49b1c9587dfe",
+        "change_id": "MC:2347b3755d3c",
         "shape": "generic",
         "target_modules": [
           "tests.test_d1_device_path_attribution"
@@ -53110,9 +53089,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:1ed95db99488",
+        "change_id": "MC:a6f4052a4e4a",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_2_corpus_fragment_nesting"
@@ -53121,9 +53100,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:3998c9a22539",
+        "change_id": "MC:00bbc22a16b9",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_2_live_turn_reentrancy_guard"
@@ -53132,9 +53111,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ba0056a593de",
+        "change_id": "MC:db97239d1f94",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_3_delivery_boundary_telemetry_rejection"
@@ -53143,9 +53122,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c0954cc977ef",
+        "change_id": "MC:5a3304eba363",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_4_probe_battery_measures_resp_a"
@@ -53154,9 +53133,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:caff720505ad",
+        "change_id": "MC:01f527843eac",
         "shape": "generic",
         "target_modules": [
           "tests.test_d2_condition2_abstain_sanity"
@@ -53165,9 +53144,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:af2beeff33e6",
+        "change_id": "MC:874a65c203fb",
         "shape": "generic",
         "target_modules": [
           "tests.test_daemon_classroom_cycle"
@@ -53176,9 +53155,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:22b965ef2182",
+        "change_id": "MC:193c003dbc84",
         "shape": "generic",
         "target_modules": [
           "tests.test_daemon_subsurface_and_ambient"
@@ -53187,9 +53166,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:210ae8954036",
+        "change_id": "MC:a025e2cd2f38",
         "shape": "generic",
         "target_modules": [
           "tests.test_direct_address_formulation"
@@ -53198,9 +53177,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2e5debbddfed",
+        "change_id": "MC:a3db74a08031",
         "shape": "generic",
         "target_modules": [
           "tests.test_directed_training_corpus_cache_trust"
@@ -53209,9 +53188,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ca209d543faa",
+        "change_id": "MC:29968ca374b3",
         "shape": "generic",
         "target_modules": [
           "tests.test_emitter_crash"
@@ -53220,9 +53199,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ea6258cfb608",
+        "change_id": "MC:ba3ba8652265",
         "shape": "generic",
         "target_modules": [
           "tests.test_episode_to_entity_experience"
@@ -53231,9 +53210,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f5e9f1910e8c",
+        "change_id": "MC:feea62cdf51a",
         "shape": "generic",
         "target_modules": [
           "tests.test_f5_register_exploration_plumbing"
@@ -53242,9 +53221,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0dc35d546f33",
+        "change_id": "MC:dd80e835b245",
         "shape": "generic",
         "target_modules": [
           "tests.test_failure_shape_tracing"
@@ -53253,9 +53232,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7ca320f91bb2",
+        "change_id": "MC:9a9aeeaf4416",
         "shape": "generic",
         "target_modules": [
           "tests.test_flow_audit_and_tcl_wiring"
@@ -53264,9 +53243,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0e2ad24902a8",
+        "change_id": "MC:560a83a1a058",
         "shape": "generic",
         "target_modules": [
           "tests.test_full_reasoning_pipeline"
@@ -53275,9 +53254,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:8bc7ea61406f",
+        "change_id": "MC:ea965bba9114",
         "shape": "generic",
         "target_modules": [
           "tests.test_function_word_gate_golden"
@@ -53286,9 +53265,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:682194b1c5e7",
+        "change_id": "MC:b16d3263ebfd",
         "shape": "generic",
         "target_modules": [
           "tests.test_genealogy_atomic_writes"
@@ -53297,9 +53276,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:463203376d16",
+        "change_id": "MC:9633889d166a",
         "shape": "generic",
         "target_modules": [
           "tests.test_generation_collapse_regression"
@@ -53308,9 +53287,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e067b26fbe9e",
+        "change_id": "MC:ed6415ec4314",
         "shape": "generic",
         "target_modules": [
           "tests.test_golden_transcript_validation"
@@ -53319,9 +53298,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2e290aa34b8f",
+        "change_id": "MC:3bcb7efd957b",
         "shape": "generic",
         "target_modules": [
           "tests.test_governance_liveness"
@@ -53330,9 +53309,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:c8a235b3d002",
+        "change_id": "MC:6c6331bdbeaa",
         "shape": "generic",
         "target_modules": [
           "tests.test_grammar_motif_depletion_check"
@@ -53341,9 +53320,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6b91d138e3cc",
+        "change_id": "MC:bc098a7b3751",
         "shape": "generic",
         "target_modules": [
           "tests.test_i_state_channel_reweighting"
@@ -53352,9 +53331,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:18941a7e652d",
+        "change_id": "MC:c382807d9b63",
         "shape": "generic",
         "target_modules": [
           "tests.test_icc_ledger"
@@ -53363,9 +53342,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b2daca5476f5",
+        "change_id": "MC:b3e4c45dfc92",
         "shape": "generic",
         "target_modules": [
           "tests.test_l1_skeleton_validity_gate"
@@ -53374,9 +53353,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:53f1b86edbf9",
+        "change_id": "MC:ad436f00cc5f",
         "shape": "generic",
         "target_modules": [
           "tests.test_l2_pos_gating"
@@ -53385,9 +53364,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:553b854207cb",
+        "change_id": "MC:68f304e22b6b",
         "shape": "generic",
         "target_modules": [
           "tests.test_l3_conjugation_wiring"
@@ -53396,9 +53375,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6dd1c3afd7bb",
+        "change_id": "MC:07580fbdb8e5",
         "shape": "generic",
         "target_modules": [
           "tests.test_l3b_determiner_preposition_slots"
@@ -53407,9 +53386,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:66ac3917e030",
+        "change_id": "MC:67f6947f07ec",
         "shape": "generic",
         "target_modules": [
           "tests.test_l4_grounded_motif_fitness"
@@ -53418,9 +53397,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a7d4bf9d7288",
+        "change_id": "MC:1f2b70e7dcaf",
         "shape": "generic",
         "target_modules": [
           "tests.test_layer_acyclicity"
@@ -53429,9 +53408,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5c7181e62f7f",
+        "change_id": "MC:218158cd18d7",
         "shape": "generic",
         "target_modules": [
           "tests.test_lifecycle_catalog"
@@ -53440,9 +53419,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:afc270fc8352",
+        "change_id": "MC:d95a9fbbf6f4",
         "shape": "generic",
         "target_modules": [
           "tests.test_lineage_runtime_activation"
@@ -53451,9 +53430,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:26bb0865a3a5",
+        "change_id": "MC:e9bc33509ebc",
         "shape": "generic",
         "target_modules": [
           "tests.test_m1_1a_relation_pairs"
@@ -53462,9 +53441,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a4d09b8af5d7",
+        "change_id": "MC:337ca00457c8",
         "shape": "generic",
         "target_modules": [
           "tests.test_m1_2_provenance_hygiene"
@@ -53473,9 +53452,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:65b1e1752df9",
+        "change_id": "MC:641b82d4e164",
         "shape": "generic",
         "target_modules": [
           "tests.test_mobile_tools_aurora"
@@ -53484,9 +53463,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e22e158a86eb",
+        "change_id": "MC:93b3d131e878",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_acceptance_report"
@@ -53495,9 +53474,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2a681529c786",
+        "change_id": "MC:4046bacca0be",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_live_wiring"
@@ -53506,9 +53485,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7a91a121e00e",
+        "change_id": "MC:437068d9da20",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_perturbation_live_wiring"
@@ -53517,9 +53496,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7804a7ac01e8",
+        "change_id": "MC:8779bbd7c7a1",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_phase0_plumbing"
@@ -53528,9 +53507,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:81e0baaf8278",
+        "change_id": "MC:94de8a78c1aa",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_phase7_extensions"
@@ -53539,9 +53518,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:cca906d7a0e1",
+        "change_id": "MC:9c73286d7e24",
         "shape": "generic",
         "target_modules": [
           "tests.test_mtsl_warp_gap_proposal"
@@ -53550,9 +53529,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:3b8b043339d4",
+        "change_id": "MC:5f5486003eda",
         "shape": "generic",
         "target_modules": [
           "tests.test_n21_hardened_reacceptance"
@@ -53561,9 +53540,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ca6691e4fa57",
+        "change_id": "MC:c2f710180b79",
         "shape": "generic",
         "target_modules": [
           "tests.test_n3_correspondence_daemon_wiring"
@@ -53572,9 +53551,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:9db45f4d4eeb",
+        "change_id": "MC:a1a8f88b2e75",
         "shape": "generic",
         "target_modules": [
           "tests.test_oets"
@@ -53583,9 +53562,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:99b5f43ebd5d",
+        "change_id": "MC:c575297d6293",
         "shape": "generic",
         "target_modules": [
           "tests.test_oets_comprehension_confidence_growth"
@@ -53594,9 +53573,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:aab2b0f7e0a2",
+        "change_id": "MC:fc7870f1076f",
         "shape": "generic",
         "target_modules": [
           "tests.test_oets_conf"
@@ -53605,9 +53584,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:1346286044a8",
+        "change_id": "MC:dbee271e1495",
         "shape": "generic",
         "target_modules": [
           "tests.test_operator_composer"
@@ -53616,9 +53595,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0385939df97f",
+        "change_id": "MC:b18ca576bda0",
         "shape": "generic",
         "target_modules": [
           "tests.test_p1_track_cp_contradiction"
@@ -53627,9 +53606,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e03a778d257b",
+        "change_id": "MC:0e8a34dfa939",
         "shape": "generic",
         "target_modules": [
           "tests.test_perturbation_probe"
@@ -53638,9 +53617,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:dda8816e7292",
+        "change_id": "MC:3f6ed5a9a656",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_1_proposition_frame"
@@ -53649,9 +53628,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:47e49f2f04c3",
+        "change_id": "MC:cc5621dbda47",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_2_transport"
@@ -53660,9 +53639,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:8bf54371ce0c",
+        "change_id": "MC:4ffb8bec97b7",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_3_motif_selection"
@@ -53671,9 +53650,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:072a9b8c7694",
+        "change_id": "MC:2432a8f6082b",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_4_slot_binding"
@@ -53682,9 +53661,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:0553343aadff",
+        "change_id": "MC:7ba81237f34c",
         "shape": "generic",
         "target_modules": [
           "tests.test_pf1_5_instruments"
@@ -53693,9 +53672,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5b627ba829cf",
+        "change_id": "MC:b2db5a5b51d9",
         "shape": "generic",
         "target_modules": [
           "tests.test_pipeline2"
@@ -53704,9 +53683,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:afbdf46fc65e",
+        "change_id": "MC:a93c0b61f2c8",
         "shape": "generic",
         "target_modules": [
           "tests.test_prediction_field_manifold"
@@ -53715,9 +53694,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6c0cabd87e06",
+        "change_id": "MC:1b4143bb9189",
         "shape": "generic",
         "target_modules": [
           "tests.test_ps1_2_persistence_arbitration"
@@ -53726,9 +53705,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f3376abb28c9",
+        "change_id": "MC:6a4b024252b0",
         "shape": "generic",
         "target_modules": [
           "tests.test_reflexive_interpreter_deposition_integration"
@@ -53737,9 +53716,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6b69f0267083",
+        "change_id": "MC:daafe2a05e66",
         "shape": "generic",
         "target_modules": [
           "tests.test_round"
@@ -53748,9 +53727,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d3147dd58010",
+        "change_id": "MC:9630022a0158",
         "shape": "generic",
         "target_modules": [
           "tests.test_rw7_attribution_trace"
@@ -53759,9 +53738,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:82ffd671346b",
+        "change_id": "MC:f4afaac7e304",
         "shape": "generic",
         "target_modules": [
           "tests.test_scheduled_run_state_persistence"
@@ -53770,9 +53749,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:658a167a7848",
+        "change_id": "MC:ef343bf203c8",
         "shape": "generic",
         "target_modules": [
           "tests.test_scheduler_balance"
@@ -53781,9 +53760,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:bc24cb6656b3",
+        "change_id": "MC:e73bbee749de",
         "shape": "generic",
         "target_modules": [
           "tests.test_semantic_intention_bridge"
@@ -53792,9 +53771,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f95ababb2b53",
+        "change_id": "MC:95d730db06d3",
         "shape": "generic",
         "target_modules": [
           "tests.test_semantic_probe_battery"
@@ -53803,9 +53782,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:9ade92b74254",
+        "change_id": "MC:9be986fff9db",
         "shape": "generic",
         "target_modules": [
           "tests.test_semantic_variant_registry"
@@ -53814,9 +53793,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:aea688da82ce",
+        "change_id": "MC:c38c6a9dd5ff",
         "shape": "generic",
         "target_modules": [
           "tests.test_strategic_horizon"
@@ -53825,9 +53804,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:e53ef3a9358c",
+        "change_id": "MC:d9702851be90",
         "shape": "generic",
         "target_modules": [
           "tests.test_stratified_wellformedness"
@@ -53836,9 +53815,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:d4f13e413729",
+        "change_id": "MC:8b98c879261d",
         "shape": "generic",
         "target_modules": [
           "tests.test_surface_boundary"
@@ -53847,9 +53826,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:fb1af27440e8",
+        "change_id": "MC:d03acd94bcb8",
         "shape": "generic",
         "target_modules": [
           "tests.test_topological_semantic_coordinator"
@@ -53858,9 +53837,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b71ba87d82a7",
+        "change_id": "MC:d31d92e931fa",
         "shape": "generic",
         "target_modules": [
           "tests.test_topology_cycle_decomposition"
@@ -53869,9 +53848,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ce0c5f0d70a7",
+        "change_id": "MC:91c7bac61eee",
         "shape": "generic",
         "target_modules": [
           "tests.test_topology_frame"
@@ -53880,9 +53859,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:62cce434313d",
+        "change_id": "MC:31d792a87f92",
         "shape": "generic",
         "target_modules": [
           "tests.test_topology_tracker"
@@ -53891,9 +53870,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:13442319481a",
+        "change_id": "MC:1079a722ac29",
         "shape": "generic",
         "target_modules": [
           "tests.test_toroidal_circulation_layer"
@@ -53902,9 +53881,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:eb6908622e7c",
+        "change_id": "MC:821d382bb20b",
         "shape": "generic",
         "target_modules": [
           "tests.test_understanding_sediment_overlay"
@@ -53913,9 +53892,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:3a597b8b132f",
+        "change_id": "MC:2b7d6c99de40",
         "shape": "generic",
         "target_modules": [
           "tests.test_up"
@@ -53924,9 +53903,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:82228119b1a7",
+        "change_id": "MC:9d931fba42a6",
         "shape": "generic",
         "target_modules": [
           "tests.test_variant_transition_predictor"
@@ -53935,9 +53914,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:7ddacd8af27d",
+        "change_id": "MC:9a99e17b829b",
         "shape": "generic",
         "target_modules": [
           "tests.test_w1_turn_content_context"
@@ -53946,9 +53925,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:73213471779f",
+        "change_id": "MC:9201ba66282e",
         "shape": "generic",
         "target_modules": [
           "tests.test_w2_claim_gate_widening"
@@ -53957,9 +53936,9 @@
         "score": 1.0
       },
       {
-        "tick": 127826,
+        "tick": 127844,
         "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:57724e2e0130",
+        "change_id": "MC:2ef1afc26f1b",
         "shape": "generic",
         "target_modules": [
           "tests.test_waveform_pressure"
