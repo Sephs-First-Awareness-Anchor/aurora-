@@ -1,55 +1,5 @@
 [
   {
-    "packet_id": "08d57ac688d54973ba2e24b2711b1945",
-    "created_at": 1784964180.1209683,
-    "source": "simulation_live_bridge",
-    "user_input": "How do you understand awareness?",
-    "aurora_response": "I exist. I understand how real. I do how good.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "understand",
-      "awareness"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.516,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "9f9fc3a411e643538f362fe2b729ffc7",
-    "created_at": 1784964180.822756,
-    "source": "simulation_live_bridge",
-    "user_input": "How do you understand awareness?",
-    "aurora_response": "I do. I understand how.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "understand",
-      "awareness"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.288,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "3da6ab9b9e2746ff909e3b925fae0dda",
     "created_at": 1784971796.3466816,
     "source": "simulation_live_bridge",
@@ -476,6 +426,54 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ec5ec2f3fc724eb4aaaa52430321a209",
+    "created_at": 1784995800.216723,
+    "source": "simulation_live_bridge",
+    "user_input": "Tell me about meaning.",
+    "aurora_response": "I tell. I tell. I tell truth.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.972,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "b7716ffd900345409417f0776f03486d",
+    "created_at": 1784995802.581783,
+    "source": "simulation_live_bridge",
+    "user_input": "Tell me about meaning.",
+    "aurora_response": "I tell meaning real. I tell me alive. I tell what good.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.744,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
