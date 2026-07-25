@@ -6094,3 +6094,57 @@ Full regression across all six phases: consistently 2 pre-existing,
 unrelated failures (`test_m1_2_provenance_hygiene`, `test_concept_
 image_ingestion_import`), zero new regressions introduced by any
 PF3.1-3.6 change.
+
+## WARP Universalization Directive, Phase 2 — dead confession calls fixed, 2026-07-24
+
+Directive (Sunni & Cael, 2026-07-24): `WarpField`
+(`aurora_warp_protocol.py:1215`) is real, instantiated at boot, has
+real actuators and pathway handlers -- but almost nothing calls it.
+Audit found exactly 4 real `warp_guard(`/`WarpDemand(` call sites in
+the whole codebase, 2 of which are dead on arrival.
+
+**FIX-A051 (RUNTIME BUG) — Dead WARP confession calls, wrong
+signature.** Category: RUNTIME BUG.
+`aurora_possibility_selves.py`'s `provoke_reexperience()` (line ~751)
+and `dream_dialogue()` (line ~1020) each called `warp_guard(anchor,
+her_strength)` -- 2 positional args of the wrong types. The real
+`aurora_warp_protocol.warp_guard`'s signature is `(source: str, layer:
+str, trigger: str, *, unresolved_text="", ..., severity=0.5,
+persistence_key="")`. Every call raised `TypeError`, caught by a bare
+`except Exception: pass` immediately around it -- running dark since
+it was wired: no crash, no signal, just a no-op that looked like a
+working confession path. Confirmed the real call site that injects the
+real function (`aurora_quantum_dream_substrate.py:489`,
+`from aurora_warp_protocol import warp_guard as _wg`) was itself
+correct -- the bug was entirely in how `dream_dialogue`/
+`provoke_reexperience` called whatever `warp_guard` they were handed.
+
+**Decision (Sunni, ratified): Option A** -- these ARE meant to confess
+through the real, universal `WarpField`, not a local lightweight
+callback. **Fix:** both call sites now build a real `WarpDemand` via
+keyword arguments (`source="possibility_selves"`, `layer=
+"provoke_reexperience"`/`"dream_dialogue"` respectively,
+`trigger=WarpTrigger.AMBIGUITY`, `unresolved_text=str(anchor)`,
+`severity=float(her_strength)`, `persistence_key=str(anchor)[:48]`) --
+her own accommodation of a re-lived tension now genuinely reaches the
+universal field. `aurora_possibility_selves.py` gained one new import
+(`from aurora_warp_protocol import WarpTrigger`) for the trigger
+constant only -- the module still never imports `warp_guard` itself,
+staying an injected `Any` parameter, callers decide what to pass. The
+bare `except Exception: pass` around each call stays intentional and
+untouched -- a confession-path failure must never break her dream
+cycle.
+
+**Tests:** `tests/test_warp_phase2_confession_calls.py` (5) -- a spy
+matching `warp_guard`'s REAL signature exactly (not permissive
+`**kwargs`) driven through the full `provoke_reexperience`/
+`dream_dialogue` functions with a constructed high-capacity scenario
+that reliably reaches the "her_resolved" branch, confirming the actual
+call shape (source/layer/trigger/unresolved_text/severity/
+persistence_key) rather than just that SOME call happened -- a call
+shaped like the original bug would raise `TypeError` against this same
+spy, the same way it silently did against the real function in
+production. Plus graceful-degradation coverage (`warp_guard=None`,
+and a spy that always raises) confirming the intentional swallow
+behavior is preserved.
+
