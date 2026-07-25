@@ -534,6 +534,12 @@ class CrystalProcessingSystem(WarpCapable):
         self.tracker = tracker
         self.crystals: Dict[str, Crystal] = {}
         self.concept_index: Dict[str, str] = {}  # concept â†' crystal_id
+        # WARP Universalization Directive Phase 1 (2026-07-24): cosine-
+        # similarity resonance graph between crystals -- same shape as
+        # EnergyRegulatorSystem.facet_to_facet_links, one layer up. Built
+        # and populated by _update_crystal_links(); see that method and
+        # resonant_lookup() below.
+        self.crystal_links: Dict[str, Dict[str, float]] = {}
         self._energy_system = energy_system  # Set after DER init
         self._sedimemory = None  # L3.5 SediMemory (injected externally)
         self._init_warp()
@@ -660,6 +666,16 @@ class CrystalProcessingSystem(WarpCapable):
                 except Exception:
                     pass
 
+        # WARP Universalization Directive Phase 1 (2026-07-24): keep the
+        # crystal's resonance links current -- mirrors where register_
+        # facet() already triggers _update_links_for_facet() on the
+        # energy side. Observation only at this phase; nothing consumes
+        # crystal_links yet (that's Phase 4).
+        try:
+            self._update_crystal_links(crystal.crystal_id)
+        except Exception:
+            pass
+
         return {
             'crystal_id': crystal.crystal_id,
             'concept': crystal.concept,
@@ -750,6 +766,133 @@ class CrystalProcessingSystem(WarpCapable):
         cid = self.concept_index.get(concept)
         return self.crystals.get(cid) if cid else None
 
+    # ── WARP Universalization Directive Phase 1 (2026-07-24) ────────────
+    # Ranked/graph-propagated crystal activation, closing patent Claims
+    # 4 & 5. Retrieval-by-relatedness alongside exact match, using the
+    # vectors Crystal already carries (constraint_signature, axis_mean),
+    # using the exact cosine-similarity pattern EnergyRegulatorSystem.
+    # _update_links_for_facet() (this file, ~line 1623) already proved
+    # out for facet-to-facet energy resonance, lifted one layer up.
+    # Deliberately does NOT touch concept_index or _get_or_create()'s
+    # exact-match path -- that stays the legitimate fast path for known
+    # concepts and must not regress.
+
+    def _crystal_vector(self, crystal: "Crystal") -> Optional[Dict[str, float]]:
+        """Build a comparable fingerprint for a crystal from what she
+        already maintains for it: signed constraint_signature (what it
+        displaces) fused with axis_mean (where it lives). Both are dense
+        Dict[str, float] keyed on the same five axes (X, T, N, B, A), so
+        no new state is introduced -- this reads existing fields, it
+        doesn't grow the Crystal dataclass. Returns None if the crystal
+        hasn't been processed enough to have a signature yet (BASE
+        crystals with a single facet, fresh off _get_or_create)."""
+        sig = crystal.constraint_signature
+        mean = crystal.axis_mean
+        if not sig and not mean:
+            return None
+        axes = set(sig or {}) | set(mean or {})
+        if not axes:
+            return None
+        # Fuse: signature carries polarity/magnitude of displacement,
+        # axis_mean carries dimensional "home". Equal-weight fusion --
+        # no tuning yet, naive first pass per the directive's own
+        # audit-first preference.
+        return {ax: 0.5 * (sig or {}).get(ax, 0.0) + 0.5 * (mean or {}).get(ax, 0.0)
+                for ax in axes}
+
+    def _update_crystal_links(self, crystal_id: str, top_k: int = 8,
+                               floor: float = 0.1) -> None:
+        """Cosine-similarity resonance graph between crystals -- same
+        shape as EnergyRegulatorSystem._update_links_for_facet(), lifted
+        from facets to crystals. Reuses the proven pattern instead of
+        inventing a new one."""
+        src = self.crystals.get(crystal_id)
+        if src is None:
+            return
+        src_vec = self._crystal_vector(src)
+        if not src_vec:
+            # No fingerprint (yet, or any more) -- any stale link entry
+            # from a prior call must not survive; it would point at a
+            # vector that no longer exists.
+            self.crystal_links.pop(crystal_id, None)
+            return
+        src_keys = sorted(src_vec.keys())
+        src_arr = np.array([src_vec[k] for k in src_keys])
+        src_mag = np.linalg.norm(src_arr) + 1e-12
+
+        similarities, ids = [], []
+        for other_id, other in self.crystals.items():
+            if other_id == crystal_id:
+                continue
+            other_vec = self._crystal_vector(other)
+            if not other_vec or set(other_vec.keys()) != set(src_keys):
+                continue
+            other_arr = np.array([other_vec[k] for k in src_keys])
+            other_mag = np.linalg.norm(other_arr) + 1e-12
+            score = float(np.dot(src_arr, other_arr) / (src_mag * other_mag))
+            if score > floor:
+                similarities.append(score)
+                ids.append(other_id)
+
+        if not similarities:
+            self.crystal_links.pop(crystal_id, None)
+            return
+
+        sims = np.array(similarities)
+        top = np.argsort(sims)[::-1][:top_k]
+        total = sims[top].sum() + 1e-12
+        self.crystal_links[crystal_id] = {
+            ids[i]: float(sims[i] / total) for i in top
+        }
+
+    def resonant_lookup(self, concept: str, query_axis_state: Optional[Dict[str, float]] = None,
+                         threshold: float = 0.55, top_k: int = 3) -> List[Tuple["Crystal", float]]:
+        """Retrieval-by-relatedness. Called by callers who already tried
+        get_crystal(concept) and got None -- this is the second-tier
+        path, never the first.
+
+        query_axis_state is the CALLER's actual live IVM axis position
+        (ratified query-vector interface, 2026-07-24) -- e.g. the same
+        {X,T,N,B,A} dict process() already derives from envelope.
+        position.phases at ~line 616-621 and discards after updating
+        axis_mean. Not a hash of the concept string: a hashed pseudo-
+        profile would compare noise to noise, and her real live
+        position is the honest thing to compare against.
+
+        Returns [] when no query_axis_state is supplied -- fail-quiet:
+        a caller with nothing real to compare against gets nothing, not
+        a fabricated match dressed as a real one.
+
+        Returns [(crystal, similarity_score), ...] ranked descending,
+        already-provisional in the WARP sense (Phase 4) -- the caller
+        decides whether score clears its own confidence floor before
+        treating the result as usable, matching the "operate on theory
+        until disproven" model rather than treating a resonance hit as
+        equivalent to an exact match. This method does not itself touch
+        _warp_trials -- Phase 4 wires that.
+        """
+        if not query_axis_state:
+            return []
+        query_keys = sorted(query_axis_state.keys())
+        query_arr = np.array([query_axis_state[k] for k in query_keys])
+        query_mag = np.linalg.norm(query_arr) + 1e-12
+
+        scored: List[Tuple["Crystal", float]] = []
+        for crystal in self.crystals.values():
+            if crystal.concept == concept:
+                continue
+            vec = self._crystal_vector(crystal)
+            if not vec or set(vec.keys()) != set(query_keys):
+                continue
+            arr = np.array([vec[k] for k in query_keys])
+            mag = np.linalg.norm(arr) + 1e-12
+            score = float(np.dot(query_arr, arr) / (query_mag * mag))
+            if score >= threshold:
+                scored.append((crystal, score))
+
+        scored.sort(key=lambda cs: cs[1], reverse=True)
+        return scored[:top_k]
+
     def tick(self):
         for crystal in self.crystals.values():
             for facet in crystal.facets.values():
@@ -806,6 +949,13 @@ class CrystalProcessingSystem(WarpCapable):
             for axis, w in sig.constraint_weights.items():
                 prev = crystal.constraint_signature.get(axis, w)
                 crystal.constraint_signature[axis] = round(prev * 0.8 + w * 0.2, 4)
+
+            # WARP Universalization Directive Phase 1 (2026-07-24): see
+            # process()'s matching call for the full comment.
+            try:
+                self._update_crystal_links(crystal.crystal_id)
+            except Exception:
+                pass
 
             processed.append({
                 'crystal_id': crystal.crystal_id,

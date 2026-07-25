@@ -6148,3 +6148,71 @@ production. Plus graceful-degradation coverage (`warp_guard=None`,
 and a spy that always raises) confirming the intentional swallow
 behavior is preserved.
 
+## WARP Universalization Directive, Phase 1 — crystal resonance graph, 2026-07-24
+
+Directive (Sunni & Cael, 2026-07-24): `CrystalProcessingSystem` only
+ever retrieves crystals by exact string match (`concept_index`,
+`_get_or_create()`), even though each `Crystal` already carries two
+dense `{X,T,N,B,A}`-keyed vectors (`constraint_signature`,
+`axis_mean`) that go entirely unused for retrieval. Meanwhile
+`EnergyRegulatorSystem._update_links_for_facet()` (this file, ~line
+1623) already proves out a cosine-similarity resonance-graph pattern
+one layer down, at the facet level. This phase lifts that proven
+pattern up to the crystal level -- ranked/graph-propagated crystal
+activation, closing patent Claims 4 & 5 -- as pure addition: nothing
+about `_get_or_create()`'s exact-match fast path changes.
+
+**Open decision, ratified (Sunni):** `resonant_lookup()`'s query-
+vector interface threads the CALLER's actual live IVM
+`position.phases` through (the same `{X,T,N,B,A}` dict `process()`
+already derives from `envelope.position.phases` at ~line 616-621 and
+discards after updating `axis_mean`) -- not a hash of the concept
+string. A hashed pseudo-profile would compare noise to noise; her real
+live position is the honest thing to compare against. Consequence:
+`resonant_lookup()` returns `[]` (fail-quiet) whenever no
+`query_axis_state` is supplied, rather than silently falling back to
+any hash-based guess.
+
+**Added:** `self.crystal_links: Dict[str, Dict[str, float]]` on
+`CrystalProcessingSystem.__init__`; `_crystal_vector()` (fuses
+`constraint_signature` + `axis_mean`, equal weight, into one
+comparable fingerprint, `None` if the crystal has neither yet);
+`_update_crystal_links()` (mirrors `_update_links_for_facet()` exactly
+-- cosine similarity against all crystals sharing the same axis
+key-set, `score > 0.1` floor, top-8 normalized to weights summing to
+1); `resonant_lookup(concept, query_axis_state=None, threshold=0.55,
+top_k=3)` (the second-tier retrieval-by-relatedness path, called only
+after a caller's exact-match lookup already failed -- excludes the
+queried concept itself, returns `[(crystal, score), ...]` ranked
+descending). Wired `_update_crystal_links(crystal.crystal_id)` into
+both `process()` and `process_concepts()`, each call wrapped in `try/
+except: pass` -- observation only at this phase, nothing consumes
+`crystal_links` yet (that's Phase 4).
+
+**FIX-A052 (LOGIC BUG, caught by test-writing) — stale
+`crystal_links` entry survived a vector loss.** Category: LOGIC.
+`_update_crystal_links()` had two early-return paths: unknown
+`crystal_id` (correctly leaves `crystal_links` untouched -- nothing to
+clean up) and source crystal with no vector (`not src_vec`) --
+this second path returned WITHOUT popping any existing stale entry for
+that `crystal_id`, unlike the "no similar peers found" path a few
+lines later which correctly does `self.crystal_links.pop(crystal_id,
+None)`. A crystal that had links, then lost its fingerprint (signature
++ mean both cleared), would keep stale weighted links pointing at a
+vector that no longer existed. **Fix:** the `not src_vec` branch now
+also pops the stale entry before returning.
+
+**Tests:** `tests/test_warp_phase1_resonance_graph.py` (18) -- direct
+unit tests against manually-constructed `Crystal` objects (no
+`IVMEnvelope` fixture exists anywhere in the suite to build a full
+`process()`-level integration test, and the `process()`/
+`process_concepts()` wiring itself is a trivial try/except around the
+same method these tests cover directly). Covers `_crystal_vector`
+(fusion, union of mismatched axis sets, `None` when empty),
+`_update_crystal_links` (finds similar crystals, weights sum to 1,
+ignores mismatched key-sets, excludes below-floor similarity, cleans
+up stale entries -- this last one caught FIX-A052), and
+`resonant_lookup` (fail-quiet with no `query_axis_state` -- the
+ratified contract's central guarantee, excludes the exact concept
+queried, respects `threshold` and `top_k`, ranks descending, ignores
+crystals with no vector or a mismatched key-set).
