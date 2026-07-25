@@ -6451,3 +6451,82 @@ multiple missed signals join their concepts correctly in both
 successful recall (a real `MemoryNode` seeded directly into `dmc.
 nodes`/`concept_index`) does NOT confess; and confession exceptions
 are swallowed without breaking recall.
+
+## WARP Universalization Directive, Phase 3d — mid-comprehension parse confidence confession, 2026-07-25 (Phase 3 complete, all 4 candidates landed)
+
+Directive (Sunni & Cael, 2026-07-24), Section 4, candidate #1 (Sunni's
+ratified priority #4 of 4, last): `_emit_honest_abstain_and_seek()`
+(`aurora.py:4635`) was the ONLY confession point anywhere in the
+reasoning/expression pipeline, and it only fires at the terminal
+chokepoint when composition returns literally nothing. The
+comprehension stages upstream never confessed at all -- they either
+resolved or silently fell through to that one chokepoint, with no
+record of WHERE understanding actually broke down.
+
+**Added:** `_confess_low_confidence_parse(user_text, parsed)`, called
+from `_chain_up1_information()` (`aurora.py:14125`, the real, single
+live-turn call site for `UtteranceParser().parse()` building
+`state.parsed` -- confirmed via repo-wide grep) immediately after
+`state.parsed` is built. No fabricated numeric "confidence" score is
+invented (`UtteranceIntent` carries none) -- the confession fires only
+when the parser found NEITHER a real communicative frame NOR any
+`topic_words`: text that parses to a real frame (including
+`"acknowledging"` for trivial "ok"/"yeah" -- a real, if thin,
+classification, not a miss) or that yields at least some `topic_words`
+is not treated as a comprehension failure. Confesses via
+`warp_guard(source="comprehension",
+layer="chain_up1_information", trigger=WarpTrigger.
+FAILED_COMPREHENSION, unresolved_text=user_text, severity=0.45,
+persistence_key=user_text[:48])` -- `FAILED_COMPREHENSION` (routes to
+the `SEEK` pathway) chosen deliberately distinct from the terminal
+chokepoint's own `MISSING_REPRESENTATION` trigger, so the two
+confessions carry different, honest meanings ("I couldn't classify
+this at parse time" vs. "composition produced nothing at all").
+`warp_guard`/`WarpTrigger` imported locally inside the function, same
+pattern `_emit_honest_abstain_and_seek()` already uses one function
+away. Isolated in its own try/except -- a confession-path failure must
+never break comprehension.
+
+**FIX-A053 (LOGIC BUG, caught by test-writing) — a raised parse was
+treated as a REAL frame, not a miss.** Category: LOGIC. First cut of
+the gate was `if parsed.get("frame") != "unknown": return`. But
+`_chain_up1_information`'s own except branch sets `state.parsed = {}`
+when `UtteranceParser().parse()` itself raises -- and `{}.get("frame")`
+returns `None`, which is `!= "unknown"`, so the single strongest
+"didn't understand this at all" case (the parser crashed outright)
+silently skipped the confession instead of firing it. **Fix:** the
+gate now computes `_has_real_frame = bool(frame) and frame !=
+"unknown"` -- a falsy/missing frame (from an empty-dict fallback) is
+treated exactly like the literal string `"unknown"`, both correctly
+recognized as "no real frame," not exempted from confession.
+
+**Tests:**
+`tests/test_warp_phase3d_parse_confidence_confession.py` (7) -- direct
+unit tests of `_confess_low_confidence_parse()` (no need to construct
+a full live-turn `state`/`systems` since the helper takes only
+`user_text`/`parsed`): unclassifiable parse confesses with the correct
+source/layer/trigger/unresolved_text/persistence_key; a real frame
+(`"acknowledging"`) does NOT confess; `topic_words` present does NOT
+confess even with `frame == "unknown"`; empty/whitespace-only text
+does NOT confess; a `{}` fallback (the crashed-parse case) DOES
+confess -- this is the test that caught FIX-A053; confession
+exceptions are swallowed without breaking comprehension; and a
+source-level structural wiring check (matching this campaign's
+established pattern from `test_m1_1a_relation_pairs.py`'s
+`test_chain_down5_understanding_calls_tier2_logger`) confirms the call
+is actually present inside `_chain_up1_information()`'s body. Also
+re-ran `tests/test_up.py`, `tests/test_m1_1a_relation_pairs.py`, and
+`tests/test_b1_1_envelope_shadow.py` (the only other files touching
+`UtteranceParser`/chain-stage functions, including two full
+`boot_aurora()` + live-turn integration tests) -- all 28 pass, zero
+regression from the `_chain_up1_information()` wiring change.
+
+**Phase 3 (all four candidates) is now complete**, in the priority
+order Sunni set: 3a LanguageField comparison judgments (FIX-none, pure
+addition), 3b resonant_lookup misses (FIX-none), 3c memory recall
+misses (FIX-none), 3d mid-comprehension parse confidence (FIX-A053).
+Combined with Phase 1 (crystal resonance graph, FIX-A052), Phase 2
+(dead confession calls, FIX-A051), and Phase 4 (resonant trial
+lifecycle), the WARP Universalization Directive's full 4-phase plan is
+now fully implemented, tested, and (pending this phase's final
+regression + push) landed on `claude/code-replacement-cleanup-zzscvt`.
