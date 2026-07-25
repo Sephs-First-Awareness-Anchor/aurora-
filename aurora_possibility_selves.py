@@ -38,6 +38,13 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
+# WARP Universalization Directive Phase 2 (2026-07-24): only used to build
+# the trigger constant for the real warp_guard() confession calls below --
+# this module still never imports warp_guard itself (it stays an injected
+# Any parameter, callers decide what to pass), so no coupling beyond this
+# one string-constant class.
+from aurora_warp_protocol import WarpTrigger
+
 # ── Her 15-dimensional possibility space ─────────────────────────────────────
 _AXES: Tuple[str, ...] = ("X", "T", "N", "B", "A")
 # I-state poles paired to their constraint axis (positive, negative).
@@ -748,7 +755,21 @@ def provoke_reexperience(selves: List[PossibilitySelf], systems,
                                             "axis": axis, "provoked_by": ps.self_id})
                 if warp_guard is not None:
                     try:
-                        warp_guard(anchor, her_strength)   # her own accommodation
+                        # WARP Universalization Directive Phase 2, Option A
+                        # (2026-07-24, ratified): warp_guard's real signature
+                        # is (source, layer, trigger, *, ...) -- this call
+                        # passed exactly 2 positional args of the wrong
+                        # types, raising TypeError on every invocation,
+                        # silently swallowed by the bare except below. Her
+                        # own accommodation (resolving a re-lived tension)
+                        # now genuinely confesses through the universal
+                        # field instead of no-op'ing.
+                        warp_guard(
+                            source="possibility_selves", layer="provoke_reexperience",
+                            trigger=WarpTrigger.AMBIGUITY,
+                            unresolved_text=str(anchor), severity=float(her_strength),
+                            persistence_key=str(anchor)[:48],
+                        )
                     except Exception:
                         pass
             elif her_strength >= cost:
@@ -1017,7 +1038,16 @@ def dream_dialogue(selves: List[PossibilitySelf], systems, warp_guard: Any = Non
                                                 "axis": axis, "provoked_by": ps.self_id})
                     if warp_guard is not None:
                         try:
-                            warp_guard(anchor, her_strength)
+                            # WARP Universalization Directive Phase 2,
+                            # Option A (2026-07-24, ratified) -- see the
+                            # matching fix + comment in provoke_
+                            # reexperience above for the full context.
+                            warp_guard(
+                                source="possibility_selves", layer="dream_dialogue",
+                                trigger=WarpTrigger.AMBIGUITY,
+                                unresolved_text=str(anchor), severity=float(her_strength),
+                                persistence_key=str(anchor)[:48],
+                            )
                         except Exception:
                             pass
                     break

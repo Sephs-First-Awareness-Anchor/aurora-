@@ -5462,3 +5462,1071 @@ things:
    neighborhood constraint (PF1.4) is still worth building now that
    real propositional content is flowing through more often (W1) --
    a natural next question this arc surfaces but doesn't answer.
+
+## PF3.1 — Carryover isolation, 2026-07-21
+
+Ground: PF2.1's full-profile recharacterization (Directive PF2, merged
+`main` via PR #132) found Cluster D -- cross-turn carryover
+contamination, sticky words persisting into completely unrelated turns
+-- as the single largest residue bucket (23/41 thought-sourced + 6/8
+non-thought = 29/49). Directive PF3 (Sunni & Cael, 2026-07-21) named
+one located mechanism (`ThoughtContinuity.carry_forward`'s axis-letter
+merge trigger) and specified the fix. Investigating and fixing it
+first, per this arc's own established practice, surfaced two FURTHER,
+independent carryover mechanisms the directive didn't anticipate --
+each investigated, fixed, and gated the same way before commit.
+
+**FIX-A047 (ARCHITECTURAL) — Continuity Over-Trigger.**
+Category: ARCHITECTURAL. `ThoughtContinuity.carry_forward`
+(`aurora_thought_formation.py:936-976`, the directive's own diagnosis)
+merged the ENTIRE previous turn's `dominant_thread` into the new
+turn's `supporting_context` whenever `last_axes & new_axes` was
+non-empty -- with a 5-letter axis alphabet (X/T/N/B/A) and the
+linguistic `ProcessContext` (W1) contributing `["X","T","A"]` on every
+turn, this fired near-unconditionally. **Fix:** gate the merge on
+topic overlap (shared 3+-char content words, `_ANCHOR_TOKEN_STOPWORDS`
+reused from `aurora_constraint_emission.py`) between the CURRENT
+turn's and PRIOR turn's `linguistic`-type context specifically, not
+axis letters, and not the whole `dominant_thread`. A first attempt
+compared topics across the WHOLE `dominant_thread` (including every
+non-linguistic context) and reproduced the identical defect one level
+down -- every other context type's `what_it_is_operating_on` is a
+FIXED administrative label ("identity_predicates", "memory presence",
+"forward lean", "sedi_ambient") present on nearly every turn
+regardless of content, confirmed live via
+`scripts/pf3_1_carryover_trace.py`. Restricting the comparison to
+`process_type=="linguistic"` (the one context type W1 confirmed
+carries genuine turn text) fixed it for real -- re-traced, confirmed
+`supporting_context` no longer accumulates prior turns' contexts on
+unrelated topics while still merging correctly on a genuine shared-
+topic multi-turn probe. Pattern, for future continuity/carry-forward
+work: a low-cardinality proxy signal (axis letters, or ANY field that
+happens to be constant/near-constant across turns) will fire near-
+unconditionally as a merge gate; use the most specific identity signal
+already in scope, and verify empirically that "specific" one doesn't
+itself hide a second constant-across-turns field. Tests:
+`tests/test_pf3_1_carryover_isolation.py` (5, including the specific
+whole-thread-vs-linguistic-only regression).
+
+**FIX-A048 (ARCHITECTURAL) — Co-occurrence relation hub leak into
+context enrichment.** Category: ARCHITECTURAL. Fixing FIX-A047 did
+NOT materially drop Cluster D in the live full-profile gate re-run --
+traced further and found a second, independent mechanism: sticky word
+"planning" (usage_count 496+ in the real, persistent `aurora_state/
+lexicon.json`, accumulated over this whole campaign's testing history)
+entering `composer._context_keywords` via `ExpressionPerceptionEngine.
+_build_expression`'s OETS relation-neighbor enrichment (aurora_
+expression_perception.py, "Pull words from relations" block) with NO
+filtering by relation source. `aurora_constraint_emission.
+build_relevance_anchor_set` already caps co-occurrence-sourced
+relation strength at the one-hop floor for exactly this reason ("86%
+of this graph's relations are co-occurrence-sourced and 84% of those
+sit at strength 1.0 -- a saturated frequency proxy, not a semantic-
+relevance signal", the same reinforcement-imbalance pattern as
+FIX-A032) -- but that dampening never reached this call site: words
+pulled in here get written straight into `context_keywords`, which
+the anchor builder then treats as DIRECT anchors (relevance 1.0),
+bypassing the one-hop cap entirely. **Fix:** exclude co-occurrence-
+sourced relations from this specific enrichment pull, reusing the
+established `source_of_knowledge` check rather than inventing a new
+one. Tests: `tests/test_pf3_1_cooccurrence_hub_leak.py` (3).
+
+**FIX-A049 (ARCHITECTURAL) — Proposition-frame staleness on
+conditionally-skipped turns.** Category: ARCHITECTURAL. Fixing
+FIX-A048 alone still left a third symptom: "upset" persisting across
+12/60 unrelated turns (all of `uncertainty_signaling`, spilling into
+the next dimension) -- and unlike "planning", "upset" never appeared
+in `word_sources` at all, ruling out every ordinary candidate-scoring
+path. Traced directly (`scripts/pf3_1_frame_staleness_trace.py`,
+monkeypatching `begin_expression`/`build_frame` to log every call):
+`composer._proposition_frame` / `systems['_proposition_frame']` are
+only ever refreshed inside `begin_expression()`
+(`aurora_braid_wiring.py`), and `aurora.py`'s own caller of
+`begin_expression` gates it behind `_perc_a5 and _resp_draft` (plus
+`not _preserve_literal_response`/`not _skip_surface_expression`) --
+confirmed live, `build_frame` was reached on only 2 of 6 traced turns.
+On every turn where that gate doesn't clear, both fields silently kept
+whatever the LAST successful turn's frame was; `_bind_slot_from_frame`
+(`aurora_expression_perception.py`) then binds that stale frame's
+`.obj`/`.relation` straight into slot-filling -- a path that never
+writes to `word_sources`, explaining exactly why "upset" was invisible
+there. **Fix:** `aurora_braid_wiring.reset_proposition_frame_for_turn`,
+called unconditionally at the top of `aurora.py`'s
+`_run_reasoning_pipeline` (before `begin_expression` may or may not
+run), so a skipped refresh correctly means "no frame this turn," not
+"reuse whichever turn last had one." Tests:
+`tests/test_pf3_1_frame_staleness.py` (5).
+
+**Before/after, full-profile live battery
+(`scripts/characterize_pf16_residue.py`), same 60-probe battery
+(recomputed directly from each stage's own saved JSON output, not
+reconstructed from memory):**
+
+| | residue | byte-identical duplicate outputs | "upset" in unrelated turns | "planning" in unrelated turns |
+|---|---|---|---|---|
+| PF2.1 baseline | 49/60 | 3 groups | 13/60 | 20/60 |
+| After FIX-A047 only (corrected) | 50/60 | **0 groups** | 13/60 | 19/60 |
+| **After FIX-A047 + A048 + A049** | **46/60** | 0 groups | **0/60** | 22/60* |
+
+(A first, buggy attempt at FIX-A047 -- comparing topics across the
+whole `dominant_thread` instead of the linguistic context only --
+reached 51/60 residue with the duplicate-output signal already gone
+but "upset" still at 12/60; caught and fixed before commit, not a
+shipped state, not counted above.)
+
+\* "planning" did not meaningfully drop after any of the three fixes
+-- not a regression from FIX-A049 specifically; none of the three
+target the mechanism responsible for it (see below). FIX-A049 removed
+a DIFFERENT masking contamination (stale frames binding other words),
+which is why "upset" -- which WAS one of that mechanism's symptoms --
+dropped to zero while "planning" -- fed by a still-unfixed third
+mechanism -- did not.
+
+**Third mechanism found, NOT fixed -- flagged for Sunni & Cael rather
+than patched unilaterally (Sunni's explicit direction: commit what's
+verified, scope this separately):** `composer._context_keywords`
+still carries "planning" into turns that never mention it or anything
+related. Traced directly (`scripts/pf3_1_context_keywords_trace.py`,
+monkeypatching `SentenceComposer.set_context` to log every call, its
+caller, and the field's contents before/after): FOUR call sites feed
+this field (`ExpressionPerceptionEngine.ingest_interaction`,
+`_build_expression`'s own enrichment, `aurora_working_memory.py`'s
+`_render_from_comprehension_intent`, `aurora_semantic_intention_
+bridge.py`'s `apply`), and it does NOT reset at turn boundaries --
+confirmed live, turn 2 ("Hi.") started with turn 1's leftover
+`["what's", "favorite"]` still present. Unlike FIX-A047/A049,
+`_context_keywords`'s cross-turn persistence is NOT a bug: an existing
+comment in `aurora_constraint_emission.py` explicitly documents it as
+"recent_words... carried across turns," with its own hollow-node
+guard built specifically because that carrying-forward is intended
+behavior. The real defect is narrower: `_build_expression`'s
+enrichment step feeds its OWN OETS-derived expansion words (relation
+neighbors, definition text) back into `_context_keywords` as if they
+were genuine recent conversation, so enrichment output compounds and
+gets re-enriched again on the next turn -- an unbounded accumulation,
+not simple carryover, and blanket-resetting the field the same way as
+FIX-A047/A049 would break the intentional multi-turn recency design.
+Needs a real decision before implementation: candidate approaches
+include (a) tracking enrichment-derived words in a separate,
+turn-scoped field never persisted via `set_context`'s cross-turn slot,
+so only genuine `ingest_interaction`-sourced words carry forward; (b)
+an explicit age/decay policy so words age out after N turns without
+reinforcement; (c) capping how many enrichment-derived words any
+single turn may inject, independent of the "recent" cap. Not chased
+further this phase.
+
+**Full suite: 996 passed, 2 failed** -- both already-documented,
+pre-existing, unrelated (`test_m1_2_provenance_hygiene` -- live-lexicon
+tagging drift, confirmed identical with and without any of this
+phase's fixes; `test_concept_image_ingestion_import` -- passes in
+isolation, full-suite-only cross-test ordering artifact, same class as
+the reentrancy flake).
+
+Full data: `aurora_state/probe_battery/results/` runs (gitignored,
+local only) at each stage. PF3.2 (pronoun consumer split) next, per
+Directive PF3's sequence.
+
+## PF3.2 — Pronoun claim consumer split, 2026-07-21
+
+Directive PF3's ratified ruling. `_CLAIM_SKIP_SUBJECTS`
+(`aurora_working_memory.py:154`, enforced in `_extract_claims`) stays
+untouched for `PropositionSubstrate` admission -- the substrate keys
+contradiction identity by subject, and an unresolved "he"/"she"/"they"
+colliding across referents would manufacture false contradictions,
+violating fail-quiet perception (which requires positive same-referent
+evidence the substrate cannot have). But the frame needs no cross-turn
+identity, so a claim rejected SOLELY by the pronoun-subject check now
+has somewhere to go within the turn it was said.
+
+**Implementation:** `WorkingMemory.__init__` gained
+`self._turn_local_claims = deque(maxlen=12)` -- bounded, multi-turn
+(NOT reset per `note_claims()` call, since `note_claims` legitimately
+runs more than once per turn, `source='user'` then `source='aurora'`;
+a single-call reset would let the second call silently wipe the
+first's turn-local claims). `_extract_claims`'s `_append_claim` closure
+was reordered so the REAL invalidity checks (empty subject/object, weak
+anchor label, vague-referent object after conjunction-splitting) run
+BEFORE the pronoun-subject check, not after -- "rejected solely by
+pronoun" has to mean every other check already passed. A claim that
+clears every check except `subject_norm in _CLAIM_SKIP_SUBJECTS` is
+built the normal way (`_build_claim`, so `_normalize_mention` already
+renders "He's" -> "he" exactly as spoken, no extra pronoun-preservation
+logic needed) and appended to `_turn_local_claims` instead of `out`,
+deduplicated within the SAME call (`seen_turn_local`, same per-call
+scope as the existing `seen` set for substrate claims -- calling
+`_extract_claims` twice with identical text produces two entries either
+way, unchanged from prior behavior).
+
+`aurora_internal/aurora_proposition_frame.py` gained
+`_frame_from_turn_local_claims`, wired into `build_frame`'s ladder
+between `_frame_from_claims` and `_frame_from_anchor`: thought ->
+substrate claim -> turn-local claim -> anchor. Filters
+`working_memory._turn_local_claims` by `turn == turn_count`, the same
+turn-filtering discipline `_frame_from_claims` already applies to
+substrate nodes (a stale earlier-turn's turn-local claim must not leak
+into a later turn's frame -- verified explicitly, since this whole arc
+has been about exactly that class of bug). No substrate scoring
+function exists for claims that never entered the substrate, so ties
+break on recency (most recent claim for the current turn wins) --
+the same default this module already uses elsewhere when no stronger
+signal exists.
+
+**Gate (directive's own scenario), verified end to end:**
+`"He's a bit nervous around new people."` -> `frame.subject == 'he'`,
+`frame.relation == 'is'`, `frame.source == 'claim'`,
+`'nervous' in frame.obj` (the object is the copula pattern's full
+predicate capture, `"bit nervous around new people"` -- unchanged,
+pre-existing behavior for EVERY subject, pronoun or not; PF3.2 changes
+WHERE a pronoun-subject claim goes, never how the object is extracted).
+`proposition_substrate.nodes` count: 0. `recent_claims` and
+`claim_conflicts`: both empty -- `note_claims()` only ever iterates its
+substrate-bound return value, so a pronoun-only turn never touches
+either.
+
+**Tests:** `tests/test_pf3_2_pronoun_consumer_split.py` (11) -- the
+directive's own gate scenario end to end, substrate-claim-over-
+turn-local precedence, anchor fallback when turn-local is absent,
+survival across the two-call-per-turn `note_claims` pattern
+(user then aurora, confirmed live NOT to wipe each other), turn-
+filtering (an earlier turn's claim must not leak forward), wh-word
+subjects (not just personal pronouns), the "solely by pronoun" boundary
+(a claim invalid for an UNRELATED reason, e.g. vague object, still
+goes nowhere), and per-call dedup. Full existing `_extract_claims`/
+`build_frame` regression (`test_w2_claim_gate_widening.py`,
+`test_pf1_1_proposition_frame.py`, 33 tests) unaffected by the
+`_append_claim` reordering.
+
+## PF3.3 — Descriptor neighborhood constraint (+ scope extension: frame absence), 2026-07-21
+
+Directive PF3's own ruling, carried unchanged from PF2.3: when a frame
+is present and the role is `descriptor`
+(`aurora_expression_perception.py`, `SentenceComposer.compose()`'s
+role-fill dispatch), filter `_select_constraint_word`'s candidate pool
+to words whose OETS node lies within one relation hop of `frame.
+subject`/`frame.obj`, **before** the existing resonance/valence
+ranking runs; empty neighborhood (or empty intersection with the pool)
+falls through to the unfiltered pool, fail-quiet. Gate: descriptor
+repetition share ("clear"+"real" fraction of descriptor fills across
+the 60-probe battery) drops materially from the PF2.1/PF3.1/PF3.2
+baseline.
+
+**Implementation.** New `SentenceComposer._descriptor_neighborhood(frame)`:
+unions `frame.subject`/`frame.obj` themselves with every OETS one-hop
+neighbor via `get_all_relations_for` (same traversal `aurora_
+constraint_emission.build_relevance_anchor_set` already uses), wired
+into `_select_constraint_word` right after candidate-pool assembly and
+before the `candidates.sort(...)` ranking, gated to `role=="descriptor"
+and frame is not None`.
+
+**Two leaks found and fixed via this fix's OWN live-fire testing,
+same discipline as every prior W/FIX in this arc -- the directive's
+literal spec, implemented exactly, measured WORSE on the first two
+attempts, each traced to ground before shipping:**
+
+1. **Co-occurrence-sourced relations** (same FIX-A048 pattern, applied
+   here too): "clear"/"real" carry 39 and 131 co-occurrence-sourced
+   edges respectively in the real, committed OETS graph
+   (`aurora_state/aurora_oets_web.json`), to near-arbitrary common
+   words purely from being used so often across this campaign's whole
+   testing history. Excluded via the established `source_of_knowledge`
+   check.
+2. **Co-expression-sourced relations** -- excluding co-occurrence ALONE
+   still measured no improvement. Traced live
+   (`scripts/pf3_3_descriptor_trace.py`, direct instrumentation of
+   `_descriptor_neighborhood` against the real graph) and found the
+   actual leak: co-expression relations, created FRESH during the very
+   session being measured -- every response Aurora generates that
+   contains "clear"/"real" (nearly all of them, precisely because
+   they're the entrenched generic fillers) wires a co-expression
+   relation from every OTHER word in that response back to "clear"/
+   "real", so the act of using them reinforces their own future
+   eligibility as a "neighbor" of whatever gets said next -- a
+   self-reinforcing loop identical in kind to co-occurrence's
+   (FIX-A032's own named pattern), despite co-expression being
+   general-case trustworthy elsewhere in this codebase (`aurora_
+   constraint_emission.py`'s own comment lists it among "deliberate
+   structure" sources -- that classification assumed ordinary usage
+   volume, which breaks down for genuinely pathological outlier
+   words). Both relation sources excluded now.
+
+**Third finding, scope-extended at Sunni's explicit direction after a
+proper 3-pass live measurement:** even with both leaks fixed, three
+full-profile passes averaged 9.98% descriptor repetition (baseline
+9.22%) -- every single pass ABOVE baseline (9.31%/10.18%/10.46%),
+ruling out noise as the explanation. Traced why
+(`scripts/pf3_3_frame_absence_trace.py`, direct instrumentation of
+`begin_expression`/`compose()`): of the turns where "clear"/"real"
+survive, 67% have `frame_source: None` -- no `PropositionFrame` at
+all, meaning this fix's entire mechanism was architecturally unable to
+reach them. Root cause: `begin_expression()` (`aurora_braid_wiring.py`)
+-- the only place `composer._proposition_frame` gets built -- is gated
+in `aurora.py` behind `_perc_a5 and _resp_draft`, and is **skipped**
+whenever `state.response_content` is still empty at that point in
+`_run_reasoning_pipeline`, heavily correlated with question-shaped
+input (confirmed live: all 4 traced `uncertainty_signaling`-style
+questions never called `begin_expression` at all). Those turns still
+produce real delivered text -- generated LATER via a separate call,
+`dual_question_pipeline` -> `gw._express()` -> `perception.express()`
+-> `_build_expression()` -> `compose()`, through the SAME composer
+instance (`gw.perception` IS `systems['perception']`, wired once at
+boot) -- but `composer._proposition_frame` was never populated for
+it, so every frame-consuming fix in this whole PF1-PF3 arc (slot-
+binding, this phase's own neighborhood filter) silently never applied
+to a large share of turns.
+
+**Fix:** extracted `begin_expression`'s frame-building portion into a
+new, independently-callable `aurora_braid_wiring.
+ensure_proposition_frame_for_turn(systems)` (safe to call more than
+once per turn -- a fresh `build_frame()` call each time, deliberately
+NOT re-running `begin_expression`'s other side effects like a fresh
+`StreamingExpressionLayer` or re-applying `SemanticIntentionBridge`,
+to avoid double-applying those elsewhere). Called from two places now:
+`begin_expression` itself (unchanged behavior, refactored not
+duplicated) and a new call site in `aurora.py`, right before the
+`gw._express(packet, synthesis, mode)` call inside `dual_question_
+pipeline`'s reasoning-pipeline body that was previously composing
+frame-blind. Verified live: the SAME compose() call that showed
+`proposition_frame_set=False` before now shows `True`, and delivered
+text visibly changed from generic filler to frame-grounded content
+(e.g. `"Is this the right career move for the next twenty years?"` --
+frame `relation='move', obj='right'` -- delivered: `"I move right. I
+move."`, directly reflecting the frame, vs. the old frame-blind
+filler shape).
+
+**Validation status (honest, not yet fully closed):** full regression
+green (1022 passed, 2 pre-existing/unrelated failures, unchanged from
+every prior phase this arc). A single post-scope-extension live pass
+looks strongly promising (word_frac 6.25%, resp_frac 41.7% -- both
+BELOW the original 9.22%/51.7% baseline, a first for this phase), but
+**Sunni's explicit direction was to defer the rigorous 3-pass
+validation until all of PF3 is complete**, to avoid burning a 25-
+minute run after every remaining sub-phase. This entry will be updated
+with the final 3-pass-averaged numbers (both baseline and post-fix,
+matching PF1.6/W3's own methodology) once that batched validation
+runs. Until then: the underlying mechanism (neighborhood filter +
+frame-absence fix) is code-complete, tested (`tests/test_pf3_3_
+descriptor_neighborhood.py` 10, `tests/test_pf3_3_frame_absence.py`
+5), and regression-clean, but the directive's own numeric gate is
+PENDING CONFIRMATION, not yet closed.
+
+## PF3.4 / PF3.4a — Cluster E characterization + motif-thinning guard, 2026-07-21
+
+Directive PF3.4: characterize Cluster E (PF2.1's "correct extraction,
+thin/repetitive rendering," 14/41 in the original characterization)
+before any code change -- group by promoted motif and whether the
+repetition is (a) same role filled twice, (b) a single-role motif
+selected when a frame with more participants was available, or (c)
+slot-fill genuinely starved of alternatives. Propose a fix as PF3.4a
+in the note itself, implement only on ratification.
+
+**Re-characterized against current data** (post PF3.1-3.3, 49-record
+residue set from the live battery, not PF2.1's original 14 --
+carryover/context-enrichment mechanisms this arc has since fixed
+changed which records fail and why, so the original list no longer
+reflects the live system). Split off 13 records still showing the
+already-tracked, separately-deferred "planning" context_keywords
+contamination (PF3.1's third finding) -- not Cluster E. Of the
+remaining 36:
+
+| Sub-pattern | Count |
+|---|---|
+| (a) Literal/near-literal clause duplication | 8 |
+| (a) Same action+object repeated, only descriptor varies | 8 |
+| (b) Motif shape collapses to bare `agent_action` mid-response | **14** |
+| Unclassified/mixed | 6 |
+
+**(b) is the largest single pattern, and matches the directive's own
+hypothesis exactly.** Checked `motifs` directly for every record in
+this bucket: each response mixes skeleton shapes across its own two
+clauses against the SAME frame -- one clause draws `agent_action_
+object` or `agent_action_object_descriptor` (content-bearing), the
+sibling clause draws the bare 2-role `agent_action` skeleton, which
+has no object/descriptor role to fill in the first place
+(`"I denied claims. I denied."`). Not slot-fill starvation
+(hypothesis (c) -- no empty slot goes unfilled); the skeleton itself
+has no slot. Root cause: `best_for_proposition`'s own fitness-
+proportional sampling (PF1.3, intentionally random for skeleton
+diversity ACROSS different responses) independently re-samples for
+every sentence in `compose()`'s loop against the identical frame, so
+a later sentence can draw something strictly thinner than an earlier
+sentence in the SAME response already achieved.
+
+**PF3.4a (ratified, implemented same phase):** `SentenceComposer.
+_motif_for_proposition_avoiding_thinning` -- a bounded retry (default
+3 attempts) around `best_for_proposition`, only when the frame is
+fully populated (subject+relation+obj all present): if a draw is
+strictly thinner (fewer role_sequence roles) than the richest skeleton
+already used elsewhere in THIS response, retry toward something that
+meets or exceeds it; if the lineage genuinely has nothing richer
+promoted, keep the best draw found (fail-quiet, never spins or returns
+None). `richest_role_count` tracked across `compose()`'s own sentence
+loop, reset implicitly each call. PF1.3's own diversity properties
+(fitness-proportional sampling, skeleton variety across DIFFERENT
+responses, `best_for_pressure`'s frame-absent path) are completely
+untouched -- this only constrains a downward move within one
+response's own clauses, and only when there's frame content to
+protect.
+
+**Tests:** `tests/test_pf3_4a_motif_thinning_guard.py` (5) -- no-retry
+when nothing to protect (richest_role_count=0, identical to calling
+best_for_proposition directly), retries away from a strictly-thinner
+draw when a richer skeleton exists, fails quiet to the best available
+draw when no richer skeleton is promoted, no wasted retry when the
+draw already meets richness, degrades gracefully when best_for_
+proposition itself returns None. Full existing `test_pf1_3_motif_
+selection.py`/`test_pf1_4_slot_binding.py` regression unaffected
+(`best_for_proposition` itself is untouched; the guard wraps it).
+
+**Validation status:** full regression pending (background run in
+progress at commit time); live-battery confirmation of the (b)-bucket
+drop bundled into the same deferred 3-pass validation as PF3.3's own
+pending gate, per Sunni's explicit direction -- both will be measured
+and reported together once all of PF3 is code-complete.
+
+## PF3.5 — Motif promotion watch opens, 2026-07-21
+
+Directive PF3 (carried forward from PF2.4, window unchanged,
+observation widened). Developmental-gate rule stands: no seeding while
+the window is open -- structure was proven healthy and diverse in the
+residue; motifs earn fitness by carrying content, and PF3.1-3.4 are
+what's making real content arrive more consistently. Give the
+carryover-corrected, frame-completed, thinning-guarded branch a real
+window before judging structural capacity.
+
+**Window:** 14 days of live, thought-fed operation, OR 500 processed
+turns, whichever comes first -- **restarts from PF3.1's landing
+(2026-07-21), not PF2's**, since PF3.1 materially changed what content
+motifs actually receive (the whole point of the carryover-isolation
+work). Window closes 2026-08-04 (calendar) or at 500 turns.
+
+**Observation, widened per the directive -- both are "does she have
+enough ways to say things" signals, one watch:**
+(a) promoted, clause-valid motif count and shape distribution from
+`aurora_state/grammar_motifs.json` (existing promotion machinery, no
+new code beyond the readout);
+(b) Cluster-E-style repetition share (same-role-filled-twice
+frequency, PF3.4's own named pattern) across the standing probe
+battery.
+
+**Ships as:** `scripts/pf3_5_motif_watch_readout.py` (new, read-only,
+no scratch-isolation needed -- reads the live `grammar_motifs.json`
+directly since this is observation, never mutation) + this dated
+ledger note. `--characterization <path>` accepts any `characterize_
+pf16_residue.py` output for the (b) readout; a fresh battery run is
+its own already-established separate step, not re-implemented here.
+
+**First readout (2026-07-21, window just opened, 2 days elapsed --
+baseline for the window, not a trigger check):**
+- Total motifs tracked: 1057. Total promoted: 16. **Promoted AND
+  clause-valid: 3** -- `agent_action`, `agent_action_object`,
+  `agent_action_object_descriptor` -- confirming the exact ceiling
+  PF1.3/PF2's own "Ground" section already named ("3 promoted+valid
+  motifs in the live lineage vs. the directive's stated >=4").
+- Repetition share (against the most recent full-profile battery,
+  post PF3.1-3.4): 32/49 residue records (65.3%) show cross-clause
+  token overlap by this readout's own measure -- a coarser, whole-
+  response-text heuristic than PF3.4's own motif-level analysis (which
+  found 14/36 non-carryover records specifically matching the (b)
+  bare-`agent_action` pattern this readout can't distinguish from
+  ordinary topical word reuse without per-clause role data). Read as a
+  trend-tracking number across future readouts, not a precise
+  restatement of PF3.4's finding.
+
+**Trigger (window close, human call, not automated by the script):**
+if promoted clause-valid count is still 3 AND/OR repetition share
+hasn't materially improved from this baseline, seed candidate shapes
+through `MotifLineage.seed_motifs` (`aurora_grammar_engine.py:796`) --
+feed-the-mechanism; candidates enter the same fitness competition as
+everything else, no direct promotion. Not triggered now -- window just
+opened.
+
+**Tests:** `tests/test_pf3_5_motif_watch_readout.py` (5) -- promoted/
+clause-valid counting against a synthetic motif file (including an
+invalid-shape-but-promoted motif correctly excluded, and an unknown
+role string degrading gracefully rather than raising), repetition-
+share detection against synthetic characterization records (cross-
+clause overlap flagged, no-residue case returns `None` rather than a
+misleading 0%, a single-sentence response correctly never flagged).
+
+## PF3.6 — Registry & hygiene, 2026-07-21
+
+Directive PF3.6 (carried forward from PF2.5, extended): record, don't
+chase.
+
+**FIX-A013 note:** the directive names this entry "FIX-A013:
+Continuity Over-Trigger" for `ThoughtContinuity.carry_forward`'s
+axis-letter merge trigger bug. `FIX-A013` isn't actually free in this
+registry's own numbering (its next real slot was `FIX-A047` at the
+time PF3.1 shipped -- `FIX-A013` as a label only exists informally, in
+an unrelated `aurora_expression_perception.py` docstring about
+`save_lexicon()`, never as an entry here). Already fully documented,
+under its correct number, in **PF3.1's own entry above as FIX-A047**
+-- not duplicated here.
+
+**KNOWN-GAP: ditransitive reported speech.** "I told my friend I was
+fine, but I've been crying all week" needs a genuinely different claim
+pattern than `_extract_claims`'s existing reported-speech branch
+handles (a ditransitive reporting verb -- told WHOM WHAT -- not the
+single-object "said/thinks/believes" shape the branch was built for).
+Carried from PF2.5, unchanged. Out of scope until residue
+characterization shows it matters at volume; still doesn't, as of
+PF3.4's re-characterization (this arc's most recent volume check).
+
+**KNOWN-GAP: "claims to `<verb>`" infinitive-marker-as-subject.** "The
+policy claims to support flexibility, but every request gets denied"
+extracts with the stray infinitive "to" swallowed into the subject
+position by the existing reported-speech/relation patterns. Carried
+from PF2.5, unchanged, same deferral -- narrow, low-volume, needs its
+own pattern rather than a patch to the existing ones.
+
+**FIX-A050 (RUNTIME BUG) — Do-support negation dropped tense on
+past-tense main verbs (Cluster B).** Category: RUNTIME BUG. Pattern:
+`SentenceComposer._negate_action_word` (`aurora_expression_
+perception.py`) built do-support negation as `f"do not {base}"`
+unconditionally -- correct present-tense polarity flip ("I do not
+help"), but for a past-tense main verb ("went"), `base` passes through
+`_conjugate_for_subject` UNCHANGED (English past tense doesn't inflect
+for person, so "I went"/"you went" are both already correct when NOT
+negated -- there was nothing to conjugate FROM), producing "I do not
+went" -- confirmed live, `boundary_calibration_10`, never grammatical
+English. Do-support moves TENSE onto the auxiliary, not just polarity:
+"I did not go." **Fix:** new `_past_tense_base_form` -- an irregular-
+verb table reversing the SAME verbs `_CONJUGATIONS` already covers
+(established vocabulary, not new coverage), plus a regular `-ed`/
+`-ied` reversal checked against the live lexicon for the silent-e case
+("created" -> "creat" + "e" only if "create" is itself a known word,
+else the plain strip -- an honest, narrow limitation for un-seeded
+silent-e verbs, not claimed as a general lemmatizer). Returns `None`
+(fail-quiet) for anything not confidently past tense, so `_negate_
+action_word`'s existing present-tense behavior is completely
+unaffected. **Tests:** `tests/test_pf1_4_slot_binding.py` (+6, now
+30) -- the exact live-confirmed shape end to end
+(`"went"` negated -> `"did not go"`, through the full `_bind_slot_
+from_frame` path), irregular and regular past-tense verbs directly,
+an explicit regression case proving present-tense verbs keep today's
+"do not `<base>`" shape unchanged, and `_past_tense_base_form`
+returning `None` for non-past verbs. Full `test_function_word_gate_
+golden.py` / `test_golden_transcript_validation.py` / `test_l1_
+skeleton_validity_gate.py` / `test_l2_pos_gating.py` / `test_l3_
+conjugation_wiring.py` / `test_l3b_determiner_preposition_slots.py` /
+`test_l4_grounded_motif_fitness.py` regression (the R1.9.3/R1.9.4
+golden-set lineage the directive names) unaffected -- 57 passed.
+
+**Hygiene ticket (carried, unchanged, not this arc's debt):**
+reentrancy cross-test flake (`test_d2_2_live_turn_reentrancy_guard.py`
+::`test_twenty_live_turns_each_produce_exactly_one_top_level_call`) --
+module-singleton state (`ThoughtBraid`/`ThoughtContinuity`/
+`EmotionFirewall`, process-global per `aurora_braid_wiring.py`'s
+`_get_braid`/`_get_continuity`/`_get_firewall`) bleeding across all
+~1000+ tests in one pytest process. Confirmed via W1's own git-stash
+isolation (2026-07-21) that no single fix in this arc deterministically
+causes it -- full-suite-only cross-test timing artifact, same class as
+the already-documented cv2.imdecode flake. Fix is a test-isolation
+fixture (reset the module-level singletons between tests); noisy,
+non-deterministic, environmental -- not chased further this phase.
+
+## Directive PF3 — final 3-pass validation, 2026-07-21
+
+Deferred at Sunni's explicit direction until all of PF3.1-3.6 was
+code-complete, to avoid a 25-minute live-battery run after every
+sub-phase. Run now, same methodology as PF1.6/W3 and PF3.3's own
+earlier 3-pass check: three independent full-profile
+`scripts/characterize_pf16_residue.py` runs on the final, complete
+PF3.1-3.6 code, averaged.
+
+| | residue | word_frac ("clear"+"real") | resp_frac | byte-identical duplicate groups |
+|---|---|---|---|---|
+| PF2.1 baseline (pre-PF3) | 49/60 | 9.22% | 51.7% | 3 |
+| Post-PF3.1+3.2 only (3-pass avg) | 50/60 | 9.98% | 59.4% | 0 |
+| **Post-PF3.1-3.6, final (3-pass avg)** | **44.7/60** | **8.67%** | **51.1%** | **0.3** |
+| — pass 1 | 43/60 | 8.26% | 50.0% | 0 |
+| — pass 2 | 47/60 | 8.30% | 46.7% | 0 |
+| — pass 3 | 44/60 | 9.45% | 56.7% | 1 |
+
+**Honest read, not spun:**
+- **Byte-identical duplicate outputs: resolved.** 3 -> ~0 (one
+  singleton in one of three passes, plausibly coincidental rather than
+  the systematic carryover contamination PF2.1 found). This was
+  PF2.1's own clearest, most severe smoke-test signal and it is gone.
+- **Residue and descriptor repetition: real but MODEST improvement,
+  not the dramatic "material drop" the directive's language might
+  suggest.** word_frac 9.22% -> 8.67% (~6% relative reduction, 2 of 3
+  passes clearly below baseline, one close to it); residue 49 -> 44.7
+  (~9% relative reduction). Consistent direction, not large magnitude.
+  resp_frac is essentially flat (51.7% -> 51.1%).
+- **PF3.4a's specific target (motif shape mixing bare-agent_action
+  against a richer sibling clause) does NOT show a clean win in this
+  final check**, and this is reported honestly rather than omitted:
+  recomputed the same rich+bare motif-mixing measure PF3.4's own
+  characterization used, this time against the final 3-pass data --
+  11/43 (25.6%), 19/47 (40.4%), 21/44 (47.7%) of residue, averaging
+  ~38%, versus PF3.4's own pre-fix single-run baseline of 14/49
+  (28.6%). Not lower; arguably higher. Plausible confound, not yet
+  isolated: PF3.3's frame-absence fix (`ensure_proposition_frame_for_
+  turn`) substantially INCREASED how many turns have a `PropositionFrame`
+  at all -- and `best_for_proposition`'s frame-driven motif selection
+  (where PF3.4a's guard operates) only ever ran on frame-present turns
+  in the first place. More frame-eligible turns plausibly means more
+  opportunities for the rich+bare pattern to surface at all, even if
+  PF3.4a's retry logic is correctly narrowing it WITHIN that larger
+  population -- these two effects are entangled in this measurement and
+  weren't separated. PF3.4a's own mechanism is verified correct in
+  isolation (`tests/test_pf3_4a_motif_thinning_guard.py`, 5 passing,
+  directly exercising the retry logic without the frame-availability
+  confound); the live, whole-system number just doesn't cleanly
+  demonstrate it yet. Not chased further this session -- isolating
+  PF3.3's and PF3.4a's individual live contributions would need its
+  own controlled A/B run (one flag disabling each independently),
+  which is new scope, not owed by this directive.
+
+**What actually closed, honestly:** the two most severe, most
+clearly-diagnosed defects from PF2.1's own characterization --
+paragraph-level whole-thread carryover (byte-identical duplicate
+outputs) and the frame-blind composition path (67% of surviving
+"clear"/"real" instances, `dual_question_pipeline` never wiring a
+frame at all) -- are both confirmed fixed. The subtler, second-order
+effects layered on top (usage-count/co-expression hub leaks, motif
+shape mixing) show real but smaller, partially-confounded improvement.
+This is where Directive PF3 lands -- not "solved," measurably better
+on its clearest signals, honestly incomplete on its subtler ones.
+
+Full regression across all six phases: consistently 2 pre-existing,
+unrelated failures (`test_m1_2_provenance_hygiene`, `test_concept_
+image_ingestion_import`), zero new regressions introduced by any
+PF3.1-3.6 change.
+
+## WARP Universalization Directive, Phase 2 — dead confession calls fixed, 2026-07-24
+
+Directive (Sunni & Cael, 2026-07-24): `WarpField`
+(`aurora_warp_protocol.py:1215`) is real, instantiated at boot, has
+real actuators and pathway handlers -- but almost nothing calls it.
+Audit found exactly 4 real `warp_guard(`/`WarpDemand(` call sites in
+the whole codebase, 2 of which are dead on arrival.
+
+**FIX-A051 (RUNTIME BUG) — Dead WARP confession calls, wrong
+signature.** Category: RUNTIME BUG.
+`aurora_possibility_selves.py`'s `provoke_reexperience()` (line ~751)
+and `dream_dialogue()` (line ~1020) each called `warp_guard(anchor,
+her_strength)` -- 2 positional args of the wrong types. The real
+`aurora_warp_protocol.warp_guard`'s signature is `(source: str, layer:
+str, trigger: str, *, unresolved_text="", ..., severity=0.5,
+persistence_key="")`. Every call raised `TypeError`, caught by a bare
+`except Exception: pass` immediately around it -- running dark since
+it was wired: no crash, no signal, just a no-op that looked like a
+working confession path. Confirmed the real call site that injects the
+real function (`aurora_quantum_dream_substrate.py:489`,
+`from aurora_warp_protocol import warp_guard as _wg`) was itself
+correct -- the bug was entirely in how `dream_dialogue`/
+`provoke_reexperience` called whatever `warp_guard` they were handed.
+
+**Decision (Sunni, ratified): Option A** -- these ARE meant to confess
+through the real, universal `WarpField`, not a local lightweight
+callback. **Fix:** both call sites now build a real `WarpDemand` via
+keyword arguments (`source="possibility_selves"`, `layer=
+"provoke_reexperience"`/`"dream_dialogue"` respectively,
+`trigger=WarpTrigger.AMBIGUITY`, `unresolved_text=str(anchor)`,
+`severity=float(her_strength)`, `persistence_key=str(anchor)[:48]`) --
+her own accommodation of a re-lived tension now genuinely reaches the
+universal field. `aurora_possibility_selves.py` gained one new import
+(`from aurora_warp_protocol import WarpTrigger`) for the trigger
+constant only -- the module still never imports `warp_guard` itself,
+staying an injected `Any` parameter, callers decide what to pass. The
+bare `except Exception: pass` around each call stays intentional and
+untouched -- a confession-path failure must never break her dream
+cycle.
+
+**Tests:** `tests/test_warp_phase2_confession_calls.py` (5) -- a spy
+matching `warp_guard`'s REAL signature exactly (not permissive
+`**kwargs`) driven through the full `provoke_reexperience`/
+`dream_dialogue` functions with a constructed high-capacity scenario
+that reliably reaches the "her_resolved" branch, confirming the actual
+call shape (source/layer/trigger/unresolved_text/severity/
+persistence_key) rather than just that SOME call happened -- a call
+shaped like the original bug would raise `TypeError` against this same
+spy, the same way it silently did against the real function in
+production. Plus graceful-degradation coverage (`warp_guard=None`,
+and a spy that always raises) confirming the intentional swallow
+behavior is preserved.
+
+## WARP Universalization Directive, Phase 1 — crystal resonance graph, 2026-07-24
+
+Directive (Sunni & Cael, 2026-07-24): `CrystalProcessingSystem` only
+ever retrieves crystals by exact string match (`concept_index`,
+`_get_or_create()`), even though each `Crystal` already carries two
+dense `{X,T,N,B,A}`-keyed vectors (`constraint_signature`,
+`axis_mean`) that go entirely unused for retrieval. Meanwhile
+`EnergyRegulatorSystem._update_links_for_facet()` (this file, ~line
+1623) already proves out a cosine-similarity resonance-graph pattern
+one layer down, at the facet level. This phase lifts that proven
+pattern up to the crystal level -- ranked/graph-propagated crystal
+activation, closing patent Claims 4 & 5 -- as pure addition: nothing
+about `_get_or_create()`'s exact-match fast path changes.
+
+**Open decision, ratified (Sunni):** `resonant_lookup()`'s query-
+vector interface threads the CALLER's actual live IVM
+`position.phases` through (the same `{X,T,N,B,A}` dict `process()`
+already derives from `envelope.position.phases` at ~line 616-621 and
+discards after updating `axis_mean`) -- not a hash of the concept
+string. A hashed pseudo-profile would compare noise to noise; her real
+live position is the honest thing to compare against. Consequence:
+`resonant_lookup()` returns `[]` (fail-quiet) whenever no
+`query_axis_state` is supplied, rather than silently falling back to
+any hash-based guess.
+
+**Added:** `self.crystal_links: Dict[str, Dict[str, float]]` on
+`CrystalProcessingSystem.__init__`; `_crystal_vector()` (fuses
+`constraint_signature` + `axis_mean`, equal weight, into one
+comparable fingerprint, `None` if the crystal has neither yet);
+`_update_crystal_links()` (mirrors `_update_links_for_facet()` exactly
+-- cosine similarity against all crystals sharing the same axis
+key-set, `score > 0.1` floor, top-8 normalized to weights summing to
+1); `resonant_lookup(concept, query_axis_state=None, threshold=0.55,
+top_k=3)` (the second-tier retrieval-by-relatedness path, called only
+after a caller's exact-match lookup already failed -- excludes the
+queried concept itself, returns `[(crystal, score), ...]` ranked
+descending). Wired `_update_crystal_links(crystal.crystal_id)` into
+both `process()` and `process_concepts()`, each call wrapped in `try/
+except: pass` -- observation only at this phase, nothing consumes
+`crystal_links` yet (that's Phase 4).
+
+**FIX-A052 (LOGIC BUG, caught by test-writing) — stale
+`crystal_links` entry survived a vector loss.** Category: LOGIC.
+`_update_crystal_links()` had two early-return paths: unknown
+`crystal_id` (correctly leaves `crystal_links` untouched -- nothing to
+clean up) and source crystal with no vector (`not src_vec`) --
+this second path returned WITHOUT popping any existing stale entry for
+that `crystal_id`, unlike the "no similar peers found" path a few
+lines later which correctly does `self.crystal_links.pop(crystal_id,
+None)`. A crystal that had links, then lost its fingerprint (signature
++ mean both cleared), would keep stale weighted links pointing at a
+vector that no longer existed. **Fix:** the `not src_vec` branch now
+also pops the stale entry before returning.
+
+**Tests:** `tests/test_warp_phase1_resonance_graph.py` (18) -- direct
+unit tests against manually-constructed `Crystal` objects (no
+`IVMEnvelope` fixture exists anywhere in the suite to build a full
+`process()`-level integration test, and the `process()`/
+`process_concepts()` wiring itself is a trivial try/except around the
+same method these tests cover directly). Covers `_crystal_vector`
+(fusion, union of mismatched axis sets, `None` when empty),
+`_update_crystal_links` (finds similar crystals, weights sum to 1,
+ignores mismatched key-sets, excludes below-floor similarity, cleans
+up stale entries -- this last one caught FIX-A052), and
+`resonant_lookup` (fail-quiet with no `query_axis_state` -- the
+ratified contract's central guarantee, excludes the exact concept
+queried, respects `threshold` and `top_k`, ranks descending, ignores
+crystals with no vector or a mismatched key-set).
+
+## WARP Universalization Directive, Phase 4 — resonant trial lifecycle, 2026-07-24
+
+Directive (Sunni & Cael, 2026-07-24), Section 5: `check_and_extend()`
+(`aurora_warp_protocol.py:945`) only ever saw a binary choice for a
+given axis state -- an existing component already covers it, or a
+total gap that WARP derives fresh from scratch. No middle tier for "I
+have something *related* but not exact, so let me operate on it as a
+working theory." Phase 1's `resonant_lookup()` is that middle tier,
+*if* wired into the trial lifecycle instead of returned as a plain
+answer -- which this phase does, per the directive's own explicit
+spec (never written to disk by the directive itself; it stopped short
+because "making resonance hits provisional-by-default is a real
+behavior change ... a design call for you to make explicitly").
+
+**Added:** `CrystalProcessingSystem.resonant_or_extend(concept,
+query_axis_state=None, *, source="resonant_lookup", tick=0,
+topology_gap_ref=None) -> Tuple[Optional[Any], str]`, three tiers
+exactly per the directive:
+1. **Exact match** (`get_crystal()` hit) -- full confidence, current
+   behavior, unchanged. Returns `(crystal, "exact")`.
+2. **Resonance match, no exact match** -- provisional, not ground
+   truth. The top `resonant_lookup()` candidate's own fingerprint
+   (`_crystal_vector()`, converted to I-state space via the same
+   `axes_to_istates()` pattern `_get_axis_profiles()` already uses)
+   seeds a `WarpComponent` stamped into `_warp_trials` via the real
+   `_integrate_warp()` -- with `trial_score_ema` SEEDED from the
+   similarity score itself (the resonance hit IS the hypothesis, not a
+   zero-starting trial), exactly as `check_and_extend()` does at line
+   1005-1007. `evaluate_warp_trials()` (line 1010, untouched) then
+   promotes or dissolves it over `TRIAL_TICKS` from real usage --
+   recurrence is the experiment, `evaluate_warp_trials()` is peer
+   review. `component_id` is deterministic
+   (`"resonant:" + md5(concept)[:12]`), so a repeat call for the same
+   concept finds the trial already tracked and skips re-integration --
+   in practice this guard is rarely even reached, because
+   `_integrate_warp()`'s own `_get_or_create(component.name)` (name =
+   the queried concept) means the *first* resonant call already makes
+   `concept` a real `concept_index` entry, so every subsequent call for
+   that same concept naturally resolves as tier 1 before tier 2 is ever
+   reached again. Returns `(crystal, "resonant_trial")`.
+3. **Neither** -- falls through to the real, unmodified
+   `check_and_extend()`, gated by its own
+   `GAP_PERSISTENCE_REQUIRED` exactly as every other WARP-capable
+   level. Only reached when a real `query_axis_state` was supplied
+   (fail-quiet otherwise, `(None, "none")` -- same posture as
+   `resonant_lookup()` itself, no fabricated fallback). Returns
+   `(component_or_None, "gap")` when it fires, `(None, "none")`
+   otherwise.
+
+Purely additive: nothing calls `resonant_or_extend()` yet.
+`process()`/`process_concepts()` keep calling `_get_or_create()`
+unconditionally, exactly as before -- this is an opt-in second
+entry point into the existing, solid trial lifecycle, not a
+replacement for the exact-match fast path. No new lifecycle was built;
+`_warp_trials`, `evaluate_warp_trials()`, `TRIAL_TICKS`,
+`PROMOTION_SCORE` are all reused verbatim.
+
+**Tests:** `tests/test_warp_phase4_resonant_trial_lifecycle.py` (10)
+-- against a real `CrystalProcessingSystem` (the real `WarpCapable`
+mixin, not mocked, since the point is that this reuses the real trial
+lifecycle verbatim). Covers all three tiers: exact match spawns no
+trial (even with no `query_axis_state`); resonance match creates a
+provisional trial seeded from the similarity score with the right
+`parent_ids`/`name`/genealogy facets; repeat calls are idempotent
+(second call naturally resolves as tier 1, no duplicate facets, no
+duplicate trial) with a direct test of the deterministic-id guard
+itself; no match with no `query_axis_state` fails quiet; no match with
+a real `query_axis_state` falls through to the genuine
+`check_and_extend()` and fires once `GAP_PERSISTENCE_REQUIRED` is
+met (confirmed against real `AxisCoverageChecker` behavior, including
+the discovered edge case that a *totally empty* crystal system trips
+`check_and_extend()`'s own 6th-axis-anomaly path instead of a normal
+persistent gap -- pre-existing `WarpGenerator` behavior, unrelated to
+this phase, so the test seeds one unrelated crystal to exercise the
+ordinary path instead).
+
+## WARP Universalization Directive, Phase 3a — LanguageField comparison confession, 2026-07-25
+
+Directive (Sunni & Cael, 2026-07-24), Section 4, candidate #3 (Sunni's
+ratified priority #1 of 4): `LanguageField`'s one existing WARP call
+(`_check_comparison_coverage`, line ~294, `language_ignite` source)
+only fires on structural axis-coverage gaps -- it says nothing about
+"I can compare these but I'm not confident in the comparison."
+`_infer_comparison_type()` is a chain of explicit rules (question,
+self_reflection, empathy, assertion-via-reasoning, change, relation,
+state, WARP-derived types) that falls all the way through to a bare
+`return "assertion"` when NOTHING matches -- a guess dressed as a
+confident classification, with nowhere honest to go.
+
+**Changed:** `_infer_comparison_type()` now returns `(comparison_type,
+matched)` instead of a bare string -- `matched` is `False` only on
+that final unconditional fallback, `True` on every genuine rule hit
+(including the existing WARP-derived-type lookup). Single call site
+(`extract_proto_language()`), confirmed via repo-wide grep before
+changing the signature. **Added:** `_confess_comparison_uncertainty()`,
+called from `extract_proto_language()` exactly when `matched` is
+`False`, right after `_infer_comparison_type()` returns -- confesses
+through the real, universal `WarpField` via `warp_guard(source=
+"language_field", layer="infer_comparison_type",
+trigger=WarpTrigger.NO_LANGUAGE_FORM, unresolved_text=<user text or a
+dominant-axes description>, profile=<the real 5-axis {X,T,N,B,A} state
+already computed in extract_proto_language>, severity=0.4,
+persistence_key="comparison_type:" + sorted dominant axes)`.
+`NO_LANGUAGE_FORM` was chosen over `AMBIGUITY`/`GAP` because the
+pathway it maps to (`GENERATE_FORM` -- "no language / representation
+exists") is the honest description of what's actually missing: a
+confident comparison-type label, not just an ambiguous signal.
+`aurora_language_field.py` gained one import (`warp_guard,
+WarpTrigger` added to the existing guarded `aurora_warp_protocol`
+import block, same `_WARP_AVAILABLE` fallback posture already used for
+`WarpCapable`/`WarpComponent`/`CoverageGap`/`axes_to_istates`). Purely
+additive: `comparison_type` itself is never changed by this -- the
+fallback still returns `"assertion"` exactly as before, this only adds
+an honest signal alongside it. Isolated in its own try/except, silent
+no-op if WARP isn't available or the call itself fails -- a
+confession-path failure must never break proto-language extraction.
+
+**Tests:** `tests/test_warp_phase3a_language_field_confession.py` (7)
+-- direct coverage of `_infer_comparison_type()`'s `matched` flag
+(explicit rule hit, unconditional fallback, WARP-derived-type hit, the
+last two of which previously had no test coverage under the old
+bare-string return either), plus `extract_proto_language()` end-to-end
+with a spy matching `warp_guard`'s REAL signature exactly (same
+regression-catching posture as the Phase 2 tests): confesses with the
+correct source/layer/trigger/unresolved_text/profile/persistence_key
+on the unmatched fallback, does NOT confess when a rule genuinely
+matched, confession exceptions are swallowed without breaking
+extraction, and the whole path no-ops cleanly when `_WARP_AVAILABLE`
+is `False`. Also re-ran `tests/test_cpm.py` and
+`tests/test_lifecycle_catalog.py` (the only other files touching
+`LanguageField`) to confirm the `_infer_comparison_type()` return-type
+change caused no regression -- both still pass in full (80 total).
+
+## WARP Universalization Directive, Phase 3b — resonant_lookup miss confession, 2026-07-25
+
+Directive (Sunni & Cael, 2026-07-24), Section 4, candidate #4 (Sunni's
+ratified priority #2 of 4): "when even the resonance graph comes back
+under threshold, that's a textbook `WarpTrigger.GAP` confession." Phase
+1's `resonant_lookup()` and Phase 4's `resonant_or_extend()` already
+handle a miss structurally (tier 3 falls through to the real
+`check_and_extend()`), but nothing reached the universal `WarpField`
+confession side (`warp_guard`) directly -- the two WARP subsystems
+(`WarpCapable`'s structural coverage machinery vs. `WarpField`'s
+universal accommodation primitive) hadn't been connected for this
+specific miss.
+
+**Added:** `CrystalProcessingSystem._confess_resonance_miss(concept,
+query_axis_state)`, called from `resonant_lookup()` exactly when a
+GENUINE search (a real `query_axis_state` was supplied, so the fail-
+quiet no-query path at the top already returned) still ends with
+`scored` empty -- no crystal cleared `threshold`. Confesses via
+`warp_guard(source=self._warp_level_name()` (`"dimensional_crystal"`)
+`, layer="resonant_lookup", trigger=WarpTrigger.GAP,
+unresolved_text=concept, profile=query_axis_state, severity=0.4,
+persistence_key="resonant_miss:" + concept)`. `aurora_dimensional_
+systems.py` gained `warp_guard, WarpTrigger` on its existing (hard,
+non-guarded) `aurora_warp_protocol` import line. Isolated in its own
+try/except -- a confession-path failure must never break
+`resonant_lookup()` itself.
+
+Deliberately does NOT replace or gate `resonant_or_extend()`'s own
+tier-3 fallthrough to `check_and_extend()` -- both fire from the same
+miss, by design, exactly as the directive frames it ("feeding the
+exact provisional-hypothesis lifecycle in Phase 4"): the confession is
+the universal, always-on signal; `check_and_extend()`'s own
+`GAP_PERSISTENCE_REQUIRED` gate still independently decides whether a
+structural component actually gets derived. Confirmed
+`WarpTrigger.GAP`'s real routing (`_route_to_warp_capable`, `aurora_
+warp_protocol.py:1371`) is side-effect-safe when no `dimensional_
+crystal` system is registered in the (test-default, unwired) global
+`WarpField` singleton -- `system is None` short-circuits to a no-op
+note, no exception, no disk I/O.
+
+**Tests:** `tests/test_warp_phase3b_resonant_lookup_confession.py` (6)
+-- a spy matching `warp_guard`'s REAL signature exactly (same
+regression-catching posture as Phase 2/3a). Covers: the no-query
+fail-quiet path does NOT confess (nothing was searched); a genuine
+miss (mismatched axis key-set, nothing to even compare) confesses with
+the correct source/layer/trigger/unresolved_text/profile/
+persistence_key; a below-threshold miss (real candidate, real
+key-set match, insufficient similarity) also confesses; a successful
+match does NOT confess; confession exceptions are swallowed without
+breaking `resonant_lookup()`; and an end-to-end run through
+`resonant_or_extend()`'s tier-3 fallthrough confirms the confession
+fires on every miss attempt AND the real `check_and_extend()` gap
+still fires exactly as it did before this phase (Phase 4's own tests
+unchanged, re-run clean alongside this file).
+
+## WARP Universalization Directive, Phase 3c — memory recall miss confession, 2026-07-25
+
+Directive (Sunni & Cael, 2026-07-24), Section 4, candidate #2 (Sunni's
+ratified priority #3 of 4): `DimensionalRecall.recall_for_signals()`
+(`aurora_dimensional_systems.py:1628`) surfaces `MemoryNode`s relevant
+to a turn's `ConceptSignal`s via direct concept recall + dimension-tag
+recall. A real attempt (real signals, gate already passed) that comes
+back with nothing at all -- neither a direct match nor any
+dimension-tag hit cleared `ALIGNMENT_FLOOR` (0.30) -- previously just
+returned `[]`, indistinguishable from "nothing here was worth
+recalling." That is a textbook `WarpTrigger.NO_MEMORY` confession with
+nowhere to go, per the directive's own framing.
+
+**Added:** `DimensionalRecall._confess_recall_miss(signals)`, called
+from `recall_for_signals()` exactly when the `found` dict ends up
+empty after checking every signal -- NOT at the pre-existing `not
+signals or mode < GATE` short-circuit at the top, which is a different
+thing (nothing was searched at all, so nothing to confess, same
+fail-quiet-vs-genuine-miss distinction Phase 3b drew for
+`resonant_lookup()`). Confesses via `warp_guard(source=
+"dimensional_recall", layer="recall_for_signals",
+trigger=WarpTrigger.NO_MEMORY, unresolved_text=<comma-joined
+concepts>, severity=0.4, persistence_key="recall_miss:" + sorted
+unique concepts)`. No new import needed -- `warp_guard`/`WarpTrigger`
+were already added to `aurora_dimensional_systems.py`'s import line in
+Phase 3b, and `DimensionalRecall` lives in the same file. Isolated in
+its own try/except -- a confession-path failure must never break
+recall. `recall_for_signals()`'s own return behavior is completely
+unchanged (still `[]` on a miss) -- purely an honest signal alongside
+it. Confirmed via repo-wide grep that `recall_for_signals()` has no
+other callers yet (not wired into `aurora.py`'s live turn pipeline),
+so this addition carries no live-behavior regression risk beyond the
+method's own test coverage.
+
+**Tests:**
+`tests/test_warp_phase3c_memory_recall_confession.py` (6) -- a spy
+matching `warp_guard`'s REAL signature exactly (same posture as every
+other confession-call-site test in this campaign). Covers: empty
+signals list does NOT confess (nothing searched); mode below `GATE`
+does NOT confess; a genuine miss (real signal, empty `DMC`) confesses
+with the correct source/layer/trigger/unresolved_text/persistence_key;
+multiple missed signals join their concepts correctly in both
+`unresolved_text` and the sorted, deduplicated `persistence_key`; a
+successful recall (a real `MemoryNode` seeded directly into `dmc.
+nodes`/`concept_index`) does NOT confess; and confession exceptions
+are swallowed without breaking recall.
+
+## WARP Universalization Directive, Phase 3d — mid-comprehension parse confidence confession, 2026-07-25 (Phase 3 complete, all 4 candidates landed)
+
+Directive (Sunni & Cael, 2026-07-24), Section 4, candidate #1 (Sunni's
+ratified priority #4 of 4, last): `_emit_honest_abstain_and_seek()`
+(`aurora.py:4635`) was the ONLY confession point anywhere in the
+reasoning/expression pipeline, and it only fires at the terminal
+chokepoint when composition returns literally nothing. The
+comprehension stages upstream never confessed at all -- they either
+resolved or silently fell through to that one chokepoint, with no
+record of WHERE understanding actually broke down.
+
+**Added:** `_confess_low_confidence_parse(user_text, parsed)`, called
+from `_chain_up1_information()` (`aurora.py:14125`, the real, single
+live-turn call site for `UtteranceParser().parse()` building
+`state.parsed` -- confirmed via repo-wide grep) immediately after
+`state.parsed` is built. No fabricated numeric "confidence" score is
+invented (`UtteranceIntent` carries none) -- the confession fires only
+when the parser found NEITHER a real communicative frame NOR any
+`topic_words`: text that parses to a real frame (including
+`"acknowledging"` for trivial "ok"/"yeah" -- a real, if thin,
+classification, not a miss) or that yields at least some `topic_words`
+is not treated as a comprehension failure. Confesses via
+`warp_guard(source="comprehension",
+layer="chain_up1_information", trigger=WarpTrigger.
+FAILED_COMPREHENSION, unresolved_text=user_text, severity=0.45,
+persistence_key=user_text[:48])` -- `FAILED_COMPREHENSION` (routes to
+the `SEEK` pathway) chosen deliberately distinct from the terminal
+chokepoint's own `MISSING_REPRESENTATION` trigger, so the two
+confessions carry different, honest meanings ("I couldn't classify
+this at parse time" vs. "composition produced nothing at all").
+`warp_guard`/`WarpTrigger` imported locally inside the function, same
+pattern `_emit_honest_abstain_and_seek()` already uses one function
+away. Isolated in its own try/except -- a confession-path failure must
+never break comprehension.
+
+**FIX-A053 (LOGIC BUG, caught by test-writing) — a raised parse was
+treated as a REAL frame, not a miss.** Category: LOGIC. First cut of
+the gate was `if parsed.get("frame") != "unknown": return`. But
+`_chain_up1_information`'s own except branch sets `state.parsed = {}`
+when `UtteranceParser().parse()` itself raises -- and `{}.get("frame")`
+returns `None`, which is `!= "unknown"`, so the single strongest
+"didn't understand this at all" case (the parser crashed outright)
+silently skipped the confession instead of firing it. **Fix:** the
+gate now computes `_has_real_frame = bool(frame) and frame !=
+"unknown"` -- a falsy/missing frame (from an empty-dict fallback) is
+treated exactly like the literal string `"unknown"`, both correctly
+recognized as "no real frame," not exempted from confession.
+
+**Tests:**
+`tests/test_warp_phase3d_parse_confidence_confession.py` (7) -- direct
+unit tests of `_confess_low_confidence_parse()` (no need to construct
+a full live-turn `state`/`systems` since the helper takes only
+`user_text`/`parsed`): unclassifiable parse confesses with the correct
+source/layer/trigger/unresolved_text/persistence_key; a real frame
+(`"acknowledging"`) does NOT confess; `topic_words` present does NOT
+confess even with `frame == "unknown"`; empty/whitespace-only text
+does NOT confess; a `{}` fallback (the crashed-parse case) DOES
+confess -- this is the test that caught FIX-A053; confession
+exceptions are swallowed without breaking comprehension; and a
+source-level structural wiring check (matching this campaign's
+established pattern from `test_m1_1a_relation_pairs.py`'s
+`test_chain_down5_understanding_calls_tier2_logger`) confirms the call
+is actually present inside `_chain_up1_information()`'s body. Also
+re-ran `tests/test_up.py`, `tests/test_m1_1a_relation_pairs.py`, and
+`tests/test_b1_1_envelope_shadow.py` (the only other files touching
+`UtteranceParser`/chain-stage functions, including two full
+`boot_aurora()` + live-turn integration tests) -- all 28 pass, zero
+regression from the `_chain_up1_information()` wiring change.
+
+**Phase 3 (all four candidates) is now complete**, in the priority
+order Sunni set: 3a LanguageField comparison judgments (FIX-none, pure
+addition), 3b resonant_lookup misses (FIX-none), 3c memory recall
+misses (FIX-none), 3d mid-comprehension parse confidence (FIX-A053).
+Combined with Phase 1 (crystal resonance graph, FIX-A052), Phase 2
+(dead confession calls, FIX-A051), and Phase 4 (resonant trial
+lifecycle), the WARP Universalization Directive's full 4-phase plan is
+now fully implemented, tested, and (pending this phase's final
+regression + push) landed on `claude/code-replacement-cleanup-zzscvt`.

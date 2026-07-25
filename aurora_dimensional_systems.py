@@ -68,6 +68,7 @@ from collections import defaultdict, deque
 # EDIT (constraint-expansive concepts): WARP machinery for DPS
 from aurora_warp_protocol import (
     WarpCapable, WarpComponent, axes_to_istates, istates_to_axes,
+    warp_guard, WarpTrigger,
 )
 from enum import Enum, IntEnum
 
@@ -534,6 +535,12 @@ class CrystalProcessingSystem(WarpCapable):
         self.tracker = tracker
         self.crystals: Dict[str, Crystal] = {}
         self.concept_index: Dict[str, str] = {}  # concept â†' crystal_id
+        # WARP Universalization Directive Phase 1 (2026-07-24): cosine-
+        # similarity resonance graph between crystals -- same shape as
+        # EnergyRegulatorSystem.facet_to_facet_links, one layer up. Built
+        # and populated by _update_crystal_links(); see that method and
+        # resonant_lookup() below.
+        self.crystal_links: Dict[str, Dict[str, float]] = {}
         self._energy_system = energy_system  # Set after DER init
         self._sedimemory = None  # L3.5 SediMemory (injected externally)
         self._init_warp()
@@ -660,6 +667,16 @@ class CrystalProcessingSystem(WarpCapable):
                 except Exception:
                     pass
 
+        # WARP Universalization Directive Phase 1 (2026-07-24): keep the
+        # crystal's resonance links current -- mirrors where register_
+        # facet() already triggers _update_links_for_facet() on the
+        # energy side. Observation only at this phase; nothing consumes
+        # crystal_links yet (that's Phase 4).
+        try:
+            self._update_crystal_links(crystal.crystal_id)
+        except Exception:
+            pass
+
         return {
             'crystal_id': crystal.crystal_id,
             'concept': crystal.concept,
@@ -750,6 +767,273 @@ class CrystalProcessingSystem(WarpCapable):
         cid = self.concept_index.get(concept)
         return self.crystals.get(cid) if cid else None
 
+    # ── WARP Universalization Directive Phase 1 (2026-07-24) ────────────
+    # Ranked/graph-propagated crystal activation, closing patent Claims
+    # 4 & 5. Retrieval-by-relatedness alongside exact match, using the
+    # vectors Crystal already carries (constraint_signature, axis_mean),
+    # using the exact cosine-similarity pattern EnergyRegulatorSystem.
+    # _update_links_for_facet() (this file, ~line 1623) already proved
+    # out for facet-to-facet energy resonance, lifted one layer up.
+    # Deliberately does NOT touch concept_index or _get_or_create()'s
+    # exact-match path -- that stays the legitimate fast path for known
+    # concepts and must not regress.
+
+    def _crystal_vector(self, crystal: "Crystal") -> Optional[Dict[str, float]]:
+        """Build a comparable fingerprint for a crystal from what she
+        already maintains for it: signed constraint_signature (what it
+        displaces) fused with axis_mean (where it lives). Both are dense
+        Dict[str, float] keyed on the same five axes (X, T, N, B, A), so
+        no new state is introduced -- this reads existing fields, it
+        doesn't grow the Crystal dataclass. Returns None if the crystal
+        hasn't been processed enough to have a signature yet (BASE
+        crystals with a single facet, fresh off _get_or_create)."""
+        sig = crystal.constraint_signature
+        mean = crystal.axis_mean
+        if not sig and not mean:
+            return None
+        axes = set(sig or {}) | set(mean or {})
+        if not axes:
+            return None
+        # Fuse: signature carries polarity/magnitude of displacement,
+        # axis_mean carries dimensional "home". Equal-weight fusion --
+        # no tuning yet, naive first pass per the directive's own
+        # audit-first preference.
+        return {ax: 0.5 * (sig or {}).get(ax, 0.0) + 0.5 * (mean or {}).get(ax, 0.0)
+                for ax in axes}
+
+    def _update_crystal_links(self, crystal_id: str, top_k: int = 8,
+                               floor: float = 0.1) -> None:
+        """Cosine-similarity resonance graph between crystals -- same
+        shape as EnergyRegulatorSystem._update_links_for_facet(), lifted
+        from facets to crystals. Reuses the proven pattern instead of
+        inventing a new one."""
+        src = self.crystals.get(crystal_id)
+        if src is None:
+            return
+        src_vec = self._crystal_vector(src)
+        if not src_vec:
+            # No fingerprint (yet, or any more) -- any stale link entry
+            # from a prior call must not survive; it would point at a
+            # vector that no longer exists.
+            self.crystal_links.pop(crystal_id, None)
+            return
+        src_keys = sorted(src_vec.keys())
+        src_arr = np.array([src_vec[k] for k in src_keys])
+        src_mag = np.linalg.norm(src_arr) + 1e-12
+
+        similarities, ids = [], []
+        for other_id, other in self.crystals.items():
+            if other_id == crystal_id:
+                continue
+            other_vec = self._crystal_vector(other)
+            if not other_vec or set(other_vec.keys()) != set(src_keys):
+                continue
+            other_arr = np.array([other_vec[k] for k in src_keys])
+            other_mag = np.linalg.norm(other_arr) + 1e-12
+            score = float(np.dot(src_arr, other_arr) / (src_mag * other_mag))
+            if score > floor:
+                similarities.append(score)
+                ids.append(other_id)
+
+        if not similarities:
+            self.crystal_links.pop(crystal_id, None)
+            return
+
+        sims = np.array(similarities)
+        top = np.argsort(sims)[::-1][:top_k]
+        total = sims[top].sum() + 1e-12
+        self.crystal_links[crystal_id] = {
+            ids[i]: float(sims[i] / total) for i in top
+        }
+
+    def resonant_lookup(self, concept: str, query_axis_state: Optional[Dict[str, float]] = None,
+                         threshold: float = 0.55, top_k: int = 3) -> List[Tuple["Crystal", float]]:
+        """Retrieval-by-relatedness. Called by callers who already tried
+        get_crystal(concept) and got None -- this is the second-tier
+        path, never the first.
+
+        query_axis_state is the CALLER's actual live IVM axis position
+        (ratified query-vector interface, 2026-07-24) -- e.g. the same
+        {X,T,N,B,A} dict process() already derives from envelope.
+        position.phases at ~line 616-621 and discards after updating
+        axis_mean. Not a hash of the concept string: a hashed pseudo-
+        profile would compare noise to noise, and her real live
+        position is the honest thing to compare against.
+
+        Returns [] when no query_axis_state is supplied -- fail-quiet:
+        a caller with nothing real to compare against gets nothing, not
+        a fabricated match dressed as a real one.
+
+        Returns [(crystal, similarity_score), ...] ranked descending,
+        already-provisional in the WARP sense (Phase 4) -- the caller
+        decides whether score clears its own confidence floor before
+        treating the result as usable, matching the "operate on theory
+        until disproven" model rather than treating a resonance hit as
+        equivalent to an exact match. This method does not itself
+        promote anything into _warp_trials -- Phase 4 (resonant_or_
+        extend) wires that.
+
+        WARP Universalization Directive Phase 3b (2026-07-25, ratified
+        priority #2 of 4): a genuine search (real query_axis_state)
+        that still comes back with nothing above threshold confesses
+        through the real, universal WarpField (WarpTrigger.GAP) -- see
+        _confess_resonance_miss(). This is the universal confession
+        side; it does not replace or duplicate resonant_or_extend()'s
+        own tier-3 fallthrough to check_and_extend() (the structural
+        WarpCapable side) -- both fire from the same miss, by design.
+        """
+        if not query_axis_state:
+            return []
+        query_keys = sorted(query_axis_state.keys())
+        query_arr = np.array([query_axis_state[k] for k in query_keys])
+        query_mag = np.linalg.norm(query_arr) + 1e-12
+
+        scored: List[Tuple["Crystal", float]] = []
+        for crystal in self.crystals.values():
+            if crystal.concept == concept:
+                continue
+            vec = self._crystal_vector(crystal)
+            if not vec or set(vec.keys()) != set(query_keys):
+                continue
+            arr = np.array([vec[k] for k in query_keys])
+            mag = np.linalg.norm(arr) + 1e-12
+            score = float(np.dot(query_arr, arr) / (query_mag * mag))
+            if score >= threshold:
+                scored.append((crystal, score))
+
+        if not scored:
+            self._confess_resonance_miss(concept, query_axis_state)
+            return []
+
+        scored.sort(key=lambda cs: cs[1], reverse=True)
+        return scored[:top_k]
+
+    def _confess_resonance_miss(
+        self, concept: str, query_axis_state: Dict[str, float],
+    ) -> None:
+        """WARP Universalization Directive Phase 3b (2026-07-25,
+        ratified priority #2 of 4): even the resonance graph coming
+        back empty is a textbook WarpTrigger.GAP confession (directive
+        Section 4, candidate #4) -- distinct from check_and_extend()'s
+        own structural coverage-gap machinery (WarpCapable), this
+        reaches the universal WarpField confession side directly.
+        Isolated in its own try/except, same swallow-on-failure posture
+        as every other confession call site in this campaign -- a
+        confession-path failure must never break resonant_lookup()
+        itself."""
+        try:
+            warp_guard(
+                source=self._warp_level_name(), layer="resonant_lookup",
+                trigger=WarpTrigger.GAP,
+                unresolved_text=concept,
+                profile=dict(query_axis_state),
+                severity=0.4,
+                persistence_key="resonant_miss:" + concept,
+            )
+        except Exception:
+            pass
+
+    def resonant_or_extend(
+        self,
+        concept: str,
+        query_axis_state: Optional[Dict[str, float]] = None,
+        *,
+        source: str = "resonant_lookup",
+        tick: int = 0,
+        topology_gap_ref: Optional[str] = None,
+    ) -> Tuple[Optional[Any], str]:
+        """WARP Universalization Directive Phase 4 (2026-07-24): the
+        "operate on theory until disproven" middle tier. Until now
+        check_and_extend() only ever saw a binary choice for a given
+        axis state -- an existing component already covers it, or a
+        total gap that WARP derives fresh from scratch. This adds the
+        missing middle: a resonance hit that isn't an exact match
+        becomes a WARP TRIAL, not ground truth -- reusing the existing
+        trial/evaluate_warp_trials()/TRIAL_TICKS/PROMOTION_SCORE
+        machinery check_and_extend() already uses (aurora_warp_
+        protocol.py:945-1049), entered from a second, resonance-
+        triggered doorway instead of only a coverage-gap-triggered one.
+        No new lifecycle -- the lifecycle is solid, this is only a
+        second entry point into it.
+
+        Three tiers, exactly per the directive:
+          1. Exact match (concept_index hit, via get_crystal()) -- full
+             confidence, current behavior, unchanged.
+          2. Resonance match above threshold, no exact match --
+             provisional: the top candidate's own fingerprint seeds a
+             WarpComponent stamped into _warp_trials with
+             trial_score_ema SEEDED from the similarity score itself
+             (the resonance hit is the hypothesis) -- left for
+             evaluate_warp_trials() to promote or dissolve over
+             TRIAL_TICKS from real recurrence (the experiment / peer
+             review), exactly like every other WARP trial. Idempotent
+             per concept via a deterministic component_id: repeat calls
+             while a trial is pending, or after it's promoted, find the
+             same tracked component and skip re-integration rather than
+             stamping duplicate genealogy facets every call.
+          3. Neither -- current check_and_extend() path, WARP derives
+             from combination the same as today. Untouched; only
+             reached when there's a real query_axis_state to check
+             coverage against (fail-quiet otherwise, same posture as
+             resonant_lookup() itself).
+
+        Returns (result, tier) where tier is one of "exact",
+        "resonant_trial", "gap", "none". result is the matching
+        Crystal for "exact"/"resonant_trial", the spawned (or still-
+        pending, possibly None) WarpComponent for "gap", or None for
+        "none".
+
+        Purely additive and not yet called from anywhere:
+        process()/process_concepts() keep calling _get_or_create()
+        unconditionally -- this is an opt-in second path for a future
+        caller who already has a real query_axis_state and wants
+        resonance-aware lookup instead of blind auto-create, not a
+        replacement for the existing exact-match fast path.
+        """
+        existing = self.get_crystal(concept)
+        if existing is not None:
+            return existing, "exact"
+
+        hits = self.resonant_lookup(concept, query_axis_state=query_axis_state)
+        if hits:
+            top_crystal, score = hits[0]
+            component_id = "resonant:" + hashlib.md5(concept.encode()).hexdigest()[:12]
+
+            if component_id not in self._warp_trials and component_id not in self._warp_promoted:
+                top_vec = self._crystal_vector(top_crystal) or {}
+                axis_profile = axes_to_istates(
+                    {ax: abs(float(v)) for ax, v in top_vec.items()},
+                    ivm_polarity={ax: (1.0 if float(v) >= 0 else -1.0)
+                                  for ax, v in top_vec.items()},
+                )
+                component = WarpComponent(
+                    component_id=component_id,
+                    level=self._warp_level_name(),
+                    axis_profile=axis_profile,
+                    parent_ids=[top_crystal.crystal_id],
+                    name=concept,
+                )
+                component.trial_score_ema = float(score)
+                self._integrate_warp(component)
+                self._sediment_warp_traversal(component, "warp_gap_closed")
+                self._warp_trials[component_id] = component
+
+            return self.get_crystal(concept), "resonant_trial"
+
+        if not query_axis_state:
+            return None, "none"
+
+        istate_profile = axes_to_istates(
+            {ax: abs(float(v)) for ax, v in query_axis_state.items()},
+            ivm_polarity={ax: (1.0 if float(v) >= 0 else -1.0)
+                          for ax, v in query_axis_state.items()},
+        )
+        component = self.check_and_extend(
+            istate_profile, source=source, tick=tick,
+            topology_gap_ref=topology_gap_ref,
+        )
+        return component, ("gap" if component is not None else "none")
+
     def tick(self):
         for crystal in self.crystals.values():
             for facet in crystal.facets.values():
@@ -806,6 +1090,13 @@ class CrystalProcessingSystem(WarpCapable):
             for axis, w in sig.constraint_weights.items():
                 prev = crystal.constraint_signature.get(axis, w)
                 crystal.constraint_signature[axis] = round(prev * 0.8 + w * 0.2, 4)
+
+            # WARP Universalization Directive Phase 1 (2026-07-24): see
+            # process()'s matching call for the full comment.
+            try:
+                self._update_crystal_links(crystal.crystal_id)
+            except Exception:
+                pass
 
             processed.append({
                 'crystal_id': crystal.crystal_id,
@@ -1367,6 +1658,7 @@ class DimensionalRecall:
                             found[node.node_id] = pkt
 
         if not found:
+            self._confess_recall_miss(signals)
             return []
 
         # Sort: A-axis (intent/action) first, then composite score desc
@@ -1378,6 +1670,32 @@ class DimensionalRecall:
         results = sorted(found.values(), key=_sort_key)[:self.MAX_RESULTS]
         self.tracker.record('recall', 'packets', float(len(results)))
         return results
+
+    def _confess_recall_miss(self, signals: List[ConceptSignal]) -> None:
+        """WARP Universalization Directive Phase 3c (2026-07-25,
+        ratified priority #3 of 4): a real recall attempt (real
+        signals, gate already passed) that surfaces nothing at all --
+        neither a direct concept match nor any dimension-tag hit
+        cleared ALIGNMENT_FLOOR -- is a textbook WarpTrigger.NO_MEMORY
+        confession (directive Section 4, candidate #2) that previously
+        had nowhere to go; recall_for_signals() just returned [] and
+        every caller treated that identically to "nothing was worth
+        recalling" and "she has no memory of this at all." Confesses
+        through the real, universal WarpField instead. Isolated in its
+        own try/except, same swallow-on-failure posture as every other
+        confession call site in this campaign -- a confession-path
+        failure must never break recall."""
+        try:
+            concepts = [s.concept for s in signals]
+            warp_guard(
+                source="dimensional_recall", layer="recall_for_signals",
+                trigger=WarpTrigger.NO_MEMORY,
+                unresolved_text=", ".join(concepts),
+                severity=0.4,
+                persistence_key="recall_miss:" + ",".join(sorted(set(concepts))),
+            )
+        except Exception:
+            pass
 
     def _to_packet(
         self,

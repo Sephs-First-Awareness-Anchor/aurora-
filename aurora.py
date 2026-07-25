@@ -14122,12 +14122,59 @@ def _log_claim_resolution_relief(
 # context_control handled) -- downward stages check this before doing work.
 # ---------------------------------------------------------------------------
 
+def _confess_low_confidence_parse(user_text: str, parsed: Dict[str, Any]) -> None:
+    """WARP Universalization Directive Phase 3d (2026-07-25, ratified
+    priority #4 of 4, last): _emit_honest_abstain_and_seek() was the
+    ONLY confession point anywhere in the reasoning/expression
+    pipeline, and it only fires at the terminal chokepoint when
+    composition returns literally nothing. The comprehension stages
+    upstream of it -- starting with the very first one, UtteranceParser
+    building state.parsed right here -- never confessed at all: a
+    genuinely unclassifiable input either silently resolves through
+    downstream defaults or falls all the way through to that one
+    terminal chokepoint with no record of WHERE understanding actually
+    broke down. This adds a confession at the earliest point Aurora can
+    know she didn't understand, not just where composition gave up.
+
+    Deliberately narrow, honest signal (no fabricated numeric
+    "confidence" score -- UtteranceIntent carries none): confesses only
+    when the parser found NEITHER a real communicative frame (empty,
+    missing, or the literal "unknown" -- distinct from a real, if
+    trivial, frame like "acknowledging" for "ok"/"yeah") NOR any
+    topic_words to fall back on. A `parsed` that fell back to `{}`
+    (UtteranceParser itself raised, in _chain_up1_information's own
+    except branch) counts as no-real-frame too -- that's the strongest
+    version of "didn't understand this," not an exemption. Text that
+    parses to a real frame, or that yields at least some topic_words,
+    is not a comprehension failure and does not confess -- this is not
+    a catch-all for "parse produced something imperfect."
+    """
+    if not str(user_text or "").strip():
+        return
+    try:
+        _frame = (parsed or {}).get("frame")
+        _has_real_frame = bool(_frame) and _frame != "unknown"
+        if _has_real_frame or (parsed or {}).get("topic_words"):
+            return
+        from aurora_warp_protocol import warp_guard as _wg, WarpTrigger as _WT
+        _wg(
+            source="comprehension", layer="chain_up1_information",
+            trigger=_WT.FAILED_COMPREHENSION,
+            unresolved_text=str(user_text or ""),
+            severity=0.45,
+            persistence_key=str(user_text or "")[:48],
+        )
+    except Exception:
+        pass
+
+
 def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
     """Stage 1 up -- Information (X axis): Existence gate -- parse input, OETS concept lookup."""
     try:
         state.parsed = UtteranceParser().parse(user_text)
     except Exception:
         state.parsed = {}
+    _confess_low_confidence_parse(user_text, state.parsed)
     # OETS concept pre-fetch for known topic words
     try:
         perception = systems.get("perception")
@@ -16280,6 +16327,17 @@ def _run_reasoning_pipeline(
     except Exception:
         pass
 
+    # PF3.1 (2026-07-21): see aurora_braid_wiring.reset_proposition_frame_
+    # for_turn's docstring -- composer._proposition_frame only ever gets
+    # refreshed later in this function, inside begin_expression(), which
+    # is itself conditionally skipped on some turns. Unconditional reset
+    # here means a skipped refresh correctly means "no frame this turn".
+    try:
+        from aurora_braid_wiring import reset_proposition_frame_for_turn
+        reset_proposition_frame_for_turn(systems)
+    except Exception:
+        pass
+
     # ---- GAP 3 FIX: SEDI SURFACE FRAGS — inject temporal continuity fragments ----
     # SediMemory surface recall is loaded by the surface daemon before calling
     # process_external_user_turn, but the frags were never threaded into the
@@ -17272,6 +17330,23 @@ def _run_reasoning_pipeline(
         _direct_sensory_query or
         _inline_definition_turn
     )
+    # PF3.3 (2026-07-21) scope extension: gw._express() below composes
+    # through the SAME composer instance begin_expression() targets
+    # (gw.perception is systems['perception'], wired once at boot), but
+    # on turns where begin_expression() itself was skipped earlier in
+    # this function (state.response_content still empty at that point --
+    # confirmed live, heavily correlated with question-shaped input),
+    # composer._proposition_frame was never populated for THIS
+    # composition either -- and per the "voice transplant" logic just
+    # below, resp_B's content often becomes resp_A's delivered content,
+    # meaning this specific compose() call reaches the device far more
+    # often than its own frame-less state would suggest. See
+    # aurora_braid_wiring.ensure_proposition_frame_for_turn's docstring.
+    try:
+        from aurora_braid_wiring import ensure_proposition_frame_for_turn
+        ensure_proposition_frame_for_turn(systems)
+    except Exception:
+        pass
     try:
         resp_B = None if (suppress_afterthought or synthesis is None) else gw._express(packet, synthesis, mode)
     except Exception:

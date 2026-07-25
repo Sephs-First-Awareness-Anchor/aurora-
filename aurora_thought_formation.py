@@ -58,6 +58,7 @@ from aurora_warp_protocol import (
     _RECURSION_DIMS,
     _ALL_DIMS,
 )
+from aurora_constraint_emission import _ANCHOR_TOKEN_STOPWORDS
 
 
 # ---------------------------------------------------------------------------
@@ -920,6 +921,34 @@ _THOUGHT_LOG_PATH = (
     Path(__file__).resolve().parent / "aurora_logs" / "thought_chain.jsonl"
 )
 
+# PF3.1 carryover isolation: carry_forward's merge trigger used to be
+# axis-fingerprint overlap alone. With a 5-letter axis alphabet (X/T/N/B/A)
+# and the linguistic ProcessContext (aurora_braid_wiring.py) contributing
+# axis_signature=["X","T","A"] on every turn, unrelated back-to-back turns
+# share an axis letter near-unconditionally -- the entire previous turn's
+# dominant_thread was merging into supporting_context almost every turn,
+# chaining sticky content down the whole battery (confirmed live, PF2.1:
+# byte-identical delivered text across unrelated probes, e.g. "upset"
+# present in 12/12 uncertainty_signaling turns despite appearing in NONE
+# of their inputs). Topic identity -- what_it_is_operating_on -- is the
+# specific signal already present; axis letters are the coarse one. Same
+# anchor-token tokenizer + stopword convention as aurora_constraint_
+# emission.py's relevance anchor builder, reused rather than re-invented,
+# so common words ("the", "what", "just") that appear in nearly every turn
+# can't manufacture a false topic match the same way axis letters did.
+_TOPIC_TOKEN_RE = re.compile(r"[a-zA-Z][a-zA-Z']{2,}")
+
+
+def _topic_words(topics) -> set:
+    words: set = set()
+    for t in topics:
+        if not t:
+            continue
+        for tok in _TOPIC_TOKEN_RE.findall(str(t).lower()):
+            if tok not in _ANCHOR_TOKEN_STOPWORDS:
+                words.add(tok)
+    return words
+
 
 class ThoughtContinuity:
     """
@@ -948,9 +977,35 @@ class ThoughtContinuity:
                 if not any(item.lower() in t.lower() for t in new_topics if t):
                     still_unresolved.append(item)
 
+            # PF3.1: the full prior thread merges only when the turns share
+            # actual topic content, not merely an axis letter (see module
+            # comment above _topic_words). Axis overlap stays meaningful as
+            # the secondary signal it always was for noting an axis shift.
+            # Restricted to process_type=="linguistic" specifically -- every
+            # OTHER context type's what_it_is_operating_on is a fixed
+            # administrative label ("identity_predicates", "memory
+            # presence", "forward lean", "sedi_ambient") present on nearly
+            # every turn regardless of content. Comparing against the full
+            # dominant_thread (first attempt at this fix) reproduced the
+            # exact low-cardinality-proxy defect this phase targets, just
+            # one level down from axis letters -- confirmed live via
+            # scripts/pf3_1_carryover_trace.py: those fixed labels overlap
+            # turn to turn even when the turns share nothing else. The
+            # linguistic context (W1) is the only one confirmed to carry
+            # the turn's own language.
+            new_linguistic_topics = {
+                ctx.what_it_is_operating_on for ctx in new_thought.dominant_thread
+                if ctx.process_type == "linguistic"
+            }
+            last_linguistic_topics = {
+                ctx.what_it_is_operating_on for ctx in self.last_thought.dominant_thread
+                if ctx.process_type == "linguistic"
+            }
+            topic_overlap = bool(_topic_words(new_linguistic_topics) & _topic_words(last_linguistic_topics))
+
             last_axes = set(self.last_thought.axis_fingerprint)
             new_axes = set(new_thought.axis_fingerprint)
-            if last_axes & new_axes:
+            if topic_overlap:
                 new_thought.supporting_context = (
                     new_thought.supporting_context
                     + [ctx for ctx in self.last_thought.dominant_thread

@@ -2316,6 +2316,41 @@ class SentenceComposer:
     # COMPOSITION  -- The main output (scaffolding-aware)
     # ================================================================
 
+    def _motif_for_proposition_avoiding_thinning(self, lineage, frame, orient, outlet,
+                                                  richest_role_count: int,
+                                                  max_retries: int):
+        """PF3.4a (2026-07-21, ratified from PF3.4's characterization
+        note): best_for_proposition's own fitness-proportional sampling
+        (PF1.3, intentional -- diversity ACROSS responses) independently
+        re-samples for every sentence in ONE response against the SAME
+        frame, so a later sentence can land on a strictly thinner
+        skeleton (bare agent_action, no object/descriptor role to fill
+        at all) than an earlier sentence in the SAME response already
+        achieved -- even though the frame still has full subject/
+        relation/obj content available. PF3.4's characterization found
+        this as the single largest residue sub-pattern (14/36 non-
+        carryover records): one clause content-bearing, the sibling
+        clause ("I denied claims. I denied.") bare, from the identical
+        frame. Not slot-fill starvation (no empty slot is left unfilled)
+        -- the skeleton itself has no slot.
+
+        richest_role_count=0 (frame not fully populated, or this is the
+        response's first sentence) means "nothing to protect yet" --
+        every draw passes on the first comparison, no retry, identical
+        to pre-PF3.4a behavior. Bounded retries only, so a lineage with
+        genuinely no richer promoted skeleton available still returns
+        the best draw it found rather than looping or returning None."""
+        motif = lineage.best_for_proposition(frame, orient, outlet)
+        if richest_role_count <= 0 or motif is None:
+            return motif
+        for _ in range(max_retries):
+            if len(motif.role_sequence) >= richest_role_count:
+                break
+            retry = lineage.best_for_proposition(frame, orient, outlet)
+            if retry is not None:
+                motif = retry
+        return motif
+
     def compose(self, offspring: 'ExpressionOffspring',
                 assembly: 'AssemblyResult',
                 i_state: str,
@@ -2397,6 +2432,19 @@ class SentenceComposer:
         engine = getattr(self, "grammar_engine", None)
         lineage = getattr(engine, "_lineage", None) if engine is not None else None
 
+        # PF3.4a: avoid a later sentence in this SAME response landing on
+        # a strictly thinner motif skeleton than an earlier one already
+        # achieved against the identical frame -- see
+        # _motif_for_proposition_avoiding_thinning's own docstring.
+        _richest_role_count = 0
+        _frame_fully_populated = bool(
+            self._proposition_frame is not None
+            and getattr(self._proposition_frame, "subject", "")
+            and getattr(self._proposition_frame, "relation", "")
+            and getattr(self._proposition_frame, "obj", "")
+        )
+        _MAX_RICHNESS_RETRIES = 3
+
         sentences = []
         for s_i in range(sentence_count):
             motif = None
@@ -2411,8 +2459,11 @@ class SentenceComposer:
                     # of pressure-only scoring -- frame-absent turns keep
                     # today's exact best_for_pressure behavior.
                     if self._proposition_frame is not None:
-                        motif = lineage.best_for_proposition(
-                            self._proposition_frame, _orient, outlet)
+                        motif = self._motif_for_proposition_avoiding_thinning(
+                            lineage, self._proposition_frame, _orient, outlet,
+                            _richest_role_count if _frame_fully_populated else 0,
+                            _MAX_RICHNESS_RETRIES,
+                        )
                     else:
                         motif = lineage.best_for_pressure(_orient, outlet)
                 except Exception:
@@ -2427,6 +2478,8 @@ class SentenceComposer:
                 if motif is not None:
                     self._last_motifs_used.append(motif)
                     self._last_motif_sentences.append((motif, sent))
+                    if _frame_fully_populated:
+                        _richest_role_count = max(_richest_role_count, len(motif.role_sequence))
 
         text = " ".join(sentences)
 
@@ -2530,6 +2583,7 @@ class SentenceComposer:
                 valence_target, words,
                 input_text=_role_input_text,
                 f5_turn_id=f5_turn_id, f5_register=f5_register,
+                frame=frame,
             )
             if word:
                 words.append(word)
@@ -2639,15 +2693,64 @@ class SentenceComposer:
 
         return None
 
+    # PF3.6 Cluster B (2026-07-21): do-support moves TENSE onto the
+    # auxiliary, not just polarity -- "I went" negates to "I did not
+    # go", never "I do not went" (confirmed live, boundary_
+    # calibration_10). _negate_action_word's original do-support path
+    # only ever produced "do not <verb>", bare-stem retention, because
+    # frame.relation ("went") passes through _conjugate_for_subject
+    # unchanged (no past-tense entry to conjugate FROM -- English past
+    # tense doesn't inflect for person, so "I went"/"you went" are both
+    # already correct there; the auxiliary-fronting requirement only
+    # exists once negation moves the verb behind "not"). Reverses the
+    # SAME irregular verbs _CONJUGATIONS already covers (established
+    # vocabulary, not new coverage) rather than a general lemmatizer.
+    _IRREGULAR_PAST_TO_BASE = {
+        'went': 'go', 'said': 'say', 'made': 'make', 'took': 'take',
+        'gave': 'give', 'came': 'come', 'found': 'find', 'got': 'get',
+        'knew': 'know', 'thought': 'think', 'saw': 'see', 'felt': 'feel',
+        'kept': 'keep', 'began': 'begin', 'heard': 'hear', 'ran': 'run',
+        'brought': 'bring', 'wrote': 'write', 'sat': 'sit', 'stood': 'stand',
+        'lost': 'lose', 'paid': 'pay', 'met': 'meet', 'grew': 'grow',
+        'led': 'lead', 'understood': 'understand', 'held': 'hold',
+        'sought': 'seek', 'chose': 'choose', 'became': 'become', 'did': 'do',
+    }
+
+    def _past_tense_base_form(self, verb: str) -> Optional[str]:
+        """Returns the base/infinitive form if `verb` is recognizably
+        past tense, else None (fail-quiet -- caller keeps today's
+        bare-stem behavior for anything this can't confidently reverse).
+        Irregulars via the table above; regular "-ed"/"-ied" reversed
+        with the same silent-e disambiguation _conjugate_for_subject's
+        own -es/-s stripping already relies on, checked against the
+        lexicon itself (her web defines it, same PF3.3 doctrine) rather
+        than a fixed spelling-rule guess."""
+        v = verb.lower()
+        if v in self._IRREGULAR_PAST_TO_BASE:
+            return self._IRREGULAR_PAST_TO_BASE[v]
+        if v.endswith('ied') and len(v) > 4:
+            return v[:-3] + 'y'
+        if v.endswith('ed') and len(v) > 3:
+            stem = v[:-2]
+            if (stem + 'e') in self.lexicon.entries:
+                return stem + 'e'
+            return stem
+        return None
+
     def _negate_action_word(self, verb: str, subject: str) -> str:
         """PF1.4: minimal do-support negation, reusing the existing
         _conjugate_for_subject table rather than a new one. 'be' forms
-        negate in place ("am not"/"are not"); everything else uses
-        do-support ("do not <base>") -- correct for "I"/"you" (the only
-        subjects this delivered voice ever uses; "does" never applies)."""
+        negate in place ("am not"/"are not"); a past-tense main verb
+        moves its tense onto the auxiliary ("did not go", PF3.6 Cluster
+        B); everything else uses present do-support ("do not <base>")
+        -- correct for "I"/"you" (the only subjects this delivered
+        voice ever uses; "does" never applies)."""
         base = self._conjugate_for_subject(verb, subject)
         if base in self._BE_NEGATION_FORMS:
             return f"{base} not"
+        past_base = self._past_tense_base_form(verb)
+        if past_base is not None:
+            return f"did not {past_base}"
         return f"do not {base}"
 
     # R1.9.2 G1: valence-proximity's bonus is bounded so no valence match,
@@ -3071,12 +3174,76 @@ class SentenceComposer:
         except Exception:
             pass
 
+    def _descriptor_neighborhood(self, frame) -> set:
+        """PF3.3 (2026-07-21): words whose OETS node lies within one
+        relation hop of frame.subject or frame.obj. Her web defines
+        "about" -- no word lists, no tuned constants, same
+        get_all_relations_for traversal aurora_constraint_emission.
+        build_relevance_anchor_set already uses for one-hop expansion.
+        Returns an empty set (never raises) if there's nothing to
+        anchor to -- callers fall through to the unfiltered pool.
+
+        Co-occurrence-sourced relations are EXCLUDED from the
+        neighborhood, same FIX-A048 exclusion and rationale (PF3.1):
+        "clear"/"real" -- the exact generic-filler words this phase
+        targets -- carry 39 and 131 co-occurrence-sourced edges
+        respectively in the real, committed OETS graph (confirmed live,
+        aurora_state/aurora_oets_web.json), to near-arbitrary common
+        words ("exist", "always", "feel", "does", "time") purely from
+        being used so often across this whole campaign's testing
+        history. A first version excluding ONLY co-occurrence still
+        measured no improvement (9.22% -> 9.64%, if anything slightly
+        worse) -- traced live (scripts/pf3_3_descriptor_trace.py) and
+        found the actual leak was "co-expression" relations, created
+        fresh DURING the very session being measured: every response
+        Aurora generates that contains "clear"/"real" (nearly all of
+        them, precisely because they're the entrenched generic fillers)
+        wires a co-expression relation from every OTHER word in that
+        same response back to "clear"/"real" -- so the very act of using
+        them reinforces their own future eligibility as a "neighbor" of
+        whatever gets said next, a self-reinforcing loop identical in
+        kind to co-occurrence's (FIX-A032's own named pattern), despite
+        co-expression being general-case trustworthy elsewhere in this
+        codebase (aurora_constraint_emission.py's own comment lists it
+        among "deliberate structure" sources) -- that classification
+        assumed ordinary usage volume, which breaks down for genuinely
+        pathological outlier words. Both excluded here; other structural
+        relations (category_sharing, definition_analysis, conversation,
+        adjacency, ...) still count."""
+        if not self._has_oets or frame is None:
+            return set()
+        terms = [
+            str(t).strip().lower()
+            for t in (getattr(frame, "subject", ""), getattr(frame, "obj", ""))
+            if t
+        ]
+        if not terms:
+            return set()
+        neighborhood = set(terms)
+        get_all = getattr(self._oets.web, "get_all_relations_for", None)
+        if not callable(get_all):
+            return neighborhood
+        _EXCLUDED_RELATION_SOURCES = {"co-occurrence", "co-expression"}
+        for term in terms:
+            try:
+                rels = get_all(term) or []
+            except Exception:
+                continue
+            for rel in rels:
+                if getattr(rel, "source_of_knowledge", "") in _EXCLUDED_RELATION_SOURCES:
+                    continue
+                other = rel.target_word if rel.source_word == term else rel.source_word
+                if other:
+                    neighborhood.add(str(other).lower())
+        return neighborhood
+
     def _select_constraint_word(self, role: str, dominant_axis: str,
                                 chars: tuple, lex_role: str,
                                 valence_target: float,
                                 already: list,
                                 input_text: str = "",
-                                f5_turn_id: str = "", f5_register: str = "neutral") -> str:
+                                f5_turn_id: str = "", f5_register: str = "neutral",
+                                frame=None) -> str:
         """Concept-channel word selection with role fallback.
 
         R1.9.2 G1: relevance chooses WHAT is said, valence-proximity biases
@@ -3201,6 +3368,20 @@ class SentenceComposer:
 
         if not candidates:
             return ""
+
+        # PF3.3 (2026-07-21): the descriptor slot is the last generic-
+        # filler leak ("clear"/"real") once real propositional content is
+        # flowing through more often (W1). When a frame is present, filter
+        # the candidate pool to the frame's one-hop OETS neighborhood
+        # BEFORE the resonance/valence ranking below runs -- an empty
+        # neighborhood (or an empty intersection with this pool) falls
+        # through to the unfiltered pool unchanged (fail-quiet).
+        if role == "descriptor" and frame is not None:
+            neighborhood = self._descriptor_neighborhood(frame)
+            if neighborhood:
+                _neighborhood_candidates = [e for e in candidates if e.word.lower() in neighborhood]
+                if _neighborhood_candidates:
+                    candidates = _neighborhood_candidates
 
         # R1.9.2 G2 fix: deliberately NOT unioning `already` (words already
         # chosen earlier in THIS SAME response) into the anchor set. It was
@@ -4484,8 +4665,31 @@ class ExpressionPerceptionEngine(WarpCapable):
                 _oets_checked += 1
                 if node:
                     _oets_hits += 1
-                    # Pull words from relations
-                    for rel in list(node.relations.values())[:5]:
+                    # Pull words from relations. Co-occurrence-sourced
+                    # relations are excluded here -- PF3.1 (2026-07-21):
+                    # aurora_constraint_emission.build_relevance_anchor_set
+                    # already caps co-occurrence edge strength at the
+                    # one-hop floor with exactly this rationale ("86% of
+                    # this graph's relations are co-occurrence-sourced and
+                    # 84% of those sit at strength 1.0 -- a saturated
+                    # frequency proxy, not a semantic-relevance signal",
+                    # same pattern as FIX-A032), but that dampening never
+                    # reached this call site: words pulled in here get
+                    # written straight into composer._context_keywords,
+                    # which build_relevance_anchor_set then treats as
+                    # DIRECT anchors (relevance 1.0, full strength) via its
+                    # direct_from_recent branch -- bypassing the one-hop
+                    # cap entirely. Confirmed live: heavily-reinforced hub
+                    # words ("planning", usage_count 496+) rode a
+                    # co-occurrence edge from an unrelated turn's keyword
+                    # straight into context_keywords, then into the
+                    # anchor set at full strength, dominating slot
+                    # selection for turns that never mentioned them.
+                    relevant_rels = [
+                        rel for rel in node.relations.values()
+                        if getattr(rel, "source_of_knowledge", "") != "co-occurrence"
+                    ]
+                    for rel in relevant_rels[:5]:
                         other = (rel.target_word if rel.source_word == keyword
                                  else rel.source_word)
                         if other not in enriched:
