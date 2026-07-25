@@ -68,6 +68,7 @@ from collections import defaultdict, deque
 # EDIT (constraint-expansive concepts): WARP machinery for DPS
 from aurora_warp_protocol import (
     WarpCapable, WarpComponent, axes_to_istates, istates_to_axes,
+    warp_guard, WarpTrigger,
 )
 from enum import Enum, IntEnum
 
@@ -868,8 +869,18 @@ class CrystalProcessingSystem(WarpCapable):
         decides whether score clears its own confidence floor before
         treating the result as usable, matching the "operate on theory
         until disproven" model rather than treating a resonance hit as
-        equivalent to an exact match. This method does not itself touch
-        _warp_trials -- Phase 4 wires that.
+        equivalent to an exact match. This method does not itself
+        promote anything into _warp_trials -- Phase 4 (resonant_or_
+        extend) wires that.
+
+        WARP Universalization Directive Phase 3b (2026-07-25, ratified
+        priority #2 of 4): a genuine search (real query_axis_state)
+        that still comes back with nothing above threshold confesses
+        through the real, universal WarpField (WarpTrigger.GAP) -- see
+        _confess_resonance_miss(). This is the universal confession
+        side; it does not replace or duplicate resonant_or_extend()'s
+        own tier-3 fallthrough to check_and_extend() (the structural
+        WarpCapable side) -- both fire from the same miss, by design.
         """
         if not query_axis_state:
             return []
@@ -890,8 +901,37 @@ class CrystalProcessingSystem(WarpCapable):
             if score >= threshold:
                 scored.append((crystal, score))
 
+        if not scored:
+            self._confess_resonance_miss(concept, query_axis_state)
+            return []
+
         scored.sort(key=lambda cs: cs[1], reverse=True)
         return scored[:top_k]
+
+    def _confess_resonance_miss(
+        self, concept: str, query_axis_state: Dict[str, float],
+    ) -> None:
+        """WARP Universalization Directive Phase 3b (2026-07-25,
+        ratified priority #2 of 4): even the resonance graph coming
+        back empty is a textbook WarpTrigger.GAP confession (directive
+        Section 4, candidate #4) -- distinct from check_and_extend()'s
+        own structural coverage-gap machinery (WarpCapable), this
+        reaches the universal WarpField confession side directly.
+        Isolated in its own try/except, same swallow-on-failure posture
+        as every other confession call site in this campaign -- a
+        confession-path failure must never break resonant_lookup()
+        itself."""
+        try:
+            warp_guard(
+                source=self._warp_level_name(), layer="resonant_lookup",
+                trigger=WarpTrigger.GAP,
+                unresolved_text=concept,
+                profile=dict(query_axis_state),
+                severity=0.4,
+                persistence_key="resonant_miss:" + concept,
+            )
+        except Exception:
+            pass
 
     def resonant_or_extend(
         self,

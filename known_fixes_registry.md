@@ -6349,3 +6349,58 @@ is `False`. Also re-ran `tests/test_cpm.py` and
 `tests/test_lifecycle_catalog.py` (the only other files touching
 `LanguageField`) to confirm the `_infer_comparison_type()` return-type
 change caused no regression -- both still pass in full (80 total).
+
+## WARP Universalization Directive, Phase 3b — resonant_lookup miss confession, 2026-07-25
+
+Directive (Sunni & Cael, 2026-07-24), Section 4, candidate #4 (Sunni's
+ratified priority #2 of 4): "when even the resonance graph comes back
+under threshold, that's a textbook `WarpTrigger.GAP` confession." Phase
+1's `resonant_lookup()` and Phase 4's `resonant_or_extend()` already
+handle a miss structurally (tier 3 falls through to the real
+`check_and_extend()`), but nothing reached the universal `WarpField`
+confession side (`warp_guard`) directly -- the two WARP subsystems
+(`WarpCapable`'s structural coverage machinery vs. `WarpField`'s
+universal accommodation primitive) hadn't been connected for this
+specific miss.
+
+**Added:** `CrystalProcessingSystem._confess_resonance_miss(concept,
+query_axis_state)`, called from `resonant_lookup()` exactly when a
+GENUINE search (a real `query_axis_state` was supplied, so the fail-
+quiet no-query path at the top already returned) still ends with
+`scored` empty -- no crystal cleared `threshold`. Confesses via
+`warp_guard(source=self._warp_level_name()` (`"dimensional_crystal"`)
+`, layer="resonant_lookup", trigger=WarpTrigger.GAP,
+unresolved_text=concept, profile=query_axis_state, severity=0.4,
+persistence_key="resonant_miss:" + concept)`. `aurora_dimensional_
+systems.py` gained `warp_guard, WarpTrigger` on its existing (hard,
+non-guarded) `aurora_warp_protocol` import line. Isolated in its own
+try/except -- a confession-path failure must never break
+`resonant_lookup()` itself.
+
+Deliberately does NOT replace or gate `resonant_or_extend()`'s own
+tier-3 fallthrough to `check_and_extend()` -- both fire from the same
+miss, by design, exactly as the directive frames it ("feeding the
+exact provisional-hypothesis lifecycle in Phase 4"): the confession is
+the universal, always-on signal; `check_and_extend()`'s own
+`GAP_PERSISTENCE_REQUIRED` gate still independently decides whether a
+structural component actually gets derived. Confirmed
+`WarpTrigger.GAP`'s real routing (`_route_to_warp_capable`, `aurora_
+warp_protocol.py:1371`) is side-effect-safe when no `dimensional_
+crystal` system is registered in the (test-default, unwired) global
+`WarpField` singleton -- `system is None` short-circuits to a no-op
+note, no exception, no disk I/O.
+
+**Tests:** `tests/test_warp_phase3b_resonant_lookup_confession.py` (6)
+-- a spy matching `warp_guard`'s REAL signature exactly (same
+regression-catching posture as Phase 2/3a). Covers: the no-query
+fail-quiet path does NOT confess (nothing was searched); a genuine
+miss (mismatched axis key-set, nothing to even compare) confesses with
+the correct source/layer/trigger/unresolved_text/profile/
+persistence_key; a below-threshold miss (real candidate, real
+key-set match, insufficient similarity) also confesses; a successful
+match does NOT confess; confession exceptions are swallowed without
+breaking `resonant_lookup()`; and an end-to-end run through
+`resonant_or_extend()`'s tier-3 fallthrough confirms the confession
+fires on every miss attempt AND the real `check_and_extend()` gap
+still fires exactly as it did before this phase (Phase 4's own tests
+unchanged, re-run clean alongside this file).
