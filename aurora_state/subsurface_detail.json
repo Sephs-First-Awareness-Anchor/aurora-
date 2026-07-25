@@ -10,16 +10,16 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.288,
+  "coherence": 0.188,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "connection",
+    "active_topic": "a code evolve 2054e852af",
     "ambiguity": 0.545,
-    "cost_total": 0.2041,
+    "cost_total": 0.2241,
     "dominant_emotion": "curiosity",
     "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
@@ -30,11 +30,26 @@
   "instability_markers": [
     {
       "label": "low_coherence",
-      "severity": 0.712
+      "severity": 0.812
+    },
+    {
+      "label": "prediction_mismatch",
+      "severity": 0.5575
     }
   ],
   "law_bindings": [],
   "micro_reasoning": [
+    {
+      "confidence": 0.5575,
+      "label": "prediction_mismatch",
+      "rationale": "Observed input diverged from the currently primed continuation.",
+      "source": "prediction",
+      "tags": [
+        "reframe",
+        "surprise"
+      ],
+      "urgency": 0.812
+    },
     {
       "confidence": 1.0,
       "label": "callback_pressure",
@@ -65,25 +80,26 @@
   ],
   "prediction_signal": {
     "alerts": [
+      "prediction_mismatch",
       "novelty_shift"
     ],
-    "confidence": 0.6757,
+    "confidence": 0.5678,
     "expected_observation": "followup",
-    "expected_user_continuation": "connection",
+    "expected_user_continuation": "a code evolve 2054e852af",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.325,
+    "mismatch": 0.5575,
     "prediction_payload": {
       "affect": "curiosity",
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "connection"
+      "topic": "a code evolve 2054e852af"
     },
     "preload_context": [
-      "connection",
+      "a code evolve 2054e852af",
       "followup"
     ],
-    "readiness_bias": 0.4312,
+    "readiness_bias": 0.2826,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -93,19 +109,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.4033,
+  "readiness": 0.2863,
   "recalled_fragments": [
-    "connection",
-    "Tell me about connection.\n[recalled:connection] Tell me about connection. [recalled:recalled:connection] Tell me about connection.\n[recal..."
+    "a code evolve 2054e852af",
+    "What does identity mean to you?\n[recalled:identity] What does identity mean to you? [recalled:mean] What does identity mean to you? [reca..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2741,
-    "N": 0.0821,
-    "T": 0.6438,
+    "B": 0.2719,
+    "N": 0.0894,
+    "T": 0.6386,
     "X": 0.0
   },
-  "saved_at": 1784985658.8223903,
+  "saved_at": 1784991435.6659913,
   "sub_crests": [
     {
       "axis": "X",
@@ -124,8 +140,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.45,
-      "label": "low_certainty"
+      "intensity": 0.5575,
+      "label": "surprise"
     },
     {
       "axis": "N",
