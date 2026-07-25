@@ -6216,3 +6216,79 @@ up stale entries -- this last one caught FIX-A052), and
 ratified contract's central guarantee, excludes the exact concept
 queried, respects `threshold` and `top_k`, ranks descending, ignores
 crystals with no vector or a mismatched key-set).
+
+## WARP Universalization Directive, Phase 4 — resonant trial lifecycle, 2026-07-24
+
+Directive (Sunni & Cael, 2026-07-24), Section 5: `check_and_extend()`
+(`aurora_warp_protocol.py:945`) only ever saw a binary choice for a
+given axis state -- an existing component already covers it, or a
+total gap that WARP derives fresh from scratch. No middle tier for "I
+have something *related* but not exact, so let me operate on it as a
+working theory." Phase 1's `resonant_lookup()` is that middle tier,
+*if* wired into the trial lifecycle instead of returned as a plain
+answer -- which this phase does, per the directive's own explicit
+spec (never written to disk by the directive itself; it stopped short
+because "making resonance hits provisional-by-default is a real
+behavior change ... a design call for you to make explicitly").
+
+**Added:** `CrystalProcessingSystem.resonant_or_extend(concept,
+query_axis_state=None, *, source="resonant_lookup", tick=0,
+topology_gap_ref=None) -> Tuple[Optional[Any], str]`, three tiers
+exactly per the directive:
+1. **Exact match** (`get_crystal()` hit) -- full confidence, current
+   behavior, unchanged. Returns `(crystal, "exact")`.
+2. **Resonance match, no exact match** -- provisional, not ground
+   truth. The top `resonant_lookup()` candidate's own fingerprint
+   (`_crystal_vector()`, converted to I-state space via the same
+   `axes_to_istates()` pattern `_get_axis_profiles()` already uses)
+   seeds a `WarpComponent` stamped into `_warp_trials` via the real
+   `_integrate_warp()` -- with `trial_score_ema` SEEDED from the
+   similarity score itself (the resonance hit IS the hypothesis, not a
+   zero-starting trial), exactly as `check_and_extend()` does at line
+   1005-1007. `evaluate_warp_trials()` (line 1010, untouched) then
+   promotes or dissolves it over `TRIAL_TICKS` from real usage --
+   recurrence is the experiment, `evaluate_warp_trials()` is peer
+   review. `component_id` is deterministic
+   (`"resonant:" + md5(concept)[:12]`), so a repeat call for the same
+   concept finds the trial already tracked and skips re-integration --
+   in practice this guard is rarely even reached, because
+   `_integrate_warp()`'s own `_get_or_create(component.name)` (name =
+   the queried concept) means the *first* resonant call already makes
+   `concept` a real `concept_index` entry, so every subsequent call for
+   that same concept naturally resolves as tier 1 before tier 2 is ever
+   reached again. Returns `(crystal, "resonant_trial")`.
+3. **Neither** -- falls through to the real, unmodified
+   `check_and_extend()`, gated by its own
+   `GAP_PERSISTENCE_REQUIRED` exactly as every other WARP-capable
+   level. Only reached when a real `query_axis_state` was supplied
+   (fail-quiet otherwise, `(None, "none")` -- same posture as
+   `resonant_lookup()` itself, no fabricated fallback). Returns
+   `(component_or_None, "gap")` when it fires, `(None, "none")`
+   otherwise.
+
+Purely additive: nothing calls `resonant_or_extend()` yet.
+`process()`/`process_concepts()` keep calling `_get_or_create()`
+unconditionally, exactly as before -- this is an opt-in second
+entry point into the existing, solid trial lifecycle, not a
+replacement for the exact-match fast path. No new lifecycle was built;
+`_warp_trials`, `evaluate_warp_trials()`, `TRIAL_TICKS`,
+`PROMOTION_SCORE` are all reused verbatim.
+
+**Tests:** `tests/test_warp_phase4_resonant_trial_lifecycle.py` (10)
+-- against a real `CrystalProcessingSystem` (the real `WarpCapable`
+mixin, not mocked, since the point is that this reuses the real trial
+lifecycle verbatim). Covers all three tiers: exact match spawns no
+trial (even with no `query_axis_state`); resonance match creates a
+provisional trial seeded from the similarity score with the right
+`parent_ids`/`name`/genealogy facets; repeat calls are idempotent
+(second call naturally resolves as tier 1, no duplicate facets, no
+duplicate trial) with a direct test of the deterministic-id guard
+itself; no match with no `query_axis_state` fails quiet; no match with
+a real `query_axis_state` falls through to the genuine
+`check_and_extend()` and fires once `GAP_PERSISTENCE_REQUIRED` is
+met (confirmed against real `AxisCoverageChecker` behavior, including
+the discovered edge case that a *totally empty* crystal system trips
+`check_and_extend()`'s own 6th-axis-anomaly path instead of a normal
+persistent gap -- pre-existing `WarpGenerator` behavior, unrelated to
+this phase, so the test seeds one unrelated crystal to exercise the
+ordinary path instead).

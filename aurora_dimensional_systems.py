@@ -893,6 +893,107 @@ class CrystalProcessingSystem(WarpCapable):
         scored.sort(key=lambda cs: cs[1], reverse=True)
         return scored[:top_k]
 
+    def resonant_or_extend(
+        self,
+        concept: str,
+        query_axis_state: Optional[Dict[str, float]] = None,
+        *,
+        source: str = "resonant_lookup",
+        tick: int = 0,
+        topology_gap_ref: Optional[str] = None,
+    ) -> Tuple[Optional[Any], str]:
+        """WARP Universalization Directive Phase 4 (2026-07-24): the
+        "operate on theory until disproven" middle tier. Until now
+        check_and_extend() only ever saw a binary choice for a given
+        axis state -- an existing component already covers it, or a
+        total gap that WARP derives fresh from scratch. This adds the
+        missing middle: a resonance hit that isn't an exact match
+        becomes a WARP TRIAL, not ground truth -- reusing the existing
+        trial/evaluate_warp_trials()/TRIAL_TICKS/PROMOTION_SCORE
+        machinery check_and_extend() already uses (aurora_warp_
+        protocol.py:945-1049), entered from a second, resonance-
+        triggered doorway instead of only a coverage-gap-triggered one.
+        No new lifecycle -- the lifecycle is solid, this is only a
+        second entry point into it.
+
+        Three tiers, exactly per the directive:
+          1. Exact match (concept_index hit, via get_crystal()) -- full
+             confidence, current behavior, unchanged.
+          2. Resonance match above threshold, no exact match --
+             provisional: the top candidate's own fingerprint seeds a
+             WarpComponent stamped into _warp_trials with
+             trial_score_ema SEEDED from the similarity score itself
+             (the resonance hit is the hypothesis) -- left for
+             evaluate_warp_trials() to promote or dissolve over
+             TRIAL_TICKS from real recurrence (the experiment / peer
+             review), exactly like every other WARP trial. Idempotent
+             per concept via a deterministic component_id: repeat calls
+             while a trial is pending, or after it's promoted, find the
+             same tracked component and skip re-integration rather than
+             stamping duplicate genealogy facets every call.
+          3. Neither -- current check_and_extend() path, WARP derives
+             from combination the same as today. Untouched; only
+             reached when there's a real query_axis_state to check
+             coverage against (fail-quiet otherwise, same posture as
+             resonant_lookup() itself).
+
+        Returns (result, tier) where tier is one of "exact",
+        "resonant_trial", "gap", "none". result is the matching
+        Crystal for "exact"/"resonant_trial", the spawned (or still-
+        pending, possibly None) WarpComponent for "gap", or None for
+        "none".
+
+        Purely additive and not yet called from anywhere:
+        process()/process_concepts() keep calling _get_or_create()
+        unconditionally -- this is an opt-in second path for a future
+        caller who already has a real query_axis_state and wants
+        resonance-aware lookup instead of blind auto-create, not a
+        replacement for the existing exact-match fast path.
+        """
+        existing = self.get_crystal(concept)
+        if existing is not None:
+            return existing, "exact"
+
+        hits = self.resonant_lookup(concept, query_axis_state=query_axis_state)
+        if hits:
+            top_crystal, score = hits[0]
+            component_id = "resonant:" + hashlib.md5(concept.encode()).hexdigest()[:12]
+
+            if component_id not in self._warp_trials and component_id not in self._warp_promoted:
+                top_vec = self._crystal_vector(top_crystal) or {}
+                axis_profile = axes_to_istates(
+                    {ax: abs(float(v)) for ax, v in top_vec.items()},
+                    ivm_polarity={ax: (1.0 if float(v) >= 0 else -1.0)
+                                  for ax, v in top_vec.items()},
+                )
+                component = WarpComponent(
+                    component_id=component_id,
+                    level=self._warp_level_name(),
+                    axis_profile=axis_profile,
+                    parent_ids=[top_crystal.crystal_id],
+                    name=concept,
+                )
+                component.trial_score_ema = float(score)
+                self._integrate_warp(component)
+                self._sediment_warp_traversal(component, "warp_gap_closed")
+                self._warp_trials[component_id] = component
+
+            return self.get_crystal(concept), "resonant_trial"
+
+        if not query_axis_state:
+            return None, "none"
+
+        istate_profile = axes_to_istates(
+            {ax: abs(float(v)) for ax, v in query_axis_state.items()},
+            ivm_polarity={ax: (1.0 if float(v) >= 0 else -1.0)
+                          for ax, v in query_axis_state.items()},
+        )
+        component = self.check_and_extend(
+            istate_profile, source=source, tick=tick,
+            topology_gap_ref=topology_gap_ref,
+        )
+        return component, ("gap" if component is not None else "none")
+
     def tick(self):
         for crystal in self.crystals.values():
             for facet in crystal.facets.values():
