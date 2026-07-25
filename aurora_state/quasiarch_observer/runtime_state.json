@@ -29,384 +29,6 @@
   "issue_possibility_pressure": {},
   "recent_events": [
     {
-      "ts": 1783854171.1851125,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_daemon_classroom_cycle",
-      "severity": 0.6,
-      "persistence_key": "tests.test_daemon_classroom_cycle",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783854171.9205515,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_daemon_subsurface_and_ambient",
-      "severity": 0.6,
-      "persistence_key": "tests.test_daemon_subsurface_and_ambient",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783854179.6751916,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_oets_comprehension_confidence_growth",
-      "severity": 0.6,
-      "persistence_key": "tests.test_oets_comprehension_confidence_growth",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783854182.5202146,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_reflexive_interpreter_deposition_integration",
-      "severity": 0.6,
-      "persistence_key": "tests.test_reflexive_interpreter_deposition_inte",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783854185.2911708,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_understanding_sediment_overlay",
-      "severity": 0.6,
-      "persistence_key": "tests.test_understanding_sediment_overlay",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783972629.623394,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "aurora_flow_audit",
-      "severity": 0.6,
-      "persistence_key": "aurora_flow_audit",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783972762.2153437,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "aurora_toroidal_circulation",
-      "severity": 0.6,
-      "persistence_key": "aurora_toroidal_circulation",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783972837.588566,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_flow_audit_and_tcl_wiring",
-      "severity": 0.6,
-      "persistence_key": "tests.test_flow_audit_and_tcl_wiring",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783972850.6976078,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_toroidal_circulation_layer",
-      "severity": 0.6,
-      "persistence_key": "tests.test_toroidal_circulation_layer",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011026.753972,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_cers_topology_context",
-      "severity": 0.6,
-      "persistence_key": "tests.test_cers_topology_context",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011042.8040507,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_mtsl_acceptance_report",
-      "severity": 0.6,
-      "persistence_key": "tests.test_mtsl_acceptance_report",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011043.6498652,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_mtsl_phase0_plumbing",
-      "severity": 0.6,
-      "persistence_key": "tests.test_mtsl_phase0_plumbing",
-      "profile": {
-        "X": 0.1,
-        "T": 0.8,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011044.4213398,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_mtsl_phase7_extensions",
-      "severity": 0.6,
-      "persistence_key": "tests.test_mtsl_phase7_extensions",
-      "profile": {
-        "X": 0.1,
-        "T": 0.8,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011047.782582,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_perturbation_probe",
-      "severity": 0.6,
-      "persistence_key": "tests.test_perturbation_probe",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011052.81609,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_semantic_intention_bridge",
-      "severity": 0.6,
-      "persistence_key": "tests.test_semantic_intention_bridge",
-      "profile": {
-        "X": 0.1,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.8,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011053.6587613,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_semantic_variant_registry",
-      "severity": 0.6,
-      "persistence_key": "tests.test_semantic_variant_registry",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011055.3489323,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_topological_semantic_coordinator",
-      "severity": 0.6,
-      "persistence_key": "tests.test_topological_semantic_coordinator",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011056.1984904,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_topology_cycle_decomposition",
-      "severity": 0.6,
-      "persistence_key": "tests.test_topology_cycle_decomposition",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011057.0564747,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_topology_frame",
-      "severity": 0.6,
-      "persistence_key": "tests.test_topology_frame",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011057.9150007,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_topology_tracker",
-      "severity": 0.6,
-      "persistence_key": "tests.test_topology_tracker",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011061.2408683,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_variant_transition_predictor",
-      "severity": 0.6,
-      "persistence_key": "tests.test_variant_transition_predictor",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
       "ts": 1784026275.1836212,
       "provenance": "WARP",
       "pathway": "surface_emergence",
@@ -1755,6 +1377,384 @@
         "B": 0.1,
         "A": 0.1
       }
+    },
+    {
+      "ts": 1784963967.5254772,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "scripts.pf3_1_carryover_trace",
+      "severity": 0.6,
+      "persistence_key": "scripts.pf3_1_carryover_trace",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784963968.870951,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "scripts.pf3_1_context_keywords_trace",
+      "severity": 0.6,
+      "persistence_key": "scripts.pf3_1_context_keywords_trace",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784963970.5308719,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "scripts.pf3_1_frame_staleness_trace",
+      "severity": 0.6,
+      "persistence_key": "scripts.pf3_1_frame_staleness_trace",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784963971.951922,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "scripts.pf3_3_descriptor_trace",
+      "severity": 0.6,
+      "persistence_key": "scripts.pf3_3_descriptor_trace",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784963973.176038,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "scripts.pf3_3_frame_absence_trace",
+      "severity": 0.6,
+      "persistence_key": "scripts.pf3_3_frame_absence_trace",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784963974.5437565,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "scripts.pf3_5_motif_watch_readout",
+      "severity": 0.6,
+      "persistence_key": "scripts.pf3_5_motif_watch_readout",
+      "profile": {
+        "X": 0.1,
+        "T": 0.8,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964116.2173688,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_pf3_1_carryover_isolation",
+      "severity": 0.6,
+      "persistence_key": "tests.test_pf3_1_carryover_isolation",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964117.896226,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_pf3_1_cooccurrence_hub_leak",
+      "severity": 0.6,
+      "persistence_key": "tests.test_pf3_1_cooccurrence_hub_leak",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964119.3156872,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_pf3_1_frame_staleness",
+      "severity": 0.6,
+      "persistence_key": "tests.test_pf3_1_frame_staleness",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964120.7146564,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_pf3_2_pronoun_consumer_split",
+      "severity": 0.6,
+      "persistence_key": "tests.test_pf3_2_pronoun_consumer_split",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964121.9794278,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_pf3_3_descriptor_neighborhood",
+      "severity": 0.6,
+      "persistence_key": "tests.test_pf3_3_descriptor_neighborhood",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964123.4462285,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_pf3_3_frame_absence",
+      "severity": 0.6,
+      "persistence_key": "tests.test_pf3_3_frame_absence",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964125.0261514,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_pf3_4a_motif_thinning_guard",
+      "severity": 0.6,
+      "persistence_key": "tests.test_pf3_4a_motif_thinning_guard",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964126.6088843,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_pf3_5_motif_watch_readout",
+      "severity": 0.6,
+      "persistence_key": "tests.test_pf3_5_motif_watch_readout",
+      "profile": {
+        "X": 0.1,
+        "T": 0.8,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964162.8967113,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_warp_phase1_resonance_graph",
+      "severity": 0.6,
+      "persistence_key": "tests.test_warp_phase1_resonance_graph",
+      "profile": {
+        "X": 0.1,
+        "T": 0.8,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964164.2067351,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_warp_phase2_confession_calls",
+      "severity": 0.6,
+      "persistence_key": "tests.test_warp_phase2_confession_calls",
+      "profile": {
+        "X": 0.1,
+        "T": 0.8,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964165.4292033,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_warp_phase3a_language_field_confession",
+      "severity": 0.6,
+      "persistence_key": "tests.test_warp_phase3a_language_field_confessio",
+      "profile": {
+        "X": 0.1,
+        "T": 0.8,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964166.8953238,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_warp_phase3b_resonant_lookup_confession",
+      "severity": 0.6,
+      "persistence_key": "tests.test_warp_phase3b_resonant_lookup_confessi",
+      "profile": {
+        "X": 0.1,
+        "T": 0.8,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964168.2880924,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_warp_phase3c_memory_recall_confession",
+      "severity": 0.6,
+      "persistence_key": "tests.test_warp_phase3c_memory_recall_confession",
+      "profile": {
+        "X": 0.1,
+        "T": 0.8,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964169.690383,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_warp_phase3d_parse_confidence_confession",
+      "severity": 0.6,
+      "persistence_key": "tests.test_warp_phase3d_parse_confidence_confess",
+      "profile": {
+        "X": 0.1,
+        "T": 0.8,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784964171.033956,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_warp_phase4_resonant_trial_lifecycle",
+      "severity": 0.6,
+      "persistence_key": "tests.test_warp_phase4_resonant_trial_lifecycle",
+      "profile": {
+        "X": 0.1,
+        "T": 0.8,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
     }
   ],
   "consultation_history": [],
@@ -3008,5 +3008,5 @@
       ]
     }
   ],
-  "saved_at": 1784956074.1337068
+  "saved_at": 1784964183.0883937
 }

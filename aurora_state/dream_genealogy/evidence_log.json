@@ -1,14 +1,14 @@
 [
   {
-    "evidence_id": "dev_def_984f5060b80a",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_def_4eed7ea5ffe5",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "rubric_deficit",
     "source_dimensions": [
       "context_carryover"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
@@ -21,8 +21,8 @@
       "A": 0.0
     },
     "pressure_relief": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
@@ -34,32 +34,32 @@
     ],
     "trace_links": [],
     "cost_total": {
-      "T": 0.007762692307692307
+      "T": 0.006606818181818182
     },
-    "risk_estimate": 0.03881346153846154,
+    "risk_estimate": 0.03303409090909091,
     "origin_tags": {
       "source": "dream_episode",
       "evidence_class": "deficit",
       "deficit_dimension": "context_carryover",
-      "deficit_score": 0.11186538461538462,
+      "deficit_score": 0.16965909090909093,
       "artificial_seed": true,
-      "artificial_seed_weight": 0.5822019230769231,
-      "seed_lineage_id": "episode_995414c97cbf",
+      "artificial_seed_weight": 0.4955113636363636,
+      "seed_lineage_id": "episode_b5344366241f",
       "target_purpose_lane": "communication"
     },
-    "confidence": 0.5777665181589579,
-    "timestamp": 1784956069.714487
+    "confidence": 0.5779842970348875,
+    "timestamp": 1784964181.0685434
   },
   {
-    "evidence_id": "dev_def_982e4de3c19d",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_def_12fb8dc1ebdf",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "rubric_deficit",
     "source_dimensions": [
       "ambiguity_handling"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
@@ -72,8 +72,8 @@
       "A": 0.0
     },
     "pressure_relief": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
@@ -95,22 +95,22 @@
       "deficit_score": 0.2,
       "artificial_seed": true,
       "artificial_seed_weight": 0.44999999999999996,
-      "seed_lineage_id": "episode_995414c97cbf",
+      "seed_lineage_id": "episode_b5344366241f",
       "target_purpose_lane": "meaning"
     },
-    "confidence": 0.5777665181589579,
-    "timestamp": 1784956069.7145176
+    "confidence": 0.5779842970348875,
+    "timestamp": 1784964181.0685678
   },
   {
-    "evidence_id": "dev_def_c00f47090079",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_def_196aa5402253",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "rubric_deficit",
     "source_dimensions": [
       "uncertainty_signaling"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
@@ -123,8 +123,8 @@
       "A": 0.0
     },
     "pressure_relief": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
@@ -146,22 +146,22 @@
       "deficit_score": 0.2,
       "artificial_seed": true,
       "artificial_seed_weight": 0.44999999999999996,
-      "seed_lineage_id": "episode_995414c97cbf",
+      "seed_lineage_id": "episode_b5344366241f",
       "target_purpose_lane": "intelligence"
     },
-    "confidence": 0.5777665181589579,
-    "timestamp": 1784956069.714545
+    "confidence": 0.5779842970348875,
+    "timestamp": 1784964181.06859
   },
   {
-    "evidence_id": "dev_def_3b6d546b978f",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_def_dd4f8a65cbcb",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "rubric_deficit",
     "source_dimensions": [
       "framing_selection"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
@@ -174,8 +174,8 @@
       "A": 0.0
     },
     "pressure_relief": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
@@ -187,39 +187,39 @@
     ],
     "trace_links": [],
     "cost_total": {
-      "X": 0.004
+      "X": 0.0029089436345053157
     },
-    "risk_estimate": 0.020000000000000004,
+    "risk_estimate": 0.014544718172526578,
     "origin_tags": {
       "source": "dream_episode",
       "evidence_class": "deficit",
       "deficit_dimension": "framing_selection",
-      "deficit_score": 0.3,
+      "deficit_score": 0.3545528182747342,
       "artificial_seed": true,
-      "artificial_seed_weight": 0.30000000000000004,
-      "seed_lineage_id": "episode_995414c97cbf",
+      "artificial_seed_weight": 0.21817077258789866,
+      "seed_lineage_id": "episode_b5344366241f",
       "target_purpose_lane": "communication"
     },
-    "confidence": 0.5777665181589579,
-    "timestamp": 1784956069.7145715
+    "confidence": 0.5779842970348875,
+    "timestamp": 1784964181.0686116
   },
   {
-    "evidence_id": "dev_lev_6eba0303305c",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_lev_c556b2b91265",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "leverage_hit",
     "source_dimensions": [
       "uncertainty_signaling"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_after": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.033333333333333326,
       "B": 0.19999999999999998,
       "A": 0.0
@@ -246,36 +246,36 @@
       "leverage_score": 0.77,
       "artificial_seed": true,
       "artificial_seed_weight": 0.385,
-      "seed_lineage_id": "episode_995414c97cbf",
+      "seed_lineage_id": "episode_b5344366241f",
       "target_purpose_lane": "intelligence"
     },
-    "confidence": 0.5561002737279969,
-    "timestamp": 1784956069.7145946
+    "confidence": 0.5563098858960792,
+    "timestamp": 1784964181.068631
   },
   {
-    "evidence_id": "dev_lev_8f3cf13aadc3",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_lev_c6013a9a2f71",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "leverage_hit",
     "source_dimensions": [
       "context_carryover"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_after": {
-      "X": 0.06666666666666667,
-      "T": 0.09630361305361305,
+      "X": 0.05421156057508858,
+      "T": 0.0896770010964912,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_relief": {
       "X": 0.0,
-      "T": 0.06666666666666664,
+      "T": 0.06666666666666667,
       "N": 0.0,
       "B": 0.0,
       "A": 0.0
@@ -292,38 +292,38 @@
       "source": "dream_episode",
       "evidence_class": "leverage",
       "leverage_dimension": "context_carryover",
-      "leverage_score": 0.5299568837412587,
+      "leverage_score": 0.4952273888556618,
       "artificial_seed": true,
-      "artificial_seed_weight": 0.26497844187062936,
-      "seed_lineage_id": "episode_995414c97cbf",
+      "artificial_seed_weight": 0.2476136944278309,
+      "seed_lineage_id": "episode_b5344366241f",
       "target_purpose_lane": "communication"
     },
-    "confidence": 0.3827391793669483,
-    "timestamp": 1784956069.7146153
+    "confidence": 0.3577920677752032,
+    "timestamp": 1784964181.068647
   },
   {
-    "evidence_id": "dev_lev_a338dfc86dc5",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_lev_d1de90c86afb",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "leverage_hit",
     "source_dimensions": [
       "framing_selection"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_after": {
-      "X": 0.0,
-      "T": 0.1629702797202797,
+      "X": 0.005729166666666656,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_relief": {
-      "X": 0.06666666666666667,
+      "X": 0.04848239390842193,
       "T": 0.0,
       "N": 0.0,
       "B": 0.0,
@@ -341,32 +341,32 @@
       "source": "dream_episode",
       "evidence_class": "leverage",
       "leverage_dimension": "framing_selection",
-      "leverage_score": 0.3123265297202797,
+      "leverage_score": 0.27862669877072027,
       "artificial_seed": true,
-      "artificial_seed_weight": 0.15616326486013984,
-      "seed_lineage_id": "episode_995414c97cbf",
+      "artificial_seed_weight": 0.13931334938536014,
+      "seed_lineage_id": "episode_b5344366241f",
       "target_purpose_lane": "communication"
     },
-    "confidence": 0.2255647645064453,
-    "timestamp": 1784956069.7146332
+    "confidence": 0.20130232078018265,
+    "timestamp": 1784964181.0686617
   },
   {
-    "evidence_id": "dev_lev_3ee223dd882c",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_lev_b5b9c2a09236",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "leverage_hit",
     "source_dimensions": [
       "ambiguity_handling"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_after": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.13333333333333333,
       "A": 0.0
@@ -393,29 +393,29 @@
       "leverage_score": 0.25,
       "artificial_seed": true,
       "artificial_seed_weight": 0.125,
-      "seed_lineage_id": "episode_995414c97cbf",
+      "seed_lineage_id": "episode_b5344366241f",
       "target_purpose_lane": "meaning"
     },
-    "confidence": 0.1805520369246743,
-    "timestamp": 1784956069.714657
+    "confidence": 0.18062009282340236,
+    "timestamp": 1784964181.0686805
   },
   {
-    "evidence_id": "dev_dir_1c612d0f7197",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_dir_f07de474223f",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "directive_projection",
     "source_dimensions": [
       "expression"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_after": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.05000000000000001,
       "B": 0.158,
       "A": 0.0
@@ -437,41 +437,41 @@
     "origin_tags": {
       "source": "dream_episode",
       "evidence_class": "directive_projection",
-      "directive_id": "spd_099162ba8675",
-      "directive_confidence": 0.7643248886192183,
+      "directive_id": "spd_fc4e25619476",
+      "directive_confidence": 0.7644882227761657,
       "artificial_seed": true,
-      "artificial_seed_weight": 0.5520016620496987,
-      "seed_lineage_id": "spd_099162ba8675",
+      "artificial_seed_weight": 0.5523277350409158,
+      "seed_lineage_id": "spd_fc4e25619476",
       "target_purpose_lane": "communication"
     },
-    "confidence": 0.5520016620496987,
-    "timestamp": 1784956069.7146885
+    "confidence": 0.5523277350409158,
+    "timestamp": 1784964181.0687084
   },
   {
-    "evidence_id": "dev_dir_8f55095cc409",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_dir_6803ad230b41",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "directive_projection",
     "source_dimensions": [
       "consciousness",
       "simulation"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_after": {
-      "X": 0.06666666666666667,
-      "T": 0.07937820512820513,
+      "X": 0.05421156057508858,
+      "T": 0.06011363636363635,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_relief": {
       "X": 0.0,
-      "T": 0.08359207459207456,
+      "T": 0.09623003139952152,
       "N": 0.0,
       "B": 0.0,
       "A": 0.0
@@ -487,41 +487,41 @@
     "origin_tags": {
       "source": "dream_episode",
       "evidence_class": "directive_projection",
-      "directive_id": "spd_943ba83ca94e",
-      "directive_confidence": 0.6923119537415959,
+      "directive_id": "spd_096a5d1ca561",
+      "directive_confidence": 0.6820564394328642,
       "artificial_seed": true,
-      "artificial_seed_weight": 0.49999333374138416,
-      "seed_lineage_id": "spd_943ba83ca94e",
+      "artificial_seed_weight": 0.49277238960465297,
+      "seed_lineage_id": "spd_096a5d1ca561",
       "target_purpose_lane": "communication"
     },
-    "confidence": 0.49999333374138416,
-    "timestamp": 1784956069.7147121
+    "confidence": 0.49277238960465297,
+    "timestamp": 1784964181.0687282
   },
   {
-    "evidence_id": "dev_dir_a074d5fe380e",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_dir_703f1b1a5523",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "directive_projection",
     "source_dimensions": [
       "expression",
       "identity"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_after": {
-      "X": 0.026666666666666672,
-      "T": 0.13444849941724943,
+      "X": 0.019392957563368767,
+      "T": 0.13331526180407918,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_relief": {
-      "X": 0.039999999999999994,
-      "T": 0.028521780303030264,
+      "X": 0.03481860301171981,
+      "T": 0.02302840595907868,
       "N": 0.0,
       "B": 0.0,
       "A": 0.0
@@ -537,34 +537,34 @@
     "origin_tags": {
       "source": "dream_episode",
       "evidence_class": "directive_projection",
-      "directive_id": "spd_9763e5224f3b",
-      "directive_confidence": 0.6270228475353022,
+      "directive_id": "spd_e1b7b2658b93",
+      "directive_confidence": 0.6170762324073817,
       "artificial_seed": true,
-      "artificial_seed_weight": 0.4528410092832333,
-      "seed_lineage_id": "spd_9763e5224f3b",
+      "artificial_seed_weight": 0.44582546550614677,
+      "seed_lineage_id": "spd_e1b7b2658b93",
       "target_purpose_lane": "communication"
     },
-    "confidence": 0.4528410092832333,
-    "timestamp": 1784956069.7147338
+    "confidence": 0.44582546550614677,
+    "timestamp": 1784964181.0687466
   },
   {
-    "evidence_id": "dev_dir_b77a5a262a1e",
-    "episode_id": "episode_995414c97cbf",
+    "evidence_id": "dev_dir_2535d8c516cf",
+    "episode_id": "episode_b5344366241f",
     "evidence_type": "directive_projection",
     "source_dimensions": [
       "expression",
       "perception"
     ],
     "pressure_before": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.19999999999999998,
       "A": 0.0
     },
     "pressure_after": {
-      "X": 0.06666666666666667,
-      "T": 0.1629702797202797,
+      "X": 0.05421156057508858,
+      "T": 0.15634366776315786,
       "N": 0.09999999999999999,
       "B": 0.10000000000000002,
       "A": 0.0
@@ -587,14 +587,14 @@
     "origin_tags": {
       "source": "dream_episode",
       "evidence_class": "directive_projection",
-      "directive_id": "spd_9ab741c02b8c",
-      "directive_confidence": 0.6083248886192183,
+      "directive_id": "spd_388415b5f1b3",
+      "directive_confidence": 0.6084882227761657,
       "artificial_seed": true,
-      "artificial_seed_weight": 0.43933719100870194,
-      "seed_lineage_id": "spd_9ab741c02b8c",
+      "artificial_seed_weight": 0.43962079711911267,
+      "seed_lineage_id": "spd_388415b5f1b3",
       "target_purpose_lane": "communication"
     },
-    "confidence": 0.43933719100870194,
-    "timestamp": 1784956069.714753
+    "confidence": 0.43962079711911267,
+    "timestamp": 1784964181.0687625
   }
 ]
