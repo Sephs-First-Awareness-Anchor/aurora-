@@ -1,37 +1,14 @@
 {
-  "original": "I did. I change how.",
-  "candidate": "",
-  "selected": "I did. I change how.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.62,
-  "candidate_score": 0.0,
-  "original_pressure": 0.396,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.604,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "How do you understand awareness?",
-    "input_interpretation": {
-      "raw_prompt": "How do you understand awareness?",
-      "intent_hint": "question",
-      "topic_terms": [
-        "understand",
-        "awareness"
-      ],
-      "entities": [
-        "How"
-      ]
-    },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1785010749.7861965,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0,
-    "expression_context": {
-      "semantic_strategy": "observe",
-      "semantic_confidence": 0.0,
-      "semantic_strategy_applied": true
-    }
-  }
+  "original": "I tell me clear. I tell meaning real.",
+  "candidate": "I tell me clear. I tell meaning real.",
+  "selected": "I tell me clear. I tell meaning real.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.74,
+  "candidate_score": 0.74,
+  "original_pressure": 0.172,
+  "candidate_pressure": 0.172,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }
