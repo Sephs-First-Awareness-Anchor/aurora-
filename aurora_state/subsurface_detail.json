@@ -17,7 +17,7 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "identity",
+    "active_topic": "connection",
     "ambiguity": 0.545,
     "cost_total": 0.2041,
     "dominant_emotion": "curiosity",
@@ -67,9 +67,9 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6237,
+    "confidence": 0.6757,
     "expected_observation": "followup",
-    "expected_user_continuation": "identity",
+    "expected_user_continuation": "connection",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
@@ -77,13 +77,13 @@
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "identity"
+      "topic": "connection"
     },
     "preload_context": [
-      "identity",
+      "connection",
       "followup"
     ],
-    "readiness_bias": 0.4156,
+    "readiness_bias": 0.4312,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -95,8 +95,8 @@
   },
   "readiness": 0.4033,
   "recalled_fragments": [
-    "identity",
-    "identity.\n[recalled:identity] identity. [recalled:recalled:identity] identity.\n[recalled:identity] identity. [recalled:recalled:recalled:..."
+    "connection",
+    "Tell me about connection.\n[recalled:connection] Tell me about connection. [recalled:recalled:connection] Tell me about connection.\n[recal..."
   ],
   "salience_weights": {
     "A": 0.0,
@@ -105,7 +105,7 @@
     "T": 0.6438,
     "X": 0.0
   },
-  "saved_at": 1784981405.9546797,
+  "saved_at": 1784985658.8223903,
   "sub_crests": [
     {
       "axis": "X",
