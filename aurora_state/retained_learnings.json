@@ -127295,6 +127295,29 @@
       "sightings": 3,
       "first_seen": 1784991433.5788774,
       "last_seen": 1784991435.6833897
+    },
+    {
+      "text": "Code evolution outcome for mutation_id=DREAM:a9950d214a655e; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35",
+      "confidence": 0.84,
+      "sources": [
+        "simulation_live_bridge:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "code",
+        "evolve",
+        "acode_evolve_a24af65ee1"
+      ],
+      "tags": [
+        "lineage_event",
+        "code_function",
+        "composer_unified"
+      ],
+      "sightings": 3,
+      "first_seen": 1784999000.6271787,
+      "last_seen": 1784999002.6096952
     }
   ]
 }

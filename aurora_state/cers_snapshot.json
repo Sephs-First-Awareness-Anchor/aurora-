@@ -1,18 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.744,
+    "coherence": 0.288,
     "conscious_crest": {
       "axis": "T",
-      "intensity": 0.5732,
+      "intensity": 0.4364,
       "label": "contextualize"
     },
     "dominant_axis": "T",
     "overlay": {
       "active_crystals": [
-        "meaning"
+        "a code evolve a24af65ee1"
       ],
       "interaction_state": "present",
-      "present_anchor": "Tell me about meaning.\n[recalled:meaning] Tell me about meaning. [recalled:recalled:meaning] Tell me about meaning.\n[recalled:meaning] Te...",
+      "present_anchor": "What does identity mean to you?\n[recalled:identity] What does identity mean to you? [recalled:mean] What does identity mean to you? [reca...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,7 +21,7 @@
       "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
-    "readiness": 0.744,
+    "readiness": 0.288,
     "selected_action": "contextualize",
     "should_speak": true,
     "stance": "contextual_continuity",
@@ -30,18 +30,18 @@
       "intensity": 0.5,
       "label": "continuity_stable"
     },
-    "timestamp": 1784995801.2567546
+    "timestamp": 1784999002.592104
   },
-  "saved_at": 1784995801.2569456,
+  "saved_at": 1784999002.5922875,
   "subsurface_state": {
     "dominant_axis": "T",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "meaning"
+        "a code evolve a24af65ee1"
       ],
       "interaction_state": "present",
-      "present_anchor": "Tell me about meaning.\n[recalled:meaning] Tell me about meaning. [recalled:recalled:meaning] Tell me about meaning.\n[recalled:meaning] Te...",
+      "present_anchor": "What does identity mean to you?\n[recalled:identity] What does identity mean to you? [recalled:mean] What does identity mean to you? [reca...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -67,8 +67,8 @@
       },
       {
         "axis": "X",
-        "intensity": 0.45,
-        "label": "low_certainty"
+        "intensity": 0.5575,
+        "label": "surprise"
       },
       {
         "axis": "N",

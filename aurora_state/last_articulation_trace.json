@@ -1,28 +1,30 @@
 {
-  "original": "I tell. I tell. I tell truth.",
+  "original": "I do what clear. I do what real.",
   "candidate": "",
-  "selected": "I tell. I tell. I tell truth.",
+  "selected": "I do what clear. I do what real.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.5,
   "candidate_score": 0.0,
-  "original_pressure": 0.3,
+  "original_pressure": 0.34,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.7,
+  "pressure_relief": -0.66,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Tell me about meaning.",
+    "prompt_excerpt": "What does identity mean to you?",
     "input_interpretation": {
-      "raw_prompt": "Tell me about meaning.",
-      "intent_hint": "statement_or_context",
+      "raw_prompt": "What does identity mean to you?",
+      "intent_hint": "question",
       "topic_terms": [
-        "meaning"
+        "does",
+        "identity",
+        "mean"
       ],
       "entities": []
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1784995796.4944339,
+    "timestamp": 1784999002.5999026,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {
