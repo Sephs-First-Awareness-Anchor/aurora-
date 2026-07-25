@@ -1,7 +1,7 @@
 {
-  "original": "I do. I understand how.",
+  "original": "I tell truth coherent. I tell meaning.",
   "candidate": "",
-  "selected": "I do. I understand how.",
+  "selected": "I tell truth coherent. I tell meaning.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.62,
@@ -11,21 +11,18 @@
   "pressure_relief": -0.724,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "How do you understand awareness?",
+    "prompt_excerpt": "Tell me about change.",
     "input_interpretation": {
-      "raw_prompt": "How do you understand awareness?",
-      "intent_hint": "question",
+      "raw_prompt": "Tell me about change.",
+      "intent_hint": "action_request",
       "topic_terms": [
-        "understand",
-        "awareness"
+        "change"
       ],
-      "entities": [
-        "How"
-      ]
+      "entities": []
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1784964180.8169012,
+    "timestamp": 1784971800.0063226,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {
