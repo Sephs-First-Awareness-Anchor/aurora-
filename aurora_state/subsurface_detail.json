@@ -10,24 +10,29 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.744,
+  "coherence": 0.288,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "meaning",
+    "active_topic": "change",
     "ambiguity": 0.545,
-    "cost_total": 0.1361,
+    "cost_total": 0.1956,
     "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
-    "interpreted_deep_passion": "meaning_hold",
+    "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
-  "instability_markers": [],
+  "instability_markers": [
+    {
+      "label": "low_coherence",
+      "severity": 0.712
+    }
+  ],
   "law_bindings": [],
   "micro_reasoning": [
     {
@@ -51,23 +56,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6891,
+    "confidence": 0.6268,
     "expected_observation": "followup",
-    "expected_user_continuation": "meaning",
+    "expected_user_continuation": "change",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.325,
+    "mismatch": 0.3925,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "B",
+      "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "meaning"
+      "topic": "change"
     },
     "preload_context": [
-      "meaning",
+      "change",
       "followup"
     ],
-    "readiness_bias": 0.4352,
+    "readiness_bias": 0.3828,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -77,19 +82,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.7025,
+  "readiness": 0.3831,
   "recalled_fragments": [
-    "meaning",
-    "Do you experience meaning?\n[recalled:meaning] Do you experience meaning? [recalled:experience] Do you experience meaning? [recalled:recal..."
+    "change",
+    "What does change mean to you?\n[recalled:change] What does change mean to you? [recalled:mean] What does change mean to you? [recalled:rec..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.4807,
-    "N": 0.5193,
+    "B": 0.4613,
+    "N": 0.5387,
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785019010.0379915,
+  "saved_at": 1785022845.6761887,
   "sub_crests": [
     {
       "axis": "X",

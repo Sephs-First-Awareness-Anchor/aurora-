@@ -1,29 +1,30 @@
 {
-  "original": "I experience. I experience meaning. I experience.",
+  "original": "I do. I do what clear.",
   "candidate": "",
-  "selected": "I experience. I experience meaning. I experience.",
+  "selected": "I do. I do what clear.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.5,
   "candidate_score": 0.0,
-  "original_pressure": 0.276,
+  "original_pressure": 0.42,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.724,
+  "pressure_relief": -0.58,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Do you experience meaning?",
+    "prompt_excerpt": "What does change mean to you?",
     "input_interpretation": {
-      "raw_prompt": "Do you experience meaning?",
+      "raw_prompt": "What does change mean to you?",
       "intent_hint": "question",
       "topic_terms": [
-        "experience",
-        "meaning"
+        "does",
+        "change",
+        "mean"
       ],
       "entities": []
     },
-    "tone": "playful",
+    "tone": "warm",
     "source": "no_pattern_matched",
-    "timestamp": 1785019010.056212,
+    "timestamp": 1785022845.6965096,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {

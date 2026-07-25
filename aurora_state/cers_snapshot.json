@@ -1,18 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.744,
+    "coherence": 0.288,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.5365,
+      "intensity": 0.3997,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [
-        "meaning"
+        "change"
       ],
       "interaction_state": "present",
-      "present_anchor": "Do you experience meaning?\n[recalled:meaning] Do you experience meaning? [recalled:experience] Do you experience meaning? [recalled:recal...",
+      "present_anchor": "What does change mean to you?\n[recalled:change] What does change mean to you? [recalled:mean] What does change mean to you? [recalled:rec...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,27 +21,27 @@
       "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
-    "readiness": 0.744,
+    "readiness": 0.288,
     "selected_action": "explain",
-    "should_speak": true,
+    "should_speak": false,
     "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
       "intensity": 0.4476,
       "label": "steady"
     },
-    "timestamp": 1785019010.039307
+    "timestamp": 1785022845.6775439
   },
-  "saved_at": 1785019010.0394828,
+  "saved_at": 1785022845.6777542,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "meaning"
+        "change"
       ],
       "interaction_state": "present",
-      "present_anchor": "Do you experience meaning?\n[recalled:meaning] Do you experience meaning? [recalled:experience] Do you experience meaning? [recalled:recal...",
+      "present_anchor": "What does change mean to you?\n[recalled:change] What does change mean to you? [recalled:mean] What does change mean to you? [recalled:rec...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
