@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785105620.4584916,
-  "generation": 10509,
-  "genome_version": 10509,
+  "timestamp": 1785109172.8166695,
+  "generation": 10511,
+  "genome_version": 10511,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.9983,
-    "caution": 0.9765,
+    "curiosity": 0.978,
+    "caution": 0.9801,
     "emotional_expressiveness": 1.0,
-    "verbosity": 0.998,
-    "introspection": 0.9666,
-    "pattern_sensitivity": 0.9905,
+    "verbosity": 1.0,
+    "introspection": 1.0,
+    "pattern_sensitivity": 1.0,
     "social_engagement": 1.0,
     "energy_conservation": 1.0
   },
-  "personality_drift": 3.8298,
+  "personality_drift": 3.8581,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6678290744332198,
-      "precision": 0.9027461713105331,
-      "depth": 0.6460295132832939,
-      "confidence": 0.7001035595208486
+      "warmth": 0.6629690974595801,
+      "precision": 0.9393970450474338,
+      "depth": 0.6080491864056768,
+      "confidence": 0.6837122796181694
     },
     "cognitive": {
-      "curiosity": 0.8895638103314634,
-      "pattern_matching": 0.5795298945224842,
-      "abstraction": 0.5496389844608192,
-      "risk_assessment": 0.6542478776839898
+      "curiosity": 0.944883520166658,
+      "pattern_matching": 0.5304000000000001,
+      "abstraction": 0.5425970902427654,
+      "risk_assessment": 0.5841609202777809
     },
     "social": {
       "empathy": 0.585,
-      "trust_extension": 0.8068901877456391,
-      "boundary_maintenance": 0.8801698340767317,
-      "engagement": 0.5791735435991977
+      "trust_extension": 0.8600670581441225,
+      "boundary_maintenance": 0.8179764729766925,
+      "engagement": 0.5536762242058766
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "80e98bf256a7"
+  "_checksum": "814041152603"
 }

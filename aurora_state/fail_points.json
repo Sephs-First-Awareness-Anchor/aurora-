@@ -1,5 +1,5 @@
 {
-  "total_fails": 72330,
+  "total_fails": 72342,
   "records": {
     "coherence_maintenance": {
       "fail_count": 4263,
@@ -226,15 +226,15 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 12406,
-      "severity_sum": 6116.798797751703,
+      "fail_count": 12408,
+      "severity_sum": 6117.798797751703,
       "recent": [
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
         0.035,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -450,19 +450,19 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 2453,
-      "severity_sum": 822.4671316552582,
+      "fail_count": 2457,
+      "severity_sum": 824.4671316552582,
       "recent": [
         0.5,
         0.5,
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
         0.035,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -628,8 +628,8 @@
       ]
     },
     "contradiction_handling": {
-      "fail_count": 15983,
-      "severity_sum": 8051.0309483313185,
+      "fail_count": 15987,
+      "severity_sum": 8053.0309483313185,
       "recent": [
         0.5,
         0.5,
@@ -645,11 +645,11 @@
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
         0.035,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5
       ],
       "examples": [
@@ -1187,8 +1187,8 @@
       ]
     },
     "uncertainty_signaling": {
-      "fail_count": 15073,
-      "severity_sum": 7652.895228488338,
+      "fail_count": 15075,
+      "severity_sum": 7653.895228488338,
       "recent": [
         0.5,
         0.5,
@@ -1205,9 +1205,9 @@
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
         0.035,
+        0.5,
+        0.5,
         0.5,
         0.5
       ],
