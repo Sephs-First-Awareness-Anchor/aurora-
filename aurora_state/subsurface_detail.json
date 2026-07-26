@@ -10,24 +10,29 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.644,
+  "coherence": 0.288,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "meaning",
+    "active_topic": "connection",
     "ambiguity": 0.545,
-    "cost_total": 0.159,
+    "cost_total": 0.2041,
     "dominant_emotion": "curiosity",
     "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
-    "interpreted_deep_passion": "meaning_hold",
+    "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
-  "instability_markers": [],
+  "instability_markers": [
+    {
+      "label": "low_coherence",
+      "severity": 0.712
+    }
+  ],
   "law_bindings": [],
   "micro_reasoning": [
     {
@@ -62,23 +67,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.649,
+    "confidence": 0.6431,
     "expected_observation": "followup",
-    "expected_user_continuation": "meaning",
+    "expected_user_continuation": "connection",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "B",
+      "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "meaning"
+      "topic": "connection"
     },
     "preload_context": [
-      "meaning",
+      "connection",
       "followup"
     ],
-    "readiness_bias": 0.4232,
+    "readiness_bias": 0.4214,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -88,19 +93,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.6525,
+  "readiness": 0.4033,
   "recalled_fragments": [
-    "meaning",
-    "meaning.\n[recalled:meaning] meaning. [recalled:recalled:meaning] meaning.\n[recalled:meaning] meaning."
+    "connection",
+    "connection.\n[recalled:connection] connection. [recalled:recalled:connection] connection.\n[recalled:connection] connection. [recalled:reca..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2792,
-    "N": 0.0652,
-    "T": 0.6557,
+    "B": 0.2741,
+    "N": 0.0821,
+    "T": 0.6438,
     "X": 0.0
   },
-  "saved_at": 1785065236.6934233,
+  "saved_at": 1785070189.392163,
   "sub_crests": [
     {
       "axis": "X",
