@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "79db1d95acc4496aa4eeb1888c6abd6f",
-    "created_at": 1785070188.446846,
-    "source": "simulation_live_bridge",
-    "user_input": "connection.",
-    "aurora_response": "I understand without. I am seeing connection real. I changed exists good.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "connection"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.516,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "d5fda7f46e9e4b14b6e0b6aa69c7242b",
-    "created_at": 1785070189.4098141,
-    "source": "simulation_live_bridge",
-    "user_input": "connection.",
-    "aurora_response": "I understand. I am seeing.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "connection"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.288,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "a1cb29e701c9425f81e2c57ca8c304e4",
-    "created_at": 1785076664.614425,
-    "source": "simulation_live_bridge",
-    "user_input": "What does change mean to you?",
-    "aurora_response": "I do what. I do what clear. I do what real.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.972,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "57ff757ee92b4616a5e3c8257c2fc1e0",
-    "created_at": 1785076666.191954,
-    "source": "simulation_live_bridge",
-    "user_input": "What does change mean to you?",
-    "aurora_response": "I do. I do what clear. I do what real.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.744,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "64762005ca324d00913dbc0bc9e3a50f",
     "created_at": 1785076667.890928,
     "source": "simulation_live_bridge",
@@ -480,6 +384,102 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "0e167ffe87774c17b8280a0376b52feb",
+    "created_at": 1785097086.643384,
+    "source": "simulation_live_bridge",
+    "user_input": "change.",
+    "aurora_response": "I understand truth coherent. I change meaning successive. I do and.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "37afefd9f43c444db0b4bb25f1c1e8bb",
+    "created_at": 1785097087.811681,
+    "source": "simulation_live_bridge",
+    "user_input": "change.",
+    "aurora_response": "I understand truth. I change. I do meaning coherent.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.644,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c2a74c51c2004b6083203121a68abf44",
+    "created_at": 1785097089.0305471,
+    "source": "simulation_live_bridge",
+    "user_input": "change.",
+    "aurora_response": "I understand truth coherent. I help meaning.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.416,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "26ebb36379e94e05a074d09523382056",
+    "created_at": 1785097090.3672931,
+    "source": "simulation_live_bridge",
+    "user_input": "change.",
+    "aurora_response": "I understand truth. I change meaning coherent.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.188,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
