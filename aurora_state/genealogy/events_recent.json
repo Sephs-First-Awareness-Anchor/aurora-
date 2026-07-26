@@ -1,18 +1,18 @@
 {
-  "total_count": 64374,
-  "tick_count": 128710,
+  "total_count": 64386,
+  "tick_count": 128729,
   "records": [
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128690,
-      "timestamp": 1785051845.0115583,
+      "run_id": "2026-07-26_095050",
+      "tick": 128711,
+      "timestamp": 1785060198.4214563,
       "state_sig_before": "5e5a4507",
       "state_sig_after": "b30d7cc5",
       "pressure_before": {
         "X": 0.0,
-        "T": 0.043875,
+        "T": 0.029249999999999998,
         "N": 0.0195,
-        "B": 0.043875,
+        "B": 0.029249999999999998,
         "A": 0.039
       },
       "pressure_after": {
@@ -24,12 +24,12 @@
       },
       "relief": {
         "X": 0.0,
-        "T": 0.041242499999999994,
+        "T": 0.027494999999999995,
         "N": 0.01833,
-        "B": 0.041242499999999994,
+        "B": 0.027494999999999995,
         "A": 0.03666
       },
-      "dominant_relief_axis": "T",
+      "dominant_relief_axis": "A",
       "trace": [
         {
           "kind": "ABILITY",
@@ -61,24 +61,24 @@
       "notes": {
         "tag": "grammar_clarity",
         "clarity": 0.65,
-        "b_score": 1.0,
-        "t_score": 1.0,
+        "b_score": 0.5,
+        "t_score": 0.5,
         "relief_tolerance": {
           "factor": 0.94,
           "mean_tolerance": 0.06,
           "slots": 3,
-          "axis": "T",
+          "axis": "A",
           "top": [
             {
-              "solution": "ABILITY:A:OUTLET_PUSH@T",
+              "solution": "ABILITY:A:OUTLET_PUSH@A",
               "tolerance": 0.06
             },
             {
-              "solution": "ABILITY:B:INTERFACE_WEAKEN@T",
+              "solution": "ABILITY:B:INTERFACE_WEAKEN@A",
               "tolerance": 0.06
             },
             {
-              "solution": "ABILITY:T:ADVANCE_TICK@T",
+              "solution": "ABILITY:T:ADVANCE_TICK@A",
               "tolerance": 0.06
             }
           ]
@@ -94,20 +94,20 @@
             {
               "signature": "B^1*A^1",
               "semantic": "map",
-              "count": 39798,
-              "effect_ema": 0.0864293028,
+              "count": 39808,
+              "effect_ema": 0.19937764914,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.077169; scope=1.120; global_effect=0.086429; origin_diversity=2",
-              "raw_effect_ema": 0.154338,
-              "local_effect_ema": 0.077169,
-              "global_effect_ema": 0.086429,
+              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.178016; scope=1.120; global_effect=0.199378; origin_diversity=2",
+              "raw_effect_ema": 0.178016,
+              "local_effect_ema": 0.178016,
+              "global_effect_ema": 0.199378,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.077169, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.178016, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 39719,
+              "semantic_version": 39729,
               "semantic_lane_ema": {
                 "communication": 0.3647058823529412,
                 "intelligence": 0.25882352941176473,
@@ -138,27 +138,27 @@
                 "strictness_index": 0.585,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.300427,
-                  "relation_min": 0.207364,
-                  "effect_min": 0.000193829,
+                  "inheritance_min": 0.299434,
+                  "relation_min": 0.206678,
+                  "effect_min": 0.00019093,
                   "breeding_min": 0.149254,
                   "pressure_regulation": {
                     "dominant_axis": "B",
                     "evidence": {
-                      "factor": 0.403373,
-                      "gradient": 1.1743
+                      "factor": 0.402039,
+                      "gradient": 1.275147
                     },
                     "inheritance": {
-                      "factor": 0.403373,
-                      "gradient": 1.1743
+                      "factor": 0.402039,
+                      "gradient": 1.275147
                     },
                     "relation": {
-                      "factor": 0.403373,
-                      "gradient": 1.1743
+                      "factor": 0.402039,
+                      "gradient": 1.275147
                     },
                     "effect": {
-                      "factor": 1.587197,
-                      "gradient": -0.905937
+                      "factor": 1.563459,
+                      "gradient": -0.692142
                     },
                     "breeding": {
                       "factor": 0.4492,
@@ -181,20 +181,20 @@
             {
               "signature": "T^1*B^1",
               "semantic": "complexity",
-              "count": 35518,
-              "effect_ema": 0.08576728677,
+              "count": 35526,
+              "effect_ema": 0.04982217308,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.076578; scope=1.120; global_effect=0.085767; origin_diversity=2",
-              "raw_effect_ema": 0.076578,
-              "local_effect_ema": 0.076578,
-              "global_effect_ema": 0.085767,
+              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.044484; scope=1.120; global_effect=0.049822; origin_diversity=2",
+              "raw_effect_ema": 0.088968,
+              "local_effect_ema": 0.044484,
+              "global_effect_ema": 0.049822,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.076578, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.044484, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 35443,
+              "semantic_version": 35451,
               "semantic_lane_ema": {
                 "communication": 0.4125,
                 "intelligence": 0.2875,
@@ -225,27 +225,27 @@
                 "strictness_index": 0.42,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.282051,
-                  "relation_min": 0.193083,
-                  "effect_min": 0.000169575,
+                  "inheritance_min": 0.282133,
+                  "relation_min": 0.193139,
+                  "effect_min": 0.000171466,
                   "breeding_min": 0.12673,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.40067,
-                      "gradient": 1.498116
+                      "factor": 0.400786,
+                      "gradient": 1.466023
                     },
                     "inheritance": {
-                      "factor": 0.40067,
-                      "gradient": 1.498116
+                      "factor": 0.400786,
+                      "gradient": 1.466023
                     },
                     "relation": {
-                      "factor": 0.40067,
-                      "gradient": 1.498116
+                      "factor": 0.400786,
+                      "gradient": 1.466023
                     },
                     "effect": {
-                      "factor": 1.538236,
-                      "gradient": -0.582783
+                      "factor": 1.555385,
+                      "gradient": -0.650822
                     },
                     "breeding": {
                       "factor": 0.410047,
@@ -277,16 +277,16 @@
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128691,
-      "timestamp": 1785051845.0949981,
+      "run_id": "2026-07-26_095050",
+      "tick": 128712,
+      "timestamp": 1785060198.45932,
       "state_sig_before": "5e5a4507",
       "state_sig_after": "b30d7cc5",
       "pressure_before": {
         "X": 0.0,
-        "T": 0.040499999999999994,
+        "T": 0.026999999999999996,
         "N": 0.018,
-        "B": 0.040499999999999994,
+        "B": 0.026999999999999996,
         "A": 0.036
       },
       "pressure_after": {
@@ -298,12 +298,12 @@
       },
       "relief": {
         "X": 0.0,
-        "T": 0.035808641999999995,
+        "T": 0.023872427999999994,
         "N": 0.015914952,
-        "B": 0.035808641999999995,
+        "B": 0.023872427999999994,
         "A": 0.031829904
       },
-      "dominant_relief_axis": "T",
+      "dominant_relief_axis": "A",
       "trace": [
         {
           "kind": "ABILITY",
@@ -335,24 +335,24 @@
       "notes": {
         "tag": "grammar_clarity",
         "clarity": 0.6,
-        "b_score": 1.0,
-        "t_score": 1.0,
+        "b_score": 0.5,
+        "t_score": 0.5,
         "relief_tolerance": {
           "factor": 0.884164,
           "mean_tolerance": 0.115836,
           "slots": 3,
-          "axis": "T",
+          "axis": "A",
           "top": [
             {
-              "solution": "ABILITY:A:OUTLET_PUSH@T",
+              "solution": "ABILITY:A:OUTLET_PUSH@A",
               "tolerance": 0.115836
             },
             {
-              "solution": "ABILITY:B:INTERFACE_WEAKEN@T",
+              "solution": "ABILITY:B:INTERFACE_WEAKEN@A",
               "tolerance": 0.115836
             },
             {
-              "solution": "ABILITY:T:ADVANCE_TICK@T",
+              "solution": "ABILITY:T:ADVANCE_TICK@A",
               "tolerance": 0.115836
             }
           ]
@@ -366,109 +366,22 @@
           "persistent_root_accuracy_ok": false,
           "top": [
             {
-              "signature": "T^1*B^1",
-              "semantic": "complexity",
-              "count": 35519,
-              "effect_ema": 0.08960075157,
-              "min_generation": 2,
-              "max_generation": 2,
-              "generation_role": "ADJACENT",
-              "breeding_score_ema": 0.0,
-              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.080001; scope=1.120; global_effect=0.089601; origin_diversity=2",
-              "raw_effect_ema": 0.080001,
-              "local_effect_ema": 0.080001,
-              "global_effect_ema": 0.089601,
-              "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.080001, scope=1.120, conf=0.900).",
-              "semantic_confidence": 0.9,
-              "semantic_version": 35444,
-              "semantic_lane_ema": {
-                "communication": 0.4125,
-                "intelligence": 0.2875,
-                "meaning": 0.30000000000000004
-              },
-              "regulation": {
-                "enabled": true,
-                "evidence_min": 10,
-                "evidence_complete": true,
-                "validation_complete": true,
-                "issues": [],
-                "inheritance_score": 0.866667,
-                "inheritance_influence_factor": 1.0,
-                "relation_score": 0.833333,
-                "effect_score": 1.0,
-                "effect_score_raw": 1.0,
-                "breeding_score": 0.444444,
-                "representation_score": 0.820556,
-                "sustainability_score": 0.441856,
-                "formation_burden": 1.5972,
-                "persistence_tax_factor": 1.912884,
-                "persistence_tax_per_tick": 1.339019,
-                "maintenance_savings_per_tick": 0.156831,
-                "break_even_ticks": 10.184,
-                "requirement_coverage": 1.0,
-                "scale_depth_index": 0.6,
-                "complexity_index": 0.15,
-                "strictness_index": 0.42,
-                "dynamic_thresholds": {
-                  "evidence_min": 10,
-                  "inheritance_min": 0.282043,
-                  "relation_min": 0.193077,
-                  "effect_min": 0.000169326,
-                  "breeding_min": 0.126725,
-                  "pressure_regulation": {
-                    "dominant_axis": "T",
-                    "evidence": {
-                      "factor": 0.400657,
-                      "gradient": 1.501869
-                    },
-                    "inheritance": {
-                      "factor": 0.400657,
-                      "gradient": 1.501869
-                    },
-                    "relation": {
-                      "factor": 0.400657,
-                      "gradient": 1.501869
-                    },
-                    "effect": {
-                      "factor": 1.535976,
-                      "gradient": -0.575197
-                    },
-                    "breeding": {
-                      "factor": 0.410031,
-                      "gradient": 0.955202
-                    }
-                  }
-                },
-                "axes_active": 2,
-                "dominance": 0.5,
-                "constraint_influence": {
-                  "X": 0.0,
-                  "T": 0.5,
-                  "N": 0.0,
-                  "B": 0.5,
-                  "A": 0.0
-                }
-              },
-              "inheritance_breach_count": 1
-            },
-            {
               "signature": "B^1*A^1",
               "semantic": "map",
-              "count": 39799,
-              "effect_ema": 0.08486238244,
+              "count": 39809,
+              "effect_ema": 0.1919833154,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.075770; scope=1.120; global_effect=0.084862; origin_diversity=2",
-              "raw_effect_ema": 0.15154,
-              "local_effect_ema": 0.07577,
-              "global_effect_ema": 0.084862,
+              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.171414; scope=1.120; global_effect=0.191983; origin_diversity=2",
+              "raw_effect_ema": 0.171414,
+              "local_effect_ema": 0.171414,
+              "global_effect_ema": 0.191983,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.075770, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.171414, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 39720,
+              "semantic_version": 39730,
               "semantic_lane_ema": {
                 "communication": 0.3647058823529412,
                 "intelligence": 0.25882352941176473,
@@ -499,31 +412,31 @@
                 "strictness_index": 0.585,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.30044,
-                  "relation_min": 0.207373,
-                  "effect_min": 0.000193849,
-                  "breeding_min": 0.149228,
+                  "inheritance_min": 0.299483,
+                  "relation_min": 0.206712,
+                  "effect_min": 0.000191218,
+                  "breeding_min": 0.149236,
                   "pressure_regulation": {
                     "dominant_axis": "B",
                     "evidence": {
-                      "factor": 0.403391,
-                      "gradient": 1.173231
+                      "factor": 0.402105,
+                      "gradient": 1.268765
                     },
                     "inheritance": {
-                      "factor": 0.403391,
-                      "gradient": 1.173231
+                      "factor": 0.402105,
+                      "gradient": 1.268765
                     },
                     "relation": {
-                      "factor": 0.403391,
-                      "gradient": 1.173231
+                      "factor": 0.402105,
+                      "gradient": 1.268765
                     },
                     "effect": {
-                      "factor": 1.587363,
-                      "gradient": -0.908573
+                      "factor": 1.565822,
+                      "gradient": -0.705918
                     },
                     "breeding": {
-                      "factor": 0.449122,
-                      "gradient": 0.630795
+                      "factor": 0.449148,
+                      "gradient": 0.630685
                     }
                   }
                 },
@@ -535,6 +448,93 @@
                   "N": 0.0,
                   "B": 0.5,
                   "A": 0.5
+                }
+              },
+              "inheritance_breach_count": 1
+            },
+            {
+              "signature": "T^1*B^1",
+              "semantic": "complexity",
+              "count": 35527,
+              "effect_ema": 0.05011433833,
+              "min_generation": 2,
+              "max_generation": 2,
+              "generation_role": "ADJACENT",
+              "breeding_score_ema": 0.0,
+              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.044745; scope=1.120; global_effect=0.050114; origin_diversity=2",
+              "raw_effect_ema": 0.08949,
+              "local_effect_ema": 0.044745,
+              "global_effect_ema": 0.050114,
+              "scope_scale": 1.12,
+              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.044745, scope=1.120, conf=0.900).",
+              "semantic_confidence": 0.9,
+              "semantic_version": 35452,
+              "semantic_lane_ema": {
+                "communication": 0.4125,
+                "intelligence": 0.2875,
+                "meaning": 0.30000000000000004
+              },
+              "regulation": {
+                "enabled": true,
+                "evidence_min": 10,
+                "evidence_complete": true,
+                "validation_complete": true,
+                "issues": [],
+                "inheritance_score": 0.866667,
+                "inheritance_influence_factor": 1.0,
+                "relation_score": 0.833333,
+                "effect_score": 1.0,
+                "effect_score_raw": 1.0,
+                "breeding_score": 0.444444,
+                "representation_score": 0.820556,
+                "sustainability_score": 0.441856,
+                "formation_burden": 1.5972,
+                "persistence_tax_factor": 1.912884,
+                "persistence_tax_per_tick": 1.339019,
+                "maintenance_savings_per_tick": 0.156831,
+                "break_even_ticks": 10.184,
+                "requirement_coverage": 1.0,
+                "scale_depth_index": 0.6,
+                "complexity_index": 0.15,
+                "strictness_index": 0.42,
+                "dynamic_thresholds": {
+                  "evidence_min": 10,
+                  "inheritance_min": 0.282132,
+                  "relation_min": 0.193138,
+                  "effect_min": 0.000171447,
+                  "breeding_min": 0.126727,
+                  "pressure_regulation": {
+                    "dominant_axis": "T",
+                    "evidence": {
+                      "factor": 0.400784,
+                      "gradient": 1.466503
+                    },
+                    "inheritance": {
+                      "factor": 0.400784,
+                      "gradient": 1.466503
+                    },
+                    "relation": {
+                      "factor": 0.400784,
+                      "gradient": 1.466503
+                    },
+                    "effect": {
+                      "factor": 1.555218,
+                      "gradient": -0.650049
+                    },
+                    "breeding": {
+                      "factor": 0.410036,
+                      "gradient": 0.955092
+                    }
+                  }
+                },
+                "axes_active": 2,
+                "dominance": 0.5,
+                "constraint_influence": {
+                  "X": 0.0,
+                  "T": 0.5,
+                  "N": 0.0,
+                  "B": 0.5,
+                  "A": 0.0
                 }
               },
               "inheritance_breach_count": 1
@@ -544,23 +544,23 @@
       },
       "active_concepts": [
         "tensor:MANIFOLD:X:NC[N:COST]xNC[T:DIFFERENCE]",
-        "mean",
-        "understanding",
+        "identity",
+        "understand",
         "behavioral:visual:detail_orientation",
         "behavioral:visual:recognition_threshold"
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128692,
-      "timestamp": 1785051845.1677806,
+      "run_id": "2026-07-26_095050",
+      "tick": 128713,
+      "timestamp": 1785060198.5382748,
       "state_sig_before": "5e5a4507",
       "state_sig_after": "b30d7cc5",
       "pressure_before": {
         "X": 0.0,
-        "T": 0.040499999999999994,
+        "T": 0.026999999999999996,
         "N": 0.018,
-        "B": 0.040499999999999994,
+        "B": 0.026999999999999996,
         "A": 0.036
       },
       "pressure_after": {
@@ -572,12 +572,12 @@
       },
       "relief": {
         "X": 0.0,
-        "T": 0.0337042222452,
+        "T": 0.022469481496799996,
         "N": 0.014979654331199998,
-        "B": 0.0337042222452,
+        "B": 0.022469481496799996,
         "A": 0.029959308662399996
       },
-      "dominant_relief_axis": "T",
+      "dominant_relief_axis": "A",
       "trace": [
         {
           "kind": "ABILITY",
@@ -609,24 +609,24 @@
       "notes": {
         "tag": "grammar_clarity",
         "clarity": 0.6,
-        "b_score": 1.0,
-        "t_score": 1.0,
+        "b_score": 0.5,
+        "t_score": 0.5,
         "relief_tolerance": {
           "factor": 0.832203,
           "mean_tolerance": 0.167797,
           "slots": 3,
-          "axis": "T",
+          "axis": "A",
           "top": [
             {
-              "solution": "ABILITY:A:OUTLET_PUSH@T",
+              "solution": "ABILITY:A:OUTLET_PUSH@A",
               "tolerance": 0.167797
             },
             {
-              "solution": "ABILITY:B:INTERFACE_WEAKEN@T",
+              "solution": "ABILITY:B:INTERFACE_WEAKEN@A",
               "tolerance": 0.167797
             },
             {
-              "solution": "ABILITY:T:ADVANCE_TICK@T",
+              "solution": "ABILITY:T:ADVANCE_TICK@A",
               "tolerance": 0.167797
             }
           ]
@@ -640,109 +640,22 @@
           "persistent_root_accuracy_ok": false,
           "top": [
             {
-              "signature": "T^1*B^1",
-              "semantic": "complexity",
-              "count": 35520,
-              "effect_ema": 0.09249901915,
-              "min_generation": 2,
-              "max_generation": 2,
-              "generation_role": "ADJACENT",
-              "breeding_score_ema": 0.0,
-              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.082588; scope=1.120; global_effect=0.092499; origin_diversity=2",
-              "raw_effect_ema": 0.082588,
-              "local_effect_ema": 0.082588,
-              "global_effect_ema": 0.092499,
-              "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.082588, scope=1.120, conf=0.900).",
-              "semantic_confidence": 0.9,
-              "semantic_version": 35445,
-              "semantic_lane_ema": {
-                "communication": 0.4125,
-                "intelligence": 0.2875,
-                "meaning": 0.30000000000000004
-              },
-              "regulation": {
-                "enabled": true,
-                "evidence_min": 10,
-                "evidence_complete": true,
-                "validation_complete": true,
-                "issues": [],
-                "inheritance_score": 0.866667,
-                "inheritance_influence_factor": 1.0,
-                "relation_score": 0.833333,
-                "effect_score": 1.0,
-                "effect_score_raw": 1.0,
-                "breeding_score": 0.444444,
-                "representation_score": 0.820556,
-                "sustainability_score": 0.441856,
-                "formation_burden": 1.5972,
-                "persistence_tax_factor": 1.912884,
-                "persistence_tax_per_tick": 1.339019,
-                "maintenance_savings_per_tick": 0.156831,
-                "break_even_ticks": 10.184,
-                "requirement_coverage": 1.0,
-                "scale_depth_index": 0.6,
-                "complexity_index": 0.15,
-                "strictness_index": 0.42,
-                "dynamic_thresholds": {
-                  "evidence_min": 10,
-                  "inheritance_min": 0.282036,
-                  "relation_min": 0.193072,
-                  "effect_min": 0.000169132,
-                  "breeding_min": 0.126721,
-                  "pressure_regulation": {
-                    "dominant_axis": "T",
-                    "evidence": {
-                      "factor": 0.400648,
-                      "gradient": 1.504717
-                    },
-                    "inheritance": {
-                      "factor": 0.400648,
-                      "gradient": 1.504717
-                    },
-                    "relation": {
-                      "factor": 0.400648,
-                      "gradient": 1.504717
-                    },
-                    "effect": {
-                      "factor": 1.534212,
-                      "gradient": -0.569451
-                    },
-                    "breeding": {
-                      "factor": 0.410018,
-                      "gradient": 0.955462
-                    }
-                  }
-                },
-                "axes_active": 2,
-                "dominance": 0.5,
-                "constraint_influence": {
-                  "X": 0.0,
-                  "T": 0.5,
-                  "N": 0.0,
-                  "B": 0.5,
-                  "A": 0.0
-                }
-              },
-              "inheritance_breach_count": 1
-            },
-            {
               "signature": "B^1*A^1",
               "semantic": "map",
-              "count": 39800,
-              "effect_ema": 0.0831065557,
+              "count": 39810,
+              "effect_ema": 0.18467771234,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.074202; scope=1.120; global_effect=0.083107; origin_diversity=2",
-              "raw_effect_ema": 0.148405,
-              "local_effect_ema": 0.074202,
-              "global_effect_ema": 0.083107,
+              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.164891; scope=1.120; global_effect=0.184678; origin_diversity=2",
+              "raw_effect_ema": 0.164891,
+              "local_effect_ema": 0.164891,
+              "global_effect_ema": 0.184678,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.074202, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.164891, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 39721,
+              "semantic_version": 39731,
               "semantic_lane_ema": {
                 "communication": 0.3647058823529412,
                 "intelligence": 0.25882352941176473,
@@ -773,31 +686,31 @@
                 "strictness_index": 0.585,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.300457,
-                  "relation_min": 0.207385,
-                  "effect_min": 0.000193872,
-                  "breeding_min": 0.149207,
+                  "inheritance_min": 0.299534,
+                  "relation_min": 0.206747,
+                  "effect_min": 0.000191486,
+                  "breeding_min": 0.149223,
                   "pressure_regulation": {
                     "dominant_axis": "B",
                     "evidence": {
-                      "factor": 0.403413,
-                      "gradient": 1.171924
+                      "factor": 0.402173,
+                      "gradient": 1.262416
                     },
                     "inheritance": {
-                      "factor": 0.403413,
-                      "gradient": 1.171924
+                      "factor": 0.402173,
+                      "gradient": 1.262416
                     },
                     "relation": {
-                      "factor": 0.403413,
-                      "gradient": 1.171924
+                      "factor": 0.402173,
+                      "gradient": 1.262416
                     },
                     "effect": {
-                      "factor": 1.587553,
-                      "gradient": -0.911636
+                      "factor": 1.568017,
+                      "gradient": -0.719573
                     },
                     "breeding": {
-                      "factor": 0.449061,
-                      "gradient": 0.631055
+                      "factor": 0.449107,
+                      "gradient": 0.630858
                     }
                   }
                 },
@@ -812,124 +725,24 @@
                 }
               },
               "inheritance_breach_count": 1
-            }
-          ]
-        }
-      },
-      "active_concepts": [
-        "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean",
-        "understanding"
-      ]
-    },
-    {
-      "run_id": "2026-07-26_073133",
-      "tick": 128693,
-      "timestamp": 1785051845.1914978,
-      "state_sig_before": "5e5a4507",
-      "state_sig_after": "b30d7cc5",
-      "pressure_before": {
-        "X": 0.0,
-        "T": 0.040499999999999994,
-        "N": 0.018,
-        "B": 0.040499999999999994,
-        "A": 0.036
-      },
-      "pressure_after": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.0,
-        "A": 0.0
-      },
-      "relief": {
-        "X": 0.0,
-        "T": 0.03174584922138311,
-        "N": 0.01410926632061472,
-        "B": 0.03174584922138311,
-        "A": 0.02821853264122944
-      },
-      "dominant_relief_axis": "T",
-      "trace": [
-        {
-          "kind": "ABILITY",
-          "id": "A:OUTLET_PUSH"
-        },
-        {
-          "kind": "ABILITY",
-          "id": "B:INTERFACE_WEAKEN"
-        },
-        {
-          "kind": "ABILITY",
-          "id": "T:ADVANCE_TICK"
-        }
-      ],
-      "trace_cost_total": {
-        "X": 0.0,
-        "T": 0.002,
-        "N": 0.002,
-        "B": 0.001,
-        "A": 0.001
-      },
-      "trace_risk_total": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.0,
-        "A": 0.01
-      },
-      "notes": {
-        "tag": "grammar_clarity",
-        "clarity": 0.6,
-        "b_score": 1.0,
-        "t_score": 1.0,
-        "relief_tolerance": {
-          "factor": 0.783848,
-          "mean_tolerance": 0.216152,
-          "slots": 3,
-          "axis": "T",
-          "top": [
-            {
-              "solution": "ABILITY:A:OUTLET_PUSH@T",
-              "tolerance": 0.216152
             },
-            {
-              "solution": "ABILITY:B:INTERFACE_WEAKEN@T",
-              "tolerance": 0.216152
-            },
-            {
-              "solution": "ABILITY:T:ADVANCE_TICK@T",
-              "tolerance": 0.216152
-            }
-          ]
-        },
-        "coupling_roots": {
-          "persistent_pressure_root": "A^1*N^1*T^1",
-          "persistent_pressure_root_canonical": "T^1*N^1*A^1",
-          "persistent_pressure_root_ema": 3.08e-09,
-          "persistent_root_generation_expected": 2,
-          "persistent_root_generation_observed": 3,
-          "persistent_root_accuracy_ok": false,
-          "top": [
             {
               "signature": "T^1*B^1",
               "semantic": "complexity",
-              "count": 35521,
-              "effect_ema": 0.09458052459,
+              "count": 35528,
+              "effect_ema": 0.05013172235,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.084447; scope=1.120; global_effect=0.094581; origin_diversity=2",
-              "raw_effect_ema": 0.084447,
-              "local_effect_ema": 0.084447,
-              "global_effect_ema": 0.094581,
+              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.044760; scope=1.120; global_effect=0.050132; origin_diversity=2",
+              "raw_effect_ema": 0.089521,
+              "local_effect_ema": 0.04476,
+              "global_effect_ema": 0.050132,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.084447, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.044760, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 35446,
+              "semantic_version": 35453,
               "semantic_lane_ema": {
                 "communication": 0.4125,
                 "intelligence": 0.2875,
@@ -960,31 +773,31 @@
                 "strictness_index": 0.42,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.282031,
-                  "relation_min": 0.193069,
-                  "effect_min": 0.000168988,
-                  "breeding_min": 0.126718,
+                  "inheritance_min": 0.282132,
+                  "relation_min": 0.193138,
+                  "effect_min": 0.000171442,
+                  "breeding_min": 0.126724,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.400641,
-                      "gradient": 1.506798
+                      "factor": 0.400783,
+                      "gradient": 1.466692
                     },
                     "inheritance": {
-                      "factor": 0.400641,
-                      "gradient": 1.506798
+                      "factor": 0.400783,
+                      "gradient": 1.466692
                     },
                     "relation": {
-                      "factor": 0.400641,
-                      "gradient": 1.506798
+                      "factor": 0.400783,
+                      "gradient": 1.466692
                     },
                     "effect": {
-                      "factor": 1.532906,
-                      "gradient": -0.565288
+                      "factor": 1.555174,
+                      "gradient": -0.649843
                     },
                     "breeding": {
-                      "factor": 0.410007,
-                      "gradient": 0.955684
+                      "factor": 0.410028,
+                      "gradient": 0.955265
                     }
                   }
                 },
@@ -999,111 +812,24 @@
                 }
               },
               "inheritance_breach_count": 1
-            },
-            {
-              "signature": "B^1*A^1",
-              "semantic": "map",
-              "count": 39801,
-              "effect_ema": 0.08119874473,
-              "min_generation": 2,
-              "max_generation": 2,
-              "generation_role": "ADJACENT",
-              "breeding_score_ema": 0.0,
-              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.072499; scope=1.120; global_effect=0.081199; origin_diversity=2",
-              "raw_effect_ema": 0.144998,
-              "local_effect_ema": 0.072499,
-              "global_effect_ema": 0.081199,
-              "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.072499, scope=1.120, conf=0.900).",
-              "semantic_confidence": 0.9,
-              "semantic_version": 39722,
-              "semantic_lane_ema": {
-                "communication": 0.3647058823529412,
-                "intelligence": 0.25882352941176473,
-                "meaning": 0.3764705882352941
-              },
-              "regulation": {
-                "enabled": true,
-                "evidence_min": 10,
-                "evidence_complete": true,
-                "validation_complete": true,
-                "issues": [],
-                "inheritance_score": 0.866667,
-                "inheritance_influence_factor": 1.0,
-                "relation_score": 0.833333,
-                "effect_score": 1.0,
-                "effect_score_raw": 1.0,
-                "breeding_score": 0.444444,
-                "representation_score": 0.820556,
-                "sustainability_score": 0.394034,
-                "formation_burden": 1.777187,
-                "persistence_tax_factor": 2.869327,
-                "persistence_tax_per_tick": 2.008529,
-                "maintenance_savings_per_tick": 0.104554,
-                "break_even_ticks": 16.998,
-                "requirement_coverage": 1.0,
-                "scale_depth_index": 0.875,
-                "complexity_index": 0.15,
-                "strictness_index": 0.585,
-                "dynamic_thresholds": {
-                  "evidence_min": 10,
-                  "inheritance_min": 0.300476,
-                  "relation_min": 0.207398,
-                  "effect_min": 0.000193897,
-                  "breeding_min": 0.14919,
-                  "pressure_regulation": {
-                    "dominant_axis": "B",
-                    "evidence": {
-                      "factor": 0.403438,
-                      "gradient": 1.170443
-                    },
-                    "inheritance": {
-                      "factor": 0.403438,
-                      "gradient": 1.170443
-                    },
-                    "relation": {
-                      "factor": 0.403438,
-                      "gradient": 1.170443
-                    },
-                    "effect": {
-                      "factor": 1.58776,
-                      "gradient": -0.915025
-                    },
-                    "breeding": {
-                      "factor": 0.449008,
-                      "gradient": 0.631277
-                    }
-                  }
-                },
-                "axes_active": 2,
-                "dominance": 0.5,
-                "constraint_influence": {
-                  "X": 0.0,
-                  "T": 0.0,
-                  "N": 0.0,
-                  "B": 0.5,
-                  "A": 0.5
-                }
-              },
-              "inheritance_breach_count": 1
             }
           ]
         }
       },
       "active_concepts": [
         "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean",
-        "understanding"
+        "recalled:understand",
+        "recalled:identity",
+        "identity",
+        "understand"
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128695,
-      "timestamp": 1785051848.9814627,
-      "state_sig_before": "cba981d789b3",
-      "state_sig_after": "39d68ec711ff",
+      "run_id": "2026-07-26_095050",
+      "tick": 128715,
+      "timestamp": 1785060202.360352,
+      "state_sig_before": "a05e58f4417b",
+      "state_sig_after": "4979cc5337d0",
       "pressure_before": {
         "X": 0.3668,
         "T": 1.0,
@@ -1112,14 +838,14 @@
         "A": 0.42
       },
       "pressure_after": {
-        "X": 0.3791,
+        "X": 0.378,
         "T": 0.3,
         "N": 0.1561,
         "B": 0.545,
         "A": 0.42
       },
       "relief": {
-        "X": -0.011561999999999979,
+        "X": -0.010527999999999987,
         "T": 0.6579999999999999,
         "N": -0.017107999999999995,
         "B": 0.0,
@@ -1180,15 +906,15 @@
         "axis_signature": "X^1*T^1*N^1*B^1*A^1",
         "purpose_lane": "meaning",
         "time_index": 979,
-        "session_id": "sim_1785051844493",
+        "session_id": "sim_1785060197966",
         "source": "simulation_live_bridge",
         "response_source": "composer_unified",
         "action_type": "grounded_response",
-        "projected_accuracy": 0.6487,
+        "projected_accuracy": 0.6693,
         "projected_cost": 0.1379,
-        "policy_delta": 0.172,
+        "policy_delta": 0.1778,
         "boundary_ambiguity": 0.545,
-        "meaning_focus": "understanding",
+        "meaning_focus": "understand",
         "meaning_form": "momentum",
         "meaning_signature": "T^1*N^1",
         "contract_domains": {
@@ -1205,7 +931,7 @@
             }
           },
           "communication": {
-            "score": 0.7012,
+            "score": 0.7081,
             "success": false,
             "failure_signatures": [
               "structure_blur"
@@ -1216,7 +942,7 @@
             }
           },
           "intelligence": {
-            "score": 0.043,
+            "score": 0.0445,
             "success": false,
             "failure_signatures": [
               "pressure_stuck",
@@ -1275,20 +1001,20 @@
             {
               "signature": "T^1*N^1",
               "semantic": "momentum",
-              "count": 4363,
-              "effect_ema": 0.57712536369,
+              "count": 4365,
+              "effect_ema": 0.59397927234,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "momentum; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.515291; scope=1.120; global_effect=0.577125; origin_diversity=2",
-              "raw_effect_ema": 0.515291,
-              "local_effect_ema": 0.515291,
-              "global_effect_ema": 0.577125,
+              "effect_descriptor": "momentum; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.530339; scope=1.120; global_effect=0.593979; origin_diversity=2",
+              "raw_effect_ema": 0.530339,
+              "local_effect_ema": 0.530339,
+              "global_effect_ema": 0.593979,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as momentum (pre_agency_will) in adjacent mode via model refinement (local=0.515291, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as momentum (pre_agency_will) in adjacent mode via model refinement (local=0.530339, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 4293,
+              "semantic_version": 4295,
               "semantic_lane_ema": {
                 "communication": 0.31428571428571433,
                 "intelligence": 0.39999999999999997,
@@ -1319,31 +1045,31 @@
                 "strictness_index": 0.345,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.274179,
-                  "relation_min": 0.186926,
-                  "effect_min": 5.1348e-05,
-                  "breeding_min": 0.120789,
+                  "inheritance_min": 0.274177,
+                  "relation_min": 0.186925,
+                  "effect_min": 5.0068e-05,
+                  "breeding_min": 0.120793,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.400034,
-                      "gradient": 2.092534
+                      "factor": 0.400032,
+                      "gradient": 2.107122
                     },
                     "inheritance": {
-                      "factor": 0.400034,
-                      "gradient": 2.092534
+                      "factor": 0.400032,
+                      "gradient": 2.107122
                     },
                     "relation": {
-                      "factor": 0.400034,
-                      "gradient": 2.092534
+                      "factor": 0.400032,
+                      "gradient": 2.107122
                     },
                     "effect": {
-                      "factor": 0.489779,
-                      "gradient": 0.502993
+                      "factor": 0.477562,
+                      "gradient": 0.534435
                     },
                     "breeding": {
-                      "factor": 0.404634,
-                      "gradient": 1.110577
+                      "factor": 0.404644,
+                      "gradient": 1.110117
                     }
                   }
                 },
@@ -1362,20 +1088,20 @@
             {
               "signature": "X^1*T^1",
               "semantic": "persistence",
-              "count": 4461,
-              "effect_ema": 0.57712536365,
+              "count": 4463,
+              "effect_ema": 0.5939792723,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "persistence; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.515291; scope=1.120; global_effect=0.577125; origin_diversity=2",
-              "raw_effect_ema": 0.515291,
-              "local_effect_ema": 0.515291,
-              "global_effect_ema": 0.577125,
+              "effect_descriptor": "persistence; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.530339; scope=1.120; global_effect=0.593979; origin_diversity=2",
+              "raw_effect_ema": 0.530339,
+              "local_effect_ema": 0.530339,
+              "global_effect_ema": 0.593979,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as persistence (trace) in adjacent mode via model refinement (local=0.515291, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as persistence (trace) in adjacent mode via model refinement (local=0.530339, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 4337,
+              "semantic_version": 4339,
               "semantic_lane_ema": {
                 "communication": 0.2948717948717949,
                 "intelligence": 0.4102564102564103,
@@ -1408,29 +1134,29 @@
                   "evidence_min": 10,
                   "inheritance_min": 0.259311,
                   "relation_min": 0.175214,
-                  "effect_min": 4.0126e-05,
-                  "breeding_min": 0.111331,
+                  "effect_min": 3.9755e-05,
+                  "breeding_min": 0.11133,
                   "pressure_regulation": {
                     "dominant_axis": "X",
                     "evidence": {
-                      "factor": 0.40001,
-                      "gradient": 2.346193
+                      "factor": 0.400009,
+                      "gradient": 2.361997
                     },
                     "inheritance": {
-                      "factor": 0.40001,
-                      "gradient": 2.346193
+                      "factor": 0.400009,
+                      "gradient": 2.361997
                     },
                     "relation": {
-                      "factor": 0.40001,
-                      "gradient": 2.346193
+                      "factor": 0.400009,
+                      "gradient": 2.361997
                     },
                     "effect": {
-                      "factor": 0.426691,
-                      "gradient": 0.756651
+                      "factor": 0.422746,
+                      "gradient": 0.789309
                     },
                     "breeding": {
-                      "factor": 0.401307,
-                      "gradient": 1.364236
+                      "factor": 0.401302,
+                      "gradient": 1.364991
                     }
                   }
                 },
@@ -1447,26 +1173,26 @@
               "inheritance_breach_count": 3
             },
             {
-              "signature": "N^1*B^1",
-              "semantic": "tension",
-              "count": 5357,
-              "effect_ema": 0.27184545143,
+              "signature": "A^1",
+              "semantic": "understanding",
+              "count": 4269,
+              "effect_ema": 0.27312439755,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "tension; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.242719; scope=1.120; global_effect=0.271845; origin_diversity=2",
-              "raw_effect_ema": 0.485438,
-              "local_effect_ema": 0.242719,
-              "global_effect_ema": 0.271845,
-              "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as tension (pressure) in adjacent mode via value grounding (local=0.242719, scope=1.120, conf=0.900).",
-              "semantic_confidence": 0.9,
-              "semantic_version": 5281,
+              "effect_descriptor": "understanding; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.265169; scope=1.030; global_effect=0.273124; origin_diversity=1",
+              "raw_effect_ema": 0.530339,
+              "local_effect_ema": 0.265169,
+              "global_effect_ema": 0.273124,
+              "scope_scale": 1.03,
+              "semantic_translation": "At gen 2, this coupling resolves as understanding (interpretation) in adjacent mode via value grounding (local=0.265169, scope=1.030, conf=1.000).",
+              "semantic_confidence": 1.0,
+              "semantic_version": 4257,
               "semantic_lane_ema": {
-                "communication": 0.32857142857142857,
-                "intelligence": 0.30000000000000004,
-                "meaning": 0.37142857142857144
+                "communication": 0.3111111111111111,
+                "intelligence": 0.3111111111111111,
+                "meaning": 0.3777777777777778
               },
               "regulation": {
                 "enabled": true,
@@ -1474,61 +1200,61 @@
                 "evidence_complete": true,
                 "validation_complete": true,
                 "issues": [],
-                "inheritance_score": 0.866667,
-                "inheritance_influence_factor": 1.0,
-                "relation_score": 0.833333,
+                "inheritance_score": 0.833333,
+                "inheritance_influence_factor": 1.5,
+                "relation_score": 0.666667,
                 "effect_score": 1.0,
                 "effect_score_raw": 1.0,
                 "breeding_score": 0.444444,
-                "representation_score": 0.820556,
-                "sustainability_score": 0.425915,
-                "formation_burden": 1.613187,
-                "persistence_tax_factor": 2.231699,
-                "persistence_tax_per_tick": 1.562189,
-                "maintenance_savings_per_tick": 0.134427,
-                "break_even_ticks": 12.0,
+                "representation_score": 0.772222,
+                "sustainability_score": 0.324968,
+                "formation_burden": 1.69975,
+                "persistence_tax_factor": 3.188141,
+                "persistence_tax_per_tick": 2.231699,
+                "maintenance_savings_per_tick": 0.094099,
+                "break_even_ticks": 18.063,
                 "requirement_coverage": 1.0,
-                "scale_depth_index": 0.625,
-                "complexity_index": 0.15,
-                "strictness_index": 0.435,
+                "scale_depth_index": 1.0,
+                "complexity_index": 0.0375,
+                "strictness_index": 0.615,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.283336,
-                  "relation_min": 0.194116,
-                  "effect_min": 0.00015221,
-                  "breeding_min": 0.128562,
+                  "inheritance_min": 0.309003,
+                  "relation_min": 0.213581,
+                  "effect_min": 0.000192412,
+                  "breeding_min": 0.196455,
                   "pressure_regulation": {
-                    "dominant_axis": "N",
+                    "dominant_axis": "A",
                     "evidence": {
-                      "factor": 0.400383,
-                      "gradient": 1.609851
+                      "factor": 0.410792,
+                      "gradient": 0.940439
                     },
                     "inheritance": {
-                      "factor": 0.400383,
-                      "gradient": 1.609851
+                      "factor": 0.410792,
+                      "gradient": 0.940439
                     },
                     "relation": {
-                      "factor": 0.400383,
-                      "gradient": 1.609851
+                      "factor": 0.410792,
+                      "gradient": 0.940439
                     },
                     "effect": {
-                      "factor": 1.367317,
-                      "gradient": -0.28497
+                      "factor": 1.548214,
+                      "gradient": -0.61977
                     },
                     "breeding": {
-                      "factor": 0.413154,
-                      "gradient": 0.900465
+                      "factor": 0.583846,
+                      "gradient": 0.341937
                     }
                   }
                 },
-                "axes_active": 2,
-                "dominance": 0.5,
+                "axes_active": 1,
+                "dominance": 1.0,
                 "constraint_influence": {
                   "X": 0.0,
                   "T": 0.0,
-                  "N": 0.5,
-                  "B": 0.5,
-                  "A": 0.0
+                  "N": 0.0,
+                  "B": 0.0,
+                  "A": 1.0
                 }
               },
               "inheritance_breach_count": 1
@@ -1538,23 +1264,23 @@
       },
       "active_concepts": [
         "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean",
-        "understanding"
+        "recalled:understand",
+        "recalled:identity",
+        "identity",
+        "understand"
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128696,
-      "timestamp": 1785051849.0112445,
+      "run_id": "2026-07-26_095050",
+      "tick": 128716,
+      "timestamp": 1785060202.393191,
       "state_sig_before": "5e5a4507",
       "state_sig_after": "b30d7cc5",
       "pressure_before": {
         "X": 0.0,
-        "T": 0.040499999999999994,
+        "T": 0.026999999999999996,
         "N": 0.018,
-        "B": 0.040499999999999994,
+        "B": 0.026999999999999996,
         "A": 0.036
       },
       "pressure_after": {
@@ -1566,12 +1292,12 @@
       },
       "relief": {
         "X": 0.0,
-        "T": 0.030085504878439286,
-        "N": 0.013371335501528572,
-        "B": 0.030085504878439286,
-        "A": 0.026742671003057144
+        "T": 0.02124779988125173,
+        "N": 0.014165199920834487,
+        "B": 0.02124779988125173,
+        "A": 0.028330399841668973
       },
-      "dominant_relief_axis": "T",
+      "dominant_relief_axis": "A",
       "trace": [
         {
           "kind": "ABILITY",
@@ -1603,25 +1329,25 @@
       "notes": {
         "tag": "grammar_clarity",
         "clarity": 0.6,
-        "b_score": 1.0,
-        "t_score": 1.0,
+        "b_score": 0.5,
+        "t_score": 0.5,
         "relief_tolerance": {
-          "factor": 0.742852,
-          "mean_tolerance": 0.257148,
+          "factor": 0.786956,
+          "mean_tolerance": 0.213044,
           "slots": 3,
-          "axis": "T",
+          "axis": "A",
           "top": [
             {
-              "solution": "ABILITY:A:OUTLET_PUSH@T",
-              "tolerance": 0.257148
+              "solution": "ABILITY:A:OUTLET_PUSH@A",
+              "tolerance": 0.213044
             },
             {
-              "solution": "ABILITY:B:INTERFACE_WEAKEN@T",
-              "tolerance": 0.257148
+              "solution": "ABILITY:B:INTERFACE_WEAKEN@A",
+              "tolerance": 0.213044
             },
             {
-              "solution": "ABILITY:T:ADVANCE_TICK@T",
-              "tolerance": 0.257148
+              "solution": "ABILITY:T:ADVANCE_TICK@A",
+              "tolerance": 0.213044
             }
           ]
         },
@@ -1636,20 +1362,20 @@
             {
               "signature": "B^1*A^1",
               "semantic": "map",
-              "count": 39803,
-              "effect_ema": 0.10033951427,
+              "count": 39812,
+              "effect_ema": 0.2181666832,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.089589; scope=1.120; global_effect=0.100340; origin_diversity=2",
-              "raw_effect_ema": 0.179178,
-              "local_effect_ema": 0.089589,
-              "global_effect_ema": 0.10034,
+              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.194792; scope=1.120; global_effect=0.218167; origin_diversity=2",
+              "raw_effect_ema": 0.194792,
+              "local_effect_ema": 0.194792,
+              "global_effect_ema": 0.218167,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.089589, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.194792, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 39724,
+              "semantic_version": 39733,
               "semantic_lane_ema": {
                 "communication": 0.3647058823529412,
                 "intelligence": 0.25882352941176473,
@@ -1680,31 +1406,31 @@
                 "strictness_index": 0.585,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.300554,
-                  "relation_min": 0.207452,
-                  "effect_min": 0.000193797,
-                  "breeding_min": 0.151096,
+                  "inheritance_min": 0.299481,
+                  "relation_min": 0.206711,
+                  "effect_min": 0.000190648,
+                  "breeding_min": 0.151151,
                   "pressure_regulation": {
                     "dominant_axis": "B",
                     "evidence": {
-                      "factor": 0.403544,
-                      "gradient": 1.164394
+                      "factor": 0.402103,
+                      "gradient": 1.268972
                     },
                     "inheritance": {
-                      "factor": 0.403544,
-                      "gradient": 1.164394
+                      "factor": 0.402103,
+                      "gradient": 1.268972
                     },
                     "relation": {
-                      "factor": 0.403544,
-                      "gradient": 1.164394
+                      "factor": 0.402103,
+                      "gradient": 1.268972
                     },
                     "effect": {
-                      "factor": 1.586941,
-                      "gradient": -0.901933
+                      "factor": 1.561157,
+                      "gradient": -0.679528
                     },
                     "breeding": {
-                      "factor": 0.454745,
-                      "gradient": 0.608139
+                      "factor": 0.454909,
+                      "gradient": 0.607513
                     }
                   }
                 },
@@ -1723,20 +1449,20 @@
             {
               "signature": "T^1*B^1",
               "semantic": "complexity",
-              "count": 35522,
-              "effect_ema": 0.09599962008,
+              "count": 35529,
+              "effect_ema": 0.0499287903,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.085714; scope=1.120; global_effect=0.096000; origin_diversity=2",
-              "raw_effect_ema": 0.085714,
-              "local_effect_ema": 0.085714,
-              "global_effect_ema": 0.096,
+              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.044579; scope=1.120; global_effect=0.049929; origin_diversity=2",
+              "raw_effect_ema": 0.089159,
+              "local_effect_ema": 0.044579,
+              "global_effect_ema": 0.049929,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.085714, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.044579, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 35447,
+              "semantic_version": 35454,
               "semantic_lane_ema": {
                 "communication": 0.4125,
                 "intelligence": 0.2875,
@@ -1767,31 +1493,31 @@
                 "strictness_index": 0.42,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.281969,
-                  "relation_min": 0.193026,
-                  "effect_min": 0.000167812,
-                  "breeding_min": 0.126307,
+                  "inheritance_min": 0.282058,
+                  "relation_min": 0.193087,
+                  "effect_min": 0.000170719,
+                  "breeding_min": 0.126311,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.400552,
-                      "gradient": 1.536765
+                      "factor": 0.400679,
+                      "gradient": 1.495373
                     },
                     "inheritance": {
-                      "factor": 0.400552,
-                      "gradient": 1.536765
+                      "factor": 0.400679,
+                      "gradient": 1.495373
                     },
                     "relation": {
-                      "factor": 0.400552,
-                      "gradient": 1.536765
+                      "factor": 0.400679,
+                      "gradient": 1.495373
                     },
                     "effect": {
-                      "factor": 1.522244,
-                      "gradient": -0.533902
+                      "factor": 1.548608,
+                      "gradient": -0.621365
                     },
                     "breeding": {
-                      "factor": 0.408679,
-                      "gradient": 0.984385
+                      "factor": 0.40869,
+                      "gradient": 0.984127
                     }
                   }
                 },
@@ -1812,20 +1538,20 @@
       },
       "active_concepts": [
         "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean",
-        "understanding"
+        "recalled:understand",
+        "recalled:identity",
+        "identity",
+        "understand"
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128697,
-      "timestamp": 1785051849.0585263,
-      "state_sig_before": "1663bbe20c36",
-      "state_sig_after": "ebc21d079729",
+      "run_id": "2026-07-26_095050",
+      "tick": 128717,
+      "timestamp": 1785060202.4388077,
+      "state_sig_before": "863384442a32",
+      "state_sig_after": "a979f0f2582d",
       "pressure_before": {
-        "X": 0.3791,
+        "X": 0.378,
         "T": 0.3,
         "N": 0.1561,
         "B": 0.545,
@@ -1839,7 +1565,7 @@
         "A": 0.38
       },
       "relief": {
-        "X": -0.026010837383999987,
+        "X": -0.026984031979999976,
         "T": 0.265416708,
         "N": 0.00946652925199999,
         "B": 0.2543576785,
@@ -1900,9 +1626,9 @@
         "axis_signature": "X^1*T^1*N^1*B^1*A^1",
         "purpose_lane": "meaning",
         "time_index": 980,
-        "session_id": "sim_1785051844493",
+        "session_id": "sim_1785060197966",
         "source": "simulation_live_bridge",
-        "observation_intent": "clarification",
+        "observation_intent": "how_to",
         "accuracy_score": 0.62,
         "accuracy_label": "engaged_followup",
         "cost_total": 0.1454,
@@ -1995,20 +1721,20 @@
             {
               "signature": "T^1*N^1",
               "semantic": "momentum",
-              "count": 4364,
-              "effect_ema": 0.58154616558,
+              "count": 4366,
+              "effect_ema": 0.59705176154,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "momentum; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.519238; scope=1.120; global_effect=0.581546; origin_diversity=2",
-              "raw_effect_ema": 0.519238,
-              "local_effect_ema": 0.519238,
-              "global_effect_ema": 0.581546,
+              "effect_descriptor": "momentum; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.533082; scope=1.120; global_effect=0.597052; origin_diversity=2",
+              "raw_effect_ema": 0.533082,
+              "local_effect_ema": 0.533082,
+              "global_effect_ema": 0.597052,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as momentum (pre_agency_will) in adjacent mode via model refinement (local=0.519238, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as momentum (pre_agency_will) in adjacent mode via model refinement (local=0.533082, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 4294,
+              "semantic_version": 4296,
               "semantic_lane_ema": {
                 "communication": 0.31428571428571433,
                 "intelligence": 0.39999999999999997,
@@ -2039,31 +1765,31 @@
                 "strictness_index": 0.345,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.274175,
-                  "relation_min": 0.186924,
-                  "effect_min": 4.9942e-05,
-                  "breeding_min": 0.120619,
+                  "inheritance_min": 0.274174,
+                  "relation_min": 0.186923,
+                  "effect_min": 4.892e-05,
+                  "breeding_min": 0.120621,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.400029,
-                      "gradient": 2.122872
+                      "factor": 0.400028,
+                      "gradient": 2.136409
                     },
                     "inheritance": {
-                      "factor": 0.400029,
-                      "gradient": 2.122872
+                      "factor": 0.400028,
+                      "gradient": 2.136409
                     },
                     "relation": {
-                      "factor": 0.400029,
-                      "gradient": 2.122872
+                      "factor": 0.400028,
+                      "gradient": 2.136409
                     },
                     "effect": {
-                      "factor": 0.476368,
-                      "gradient": 0.537752
+                      "factor": 0.466619,
+                      "gradient": 0.566794
                     },
                     "breeding": {
-                      "factor": 0.404063,
-                      "gradient": 1.136968
+                      "factor": 0.404069,
+                      "gradient": 1.13666
                     }
                   }
                 },
@@ -2082,20 +1808,20 @@
             {
               "signature": "X^1*T^1",
               "semantic": "persistence",
-              "count": 4462,
-              "effect_ema": 0.58154616554,
+              "count": 4464,
+              "effect_ema": 0.59705176151,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "persistence; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.519238; scope=1.120; global_effect=0.581546; origin_diversity=2",
-              "raw_effect_ema": 0.519238,
-              "local_effect_ema": 0.519238,
-              "global_effect_ema": 0.581546,
+              "effect_descriptor": "persistence; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.533082; scope=1.120; global_effect=0.597052; origin_diversity=2",
+              "raw_effect_ema": 0.533082,
+              "local_effect_ema": 0.533082,
+              "global_effect_ema": 0.597052,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as persistence (trace) in adjacent mode via model refinement (local=0.519238, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as persistence (trace) in adjacent mode via model refinement (local=0.533082, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 4338,
+              "semantic_version": 4340,
               "semantic_lane_ema": {
                 "communication": 0.2948717948717949,
                 "intelligence": 0.4102564102564103,
@@ -2128,29 +1854,29 @@
                   "evidence_min": 10,
                   "inheritance_min": 0.259311,
                   "relation_min": 0.175214,
-                  "effect_min": 4.0033e-05,
-                  "breeding_min": 0.111333,
+                  "effect_min": 3.9703e-05,
+                  "breeding_min": 0.111331,
                   "pressure_regulation": {
                     "dominant_axis": "X",
                     "evidence": {
                       "factor": 0.400009,
-                      "gradient": 2.349498
+                      "gradient": 2.36398
                     },
                     "inheritance": {
                       "factor": 0.400009,
-                      "gradient": 2.349498
+                      "gradient": 2.36398
                     },
                     "relation": {
                       "factor": 0.400009,
-                      "gradient": 2.349498
+                      "gradient": 2.36398
                     },
                     "effect": {
-                      "factor": 0.425701,
-                      "gradient": 0.764377
+                      "factor": 0.422189,
+                      "gradient": 0.794365
                     },
                     "breeding": {
-                      "factor": 0.401311,
-                      "gradient": 1.363593
+                      "factor": 0.401307,
+                      "gradient": 1.364232
                     }
                   }
                 },
@@ -2167,26 +1893,26 @@
               "inheritance_breach_count": 3
             },
             {
-              "signature": "N^1*B^1",
-              "semantic": "tension",
-              "count": 5358,
-              "effect_ema": 0.27539323081,
+              "signature": "A^1",
+              "semantic": "understanding",
+              "count": 4270,
+              "effect_ema": 0.27453719392,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "tension; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.245887; scope=1.120; global_effect=0.275393; origin_diversity=2",
-              "raw_effect_ema": 0.491774,
-              "local_effect_ema": 0.245887,
-              "global_effect_ema": 0.275393,
-              "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as tension (pressure) in adjacent mode via value grounding (local=0.245887, scope=1.120, conf=0.900).",
-              "semantic_confidence": 0.9,
-              "semantic_version": 5282,
+              "effect_descriptor": "understanding; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.266541; scope=1.030; global_effect=0.274537; origin_diversity=1",
+              "raw_effect_ema": 0.533082,
+              "local_effect_ema": 0.266541,
+              "global_effect_ema": 0.274537,
+              "scope_scale": 1.03,
+              "semantic_translation": "At gen 2, this coupling resolves as understanding (interpretation) in adjacent mode via value grounding (local=0.266541, scope=1.030, conf=1.000).",
+              "semantic_confidence": 1.0,
+              "semantic_version": 4258,
               "semantic_lane_ema": {
-                "communication": 0.32857142857142857,
-                "intelligence": 0.30000000000000004,
-                "meaning": 0.37142857142857144
+                "communication": 0.3111111111111111,
+                "intelligence": 0.3111111111111111,
+                "meaning": 0.3777777777777778
               },
               "regulation": {
                 "enabled": true,
@@ -2194,61 +1920,61 @@
                 "evidence_complete": true,
                 "validation_complete": true,
                 "issues": [],
-                "inheritance_score": 0.866667,
-                "inheritance_influence_factor": 1.0,
-                "relation_score": 0.833333,
+                "inheritance_score": 0.833333,
+                "inheritance_influence_factor": 1.5,
+                "relation_score": 0.666667,
                 "effect_score": 1.0,
                 "effect_score_raw": 1.0,
                 "breeding_score": 0.444444,
-                "representation_score": 0.820556,
-                "sustainability_score": 0.425915,
-                "formation_burden": 1.613187,
-                "persistence_tax_factor": 2.231699,
-                "persistence_tax_per_tick": 1.562189,
-                "maintenance_savings_per_tick": 0.134427,
-                "break_even_ticks": 12.0,
+                "representation_score": 0.772222,
+                "sustainability_score": 0.324968,
+                "formation_burden": 1.69975,
+                "persistence_tax_factor": 3.188141,
+                "persistence_tax_per_tick": 2.231699,
+                "maintenance_savings_per_tick": 0.094099,
+                "break_even_ticks": 18.063,
                 "requirement_coverage": 1.0,
-                "scale_depth_index": 0.625,
-                "complexity_index": 0.15,
-                "strictness_index": 0.435,
+                "scale_depth_index": 1.0,
+                "complexity_index": 0.0375,
+                "strictness_index": 0.615,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.283332,
-                  "relation_min": 0.194113,
-                  "effect_min": 0.000151494,
-                  "breeding_min": 0.12856,
+                  "inheritance_min": 0.308911,
+                  "relation_min": 0.213518,
+                  "effect_min": 0.000192297,
+                  "breeding_min": 0.196212,
                   "pressure_regulation": {
-                    "dominant_axis": "N",
+                    "dominant_axis": "A",
                     "evidence": {
-                      "factor": 0.400377,
-                      "gradient": 1.61309
+                      "factor": 0.41067,
+                      "gradient": 0.94274
                     },
                     "inheritance": {
-                      "factor": 0.400377,
-                      "gradient": 1.61309
+                      "factor": 0.41067,
+                      "gradient": 0.94274
                     },
                     "relation": {
-                      "factor": 0.400377,
-                      "gradient": 1.61309
+                      "factor": 0.41067,
+                      "gradient": 0.94274
                     },
                     "effect": {
-                      "factor": 1.360886,
-                      "gradient": -0.278183
+                      "factor": 1.547286,
+                      "gradient": -0.616056
                     },
                     "breeding": {
-                      "factor": 0.413149,
-                      "gradient": 0.900537
+                      "factor": 0.583124,
+                      "gradient": 0.342866
                     }
                   }
                 },
-                "axes_active": 2,
-                "dominance": 0.5,
+                "axes_active": 1,
+                "dominance": 1.0,
                 "constraint_influence": {
                   "X": 0.0,
                   "T": 0.0,
-                  "N": 0.5,
-                  "B": 0.5,
-                  "A": 0.0
+                  "N": 0.0,
+                  "B": 0.0,
+                  "A": 1.0
                 }
               },
               "inheritance_breach_count": 1
@@ -2258,201 +1984,23 @@
       },
       "active_concepts": [
         "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean",
-        "understanding"
+        "recalled:understand",
+        "recalled:identity",
+        "identity",
+        "understand"
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128698,
-      "timestamp": 1785051849.6446059,
-      "state_sig_before": "pre_mod_t128697",
-      "state_sig_after": "post_mod_t128697",
-      "pressure_before": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.128,
-        "A": 0.0
-      },
-      "pressure_after": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.1024,
-        "A": 0.0
-      },
-      "relief": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.024063999999999995,
-        "A": 0.0
-      },
-      "dominant_relief_axis": "B",
-      "trace": [
-        {
-          "kind": "ABILITY",
-          "id": "N:READ_PIPELINE_STATE"
-        },
-        {
-          "kind": "ABILITY",
-          "id": "B:SHAPE_EXPRESSION_BOUNDARY"
-        }
-      ],
-      "trace_cost_total": {
-        "X": 0.0,
-        "T": 0.02,
-        "N": 0.03,
-        "B": 0.03,
-        "A": 0.02
-      },
-      "trace_risk_total": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.01,
-        "A": 0.0
-      },
-      "notes": {
-        "source": "apply_pipeline_modulation",
-        "text_changed": false,
-        "tone_changed": true,
-        "relief_tolerance": {
-          "factor": 0.94,
-          "mean_tolerance": 0.06,
-          "slots": 2,
-          "axis": "B",
-          "top": [
-            {
-              "solution": "ABILITY:N:READ_PIPELINE_STATE@B",
-              "tolerance": 0.06
-            },
-            {
-              "solution": "ABILITY:B:SHAPE_EXPRESSION_BOUNDARY@B",
-              "tolerance": 0.06
-            }
-          ]
-        },
-        "coupling_roots": {
-          "persistent_pressure_root": "A^1*N^1*T^1",
-          "persistent_pressure_root_canonical": "T^1*N^1*A^1",
-          "persistent_pressure_root_ema": 3.08e-09,
-          "persistent_root_generation_expected": 2,
-          "persistent_root_generation_observed": 3,
-          "persistent_root_accuracy_ok": false,
-          "top": [
-            {
-              "signature": "N^1*B^1",
-              "semantic": "tension",
-              "count": 5359,
-              "effect_ema": 0.50887967909,
-              "min_generation": 2,
-              "max_generation": 2,
-              "generation_role": "ADJACENT",
-              "breeding_score_ema": 0.0,
-              "effect_descriptor": "tension; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.454357; scope=1.120; global_effect=0.508880; origin_diversity=2",
-              "raw_effect_ema": 0.454357,
-              "local_effect_ema": 0.454357,
-              "global_effect_ema": 0.50888,
-              "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as tension (pressure) in adjacent mode via value grounding (local=0.454357, scope=1.120, conf=0.900).",
-              "semantic_confidence": 0.9,
-              "semantic_version": 5283,
-              "semantic_lane_ema": {
-                "communication": 0.32857142857142857,
-                "intelligence": 0.30000000000000004,
-                "meaning": 0.37142857142857144
-              },
-              "regulation": {
-                "enabled": true,
-                "evidence_min": 10,
-                "evidence_complete": true,
-                "validation_complete": true,
-                "issues": [],
-                "inheritance_score": 0.866667,
-                "inheritance_influence_factor": 1.0,
-                "relation_score": 0.833333,
-                "effect_score": 1.0,
-                "effect_score_raw": 1.0,
-                "breeding_score": 0.444444,
-                "representation_score": 0.820556,
-                "sustainability_score": 0.425915,
-                "formation_burden": 1.613187,
-                "persistence_tax_factor": 2.231699,
-                "persistence_tax_per_tick": 1.562189,
-                "maintenance_savings_per_tick": 0.134427,
-                "break_even_ticks": 12.0,
-                "requirement_coverage": 1.0,
-                "scale_depth_index": 0.625,
-                "complexity_index": 0.15,
-                "strictness_index": 0.435,
-                "dynamic_thresholds": {
-                  "evidence_min": 10,
-                  "inheritance_min": 0.283159,
-                  "relation_min": 0.193994,
-                  "effect_min": 8.54e-05,
-                  "breeding_min": 0.12856,
-                  "pressure_regulation": {
-                    "dominant_axis": "N",
-                    "evidence": {
-                      "factor": 0.400133,
-                      "gradient": 1.821594
-                    },
-                    "inheritance": {
-                      "factor": 0.400133,
-                      "gradient": 1.821594
-                    },
-                    "relation": {
-                      "factor": 0.400133,
-                      "gradient": 1.821594
-                    },
-                    "effect": {
-                      "factor": 0.767162,
-                      "gradient": 0.163807
-                    },
-                    "breeding": {
-                      "factor": 0.413147,
-                      "gradient": 0.900571
-                    }
-                  }
-                },
-                "axes_active": 2,
-                "dominance": 0.5,
-                "constraint_influence": {
-                  "X": 0.0,
-                  "T": 0.0,
-                  "N": 0.5,
-                  "B": 0.5,
-                  "A": 0.0
-                }
-              },
-              "inheritance_breach_count": 1
-            }
-          ]
-        }
-      },
-      "active_concepts": [
-        "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean",
-        "understanding"
-      ]
-    },
-    {
-      "run_id": "2026-07-26_073133",
-      "tick": 128699,
-      "timestamp": 1785051849.64981,
+      "run_id": "2026-07-26_095050",
+      "tick": 128718,
+      "timestamp": 1785060202.9857678,
       "state_sig_before": "5e5a4507",
       "state_sig_after": "b30d7cc5",
       "pressure_before": {
         "X": 0.0,
-        "T": 0.043875,
+        "T": 0.029249999999999998,
         "N": 0.0195,
-        "B": 0.043875,
+        "B": 0.029249999999999998,
         "A": 0.039
       },
       "pressure_after": {
@@ -2464,12 +2012,12 @@
       },
       "relief": {
         "X": 0.0,
-        "T": 0.030952064271008918,
-        "N": 0.013756473009337298,
-        "B": 0.030952064271008918,
-        "A": 0.027512946018674597
+        "T": 0.021753910255781092,
+        "N": 0.014502606837187395,
+        "B": 0.021753910255781092,
+        "A": 0.02900521367437479
       },
-      "dominant_relief_axis": "T",
+      "dominant_relief_axis": "A",
       "trace": [
         {
           "kind": "ABILITY",
@@ -2501,25 +2049,25 @@
       "notes": {
         "tag": "grammar_clarity",
         "clarity": 0.65,
-        "b_score": 1.0,
-        "t_score": 1.0,
+        "b_score": 0.5,
+        "t_score": 0.5,
         "relief_tolerance": {
-          "factor": 0.70546,
-          "mean_tolerance": 0.29454,
+          "factor": 0.743723,
+          "mean_tolerance": 0.256277,
           "slots": 3,
-          "axis": "T",
+          "axis": "A",
           "top": [
             {
-              "solution": "ABILITY:A:OUTLET_PUSH@T",
-              "tolerance": 0.29454
+              "solution": "ABILITY:A:OUTLET_PUSH@A",
+              "tolerance": 0.256277
             },
             {
-              "solution": "ABILITY:B:INTERFACE_WEAKEN@T",
-              "tolerance": 0.29454
+              "solution": "ABILITY:B:INTERFACE_WEAKEN@A",
+              "tolerance": 0.256277
             },
             {
-              "solution": "ABILITY:T:ADVANCE_TICK@T",
-              "tolerance": 0.29454
+              "solution": "ABILITY:T:ADVANCE_TICK@A",
+              "tolerance": 0.256277
             }
           ]
         },
@@ -2534,20 +2082,20 @@
             {
               "signature": "B^1*A^1",
               "semantic": "map",
-              "count": 39805,
-              "effect_ema": 0.11282132206,
+              "count": 39814,
+              "effect_ema": 0.23899644661,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.100733; scope=1.120; global_effect=0.112821; origin_diversity=2",
-              "raw_effect_ema": 0.201467,
-              "local_effect_ema": 0.100733,
-              "global_effect_ema": 0.112821,
+              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.213390; scope=1.120; global_effect=0.238996; origin_diversity=2",
+              "raw_effect_ema": 0.21339,
+              "local_effect_ema": 0.21339,
+              "global_effect_ema": 0.238996,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.100733, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.213390, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 39726,
+              "semantic_version": 39735,
               "semantic_lane_ema": {
                 "communication": 0.3647058823529412,
                 "intelligence": 0.25882352941176473,
@@ -2578,31 +2126,31 @@
                 "strictness_index": 0.585,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.30035,
-                  "relation_min": 0.207311,
-                  "effect_min": 0.000193555,
-                  "breeding_min": 0.150669,
+                  "inheritance_min": 0.299305,
+                  "relation_min": 0.20659,
+                  "effect_min": 0.000189507,
+                  "breeding_min": 0.150693,
                   "pressure_regulation": {
                     "dominant_axis": "B",
                     "evidence": {
-                      "factor": 0.40327,
-                      "gradient": 1.180519
+                      "factor": 0.401867,
+                      "gradient": 1.292888
                     },
                     "inheritance": {
-                      "factor": 0.40327,
-                      "gradient": 1.180519
+                      "factor": 0.401867,
+                      "gradient": 1.292888
                     },
                     "relation": {
-                      "factor": 0.40327,
-                      "gradient": 1.180519
+                      "factor": 0.401867,
+                      "gradient": 1.292888
                     },
                     "effect": {
-                      "factor": 1.584958,
-                      "gradient": -0.873326
+                      "factor": 1.551809,
+                      "gradient": -0.634782
                     },
                     "breeding": {
-                      "factor": 0.453459,
-                      "gradient": 0.613119
+                      "factor": 0.453532,
+                      "gradient": 0.612832
                     }
                   }
                 },
@@ -2621,20 +2169,20 @@
             {
               "signature": "T^1*B^1",
               "semantic": "complexity",
-              "count": 35523,
-              "effect_ema": 0.09756400033,
+              "count": 35530,
+              "effect_ema": 0.04983278779,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.087111; scope=1.120; global_effect=0.097564; origin_diversity=2",
-              "raw_effect_ema": 0.087111,
-              "local_effect_ema": 0.087111,
-              "global_effect_ema": 0.097564,
+              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.044494; scope=1.120; global_effect=0.049833; origin_diversity=2",
+              "raw_effect_ema": 0.088987,
+              "local_effect_ema": 0.044494,
+              "global_effect_ema": 0.049833,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.087111, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.044494, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 35448,
+              "semantic_version": 35455,
               "semantic_lane_ema": {
                 "communication": 0.4125,
                 "intelligence": 0.2875,
@@ -2665,31 +2213,31 @@
                 "strictness_index": 0.42,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.281969,
-                  "relation_min": 0.193026,
-                  "effect_min": 0.000167755,
-                  "breeding_min": 0.126328,
+                  "inheritance_min": 0.282062,
+                  "relation_min": 0.19309,
+                  "effect_min": 0.000170772,
+                  "breeding_min": 0.126335,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.400552,
-                      "gradient": 1.536623
+                      "factor": 0.400685,
+                      "gradient": 1.493472
                     },
                     "inheritance": {
-                      "factor": 0.400552,
-                      "gradient": 1.536623
+                      "factor": 0.400685,
+                      "gradient": 1.493472
                     },
                     "relation": {
-                      "factor": 0.400552,
-                      "gradient": 1.536623
+                      "factor": 0.400685,
+                      "gradient": 1.493472
                     },
                     "effect": {
-                      "factor": 1.521725,
-                      "gradient": -0.53248
+                      "factor": 1.549097,
+                      "gradient": -0.623362
                     },
                     "breeding": {
-                      "factor": 0.408745,
-                      "gradient": 0.982845
+                      "factor": 0.408769,
+                      "gradient": 0.982311
                     }
                   }
                 },
@@ -2710,23 +2258,23 @@
       },
       "active_concepts": [
         "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean",
-        "understanding"
+        "recalled:understand",
+        "recalled:identity",
+        "identity",
+        "understand"
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128700,
-      "timestamp": 1785051849.7338002,
+      "run_id": "2026-07-26_095050",
+      "tick": 128719,
+      "timestamp": 1785060203.0458832,
       "state_sig_before": "5e5a4507",
       "state_sig_after": "b30d7cc5",
       "pressure_before": {
         "X": 0.0,
-        "T": 0.040499999999999994,
+        "T": 0.026999999999999996,
         "N": 0.018,
-        "B": 0.040499999999999994,
+        "B": 0.026999999999999996,
         "A": 0.036
       },
       "pressure_after": {
@@ -2738,12 +2286,12 @@
       },
       "relief": {
         "X": 0.0,
-        "T": 0.026968999394400825,
-        "N": 0.011986221953067035,
-        "B": 0.026968999394400825,
-        "A": 0.02397244390613407
+        "T": 0.018940743585258355,
+        "N": 0.012627162390172236,
+        "B": 0.018940743585258355,
+        "A": 0.02525432478034447
       },
-      "dominant_relief_axis": "T",
+      "dominant_relief_axis": "A",
       "trace": [
         {
           "kind": "ABILITY",
@@ -2775,25 +2323,25 @@
       "notes": {
         "tag": "grammar_clarity",
         "clarity": 0.6,
-        "b_score": 1.0,
-        "t_score": 1.0,
+        "b_score": 0.5,
+        "t_score": 0.5,
         "relief_tolerance": {
-          "factor": 0.665901,
-          "mean_tolerance": 0.334099,
+          "factor": 0.701509,
+          "mean_tolerance": 0.298491,
           "slots": 3,
-          "axis": "T",
+          "axis": "A",
           "top": [
             {
-              "solution": "ABILITY:A:OUTLET_PUSH@T",
-              "tolerance": 0.334099
+              "solution": "ABILITY:A:OUTLET_PUSH@A",
+              "tolerance": 0.298491
             },
             {
-              "solution": "ABILITY:B:INTERFACE_WEAKEN@T",
-              "tolerance": 0.334099
+              "solution": "ABILITY:B:INTERFACE_WEAKEN@A",
+              "tolerance": 0.298491
             },
             {
-              "solution": "ABILITY:T:ADVANCE_TICK@T",
-              "tolerance": 0.334099
+              "solution": "ABILITY:T:ADVANCE_TICK@A",
+              "tolerance": 0.298491
             }
           ]
         },
@@ -2808,20 +2356,20 @@
             {
               "signature": "B^1*A^1",
               "semantic": "map",
-              "count": 39806,
-              "effect_ema": 0.10782298688,
+              "count": 39815,
+              "effect_ema": 0.22666509338,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.096271; scope=1.120; global_effect=0.107823; origin_diversity=2",
-              "raw_effect_ema": 0.192541,
-              "local_effect_ema": 0.096271,
-              "global_effect_ema": 0.107823,
+              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.202380; scope=1.120; global_effect=0.226665; origin_diversity=2",
+              "raw_effect_ema": 0.20238,
+              "local_effect_ema": 0.20238,
+              "global_effect_ema": 0.226665,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.096271, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.202380, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 39727,
+              "semantic_version": 39736,
               "semantic_lane_ema": {
                 "communication": 0.3647058823529412,
                 "intelligence": 0.25882352941176473,
@@ -2852,31 +2400,31 @@
                 "strictness_index": 0.585,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.300385,
-                  "relation_min": 0.207335,
-                  "effect_min": 0.000193625,
-                  "breeding_min": 0.15053,
+                  "inheritance_min": 0.299372,
+                  "relation_min": 0.206636,
+                  "effect_min": 0.000190092,
+                  "breeding_min": 0.150559,
                   "pressure_regulation": {
                     "dominant_axis": "B",
                     "evidence": {
-                      "factor": 0.403316,
-                      "gradient": 1.177692
+                      "factor": 0.401956,
+                      "gradient": 1.283463
                     },
                     "inheritance": {
-                      "factor": 0.403316,
-                      "gradient": 1.177692
+                      "factor": 0.401956,
+                      "gradient": 1.283463
                     },
                     "relation": {
-                      "factor": 0.403316,
-                      "gradient": 1.177692
+                      "factor": 0.401956,
+                      "gradient": 1.283463
                     },
                     "effect": {
-                      "factor": 1.585528,
-                      "gradient": -0.881152
+                      "factor": 1.556596,
+                      "gradient": -0.656539
                     },
                     "breeding": {
-                      "factor": 0.453043,
-                      "gradient": 0.614755
+                      "factor": 0.453128,
+                      "gradient": 0.614417
                     }
                   }
                 },
@@ -2895,20 +2443,20 @@
             {
               "signature": "T^1*B^1",
               "semantic": "complexity",
-              "count": 35524,
-              "effect_ema": 0.09781362146,
+              "count": 35531,
+              "effect_ema": 0.04924034602,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.087334; scope=1.120; global_effect=0.097814; origin_diversity=2",
-              "raw_effect_ema": 0.087334,
-              "local_effect_ema": 0.087334,
-              "global_effect_ema": 0.097814,
+              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.043965; scope=1.120; global_effect=0.049240; origin_diversity=2",
+              "raw_effect_ema": 0.087929,
+              "local_effect_ema": 0.043965,
+              "global_effect_ema": 0.04924,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.087334, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.043965, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 35449,
+              "semantic_version": 35456,
               "semantic_lane_ema": {
                 "communication": 0.4125,
                 "intelligence": 0.2875,
@@ -2939,31 +2487,31 @@
                 "strictness_index": 0.42,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.281972,
-                  "relation_min": 0.193029,
-                  "effect_min": 0.000167816,
-                  "breeding_min": 0.126355,
+                  "inheritance_min": 0.282069,
+                  "relation_min": 0.193094,
+                  "effect_min": 0.000170856,
+                  "breeding_min": 0.126362,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.400557,
-                      "gradient": 1.534855
+                      "factor": 0.400694,
+                      "gradient": 1.490922
                     },
                     "inheritance": {
-                      "factor": 0.400557,
-                      "gradient": 1.534855
+                      "factor": 0.400694,
+                      "gradient": 1.490922
                     },
                     "relation": {
-                      "factor": 0.400557,
-                      "gradient": 1.534855
+                      "factor": 0.400694,
+                      "gradient": 1.490922
                     },
                     "effect": {
-                      "factor": 1.522279,
-                      "gradient": -0.533998
+                      "factor": 1.549857,
+                      "gradient": -0.626505
                     },
                     "breeding": {
-                      "factor": 0.408832,
-                      "gradient": 0.980855
+                      "factor": 0.408857,
+                      "gradient": 0.98029
                     }
                   }
                 },
@@ -2984,23 +2532,23 @@
       },
       "active_concepts": [
         "tensor:MANIFOLD:X:NC[N:COST]xNC[T:DIFFERENCE]",
-        "mean",
-        "understanding",
+        "identity",
+        "understand",
         "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:mean"
+        "recalled:understand"
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128701,
-      "timestamp": 1785051849.827215,
+      "run_id": "2026-07-26_095050",
+      "tick": 128720,
+      "timestamp": 1785060203.078768,
       "state_sig_before": "5e5a4507",
       "state_sig_after": "b30d7cc5",
       "pressure_before": {
         "X": 0.0,
-        "T": 0.040499999999999994,
+        "T": 0.026999999999999996,
         "N": 0.018,
-        "B": 0.040499999999999994,
+        "B": 0.026999999999999996,
         "A": 0.036
       },
       "pressure_after": {
@@ -3012,12 +2560,12 @@
       },
       "relief": {
         "X": 0.0,
-        "T": 0.025478050836429414,
-        "N": 0.011323578149524186,
-        "B": 0.025478050836429414,
-        "A": 0.02264715629904837
+        "T": 0.017880055980441425,
+        "N": 0.011920037320294282,
+        "B": 0.017880055980441425,
+        "A": 0.023840074640588564
       },
-      "dominant_relief_axis": "T",
+      "dominant_relief_axis": "A",
       "trace": [
         {
           "kind": "ABILITY",
@@ -3049,25 +2597,25 @@
       "notes": {
         "tag": "grammar_clarity",
         "clarity": 0.6,
-        "b_score": 1.0,
-        "t_score": 1.0,
+        "b_score": 0.5,
+        "t_score": 0.5,
         "relief_tolerance": {
-          "factor": 0.629088,
-          "mean_tolerance": 0.370912,
+          "factor": 0.662224,
+          "mean_tolerance": 0.337776,
           "slots": 3,
-          "axis": "T",
+          "axis": "A",
           "top": [
             {
-              "solution": "ABILITY:A:OUTLET_PUSH@T",
-              "tolerance": 0.370912
+              "solution": "ABILITY:A:OUTLET_PUSH@A",
+              "tolerance": 0.337776
             },
             {
-              "solution": "ABILITY:B:INTERFACE_WEAKEN@T",
-              "tolerance": 0.370912
+              "solution": "ABILITY:B:INTERFACE_WEAKEN@A",
+              "tolerance": 0.337776
             },
             {
-              "solution": "ABILITY:T:ADVANCE_TICK@T",
-              "tolerance": 0.370912
+              "solution": "ABILITY:T:ADVANCE_TICK@A",
+              "tolerance": 0.337776
             }
           ]
         },
@@ -3082,20 +2630,20 @@
             {
               "signature": "B^1*A^1",
               "semantic": "map",
-              "count": 39807,
-              "effect_ema": 0.10300187018,
+              "count": 39816,
+              "effect_ema": 0.21494009797,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.091966; scope=1.120; global_effect=0.103002; origin_diversity=2",
-              "raw_effect_ema": 0.183932,
-              "local_effect_ema": 0.091966,
-              "global_effect_ema": 0.103002,
+              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.191911; scope=1.120; global_effect=0.214940; origin_diversity=2",
+              "raw_effect_ema": 0.191911,
+              "local_effect_ema": 0.191911,
+              "global_effect_ema": 0.21494,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.091966, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.191911, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 39728,
+              "semantic_version": 39737,
               "semantic_lane_ema": {
                 "communication": 0.3647058823529412,
                 "intelligence": 0.25882352941176473,
@@ -3126,31 +2674,31 @@
                 "strictness_index": 0.585,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.30042,
-                  "relation_min": 0.207359,
-                  "effect_min": 0.00019369,
-                  "breeding_min": 0.150407,
+                  "inheritance_min": 0.299439,
+                  "relation_min": 0.206682,
+                  "effect_min": 0.000190597,
+                  "breeding_min": 0.150438,
                   "pressure_regulation": {
                     "dominant_axis": "B",
                     "evidence": {
-                      "factor": 0.403363,
-                      "gradient": 1.17486
+                      "factor": 0.402047,
+                      "gradient": 1.274429
                     },
                     "inheritance": {
-                      "factor": 0.403363,
-                      "gradient": 1.17486
+                      "factor": 0.402047,
+                      "gradient": 1.274429
                     },
                     "relation": {
-                      "factor": 0.403363,
-                      "gradient": 1.17486
+                      "factor": 0.402047,
+                      "gradient": 1.274429
                     },
                     "effect": {
-                      "factor": 1.586065,
-                      "gradient": -0.888805
+                      "factor": 1.560735,
+                      "gradient": -0.677297
                     },
                     "breeding": {
-                      "factor": 0.452671,
-                      "gradient": 0.616227
+                      "factor": 0.452765,
+                      "gradient": 0.615852
                     }
                   }
                 },
@@ -3169,20 +2717,20 @@
             {
               "signature": "T^1*B^1",
               "semantic": "complexity",
-              "count": 35525,
-              "effect_ema": 0.09759797626,
+              "count": 35532,
+              "effect_ema": 0.04850522437,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.087141; scope=1.120; global_effect=0.097598; origin_diversity=2",
-              "raw_effect_ema": 0.087141,
-              "local_effect_ema": 0.087141,
-              "global_effect_ema": 0.097598,
+              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.043308; scope=1.120; global_effect=0.048505; origin_diversity=2",
+              "raw_effect_ema": 0.086616,
+              "local_effect_ema": 0.043308,
+              "global_effect_ema": 0.048505,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.087141, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.043308, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 35450,
+              "semantic_version": 35457,
               "semantic_lane_ema": {
                 "communication": 0.4125,
                 "intelligence": 0.2875,
@@ -3213,31 +2761,31 @@
                 "strictness_index": 0.42,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.281976,
-                  "relation_min": 0.193031,
-                  "effect_min": 0.000167907,
-                  "breeding_min": 0.12638,
+                  "inheritance_min": 0.282075,
+                  "relation_min": 0.193099,
+                  "effect_min": 0.000170942,
+                  "breeding_min": 0.126388,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.400563,
-                      "gradient": 1.5328
+                      "factor": 0.400703,
+                      "gradient": 1.488383
                     },
                     "inheritance": {
-                      "factor": 0.400563,
-                      "gradient": 1.5328
+                      "factor": 0.400703,
+                      "gradient": 1.488383
                     },
                     "relation": {
-                      "factor": 0.400563,
-                      "gradient": 1.5328
+                      "factor": 0.400703,
+                      "gradient": 1.488383
                     },
                     "effect": {
-                      "factor": 1.5231,
-                      "gradient": -0.536269
+                      "factor": 1.550638,
+                      "gradient": -0.629778
                     },
                     "breeding": {
-                      "factor": 0.408914,
-                      "gradient": 0.978992
+                      "factor": 0.40894,
+                      "gradient": 0.978408
                     }
                   }
                 },
@@ -3257,24 +2805,24 @@
         }
       },
       "active_concepts": [
+        "tensor:MANIFOLD:X:NC[N:COST]xNC[T:DIFFERENCE]",
+        "identity",
+        "understand",
         "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:recalled:understanding",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean"
+        "recalled:understand"
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128705,
-      "timestamp": 1785051852.856838,
+      "run_id": "2026-07-26_095050",
+      "tick": 128721,
+      "timestamp": 1785060203.1966646,
       "state_sig_before": "5e5a4507",
       "state_sig_after": "b30d7cc5",
       "pressure_before": {
         "X": 0.0,
-        "T": 0.040499999999999994,
+        "T": 0.026999999999999996,
         "N": 0.018,
-        "B": 0.040499999999999994,
+        "B": 0.026999999999999996,
         "A": 0.036
       },
       "pressure_after": {
@@ -3286,12 +2834,12 @@
       },
       "relief": {
         "X": 0.0,
-        "T": 0.02450577703678818,
-        "N": 0.010891456460794747,
-        "B": 0.02450577703678818,
-        "A": 0.021782912921589494
+        "T": 0.016892980095398788,
+        "N": 0.011261986730265858,
+        "B": 0.016892980095398788,
+        "A": 0.022523973460531716
       },
-      "dominant_relief_axis": "T",
+      "dominant_relief_axis": "A",
       "trace": [
         {
           "kind": "ABILITY",
@@ -3323,25 +2871,25 @@
       "notes": {
         "tag": "grammar_clarity",
         "clarity": 0.6,
-        "b_score": 1.0,
-        "t_score": 1.0,
+        "b_score": 0.5,
+        "t_score": 0.5,
         "relief_tolerance": {
-          "factor": 0.605081,
-          "mean_tolerance": 0.394919,
+          "factor": 0.625666,
+          "mean_tolerance": 0.374334,
           "slots": 3,
-          "axis": "T",
+          "axis": "A",
           "top": [
             {
-              "solution": "ABILITY:A:OUTLET_PUSH@T",
-              "tolerance": 0.394919
+              "solution": "ABILITY:A:OUTLET_PUSH@A",
+              "tolerance": 0.374334
             },
             {
-              "solution": "ABILITY:B:INTERFACE_WEAKEN@T",
-              "tolerance": 0.394919
+              "solution": "ABILITY:B:INTERFACE_WEAKEN@A",
+              "tolerance": 0.374334
             },
             {
-              "solution": "ABILITY:T:ADVANCE_TICK@T",
-              "tolerance": 0.394919
+              "solution": "ABILITY:T:ADVANCE_TICK@A",
+              "tolerance": 0.374334
             }
           ]
         },
@@ -3356,20 +2904,20 @@
             {
               "signature": "B^1*A^1",
               "semantic": "map",
-              "count": 39808,
-              "effect_ema": 0.09842124994,
+              "count": 39817,
+              "effect_ema": 0.2037993342,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.087876; scope=1.120; global_effect=0.098421; origin_diversity=2",
-              "raw_effect_ema": 0.175752,
-              "local_effect_ema": 0.087876,
-              "global_effect_ema": 0.098421,
+              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.181964; scope=1.120; global_effect=0.203799; origin_diversity=2",
+              "raw_effect_ema": 0.181964,
+              "local_effect_ema": 0.181964,
+              "global_effect_ema": 0.203799,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.087876, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.181964, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 39729,
+              "semantic_version": 39738,
               "semantic_lane_ema": {
                 "communication": 0.3647058823529412,
                 "intelligence": 0.25882352941176473,
@@ -3400,31 +2948,31 @@
                 "strictness_index": 0.585,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.300455,
-                  "relation_min": 0.207383,
-                  "effect_min": 0.000193751,
-                  "breeding_min": 0.150295,
+                  "inheritance_min": 0.299506,
+                  "relation_min": 0.206728,
+                  "effect_min": 0.000191035,
+                  "breeding_min": 0.150329,
                   "pressure_regulation": {
                     "dominant_axis": "B",
                     "evidence": {
-                      "factor": 0.40341,
-                      "gradient": 1.172113
+                      "factor": 0.402137,
+                      "gradient": 1.265794
                     },
                     "inheritance": {
-                      "factor": 0.40341,
-                      "gradient": 1.172113
+                      "factor": 0.402137,
+                      "gradient": 1.265794
                     },
                     "relation": {
-                      "factor": 0.40341,
-                      "gradient": 1.172113
+                      "factor": 0.402137,
+                      "gradient": 1.265794
                     },
                     "effect": {
-                      "factor": 1.586561,
-                      "gradient": -0.896133
+                      "factor": 1.564322,
+                      "gradient": -0.697073
                     },
                     "breeding": {
-                      "factor": 0.452333,
-                      "gradient": 0.61757
+                      "factor": 0.452435,
+                      "gradient": 0.617164
                     }
                   }
                 },
@@ -3443,20 +2991,20 @@
             {
               "signature": "T^1*B^1",
               "semantic": "complexity",
-              "count": 35526,
-              "effect_ema": 0.0971091969,
+              "count": 35533,
+              "effect_ema": 0.04765202845,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.086705; scope=1.120; global_effect=0.097109; origin_diversity=2",
-              "raw_effect_ema": 0.086705,
-              "local_effect_ema": 0.086705,
-              "global_effect_ema": 0.097109,
+              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.042546; scope=1.120; global_effect=0.047652; origin_diversity=2",
+              "raw_effect_ema": 0.085093,
+              "local_effect_ema": 0.042546,
+              "global_effect_ema": 0.047652,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.086705, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.042546, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 35451,
+              "semantic_version": 35458,
               "semantic_lane_ema": {
                 "communication": 0.4125,
                 "intelligence": 0.2875,
@@ -3487,31 +3035,31 @@
                 "strictness_index": 0.42,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.281981,
-                  "relation_min": 0.193034,
-                  "effect_min": 0.000168011,
-                  "breeding_min": 0.126404,
+                  "inheritance_min": 0.282081,
+                  "relation_min": 0.193103,
+                  "effect_min": 0.000171029,
+                  "breeding_min": 0.126412,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.400569,
-                      "gradient": 1.530638
+                      "factor": 0.400712,
+                      "gradient": 1.485882
                     },
                     "inheritance": {
-                      "factor": 0.400569,
-                      "gradient": 1.530638
+                      "factor": 0.400712,
+                      "gradient": 1.485882
                     },
                     "relation": {
-                      "factor": 0.400569,
-                      "gradient": 1.530638
+                      "factor": 0.400712,
+                      "gradient": 1.485882
                     },
                     "effect": {
-                      "factor": 1.524049,
-                      "gradient": -0.53892
+                      "factor": 1.551426,
+                      "gradient": -0.633133
                     },
                     "breeding": {
-                      "factor": 0.408991,
-                      "gradient": 0.977266
+                      "factor": 0.409018,
+                      "gradient": 0.976668
                     }
                   }
                 },
@@ -3532,20 +3080,294 @@
       },
       "active_concepts": [
         "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:recalled:understanding",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean"
+        "recalled:recalled:identity",
+        "recalled:understand",
+        "recalled:identity",
+        "identity"
       ]
     },
     {
-      "run_id": "2026-07-26_073133",
-      "tick": 128706,
-      "timestamp": 1785051852.941545,
-      "state_sig_before": "f02486beea78",
-      "state_sig_after": "c8dd923b6d60",
+      "run_id": "2026-07-26_095050",
+      "tick": 128725,
+      "timestamp": 1785060205.8381817,
+      "state_sig_before": "5e5a4507",
+      "state_sig_after": "b30d7cc5",
       "pressure_before": {
-        "X": 0.423,
+        "X": 0.0,
+        "T": 0.026999999999999996,
+        "N": 0.018,
+        "B": 0.026999999999999996,
+        "A": 0.036
+      },
+      "pressure_after": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.0,
+        "B": 0.0,
+        "A": 0.0
+      },
+      "relief": {
+        "X": 0.0,
+        "T": 0.016253762786250528,
+        "N": 0.010835841857500353,
+        "B": 0.016253762786250528,
+        "A": 0.021671683715000705
+      },
+      "dominant_relief_axis": "A",
+      "trace": [
+        {
+          "kind": "ABILITY",
+          "id": "A:OUTLET_PUSH"
+        },
+        {
+          "kind": "ABILITY",
+          "id": "B:INTERFACE_WEAKEN"
+        },
+        {
+          "kind": "ABILITY",
+          "id": "T:ADVANCE_TICK"
+        }
+      ],
+      "trace_cost_total": {
+        "X": 0.0,
+        "T": 0.002,
+        "N": 0.002,
+        "B": 0.001,
+        "A": 0.001
+      },
+      "trace_risk_total": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.0,
+        "B": 0.0,
+        "A": 0.01
+      },
+      "notes": {
+        "tag": "grammar_clarity",
+        "clarity": 0.6,
+        "b_score": 0.5,
+        "t_score": 0.5,
+        "relief_tolerance": {
+          "factor": 0.601991,
+          "mean_tolerance": 0.398009,
+          "slots": 3,
+          "axis": "A",
+          "top": [
+            {
+              "solution": "ABILITY:A:OUTLET_PUSH@A",
+              "tolerance": 0.398009
+            },
+            {
+              "solution": "ABILITY:B:INTERFACE_WEAKEN@A",
+              "tolerance": 0.398009
+            },
+            {
+              "solution": "ABILITY:T:ADVANCE_TICK@A",
+              "tolerance": 0.398009
+            }
+          ]
+        },
+        "coupling_roots": {
+          "persistent_pressure_root": "A^1*N^1*T^1",
+          "persistent_pressure_root_canonical": "T^1*N^1*A^1",
+          "persistent_pressure_root_ema": 3.08e-09,
+          "persistent_root_generation_expected": 2,
+          "persistent_root_generation_observed": 3,
+          "persistent_root_accuracy_ok": false,
+          "top": [
+            {
+              "signature": "B^1*A^1",
+              "semantic": "map",
+              "count": 39818,
+              "effect_ema": 0.19332073605,
+              "min_generation": 2,
+              "max_generation": 2,
+              "generation_role": "ADJACENT",
+              "breeding_score_ema": 0.0,
+              "effect_descriptor": "map; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.172608; scope=1.120; global_effect=0.193321; origin_diversity=2",
+              "raw_effect_ema": 0.172608,
+              "local_effect_ema": 0.172608,
+              "global_effect_ema": 0.193321,
+              "scope_scale": 1.12,
+              "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.172608, scope=1.120, conf=0.900).",
+              "semantic_confidence": 0.9,
+              "semantic_version": 39739,
+              "semantic_lane_ema": {
+                "communication": 0.3647058823529412,
+                "intelligence": 0.25882352941176473,
+                "meaning": 0.3764705882352941
+              },
+              "regulation": {
+                "enabled": true,
+                "evidence_min": 10,
+                "evidence_complete": true,
+                "validation_complete": true,
+                "issues": [],
+                "inheritance_score": 0.866667,
+                "inheritance_influence_factor": 1.0,
+                "relation_score": 0.833333,
+                "effect_score": 1.0,
+                "effect_score_raw": 1.0,
+                "breeding_score": 0.444444,
+                "representation_score": 0.820556,
+                "sustainability_score": 0.394034,
+                "formation_burden": 1.777187,
+                "persistence_tax_factor": 2.869327,
+                "persistence_tax_per_tick": 2.008529,
+                "maintenance_savings_per_tick": 0.104554,
+                "break_even_ticks": 16.998,
+                "requirement_coverage": 1.0,
+                "scale_depth_index": 0.875,
+                "complexity_index": 0.15,
+                "strictness_index": 0.585,
+                "dynamic_thresholds": {
+                  "evidence_min": 10,
+                  "inheritance_min": 0.299573,
+                  "relation_min": 0.206774,
+                  "effect_min": 0.000191412,
+                  "breeding_min": 0.150229,
+                  "pressure_regulation": {
+                    "dominant_axis": "B",
+                    "evidence": {
+                      "factor": 0.402226,
+                      "gradient": 1.257638
+                    },
+                    "inheritance": {
+                      "factor": 0.402226,
+                      "gradient": 1.257638
+                    },
+                    "relation": {
+                      "factor": 0.402226,
+                      "gradient": 1.257638
+                    },
+                    "effect": {
+                      "factor": 1.56741,
+                      "gradient": -0.715708
+                    },
+                    "breeding": {
+                      "factor": 0.452135,
+                      "gradient": 0.618363
+                    }
+                  }
+                },
+                "axes_active": 2,
+                "dominance": 0.5,
+                "constraint_influence": {
+                  "X": 0.0,
+                  "T": 0.0,
+                  "N": 0.0,
+                  "B": 0.5,
+                  "A": 0.5
+                }
+              },
+              "inheritance_breach_count": 1
+            },
+            {
+              "signature": "T^1*B^1",
+              "semantic": "complexity",
+              "count": 35534,
+              "effect_ema": 0.04675254047,
+              "min_generation": 2,
+              "max_generation": 2,
+              "generation_role": "ADJACENT",
+              "breeding_score_ema": 0.0,
+              "effect_descriptor": "complexity; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.041743; scope=1.120; global_effect=0.046753; origin_diversity=2",
+              "raw_effect_ema": 0.083487,
+              "local_effect_ema": 0.041743,
+              "global_effect_ema": 0.046753,
+              "scope_scale": 1.12,
+              "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.041743, scope=1.120, conf=0.900).",
+              "semantic_confidence": 0.9,
+              "semantic_version": 35459,
+              "semantic_lane_ema": {
+                "communication": 0.4125,
+                "intelligence": 0.2875,
+                "meaning": 0.30000000000000004
+              },
+              "regulation": {
+                "enabled": true,
+                "evidence_min": 10,
+                "evidence_complete": true,
+                "validation_complete": true,
+                "issues": [],
+                "inheritance_score": 0.866667,
+                "inheritance_influence_factor": 1.0,
+                "relation_score": 0.833333,
+                "effect_score": 1.0,
+                "effect_score_raw": 1.0,
+                "breeding_score": 0.444444,
+                "representation_score": 0.820556,
+                "sustainability_score": 0.441856,
+                "formation_burden": 1.5972,
+                "persistence_tax_factor": 1.912884,
+                "persistence_tax_per_tick": 1.339019,
+                "maintenance_savings_per_tick": 0.156831,
+                "break_even_ticks": 10.184,
+                "requirement_coverage": 1.0,
+                "scale_depth_index": 0.6,
+                "complexity_index": 0.15,
+                "strictness_index": 0.42,
+                "dynamic_thresholds": {
+                  "evidence_min": 10,
+                  "inheritance_min": 0.282087,
+                  "relation_min": 0.193107,
+                  "effect_min": 0.000171114,
+                  "breeding_min": 0.126434,
+                  "pressure_regulation": {
+                    "dominant_axis": "T",
+                    "evidence": {
+                      "factor": 0.40072,
+                      "gradient": 1.48347
+                    },
+                    "inheritance": {
+                      "factor": 0.40072,
+                      "gradient": 1.48347
+                    },
+                    "relation": {
+                      "factor": 0.40072,
+                      "gradient": 1.48347
+                    },
+                    "effect": {
+                      "factor": 1.552192,
+                      "gradient": -0.636444
+                    },
+                    "breeding": {
+                      "factor": 0.40909,
+                      "gradient": 0.97506
+                    }
+                  }
+                },
+                "axes_active": 2,
+                "dominance": 0.5,
+                "constraint_influence": {
+                  "X": 0.0,
+                  "T": 0.5,
+                  "N": 0.0,
+                  "B": 0.5,
+                  "A": 0.0
+                }
+              },
+              "inheritance_breach_count": 1
+            }
+          ]
+        }
+      },
+      "active_concepts": [
+        "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
+        "recalled:recalled:identity",
+        "recalled:understand",
+        "recalled:identity",
+        "identity"
+      ]
+    },
+    {
+      "run_id": "2026-07-26_095050",
+      "tick": 128726,
+      "timestamp": 1785060205.9186046,
+      "state_sig_before": "d3abc2018287",
+      "state_sig_after": "0d32660f10eb",
+      "pressure_before": {
+        "X": 0.4218,
         "T": 0.0,
         "N": 0.183,
         "B": 0.545,
@@ -3559,7 +3381,7 @@
         "A": 0.34
       },
       "relief": {
-        "X": 0.036472,
+        "X": 0.03534400000000002,
         "T": 0.0,
         "N": 0.04079599999999999,
         "B": 0.27025,
@@ -3620,9 +3442,9 @@
         "axis_signature": "X^1*T^1*N^1*B^1*A^1",
         "purpose_lane": "meaning",
         "time_index": 982,
-        "session_id": "sim_1785051844493",
+        "session_id": "sim_1785060197966",
         "source": "simulation_live_bridge",
-        "observation_intent": "clarification",
+        "observation_intent": "how_to",
         "accuracy_score": 0.66,
         "accuracy_label": "engaged_followup",
         "cost_total": 0.1396,
@@ -3713,20 +3535,20 @@
             {
               "signature": "N^1*B^1",
               "semantic": "tension",
-              "count": 5360,
-              "effect_ema": 0.50267587756,
+              "count": 5362,
+              "effect_ema": 0.52710860358,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "tension; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.448818; scope=1.120; global_effect=0.502676; origin_diversity=2",
-              "raw_effect_ema": 0.448818,
-              "local_effect_ema": 0.448818,
-              "global_effect_ema": 0.502676,
+              "effect_descriptor": "tension; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.470633; scope=1.120; global_effect=0.527109; origin_diversity=2",
+              "raw_effect_ema": 0.470633,
+              "local_effect_ema": 0.470633,
+              "global_effect_ema": 0.527109,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as tension (pressure) in adjacent mode via value grounding (local=0.448818, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as tension (pressure) in adjacent mode via value grounding (local=0.470633, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 5284,
+              "semantic_version": 5286,
               "semantic_lane_ema": {
                 "communication": 0.32857142857142857,
                 "intelligence": 0.30000000000000004,
@@ -3757,27 +3579,27 @@
                 "strictness_index": 0.435,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.283162,
-                  "relation_min": 0.193996,
-                  "effect_min": 8.7058e-05,
+                  "inheritance_min": 0.283152,
+                  "relation_min": 0.193989,
+                  "effect_min": 8.0652e-05,
                   "breeding_min": 0.128556,
                   "pressure_regulation": {
                     "dominant_axis": "N",
                     "evidence": {
-                      "factor": 0.400137,
-                      "gradient": 1.816236
+                      "factor": 0.400122,
+                      "gradient": 1.838052
                     },
                     "inheritance": {
-                      "factor": 0.400137,
-                      "gradient": 1.816236
+                      "factor": 0.400122,
+                      "gradient": 1.838052
                     },
                     "relation": {
-                      "factor": 0.400137,
-                      "gradient": 1.816236
+                      "factor": 0.400122,
+                      "gradient": 1.838052
                     },
                     "effect": {
-                      "factor": 0.782056,
-                      "gradient": 0.152246
+                      "factor": 0.72451,
+                      "gradient": 0.198493
                     },
                     "breeding": {
                       "factor": 0.413135,
@@ -3800,20 +3622,20 @@
             {
               "signature": "T^1*N^1",
               "semantic": "momentum",
-              "count": 4365,
-              "effect_ema": 0.28476452257,
+              "count": 4367,
+              "effect_ema": 0.29184656231,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "momentum; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.254254; scope=1.120; global_effect=0.284765; origin_diversity=2",
-              "raw_effect_ema": 0.508508,
-              "local_effect_ema": 0.254254,
-              "global_effect_ema": 0.284765,
+              "effect_descriptor": "momentum; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.260577; scope=1.120; global_effect=0.291847; origin_diversity=2",
+              "raw_effect_ema": 0.521155,
+              "local_effect_ema": 0.260577,
+              "global_effect_ema": 0.291847,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as momentum (pre_agency_will) in adjacent mode via model refinement (local=0.254254, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as momentum (pre_agency_will) in adjacent mode via model refinement (local=0.260577, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 4295,
+              "semantic_version": 4297,
               "semantic_lane_ema": {
                 "communication": 0.31428571428571433,
                 "intelligence": 0.39999999999999997,
@@ -3844,31 +3666,31 @@
                 "strictness_index": 0.345,
                 "dynamic_thresholds": {
                   "evidence_min": 10,
-                  "inheritance_min": 0.274234,
-                  "relation_min": 0.186964,
-                  "effect_min": 0.000109644,
-                  "breeding_min": 0.12066,
+                  "inheritance_min": 0.274232,
+                  "relation_min": 0.186962,
+                  "effect_min": 0.000107872,
+                  "breeding_min": 0.120673,
                   "pressure_regulation": {
                     "dominant_axis": "T",
                     "evidence": {
-                      "factor": 0.400115,
-                      "gradient": 1.851295
+                      "factor": 0.400112,
+                      "gradient": 1.855522
                     },
                     "inheritance": {
-                      "factor": 0.400115,
-                      "gradient": 1.851295
+                      "factor": 0.400112,
+                      "gradient": 1.855522
                     },
                     "relation": {
-                      "factor": 0.400115,
-                      "gradient": 1.851295
+                      "factor": 0.400112,
+                      "gradient": 1.855522
                     },
                     "effect": {
-                      "factor": 1.045821,
-                      "gradient": -0.030607
+                      "factor": 1.028924,
+                      "gradient": -0.019298
                     },
                     "breeding": {
-                      "factor": 0.404198,
-                      "gradient": 1.130374
+                      "factor": 0.404242,
+                      "gradient": 1.128278
                     }
                   }
                 },
@@ -3887,20 +3709,20 @@
             {
               "signature": "X^1*T^1",
               "semantic": "persistence",
-              "count": 4463,
-              "effect_ema": 0.28476452255,
+              "count": 4465,
+              "effect_ema": 0.29184656229,
               "min_generation": 2,
               "max_generation": 2,
               "generation_role": "ADJACENT",
               "breeding_score_ema": 0.0,
-              "effect_descriptor": "persistence; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.254254; scope=1.120; global_effect=0.284765; origin_diversity=2",
-              "raw_effect_ema": 0.508508,
-              "local_effect_ema": 0.254254,
-              "global_effect_ema": 0.284765,
+              "effect_descriptor": "persistence; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.260577; scope=1.120; global_effect=0.291847; origin_diversity=2",
+              "raw_effect_ema": 0.521155,
+              "local_effect_ema": 0.260577,
+              "global_effect_ema": 0.291847,
               "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as persistence (trace) in adjacent mode via model refinement (local=0.254254, scope=1.120, conf=0.900).",
+              "semantic_translation": "At gen 2, this coupling resolves as persistence (trace) in adjacent mode via model refinement (local=0.260577, scope=1.120, conf=0.900).",
               "semantic_confidence": 0.9,
-              "semantic_version": 4339,
+              "semantic_version": 4341,
               "semantic_lane_ema": {
                 "communication": 0.2948717948717949,
                 "intelligence": 0.4102564102564103,
@@ -3932,30 +3754,30 @@
                 "dynamic_thresholds": {
                   "evidence_min": 10,
                   "inheritance_min": 0.259328,
-                  "relation_min": 0.175226,
-                  "effect_min": 6.7938e-05,
+                  "relation_min": 0.175225,
+                  "effect_min": 6.6471e-05,
                   "breeding_min": 0.111337,
                   "pressure_regulation": {
                     "dominant_axis": "X",
                     "evidence": {
-                      "factor": 0.400036,
-                      "gradient": 2.08215
+                      "factor": 0.400035,
+                      "gradient": 2.088506
                     },
                     "inheritance": {
-                      "factor": 0.400036,
-                      "gradient": 2.08215
+                      "factor": 0.400035,
+                      "gradient": 2.088506
                     },
                     "relation": {
-                      "factor": 0.400036,
-                      "gradient": 2.08215
+                      "factor": 0.400035,
+                      "gradient": 2.088506
                     },
                     "effect": {
-                      "factor": 0.722438,
-                      "gradient": 0.200248
+                      "factor": 0.706843,
+                      "gradient": 0.213685
                     },
                     "breeding": {
                       "factor": 0.401327,
-                      "gradient": 1.361229
+                      "gradient": 1.361262
                     }
                   }
                 },
@@ -3976,188 +3798,10 @@
       },
       "active_concepts": [
         "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:recalled:understanding",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean"
-      ]
-    },
-    {
-      "run_id": "2026-07-26_073133",
-      "tick": 128707,
-      "timestamp": 1785051853.4779592,
-      "state_sig_before": "pre_mod_t128706",
-      "state_sig_after": "post_mod_t128706",
-      "pressure_before": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.356,
-        "A": 0.0
-      },
-      "pressure_after": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.2848,
-        "A": 0.0
-      },
-      "relief": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.06325960705962488,
-        "A": 0.0
-      },
-      "dominant_relief_axis": "B",
-      "trace": [
-        {
-          "kind": "ABILITY",
-          "id": "N:READ_PIPELINE_STATE"
-        },
-        {
-          "kind": "ABILITY",
-          "id": "B:SHAPE_EXPRESSION_BOUNDARY"
-        }
-      ],
-      "trace_cost_total": {
-        "X": 0.0,
-        "T": 0.02,
-        "N": 0.03,
-        "B": 0.03,
-        "A": 0.02
-      },
-      "trace_risk_total": {
-        "X": 0.0,
-        "T": 0.0,
-        "N": 0.0,
-        "B": 0.01,
-        "A": 0.0
-      },
-      "notes": {
-        "source": "apply_pipeline_modulation",
-        "text_changed": false,
-        "tone_changed": true,
-        "relief_tolerance": {
-          "factor": 0.888478,
-          "mean_tolerance": 0.111522,
-          "slots": 2,
-          "axis": "B",
-          "top": [
-            {
-              "solution": "ABILITY:N:READ_PIPELINE_STATE@B",
-              "tolerance": 0.111522
-            },
-            {
-              "solution": "ABILITY:B:SHAPE_EXPRESSION_BOUNDARY@B",
-              "tolerance": 0.111522
-            }
-          ]
-        },
-        "coupling_roots": {
-          "persistent_pressure_root": "A^1*N^1*T^1",
-          "persistent_pressure_root_canonical": "T^1*N^1*A^1",
-          "persistent_pressure_root_ema": 3.08e-09,
-          "persistent_root_generation_expected": 2,
-          "persistent_root_generation_observed": 3,
-          "persistent_root_accuracy_ok": false,
-          "top": [
-            {
-              "signature": "N^1*B^1",
-              "semantic": "tension",
-              "count": 5361,
-              "effect_ema": 0.46812986815,
-              "min_generation": 2,
-              "max_generation": 2,
-              "generation_role": "ADJACENT",
-              "breeding_score_ema": 0.0,
-              "effect_descriptor": "tension; adjacent adaptation; neutral-cross; incremental accumulation; gen_span=2->2; local_effect=0.417973; scope=1.120; global_effect=0.468130; origin_diversity=2",
-              "raw_effect_ema": 0.417973,
-              "local_effect_ema": 0.417973,
-              "global_effect_ema": 0.46813,
-              "scope_scale": 1.12,
-              "semantic_translation": "At gen 2, this coupling resolves as tension (pressure) in adjacent mode via value grounding (local=0.417973, scope=1.120, conf=0.900).",
-              "semantic_confidence": 0.9,
-              "semantic_version": 5285,
-              "semantic_lane_ema": {
-                "communication": 0.32857142857142857,
-                "intelligence": 0.30000000000000004,
-                "meaning": 0.37142857142857144
-              },
-              "regulation": {
-                "enabled": true,
-                "evidence_min": 10,
-                "evidence_complete": true,
-                "validation_complete": true,
-                "issues": [],
-                "inheritance_score": 0.866667,
-                "inheritance_influence_factor": 1.0,
-                "relation_score": 0.833333,
-                "effect_score": 1.0,
-                "effect_score_raw": 1.0,
-                "breeding_score": 0.444444,
-                "representation_score": 0.820556,
-                "sustainability_score": 0.425915,
-                "formation_burden": 1.613187,
-                "persistence_tax_factor": 2.231699,
-                "persistence_tax_per_tick": 1.562189,
-                "maintenance_savings_per_tick": 0.134427,
-                "break_even_ticks": 12.0,
-                "requirement_coverage": 1.0,
-                "scale_depth_index": 0.625,
-                "complexity_index": 0.15,
-                "strictness_index": 0.435,
-                "dynamic_thresholds": {
-                  "evidence_min": 10,
-                  "inheritance_min": 0.283178,
-                  "relation_min": 0.194007,
-                  "effect_min": 9.6998e-05,
-                  "breeding_min": 0.128551,
-                  "pressure_regulation": {
-                    "dominant_axis": "N",
-                    "evidence": {
-                      "factor": 0.400159,
-                      "gradient": 1.78566
-                    },
-                    "inheritance": {
-                      "factor": 0.400159,
-                      "gradient": 1.78566
-                    },
-                    "relation": {
-                      "factor": 0.400159,
-                      "gradient": 1.78566
-                    },
-                    "effect": {
-                      "factor": 0.871344,
-                      "gradient": 0.087123
-                    },
-                    "breeding": {
-                      "factor": 0.413118,
-                      "gradient": 0.90102
-                    }
-                  }
-                },
-                "axes_active": 2,
-                "dominance": 0.5,
-                "constraint_influence": {
-                  "X": 0.0,
-                  "T": 0.0,
-                  "N": 0.5,
-                  "B": 0.5,
-                  "A": 0.0
-                }
-              },
-              "inheritance_breach_count": 1
-            }
-          ]
-        }
-      },
-      "active_concepts": [
-        "tensor:MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
-        "recalled:recalled:understanding",
-        "recalled:mean",
-        "recalled:understanding",
-        "mean"
+        "recalled:recalled:identity",
+        "recalled:understand",
+        "recalled:identity",
+        "identity"
       ]
     }
   ]

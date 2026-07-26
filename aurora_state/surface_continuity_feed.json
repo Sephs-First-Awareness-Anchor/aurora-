@@ -1,53 +1,5 @@
 [
   {
-    "packet_id": "51075819ceeb4af892437dbac35c3118",
-    "created_at": 1785014853.113541,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about language.",
-    "aurora_response": "I tell moment. I tell. I tell me.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "08a96989be6f4a1f907a4d2e29c8f58c",
-    "created_at": 1785014854.3336852,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about language.",
-    "aurora_response": "I tell. I tell me. I tell.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.644,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "1e6bb284ee4b40b18dcb7c8b936d72dd",
     "created_at": 1785014855.520648,
     "source": "simulation_live_bridge",
@@ -464,6 +416,56 @@
     "response_tone": "curious",
     "concepts_activated": [
       "understanding"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.644,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "7b93c0128ee14f42bd33c0b4190acbed",
+    "created_at": 1785060202.311156,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand identity?",
+    "aurora_response": "I understand. I change how clear. I did how.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "understand",
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "09a3f271710f4b8782dd040366ba054d",
+    "created_at": 1785060205.5526652,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand identity?",
+    "aurora_response": "I change how alive. I understand how real. I did how successive.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "understand",
+      "identity"
     ],
     "visual_description": "",
     "audio_description": "",
