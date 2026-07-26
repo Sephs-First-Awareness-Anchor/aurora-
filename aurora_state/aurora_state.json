@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785028721.3348665,
-  "generation": 10483,
-  "genome_version": 10483,
+  "timestamp": 1785042272.4545324,
+  "generation": 10485,
+  "genome_version": 10485,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.9702,
-    "caution": 0.9907,
+    "curiosity": 1.0,
+    "caution": 0.9829,
     "emotional_expressiveness": 1.0,
     "verbosity": 1.0,
     "introspection": 1.0,
     "pattern_sensitivity": 1.0,
-    "social_engagement": 0.9963,
-    "energy_conservation": 1.0
+    "social_engagement": 0.9776,
+    "energy_conservation": 0.9703
   },
-  "personality_drift": 3.8572,
+  "personality_drift": 3.8309,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.5668244986830931,
-      "precision": 0.5871578553058148,
-      "depth": 0.7418680007517754,
-      "confidence": 0.6336612301953812
+      "warmth": 0.5616,
+      "precision": 0.6100114294711311,
+      "depth": 0.7489427683478307,
+      "confidence": 0.6157038439879807
     },
     "cognitive": {
-      "curiosity": 1.0,
-      "pattern_matching": 0.6619395570557176,
-      "abstraction": 0.7110845457422001,
-      "risk_assessment": 0.9077318881192794
+      "curiosity": 0.9501742843439398,
+      "pattern_matching": 0.6361129251752506,
+      "abstraction": 0.6984374420633748,
+      "risk_assessment": 0.919833140757627
     },
     "social": {
-      "empathy": 0.6077990782868044,
-      "trust_extension": 0.8199096635689633,
-      "boundary_maintenance": 0.9465530073773395,
-      "engagement": 0.6174642505102496
+      "empathy": 0.6117166693210776,
+      "trust_extension": 0.7880843600811619,
+      "boundary_maintenance": 0.9812047389231954,
+      "engagement": 0.6704229377066165
     }
   },
   "governance_stats": {
@@ -113,9 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 0,
-  "understanding_shards": 0,
+  "understanding_shards": 1,
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "e4bcaf5061e2"
+  "_checksum": "78fff854c531"
 }
