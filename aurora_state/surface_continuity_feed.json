@@ -1,53 +1,5 @@
 [
   {
-    "packet_id": "1e6bb284ee4b40b18dcb7c8b936d72dd",
-    "created_at": 1785014855.520648,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about language.",
-    "aurora_response": "I tell. I tell me.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.416,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "eb197d436e8b4b1da464b6b215078241",
-    "created_at": 1785014856.6847928,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about language.",
-    "aurora_response": "I tell me clear. I tell meaning real.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.188,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "4b646bb5ec8b434dbe3727003d02259a",
     "created_at": 1785019009.0426993,
     "source": "simulation_live_bridge",
@@ -471,6 +423,54 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
+    "coherence": 0.644,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6ca06f8abd0a4139bd5a48be8051fa09",
+    "created_at": 1785065235.6759145,
+    "source": "simulation_live_bridge",
+    "user_input": "meaning.",
+    "aurora_response": "I change truth. I hold meaning. I am seeing blue good.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "5df35f24d5414e019410ae23801c8397",
+    "created_at": 1785065238.0254242,
+    "source": "simulation_live_bridge",
+    "user_input": "meaning.",
+    "aurora_response": "I change truth good. I hold meaning. I am seeing blue alive.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
     "coherence": 0.644,
     "felt_wrong": false,
     "wrong_reason": "",
