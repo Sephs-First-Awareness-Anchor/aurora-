@@ -1,7 +1,7 @@
 {
-  "original": "I do what. I do what clear.",
+  "original": "I did how. I do how successive.",
   "candidate": "",
-  "selected": "I do what. I do what clear.",
+  "selected": "I did how. I do how successive.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.5,
@@ -11,20 +11,21 @@
   "pressure_relief": -0.58,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What does identity mean to you?",
+    "prompt_excerpt": "How do you understand existence?",
     "input_interpretation": {
-      "raw_prompt": "What does identity mean to you?",
+      "raw_prompt": "How do you understand existence?",
       "intent_hint": "question",
       "topic_terms": [
-        "does",
-        "identity",
-        "mean"
+        "understand",
+        "existence"
       ],
-      "entities": []
+      "entities": [
+        "How"
+      ]
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785085248.8059137,
+    "timestamp": 1785089274.936322,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {

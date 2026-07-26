@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785085243.5177941,
-  "generation": 10499,
-  "genome_version": 10499,
+  "timestamp": 1785089270.7361622,
+  "generation": 10501,
+  "genome_version": 10501,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -68,32 +68,32 @@
   "traits": {
     "curiosity": 1.0,
     "caution": 1.0,
-    "emotional_expressiveness": 1.0,
-    "verbosity": 0.9984,
+    "emotional_expressiveness": 0.9971,
+    "verbosity": 1.0,
     "introspection": 1.0,
-    "pattern_sensitivity": 1.0,
+    "pattern_sensitivity": 0.9861,
     "social_engagement": 1.0,
-    "energy_conservation": 1.0
+    "energy_conservation": 0.9825
   },
-  "personality_drift": 3.8984,
+  "personality_drift": 3.8657,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6338362030823443,
-      "precision": 0.778697381390224,
-      "depth": 0.6308896028995871,
-      "confidence": 0.6870859696948267
+      "warmth": 0.7221353912564121,
+      "precision": 0.7732114357460023,
+      "depth": 0.6208661988106811,
+      "confidence": 0.635270824158654
     },
     "cognitive": {
-      "curiosity": 0.9409079984115662,
-      "pattern_matching": 0.5607378588833898,
-      "abstraction": 0.5964560397159973,
-      "risk_assessment": 0.6524154697817192
+      "curiosity": 0.92787572504689,
+      "pattern_matching": 0.5304000000000001,
+      "abstraction": 0.6120744164318931,
+      "risk_assessment": 0.6046250628944225
     },
     "social": {
-      "empathy": 0.6066238257277164,
-      "trust_extension": 0.7504244404014652,
-      "boundary_maintenance": 0.9357821772799764,
-      "engagement": 0.5485726920450783
+      "empathy": 0.6052070657792771,
+      "trust_extension": 0.7106389059728588,
+      "boundary_maintenance": 0.921893605814986,
+      "engagement": 0.5835007575911471
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "79f29245cf56"
+  "_checksum": "43f7bf7d59fd"
 }
