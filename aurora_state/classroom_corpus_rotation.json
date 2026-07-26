@@ -65,7 +65,8 @@
     "corpus:boundary_calibration:5"
   ],
   "coherence_maintenance": [
-    "fail_point:prove_ep_epoch_1:rel_probe_corpus_fragment_1"
+    "fail_point:prove_ep_epoch_1:rel_probe_corpus_fragment_1",
+    "fail_point:train_epoch_2:episode_c6388e715bc2"
   ],
   "perspective_integration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -88,7 +89,8 @@
     "corpus:perspective_integration:15",
     "corpus:perspective_integration:16",
     "corpus:perspective_integration:17",
-    "corpus:perspective_integration:18"
+    "corpus:perspective_integration:18",
+    "corpus:perspective_integration:19"
   ],
   "ambiguity_handling": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -111,7 +113,8 @@
     "corpus:ambiguity_handling:15",
     "corpus:ambiguity_handling:16",
     "corpus:ambiguity_handling:17",
-    "corpus:ambiguity_handling:18"
+    "corpus:ambiguity_handling:18",
+    "corpus:ambiguity_handling:19"
   ],
   "adaptive_strategy_selection": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -134,6 +137,7 @@
     "corpus:adaptive_strategy_selection:15",
     "corpus:adaptive_strategy_selection:16",
     "corpus:adaptive_strategy_selection:17",
-    "corpus:adaptive_strategy_selection:18"
+    "corpus:adaptive_strategy_selection:18",
+    "corpus:adaptive_strategy_selection:19"
   ]
 }

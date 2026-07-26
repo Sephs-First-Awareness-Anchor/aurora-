@@ -1,14 +1,36 @@
 {
-  "original": "I understand. I am seeing.",
-  "candidate": "I understand. I am seeing.",
-  "selected": "I understand. I am seeing.",
-  "accepted": true,
-  "reason": "already_well_formed",
-  "original_score": 0.74,
-  "candidate_score": 0.74,
-  "original_pressure": 0.372,
-  "candidate_pressure": 0.372,
-  "pressure_relief": 0.0,
-  "safe": true,
-  "metadata": {}
+  "original": "I do what clear. I do what.",
+  "candidate": "",
+  "selected": "I do what clear. I do what.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.5,
+  "candidate_score": 0.0,
+  "original_pressure": 0.42,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.58,
+  "safe": false,
+  "metadata": {
+    "prompt_excerpt": "What does change mean to you?",
+    "input_interpretation": {
+      "raw_prompt": "What does change mean to you?",
+      "intent_hint": "question",
+      "topic_terms": [
+        "does",
+        "change",
+        "mean"
+      ],
+      "entities": []
+    },
+    "tone": "precise",
+    "source": "no_pattern_matched",
+    "timestamp": 1785076668.9548135,
+    "min_relief_used": 0.035,
+    "semantic_strategy_relief_bump": 0.0,
+    "expression_context": {
+      "semantic_strategy": "observe",
+      "semantic_confidence": 0.0,
+      "semantic_strategy_applied": true
+    }
+  }
 }

@@ -2,52 +2,52 @@
   "conscious_frame": {
     "coherence": 0.288,
     "conscious_crest": {
-      "axis": "T",
-      "intensity": 0.4364,
-      "label": "contextualize"
+      "axis": "N",
+      "intensity": 0.3997,
+      "label": "explain"
     },
-    "dominant_axis": "T",
+    "dominant_axis": "N",
     "overlay": {
       "active_crystals": [
-        "connection"
+        "change"
       ],
       "interaction_state": "present",
-      "present_anchor": "connection.\n[recalled:connection] connection. [recalled:recalled:connection] connection.\n[recalled:connection] connection. [recalled:reca...",
+      "present_anchor": "What does change mean to you?\n[recalled:change] What does change mean to you? [recalled:mean] What does change mean to you? [recalled:rec...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
     "readiness": 0.288,
-    "selected_action": "contextualize",
-    "should_speak": true,
-    "stance": "contextual_continuity",
+    "selected_action": "explain",
+    "should_speak": false,
+    "stance": "interpretive_explanation",
     "subsurface_crest": {
-      "axis": "T",
-      "intensity": 0.5,
-      "label": "continuity_stable"
+      "axis": "N",
+      "intensity": 0.4476,
+      "label": "steady"
     },
-    "timestamp": 1785070189.3942525
+    "timestamp": 1785076668.9460506
   },
-  "saved_at": 1785070189.3944254,
+  "saved_at": 1785076668.9462175,
   "subsurface_state": {
-    "dominant_axis": "T",
+    "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "connection"
+        "change"
       ],
       "interaction_state": "present",
-      "present_anchor": "connection.\n[recalled:connection] connection. [recalled:recalled:connection] connection.\n[recalled:connection] connection. [recalled:reca...",
+      "present_anchor": "What does change mean to you?\n[recalled:change] What does change mean to you? [recalled:mean] What does change mean to you? [recalled:rec...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "sub_crests": [
       {
@@ -57,8 +57,8 @@
       },
       {
         "axis": "T",
-        "intensity": 1.0,
-        "label": "continuity_pull"
+        "intensity": 0.5,
+        "label": "familiar"
       },
       {
         "axis": "A",
@@ -78,7 +78,7 @@
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_holds"
+        "label": "thread_slipping"
       },
       {
         "axis": "N",
@@ -92,9 +92,9 @@
       }
     ],
     "subsurface_crest": {
-      "axis": "T",
-      "intensity": 0.5,
-      "label": "continuity_stable"
+      "axis": "N",
+      "intensity": 0.4476,
+      "label": "steady"
     }
   }
 }
