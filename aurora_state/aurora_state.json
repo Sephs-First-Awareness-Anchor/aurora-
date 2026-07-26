@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785097086.851891,
-  "generation": 10505,
-  "genome_version": 10505,
+  "timestamp": 1785101822.879161,
+  "generation": 10507,
+  "genome_version": 10507,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 1.0,
+    "curiosity": 0.9942,
     "caution": 1.0,
     "emotional_expressiveness": 1.0,
-    "verbosity": 0.9856,
+    "verbosity": 0.9857,
     "introspection": 1.0,
     "pattern_sensitivity": 1.0,
     "social_engagement": 1.0,
     "energy_conservation": 1.0
   },
-  "personality_drift": 3.8856,
+  "personality_drift": 3.88,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.663459493037083,
-      "precision": 0.8558428796517789,
-      "depth": 0.6165546613560118,
-      "confidence": 0.6710802798227299
+      "warmth": 0.6184431862793367,
+      "precision": 0.853769160159451,
+      "depth": 0.6032041835628419,
+      "confidence": 0.7232065963538071
     },
     "cognitive": {
-      "curiosity": 0.9509845899477007,
-      "pattern_matching": 0.64626478202876,
-      "abstraction": 0.6223108384784541,
-      "risk_assessment": 0.6371026050431806
+      "curiosity": 0.9053495749355498,
+      "pattern_matching": 0.5822072432309424,
+      "abstraction": 0.5672372521199586,
+      "risk_assessment": 0.6910177775824187
     },
     "social": {
-      "empathy": 0.5934698491844846,
-      "trust_extension": 0.7724331502203362,
-      "boundary_maintenance": 0.9173919761305532,
-      "engagement": 0.6019679769907217
+      "empathy": 0.585,
+      "trust_extension": 0.7526635388059008,
+      "boundary_maintenance": 0.8942529847492047,
+      "engagement": 0.5718783383604279
     }
   },
   "governance_stats": {
@@ -113,9 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 0,
-  "understanding_shards": 1,
+  "understanding_shards": 0,
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "d7ec2be1c318"
+  "_checksum": "b3083f5020ac"
 }

@@ -1,14 +1,36 @@
 {
-  "original": "I understand truth. I change meaning coherent.",
-  "candidate": "I understand truth. I change meaning coherent.",
-  "selected": "I understand truth. I change meaning coherent.",
-  "accepted": true,
-  "reason": "already_well_formed",
-  "original_score": 0.74,
-  "candidate_score": 0.74,
-  "original_pressure": 0.252,
-  "candidate_pressure": 0.252,
-  "pressure_relief": 0.0,
-  "safe": true,
-  "metadata": {}
+  "original": "I do what. I do what real.",
+  "candidate": "",
+  "selected": "I do what. I do what real.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.5,
+  "candidate_score": 0.0,
+  "original_pressure": 0.42,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.58,
+  "safe": false,
+  "metadata": {
+    "prompt_excerpt": "What does trust mean to you?",
+    "input_interpretation": {
+      "raw_prompt": "What does trust mean to you?",
+      "intent_hint": "question",
+      "topic_terms": [
+        "does",
+        "trust",
+        "mean"
+      ],
+      "entities": []
+    },
+    "tone": "gentle",
+    "source": "no_pattern_matched",
+    "timestamp": 1785101826.854273,
+    "min_relief_used": 0.035,
+    "semantic_strategy_relief_bump": 0.0,
+    "expression_context": {
+      "semantic_strategy": "observe",
+      "semantic_confidence": 0.0,
+      "semantic_strategy_applied": true
+    }
+  }
 }
