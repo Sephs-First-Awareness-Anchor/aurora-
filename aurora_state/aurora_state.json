@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785089270.7361622,
-  "generation": 10501,
-  "genome_version": 10501,
+  "timestamp": 1785093013.51391,
+  "generation": 10503,
+  "genome_version": 10503,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -68,32 +68,32 @@
   "traits": {
     "curiosity": 1.0,
     "caution": 1.0,
-    "emotional_expressiveness": 0.9971,
+    "emotional_expressiveness": 1.0,
     "verbosity": 1.0,
-    "introspection": 1.0,
-    "pattern_sensitivity": 0.9861,
+    "introspection": 0.9904,
+    "pattern_sensitivity": 1.0,
     "social_engagement": 1.0,
-    "energy_conservation": 0.9825
+    "energy_conservation": 1.0
   },
-  "personality_drift": 3.8657,
+  "personality_drift": 3.8904,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.7221353912564121,
-      "precision": 0.7732114357460023,
-      "depth": 0.6208661988106811,
-      "confidence": 0.635270824158654
+      "warmth": 0.7038167811453417,
+      "precision": 0.8260403080884863,
+      "depth": 0.6273407793282851,
+      "confidence": 0.5905181411876479
     },
     "cognitive": {
-      "curiosity": 0.92787572504689,
-      "pattern_matching": 0.5304000000000001,
-      "abstraction": 0.6120744164318931,
-      "risk_assessment": 0.6046250628944225
+      "curiosity": 0.945927199282864,
+      "pattern_matching": 0.5729160095590371,
+      "abstraction": 0.6631163567166676,
+      "risk_assessment": 0.6194640812300156
     },
     "social": {
-      "empathy": 0.6052070657792771,
-      "trust_extension": 0.7106389059728588,
-      "boundary_maintenance": 0.921893605814986,
-      "engagement": 0.5835007575911471
+      "empathy": 0.6022877789900409,
+      "trust_extension": 0.7547243259526225,
+      "boundary_maintenance": 0.9065152128793487,
+      "engagement": 0.6527173038437718
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "43f7bf7d59fd"
+  "_checksum": "ff9293610386"
 }
