@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785101822.879161,
-  "generation": 10507,
-  "genome_version": 10507,
+  "timestamp": 1785105620.4584916,
+  "generation": 10509,
+  "genome_version": 10509,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.9942,
-    "caution": 1.0,
+    "curiosity": 0.9983,
+    "caution": 0.9765,
     "emotional_expressiveness": 1.0,
-    "verbosity": 0.9857,
-    "introspection": 1.0,
-    "pattern_sensitivity": 1.0,
+    "verbosity": 0.998,
+    "introspection": 0.9666,
+    "pattern_sensitivity": 0.9905,
     "social_engagement": 1.0,
     "energy_conservation": 1.0
   },
-  "personality_drift": 3.88,
+  "personality_drift": 3.8298,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6184431862793367,
-      "precision": 0.853769160159451,
-      "depth": 0.6032041835628419,
-      "confidence": 0.7232065963538071
+      "warmth": 0.6678290744332198,
+      "precision": 0.9027461713105331,
+      "depth": 0.6460295132832939,
+      "confidence": 0.7001035595208486
     },
     "cognitive": {
-      "curiosity": 0.9053495749355498,
-      "pattern_matching": 0.5822072432309424,
-      "abstraction": 0.5672372521199586,
-      "risk_assessment": 0.6910177775824187
+      "curiosity": 0.8895638103314634,
+      "pattern_matching": 0.5795298945224842,
+      "abstraction": 0.5496389844608192,
+      "risk_assessment": 0.6542478776839898
     },
     "social": {
       "empathy": 0.585,
-      "trust_extension": 0.7526635388059008,
-      "boundary_maintenance": 0.8942529847492047,
-      "engagement": 0.5718783383604279
+      "trust_extension": 0.8068901877456391,
+      "boundary_maintenance": 0.8801698340767317,
+      "engagement": 0.5791735435991977
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "b3083f5020ac"
+  "_checksum": "80e98bf256a7"
 }
