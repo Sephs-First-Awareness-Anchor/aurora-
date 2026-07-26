@@ -17,9 +17,9 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "awareness",
+    "active_topic": "a code evolve 97b27e8333",
     "ambiguity": 0.545,
-    "cost_total": 0.2184,
+    "cost_total": 0.2241,
     "dominant_emotion": "curiosity",
     "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
@@ -31,10 +31,25 @@
     {
       "label": "low_coherence",
       "severity": 0.812
+    },
+    {
+      "label": "prediction_mismatch",
+      "severity": 0.5575
     }
   ],
   "law_bindings": [],
   "micro_reasoning": [
+    {
+      "confidence": 0.5575,
+      "label": "prediction_mismatch",
+      "rationale": "Observed input diverged from the currently primed continuation.",
+      "source": "prediction",
+      "tags": [
+        "reframe",
+        "surprise"
+      ],
+      "urgency": 0.812
+    },
     {
       "confidence": 1.0,
       "label": "callback_pressure",
@@ -65,25 +80,26 @@
   ],
   "prediction_signal": {
     "alerts": [
+      "prediction_mismatch",
       "novelty_shift"
     ],
-    "confidence": 0.6535,
+    "confidence": 0.564,
     "expected_observation": "followup",
-    "expected_user_continuation": "awareness",
+    "expected_user_continuation": "a code evolve 97b27e8333",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.325,
+    "mismatch": 0.5575,
     "prediction_payload": {
       "affect": "curiosity",
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "awareness"
+      "topic": "a code evolve 97b27e8333"
     },
     "preload_context": [
-      "awareness",
+      "a code evolve 97b27e8333",
       "followup"
     ],
-    "readiness_bias": 0.4246,
+    "readiness_bias": 0.2815,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -93,19 +109,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3433,
+  "readiness": 0.2863,
   "recalled_fragments": [
-    "awareness",
-    "Tell me about awareness.\n[recalled:awareness] Tell me about awareness. [recalled:recalled:awareness] Tell me about awareness.\n[recalled:a..."
+    "a code evolve 97b27e8333",
+    "What does identity mean to you?\n[recalled:identity] What does identity mean to you? [recalled:mean] What does identity mean to you? [reca..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2725,
-    "N": 0.0874,
-    "T": 0.6401,
+    "B": 0.2719,
+    "N": 0.0894,
+    "T": 0.6386,
     "X": 0.0
   },
-  "saved_at": 1785080954.368722,
+  "saved_at": 1785085248.796415,
   "sub_crests": [
     {
       "axis": "X",
@@ -124,8 +140,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.45,
-      "label": "low_certainty"
+      "intensity": 0.5575,
+      "label": "surprise"
     },
     {
       "axis": "N",
