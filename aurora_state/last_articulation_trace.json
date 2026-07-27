@@ -1,7 +1,7 @@
 {
-  "original": "I experience. I experience meaning.",
+  "original": "I experience. I experience feeling.",
   "candidate": "",
-  "selected": "I experience. I experience meaning.",
+  "selected": "I experience. I experience feeling.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.62,
@@ -11,19 +11,19 @@
   "pressure_relief": -0.724,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Do you experience change?",
+    "prompt_excerpt": "Do you experience language?",
     "input_interpretation": {
-      "raw_prompt": "Do you experience change?",
+      "raw_prompt": "Do you experience language?",
       "intent_hint": "question",
       "topic_terms": [
         "experience",
-        "change"
+        "language"
       ],
       "entities": []
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785143022.3356829,
+    "timestamp": 1785155068.795265,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {
