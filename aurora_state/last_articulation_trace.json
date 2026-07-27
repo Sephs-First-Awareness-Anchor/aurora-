@@ -1,37 +1,14 @@
 {
-  "original": "I change how. I exist how.",
-  "candidate": "",
-  "selected": "I change how. I exist how.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.5,
-  "candidate_score": 0.0,
-  "original_pressure": 0.42,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.58,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "How do you understand language?",
-    "input_interpretation": {
-      "raw_prompt": "How do you understand language?",
-      "intent_hint": "question",
-      "topic_terms": [
-        "understand",
-        "language"
-      ],
-      "entities": [
-        "How"
-      ]
-    },
-    "tone": "warm",
-    "source": "no_pattern_matched",
-    "timestamp": 1785179186.3608673,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0,
-    "expression_context": {
-      "semantic_strategy": "observe",
-      "semantic_confidence": 0.0,
-      "semantic_strategy_applied": true
-    }
-  }
+  "original": "I tell moment real. I tell what alive.",
+  "candidate": "I tell moment real. I tell what alive.",
+  "selected": "I tell moment real. I tell what alive.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.74,
+  "candidate_score": 0.74,
+  "original_pressure": 0.207,
+  "candidate_pressure": 0.207,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }
