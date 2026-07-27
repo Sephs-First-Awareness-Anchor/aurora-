@@ -1,29 +1,31 @@
 {
-  "original": "I experience truth good. I experience.",
+  "original": "I do how. I did how good.",
   "candidate": "",
-  "selected": "I experience truth good. I experience.",
+  "selected": "I do how. I did how good.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.5,
   "candidate_score": 0.0,
-  "original_pressure": 0.276,
+  "original_pressure": 0.42,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.724,
+  "pressure_relief": -0.58,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Do you experience feeling?",
+    "prompt_excerpt": "How do you understand trust?",
     "input_interpretation": {
-      "raw_prompt": "Do you experience feeling?",
+      "raw_prompt": "How do you understand trust?",
       "intent_hint": "question",
       "topic_terms": [
-        "experience",
-        "feeling"
+        "understand",
+        "trust"
       ],
-      "entities": []
+      "entities": [
+        "How"
+      ]
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785109177.2355082,
+    "timestamp": 1785115177.6502693,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {

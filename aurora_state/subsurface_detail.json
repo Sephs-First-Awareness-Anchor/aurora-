@@ -2,7 +2,7 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 1.0,
+      "confidence": 0.35,
       "label": "topic_continuation"
     },
     {
@@ -17,11 +17,11 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "a code evolve 4fb82aa774",
+    "active_topic": "understand",
     "ambiguity": 0.545,
-    "cost_total": 0.2099,
+    "cost_total": 0.1956,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 1.0,
+    "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
@@ -31,36 +31,10 @@
     {
       "label": "low_coherence",
       "severity": 0.712
-    },
-    {
-      "label": "prediction_mismatch",
-      "severity": 0.49
     }
   ],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 0.49,
-      "label": "prediction_mismatch",
-      "rationale": "Observed input diverged from the currently primed continuation.",
-      "source": "prediction",
-      "tags": [
-        "reframe",
-        "surprise"
-      ],
-      "urgency": 0.712
-    },
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -80,26 +54,25 @@
   ],
   "prediction_signal": {
     "alerts": [
-      "prediction_mismatch",
       "novelty_shift"
     ],
-    "confidence": 0.589,
+    "confidence": 0.6764,
     "expected_observation": "followup",
-    "expected_user_continuation": "a code evolve 4fb82aa774",
+    "expected_user_continuation": "understand",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.49,
+    "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "A",
+      "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "a code evolve 4fb82aa774"
+      "topic": "understand"
     },
     "preload_context": [
-      "a code evolve 4fb82aa774",
+      "understand",
       "followup"
     ],
-    "readiness_bias": 0.3227,
+    "readiness_bias": 0.4314,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -109,19 +82,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3649,
+  "readiness": 0.4033,
   "recalled_fragments": [
-    "a code evolve 4fb82aa774",
-    "Do you experience feeling?\n[recalled:feeling] Do you experience feeling? [recalled:experience] Do you experience feeling? [recalled:recal..."
+    "understand",
+    "How do you understand trust?\n[recalled:understand] How do you understand trust? [recalled:trust] How do you understand trust? [recalled:r..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2735,
-    "N": 0.0843,
-    "T": 0.6423,
+    "B": 0.4613,
+    "N": 0.5387,
+    "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785109177.2215943,
+  "saved_at": 1785115177.638836,
   "sub_crests": [
     {
       "axis": "X",
@@ -130,8 +103,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.5,
+      "label": "familiar"
     },
     {
       "axis": "A",
@@ -140,8 +113,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.49,
-      "label": "surprise"
+      "intensity": 0.45,
+      "label": "low_certainty"
     },
     {
       "axis": "N",
@@ -151,7 +124,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
