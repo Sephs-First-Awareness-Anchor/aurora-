@@ -1,28 +1,30 @@
 {
-  "original": "I exist what. I change what clear.",
+  "original": "I do what. I do what clear.",
   "candidate": "",
-  "selected": "I exist what. I change what clear.",
+  "selected": "I do what. I do what clear.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.5,
   "candidate_score": 0.0,
-  "original_pressure": 0.396,
+  "original_pressure": 0.42,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.604,
+  "pressure_relief": -0.58,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What is language?",
+    "prompt_excerpt": "What does identity mean to you?",
     "input_interpretation": {
-      "raw_prompt": "What is language?",
+      "raw_prompt": "What does identity mean to you?",
       "intent_hint": "question",
       "topic_terms": [
-        "language"
+        "does",
+        "identity",
+        "mean"
       ],
       "entities": []
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785188892.6293678,
+    "timestamp": 1785193487.5917113,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {
