@@ -10,16 +10,16 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.288,
+  "coherence": 0.188,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "understand",
+    "active_topic": "connection",
     "ambiguity": 0.545,
-    "cost_total": 0.1956,
+    "cost_total": 0.2099,
     "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
@@ -30,7 +30,7 @@
   "instability_markers": [
     {
       "label": "low_coherence",
-      "severity": 0.712
+      "severity": 0.812
     }
   ],
   "law_bindings": [],
@@ -56,23 +56,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6764,
+    "confidence": 0.6255,
     "expected_observation": "followup",
-    "expected_user_continuation": "understand",
+    "expected_user_continuation": "connection",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.325,
+    "mismatch": 0.3925,
     "prediction_payload": {
       "affect": "curiosity",
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "understand"
+      "topic": "connection"
     },
     "preload_context": [
-      "understand",
+      "connection",
       "followup"
     ],
-    "readiness_bias": 0.4314,
+    "readiness_bias": 0.3824,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -82,19 +82,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.4033,
+  "readiness": 0.3231,
   "recalled_fragments": [
-    "understand",
-    "How do you understand trust?\n[recalled:understand] How do you understand trust? [recalled:trust] How do you understand trust? [recalled:r..."
+    "connection",
+    "What does connection mean to you?\n[recalled:connection] What does connection mean to you? [recalled:mean] What does connection mean to yo..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.4613,
-    "N": 0.5387,
+    "B": 0.4569,
+    "N": 0.5431,
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785115177.638836,
+  "saved_at": 1785129316.3396235,
   "sub_crests": [
     {
       "axis": "X",

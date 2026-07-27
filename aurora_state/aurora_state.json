@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785115173.6937041,
-  "generation": 10513,
-  "genome_version": 10513,
+  "timestamp": 1785129313.2209525,
+  "generation": 10515,
+  "genome_version": 10515,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -69,31 +69,31 @@
     "curiosity": 1.0,
     "caution": 1.0,
     "emotional_expressiveness": 1.0,
-    "verbosity": 1.0,
+    "verbosity": 0.9919,
     "introspection": 1.0,
     "pattern_sensitivity": 1.0,
     "social_engagement": 1.0,
-    "energy_conservation": 1.0
+    "energy_conservation": 0.9798
   },
-  "personality_drift": 3.9,
+  "personality_drift": 3.8718,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6840166838609283,
-      "precision": 0.9614766729360443,
-      "depth": 0.6257898594741843,
-      "confidence": 0.7303963040541529
+      "warmth": 0.6912361738901165,
+      "precision": 0.9635537407521404,
+      "depth": 0.6308042262279728,
+      "confidence": 0.813942381855096
     },
     "cognitive": {
-      "curiosity": 0.9219374597205425,
-      "pattern_matching": 0.5462914217540377,
-      "abstraction": 0.5853973557944081,
-      "risk_assessment": 0.5695095143859877
+      "curiosity": 0.9200624933009406,
+      "pattern_matching": 0.5330789724520857,
+      "abstraction": 0.5577691549851516,
+      "risk_assessment": 0.5751050868176203
     },
     "social": {
-      "empathy": 0.585,
-      "trust_extension": 0.8741930917236902,
-      "boundary_maintenance": 0.8246048978107647,
-      "engagement": 0.5908255358384189
+      "empathy": 0.6155333924193449,
+      "trust_extension": 0.843856772542762,
+      "boundary_maintenance": 0.7877752918938324,
+      "engagement": 0.5367391714818268
     }
   },
   "governance_stats": {
@@ -113,9 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 0,
-  "understanding_shards": 0,
+  "understanding_shards": 1,
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "8092d2be27d5"
+  "_checksum": "3fc0a100f8f8"
 }

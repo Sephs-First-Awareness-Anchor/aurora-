@@ -1,31 +1,30 @@
 {
-  "original": "I do how. I did how good.",
+  "original": "I do what real. I do what clear.",
   "candidate": "",
-  "selected": "I do how. I did how good.",
+  "selected": "I do what real. I do what clear.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.5,
   "candidate_score": 0.0,
-  "original_pressure": 0.42,
+  "original_pressure": 0.34,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.58,
+  "pressure_relief": -0.66,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "How do you understand trust?",
+    "prompt_excerpt": "What does connection mean to you?",
     "input_interpretation": {
-      "raw_prompt": "How do you understand trust?",
+      "raw_prompt": "What does connection mean to you?",
       "intent_hint": "question",
       "topic_terms": [
-        "understand",
-        "trust"
+        "does",
+        "connection",
+        "mean"
       ],
-      "entities": [
-        "How"
-      ]
+      "entities": []
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785115177.6502693,
+    "timestamp": 1785129316.3492694,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {
