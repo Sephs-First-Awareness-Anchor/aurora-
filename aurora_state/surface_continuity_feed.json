@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "c850d3a9173d4365ab2e4423a8c2a108",
-    "created_at": 1785155064.3657856,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I experience chromodynamics. I experience what. I experience one.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "ee61505dc1184203a74fc623c3eb1089",
-    "created_at": 1785155066.1905038,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I experience thing. I experience kind. I experience.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.644,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1feec808e90543889aeb129ecb79dc66",
-    "created_at": 1785155067.7155638,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I experience chromodynamics. I experience truth.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.416,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "d7ade5af0149439a877539a5a1e203fa",
-    "created_at": 1785155068.8048575,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I experience. I experience feeling.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.188,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "e3e2e66991a3413898720240108d83af",
     "created_at": 1785166400.718396,
     "source": "simulation_live_bridge",
@@ -468,6 +372,102 @@
     "response_tone": "neutral",
     "concepts_activated": [
       "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.188,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "40e3a4bfd0c34809a65ab69fedafb633",
+    "created_at": 1785188887.7150543,
+    "source": "simulation_live_bridge",
+    "user_input": "What is language?",
+    "aurora_response": "I am being what. I changed. I am seeing what clear.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "language"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "42bc32ccfe9d438e8171b750c71f41ae",
+    "created_at": 1785188888.9743204,
+    "source": "simulation_live_bridge",
+    "user_input": "What is language?",
+    "aurora_response": "I exist what. I hold what clear. I am being.",
+    "response_tone": "precise",
+    "concepts_activated": [
+      "language"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.644,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "70f9a557f8d24ab79291dd54a0c62f4a",
+    "created_at": 1785188891.4785154,
+    "source": "simulation_live_bridge",
+    "user_input": "What is language?",
+    "aurora_response": "I exist. I change.",
+    "response_tone": "precise",
+    "concepts_activated": [
+      "language"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.416,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "32bcb3326017495aad45d42393c4dc75",
+    "created_at": 1785188893.9894247,
+    "source": "simulation_live_bridge",
+    "user_input": "What is language?",
+    "aurora_response": "I exist what. I change what clear.",
+    "response_tone": "precise",
+    "concepts_activated": [
+      "language"
     ],
     "visual_description": "",
     "audio_description": "",
