@@ -2,7 +2,7 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 1.0,
+      "confidence": 0.35,
       "label": "topic_continuation"
     },
     {
@@ -17,11 +17,11 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "understanding",
+    "active_topic": "understand",
     "ambiguity": 0.545,
-    "cost_total": 0.2041,
+    "cost_total": 0.1956,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 1.0,
+    "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
@@ -35,17 +35,6 @@
   ],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -67,23 +56,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6431,
+    "confidence": 0.6677,
     "expected_observation": "followup",
-    "expected_user_continuation": "understanding",
+    "expected_user_continuation": "understand",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "A",
+      "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "understanding"
+      "topic": "understand"
     },
     "preload_context": [
-      "understanding",
+      "understand",
       "followup"
     ],
-    "readiness_bias": 0.4214,
+    "readiness_bias": 0.4288,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -95,17 +84,17 @@
   },
   "readiness": 0.4033,
   "recalled_fragments": [
-    "understanding",
-    "understanding.\n[recalled:understanding] understanding. [recalled:recalled:understanding] understanding.\n[recalled:understanding] understa..."
+    "understand",
+    "How do you understand language?\n[recalled:understand] How do you understand language? [recalled:language] How do you understand language?..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2741,
-    "N": 0.0821,
-    "T": 0.6438,
+    "B": 0.4613,
+    "N": 0.5387,
+    "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785173299.3712804,
+  "saved_at": 1785179186.3505583,
   "sub_crests": [
     {
       "axis": "X",
@@ -114,8 +103,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.5,
+      "label": "familiar"
     },
     {
       "axis": "A",
@@ -135,7 +124,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",

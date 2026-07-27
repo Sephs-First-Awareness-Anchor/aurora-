@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785173295.899433,
-  "generation": 10524,
-  "genome_version": 10524,
+  "timestamp": 1785179182.0438375,
+  "generation": 10526,
+  "genome_version": 10526,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 1.0,
+    "curiosity": 0.9859,
     "caution": 1.0,
     "emotional_expressiveness": 1.0,
-    "verbosity": 0.9943,
-    "introspection": 1.0,
+    "verbosity": 0.9809,
+    "introspection": 0.9948,
     "pattern_sensitivity": 1.0,
-    "social_engagement": 0.9931,
+    "social_engagement": 0.9819,
     "energy_conservation": 1.0
   },
-  "personality_drift": 3.8874,
+  "personality_drift": 3.8435,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.5693247175996483,
-      "precision": 0.8906550879743879,
-      "depth": 0.6027076125107322,
-      "confidence": 0.9268525436767748
+      "warmth": 0.6037924049036013,
+      "precision": 0.8063500379569742,
+      "depth": 0.6473534323802225,
+      "confidence": 0.9298714767122774
     },
     "cognitive": {
-      "curiosity": 0.8609809362271764,
-      "pattern_matching": 0.7757220115669308,
-      "abstraction": 0.6102557049909424,
-      "risk_assessment": 0.634529672899021
+      "curiosity": 0.824772304811077,
+      "pattern_matching": 0.7688412550245378,
+      "abstraction": 0.5383588286764123,
+      "risk_assessment": 0.5996061869506683
     },
     "social": {
-      "empathy": 0.6162896239723415,
-      "trust_extension": 0.7624244449430392,
-      "boundary_maintenance": 0.6498296066497631,
-      "engagement": 0.5058881643215469
+      "empathy": 0.585,
+      "trust_extension": 0.8149274690388333,
+      "boundary_maintenance": 0.6192528657560957,
+      "engagement": 0.5319257174780374
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "550c4fa08acf"
+  "_checksum": "3a3ea45cb3ba"
 }
