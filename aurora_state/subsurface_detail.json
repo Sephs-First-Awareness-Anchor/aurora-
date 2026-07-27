@@ -10,16 +10,16 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.188,
+  "coherence": 0.288,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "connection",
+    "active_topic": "change",
     "ambiguity": 0.545,
-    "cost_total": 0.2099,
+    "cost_total": 0.1956,
     "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
@@ -30,7 +30,7 @@
   "instability_markers": [
     {
       "label": "low_coherence",
-      "severity": 0.812
+      "severity": 0.712
     }
   ],
   "law_bindings": [],
@@ -56,23 +56,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6255,
+    "confidence": 0.6504,
     "expected_observation": "followup",
-    "expected_user_continuation": "connection",
+    "expected_user_continuation": "change",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.3925,
+    "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "X",
+      "axis_signature": "A",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "connection"
+      "topic": "change"
     },
     "preload_context": [
-      "connection",
+      "change",
       "followup"
     ],
-    "readiness_bias": 0.3824,
+    "readiness_bias": 0.4236,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -82,19 +82,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3231,
+  "readiness": 0.4033,
   "recalled_fragments": [
-    "connection",
-    "What does connection mean to you?\n[recalled:connection] What does connection mean to you? [recalled:mean] What does connection mean to yo..."
+    "change",
+    "Do you experience change?\n[recalled:experience] Do you experience change? [recalled:change] Do you experience change? [recalled:recalled:..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.4569,
-    "N": 0.5431,
+    "B": 0.4613,
+    "N": 0.5387,
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785129316.3396235,
+  "saved_at": 1785143022.3200343,
   "sub_crests": [
     {
       "axis": "X",

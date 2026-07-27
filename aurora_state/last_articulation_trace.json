@@ -1,30 +1,29 @@
 {
-  "original": "I do what real. I do what clear.",
+  "original": "I experience. I experience meaning.",
   "candidate": "",
-  "selected": "I do what real. I do what clear.",
+  "selected": "I experience. I experience meaning.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.5,
+  "original_score": 0.62,
   "candidate_score": 0.0,
-  "original_pressure": 0.34,
+  "original_pressure": 0.276,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.66,
+  "pressure_relief": -0.724,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What does connection mean to you?",
+    "prompt_excerpt": "Do you experience change?",
     "input_interpretation": {
-      "raw_prompt": "What does connection mean to you?",
+      "raw_prompt": "Do you experience change?",
       "intent_hint": "question",
       "topic_terms": [
-        "does",
-        "connection",
-        "mean"
+        "experience",
+        "change"
       ],
       "entities": []
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785129316.3492694,
+    "timestamp": 1785143022.3356829,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {
