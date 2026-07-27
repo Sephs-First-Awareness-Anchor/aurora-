@@ -17,7 +17,7 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "language",
+    "active_topic": "understanding",
     "ambiguity": 0.545,
     "cost_total": 0.2099,
     "dominant_emotion": "curiosity",
@@ -56,9 +56,9 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6543,
+    "confidence": 0.6751,
     "expected_observation": "followup",
-    "expected_user_continuation": "language",
+    "expected_user_continuation": "understanding",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
@@ -66,13 +66,13 @@
       "axis_signature": "A",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "language"
+      "topic": "understanding"
     },
     "preload_context": [
-      "language",
+      "understanding",
       "followup"
     ],
-    "readiness_bias": 0.4248,
+    "readiness_bias": 0.431,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -84,8 +84,8 @@
   },
   "readiness": 0.3433,
   "recalled_fragments": [
-    "language",
-    "Do you experience language?\n[recalled:experience] Do you experience language? [recalled:language] Do you experience language? [recalled:r..."
+    "understanding",
+    "Do you experience understanding?\n[recalled:understanding] Do you experience understanding? [recalled:experience] Do you experience unders..."
   ],
   "salience_weights": {
     "A": 0.0,
@@ -94,7 +94,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785155068.7856932,
+  "saved_at": 1785166404.402832,
   "sub_crests": [
     {
       "axis": "X",
