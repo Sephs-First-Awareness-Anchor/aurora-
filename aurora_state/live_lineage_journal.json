@@ -1,184 +1,8 @@
 {
-  "updated_at": 1785262251.5124412,
+  "updated_at": 1785266518.7002244,
   "events": [
     {
-      "timestamp": 1785261830.9059322,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_866d587c7c",
-      "axis": "X",
-      "summary": "Manual code change in concepts/aurora_code_evolution_stack.py attached to X:CODE_LINEAGE_866d587c7c"
-    },
-    {
-      "timestamp": 1785261832.636946,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_744eb9d88a",
-      "axis": "X",
-      "summary": "Manual code change in concepts/aurora_room.py attached to X:CODE_LINEAGE_744eb9d88a"
-    },
-    {
-      "timestamp": 1785261834.3688276,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_4651b2d50e",
-      "axis": "X",
-      "summary": "Manual code change in concepts/crystalzip_batch.py attached to X:CODE_LINEAGE_4651b2d50e"
-    },
-    {
-      "timestamp": 1785261836.0969307,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_2bf2d90a3f",
-      "axis": "X",
-      "summary": "Manual code change in concepts/dce_10state.py attached to X:CODE_LINEAGE_2bf2d90a3f"
-    },
-    {
-      "timestamp": 1785261837.848925,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_20348525f6",
-      "axis": "X",
-      "summary": "Manual code change in concepts/dce_obligation_gate.py attached to X:CODE_LINEAGE_20348525f6"
-    },
-    {
-      "timestamp": 1785261839.4963405,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_827fe52b61",
-      "axis": "X",
-      "summary": "Manual code change in concepts/force_evolve.py attached to X:CODE_LINEAGE_827fe52b61"
-    },
-    {
-      "timestamp": 1785261841.2142835,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_5096b34ed4",
-      "axis": "T",
-      "summary": "Manual code change in concepts/generate_phase_b.py attached to T:CODE_LINEAGE_5096b34ed4"
-    },
-    {
-      "timestamp": 1785261842.9651968,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_ba1a5003d1",
-      "axis": "X",
-      "summary": "Manual code change in concepts/poedex_intro.py attached to X:CODE_LINEAGE_ba1a5003d1"
-    },
-    {
-      "timestamp": 1785261844.736445,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_53caa351d1",
-      "axis": "B",
-      "summary": "Manual code change in concepts/quasiarch_bridge.py attached to B:CODE_LINEAGE_53caa351d1"
-    },
-    {
-      "timestamp": 1785261846.5042505,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_87810a0a57",
-      "axis": "X",
-      "summary": "Manual code change in concepts/quasiarch_diag.py attached to X:CODE_LINEAGE_87810a0a57"
-    },
-    {
-      "timestamp": 1785261848.15863,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_32de575213",
-      "axis": "X",
-      "summary": "Manual code change in concepts/quasiarch_observer.py attached to X:CODE_LINEAGE_32de575213"
-    },
-    {
-      "timestamp": 1785261849.8910024,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b27ac3f6d3",
-      "axis": "X",
-      "summary": "Manual code change in concepts/sentinel.py attached to X:CODE_LINEAGE_b27ac3f6d3"
-    },
-    {
-      "timestamp": 1785261851.640803,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_1856b103db",
-      "axis": "X",
-      "summary": "Manual code change in concepts/sentinel_gui.py attached to X:CODE_LINEAGE_1856b103db"
-    },
-    {
-      "timestamp": 1785261853.4158037,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_0fdd020ee8",
-      "axis": "T",
-      "summary": "Manual code change in constraint_evolutionary_sim.py attached to T:CODE_LINEAGE_0fdd020ee8"
-    },
-    {
-      "timestamp": 1785261855.2034967,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f4b88f6b80",
-      "axis": "X",
-      "summary": "Manual code change in corpus_runner.py attached to X:CODE_LINEAGE_f4b88f6b80"
-    },
-    {
-      "timestamp": 1785261856.8402927,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_6fd18be35d",
-      "axis": "X",
-      "summary": "Manual code change in crystalzip.py attached to X:CODE_LINEAGE_6fd18be35d"
-    },
-    {
-      "timestamp": 1785261858.5531065,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_f984ea53ea",
-      "axis": "B",
-      "summary": "Manual code change in flutter_app/android/app/src/main/python/aurora_bridge.py attached to B:CODE_LINEAGE_f984ea53ea"
-    },
-    {
-      "timestamp": 1785261860.3007958,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b84d367d98",
-      "axis": "X",
-      "summary": "Manual code change in flutter_app/android/app/src/main/python/cv2.py attached to X:CODE_LINEAGE_b84d367d98"
-    },
-    {
-      "timestamp": 1785261862.0553885,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_fc6e0f1952",
-      "axis": "X",
-      "summary": "Manual code change in foundational_contract.py attached to X:CODE_LINEAGE_fc6e0f1952"
-    },
-    {
-      "timestamp": 1785261863.8044827,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_8749014546",
-      "axis": "B",
-      "summary": "Manual code change in genealogy_signature_bridge.py attached to B:CODE_LINEAGE_8749014546"
-    },
-    {
-      "timestamp": 1785261865.4373932,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7e0e678d9e",
-      "axis": "X",
-      "summary": "Manual code change in geological_baseline.py attached to X:CODE_LINEAGE_7e0e678d9e"
-    },
-    {
-      "timestamp": 1785261867.1569178,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_501c097317",
-      "axis": "X",
-      "summary": "Manual code change in reply_aurora.py attached to X:CODE_LINEAGE_501c097317"
-    },
-    {
-      "timestamp": 1785261868.8915322,
+      "timestamp": 1785266143.394071,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8c75c11ac5",
@@ -186,7 +10,7 @@
       "summary": "Manual code change in run_aurora.py attached to X:CODE_LINEAGE_8c75c11ac5"
     },
     {
-      "timestamp": 1785261870.6409218,
+      "timestamp": 1785266145.0040631,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_d07d7daff2",
@@ -194,7 +18,7 @@
       "summary": "Manual code change in run_chain.py attached to T:CODE_LINEAGE_d07d7daff2"
     },
     {
-      "timestamp": 1785261872.4179733,
+      "timestamp": 1785266146.5292299,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b8687740ca",
@@ -202,7 +26,7 @@
       "summary": "Manual code change in run_corpus.py attached to X:CODE_LINEAGE_b8687740ca"
     },
     {
-      "timestamp": 1785261874.0804987,
+      "timestamp": 1785266148.1282713,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_ff3d3693ad",
@@ -210,7 +34,7 @@
       "summary": "Manual code change in run_full_competency_gauntlet.py attached to X:CODE_LINEAGE_ff3d3693ad"
     },
     {
-      "timestamp": 1785261875.8297133,
+      "timestamp": 1785266149.7407463,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c52bb378e4",
@@ -218,7 +42,7 @@
       "summary": "Manual code change in run_gauntlet.py attached to X:CODE_LINEAGE_c52bb378e4"
     },
     {
-      "timestamp": 1785261877.5882106,
+      "timestamp": 1785266151.373752,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5576fe4b42",
@@ -226,7 +50,7 @@
       "summary": "Manual code change in run_intensive_intervals.py attached to X:CODE_LINEAGE_5576fe4b42"
     },
     {
-      "timestamp": 1785261879.3990104,
+      "timestamp": 1785266152.8807373,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b1138dfb77",
@@ -234,7 +58,7 @@
       "summary": "Manual code change in run_probe_battery.py attached to X:CODE_LINEAGE_b1138dfb77"
     },
     {
-      "timestamp": 1785261881.1586866,
+      "timestamp": 1785266154.4777834,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5df1459d8d",
@@ -242,7 +66,7 @@
       "summary": "Manual code change in scripts/append_to_doc.py attached to X:CODE_LINEAGE_5df1459d8d"
     },
     {
-      "timestamp": 1785261882.809775,
+      "timestamp": 1785266156.075032,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_d635cfeb1a",
@@ -250,7 +74,7 @@
       "summary": "Manual code change in scripts/audit_actual_runtime_turn.py attached to T:CODE_LINEAGE_d635cfeb1a"
     },
     {
-      "timestamp": 1785261884.5521543,
+      "timestamp": 1785266157.6862257,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_50278d178e",
@@ -258,7 +82,7 @@
       "summary": "Manual code change in scripts/audit_unified_response_regression.py attached to X:CODE_LINEAGE_50278d178e"
     },
     {
-      "timestamp": 1785261886.3085809,
+      "timestamp": 1785266159.3147068,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f1c1e00020",
@@ -266,7 +90,7 @@
       "summary": "Manual code change in scripts/aurora_ci_segment.py attached to X:CODE_LINEAGE_f1c1e00020"
     },
     {
-      "timestamp": 1785261888.0776992,
+      "timestamp": 1785266160.8396566,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_fc757095f5",
@@ -274,7 +98,7 @@
       "summary": "Manual code change in scripts/aurora_cold_archive.py attached to X:CODE_LINEAGE_fc757095f5"
     },
     {
-      "timestamp": 1785261889.8582964,
+      "timestamp": 1785266162.4428086,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b038268c20",
@@ -282,7 +106,7 @@
       "summary": "Manual code change in scripts/aurora_stack_exporter.py attached to X:CODE_LINEAGE_b038268c20"
     },
     {
-      "timestamp": 1785261891.4910135,
+      "timestamp": 1785266164.048305,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f3e58eaddc",
@@ -290,7 +114,7 @@
       "summary": "Manual code change in scripts/aurora_state_compress.py attached to X:CODE_LINEAGE_f3e58eaddc"
     },
     {
-      "timestamp": 1785261893.2558117,
+      "timestamp": 1785266165.6637008,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_e5a5b3631e",
@@ -298,7 +122,7 @@
       "summary": "Manual code change in scripts/bridge_ledger_to_noncomps.py attached to B:CODE_LINEAGE_e5a5b3631e"
     },
     {
-      "timestamp": 1785261895.0335114,
+      "timestamp": 1785266167.270552,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_f7f886f780",
@@ -306,7 +130,7 @@
       "summary": "Manual code change in scripts/bridge_tensor_occupancy_to_warp.py attached to B:CODE_LINEAGE_f7f886f780"
     },
     {
-      "timestamp": 1785261896.8187819,
+      "timestamp": 1785266168.8871758,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_2362dcff39",
@@ -314,7 +138,7 @@
       "summary": "Manual code change in scripts/chain_dossier_codec.py attached to T:CODE_LINEAGE_2362dcff39"
     },
     {
-      "timestamp": 1785261898.5932918,
+      "timestamp": 1785266170.3950272,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b698256e01",
@@ -322,7 +146,7 @@
       "summary": "Manual code change in scripts/characterize_pf16_residue.py attached to X:CODE_LINEAGE_b698256e01"
     },
     {
-      "timestamp": 1785261900.2763622,
+      "timestamp": 1785266171.9806552,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_87d057ac86",
@@ -330,7 +154,7 @@
       "summary": "Manual code change in scripts/chat_daemon.py attached to X:CODE_LINEAGE_87d057ac86"
     },
     {
-      "timestamp": 1785261902.0342848,
+      "timestamp": 1785266173.5859427,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_df6408d431",
@@ -338,7 +162,7 @@
       "summary": "Manual code change in scripts/chatscriber.py attached to X:CODE_LINEAGE_df6408d431"
     },
     {
-      "timestamp": 1785261903.795601,
+      "timestamp": 1785266175.1982782,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f1bd365b73",
@@ -346,7 +170,7 @@
       "summary": "Manual code change in scripts/clean_corpus.py attached to X:CODE_LINEAGE_f1bd365b73"
     },
     {
-      "timestamp": 1785261905.5753896,
+      "timestamp": 1785266176.7028008,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_59bd4a61a2",
@@ -354,7 +178,7 @@
       "summary": "Manual code change in scripts/generate_nc_lineage_docs.py attached to X:CODE_LINEAGE_59bd4a61a2"
     },
     {
-      "timestamp": 1785261907.3470237,
+      "timestamp": 1785266178.285142,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_aad0288227",
@@ -362,7 +186,7 @@
       "summary": "Manual code change in scripts/inject_math_forms_v2.py attached to B:CODE_LINEAGE_aad0288227"
     },
     {
-      "timestamp": 1785261908.9993832,
+      "timestamp": 1785266179.88719,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b7e22c90b8",
@@ -370,7 +194,7 @@
       "summary": "Manual code change in scripts/m1_1a_tier1_backfill.py attached to X:CODE_LINEAGE_b7e22c90b8"
     },
     {
-      "timestamp": 1785261910.727877,
+      "timestamp": 1785266181.496934,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f0129a707f",
@@ -378,7 +202,7 @@
       "summary": "Manual code change in scripts/m1_2_provenance_hygiene.py attached to X:CODE_LINEAGE_f0129a707f"
     },
     {
-      "timestamp": 1785261912.4798808,
+      "timestamp": 1785266183.1166873,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8c8a28fc4f",
@@ -386,7 +210,7 @@
       "summary": "Manual code change in scripts/m1_3_v0_rerun.py attached to X:CODE_LINEAGE_8c8a28fc4f"
     },
     {
-      "timestamp": 1785261914.2488954,
+      "timestamp": 1785266184.6273057,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_4aa5c22a5b",
@@ -394,7 +218,7 @@
       "summary": "Manual code change in scripts/noncomp_actuation_shadow_audit.py attached to X:CODE_LINEAGE_4aa5c22a5b"
     },
     {
-      "timestamp": 1785261916.008047,
+      "timestamp": 1785266186.2203712,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_ed4a4dffb7",
@@ -402,7 +226,7 @@
       "summary": "Manual code change in scripts/pf1_0_attribution_run.py attached to X:CODE_LINEAGE_ed4a4dffb7"
     },
     {
-      "timestamp": 1785261917.6461318,
+      "timestamp": 1785266187.8183603,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8b9415a769",
@@ -410,7 +234,7 @@
       "summary": "Manual code change in scripts/pf1_5_instrument_revalidation.py attached to X:CODE_LINEAGE_8b9415a769"
     },
     {
-      "timestamp": 1785261919.3559127,
+      "timestamp": 1785266189.424303,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_30ea21811f",
@@ -418,7 +242,7 @@
       "summary": "Manual code change in scripts/pf1_6_acceptance.py attached to X:CODE_LINEAGE_30ea21811f"
     },
     {
-      "timestamp": 1785261921.0924585,
+      "timestamp": 1785266191.056622,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_aee3ba8007",
@@ -426,7 +250,7 @@
       "summary": "Manual code change in scripts/pf3_1_carryover_trace.py attached to X:CODE_LINEAGE_aee3ba8007"
     },
     {
-      "timestamp": 1785261922.834524,
+      "timestamp": 1785266192.678652,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_4acfd06cd0",
@@ -434,7 +258,7 @@
       "summary": "Manual code change in scripts/pf3_1_context_keywords_trace.py attached to X:CODE_LINEAGE_4acfd06cd0"
     },
     {
-      "timestamp": 1785261924.6013458,
+      "timestamp": 1785266194.1850233,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_3ae197bbca",
@@ -442,7 +266,7 @@
       "summary": "Manual code change in scripts/pf3_1_frame_staleness_trace.py attached to X:CODE_LINEAGE_3ae197bbca"
     },
     {
-      "timestamp": 1785261926.2955532,
+      "timestamp": 1785266195.7935236,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d1862459b5",
@@ -450,7 +274,7 @@
       "summary": "Manual code change in scripts/pf3_3_descriptor_trace.py attached to X:CODE_LINEAGE_d1862459b5"
     },
     {
-      "timestamp": 1785261928.044392,
+      "timestamp": 1785266197.3933587,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f5030cef0d",
@@ -458,7 +282,7 @@
       "summary": "Manual code change in scripts/pf3_3_frame_absence_trace.py attached to X:CODE_LINEAGE_f5030cef0d"
     },
     {
-      "timestamp": 1785261929.8108745,
+      "timestamp": 1785266198.997968,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_49401278cc",
@@ -466,7 +290,7 @@
       "summary": "Manual code change in scripts/pf3_5_motif_watch_readout.py attached to T:CODE_LINEAGE_49401278cc"
     },
     {
-      "timestamp": 1785261931.5779111,
+      "timestamp": 1785266200.5051365,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7cf0724f59",
@@ -474,7 +298,7 @@
       "summary": "Manual code change in scripts/populate_fgae_semantics.py attached to X:CODE_LINEAGE_7cf0724f59"
     },
     {
-      "timestamp": 1785261933.3430629,
+      "timestamp": 1785266202.084254,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_fccaeab57a",
@@ -482,7 +306,7 @@
       "summary": "Manual code change in scripts/process_docs.py attached to X:CODE_LINEAGE_fccaeab57a"
     },
     {
-      "timestamp": 1785261934.9923644,
+      "timestamp": 1785266203.6864643,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5c5c3a8578",
@@ -490,7 +314,7 @@
       "summary": "Manual code change in scripts/prove_learning.py attached to X:CODE_LINEAGE_5c5c3a8578"
     },
     {
-      "timestamp": 1785261936.716178,
+      "timestamp": 1785266205.3035014,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_86dc3510f0",
@@ -498,7 +322,7 @@
       "summary": "Manual code change in scripts/run_growth_session.py attached to X:CODE_LINEAGE_86dc3510f0"
     },
     {
-      "timestamp": 1785261938.5273116,
+      "timestamp": 1785266206.9620142,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c338e2d09f",
@@ -506,7 +330,7 @@
       "summary": "Manual code change in scripts/rw7_attribution_run.py attached to X:CODE_LINEAGE_c338e2d09f"
     },
     {
-      "timestamp": 1785261940.2812426,
+      "timestamp": 1785266208.4909978,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_862ba7aebc",
@@ -514,7 +338,7 @@
       "summary": "Manual code change in scripts/scan_lineage_25x25.py attached to X:CODE_LINEAGE_862ba7aebc"
     },
     {
-      "timestamp": 1785261941.9163184,
+      "timestamp": 1785266210.0904608,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_58f241fb9f",
@@ -522,7 +346,7 @@
       "summary": "Manual code change in scripts/seed_abstract_regions_s1.py attached to X:CODE_LINEAGE_58f241fb9f"
     },
     {
-      "timestamp": 1785261943.6491237,
+      "timestamp": 1785266211.6963809,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_fb5b461568",
@@ -530,7 +354,7 @@
       "summary": "Manual code change in scripts/seed_oets_aurora_vocabulary.py attached to X:CODE_LINEAGE_fb5b461568"
     },
     {
-      "timestamp": 1785261945.402136,
+      "timestamp": 1785266213.3110132,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5adc37cf56",
@@ -538,7 +362,7 @@
       "summary": "Manual code change in scripts/seed_sensory_crystals.py attached to X:CODE_LINEAGE_5adc37cf56"
     },
     {
-      "timestamp": 1785261947.1442811,
+      "timestamp": 1785266214.9226816,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c1402ad3d0",
@@ -546,7 +370,7 @@
       "summary": "Manual code change in scripts/source_conversation_corpora.py attached to X:CODE_LINEAGE_c1402ad3d0"
     },
     {
-      "timestamp": 1785261948.9325218,
+      "timestamp": 1785266216.541167,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_cd1e915503",
@@ -554,7 +378,7 @@
       "summary": "Manual code change in scripts/stamp_authorship_headers.py attached to X:CODE_LINEAGE_cd1e915503"
     },
     {
-      "timestamp": 1785261950.681866,
+      "timestamp": 1785266218.0647507,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_2e0e7667e5",
@@ -562,7 +386,7 @@
       "summary": "Manual code change in scripts/termux_voice_bridge.py attached to B:CODE_LINEAGE_2e0e7667e5"
     },
     {
-      "timestamp": 1785261952.3073926,
+      "timestamp": 1785266219.6759925,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_666233db74",
@@ -570,7 +394,7 @@
       "summary": "Manual code change in scripts/trace_live_response_pipeline.py attached to X:CODE_LINEAGE_666233db74"
     },
     {
-      "timestamp": 1785261954.010368,
+      "timestamp": 1785266221.2879093,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9614593ecd",
@@ -578,7 +402,7 @@
       "summary": "Manual code change in scripts/w1_reentrancy_trace.py attached to X:CODE_LINEAGE_9614593ecd"
     },
     {
-      "timestamp": 1785261955.747994,
+      "timestamp": 1785266222.905224,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a9b206d0cf",
@@ -586,7 +410,7 @@
       "summary": "Manual code change in scripts/w1_thought_state_diagnostic.py attached to X:CODE_LINEAGE_a9b206d0cf"
     },
     {
-      "timestamp": 1785261957.5164633,
+      "timestamp": 1785266224.4315953,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c780e0c587",
@@ -594,7 +418,7 @@
       "summary": "Manual code change in tensor_occupancy_hook.py attached to X:CODE_LINEAGE_c780e0c587"
     },
     {
-      "timestamp": 1785261959.142033,
+      "timestamp": 1785266226.0391881,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_ff000e2e37",
@@ -602,7 +426,7 @@
       "summary": "Manual code change in tensor_occupancy_warp_bridge.py attached to B:CODE_LINEAGE_ff000e2e37"
     },
     {
-      "timestamp": 1785261960.8390431,
+      "timestamp": 1785266227.6427395,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_3741d2ba6a",
@@ -610,7 +434,7 @@
       "summary": "Manual code change in test_constraint_reasoner.py attached to B:CODE_LINEAGE_3741d2ba6a"
     },
     {
-      "timestamp": 1785261962.5606592,
+      "timestamp": 1785266229.2749808,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_596bca61c8",
@@ -618,7 +442,7 @@
       "summary": "Manual code change in tests/_engine_integration_test.py attached to X:CODE_LINEAGE_596bca61c8"
     },
     {
-      "timestamp": 1785261964.314594,
+      "timestamp": 1785266230.9110453,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e8a7ef475c",
@@ -626,7 +450,7 @@
       "summary": "Manual code change in tests/_pipeline_test.py attached to X:CODE_LINEAGE_e8a7ef475c"
     },
     {
-      "timestamp": 1785261966.0792675,
+      "timestamp": 1785266232.4320848,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_25e33f0dfb",
@@ -634,7 +458,7 @@
       "summary": "Manual code change in tests/run_intelligence_test_surface.py attached to X:CODE_LINEAGE_25e33f0dfb"
     },
     {
-      "timestamp": 1785261967.8499584,
+      "timestamp": 1785266234.0375211,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_19ae8dfc7a",
@@ -642,7 +466,7 @@
       "summary": "Manual code change in tests/run_interaction_test.py attached to X:CODE_LINEAGE_19ae8dfc7a"
     },
     {
-      "timestamp": 1785261969.4943838,
+      "timestamp": 1785266235.6324255,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "A:CODE_LINEAGE_aab4a95cb0",
@@ -650,7 +474,7 @@
       "summary": "Manual code change in tests/test_alignment.py attached to A:CODE_LINEAGE_aab4a95cb0"
     },
     {
-      "timestamp": 1785261971.230345,
+      "timestamp": 1785266237.254384,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7a4c0e4b78",
@@ -658,7 +482,7 @@
       "summary": "Manual code change in tests/test_articulation_semantic_strategy.py attached to X:CODE_LINEAGE_7a4c0e4b78"
     },
     {
-      "timestamp": 1785261972.9931834,
+      "timestamp": 1785266238.9026873,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_093f5ec629",
@@ -666,7 +490,7 @@
       "summary": "Manual code change in tests/test_autoevolver_syntax_gate.py attached to X:CODE_LINEAGE_093f5ec629"
     },
     {
-      "timestamp": 1785261974.7466967,
+      "timestamp": 1785266240.5316067,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0302700d6c",
@@ -674,7 +498,7 @@
       "summary": "Manual code change in tests/test_b1_1_envelope_shadow.py attached to X:CODE_LINEAGE_0302700d6c"
     },
     {
-      "timestamp": 1785261976.3955884,
+      "timestamp": 1785266242.0557184,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d144e667d4",
@@ -682,7 +506,7 @@
       "summary": "Manual code change in tests/test_battery_relevance_metric.py attached to X:CODE_LINEAGE_d144e667d4"
     },
     {
-      "timestamp": 1785261978.1347518,
+      "timestamp": 1785266243.6628768,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_e00345b49d",
@@ -690,7 +514,7 @@
       "summary": "Manual code change in tests/test_cers_bridge_tensor_trace_integration.py attached to B:CODE_LINEAGE_e00345b49d"
     },
     {
-      "timestamp": 1785261979.8683186,
+      "timestamp": 1785266245.2745457,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a77ced49c0",
@@ -698,7 +522,7 @@
       "summary": "Manual code change in tests/test_cers_conflict_monitoring_veto.py attached to X:CODE_LINEAGE_a77ced49c0"
     },
     {
-      "timestamp": 1785261981.6170905,
+      "timestamp": 1785266246.8916419,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e3df64bce4",
@@ -706,7 +530,7 @@
       "summary": "Manual code change in tests/test_cers_geometry_deviation.py attached to X:CODE_LINEAGE_e3df64bce4"
     },
     {
-      "timestamp": 1785261983.377828,
+      "timestamp": 1785266248.409723,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a0587e8a9e",
@@ -714,7 +538,7 @@
       "summary": "Manual code change in tests/test_cers_shadow_error_logging.py attached to X:CODE_LINEAGE_a0587e8a9e"
     },
     {
-      "timestamp": 1785261985.1266596,
+      "timestamp": 1785266250.006294,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7766cd1d94",
@@ -722,7 +546,7 @@
       "summary": "Manual code change in tests/test_cers_surface_salience.py attached to X:CODE_LINEAGE_7766cd1d94"
     },
     {
-      "timestamp": 1785261986.7770896,
+      "timestamp": 1785266251.6426518,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5483b174e7",
@@ -730,7 +554,7 @@
       "summary": "Manual code change in tests/test_cers_tensor_locator.py attached to X:CODE_LINEAGE_5483b174e7"
     },
     {
-      "timestamp": 1785261988.5508292,
+      "timestamp": 1785266253.2668488,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6070b4e742",
@@ -738,7 +562,7 @@
       "summary": "Manual code change in tests/test_cers_topology_context.py attached to X:CODE_LINEAGE_6070b4e742"
     },
     {
-      "timestamp": 1785261990.29627,
+      "timestamp": 1785266254.9058676,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_29ff18491f",
@@ -746,7 +570,7 @@
       "summary": "Manual code change in tests/test_ci_segment_dev_index_rolling_cap.py attached to X:CODE_LINEAGE_29ff18491f"
     },
     {
-      "timestamp": 1785261992.0589027,
+      "timestamp": 1785266256.4264162,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "A:CODE_LINEAGE_c2b10cf275",
@@ -754,7 +578,7 @@
       "summary": "Manual code change in tests/test_classroom_behavior_modes_wiring.py attached to A:CODE_LINEAGE_c2b10cf275"
     },
     {
-      "timestamp": 1785261993.6982589,
+      "timestamp": 1785266258.0303297,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c4157c91e4",
@@ -762,7 +586,7 @@
       "summary": "Manual code change in tests/test_classroom_curriculum_seeding.py attached to X:CODE_LINEAGE_c4157c91e4"
     },
     {
-      "timestamp": 1785261995.4266238,
+      "timestamp": 1785266259.6337636,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_39625555a3",
@@ -770,7 +594,7 @@
       "summary": "Manual code change in tests/test_classroom_divergence_cold_start.py attached to X:CODE_LINEAGE_39625555a3"
     },
     {
-      "timestamp": 1785261997.1412826,
+      "timestamp": 1785266261.230081,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_b0f19c093e",
@@ -778,7 +602,7 @@
       "summary": "Manual code change in tests/test_classroom_perspective_rotation_and_watchdog.py attached to T:CODE_LINEAGE_b0f19c093e"
     },
     {
-      "timestamp": 1785261998.9235184,
+      "timestamp": 1785266262.8257744,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8d5879158f",
@@ -786,7 +610,7 @@
       "summary": "Manual code change in tests/test_composer_relevance_selection.py attached to X:CODE_LINEAGE_8d5879158f"
     },
     {
-      "timestamp": 1785262000.6811106,
+      "timestamp": 1785266264.4471629,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9191216c2b",
@@ -794,7 +618,7 @@
       "summary": "Manual code change in tests/test_concept_image_ingestion_import.py attached to X:CODE_LINEAGE_9191216c2b"
     },
     {
-      "timestamp": 1785262002.4405189,
+      "timestamp": 1785266265.9652529,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7619914f4b",
@@ -802,7 +626,7 @@
       "summary": "Manual code change in tests/test_concept_imager_cycle.py attached to X:CODE_LINEAGE_7619914f4b"
     },
     {
-      "timestamp": 1785262004.0961158,
+      "timestamp": 1785266267.561371,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_80b0722d47",
@@ -810,7 +634,7 @@
       "summary": "Manual code change in tests/test_conversation_desktop.py attached to X:CODE_LINEAGE_80b0722d47"
     },
     {
-      "timestamp": 1785262005.8510284,
+      "timestamp": 1785266269.1586165,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8e254b8677",
@@ -818,7 +642,7 @@
       "summary": "Manual code change in tests/test_correspondence_loop.py attached to X:CODE_LINEAGE_8e254b8677"
     },
     {
-      "timestamp": 1785262007.5811892,
+      "timestamp": 1785266270.7741387,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_139e53808e",
@@ -826,7 +650,7 @@
       "summary": "Manual code change in tests/test_cpm.py attached to X:CODE_LINEAGE_139e53808e"
     },
     {
-      "timestamp": 1785262009.349534,
+      "timestamp": 1785266272.2913587,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b415797ade",
@@ -834,7 +658,7 @@
       "summary": "Manual code change in tests/test_d1_device_path_attribution.py attached to X:CODE_LINEAGE_b415797ade"
     },
     {
-      "timestamp": 1785262010.9939167,
+      "timestamp": 1785266273.8842413,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c425a0c6ec",
@@ -842,7 +666,7 @@
       "summary": "Manual code change in tests/test_d2_2_corpus_fragment_nesting.py attached to X:CODE_LINEAGE_c425a0c6ec"
     },
     {
-      "timestamp": 1785262012.715497,
+      "timestamp": 1785266275.498658,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_5939ba90aa",
@@ -850,7 +674,7 @@
       "summary": "Manual code change in tests/test_d2_2_live_turn_reentrancy_guard.py attached to X:CODE_LINEAGE_5939ba90aa"
     },
     {
-      "timestamp": 1785262014.4575393,
+      "timestamp": 1785266277.1225152,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_da97426d60",
@@ -858,7 +682,7 @@
       "summary": "Manual code change in tests/test_d2_3_delivery_boundary_telemetry_rejection.py attached to X:CODE_LINEAGE_da97426d60"
     },
     {
-      "timestamp": 1785262016.2196846,
+      "timestamp": 1785266278.742698,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9c570a9392",
@@ -866,7 +690,7 @@
       "summary": "Manual code change in tests/test_d2_4_probe_battery_measures_resp_a.py attached to X:CODE_LINEAGE_9c570a9392"
     },
     {
-      "timestamp": 1785262018.0044255,
+      "timestamp": 1785266280.261759,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6a8ca3870c",
@@ -874,7 +698,7 @@
       "summary": "Manual code change in tests/test_d2_condition2_abstain_sanity.py attached to X:CODE_LINEAGE_6a8ca3870c"
     },
     {
-      "timestamp": 1785262019.773906,
+      "timestamp": 1785266281.8624728,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_83fb99210a",
@@ -882,7 +706,7 @@
       "summary": "Manual code change in tests/test_daemon_classroom_cycle.py attached to X:CODE_LINEAGE_83fb99210a"
     },
     {
-      "timestamp": 1785262021.4433935,
+      "timestamp": 1785266283.4600427,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_11402cd1f3",
@@ -890,7 +714,7 @@
       "summary": "Manual code change in tests/test_daemon_subsurface_and_ambient.py attached to X:CODE_LINEAGE_11402cd1f3"
     },
     {
-      "timestamp": 1785262023.1868773,
+      "timestamp": 1785266285.0721014,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a614dd6948",
@@ -898,7 +722,7 @@
       "summary": "Manual code change in tests/test_direct_address_formulation.py attached to X:CODE_LINEAGE_a614dd6948"
     },
     {
-      "timestamp": 1785262024.9368877,
+      "timestamp": 1785266286.678906,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9606c0e333",
@@ -906,7 +730,7 @@
       "summary": "Manual code change in tests/test_directed_training_corpus_cache_trust.py attached to X:CODE_LINEAGE_9606c0e333"
     },
     {
-      "timestamp": 1785262026.7270823,
+      "timestamp": 1785266288.3128586,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_763f9f5e5e",
@@ -914,7 +738,7 @@
       "summary": "Manual code change in tests/test_emitter_crash.py attached to X:CODE_LINEAGE_763f9f5e5e"
     },
     {
-      "timestamp": 1785262028.3808784,
+      "timestamp": 1785266289.823927,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_14abc6978b",
@@ -922,7 +746,7 @@
       "summary": "Manual code change in tests/test_episode_to_entity_experience.py attached to T:CODE_LINEAGE_14abc6978b"
     },
     {
-      "timestamp": 1785262030.1099818,
+      "timestamp": 1785266291.418218,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d73734ee7a",
@@ -930,7 +754,7 @@
       "summary": "Manual code change in tests/test_f5_register_exploration_plumbing.py attached to X:CODE_LINEAGE_d73734ee7a"
     },
     {
-      "timestamp": 1785262031.8516932,
+      "timestamp": 1785266293.022295,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_81176214ea",
@@ -938,7 +762,7 @@
       "summary": "Manual code change in tests/test_failure_shape_tracing.py attached to X:CODE_LINEAGE_81176214ea"
     },
     {
-      "timestamp": 1785262033.6114404,
+      "timestamp": 1785266294.6477869,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b4ea28d161",
@@ -946,7 +770,7 @@
       "summary": "Manual code change in tests/test_flow_audit_and_tcl_wiring.py attached to X:CODE_LINEAGE_b4ea28d161"
     },
     {
-      "timestamp": 1785262035.3871355,
+      "timestamp": 1785266296.1589863,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0f0a2cb007",
@@ -954,7 +778,7 @@
       "summary": "Manual code change in tests/test_full_reasoning_pipeline.py attached to X:CODE_LINEAGE_0f0a2cb007"
     },
     {
-      "timestamp": 1785262037.1599703,
+      "timestamp": 1785266297.7547715,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7724db79c9",
@@ -962,7 +786,7 @@
       "summary": "Manual code change in tests/test_function_word_gate_golden.py attached to X:CODE_LINEAGE_7724db79c9"
     },
     {
-      "timestamp": 1785262038.828129,
+      "timestamp": 1785266299.365635,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_70f7da7332",
@@ -970,7 +794,7 @@
       "summary": "Manual code change in tests/test_genealogy_atomic_writes.py attached to X:CODE_LINEAGE_70f7da7332"
     },
     {
-      "timestamp": 1785262040.585976,
+      "timestamp": 1785266300.9752028,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_bb5863ff74",
@@ -978,7 +802,7 @@
       "summary": "Manual code change in tests/test_generation_collapse_regression.py attached to X:CODE_LINEAGE_bb5863ff74"
     },
     {
-      "timestamp": 1785262042.3566797,
+      "timestamp": 1785266302.5956373,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_72f2b6daa9",
@@ -986,7 +810,7 @@
       "summary": "Manual code change in tests/test_golden_transcript_validation.py attached to X:CODE_LINEAGE_72f2b6daa9"
     },
     {
-      "timestamp": 1785262044.1423657,
+      "timestamp": 1785266304.1065178,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_59b810ba21",
@@ -994,7 +818,7 @@
       "summary": "Manual code change in tests/test_governance_liveness.py attached to X:CODE_LINEAGE_59b810ba21"
     },
     {
-      "timestamp": 1785262045.8032413,
+      "timestamp": 1785266305.6985924,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_c992e5c94e",
@@ -1002,7 +826,7 @@
       "summary": "Manual code change in tests/test_grammar_motif_depletion_check.py attached to X:CODE_LINEAGE_c992e5c94e"
     },
     {
-      "timestamp": 1785262047.5465994,
+      "timestamp": 1785266307.2846687,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_591d9a5d35",
@@ -1010,7 +834,7 @@
       "summary": "Manual code change in tests/test_i_state_channel_reweighting.py attached to X:CODE_LINEAGE_591d9a5d35"
     },
     {
-      "timestamp": 1785262049.3087418,
+      "timestamp": 1785266308.8911872,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_efcd1b5ed0",
@@ -1018,7 +842,7 @@
       "summary": "Manual code change in tests/test_icc_ledger.py attached to X:CODE_LINEAGE_efcd1b5ed0"
     },
     {
-      "timestamp": 1785262051.0762997,
+      "timestamp": 1785266310.5160847,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_716052eead",
@@ -1026,7 +850,7 @@
       "summary": "Manual code change in tests/test_l1_skeleton_validity_gate.py attached to X:CODE_LINEAGE_716052eead"
     },
     {
-      "timestamp": 1785262052.8414903,
+      "timestamp": 1785266312.1386955,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d09e821b6d",
@@ -1034,7 +858,7 @@
       "summary": "Manual code change in tests/test_l2_pos_gating.py attached to X:CODE_LINEAGE_d09e821b6d"
     },
     {
-      "timestamp": 1785262054.6366196,
+      "timestamp": 1785266313.6501985,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e42617eec1",
@@ -1042,7 +866,7 @@
       "summary": "Manual code change in tests/test_l3_conjugation_wiring.py attached to X:CODE_LINEAGE_e42617eec1"
     },
     {
-      "timestamp": 1785262056.3889034,
+      "timestamp": 1785266315.2468898,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_845b3994ac",
@@ -1050,7 +874,7 @@
       "summary": "Manual code change in tests/test_l3b_determiner_preposition_slots.py attached to X:CODE_LINEAGE_845b3994ac"
     },
     {
-      "timestamp": 1785262058.1875684,
+      "timestamp": 1785266316.8487403,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_293a77e709",
@@ -1058,7 +882,7 @@
       "summary": "Manual code change in tests/test_l4_grounded_motif_fitness.py attached to X:CODE_LINEAGE_293a77e709"
     },
     {
-      "timestamp": 1785262059.9622374,
+      "timestamp": 1785266318.474398,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_cd04b690b6",
@@ -1066,7 +890,7 @@
       "summary": "Manual code change in tests/test_layer_acyclicity.py attached to X:CODE_LINEAGE_cd04b690b6"
     },
     {
-      "timestamp": 1785262061.754605,
+      "timestamp": 1785266319.9832053,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_aa04ee52ef",
@@ -1074,7 +898,7 @@
       "summary": "Manual code change in tests/test_lifecycle_catalog.py attached to X:CODE_LINEAGE_aa04ee52ef"
     },
     {
-      "timestamp": 1785262063.4282675,
+      "timestamp": 1785266321.582504,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_a13b77411b",
@@ -1082,7 +906,7 @@
       "summary": "Manual code change in tests/test_lineage_runtime_activation.py attached to X:CODE_LINEAGE_a13b77411b"
     },
     {
-      "timestamp": 1785262065.1861112,
+      "timestamp": 1785266323.1773188,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f541dd4be7",
@@ -1090,7 +914,7 @@
       "summary": "Manual code change in tests/test_m1_1a_relation_pairs.py attached to X:CODE_LINEAGE_f541dd4be7"
     },
     {
-      "timestamp": 1785262066.9451637,
+      "timestamp": 1785266324.7860572,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f4f3abc162",
@@ -1098,7 +922,7 @@
       "summary": "Manual code change in tests/test_m1_2_provenance_hygiene.py attached to X:CODE_LINEAGE_f4f3abc162"
     },
     {
-      "timestamp": 1785262068.6917453,
+      "timestamp": 1785266326.4177709,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_540176ba92",
@@ -1106,7 +930,7 @@
       "summary": "Manual code change in tests/test_mobile_tools_aurora.py attached to X:CODE_LINEAGE_540176ba92"
     },
     {
-      "timestamp": 1785262070.462539,
+      "timestamp": 1785266327.9360516,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_63a5df91cd",
@@ -1114,7 +938,7 @@
       "summary": "Manual code change in tests/test_mtsl_acceptance_report.py attached to X:CODE_LINEAGE_63a5df91cd"
     },
     {
-      "timestamp": 1785262072.234676,
+      "timestamp": 1785266329.5355678,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e7facd65a9",
@@ -1122,7 +946,7 @@
       "summary": "Manual code change in tests/test_mtsl_live_wiring.py attached to X:CODE_LINEAGE_e7facd65a9"
     },
     {
-      "timestamp": 1785262073.878331,
+      "timestamp": 1785266331.1385388,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d1ed0fff5b",
@@ -1130,7 +954,7 @@
       "summary": "Manual code change in tests/test_mtsl_perturbation_live_wiring.py attached to X:CODE_LINEAGE_d1ed0fff5b"
     },
     {
-      "timestamp": 1785262075.6179457,
+      "timestamp": 1785266332.7324162,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_8ec8357862",
@@ -1138,7 +962,7 @@
       "summary": "Manual code change in tests/test_mtsl_phase0_plumbing.py attached to T:CODE_LINEAGE_8ec8357862"
     },
     {
-      "timestamp": 1785262077.363353,
+      "timestamp": 1785266334.3236256,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_d87a54fb23",
@@ -1146,7 +970,7 @@
       "summary": "Manual code change in tests/test_mtsl_phase7_extensions.py attached to T:CODE_LINEAGE_d87a54fb23"
     },
     {
-      "timestamp": 1785262079.14367,
+      "timestamp": 1785266335.9418619,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_416e06d17d",
@@ -1154,7 +978,7 @@
       "summary": "Manual code change in tests/test_mtsl_warp_gap_proposal.py attached to X:CODE_LINEAGE_416e06d17d"
     },
     {
-      "timestamp": 1785262080.8045583,
+      "timestamp": 1785266337.4473639,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_17b2c0154a",
@@ -1162,7 +986,7 @@
       "summary": "Manual code change in tests/test_n21_hardened_reacceptance.py attached to X:CODE_LINEAGE_17b2c0154a"
     },
     {
-      "timestamp": 1785262082.5593069,
+      "timestamp": 1785266339.040997,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7165f4519b",
@@ -1170,7 +994,7 @@
       "summary": "Manual code change in tests/test_n3_correspondence_daemon_wiring.py attached to X:CODE_LINEAGE_7165f4519b"
     },
     {
-      "timestamp": 1785262084.3183315,
+      "timestamp": 1785266340.6414742,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_24e7b5ee9f",
@@ -1178,7 +1002,7 @@
       "summary": "Manual code change in tests/test_oets.py attached to X:CODE_LINEAGE_24e7b5ee9f"
     },
     {
-      "timestamp": 1785262086.0994968,
+      "timestamp": 1785266342.263879,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_440b6a24be",
@@ -1186,7 +1010,7 @@
       "summary": "Manual code change in tests/test_oets_comprehension_confidence_growth.py attached to X:CODE_LINEAGE_440b6a24be"
     },
     {
-      "timestamp": 1785262087.868616,
+      "timestamp": 1785266343.7761343,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_3691803c2c",
@@ -1194,7 +1018,7 @@
       "summary": "Manual code change in tests/test_oets_conf.py attached to X:CODE_LINEAGE_3691803c2c"
     },
     {
-      "timestamp": 1785262089.6454976,
+      "timestamp": 1785266345.3564477,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6f49eeaca7",
@@ -1202,7 +1026,7 @@
       "summary": "Manual code change in tests/test_operator_composer.py attached to X:CODE_LINEAGE_6f49eeaca7"
     },
     {
-      "timestamp": 1785262091.3086298,
+      "timestamp": 1785266346.9541497,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_cf1adb1e33",
@@ -1210,7 +1034,7 @@
       "summary": "Manual code change in tests/test_p1_track_cp_contradiction.py attached to X:CODE_LINEAGE_cf1adb1e33"
     },
     {
-      "timestamp": 1785262093.0598001,
+      "timestamp": 1785266348.5789917,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_dbb2018dc0",
@@ -1218,7 +1042,7 @@
       "summary": "Manual code change in tests/test_perturbation_probe.py attached to X:CODE_LINEAGE_dbb2018dc0"
     },
     {
-      "timestamp": 1785262094.8147075,
+      "timestamp": 1785266350.204993,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_95a60e7e5d",
@@ -1226,7 +1050,7 @@
       "summary": "Manual code change in tests/test_pf1_1_proposition_frame.py attached to X:CODE_LINEAGE_95a60e7e5d"
     },
     {
-      "timestamp": 1785262096.5891867,
+      "timestamp": 1785266351.7234838,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f8d405548a",
@@ -1234,7 +1058,7 @@
       "summary": "Manual code change in tests/test_pf1_2_transport.py attached to X:CODE_LINEAGE_f8d405548a"
     },
     {
-      "timestamp": 1785262098.2500765,
+      "timestamp": 1785266353.3202543,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7b70b2c8f2",
@@ -1242,7 +1066,7 @@
       "summary": "Manual code change in tests/test_pf1_3_motif_selection.py attached to X:CODE_LINEAGE_7b70b2c8f2"
     },
     {
-      "timestamp": 1785262100.0006933,
+      "timestamp": 1785266354.9240658,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9b8cfca648",
@@ -1250,7 +1074,7 @@
       "summary": "Manual code change in tests/test_pf1_4_slot_binding.py attached to X:CODE_LINEAGE_9b8cfca648"
     },
     {
-      "timestamp": 1785262101.7498639,
+      "timestamp": 1785266356.5423748,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7acc15e1bb",
@@ -1258,7 +1082,7 @@
       "summary": "Manual code change in tests/test_pf1_5_instruments.py attached to X:CODE_LINEAGE_7acc15e1bb"
     },
     {
-      "timestamp": 1785262103.4934738,
+      "timestamp": 1785266358.1494482,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e7000032cd",
@@ -1266,7 +1090,7 @@
       "summary": "Manual code change in tests/test_pf3_1_carryover_isolation.py attached to X:CODE_LINEAGE_e7000032cd"
     },
     {
-      "timestamp": 1785262105.2770739,
+      "timestamp": 1785266359.7591524,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8053358387",
@@ -1274,7 +1098,7 @@
       "summary": "Manual code change in tests/test_pf3_1_cooccurrence_hub_leak.py attached to X:CODE_LINEAGE_8053358387"
     },
     {
-      "timestamp": 1785262107.062946,
+      "timestamp": 1785266361.2670527,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d830f2cc87",
@@ -1282,7 +1106,7 @@
       "summary": "Manual code change in tests/test_pf3_1_frame_staleness.py attached to X:CODE_LINEAGE_d830f2cc87"
     },
     {
-      "timestamp": 1785262108.706856,
+      "timestamp": 1785266362.8686748,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_bd346fa19a",
@@ -1290,7 +1114,7 @@
       "summary": "Manual code change in tests/test_pf3_2_pronoun_consumer_split.py attached to X:CODE_LINEAGE_bd346fa19a"
     },
     {
-      "timestamp": 1785262110.4440966,
+      "timestamp": 1785266364.4633908,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7d5adc0966",
@@ -1298,7 +1122,7 @@
       "summary": "Manual code change in tests/test_pf3_3_descriptor_neighborhood.py attached to X:CODE_LINEAGE_7d5adc0966"
     },
     {
-      "timestamp": 1785262112.195664,
+      "timestamp": 1785266366.0741456,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_2e44b3b7ee",
@@ -1306,7 +1130,7 @@
       "summary": "Manual code change in tests/test_pf3_3_frame_absence.py attached to X:CODE_LINEAGE_2e44b3b7ee"
     },
     {
-      "timestamp": 1785262113.9826581,
+      "timestamp": 1785266367.5788991,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_430bead1e8",
@@ -1314,7 +1138,7 @@
       "summary": "Manual code change in tests/test_pf3_4a_motif_thinning_guard.py attached to X:CODE_LINEAGE_430bead1e8"
     },
     {
-      "timestamp": 1785262115.6331203,
+      "timestamp": 1785266369.1451216,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_2c1997a040",
@@ -1322,7 +1146,7 @@
       "summary": "Manual code change in tests/test_pf3_5_motif_watch_readout.py attached to T:CODE_LINEAGE_2c1997a040"
     },
     {
-      "timestamp": 1785262117.3687706,
+      "timestamp": 1785266370.7542987,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_e926086abc",
@@ -1330,7 +1154,7 @@
       "summary": "Manual code change in tests/test_pipeline2.py attached to X:CODE_LINEAGE_e926086abc"
     },
     {
-      "timestamp": 1785262119.1757538,
+      "timestamp": 1785266372.3783145,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1be3b086b0",
@@ -1338,7 +1162,7 @@
       "summary": "Manual code change in tests/test_prediction_field_manifold.py attached to X:CODE_LINEAGE_1be3b086b0"
     },
     {
-      "timestamp": 1785262120.9396977,
+      "timestamp": 1785266373.998914,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0778ef2cb4",
@@ -1346,7 +1170,7 @@
       "summary": "Manual code change in tests/test_ps1_2_persistence_arbitration.py attached to X:CODE_LINEAGE_0778ef2cb4"
     },
     {
-      "timestamp": 1785262122.7209487,
+      "timestamp": 1785266375.5022142,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_59093a9557",
@@ -1354,7 +1178,7 @@
       "summary": "Manual code change in tests/test_reflexive_interpreter_deposition_integration.py attached to X:CODE_LINEAGE_59093a9557"
     },
     {
-      "timestamp": 1785262124.502035,
+      "timestamp": 1785266377.092452,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_601fc5583e",
@@ -1362,7 +1186,7 @@
       "summary": "Manual code change in tests/test_round.py attached to X:CODE_LINEAGE_601fc5583e"
     },
     {
-      "timestamp": 1785262126.1541288,
+      "timestamp": 1785266378.6874807,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_f29f937289",
@@ -1370,7 +1194,7 @@
       "summary": "Manual code change in tests/test_rw7_attribution_trace.py attached to X:CODE_LINEAGE_f29f937289"
     },
     {
-      "timestamp": 1785262127.8903954,
+      "timestamp": 1785266380.2898977,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_82d256a78a",
@@ -1378,7 +1202,7 @@
       "summary": "Manual code change in tests/test_scheduled_run_state_persistence.py attached to X:CODE_LINEAGE_82d256a78a"
     },
     {
-      "timestamp": 1785262129.661271,
+      "timestamp": 1785266381.8921812,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_85c79e9b7b",
@@ -1386,7 +1210,7 @@
       "summary": "Manual code change in tests/test_scheduler_balance.py attached to X:CODE_LINEAGE_85c79e9b7b"
     },
     {
-      "timestamp": 1785262131.443158,
+      "timestamp": 1785266383.5093875,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "B:CODE_LINEAGE_743d969c41",
@@ -1394,7 +1218,7 @@
       "summary": "Manual code change in tests/test_semantic_intention_bridge.py attached to B:CODE_LINEAGE_743d969c41"
     },
     {
-      "timestamp": 1785262133.0943046,
+      "timestamp": 1785266385.0148785,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_7e37a31b78",
@@ -1402,7 +1226,7 @@
       "summary": "Manual code change in tests/test_semantic_probe_battery.py attached to X:CODE_LINEAGE_7e37a31b78"
     },
     {
-      "timestamp": 1785262134.8265696,
+      "timestamp": 1785266386.6916785,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_512e0f179e",
@@ -1410,7 +1234,7 @@
       "summary": "Manual code change in tests/test_semantic_variant_registry.py attached to X:CODE_LINEAGE_512e0f179e"
     },
     {
-      "timestamp": 1785262136.5690644,
+      "timestamp": 1785266388.288609,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_853dcece19",
@@ -1418,7 +1242,7 @@
       "summary": "Manual code change in tests/test_strategic_horizon.py attached to X:CODE_LINEAGE_853dcece19"
     },
     {
-      "timestamp": 1785262138.354562,
+      "timestamp": 1785266389.8977175,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_8487158cef",
@@ -1426,7 +1250,7 @@
       "summary": "Manual code change in tests/test_stratified_wellformedness.py attached to X:CODE_LINEAGE_8487158cef"
     },
     {
-      "timestamp": 1785262140.1344342,
+      "timestamp": 1785266391.4123108,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_d04afe6234",
@@ -1434,7 +1258,7 @@
       "summary": "Manual code change in tests/test_surface_boundary.py attached to X:CODE_LINEAGE_d04afe6234"
     },
     {
-      "timestamp": 1785262141.9042652,
+      "timestamp": 1785266392.997873,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6afcddf61b",
@@ -1442,7 +1266,7 @@
       "summary": "Manual code change in tests/test_topological_semantic_coordinator.py attached to X:CODE_LINEAGE_6afcddf61b"
     },
     {
-      "timestamp": 1785262143.56081,
+      "timestamp": 1785266394.5973632,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6298d3887a",
@@ -1450,7 +1274,7 @@
       "summary": "Manual code change in tests/test_topology_cycle_decomposition.py attached to X:CODE_LINEAGE_6298d3887a"
     },
     {
-      "timestamp": 1785262145.3052752,
+      "timestamp": 1785266396.2186158,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_4ff0189b71",
@@ -1458,7 +1282,7 @@
       "summary": "Manual code change in tests/test_topology_frame.py attached to X:CODE_LINEAGE_4ff0189b71"
     },
     {
-      "timestamp": 1785262147.0401847,
+      "timestamp": 1785266397.8340065,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_0158445334",
@@ -1466,7 +1290,7 @@
       "summary": "Manual code change in tests/test_topology_tracker.py attached to X:CODE_LINEAGE_0158445334"
     },
     {
-      "timestamp": 1785262148.8736284,
+      "timestamp": 1785266399.3461065,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_3d274939b7",
@@ -1474,7 +1298,7 @@
       "summary": "Manual code change in tests/test_toroidal_circulation_layer.py attached to X:CODE_LINEAGE_3d274939b7"
     },
     {
-      "timestamp": 1785262150.5178888,
+      "timestamp": 1785266400.9453995,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_898cc56049",
@@ -1482,7 +1306,7 @@
       "summary": "Manual code change in tests/test_understanding_sediment_overlay.py attached to X:CODE_LINEAGE_898cc56049"
     },
     {
-      "timestamp": 1785262152.2507927,
+      "timestamp": 1785266402.5573266,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_9f1230ae5c",
@@ -1490,7 +1314,7 @@
       "summary": "Manual code change in tests/test_up.py attached to X:CODE_LINEAGE_9f1230ae5c"
     },
     {
-      "timestamp": 1785262153.9889696,
+      "timestamp": 1785266404.1741865,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_6545964560",
@@ -1498,7 +1322,7 @@
       "summary": "Manual code change in tests/test_variant_transition_predictor.py attached to X:CODE_LINEAGE_6545964560"
     },
     {
-      "timestamp": 1785262155.752186,
+      "timestamp": 1785266405.7804565,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_1f2ab935eb",
@@ -1506,7 +1330,7 @@
       "summary": "Manual code change in tests/test_w1_turn_content_context.py attached to X:CODE_LINEAGE_1f2ab935eb"
     },
     {
-      "timestamp": 1785262157.5239599,
+      "timestamp": 1785266407.4079123,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_40845a8aaa",
@@ -1514,7 +1338,7 @@
       "summary": "Manual code change in tests/test_w2_claim_gate_widening.py attached to X:CODE_LINEAGE_40845a8aaa"
     },
     {
-      "timestamp": 1785262159.2839353,
+      "timestamp": 1785266408.9099228,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_4abea959db",
@@ -1522,7 +1346,7 @@
       "summary": "Manual code change in tests/test_warp_phase1_resonance_graph.py attached to T:CODE_LINEAGE_4abea959db"
     },
     {
-      "timestamp": 1785262160.9245079,
+      "timestamp": 1785266410.4853525,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_b2ae703076",
@@ -1530,7 +1354,7 @@
       "summary": "Manual code change in tests/test_warp_phase2_confession_calls.py attached to T:CODE_LINEAGE_b2ae703076"
     },
     {
-      "timestamp": 1785262162.6783097,
+      "timestamp": 1785266412.0798738,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_24dd9f00c3",
@@ -1538,7 +1362,7 @@
       "summary": "Manual code change in tests/test_warp_phase3a_language_field_confession.py attached to T:CODE_LINEAGE_24dd9f00c3"
     },
     {
-      "timestamp": 1785262164.4418607,
+      "timestamp": 1785266413.6943939,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_f39c341fb9",
@@ -1546,7 +1370,7 @@
       "summary": "Manual code change in tests/test_warp_phase3b_resonant_lookup_confession.py attached to T:CODE_LINEAGE_f39c341fb9"
     },
     {
-      "timestamp": 1785262166.209486,
+      "timestamp": 1785266415.191951,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_59739d0ca0",
@@ -1554,7 +1378,7 @@
       "summary": "Manual code change in tests/test_warp_phase3c_memory_recall_confession.py attached to T:CODE_LINEAGE_59739d0ca0"
     },
     {
-      "timestamp": 1785262167.9058425,
+      "timestamp": 1785266416.7606137,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_d387d10e0e",
@@ -1562,7 +1386,7 @@
       "summary": "Manual code change in tests/test_warp_phase3d_parse_confidence_confession.py attached to T:CODE_LINEAGE_d387d10e0e"
     },
     {
-      "timestamp": 1785262169.6496084,
+      "timestamp": 1785266418.3356056,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_5b50e8e163",
@@ -1570,7 +1394,7 @@
       "summary": "Manual code change in tests/test_warp_phase4_resonant_trial_lifecycle.py attached to T:CODE_LINEAGE_5b50e8e163"
     },
     {
-      "timestamp": 1785262171.419517,
+      "timestamp": 1785266419.9487674,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "T:CODE_LINEAGE_cec6767245",
@@ -1578,10 +1402,10 @@
       "summary": "Manual code change in tests/test_waveform_pressure.py attached to T:CODE_LINEAGE_cec6767245"
     },
     {
-      "timestamp": 1785262186.0773141,
+      "timestamp": 1785266429.9454553,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_824f7387a1",
+      "id": "A:CODE_EVOLVE_03cc3d3c97",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1593,13 +1417,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:d8505b85969846; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:2016e1676ce6ef; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262186.0773141,
+      "timestamp": 1785266429.9454553,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_0c86dc47a9",
+      "id": "A:CODE_EVOLVE_b12edbd621",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1611,13 +1435,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:001161a4eab113; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:acbf3bf09c5db9; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262186.0773141,
+      "timestamp": 1785266429.9454553,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_daf7672a84",
+      "id": "A:CODE_EVOLVE_4e3147724d",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1629,13 +1453,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:e8a6afca9d2bf7; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:7fc9aa1f4e6c3f; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262194.4736888,
+      "timestamp": 1785266436.5432656,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_9cfc7be672",
+      "id": "A:CODE_EVOLVE_db31599ca4",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1647,13 +1471,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:3b9b5d8c5bc2c4; accepted=False; operator_key=dream_surface_dispatch_ciousnessengine_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:96d6ada31991de; accepted=False; operator_key=dream_surface_dispatch_ciousnessengine_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262194.4736888,
+      "timestamp": 1785266436.5432656,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_093035ff0d",
+      "id": "A:CODE_EVOLVE_1694bb5ffc",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1665,13 +1489,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:6413469e11f704; accepted=False; operator_key=dream_surface_dispatch_d_constraintpressure; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:01335d207cd13d; accepted=False; operator_key=dream_surface_dispatch_d_constraintpressure; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262194.4736888,
+      "timestamp": 1785266436.5432656,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_563108750f",
+      "id": "A:CODE_EVOLVE_68e5f0249c",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1683,13 +1507,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:fb8257f16194fa; accepted=False; operator_key=dream_surface_dispatch_ntime_chainsimbridge; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:7e7726820d7c78; accepted=False; operator_key=dream_surface_dispatch_ntime_chainsimbridge; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262194.4736888,
+      "timestamp": 1785266436.5432656,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_c5bfdccf43",
+      "id": "A:CODE_EVOLVE_6763c211de",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1701,13 +1525,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:0a71c4be41f77e; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:ed48e3980013c5; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262194.4736888,
+      "timestamp": 1785266436.5432656,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_8dbd3e6edb",
+      "id": "A:CODE_EVOLVE_75ecfc5c67",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1719,31 +1543,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:006d12d776dcd2; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:927a36cc6ebac8; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262194.4736888,
+      "timestamp": 1785266443.408422,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_9a50e311db",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:0d9d369b09e3c5; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785262201.2983797,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_c811b9dec1",
+      "id": "A:CODE_EVOLVE_74caab81c7",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1755,13 +1561,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:8699e5b8d4419e; accepted=False; operator_key=dream_surface_dispatch_rocessingsystem_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:afe9cb80a09cb9; accepted=False; operator_key=dream_surface_dispatch_rocessingsystem_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262201.2983797,
+      "timestamp": 1785266443.408422,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_29c3701190",
+      "id": "A:CODE_EVOLVE_9e6b917675",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1773,13 +1579,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:89f2bb8dae4158; accepted=False; operator_key=dream_surface_dispatch_d_energydistribution; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:7587d4e8402d7b; accepted=False; operator_key=dream_surface_dispatch_d_energydistribution; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262201.2983797,
+      "timestamp": 1785266443.408422,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_26b951ce09",
+      "id": "A:CODE_EVOLVE_9d0c485856",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1791,13 +1597,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:d8c1a7db06fe2d; accepted=False; operator_key=dream_surface_dispatch_im_epoch_fakeepisode; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:a96bc03dbcc3cd; accepted=False; operator_key=dream_surface_dispatch_im_epoch_fakeepisode; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262201.2983797,
+      "timestamp": 1785266443.408422,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_30e6addee2",
+      "id": "A:CODE_EVOLVE_c21ebb1d42",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1809,13 +1615,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:4c9efbaa80d731; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:993247c917ce22; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262201.2983797,
+      "timestamp": 1785266443.408422,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_43f0d58647",
+      "id": "A:CODE_EVOLVE_53c3dd8f59",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1827,13 +1633,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:6c0cb2fddfd3d4; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:9006c6e2d7cc89; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262210.3079026,
+      "timestamp": 1785266447.5649643,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_988450f401",
+      "id": "A:CODE_EVOLVE_67be3fdd15",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1845,13 +1651,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:a6ecccbf20a7ed; accepted=False; operator_key=dream_surface_dispatch_ensionalsystems_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:11e320e72054cc; accepted=False; operator_key=dream_surface_dispatch_ensionalsystems_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262210.3079026,
+      "timestamp": 1785266447.5649643,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_e735a818e9",
+      "id": "A:CODE_EVOLVE_27b2bfb686",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1863,13 +1669,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:0455fa5a9acba0; accepted=False; operator_key=dream_surface_dispatch_sts_decay_constraint; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:b074aa5410e52d; accepted=False; operator_key=dream_surface_dispatch_sts_decay_constraint; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262210.3079026,
+      "timestamp": 1785266447.5649643,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_6217d5748d",
+      "id": "A:CODE_EVOLVE_6ca97bc740",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1881,67 +1687,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:8ee3de5e09bf0b; accepted=False; operator_key=dream_surface_dispatch_ngine_stabilitystate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:a777d164906524; accepted=False; operator_key=dream_surface_dispatch_ngine_stabilitystate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262210.3079026,
+      "timestamp": 1785266455.1698287,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_7f85e104f9",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:e66321e2a96cc9; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785262210.3079026,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_28524de324",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:756e7dad193ee1; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785262210.3079026,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_cb3a5d1873",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:cf645cd46a73be; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785262218.052149,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_05aa9f9bfe",
+      "id": "A:CODE_EVOLVE_f1e3326c00",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1953,13 +1705,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:d37fbe6425d26f; accepted=False; operator_key=dream_surface_dispatch_roject_critical_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:05fa88e5c1fd34; accepted=False; operator_key=dream_surface_dispatch_roject_critical_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262218.052149,
+      "timestamp": 1785266455.1698287,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_520a119970",
+      "id": "A:CODE_EVOLVE_146fe4ab79",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1971,13 +1723,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:8b9742b26d09fe; accepted=False; operator_key=dream_surface_dispatch_enealogy_pressurevec; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:28508b79dfa44c; accepted=False; operator_key=dream_surface_dispatch_enealogy_pressurevec; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262218.052149,
+      "timestamp": 1785266455.1698287,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_cc714919a8",
+      "id": "A:CODE_EVOLVE_a39272e1c2",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -1989,13 +1741,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:45d283650f1024; accepted=False; operator_key=dream_surface_dispatch_timedilationgovernor; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:925fa90f99d333; accepted=False; operator_key=dream_surface_dispatch_timedilationgovernor; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262218.052149,
+      "timestamp": 1785266455.1698287,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_0e293905e5",
+      "id": "A:CODE_EVOLVE_18916b8b4b",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2007,13 +1759,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:e93e4348188422; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:2e80a1f484acda; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262218.052149,
+      "timestamp": 1785266455.1698287,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_680ce2fa37",
+      "id": "A:CODE_EVOLVE_f29540b16a",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2025,13 +1777,31 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:a0f7c37bfdc416; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:7f2e7a7462036a; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262224.912081,
+      "timestamp": 1785266455.1698287,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_0552467169",
+      "id": "A:CODE_EVOLVE_afecc4d681",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:8a42b77ab43d2a; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266463.1802113,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_bce1395ca8",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2043,13 +1813,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:7612852ef585e4; accepted=False; operator_key=dream_surface_dispatch_signal_urgency_ticks; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:2eabd437dbd00a; accepted=False; operator_key=dream_surface_dispatch_signal_urgency_ticks; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262224.912081,
+      "timestamp": 1785266463.1802113,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_a7e2e8dfb3",
+      "id": "A:CODE_EVOLVE_e125acf8a8",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2061,31 +1831,31 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:987b5c13cb2ba4; accepted=False; operator_key=dream_surface_dispatch_nealogy_reliefrecord; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:d9a6ad44486482; accepted=False; operator_key=dream_surface_dispatch_nealogy_reliefrecord; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262224.912081,
+      "timestamp": 1785266463.1802113,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_d4ee32e015",
+      "id": "A:CODE_EVOLVE_9cc51632a3",
       "axis": "A",
       "tags": [
         "derived_operation",
         "code_evolution",
         "mutation_operator:dream_surface_dispatch_e_ingest_interaction",
         "mutation_status:rejected",
-        "mutation_score:0.968",
+        "mutation_score:0.922",
         "mutation_pressure:0.000",
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:70f1fe69d34539; accepted=False; operator_key=dream_surface_dispatch_e_ingest_interaction; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:4226f9f8d91fa0; accepted=False; operator_key=dream_surface_dispatch_e_ingest_interaction; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262224.912081,
+      "timestamp": 1785266463.1802113,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_283641b5e4",
+      "id": "A:CODE_EVOLVE_516438c4e9",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2097,13 +1867,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:1f3523d101451a; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:f3484118251e5b; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262224.912081,
+      "timestamp": 1785266463.1802113,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_21f42ba8c2",
+      "id": "A:CODE_EVOLVE_69a3e3c651",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2115,13 +1885,31 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:a312a30e048944; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:9884e52706206f; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262233.8219626,
+      "timestamp": 1785266463.1802113,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_fd786c01fd",
+      "id": "A:CODE_EVOLVE_7123dd0bc7",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:ad83edb543bb28; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266469.420822,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_ea2c805e84",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2133,13 +1921,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:322b70d6f2870e; accepted=False; operator_key=dream_surface_dispatch_arychamber_run_chain; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:0c13901f9969b9; accepted=False; operator_key=dream_surface_dispatch_arychamber_run_chain; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262233.8219626,
+      "timestamp": 1785266469.420822,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_39895cf0fc",
+      "id": "A:CODE_EVOLVE_3f19cd156b",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2151,31 +1939,31 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:f417a8534119a9; accepted=False; operator_key=dream_surface_dispatch_stry_constraintstate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:35f46432f90588; accepted=False; operator_key=dream_surface_dispatch_stry_constraintstate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262233.8219626,
+      "timestamp": 1785266469.420822,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_870f125769",
+      "id": "A:CODE_EVOLVE_5aae526a2f",
       "axis": "A",
       "tags": [
         "derived_operation",
         "code_evolution",
         "mutation_operator:dream_surface_dispatch__actionabilitymapper",
         "mutation_status:rejected",
-        "mutation_score:0.851",
+        "mutation_score:0.811",
         "mutation_pressure:0.000",
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:39a52552dadbce; accepted=False; operator_key=dream_surface_dispatch__actionabilitymapper; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:c0f4612fb6e2ed; accepted=False; operator_key=dream_surface_dispatch__actionabilitymapper; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262233.8219626,
+      "timestamp": 1785266469.420822,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_c8337dd233",
+      "id": "A:CODE_EVOLVE_c46e23c963",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2187,13 +1975,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:593384f2e9bf88; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:a3e20de5dfafc3; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262233.8219626,
+      "timestamp": 1785266469.420822,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_89b8141728",
+      "id": "A:CODE_EVOLVE_bfd63049f2",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2205,31 +1993,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:a1f1457bd03ccb; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:db5302e9b26d88; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262233.8219626,
+      "timestamp": 1785266477.5308793,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_16b1cbdfed",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:d45e1220b74687; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785262241.8977878,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_2b9d9223f3",
+      "id": "A:CODE_EVOLVE_1e94343928",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2241,13 +2011,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:7c76c5074dae3a; accepted=False; operator_key=dream_surface_dispatch_utionarychamber_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:4dc84afcc022c4; accepted=False; operator_key=dream_surface_dispatch_utionarychamber_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262241.8977878,
+      "timestamp": 1785266477.5308793,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_71d15076ac",
+      "id": "A:CODE_EVOLVE_14e169f7d5",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2259,31 +2029,31 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:5608fa0bf0015e; accepted=False; operator_key=dream_surface_dispatch_stemconstraintstates; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:348a2b3011bbd3; accepted=False; operator_key=dream_surface_dispatch_stemconstraintstates; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262241.8977878,
+      "timestamp": 1785266477.5308793,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_d185a37cd5",
+      "id": "A:CODE_EVOLVE_1ec13d78f1",
       "axis": "A",
       "tags": [
         "derived_operation",
         "code_evolution",
         "mutation_operator:dream_surface_dispatch__chamber_actiontrace",
         "mutation_status:rejected",
-        "mutation_score:0.811",
+        "mutation_score:0.851",
         "mutation_pressure:0.000",
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:1beba48677695f; accepted=False; operator_key=dream_surface_dispatch__chamber_actiontrace; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:8e62bf968e7f5c; accepted=False; operator_key=dream_surface_dispatch__chamber_actiontrace; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262241.8977878,
+      "timestamp": 1785266477.5308793,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_42fce6b43c",
+      "id": "A:CODE_EVOLVE_23620d3344",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2295,13 +2065,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:9e1da2f550ecf7; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:1be922dadd9d54; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262241.8977878,
+      "timestamp": 1785266477.5308793,
       "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_819a865b19",
+      "id": "A:CODE_EVOLVE_853434e398",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2313,13 +2083,31 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:baea7e0a49a6e3; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+      "summary": "Code evolution outcome for mutation_id=DREAM:38a47a7aef8f61; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
     },
     {
-      "timestamp": 1785262247.0659752,
-      "source": "aurora.save",
+      "timestamp": 1785266477.5308793,
+      "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_e452a9c171",
+      "id": "A:CODE_EVOLVE_9c109b8afc",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:b71c6b24226276; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266485.6993244,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_a6e4188211",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2331,13 +2119,13 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:1c717305e5ea87; accepted=False; operator_key=dream_surface_dispatch_cord_ticks_remaining; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:9af4bb176ee53e; accepted=False; operator_key=dream_surface_dispatch_cord_ticks_remaining; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     },
     {
-      "timestamp": 1785262247.0659752,
-      "source": "aurora.save",
+      "timestamp": 1785266485.6993244,
+      "source": "runtime_turn:composer_unified",
       "kind": "code_function",
-      "id": "A:CODE_EVOLVE_8dc1947b34",
+      "id": "A:CODE_EVOLVE_aca1a61324",
       "axis": "A",
       "tags": [
         "derived_operation",
@@ -2349,7 +2137,439 @@
         "mutation_targets:0",
         "mutation_changed_files:0"
       ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:ab27d1f4e68956; accepted=False; operator_key=dream_surface_dispatch_constraint_aggregate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Code evolution outcome for mutation_id=DREAM:8d70d1d7d37fbd; accepted=False; operator_key=dream_surface_dispatch_constraint_aggregate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266485.6993244,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_cf9565cbb8",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ne_avatarpersonality",
+        "mutation_status:rejected",
+        "mutation_score:0.811",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:0e0c53868b8ed2; accepted=False; operator_key=dream_surface_dispatch_ne_avatarpersonality; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266485.6993244,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_3acb6d6a1d",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:7d3e4c02bbfd42; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266485.6993244,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_6e81eb6875",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:74a4b7e14d96e4; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266485.6993244,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_d6c57011cc",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:0e730eb4006d8b; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266492.053017,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_d3718ad42a",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ciousnessengine_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:eb94f7d7a88a50; accepted=False; operator_key=dream_surface_dispatch_ciousnessengine_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266492.053017,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_431dd9c1ef",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_d_constraintpressure",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:4f84fe4dacd83c; accepted=False; operator_key=dream_surface_dispatch_d_constraintpressure; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266492.053017,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_f2bf27469e",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ntime_chainsimbridge",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:952c91041852fd; accepted=False; operator_key=dream_surface_dispatch_ntime_chainsimbridge; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266492.053017,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_100a90f9de",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:d67f7ab1133c4c; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266492.053017,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_a6d53088ce",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:2616a66781cbc1; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266500.2540643,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_4b1ff2a4ba",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_rocessingsystem_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:65483d5a5b35c3; accepted=False; operator_key=dream_surface_dispatch_rocessingsystem_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266500.2540643,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_e999a6b5c1",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_d_energydistribution",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:ecee531ff9c3c2; accepted=False; operator_key=dream_surface_dispatch_d_energydistribution; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266500.2540643,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_2d9e6b0857",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_im_epoch_fakeepisode",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:dfcbe42eb680ee; accepted=False; operator_key=dream_surface_dispatch_im_epoch_fakeepisode; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266500.2540643,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_06645f8710",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:243b675e9eee2d; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266500.2540643,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_b9b419fd8d",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:25f10372458010; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266500.2540643,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_7e0731ce16",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:04174f350f7762; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266508.564543,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_344102eb3d",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ensionalsystems_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:fa213db93bc95e; accepted=False; operator_key=dream_surface_dispatch_ensionalsystems_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266508.564543,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_e19d04470e",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_sts_decay_constraint",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:e4bb91d29901c7; accepted=False; operator_key=dream_surface_dispatch_sts_decay_constraint; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266508.564543,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_5177332858",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ngine_stabilitystate",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:58a7f251bfbaaf; accepted=False; operator_key=dream_surface_dispatch_ngine_stabilitystate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266508.564543,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_f7bab286e6",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:d8044ef50bec7b; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266508.564543,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_e8b9346f92",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:c90c9861cc15cc; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266508.564543,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_34a831f76b",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:53a67f0d4a4293; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
+    },
+    {
+      "timestamp": 1785266512.9052012,
+      "source": "aurora.save",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_df88a638aa",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_roject_critical_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:ab63827c8c492f; accepted=False; operator_key=dream_surface_dispatch_roject_critical_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266512.9052012,
+      "source": "aurora.save",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_59c3c01a01",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_enealogy_pressurevec",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:8ea60dc7f1035b; accepted=False; operator_key=dream_surface_dispatch_enealogy_pressurevec; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+    },
+    {
+      "timestamp": 1785266515.8853753,
+      "source": "runtime_turn:composer_unified",
+      "kind": "code_function",
+      "id": "A:CODE_EVOLVE_3e563d8b34",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_timedilationgovernor",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "summary": "Code evolution outcome for mutation_id=DREAM:09745744f52996; accepted=False; operator_key=dream_surface_dispatch_timedilationgovernor; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
     }
   ],
   "seen_abilities": {
@@ -193977,6 +194197,1011 @@
         "mutation_changed_files:0"
       ],
       "notes": "Code evolution outcome for mutation_id=DREAM:ab27d1f4e68956; accepted=False; operator_key=dream_surface_dispatch_constraint_aggregate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_60d528cb14": {
+      "id": "A:CODE_EVOLVE_60d528cb14",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ne_avatarpersonality",
+        "mutation_status:rejected",
+        "mutation_score:0.851",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:0250aed27dfef1; accepted=False; operator_key=dream_surface_dispatch_ne_avatarpersonality; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_8e4a0090dc": {
+      "id": "A:CODE_EVOLVE_8e4a0090dc",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:7f993b33dbb278; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_03cc3d3c97": {
+      "id": "A:CODE_EVOLVE_03cc3d3c97",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:2016e1676ce6ef; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_b12edbd621": {
+      "id": "A:CODE_EVOLVE_b12edbd621",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:acbf3bf09c5db9; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_4e3147724d": {
+      "id": "A:CODE_EVOLVE_4e3147724d",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:7fc9aa1f4e6c3f; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_db31599ca4": {
+      "id": "A:CODE_EVOLVE_db31599ca4",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ciousnessengine_tick",
+        "mutation_status:rejected",
+        "mutation_score:0.924",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:96d6ada31991de; accepted=False; operator_key=dream_surface_dispatch_ciousnessengine_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_1694bb5ffc": {
+      "id": "A:CODE_EVOLVE_1694bb5ffc",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_d_constraintpressure",
+        "mutation_status:rejected",
+        "mutation_score:0.841",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:01335d207cd13d; accepted=False; operator_key=dream_surface_dispatch_d_constraintpressure; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_68e5f0249c": {
+      "id": "A:CODE_EVOLVE_68e5f0249c",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ntime_chainsimbridge",
+        "mutation_status:rejected",
+        "mutation_score:0.827",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:7e7726820d7c78; accepted=False; operator_key=dream_surface_dispatch_ntime_chainsimbridge; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_6763c211de": {
+      "id": "A:CODE_EVOLVE_6763c211de",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:ed48e3980013c5; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_75ecfc5c67": {
+      "id": "A:CODE_EVOLVE_75ecfc5c67",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:927a36cc6ebac8; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_74caab81c7": {
+      "id": "A:CODE_EVOLVE_74caab81c7",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_rocessingsystem_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:afe9cb80a09cb9; accepted=False; operator_key=dream_surface_dispatch_rocessingsystem_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_9e6b917675": {
+      "id": "A:CODE_EVOLVE_9e6b917675",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_d_energydistribution",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:7587d4e8402d7b; accepted=False; operator_key=dream_surface_dispatch_d_energydistribution; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_9d0c485856": {
+      "id": "A:CODE_EVOLVE_9d0c485856",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_im_epoch_fakeepisode",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:a96bc03dbcc3cd; accepted=False; operator_key=dream_surface_dispatch_im_epoch_fakeepisode; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_c21ebb1d42": {
+      "id": "A:CODE_EVOLVE_c21ebb1d42",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:993247c917ce22; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_53c3dd8f59": {
+      "id": "A:CODE_EVOLVE_53c3dd8f59",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:9006c6e2d7cc89; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_67be3fdd15": {
+      "id": "A:CODE_EVOLVE_67be3fdd15",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ensionalsystems_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:11e320e72054cc; accepted=False; operator_key=dream_surface_dispatch_ensionalsystems_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_27b2bfb686": {
+      "id": "A:CODE_EVOLVE_27b2bfb686",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_sts_decay_constraint",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:b074aa5410e52d; accepted=False; operator_key=dream_surface_dispatch_sts_decay_constraint; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_6ca97bc740": {
+      "id": "A:CODE_EVOLVE_6ca97bc740",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ngine_stabilitystate",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:a777d164906524; accepted=False; operator_key=dream_surface_dispatch_ngine_stabilitystate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_f1e3326c00": {
+      "id": "A:CODE_EVOLVE_f1e3326c00",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_roject_critical_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:05fa88e5c1fd34; accepted=False; operator_key=dream_surface_dispatch_roject_critical_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_146fe4ab79": {
+      "id": "A:CODE_EVOLVE_146fe4ab79",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_enealogy_pressurevec",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:28508b79dfa44c; accepted=False; operator_key=dream_surface_dispatch_enealogy_pressurevec; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_a39272e1c2": {
+      "id": "A:CODE_EVOLVE_a39272e1c2",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_timedilationgovernor",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:925fa90f99d333; accepted=False; operator_key=dream_surface_dispatch_timedilationgovernor; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_18916b8b4b": {
+      "id": "A:CODE_EVOLVE_18916b8b4b",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:2e80a1f484acda; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_f29540b16a": {
+      "id": "A:CODE_EVOLVE_f29540b16a",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:7f2e7a7462036a; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_afecc4d681": {
+      "id": "A:CODE_EVOLVE_afecc4d681",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:8a42b77ab43d2a; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_bce1395ca8": {
+      "id": "A:CODE_EVOLVE_bce1395ca8",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_signal_urgency_ticks",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:2eabd437dbd00a; accepted=False; operator_key=dream_surface_dispatch_signal_urgency_ticks; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_e125acf8a8": {
+      "id": "A:CODE_EVOLVE_e125acf8a8",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_nealogy_reliefrecord",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:d9a6ad44486482; accepted=False; operator_key=dream_surface_dispatch_nealogy_reliefrecord; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_9cc51632a3": {
+      "id": "A:CODE_EVOLVE_9cc51632a3",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_e_ingest_interaction",
+        "mutation_status:rejected",
+        "mutation_score:0.922",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:4226f9f8d91fa0; accepted=False; operator_key=dream_surface_dispatch_e_ingest_interaction; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_516438c4e9": {
+      "id": "A:CODE_EVOLVE_516438c4e9",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:f3484118251e5b; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_69a3e3c651": {
+      "id": "A:CODE_EVOLVE_69a3e3c651",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:9884e52706206f; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_7123dd0bc7": {
+      "id": "A:CODE_EVOLVE_7123dd0bc7",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:ad83edb543bb28; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_ea2c805e84": {
+      "id": "A:CODE_EVOLVE_ea2c805e84",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_arychamber_run_chain",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:0c13901f9969b9; accepted=False; operator_key=dream_surface_dispatch_arychamber_run_chain; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_3f19cd156b": {
+      "id": "A:CODE_EVOLVE_3f19cd156b",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_stry_constraintstate",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:35f46432f90588; accepted=False; operator_key=dream_surface_dispatch_stry_constraintstate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_5aae526a2f": {
+      "id": "A:CODE_EVOLVE_5aae526a2f",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch__actionabilitymapper",
+        "mutation_status:rejected",
+        "mutation_score:0.811",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:c0f4612fb6e2ed; accepted=False; operator_key=dream_surface_dispatch__actionabilitymapper; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_c46e23c963": {
+      "id": "A:CODE_EVOLVE_c46e23c963",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:a3e20de5dfafc3; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_bfd63049f2": {
+      "id": "A:CODE_EVOLVE_bfd63049f2",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:db5302e9b26d88; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_1e94343928": {
+      "id": "A:CODE_EVOLVE_1e94343928",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_utionarychamber_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:4dc84afcc022c4; accepted=False; operator_key=dream_surface_dispatch_utionarychamber_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_14e169f7d5": {
+      "id": "A:CODE_EVOLVE_14e169f7d5",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_stemconstraintstates",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:348a2b3011bbd3; accepted=False; operator_key=dream_surface_dispatch_stemconstraintstates; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_1ec13d78f1": {
+      "id": "A:CODE_EVOLVE_1ec13d78f1",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch__chamber_actiontrace",
+        "mutation_status:rejected",
+        "mutation_score:0.851",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:8e62bf968e7f5c; accepted=False; operator_key=dream_surface_dispatch__chamber_actiontrace; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_23620d3344": {
+      "id": "A:CODE_EVOLVE_23620d3344",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:1be922dadd9d54; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_853434e398": {
+      "id": "A:CODE_EVOLVE_853434e398",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:38a47a7aef8f61; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_9c109b8afc": {
+      "id": "A:CODE_EVOLVE_9c109b8afc",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:b71c6b24226276; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_a6e4188211": {
+      "id": "A:CODE_EVOLVE_a6e4188211",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_cord_ticks_remaining",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:9af4bb176ee53e; accepted=False; operator_key=dream_surface_dispatch_cord_ticks_remaining; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_aca1a61324": {
+      "id": "A:CODE_EVOLVE_aca1a61324",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_constraint_aggregate",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:8d70d1d7d37fbd; accepted=False; operator_key=dream_surface_dispatch_constraint_aggregate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_cf9565cbb8": {
+      "id": "A:CODE_EVOLVE_cf9565cbb8",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ne_avatarpersonality",
+        "mutation_status:rejected",
+        "mutation_score:0.811",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:0e0c53868b8ed2; accepted=False; operator_key=dream_surface_dispatch_ne_avatarpersonality; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_3acb6d6a1d": {
+      "id": "A:CODE_EVOLVE_3acb6d6a1d",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:7d3e4c02bbfd42; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_6e81eb6875": {
+      "id": "A:CODE_EVOLVE_6e81eb6875",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:74a4b7e14d96e4; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_d6c57011cc": {
+      "id": "A:CODE_EVOLVE_d6c57011cc",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:0e730eb4006d8b; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_d3718ad42a": {
+      "id": "A:CODE_EVOLVE_d3718ad42a",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ciousnessengine_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:eb94f7d7a88a50; accepted=False; operator_key=dream_surface_dispatch_ciousnessengine_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_431dd9c1ef": {
+      "id": "A:CODE_EVOLVE_431dd9c1ef",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_d_constraintpressure",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:4f84fe4dacd83c; accepted=False; operator_key=dream_surface_dispatch_d_constraintpressure; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_f2bf27469e": {
+      "id": "A:CODE_EVOLVE_f2bf27469e",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ntime_chainsimbridge",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:952c91041852fd; accepted=False; operator_key=dream_surface_dispatch_ntime_chainsimbridge; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_100a90f9de": {
+      "id": "A:CODE_EVOLVE_100a90f9de",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:d67f7ab1133c4c; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_a6d53088ce": {
+      "id": "A:CODE_EVOLVE_a6d53088ce",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:2616a66781cbc1; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_4b1ff2a4ba": {
+      "id": "A:CODE_EVOLVE_4b1ff2a4ba",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_rocessingsystem_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:65483d5a5b35c3; accepted=False; operator_key=dream_surface_dispatch_rocessingsystem_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_e999a6b5c1": {
+      "id": "A:CODE_EVOLVE_e999a6b5c1",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_d_energydistribution",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:ecee531ff9c3c2; accepted=False; operator_key=dream_surface_dispatch_d_energydistribution; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_2d9e6b0857": {
+      "id": "A:CODE_EVOLVE_2d9e6b0857",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_im_epoch_fakeepisode",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:dfcbe42eb680ee; accepted=False; operator_key=dream_surface_dispatch_im_epoch_fakeepisode; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_06645f8710": {
+      "id": "A:CODE_EVOLVE_06645f8710",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:243b675e9eee2d; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_b9b419fd8d": {
+      "id": "A:CODE_EVOLVE_b9b419fd8d",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:25f10372458010; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_7e0731ce16": {
+      "id": "A:CODE_EVOLVE_7e0731ce16",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:04174f350f7762; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_344102eb3d": {
+      "id": "A:CODE_EVOLVE_344102eb3d",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ensionalsystems_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:fa213db93bc95e; accepted=False; operator_key=dream_surface_dispatch_ensionalsystems_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_e19d04470e": {
+      "id": "A:CODE_EVOLVE_e19d04470e",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_sts_decay_constraint",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:e4bb91d29901c7; accepted=False; operator_key=dream_surface_dispatch_sts_decay_constraint; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_5177332858": {
+      "id": "A:CODE_EVOLVE_5177332858",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ngine_stabilitystate",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:58a7f251bfbaaf; accepted=False; operator_key=dream_surface_dispatch_ngine_stabilitystate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_f7bab286e6": {
+      "id": "A:CODE_EVOLVE_f7bab286e6",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:d8044ef50bec7b; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_e8b9346f92": {
+      "id": "A:CODE_EVOLVE_e8b9346f92",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:c90c9861cc15cc; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_34a831f76b": {
+      "id": "A:CODE_EVOLVE_34a831f76b",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:53a67f0d4a4293; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_df88a638aa": {
+      "id": "A:CODE_EVOLVE_df88a638aa",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_roject_critical_tick",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:ab63827c8c492f; accepted=False; operator_key=dream_surface_dispatch_roject_critical_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_59c3c01a01": {
+      "id": "A:CODE_EVOLVE_59c3c01a01",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_enealogy_pressurevec",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:8ea60dc7f1035b; accepted=False; operator_key=dream_surface_dispatch_enealogy_pressurevec; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_3e563d8b34": {
+      "id": "A:CODE_EVOLVE_3e563d8b34",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_timedilationgovernor",
+        "mutation_status:rejected",
+        "mutation_score:1.000",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:09745744f52996; accepted=False; operator_key=dream_surface_dispatch_timedilationgovernor; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
     }
   },
   "seen_links": {
