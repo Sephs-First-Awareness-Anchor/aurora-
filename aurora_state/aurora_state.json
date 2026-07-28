@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785215379.2694602,
-  "generation": 10590,
-  "genome_version": 10590,
+  "timestamp": 1785224839.7991397,
+  "generation": 10618,
+  "genome_version": 10618,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
-    "caution": 0.8525,
-    "emotional_expressiveness": 0.4549,
-    "verbosity": 0.4028,
-    "introspection": 0.489,
-    "pattern_sensitivity": 0.6853,
-    "social_engagement": 0.4167,
-    "energy_conservation": 0.4419
+    "curiosity": 0.5237,
+    "caution": 0.7936,
+    "emotional_expressiveness": 0.39,
+    "verbosity": 0.4218,
+    "introspection": 0.468,
+    "pattern_sensitivity": 0.6047,
+    "social_engagement": 0.4038,
+    "energy_conservation": 0.4201
   },
-  "personality_drift": 1.0245,
+  "personality_drift": 0.9112,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6404327107711533,
-      "precision": 0.6093586059687095,
-      "depth": 0.6038706125434189,
-      "confidence": 0.8904210256194212
+      "warmth": 0.6161286573845974,
+      "precision": 0.8710733263060628,
+      "depth": 0.6682496905138267,
+      "confidence": 0.9272733788298422
     },
     "cognitive": {
-      "curiosity": 0.8736568666233628,
-      "pattern_matching": 0.6691118938972554,
-      "abstraction": 0.7044760710853302,
-      "risk_assessment": 0.7129686589535448
+      "curiosity": 0.7238711776339277,
+      "pattern_matching": 0.5408238215370754,
+      "abstraction": 0.7733407017319199,
+      "risk_assessment": 0.5303425996693645
     },
     "social": {
-      "empathy": 0.704279698676224,
-      "trust_extension": 0.7887344685461293,
-      "boundary_maintenance": 0.5841325688990457,
-      "engagement": 0.6241653164261616
+      "empathy": 0.82522466018804,
+      "trust_extension": 0.8965461115646175,
+      "boundary_maintenance": 0.8507339642863182,
+      "engagement": 0.5737975851474484
     }
   },
   "governance_stats": {
@@ -113,9 +113,11 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 4,
-  "understanding_shards": 4,
-  "what_aurora_learned": [],
+  "understanding_shards": 3,
+  "what_aurora_learned": [
+    "multi held attention when approached with thoughtful reflection \u2014 it connects to is, learned (N-axis resonance, depth 0.29)."
+  ],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "af495bf2d594"
+  "_checksum": "3538746a5530"
 }

@@ -7,7 +7,8 @@
     "corpus:contradiction_handling:2",
     "corpus:contradiction_handling:3",
     "corpus:contradiction_handling:4",
-    "corpus:contradiction_handling:5"
+    "corpus:contradiction_handling:5",
+    "corpus:contradiction_handling:6"
   ],
   "uncertainty_signaling": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -153,5 +154,14 @@
   ],
   "misunderstanding_repair": [
     "corpus:misunderstanding_repair:0"
+  ],
+  "framing_selection": [
+    "fail_point:train_epoch_2:episode_c6388e715bc2"
+  ],
+  "semantic_precision": [
+    "fail_point:prove_ep_epoch_1:rel_probe_corpus_fragment_1"
+  ],
+  "compression_elaboration_fit": [
+    "fail_point:train_epoch_4:episode_bfc770689b35"
   ]
 }
