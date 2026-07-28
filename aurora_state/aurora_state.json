@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785203728.560802,
-  "generation": 10562,
-  "genome_version": 10562,
+  "timestamp": 1785215379.2694602,
+  "generation": 10590,
+  "genome_version": 10590,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.5987,
-    "caution": 0.7937,
-    "emotional_expressiveness": 0.7254,
-    "verbosity": 0.6672,
-    "introspection": 0.6658,
-    "pattern_sensitivity": 0.752,
-    "social_engagement": 0.4558,
-    "energy_conservation": 0.5868
+    "curiosity": 0.492,
+    "caution": 0.8525,
+    "emotional_expressiveness": 0.4549,
+    "verbosity": 0.4028,
+    "introspection": 0.489,
+    "pattern_sensitivity": 0.6853,
+    "social_engagement": 0.4167,
+    "energy_conservation": 0.4419
   },
-  "personality_drift": 1.2366,
+  "personality_drift": 1.0245,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6972529848849225,
-      "precision": 0.5304000000000001,
-      "depth": 0.6646921794187856,
-      "confidence": 0.9660012911741058
+      "warmth": 0.6404327107711533,
+      "precision": 0.6093586059687095,
+      "depth": 0.6038706125434189,
+      "confidence": 0.8904210256194212
     },
     "cognitive": {
-      "curiosity": 0.9677534619943057,
-      "pattern_matching": 0.6490542462468021,
-      "abstraction": 0.48360000000000003,
-      "risk_assessment": 0.6935260170721786
+      "curiosity": 0.8736568666233628,
+      "pattern_matching": 0.6691118938972554,
+      "abstraction": 0.7044760710853302,
+      "risk_assessment": 0.7129686589535448
     },
     "social": {
-      "empathy": 0.7402915081366125,
-      "trust_extension": 0.9350476796331494,
-      "boundary_maintenance": 0.7133929633465241,
-      "engagement": 0.7658393077769672
+      "empathy": 0.704279698676224,
+      "trust_extension": 0.7887344685461293,
+      "boundary_maintenance": 0.5841325688990457,
+      "engagement": 0.6241653164261616
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "913240c3156c"
+  "_checksum": "af495bf2d594"
 }

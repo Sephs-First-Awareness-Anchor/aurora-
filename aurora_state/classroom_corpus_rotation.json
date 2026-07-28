@@ -141,5 +141,17 @@
     "corpus:adaptive_strategy_selection:11",
     "corpus:adaptive_strategy_selection:12",
     "corpus:adaptive_strategy_selection:13"
+  ],
+  "multi_turn_stability": [
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
+  ],
+  "implied_intent_inference": [
+    "fail_point:train_epoch_2:episode_c6388e715bc2"
+  ],
+  "emotional_calibration": [
+    "corpus:emotional_calibration:0"
+  ],
+  "misunderstanding_repair": [
+    "corpus:misunderstanding_repair:0"
   ]
 }
