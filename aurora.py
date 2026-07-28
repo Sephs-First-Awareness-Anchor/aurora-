@@ -4653,6 +4653,29 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state, trigger: str =
         )
     except Exception:
         pass
+    # RW3 (Architecture Wiring Audit, 2026-07-20, F4): the honest-abstain
+    # chokepoint is the system's clearest, most concentrated failure
+    # signal -- literally nothing else resolved -- and it never consulted
+    # the diagnostic lattice built to reason about exactly this. Direct,
+    # synchronous call (not the resp-based _queue_/_flush_quasiarch_
+    # runtime_events() machinery elsewhere in this file) because state,
+    # not resp, is what's available at this point in the pipeline --
+    # matches the warp_guard() call just above in being a same-shaped,
+    # try/except-isolated confession at the point of failure, not a
+    # deferred one. Read-only: reason_about_event() surfaces doctrine
+    # hypotheses, never mutates state or forces any behavior.
+    try:
+        _quasiarch = systems.get("quasiarch_observer") if isinstance(systems, dict) else None
+        if _quasiarch is not None and hasattr(_quasiarch, "reason_about_event"):
+            _quasiarch.reason_about_event(
+                issue_category="honest_abstain",
+                logic_tier="expression_articulation",
+                distribution_context="single_module__same_tier",
+                limit=1, rotate=True, charge_cost=False,
+                phase=f"abstain_{trigger}", consumer="runtime",
+            )
+    except Exception:
+        pass
     _seed_abstained_gap(user_text, systems)
     _abstain = ""
     try:

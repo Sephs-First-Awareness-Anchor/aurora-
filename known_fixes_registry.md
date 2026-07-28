@@ -6634,3 +6634,80 @@ counting starts.
 **First Seen:** Autonomous-activity check-in, 2026-07-28, following up
 on the Semantic Plateau Remediation Directive's R1.1/R1.2/R1.4
 (2026-07-15) and the flat-divergence watchdog, FIX-A019 (2026-07-15).
+
+## RW3 — QuasiArch consult loop (closes F4), 2026-07-28
+
+Architecture Wiring Audit (Sunni & Cael, 2026-07-20), finding F4:
+`AuroraQuasiArchObserver` is a real, fed diagnostic lattice -- writes
+flow in from 11+ call sites -- but the live system never actually
+*asked it anything*. Four read/consult surfaces were the audit's own
+repo-wide zero-caller census: `record_warp_emergence`,
+`get_pressure_trace`, `waveform_turn_summary`, `get_doctrine_
+candidates`.
+
+**Already wired, no change needed:** `record_warp_emergence` --
+confirmed live via `aurora.py`'s `_h_surface_emergence` pathway
+handler, registered on the real `WarpField` for
+`WarpPathway.SURFACE_EMERGENCE`. Landed at some point between the
+audit's 2026-07-20 snapshot and now; verified by reading the actual
+current handler registration, not assumed.
+
+**Added:**
+1. `scripts/aurora_ci_segment.py::_run_quasiarch_maintenance_consult(systems)`,
+   called every autonomous segment (the closest real equivalent to the
+   audit's "existing 60s/idle cadence" for a scheduled-segment runner
+   -- `aurora_daemon.py` has no literal 60s loop; this script IS the
+   actual recurring autonomous maintenance window, confirmed via
+   today's GitHub Actions investigation). Per-run: `waveform_turn_
+   summary()` recorded as a passive `record_observation()` -- non-zero
+   consult counts, zero behavioral effect. Weekly (gated by a
+   persisted `aurora_state/quasiarch_doctrine_consult_last_run.json`
+   timestamp, same before/after pattern this script already uses for
+   `dev_index`): `get_doctrine_candidates()` queried for the
+   observer's own most-frequently-recorded REAL issue category
+   (`quasiarch.issue_counts` -- never a fabricated placeholder, skips
+   silently if nothing real has been recorded yet) and appended to
+   `aurora_state/quasiarch_doctrine_ratification_queue.jsonl`, an
+   append-only audit trail for later human review. Never auto-applied
+   -- matches the audit's own acceptance bar ("zero behavioral change
+   without ratification").
+2. `aurora.py::_emit_honest_abstain_and_seek()` now also calls
+   `quasiarch.reason_about_event(issue_category="honest_abstain", ...)`
+   directly and synchronously, right alongside the existing
+   `warp_guard()` confession call -- the honest-abstain chokepoint is
+   the system's clearest, most concentrated failure signal (literally
+   nothing else resolved), and it's the real call site the audit's own
+   "failure/abstain events route through reason_about_event" language
+   was pointing at. Direct call, not the `resp`-based `_queue_/_flush_
+   quasiarch_runtime_events()` machinery elsewhere in the file (which
+   already has substantial real usage, contrary to what a literal
+   grep for the single `reason_about_event(` call site inside
+   `_flush_quasiarch_runtime_events` might suggest) -- `state`, not
+   `resp`, is what's actually available at this point in the pipeline.
+   Read-only: surfaces doctrine hypotheses, never mutates state or
+   forces any behavior. Isolated in its own try/except, same
+   swallow-on-failure posture as every other confession call site in
+   this campaign.
+
+**Tests:** `tests/test_rw3_quasiarch_consult_loop.py` (11) -- a fake
+`QuasiArchObserver` double covering: no-observer no-op; waveform
+summary recorded every call with the correct target/source; waveform
+failures swallowed; doctrine consult correctly skipped (not run, but
+the marker still written) when `issue_counts` is empty; doctrine
+consult runs on first call, picks the MOST frequent real issue
+category (not first/arbitrary), and writes a correctly-shaped
+ratification-queue entry; the weekly gate correctly suppresses a
+repeat consult within 7 days and correctly re-fires after 7 days;
+doctrine failures swallowed; and `_emit_honest_abstain_and_seek()`'s
+new `reason_about_event()` call fires with the right
+issue_category/phase/charge_cost, degrades gracefully with no
+observer, and swallows exceptions without breaking the abstain path.
+Also re-ran `tests/test_ci_segment_dev_index_rolling_cap.py`,
+`tests/test_concept_imager_cycle.py`, `tests/test_daemon_classroom_
+cycle.py`, `tests/test_genealogy_atomic_writes.py`, `tests/test_
+governance_liveness.py`, `tests/test_warp_phase3d_parse_confidence_
+confession.py` (this session's own recent `_chain_up1_information`
+work, adjacent to `_emit_honest_abstain_and_seek` in the same file),
+and `tests/test_waveform_pressure.py` -- the full set of files
+touching `quasiarch`, the abstain chokepoint, or `aurora_ci_segment.py`
+-- all 77 pass, zero regression.

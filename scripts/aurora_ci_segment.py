@@ -152,6 +152,74 @@ def _last_dev_index(path):
     return lines[-1].get("dev_index") if lines else None
 
 
+_QUASIARCH_DOCTRINE_CONSULT_INTERVAL_S = 7 * 24 * 3600  # weekly
+
+
+def _run_quasiarch_maintenance_consult(systems):
+    """RW3 (Architecture Wiring Audit, 2026-07-20, F4): QuasiArch is a real,
+    fed diagnostic lattice the live system never actually asks anything --
+    its read/consult surfaces had zero callers. record_warp_emergence was
+    already wired (aurora.py's _h_surface_emergence pathway handler) by
+    the time this landed; this closes the remaining two
+    (waveform_turn_summary/get_pressure_trace, get_doctrine_candidates) on
+    the same recurring autonomous cadence every other maintenance activity
+    in this script already runs on -- the closest real equivalent to the
+    audit's "existing 60s/idle cadence" for a scheduled-segment runner.
+
+    Per-run: waveform_turn_summary() is recorded as a passive observation
+    (record_observation) -- non-zero consult counts, no behavioral effect.
+
+    Weekly (gated by a persisted timestamp, same before/after pattern this
+    script already uses for dev_index): get_doctrine_candidates() is
+    queried for the observer's own most-frequently-recorded REAL issue
+    category (quasiarch.issue_counts -- never a fabricated placeholder;
+    silently skips if nothing real has been recorded yet) and appended to
+    aurora_state/quasiarch_doctrine_ratification_queue.jsonl, an
+    append-only audit trail for later human review -- never auto-applied,
+    per the audit's own acceptance bar ("zero behavioral change without
+    ratification")."""
+    summary = {"waveform_recorded": False, "doctrine_consult_ran": False, "doctrine_candidates": 0}
+    quasiarch = systems.get("quasiarch_observer")
+    if quasiarch is None:
+        return summary
+
+    try:
+        waveform_summary = quasiarch.waveform_turn_summary()
+        quasiarch.record_observation(
+            target="waveform_turn_summary", data=waveform_summary,
+            source="ci_segment_maintenance",
+        )
+        summary["waveform_recorded"] = True
+    except Exception:
+        pass
+
+    try:
+        marker_path = os.path.join(SD, "quasiarch_doctrine_consult_last_run.json")
+        last_run = 0.0
+        if os.path.exists(marker_path):
+            last_run = float(json.load(open(marker_path)).get("ts", 0.0) or 0.0)
+        now = time.time()
+        if now - last_run >= _QUASIARCH_DOCTRINE_CONSULT_INTERVAL_S:
+            issue_counts = dict(getattr(quasiarch, "issue_counts", {}) or {})
+            if issue_counts:
+                top_issue = max(issue_counts, key=issue_counts.get)
+                candidates = quasiarch.get_doctrine_candidates(issue_category=top_issue, charge_cost=False)
+                if candidates:
+                    queue_path = os.path.join(SD, "quasiarch_doctrine_ratification_queue.jsonl")
+                    with open(queue_path, "a", encoding="utf-8") as f:
+                        f.write(json.dumps({
+                            "ts": now, "issue_category": top_issue, "candidates": candidates,
+                        }) + "\n")
+                summary["doctrine_consult_ran"] = True
+                summary["doctrine_candidates"] = len(candidates)
+            with open(marker_path, "w", encoding="utf-8") as f:
+                json.dump({"ts": now}, f)
+    except Exception:
+        pass
+
+    return summary
+
+
 def main() -> int:
     dev_timeline_path = os.path.join(SD, "developmental_timeline.jsonl")
     dev_index_start = _last_dev_index(dev_timeline_path)
@@ -209,6 +277,13 @@ def main() -> int:
                 )
     except Exception as exc:
         print(f">>> [aurora-ci] classroom curriculum skipped: {exc}", flush=True)
+
+    try:
+        quasiarch_summary = _run_quasiarch_maintenance_consult(systems)
+        if quasiarch_summary["waveform_recorded"] or quasiarch_summary["doctrine_consult_ran"]:
+            print(f">>> [aurora-ci] quasiarch maintenance consult: {quasiarch_summary}", flush=True)
+    except Exception as exc:
+        print(f">>> [aurora-ci] quasiarch maintenance consult skipped: {exc}", flush=True)
 
     # Concept-image grounding: there's no camera/mic in this headless CI
     # environment, so AuroraSensoryCrystal.observe_frame() never fires from
