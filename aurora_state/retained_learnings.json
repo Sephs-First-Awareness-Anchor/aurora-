@@ -127482,6 +127482,54 @@
       "sightings": 3,
       "first_seen": 1785193485.2829356,
       "last_seen": 1785193487.6006987
+    },
+    {
+      "text": "Code evolution outcome for mutation_id=DREAM:48e07d181aae8e; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35",
+      "confidence": 0.84,
+      "sources": [
+        "simulation_live_bridge:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "code",
+        "evolve",
+        "dfc",
+        "acode_evolve_330dfc1b8b"
+      ],
+      "tags": [
+        "lineage_event",
+        "code_function",
+        "composer_unified"
+      ],
+      "sightings": 2,
+      "first_seen": 1785197338.800817,
+      "last_seen": 1785197341.554869
+    },
+    {
+      "text": "Code evolution outcome for mutation_id=DREAM:21c9c4dfffa77d; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35",
+      "confidence": 0.84,
+      "sources": [
+        "simulation_live_bridge:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "code",
+        "evolve",
+        "dfc",
+        "acode_evolve_b3a4ed72e6"
+      ],
+      "tags": [
+        "lineage_event",
+        "code_function",
+        "composer_unified"
+      ],
+      "sightings": 1,
+      "first_seen": 1785197344.3325236,
+      "last_seen": 1785197344.3325236
     }
   ]
 }
