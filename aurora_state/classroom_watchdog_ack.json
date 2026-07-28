@@ -1,0 +1,4 @@
+{
+  "acked_at": 1785201868.981285,
+  "reason": "FIX-A054 (2026-07-28): classroom divergence cold-start bug fixed. R1.1/R1.2/R1.4 (2026-07-15) were already correct -- verified live via a real boot_aurora()+run_lesson() smoke run showing genuinely rich, varied entity valence/intensity. The remaining cause: DivergenceTracker needed 2 snapshots to compute anything, so every session's lesson 1 was structurally forced to 0.0, and the watchdog (reading the persisted log tail) kept re-tripping on that forced zero before lesson 2 of the same batch ever ran -- no session reached lesson 2 since the watchdog landed. ClassroomSession now seeds a real baseline snapshot at construction (the freshly-spawned entities' own zero-experience state), verified live: lesson 1 now reads divergence_score=0.598 instead of the old structural 0.0. See known_fixes_registry.md, FIX-A054, for the full diagnosis."
+}
