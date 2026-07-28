@@ -2,64 +2,40 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 1.0,
-      "label": "topic_continuation"
-    },
-    {
       "confidence": 0.35,
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.188,
+  "coherence": 0.45,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "a code evolve 330dfc1b8b",
+    "active_topic": "",
     "ambiguity": 0.545,
-    "cost_total": 0.2241,
+    "cost_total": 0.2807,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 1.0,
-    "interpreted_deep_emotion": "calm",
+    "frame_continuity": 0.0,
+    "interpreted_deep_emotion": "fear",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
-  "instability_markers": [
-    {
-      "label": "low_coherence",
-      "severity": 0.812
-    },
-    {
-      "label": "prediction_mismatch",
-      "severity": 0.5575
-    }
-  ],
+  "instability_markers": [],
   "law_bindings": [],
   "micro_reasoning": [
     {
-      "confidence": 0.5575,
-      "label": "prediction_mismatch",
-      "rationale": "Observed input diverged from the currently primed continuation.",
-      "source": "prediction",
+      "confidence": 0.5,
+      "label": "comfort_bias",
+      "rationale": "Deeper affective pressure suggests comfort or care may matter more than pure explanation.",
+      "source": "affect",
       "tags": [
-        "reframe",
-        "surprise"
+        "care",
+        "attunement"
       ],
-      "urgency": 0.812
-    },
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
+      "urgency": 0.55
     },
     {
       "confidence": 1.0,
@@ -80,26 +56,24 @@
   ],
   "prediction_signal": {
     "alerts": [
-      "prediction_mismatch",
       "novelty_shift"
     ],
-    "confidence": 0.573,
+    "confidence": 0.4473,
     "expected_observation": "followup",
-    "expected_user_continuation": "a code evolve 330dfc1b8b",
+    "expected_user_continuation": "",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.5575,
+    "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "X",
-      "certainty_band": "medium",
+      "axis_signature": "N",
+      "certainty_band": "low",
       "intent_type": "followup",
-      "topic": "a code evolve 330dfc1b8b"
+      "topic": ""
     },
     "preload_context": [
-      "a code evolve 330dfc1b8b",
       "followup"
     ],
-    "readiness_bias": 0.2841,
+    "readiness_bias": 0.3627,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -109,19 +83,18 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.2863,
+  "readiness": 0.5555,
   "recalled_fragments": [
-    "a code evolve 330dfc1b8b",
-    "What is awareness?\n[recalled:awareness] What is awareness? [recalled:recalled:awareness] What is awareness?\n[recalled:awareness] What is ..."
+    "Use this corpus fr\n[recalled:use] Use this corpus fr [recalled:corpus] Use this corpus fr [recalled:c1c2] Modeling the C0C2 and C1C2 scat..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2719,
-    "N": 0.0894,
-    "T": 0.6386,
+    "B": 0.4362,
+    "N": 0.5638,
+    "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785197342.7207386,
+  "saved_at": 1785203733.9679372,
   "sub_crests": [
     {
       "axis": "X",
@@ -130,8 +103,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.65,
+      "label": "unfamiliar"
     },
     {
       "axis": "A",
@@ -140,8 +113,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.5575,
-      "label": "surprise"
+      "intensity": 0.45,
+      "label": "low_certainty"
     },
     {
       "axis": "N",
@@ -151,7 +124,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
@@ -162,6 +135,16 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.8029,
+      "label": "surface"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.8234,
+      "label": "surface"
     }
   ]
 }

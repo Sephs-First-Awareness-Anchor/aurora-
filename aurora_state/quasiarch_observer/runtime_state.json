@@ -29,24 +29,6 @@
   "issue_possibility_pressure": {},
   "recent_events": [
     {
-      "ts": 1784026275.1836212,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_articulation_semantic_strategy",
-      "severity": 0.6,
-      "persistence_key": "tests.test_articulation_semantic_strategy",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
       "ts": 1784026296.7890708,
       "provenance": "WARP",
       "pathway": "surface_emergence",
@@ -1755,6 +1737,24 @@
         "B": 0.1,
         "A": 0.1
       }
+    },
+    {
+      "ts": 1785203483.8741636,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_classroom_divergence_cold_start",
+      "severity": 0.6,
+      "persistence_key": "tests.test_classroom_divergence_cold_start",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
     }
   ],
   "consultation_history": [],
@@ -3008,5 +3008,5 @@
       ]
     }
   ],
-  "saved_at": 1785197343.850008
+  "saved_at": 1785203733.4587781
 }
