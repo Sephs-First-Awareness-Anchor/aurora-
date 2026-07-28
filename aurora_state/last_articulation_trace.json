@@ -1,14 +1,14 @@
 {
-  "original": "I have corpus. I am seeing corpus.",
+  "original": "I did corpus. I am corpus real.",
   "candidate": "",
-  "selected": "I have corpus. I am seeing corpus.",
+  "selected": "I did corpus. I am corpus real.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.5,
   "candidate_score": 0.0,
-  "original_pressure": 0.276,
+  "original_pressure": 0.3,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.724,
+  "pressure_relief": -0.7,
   "safe": false,
   "metadata": {
     "prompt_excerpt": "Use this corpus fr",
@@ -24,7 +24,7 @@
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785276647.200555,
+    "timestamp": 1785280019.2965345,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {
