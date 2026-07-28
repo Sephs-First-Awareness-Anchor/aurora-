@@ -125,16 +125,20 @@
     "corpus:adaptive_strategy_selection:14"
   ],
   "multi_turn_stability": [
-    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
-  ],
-  "implied_intent_inference": [
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
     "fail_point:train_epoch_2:episode_c6388e715bc2"
   ],
+  "implied_intent_inference": [
+    "fail_point:train_epoch_2:episode_c6388e715bc2",
+    "fail_point:train_epoch_5:episode_df5c950c49f1"
+  ],
   "emotional_calibration": [
-    "corpus:emotional_calibration:0"
+    "corpus:emotional_calibration:0",
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
   ],
   "misunderstanding_repair": [
-    "corpus:misunderstanding_repair:0"
+    "corpus:misunderstanding_repair:0",
+    "corpus:misunderstanding_repair:1"
   ],
   "framing_selection": [
     "fail_point:train_epoch_2:episode_c6388e715bc2"
