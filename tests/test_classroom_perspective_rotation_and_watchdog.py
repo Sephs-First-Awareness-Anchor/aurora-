@@ -212,19 +212,26 @@ def test_classroom_uses_a_dedicated_divergence_tracker_not_the_shared_engine_one
 
     assert session._divergence_tracker is not engine.session.divergence
 
+    # FIX-A054: construction itself seeds one baseline snapshot (the freshly
+    # spawned entities' own genuine zero-experience state) -- see the
+    # dedicated cold-start test file for the full story. That baseline is
+    # what makes lesson 1 no longer structurally forced to 0.0.
+    assert len(session._divergence_tracker._snapshots) == 1
+
     session.run_lesson("contradiction_handling", turns=2)
     # engine.session.divergence picked up run_episode()'s own capture too --
     # this assertion is about ClassroomSession's OWN tracker being isolated,
     # not about the shared tracker being empty.
-    assert len(session._divergence_tracker._snapshots) >= 1
+    assert len(session._divergence_tracker._snapshots) == 2
 
     result = session.run_lesson("uncertainty_signaling", turns=2)
-    # By the second lesson, the dedicated tracker has 2 same-shaped
-    # (entity_N_valence/entity_N_intensity) snapshots to compare -- a real
-    # nonzero divergence must be possible now (was mathematically forced to
-    # 0.0 before this fix, on every single lesson).
+    # By the third snapshot (baseline + 2 real lessons), the dedicated
+    # tracker has same-shaped (entity_N_valence/entity_N_intensity)
+    # snapshots to compare -- a real nonzero divergence must be possible
+    # now (was mathematically forced to 0.0 before this fix, on every
+    # single lesson).
     assert result.divergence_score >= 0.0
-    assert len(session._divergence_tracker._snapshots) == 2
+    assert len(session._divergence_tracker._snapshots) == 3
     first_keys = set(session._divergence_tracker._snapshots[0].keys())
     last_keys = set(session._divergence_tracker._snapshots[-1].keys())
     assert first_keys == last_keys

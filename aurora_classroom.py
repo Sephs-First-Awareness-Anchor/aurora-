@@ -665,6 +665,39 @@ class ClassroomSession:
         # apples-to-apples.
         self._divergence_tracker = DivergenceTracker()
 
+        # FIX-A054 (2026-07-28): cold-start problem, the third and final
+        # cause behind the "812 consecutive lessons at divergence_score ==
+        # 0.0" watchdog trip. DivergenceTracker.current_divergence needs
+        # TWO captured snapshots to compute anything (first-vs-last diff;
+        # see _compute_divergence()'s own `len(self._snapshots) < 2` guard)
+        # -- with a freshly-constructed tracker, the FIRST real lesson of
+        # every session is therefore structurally forced to 0.0 regardless
+        # of how different the two entities' resolved perspectives actually
+        # are. Verified live (2026-07-28, scratch state_dir, real boot): a
+        # 3-lesson run read divergence_score = 0.0, 0.1146, 0.1843 -- lesson
+        # 1 always zero by construction, lessons 2+ genuinely alive. Because
+        # the flat-divergence watchdog (FIX-A019) reads the PERSISTED log
+        # tail, and lesson 1's forced zero gets written before lesson 2 ever
+        # gets a chance to run, every scheduled run's own first lesson kept
+        # re-poisoning the tail -- no session has ever reached lesson 2
+        # since the watchdog landed, so R1.1/R1.2/R1.4's real fixes never
+        # got the chance to prove themselves in the live pipeline.
+        #
+        # Fix: seed the tracker with the entities' own genuine pre-lesson
+        # state (freshly spawned, zero compressed_experiences yet) as
+        # snapshot 0, via the same collapse_to_parent()/.get(..., 0.0)
+        # contract run_lesson() itself uses below -- not an injected
+        # constant, the entities' real starting condition. This gives
+        # lesson 1 a real baseline to diverge from immediately, instead of
+        # requiring a lesson 2 that the watchdog was preventing from ever
+        # happening.
+        baseline_stats: Dict[str, float] = {}
+        for idx, entity_id in enumerate((entity_a.entity_id, entity_b.entity_id)):
+            baseline = engine.entities[entity_id].collapse_to_parent()
+            baseline_stats[f"entity_{idx}_valence"] = float(baseline.get("avg_valence", 0.0) or 0.0)
+            baseline_stats[f"entity_{idx}_intensity"] = float(baseline.get("avg_intensity", 0.0) or 0.0)
+        self._divergence_tracker.capture(baseline_stats)
+
     def run_lesson(
         self,
         target_dimension: str,

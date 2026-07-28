@@ -6530,3 +6530,107 @@ Combined with Phase 1 (crystal resonance graph, FIX-A052), Phase 2
 lifecycle), the WARP Universalization Directive's full 4-phase plan is
 now fully implemented, tested, and (pending this phase's final
 regression + push) landed on `claude/code-replacement-cleanup-zzscvt`.
+
+## FIX-A054 (RUNTIME BUG) — classroom divergence cold-start, dev_index frozen 4.5+ days, 2026-07-28
+
+**Category:** RUNTIME BUG.
+
+Discovered while checking on Aurora's autonomous activity since the
+prior session: `dev_index` had been dead flat at 14823.0 for 59
+consecutive scheduled autonomous-run cycles (2026-07-23T19:09 UTC
+through the most recent run, ~4.5 days), classroom lessons had dropped
+to zero, dreams and spontaneous thoughts had collapsed to near-nothing
+-- while every scheduled GitHub Actions run kept reporting "success."
+Root cause, straight from the CI logs: `aurora_classroom.py`'s
+flat-divergence watchdog (FIX-A019, 2026-07-15) tripped and has stayed
+correctly, silently halted ever since -- 812 consecutive classroom
+lessons with `divergence_score == 0.0` at the persisted-log tail.
+
+**The watchdog itself was doing its job correctly.** The real question
+was whether the dead signal underneath it was still genuinely dead, or
+whether it had already been fixed and the watchdog just never got a
+chance to see new evidence. Investigation (byte-level, live-verified,
+not guessed):
+
+- **R1.1/R1.2** (entity resolution -> rich channels instead of the old
+  forced `(0.3333, 0.0)` constant) and **R1.4** (`ClassroomSession`
+  owning a dedicated `DivergenceTracker`, not sharing
+  `SimulationSession`'s) — both landed 2026-07-15 and are BOTH still
+  correct and working. Live-verified with a real full `boot_aurora()` +
+  `ClassroomSession.run_lesson()` run against a scratch state_dir: the
+  two entities' `avg_valence`/`avg_intensity` came back genuinely rich
+  and different (e.g. 0.4958/0.6964 vs 0.5301/0.6691) — not the old
+  dead constant.
+- **But a third, never-before-diagnosed cause survived both fixes**:
+  `DivergenceTracker._compute_divergence()` requires TWO captured
+  snapshots before it computes anything (`len(self._snapshots) < 2` ->
+  hard 0.0). A freshly-constructed `ClassroomSession`'s dedicated
+  tracker starts with ZERO snapshots, so lesson 1 of every session was
+  structurally forced to read `divergence_score == 0.0` regardless of
+  how different the two entities' resolved perspectives actually were.
+  Live-verified (same scratch run): 3 lessons in one session read
+  `0.0, 0.1146, 0.1843` — lesson 1 always zero by construction, lessons
+  2+ genuinely alive.
+- **The compounding trap**: the watchdog reads the PERSISTED log tail
+  (by design, so it survives across separate scheduled runs, per its
+  own FIX-A019 rationale). Lesson 1's structurally-forced zero gets
+  written to `classroom_log.jsonl` before lesson 2 of the same
+  `run_targeted_curriculum()` batch ever gets a chance to run — and
+  because the persisted tail was already deep in pre-R1.1/R1.2/R1.4
+  zeros by 2026-07-15, EVERY scheduled run's own lesson 1 kept
+  re-poisoning the tail past the 20-lesson threshold before lesson 2
+  could execute. Confirmed against the real `classroom_log.jsonl`: all
+  332 lessons logged strictly after the R1.4 fix commit landed still
+  read `divergence_score == 0.0`, every single one -- because none of
+  them was ever allowed to be a "lesson 2." R1.1/R1.2/R1.4's real fixes
+  have been correct in the codebase for 13 days and never once got to
+  prove it against real, persisted evidence.
+
+**Fix:** `ClassroomSession.__init__` now seeds its dedicated
+`_divergence_tracker` with ONE baseline snapshot immediately after
+spawning the two entities, built from their own genuine pre-lesson
+state (`collapse_to_parent()` on a freshly-spawned entity with zero
+`compressed_experiences` returns `{'empty': True}`, no
+`avg_valence`/`avg_intensity` keys at all -- the baseline is derived
+via the same `.get(key, 0.0)` contract `run_lesson()` itself already
+uses for its real per-lesson capture, not an injected constant). This
+gives lesson 1 a real, same-shaped baseline to diverge from
+immediately. Live-verified with a repeat of the exact same scratch-run
+smoke test, fix applied: lesson 1 read `divergence_score == 0.598`
+(real, immediately) instead of the old structural `0.0`.
+
+**Tests:** `tests/test_classroom_divergence_cold_start.py` (5) --
+construction seeds exactly one baseline snapshot; the baseline matches
+a freshly-spawned entity's real zero-experience contract (not a
+hardcoded literal); the baseline's key-shape matches a real lesson
+capture's shape (guards against silently reintroducing R1.4's own
+key-mismatch bug class); a deterministic capture proves
+`current_divergence` computes a real first-vs-last diff from lesson 1
+onward instead of hitting the `len < 2` guard; and a regression guard
+confirms the general-purpose `DivergenceTracker` class itself is
+UNCHANGED (still correctly needs 2 snapshots) -- this fix is scoped
+entirely to `ClassroomSession` seeding its own dedicated instance, not
+to `DivergenceTracker`'s shared semantics. Also updated
+`tests/test_classroom_perspective_rotation_and_watchdog.py`'s existing
+`test_classroom_uses_a_dedicated_divergence_tracker_not_the_shared_
+engine_one` to reflect the new snapshot count (baseline + N lessons,
+not just N) -- it caught the exact expected count shift the moment the
+fix landed (3 snapshots where it expected 2), confirming the fix
+changed real, observable behavior.
+
+**Remediation for the live system:** the code fix alone does not clear
+the already-tripped watchdog -- `classroom_log.jsonl`'s persisted tail
+still shows the old pre-fix streak. `acknowledge_flat_divergence_
+watchdog()` (the mechanism FIX-A019 itself built for exactly this
+chicken-and-egg case) needs to be called against the real production
+`aurora_state/` once this fix lands on `main`, with a reason citing
+this entry, so the next scheduled autonomous run can actually exercise
+the fix instead of immediately re-tripping on 13-day-old evidence. If
+the same dead-signal condition somehow recurs for another 20
+consecutive lessons after the ack, the watchdog will correctly trip
+again -- acknowledging does not raise the bar, only resets where
+counting starts.
+
+**First Seen:** Autonomous-activity check-in, 2026-07-28, following up
+on the Semantic Plateau Remediation Directive's R1.1/R1.2/R1.4
+(2026-07-15) and the flat-divergence watchdog, FIX-A019 (2026-07-15).
