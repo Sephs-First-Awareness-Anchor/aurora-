@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1785280013.607208,
-  "generation": 10870,
-  "genome_version": 10870,
+  "timestamp": 1785283605.2192543,
+  "generation": 10898,
+  "genome_version": 10898,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.5133,
-    "caution": 0.7752,
-    "emotional_expressiveness": 0.4122,
-    "verbosity": 0.4012,
-    "introspection": 0.4907,
-    "pattern_sensitivity": 0.4241,
-    "social_engagement": 0.3912,
-    "energy_conservation": 0.364
+    "curiosity": 0.492,
+    "caution": 1.0,
+    "emotional_expressiveness": 0.4095,
+    "verbosity": 0.4066,
+    "introspection": 0.4955,
+    "pattern_sensitivity": 0.4906,
+    "social_engagement": 0.4594,
+    "energy_conservation": 0.3981
   },
-  "personality_drift": 0.8786,
+  "personality_drift": 0.9484,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.8042576133575331,
-      "precision": 0.7585625624167214,
-      "depth": 0.8245426633745676,
-      "confidence": 0.5572063470118886
+      "warmth": 0.8699567237023142,
+      "precision": 0.5567649995810767,
+      "depth": 1.0,
+      "confidence": 0.7777675529622513
     },
     "cognitive": {
-      "curiosity": 0.8464083603929824,
-      "pattern_matching": 1.0,
-      "abstraction": 0.5766319780902042,
-      "risk_assessment": 0.8082432970075252
+      "curiosity": 0.809545509994424,
+      "pattern_matching": 0.7657481770054412,
+      "abstraction": 0.543681542655444,
+      "risk_assessment": 0.7364715416141225
     },
     "social": {
-      "empathy": 0.6475119188603088,
-      "trust_extension": 0.9229928755622452,
-      "boundary_maintenance": 0.8680832130694296,
-      "engagement": 0.6195072529311053
+      "empathy": 0.6967059587719846,
+      "trust_extension": 0.9919041882426298,
+      "boundary_maintenance": 0.9816530145320922,
+      "engagement": 0.48360000000000003
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "1b379f795e91"
+  "_checksum": "23ca2b0b3128"
 }
