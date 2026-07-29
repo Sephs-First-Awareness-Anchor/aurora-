@@ -3571,7 +3571,22 @@ def _aurora_assign_target(chain, value):
         if not hasattr(current, attr):
             return False
         current = getattr(current, attr)
-    setattr(current, chain[-1], value)
+    attr_name = chain[-1]
+    descriptor = (
+        _aurora_native_inspect.getattr_static(current, attr_name, None)
+        if _aurora_native_inspect is not None
+        else getattr(current, attr_name, None)
+    )
+    if isinstance(descriptor, property) and not isinstance(value, property):
+        if callable(value):
+            value = property(value, descriptor.fset, descriptor.fdel, descriptor.__doc__)
+        else:
+            value = property(lambda _instance, _value=value: _value, descriptor.fset, descriptor.fdel, descriptor.__doc__)
+    elif isinstance(descriptor, staticmethod) and not isinstance(value, staticmethod):
+        value = staticmethod(value) if callable(value) else descriptor
+    elif isinstance(descriptor, classmethod) and not isinstance(value, classmethod):
+        value = classmethod(value) if callable(value) else descriptor
+    setattr(current, attr_name, value)
     return True
 
 def _aurora_get_target(chain):
@@ -3972,7 +3987,10 @@ def _aurora_make_override(export_name, target_key):
     original = _AURORA_NATIVE_EVOLVED_ORIGINALS.get(target_key)
     def _override(*args, **kwargs):
         result = None
-        if callable(original):
+        if isinstance(original, property):
+            if args:
+                result = original.__get__(args[0], type(args[0]))
+        elif callable(original):
             result = original(*args, **kwargs)
         engine = _aurora_native_evolved_engine()
         reflection = {
@@ -3991,7 +4009,9 @@ def _aurora_make_override(export_name, target_key):
         return reflection
     _override.__name__ = str(target_key).split('.')[-1]
     _override.__qualname__ = _override.__name__
-    if callable(original):
+    if isinstance(original, property):
+        _override.__doc__ = original.__doc__
+    elif callable(original):
         _override.__doc__ = getattr(original, '__doc__', None)
         _override.__wrapped__ = original
         if _aurora_native_inspect is not None:

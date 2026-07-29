@@ -103,29 +103,20 @@ except ImportError:
     _SYNTHESIS_TYPE = None
     I_STATE_BEINGS_AVAILABLE = False
 
-# ── Evolution/Genealogy bridge (optional) ───────────────────────────────────
-try:
-    from aurora_evolution_stack import (
-        ConstraintGenealogyLogger,
-        AbilityProfile,
-        TraceItem,
-        PressureVec,
-        EnvironmentVector,
-    )
-    from aurora_internal.lineage_canonical import (
-        constraints_for_operation,
-        axis_token,
-    )
-    GENEALOGY_AVAILABLE = True
-except ImportError:
-    ConstraintGenealogyLogger = None  # type: ignore
-    AbilityProfile = None  # type: ignore
-    TraceItem = None  # type: ignore
-    PressureVec = None  # type: ignore
-    EnvironmentVector = None  # type: ignore
-    constraints_for_operation = None  # type: ignore
-    axis_token = None  # type: ignore
-    GENEALOGY_AVAILABLE = False
+# ── Evolution/Genealogy bridge (optional, loaded lazily) ────────────────────
+# aurora_simulation_engine → aurora_consciousness_engine → this module is a
+# valid boot import path. Importing aurora_evolution_stack here would recurse
+# back through aurora_simulation_engine before its public types exist. The
+# methods that need genealogy already call _ensure_genealogy_symbols() after
+# the stack is assembled, so keep the bridge inert until then.
+ConstraintGenealogyLogger = None  # type: ignore
+AbilityProfile = None  # type: ignore
+TraceItem = None  # type: ignore
+PressureVec = None  # type: ignore
+EnvironmentVector = None  # type: ignore
+constraints_for_operation = None  # type: ignore
+axis_token = None  # type: ignore
+GENEALOGY_AVAILABLE = False
 
 # ── 625 pressure-map bridge (optional) ───────────────────────────────────────
 try:

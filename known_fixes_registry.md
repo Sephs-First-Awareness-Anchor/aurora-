@@ -6929,3 +6929,83 @@ Sunni separately as a standalone finding, not folded into this fix.
 
 **First Seen:** Zip integration phase A ("use everything in the zip"),
 2026-07-29.
+
+## FIX-A057 (RUNTIME BUG x2) — property/descriptor clobbering in native self-rewrite, eager genealogy import risk, zip integration phase B, 2026-07-29
+
+**Category:** RUNTIME BUG.
+
+Phase B of "use everything in the zip": the 2 standalone bug fixes
+found in the uploaded zip that are independent of both the fault-ledger
+modules (phase A) and the Communication Credit work (phases E-H) --
+isolated from the zip's much larger, separately-tracked exception-
+instrumentation pass (phases C-D) by diffing only the non-instrumentation
+lines.
+
+**Bug 1 -- native self-rewrite plumbing clobbered property/staticmethod/
+classmethod descriptors.** `aurora_simulation_engine.py`'s
+`_aurora_assign_target()` (used by the "evolved surface" self-rewrite
+system to install replacement implementations for functions like
+`verify_layer7`) did a bare `setattr(current, chain[-1], value)` with no
+regard for what kind of descriptor already lived at that attribute. If
+the existing attribute was a `property` and the new `value` was a plain
+callable, this silently replaced the property descriptor on the class
+with an unbound function -- every future read of that attribute through
+an instance returned a bound-method object instead of invoking a getter
+and returning its value. Reproduced directly: the old bare-`setattr`
+shape leaves `instance.attr` holding `<bound method ...>` rather than
+the getter's return value, with no exception raised anywhere -- a
+silent correctness bug, not a crash. The companion function,
+`_aurora_make_override()`, had the mirror bug: its wrapper only checked
+`callable(original)` before invoking it, and a `property` object is not
+callable, so when `original` was itself a property the branch was
+skipped entirely and the wrapper's `result` stayed `None` forever --
+the real property value was never read. **Fix:** `_aurora_assign_target`
+now inspects the existing descriptor via `inspect.getattr_static()`
+before assigning, and if it's a `property`/`staticmethod`/`classmethod`,
+re-wraps the incoming value to match (preserving `fset`/`fdel`/`__doc__`
+for properties) before calling `setattr`. `_aurora_make_override`'s
+`_override` wrapper now has an explicit `isinstance(original, property)`
+branch that calls `original.__get__(args[0], type(args[0]))` to read the
+real value, and preserves `__doc__` from the property's own docstring
+rather than trying to treat it as a wrapped callable.
+
+**Bug 2 -- eager genealogy-bridge import on a real circular-import boot
+path.** `aurora_dimensional_systems.py` eagerly imported
+`aurora_evolution_stack` and `aurora_internal.lineage_canonical` at
+module load time to populate `ConstraintGenealogyLogger`/
+`AbilityProfile`/etc. This module sits on the real boot chain
+`aurora_simulation_engine -> aurora_consciousness_engine ->
+aurora_dimensional_systems` -- importing `aurora_evolution_stack` here
+risks recursing back through `aurora_simulation_engine` before its
+public types exist. A lazy loader,
+`DimensionalSystems._ensure_genealogy_symbols()` (a `@staticmethod`
+using `global` to backfill the same names), already existed specifically
+to survive this exact import-order cycle, and every real use site
+already calls it before touching a genealogy symbol -- the eager
+top-level import was fully redundant with the lazy path and carried
+the recursion risk the lazy path exists to avoid. **Fix:** deleted the
+eager `try:`/`import` block; the bridge symbols now start `None` and
+`GENEALOGY_AVAILABLE = False` unconditionally at import time, populated
+only when `_ensure_genealogy_symbols()` actually runs.
+
+Note: in this environment, `aurora_evolution_stack` currently does not
+export a name called `EnvironmentVector` at all, so the lazy loader's
+own import also fails and `GENEALOGY_AVAILABLE` stays `False` either
+way -- confirmed this is a pre-existing condition unrelated to this fix
+(the eager import path being removed hit the exact same `ImportError`
+and was already silently swallowing it before this fix). Not chased
+further here since it's outside this fix's scope; noting it for
+awareness.
+
+**Tests:** `tests/test_zip_integration_b_standalone_fixes.py` (6) --
+real behavioral tests (not just source-text checks) confirming a plain
+callable assigned over a `property` leaves the attribute as a `property`
+afterward and an instance read invokes the new getter; the same for a
+`staticmethod`; an override wrapper built from a `property` original
+correctly reads its real value via `__get__`; plus structural checks
+that the eager import block is gone, the lazy loader is still present
+and still called from >=3 real use sites, and a fresh module reload
+starts with the genealogy bridge fully inert.
+
+**First Seen:** Zip integration phase B ("use everything in the zip"),
+2026-07-29.
