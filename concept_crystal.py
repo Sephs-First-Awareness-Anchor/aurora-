@@ -575,6 +575,61 @@ class ConceptCrystalRegistry:
             self._log_promotion(crystal)
         return crystal
 
+    def record_receiver_outcome(
+        self,
+        crystal_id: str,
+        lsa_facet_role: str,
+        *,
+        positive: bool,
+        outcome_score: float = 0.0,
+        evidence_id: str = "",
+        failpoint_dimension: str = "semantic_precision",
+    ) -> bool:
+        """Apply delayed receiver evidence to the exact LSA facet used."""
+        crystal = self._nodes.get(str(crystal_id or ""))
+        if crystal is None:
+            return False
+        role = str(lsa_facet_role or "")
+        if not _DPS_AVAILABLE:
+            if not positive and hasattr(crystal, "current_overlay"):
+                crystal.current_overlay["receiver_outcome"] = {
+                    "score": float(outcome_score or 0.0),
+                    "evidence_id": str(evidence_id or ""),
+                }
+            return True
+        facet = next((f for f in crystal.facets.values() if f.role == role), None)
+        if facet is None or not role.startswith("lsa:"):
+            return False
+        score = max(0.0, min(1.0, float(outcome_score or 0.0)))
+        if positive:
+            facet.strengthen(0.05)
+            facet.coherence = min(1.0, facet.coherence + 0.02 * max(score, 0.5))
+        else:
+            facet.confidence = max(0.0, facet.confidence - 0.04)
+            facet.coherence = max(0.0, facet.coherence - 0.03)
+        crystal.use()
+        if evidence_id:
+            crystal.failpoint_profile["receiver_evidence"] = {
+                "last_evidence_id": str(evidence_id),
+                "last_outcome_score": score,
+                "positive": bool(positive),
+            }
+        if hasattr(crystal, "record_failpoint_sample"):
+            recorded = crystal.record_failpoint_sample(
+                str(failpoint_dimension or "semantic_precision"),
+                success=bool(positive),
+                value=score,
+                evidence_id=str(evidence_id or ""),
+            )
+            if not recorded and failpoint_dimension != "semantic_precision":
+                crystal.record_failpoint_sample(
+                    "semantic_precision",
+                    success=bool(positive),
+                    value=score,
+                    evidence_id=str(evidence_id or ""),
+                )
+        return True
+
     def observe_sedi(self, ax: Dict[str, float], delta: float = 0.05) -> None:
         """
         Accumulate SediMemory resonance at this axis coordinate.

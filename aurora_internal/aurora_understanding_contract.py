@@ -29,7 +29,10 @@ import json
 import os
 import re
 import time
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from aurora_persistence_utils import atomic_write_json
 
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")
 
@@ -343,6 +346,12 @@ class RuntimeUnderstandingContract:
                 "correction": False,
             },
             "pending_validation": {},
+            # A continuation or follow-up is not proof that the prior
+            # response was understood.  Keep those unresolved records for a
+            # short audit window instead of silently converting them into a
+            # finalized indeterminate outcome and losing the attribution.
+            "deferred_validations": [],
+            "expired_validations": [],
             "contract_domains": {},
             "history": [],
             "last_saved_at": 0.0,
@@ -383,9 +392,7 @@ class RuntimeUnderstandingContract:
             self.state["last_saved_at"] = float(time.time())
             payload = copy.deepcopy(self.state)
             payload["history"] = list(payload.get("history", []) or [])[-MAX_HISTORY:]
-            with open(self.storage_path, "w", encoding="utf-8") as handle:
-                json.dump(payload, handle, indent=2, ensure_ascii=True, sort_keys=True)
-            return True
+            return bool(atomic_write_json(Path(self.storage_path), payload, indent=2, default=str))
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -1781,23 +1788,68 @@ class RuntimeUnderstandingContract:
             "thank you",
             "thanks",
         )
+        expression_confusion_markers = (
+            "what do you mean",
+            "please clarify",
+            "can you clarify",
+            "not clear",
+            "unclear",
+            "i don't understand",
+            "i do not understand",
+            "i didn't understand",
+            "i did not understand",
+            "doesn't make sense",
+            "does not make sense",
+            "confusing",
+            "i'm confused",
+            "im confused",
+        )
         clarification_markers = (
             "i mean",
             "what i mean",
             "by that i mean",
             "in other words",
-            "not ",
             "rather than",
+            "instead of",
+            "to clarify",
+            "let me clarify",
+            "i'm saying",
+            "im saying",
+            "i meant",
+            "what i meant",
         )
+
+        text_low = text_low.replace("’", "'")
+
+        def _has_marker(markers: Any) -> bool:
+            for marker in markers:
+                phrase = str(marker or "").strip().strip(".,!?;:")
+                if phrase and re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", text_low):
+                    return True
+            return False
 
         is_question = self._looks_like_question(user_text)
-        is_clarification = bool((understood or {}).get("is_clarification")) or any(
-            marker in text_low for marker in clarification_markers
+        is_clarification = bool((understood or {}).get("is_clarification")) or _has_marker(
+            clarification_markers
         )
         is_callback = bool((understood or {}).get("is_callback"))
-        is_correction = any(marker in text_low for marker in correction_markers) or bool((understood or {}).get("is_contradiction"))
+        is_expression_confusion = _has_marker(expression_confusion_markers)
+        is_correction = (
+            _has_marker(correction_markers)
+            or bool((understood or {}).get("is_contradiction"))
+        )
 
-        if expected == "clarification" and is_clarification:
+        # Expression confusion is a negative receiver signal, even when the
+        # contract had asked for clarification.  The previous ordering let
+        # phrases such as "not clear" satisfy the broad "not " marker and
+        # turn a failure-to-understand into a positive clarification.
+        if is_expression_confusion:
+            score = 0.12
+            label = "expression_unclear"
+        elif is_correction:
+            score = 0.16
+            label = "corrected"
+        elif expected == "clarification" and is_clarification:
             score = 0.88
             label = "clarification_supplied"
             matched_expectation = True
@@ -1805,14 +1857,11 @@ class RuntimeUnderstandingContract:
             score = 0.86
             label = "selection_supplied"
             matched_expectation = True
-        elif expected == "confirmation" and any(marker in text_low for marker in agreement_markers):
+        elif expected == "confirmation" and _has_marker(agreement_markers):
             score = 0.92
             label = "confirmed"
             matched_expectation = True
-        elif is_correction:
-            score = 0.16
-            label = "corrected"
-        elif any(marker in text_low for marker in agreement_markers):
+        elif _has_marker(agreement_markers):
             score = 0.86
             label = "accepted"
         elif is_question and (is_callback or pending.get("action_type") in {"meaning_reasoning", "grounded_answer"}):
@@ -1829,7 +1878,7 @@ class RuntimeUnderstandingContract:
         # Topic continuity: if we predicted a topic and user is still on it, small boost;
         # if user diverged to a clearly different topic, small penalty.
         topic_note = ""
-        if expected_topic and not is_correction:
+        if expected_topic and not is_correction and not is_expression_confusion:
             topic_words = set(_terms(expected_topic))
             obs_words = set(_terms(text_low))
             stop = {"the", "and", "for", "are", "was", "has", "but", "not",
@@ -1846,14 +1895,19 @@ class RuntimeUnderstandingContract:
         # Affect continuity: heavy correction markers already handled above;
         # here check if the predicted affective register matches the user's tone
         affect_note = ""
-        if expected_affect and expected_affect not in ("neutral", "") and not is_correction:
+        if (
+            expected_affect
+            and expected_affect not in ("neutral", "")
+            and not is_correction
+            and not is_expression_confusion
+        ):
             understood_affect = str((understood or {}).get("tone", "") or "").lower()
             if understood_affect and expected_affect in understood_affect:
                 score = _clip01(score + 0.03)
                 affect_note = f"affect_consistent:{expected_affect}"
 
         axis_note = ""
-        if expected_axis and observed_axis and not is_correction:
+        if expected_axis and observed_axis and not is_correction and not is_expression_confusion:
             if observed_axis == expected_axis:
                 score = _clip01(score + 0.02)
                 axis_note = f"axis_consistent:{expected_axis}"
@@ -2244,6 +2298,11 @@ class RuntimeUnderstandingContract:
     ) -> Dict[str, Any]:
         before_state = copy.deepcopy(self.state)
         observation = self._derive_observation(user_text, understood)
+        # Keep the application projection intact long enough to route the
+        # receiver evidence back to the exact response that created it.
+        # _evaluate_previous_accuracy() reads the same record and the live
+        # state clears it below, so taking this copy here is intentional.
+        validated_pending = copy.deepcopy(self.state.get("pending_validation", {}) or {})
         accuracy = self._evaluate_previous_accuracy(systems, user_text, understood)
         meaning_state = self._derive_meaning_state(systems, user_text, understood)
         perspective_state = self._derive_perspective_state(systems, meaning_state, source=source)
@@ -2298,6 +2357,45 @@ class RuntimeUnderstandingContract:
         self.state["M"] = meaning_state
         self.state["P"] = perspective_state
         self.state["O"] = observation
+        # Continuation is not validation.  Retain a bounded copy for audit and
+        # diagnosis, but do not hand it to the communication finalizer: doing
+        # so would close the response's receiver ledger as
+        # ``pending_verification`` before the user has actually reacted.
+        deferred = [
+            dict(item)
+            for item in list(self.state.get("deferred_validations", []) or [])
+            if isinstance(item, dict)
+        ]
+        expired = [
+            dict(item)
+            for item in list(self.state.get("expired_validations", []) or [])
+            if isinstance(item, dict)
+        ]
+        for item in deferred:
+            item["deferred_turns"] = int(item.get("deferred_turns", 0) or 0) + 1
+        if validated_pending and accuracy.get("used") and str(accuracy.get("label", "") or "") in {
+            "continued_without_validation",
+            "engaged_followup",
+            "unresolved",
+        }:
+            deferred.append({
+                **validated_pending,
+                "deferred_turns": 0,
+                "last_seen_turn": int(turn_tick or current_time),
+                "deferred_reason": str(accuracy.get("label", "") or "unresolved"),
+            })
+        still_deferred = []
+        for item in deferred:
+            if int(item.get("deferred_turns", 0) or 0) > 3:
+                expired.append({
+                    **item,
+                    "expired_at_turn": int(turn_tick or current_time),
+                    "expiry_reason": "receiver_validation_window_elapsed",
+                })
+            else:
+                still_deferred.append(item)
+        self.state["deferred_validations"] = still_deferred[-3:]
+        self.state["expired_validations"] = expired[-20:]
         self.state["pending_validation"] = {}
         contract_domains = self._evaluate_contract_domains(
             phase="observation",
@@ -2364,12 +2462,22 @@ class RuntimeUnderstandingContract:
                 "contracts": contract_domains.get("domains", {}),
             }
         )
+        self.save()
         return {
             "time_index": int(self.state.get("time_index", 0) or 0),
             "observation": observation,
             "accuracy": dict(self.state.get("A", {}) or {}),
             "meaning": dict(self.state.get("M", {}) or {}),
             "perspective": dict(self.state.get("P", {}) or {}),
+            "validated_response": (
+                validated_pending
+                if accuracy.get("used") and str(accuracy.get("label", "") or "") not in {
+                    "continued_without_validation",
+                    "engaged_followup",
+                    "unresolved",
+                }
+                else {}
+            ),
         }
 
     def commit_application(
@@ -2385,6 +2493,7 @@ class RuntimeUnderstandingContract:
         offered_lookup: bool = False,
         source: str = "",
         session_id: str = "",
+        contributors: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         before_state = copy.deepcopy(self.state)
         meaning_state = self._derive_meaning_state(systems, user_text, understood)
@@ -2490,6 +2599,7 @@ class RuntimeUnderstandingContract:
             "summary": str(response_text or "")[:240],
             "tone": str(tone or ""),
             "session_id": str(session_id or ""),
+            "contributors": copy.deepcopy(dict(contributors or {})),
         }
 
         dominant_form = dict(meaning_state.get("dominant_meaning_form", {}) or {})
@@ -2540,6 +2650,7 @@ class RuntimeUnderstandingContract:
                 "contracts": contract_domains.get("domains", {}),
             }
         )
+        self.save()
         return {
             "time_index": int(self.state.get("time_index", 0) or 0),
             "policy": dict(policy_state),
@@ -2549,6 +2660,22 @@ class RuntimeUnderstandingContract:
             "cost": dict(cost_state),
             "policy_delta": policy_delta,
         }
+
+    def attach_pending_contributors(self, contributors: Optional[Dict[str, Any]] = None) -> bool:
+        """Merge late-created contributor IDs into the current pending response.
+
+        Some contributors (notably the concept crystal) are formed after the
+        response commit.  They still belong to that response, so attach them
+        before the next turn can validate and clear the pending record.
+        """
+        pending = dict(self.state.get("pending_validation", {}) or {})
+        if not pending:
+            return False
+        merged = dict(pending.get("contributors", {}) or {})
+        merged.update(copy.deepcopy(dict(contributors or {})))
+        pending["contributors"] = merged
+        self.state["pending_validation"] = pending
+        return self.save()
 
     # =========================================================================
     # REFLECTION RE-ENTRY SEQUENCE (AURORA_COGNITIVE_PHYSICS.md §6 & §7)

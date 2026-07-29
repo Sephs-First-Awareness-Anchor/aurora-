@@ -556,7 +556,7 @@ class TopologicalSemanticCoordinator:
         """Route an outcome judgment to the last-matched semantic
         variant. Exposed plumbing only -- deciding what counts as a
         positive/negative outcome is Phase 4/5's job, not this
-        coordinator's. Nothing in Phase 3's wiring calls this."""
+        coordinator's."""
         snap = self.latest_snapshot
         if snap is None or dps is None:
             return None
@@ -564,7 +564,47 @@ class TopologicalSemanticCoordinator:
         if split is None:
             return None
         manifold_slot_id, topology_id = split
-        return self._registry.record_outcome(dps, manifold_slot_id, topology_id, positive=positive)
+        return self.record_variant_outcome(
+            manifold_slot_id=manifold_slot_id,
+            topology_id=topology_id,
+            positive=positive,
+            dps=dps,
+        )
+
+    def record_variant_outcome(
+        self,
+        *,
+        manifold_slot_id: str,
+        topology_id: str,
+        positive: bool,
+        dps: Any = None,
+    ) -> Optional[Any]:
+        """Apply an explicitly judged outcome to an addressed variant.
+
+        The live response loop supplies the IDs captured at emission time;
+        this avoids applying a later turn's outcome to whichever snapshot is
+        latest when the callback runs.
+        """
+        if dps is None or not manifold_slot_id or not topology_id:
+            return None
+        result = self._registry.record_outcome(
+            dps,
+            str(manifold_slot_id),
+            str(topology_id),
+            positive=bool(positive),
+        )
+        try:
+            self._registry.save_index()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:record_variant_outcome",
+                exc=_aurora_boundary_exc,
+                context={"function": "record_variant_outcome", "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+            )
+            pass
+        return result
 
     # ── perturbation probing (live-wired 2026-07-14: dreams/classroom) ──
 

@@ -412,6 +412,35 @@ class Crystal:
                     "achievements": 0, "missteps": 0,
                 }
 
+    def record_failpoint_sample(
+        self,
+        dimension: str,
+        *,
+        success: bool,
+        value: float,
+        evidence_id: str = "",
+    ) -> bool:
+        """Fold one explicitly classified communication sample into a failpoint."""
+        key = str(dimension or "")
+        if key not in self.failpoint_profile:
+            return False
+        record = dict(self.failpoint_profile.get(key) or {})
+        score = max(0.0, min(1.0, float(value or 0.0)))
+        previous = record.get("current")
+        record["prev"] = previous
+        record["current"] = score if previous is None else (float(previous) * 0.85 + score * 0.15)
+        if success:
+            record["achievements"] = int(record.get("achievements", 0) or 0) + 1
+        else:
+            record["missteps"] = int(record.get("missteps", 0) or 0) + 1
+        evidence_ids = list(record.get("evidence_ids", []) or [])
+        if evidence_id:
+            evidence_ids.append(str(evidence_id))
+        record["evidence_ids"] = evidence_ids[-20:]
+        record["sample_count"] = int(record.get("sample_count", 0) or 0) + 1
+        self.failpoint_profile[key] = record
+        return True
+
     def can_evolve(self) -> bool:
         external = [f for f in self.facets.values() if not f.role.startswith("LAW_")]
         if self.level == CrystalLevel.BASE:

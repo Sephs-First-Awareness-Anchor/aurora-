@@ -7176,3 +7176,134 @@ zip, tracked separately, still pending.
 
 **First Seen:** Zip integration phase D ("use everything in the zip"),
 2026-07-29.
+
+## FIX-A060 (NEW METHODS, ported + 1 RUNTIME BUG) — Communication Credit Unification foundational methods, zip integration phase E, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, plus one independent RUNTIME BUG fix.
+
+Phase E of the Communication Credit Unification port ("use everything
+in the zip"). A background research agent mapped the full feature
+first (9 callee subsystems, their systems-dict producer keys, all 5
+`aurora.py` call sites, and the `aurora_language_field.py` diff) before
+any code was touched, since the feature turned out to be one tightly
+interconnected system rather than the 5 cleanly-separable phases
+originally assumed. This phase ports every piece that is purely
+additive -- a new method or field with nothing existing to remove or
+conflict with -- deferring the `aurora.py` wiring itself (phase F/G)
+and the non-additive immediate-credit replacements each subsystem
+needs (also phase G) to later commits.
+
+**Ported, by file:**
+- `aurora_internal/aurora_understanding_contract.py`: atomic-write
+  persistence (`atomic_write_json` instead of a bare `open()`+
+  `json.dump()`), a new `deferred_validations`/`expired_validations`
+  audit window (a continuation/follow-up turn is retained for up to 3
+  turns rather than either closing the pending response as validated
+  or discarding it outright), a rewritten clarification-vs-expression-
+  confusion classifier (word-boundary phrase matching via `_has_marker()`
+  replacing substring matching that let "I am not sure" and "not clear"
+  both false-positive-match a bare `"not "` marker; `is_expression_
+  confusion` now checked with the highest priority, ahead of correction
+  and clarification), `commit_application(..., contributors=...)`, and
+  `attach_pending_contributors()` for late-forming contributor IDs
+  (notably the concept crystal, formed after the response commits).
+- `aurora_language_field.py`: 5 new `LSAEntry` fields (`validated_
+  success_count`, `validated_failure_count`, `receiver_outcome_mean`,
+  `last_receiver_label`, `last_evidence_confidence`) deliberately kept
+  separate from internal re-entry fidelity; `_receiver_reliability()`
+  (neutral 0.5 prior below 2 samples, else a blended success-rate/
+  outcome-mean score); `apply_receiver_outcome()`; a receiver-reliability
+  veto added to both `select_crossing_path`'s direct-unlock branch and
+  `_find_metaphor_proxy` (a path with >=2 samples and reliability <0.35
+  is excluded from reselection even if its internal fidelity still
+  looks fine); atomic `_save_lsa`.
+- `aurora_dimensional_systems.py`: `Crystal.record_failpoint_sample()`.
+- `concept_crystal.py`: `ConceptCrystalRegistry.record_receiver_outcome()`
+  (depends on the above).
+- `aurora_interaction_processing.py` + `aurora_interaction_memory.py`:
+  `finalize_base_interaction()` (applies receiver evidence to a
+  previously-pending base interaction crystal, rewriting its effect and
+  point scores before the normal promotion ladder may run),
+  `_rehydrate_from_memory()` (restores persisted crystals into the live
+  `_bases`/`_composites`/`_higher_orders`/`_quasicrystals` maps on
+  construction -- previously a processing object with a real persisted
+  base ID still couldn't finalize or promote it after a restart, since
+  the in-memory maps always started empty), `InteractionNode.to_crystal()`
+  (the missing inverse of the existing `from_crystal()`, needed by
+  rehydration), and `_base_family()` gated to only
+  `{"resolved_fully", "resolved_partially"}` outcomes (a pending,
+  failed, or follow-up-gap base is evidence about what *not* to
+  promote, not a stable pattern to teach from).
+- `aurora_internal/dual_strata/topological_semantic_coordinator.py`:
+  `record_variant_outcome()` split out of the existing `record_turn_
+  outcome()` (which now delegates to it), adding `registry.save_index()`
+  persistence.
+- `aurora_internal/dual_strata/variant_transition_predictor.py`:
+  `_last_transition_key` tracking in `observe()` + `record_turn_
+  outcome()` to attach delayed receiver evidence to the most recent
+  transition.
+- `aurora_grammar_engine.py`: `MotifLineage.record_trace()` (remember
+  an unvalidated observation without changing fitness),
+  `record_internal_quality()` (self-evaluated composition quality,
+  explicitly kept off the receiver counters), `record_outcome()`
+  (routes a receiver-validated outcome to `record_success`/
+  `record_fail`); `GrammarEngine.prepare_response_trace()`,
+  `observe_exemplar()`, `record_motif_outcome()`. Also fixed
+  `suggest_structure()`'s no-promoted-motif branch, which called
+  `record_success` (immediate credit) purely because a same-turn
+  response had a plausible length -- changed to `record_trace` (no
+  credit) to match the zip; no existing test covered the old behavior.
+- `aurora_expression_perception.py`: a new representation-communication
+  ledger (`_repr_communication_ledger`, persisted separately from
+  `representations.json`) tracking `sample_count`/`meaning_failures`/
+  `high_quality_failures`/`contexts`/`insufficiency_evidence` per
+  representation; `active_representation_id()`, `representation_
+  diagnostics()`, `record_communication_outcome()`; `commit_
+  representation()` and `_load_representations()` now stamp `_repr_
+  active_id` so the ledger can be keyed to the representation actually
+  in use; `_save_representations`/`_load_representations` generalized
+  to an overridable `self._repr_state_path` instead of the hardcoded
+  class constant.
+- `aurora_dream_trainer.py`: a new `_PIPELINE_LEARNING_FILE`-backed
+  ledger (`_pending_pipeline_learning`, `_pipeline_learning_failures`,
+  atomically persisted, deliberately separate from `retained_
+  learnings.json`); `stage_pipeline_learning()` (holds a candidate
+  until receiver evidence exists -- gracefully degrades to `quality={}`
+  if the optional `aurora_internal.aurora_learning_pipeline` quality
+  gate isn't present, which it currently isn't, tracked for a later
+  phase), `resolve_pipeline_learning()` (response-level and claim-level
+  `candidate_outcomes` promotion/rejection paths), `expire_staged_
+  pipeline_learning()` (drops candidates unresolved for >3 turns into
+  the failure log rather than promoting or silently losing them).
+
+**Independent bug found and fixed along the way (not part of the
+zip's Communication Credit diff, but blocking phase E's own
+verification):** `aurora_interaction_engine.py`'s `_derive_intended_
+effect(self, input_signature, issue, response_action)` read `event.
+get("tone")` where `event` was never a parameter of that method --
+guaranteed `NameError` on every call, meaning `InteractionEngine.
+score_base_point()` (and therefore `InteractionProcessing.
+form_base_interaction()`/`observe_interaction()`) had been completely
+broken for any call reaching this code path. Confirmed pre-existing
+(no diff from earlier commits touches this file) and confirmed the
+zip independently already carries the fix: `tone` became an explicit
+keyword-only parameter with a `"neutral"` default, threaded through by
+its one real call site (`event.get("tone")` moved to the caller).
+Fixed identically.
+
+**Tests:** `tests/test_comm_credit_phase_e_foundations.py` (17) -- one
+behavioral test per ported piece, matching the assertions in the zip's
+own `tests/test_communication_credit_unification.py` wherever that
+file exercises phase E content directly (the full zip test file itself
+depends on phase F/G pieces that don't exist yet, so it's ported
+separately once those land). Also ran the 2 existing boot-heavy tests
+covering live-turn reentrancy and corpus-fragment nesting (9 tests,
+full live boot) to confirm phase E's changes don't affect ordinary
+live-turn behavior -- both passed. Per Sunni's direction, the full
+`tests/` regression sweep is deferred until all Communication Credit
+phases (E-I) are complete, to avoid repeating a ~40-minute run after
+every phase; each phase is still verified with its own real, targeted
+tests before moving on.
+
+**First Seen:** Zip integration phase E ("use everything in the zip"),
+2026-07-29.

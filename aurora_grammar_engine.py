@@ -373,6 +373,13 @@ class StructuralMotif:
     generation:         int            = 0
     compression_score:  float          = 0.0
     total_tokens_avg:   float          = 0.0
+    # Self-evaluated composition quality, kept separate from receiver-
+    # validated success/fail counters so lexical fluency cannot masquerade
+    # as evidence of successful communication.
+    internal_success_count: int        = 0
+    internal_fail_count:    int        = 0
+    internal_contexts_seen: Set[str]   = field(default_factory=set)
+    internal_total_tokens_avg: float   = 0.0
 
     # ---- scoring ----------------------------------------------------------
 
@@ -410,6 +417,10 @@ class StructuralMotif:
             "generation":       self.generation,
             "compression_score": self.compression_score,
             "total_tokens_avg": self.total_tokens_avg,
+            "internal_success_count": self.internal_success_count,
+            "internal_fail_count": self.internal_fail_count,
+            "internal_contexts_seen": list(self.internal_contexts_seen),
+            "internal_total_tokens_avg": self.internal_total_tokens_avg,
         }
 
     @classmethod
@@ -431,6 +442,10 @@ class StructuralMotif:
             generation        = d.get("generation", 0),
             compression_score = d.get("compression_score", 0.0),
             total_tokens_avg  = d.get("total_tokens_avg", 0.0),
+            internal_success_count = d.get("internal_success_count", 0),
+            internal_fail_count = d.get("internal_fail_count", 0),
+            internal_contexts_seen = set(d.get("internal_contexts_seen", []) or []),
+            internal_total_tokens_avg = d.get("internal_total_tokens_avg", 0.0),
         )
 
 
@@ -556,6 +571,7 @@ class MotifLineage:
         # firehose every time best_for_pressure considers it).
         self._invalid_shape_logged: Set[str] = set()
         self._starvation_logged: Set[int] = set()
+        self._trace_history: deque = deque(maxlen=120)
         self._load()
 
     # ---- R1.9.3 L1: skeleton clause-shape validity ------------------------
@@ -669,6 +685,86 @@ class MotifLineage:
             if m.promoted and m.should_demote():
                 m.promoted = False
             self._maybe_save()
+
+    def record_trace(
+        self,
+        role_sequence: Tuple[TokenRole, ...],
+        context_hash: str,
+        token_count: int,
+        constraint_orientation: Optional[Dict[str, float]] = None,
+    ) -> None:
+        """Remember an unvalidated observation without changing motif fitness."""
+        with self._lock:
+            self._trace_history.append({
+                "role_sequence": [role.value for role in role_sequence],
+                "context_hash": str(context_hash or ""),
+                "token_count": int(token_count or 0),
+                "constraint_orientation": dict(constraint_orientation or {}),
+                "timestamp": time.time(),
+            })
+
+    def record_internal_quality(
+        self,
+        role_sequence: Tuple[TokenRole, ...],
+        context_hash: str,
+        token_count: int,
+        success: bool,
+    ) -> None:
+        """Record self-evaluated composition quality without receiver credit.
+
+        The expression engine can judge whether its draft is internally
+        parseable, but that is not evidence that a person understood it.
+        Keep this signal on the same motif node for diagnostics while leaving
+        the receiver counters, promotion flag, and receiver compression
+        statistics untouched.
+        """
+        with self._lock:
+            m = self.get_or_create(role_sequence)
+            if success:
+                m.internal_success_count += 1
+            else:
+                m.internal_fail_count += 1
+            if context_hash:
+                m.internal_contexts_seen.add(str(context_hash))
+            total = m.internal_success_count + m.internal_fail_count
+            n_tokens = max(0, int(token_count or 0))
+            m.internal_total_tokens_avg = (
+                (m.internal_total_tokens_avg * (total - 1) + n_tokens) / total
+                if total > 0
+                else 0.0
+            )
+            self._maybe_save()
+
+    def record_outcome(
+        self,
+        role_sequence: Tuple[TokenRole, ...],
+        outcome: str,
+        context_hash: str = "",
+        token_count: int = 0,
+        constraint_orientation: Optional[Dict[str, float]] = None,
+        reference_anchors: Optional[List[Tuple[int, int]]] = None,
+    ) -> bool:
+        """Apply a receiver-validated outcome to one addressed motif."""
+        normalized = str(outcome or "indeterminate").strip().lower()
+        if normalized in {"positive", "success", "resolved_fully", "resolved_partially"}:
+            self.record_success(
+                role_sequence,
+                context_hash,
+                token_count,
+                constraint_orientation,
+                reference_anchors,
+            )
+            return True
+        if normalized in {
+            "negative",
+            "failure",
+            "regression_introduced",
+            "no_change_observed",
+            "corrected",
+        }:
+            self.record_fail(role_sequence)
+            return True
+        return False
 
     def get_promoted(self, min_composability: float = 0.0) -> List[StructuralMotif]:
         return [m for m in self._motifs.values()
@@ -1563,11 +1659,12 @@ class GrammarEngine:
         best = self._lineage.best_for_pressure(orientation, outlet)
 
         if best is None:
-            # No promoted motif yet -- observe the current pattern so the
-            # lineage can start learning from it.
+            # No promoted motif yet -- retain only a diagnostic trace.  A
+            # same-turn response has no receiver evidence and must not earn
+            # grammar fitness merely because it has a plausible length.
             pattern   = self._tagger.extract_pattern(raw_expression)
             ctx_hash  = self._context_hash(context_text or raw_expression)
-            self._lineage.record_success(
+            self._lineage.record_trace(
                 pattern, ctx_hash,
                 len(raw_expression.split()), orientation,
             )
@@ -1614,6 +1711,91 @@ class GrammarEngine:
             "applied_text":   applied,
             "constraint_fit": round(axis_fit, 3),
         }
+
+    def prepare_response_trace(
+        self,
+        aurora_text: str,
+        context_text: str = "",
+        tone: str = "neutral",
+    ) -> Dict[str, Any]:
+        """Address the motif actually present in an emitted response.
+
+        ``suggest_structure`` only returns an ID when a promoted motif rewrites
+        the draft.  Most early or fallback responses do not take that branch,
+        which previously left grammar with no delayed receiver address at all.
+        This method creates/records the observed role pattern without granting
+        receiver success or failure; the next explicit reaction is still the
+        only thing that changes communicative fitness.
+        """
+        text = str(aurora_text or "").strip()
+        if not text:
+            return {}
+        pattern = self._tagger.extract_pattern(text)
+        if not pattern:
+            return {}
+        orientation, _ = self._pressure_state()
+        if tone == "focused":
+            orientation["B"] = orientation.get("B", 1.0) * 1.3
+        motif = self._lineage.get_or_create(pattern)
+        self._lineage.record_trace(
+            pattern,
+            self._context_hash(context_text or text),
+            len(text.split()),
+            orientation,
+        )
+        # A pending contract can outlive the current process.  Persist the
+        # address even though its fitness remains entirely unvalidated.
+        self._lineage.save()
+        axis_fit = sum(
+            motif.constraint_scores.get(ax, 0.5) * _clamp(float(value), 0.5, 1.5)
+            for ax, value in orientation.items()
+        ) / max(1, len(orientation))
+        self._last_motif_id = motif.pattern_id
+        return {
+            "motif_id": motif.pattern_id,
+            "role_sequence": [role.value for role in motif.role_sequence],
+            "constraint_fit": round(axis_fit, 3),
+        }
+
+    def observe_exemplar(self, text: str, tone: str = "neutral") -> None:
+        """Record a human-language exemplar without crediting Aurora's output."""
+        pattern = self._tagger.extract_pattern(text)
+        if not pattern:
+            return
+        orientation, _ = self._pressure_state()
+        if tone == "focused":
+            orientation["B"] = orientation.get("B", 1.0) * 1.3
+        self._lineage.record_trace(
+            pattern,
+            self._context_hash(text),
+            len(str(text or "").split()),
+            orientation,
+        )
+
+    def record_motif_outcome(
+        self,
+        motif_id: str,
+        outcome: str,
+        *,
+        clarity: float = 0.65,
+        context_text: str = "",
+        token_count: int = 0,
+    ) -> bool:
+        """Route delayed receiver evidence to the motif used by the response."""
+        motif = self._lineage._motifs.get(str(motif_id or ""))
+        if motif is None:
+            return False
+        orientation, _ = self._pressure_state()
+        accepted = self._lineage.record_outcome(
+            motif.role_sequence,
+            outcome,
+            context_hash=self._context_hash(context_text),
+            token_count=int(token_count or 0),
+            constraint_orientation=orientation,
+        )
+        if accepted and str(outcome or "").lower() in {"positive", "success", "resolved_fully", "resolved_partially"}:
+            self._log_relief_to_genealogy(True, float(clarity or 0.0), motif=motif)
+        return accepted
 
     def observe_exchange(
         self,

@@ -33,8 +33,10 @@ import json
 import time
 import math
 import re
+import hashlib
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from aurora_constraint_engine import (
@@ -43,6 +45,7 @@ from aurora_constraint_engine import (
     ExistenceMode as _ExistenceMode,
     GovernorWeights as _GovernorWeights,
 )
+from aurora_persistence_utils import atomic_write_json
 _FC = _FoundationalContract()
 from aurora_internal.aurora_directed_training_corpus import (
     get_directed_training_corpus_bridge,
@@ -57,6 +60,7 @@ if not os.path.exists(_FAIL_POINTS_FILE):
     with open(_FAIL_POINTS_FILE, 'w') as f:
         json.dump({}, f)
 _RETAINED_LEARNINGS_FILE = "retained_learnings.json"
+_PIPELINE_LEARNING_FILE = "pipeline_learning_pending.json"
 _DIRECTED_TRAINING = get_directed_training_corpus_bridge()
 
 
@@ -2103,6 +2107,83 @@ class DreamTrainer:
         self._systems: Dict[str, Any] = {}       # set by boot_aurora or corpus_runner
         self._genealogy_ref: Any = None          # direct genealogy reference
         self._last_relational_probe_summary: Dict[str, Any] = {}
+        # Cross-pipeline candidates are held here until a receiver outcome
+        # validates the response that produced them.  This is deliberately a
+        # separate ledger from retained_learnings.json: observation is not
+        # promotion, and an unresolved turn must not become durable memory.
+        self._pending_pipeline_learning: Dict[str, List[Dict[str, Any]]] = {}
+        self._pipeline_learning_failures: List[Dict[str, Any]] = []
+        self._load_pipeline_learning_state()
+
+    def _pipeline_learning_path(self) -> str:
+        return os.path.join(self.state_dir, _PIPELINE_LEARNING_FILE)
+
+    def _load_pipeline_learning_state(self) -> bool:
+        try:
+            path = self._pipeline_learning_path()
+            if not os.path.exists(path):
+                return False
+            with open(path, "r", encoding="utf-8") as handle:
+                payload = dict(json.load(handle) or {})
+            pending = dict(payload.get("pending", {}) or {})
+            self._pending_pipeline_learning = {}
+            for response_id, items in pending.items():
+                rid = str(response_id or "").strip()
+                if not rid:
+                    continue
+                normalized_items: List[Dict[str, Any]] = []
+                for raw_item in list(items or [])[-24:]:
+                    if not isinstance(raw_item, dict):
+                        continue
+                    item = dict(raw_item)
+                    source_key = str(item.get("source_key", "") or "")
+                    item.setdefault(
+                        "candidate_id",
+                        "candidate_" + hashlib.sha256(
+                            f"{rid}::{source_key}".encode("utf-8", "replace")
+                        ).hexdigest()[:20],
+                    )
+                    normalized_items.append(item)
+                if normalized_items:
+                    self._pending_pipeline_learning[rid] = normalized_items
+            self._pipeline_learning_failures = [
+                dict(item) for item in list(payload.get("failures", []) or [])
+                if isinstance(item, dict)
+            ][-200:]
+            return True
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:_load_pipeline_learning_state",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_pipeline_learning_state", "source_file": "aurora_dream_trainer.py"},
+            )
+            self._pending_pipeline_learning = {}
+            self._pipeline_learning_failures = []
+            return False
+
+    def _save_pipeline_learning_state(self) -> bool:
+        try:
+            return bool(atomic_write_json(
+                Path(self._pipeline_learning_path()),
+                {
+                    "schema_version": 1,
+                    "pending": self._pending_pipeline_learning,
+                    "failures": self._pipeline_learning_failures[-200:],
+                },
+                indent=2,
+                default=str,
+            ))
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:_save_pipeline_learning_state",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_pipeline_learning_state", "source_file": "aurora_dream_trainer.py"},
+            )
+            return False
 
     def _constraint_axes(self) -> Dict[str, float]:
         retained = len(getattr(self.retention, "_records", {}) or {})
@@ -3317,6 +3398,324 @@ class DreamTrainer:
                     pass
         self.retention.save()
         return True
+
+    def stage_pipeline_learning(
+        self,
+        text: str,
+        *,
+        response_id: str,
+        source: str,
+        confidence: float = 0.7,
+        context_type: str = "",
+        topic_words: Optional[List[str]] = None,
+        systems: Optional[Dict[str, Any]] = None,
+        tags: Optional[List[str]] = None,
+        turn_tick: int = 0,
+    ) -> bool:
+        """Hold a live candidate until the response has receiver evidence.
+
+        Working-memory concepts and frames are useful observations, but they
+        are not proof that the emitted response worked.  Staging keeps those
+        two states separate and makes the next-turn understanding contract the
+        authority that promotes or rejects them.
+        """
+        rid = str(response_id or "").strip()
+        clean = re.sub(r"\s+", " ", str(text or "").strip())
+        if not rid or len(clean.split()) < 3:
+            return False
+        try:
+            from aurora_internal.aurora_learning_pipeline import assess_text_quality
+            quality = assess_text_quality(clean)
+            if not quality.get("eligible_for_learning"):
+                return False
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:stage_pipeline_learning",
+                exc=_aurora_boundary_exc,
+                context={"function": "stage_pipeline_learning", "source_file": "aurora_dream_trainer.py"},
+            )
+            quality = {}
+
+        bucket = self._pending_pipeline_learning.setdefault(rid, [])
+        source_key = f"{str(source or '').strip().lower()}::{clean.lower()}"
+        if any(str(item.get("source_key", "")) == source_key for item in bucket):
+            return False
+        candidate_id = "candidate_" + hashlib.sha256(
+            f"{rid}::{source_key}".encode("utf-8", "replace")
+        ).hexdigest()[:20]
+        bucket.append({
+            "candidate_id": candidate_id,
+            "text": clean[:320],
+            "source": str(source or "pipeline"),
+            "source_key": source_key,
+            "confidence": max(0.0, min(1.0, float(confidence or 0.0))),
+            "context_type": str(context_type or ""),
+            "topic_words": [str(word)[:48] for word in list(topic_words or [])[:8]],
+            "tags": [str(tag)[:48] for tag in list(tags or [])[:10]],
+            "quality": dict(quality or {}),
+            "turn_tick": int(turn_tick or 0),
+            "staged_at": time.time(),
+        })
+        self._pending_pipeline_learning[rid] = bucket[-24:]
+        self._save_pipeline_learning_state()
+        return True
+
+    def resolve_pipeline_learning(
+        self,
+        response_id: str,
+        *,
+        outcome_kind: str,
+        evidence_id: str = "",
+        score: float = 0.0,
+        observed_effect: str = "",
+        turn_tick: int = 0,
+        systems: Optional[Dict[str, Any]] = None,
+        candidate_outcomes: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Promote or reject staged candidates after receiver evidence.
+
+        ``candidate_outcomes`` is the claim-level path.  When supplied, only
+        candidates with an explicit positive/negative outcome are resolved;
+        unaddressed candidates remain pending.  The legacy response-level
+        path remains available when the argument is omitted.
+        """
+        rid = str(response_id or "").strip()
+        candidates = list(self._pending_pipeline_learning.get(rid, []) or [])
+        if not rid or not candidates:
+            return {"response_id": rid, "resolved": 0, "promoted": 0}
+
+        kind = str(outcome_kind or "indeterminate").strip().lower()
+        if kind not in {"positive", "negative", "indeterminate"}:
+            kind = "indeterminate"
+        if kind == "indeterminate" and candidate_outcomes is None:
+            return {
+                "response_id": rid,
+                "resolved": 0,
+                "promoted": 0,
+                "pending": len(candidates),
+            }
+
+        if candidate_outcomes is not None:
+            outcome_map = dict(candidate_outcomes or {})
+            remaining: List[Dict[str, Any]] = []
+            candidate_results: List[Dict[str, Any]] = []
+            promoted = 0
+            rejected = 0
+            resolved = 0
+            for candidate in candidates:
+                candidate_id = str(
+                    candidate.get("candidate_id")
+                    or f"{rid}:{candidate.get('source_key', '')}"
+                )
+                raw_outcome = outcome_map.get(candidate_id)
+                if raw_outcome is None:
+                    raw_outcome = outcome_map.get(str(candidate.get("source_key", "") or ""))
+                if raw_outcome is None:
+                    remaining.append(candidate)
+                    candidate_results.append({"candidate_id": candidate_id, "status": "pending"})
+                    continue
+
+                details = {"outcome_kind": raw_outcome} if isinstance(raw_outcome, str) else dict(raw_outcome or {})
+                candidate_kind = str(details.get("outcome_kind", details.get("kind", "indeterminate")) or "indeterminate").strip().lower()
+                if candidate_kind not in {"positive", "negative"}:
+                    remaining.append(candidate)
+                    candidate_results.append({
+                        "candidate_id": candidate_id,
+                        "status": "pending",
+                        "outcome_kind": candidate_kind,
+                    })
+                    continue
+
+                resolved += 1
+                candidate_score = max(0.0, min(1.0, float(details.get("score", score) or 0.0)))
+                candidate_evidence_id = str(details.get("evidence_id", evidence_id or rid) or rid)
+                candidate_effect = str(details.get("observed_effect", observed_effect) or "")
+                if candidate_kind == "positive":
+                    candidate_tags = list(candidate.get("tags", []) or [])
+                    candidate_tags.extend(["receiver_validated", "pipeline_positive", candidate_id])
+                    if self.retention.record(
+                        str(candidate.get("text", "") or ""),
+                        source=str(candidate.get("source", "pipeline") or "pipeline"),
+                        confidence=max(
+                            float(candidate.get("confidence", 0.0) or 0.0),
+                            min(0.95, max(0.55, candidate_score)),
+                        ),
+                        context_type=str(candidate.get("context_type", "") or ""),
+                        topic_words=list(candidate.get("topic_words", []) or []),
+                        tags=candidate_tags,
+                    ):
+                        promoted += 1
+                    candidate_results.append({
+                        "candidate_id": candidate_id,
+                        "status": "promoted",
+                        "outcome_kind": candidate_kind,
+                        "evidence_id": candidate_evidence_id,
+                    })
+                else:
+                    rejected += 1
+                    self._pipeline_learning_failures.append({
+                        "response_id": rid,
+                        "candidate_id": candidate_id,
+                        "evidence_id": candidate_evidence_id,
+                        "outcome_kind": candidate_kind,
+                        "score": candidate_score,
+                        "observed_effect": candidate_effect,
+                        "turn_tick": int(details.get("turn_tick", turn_tick) or 0),
+                        "text": str(candidate.get("text", "") or "")[:320],
+                        "source": str(candidate.get("source", "") or ""),
+                        "timestamp": time.time(),
+                    })
+                    candidate_results.append({
+                        "candidate_id": candidate_id,
+                        "status": "rejected",
+                        "outcome_kind": candidate_kind,
+                        "evidence_id": candidate_evidence_id,
+                    })
+
+            if remaining:
+                self._pending_pipeline_learning[rid] = remaining[-24:]
+            else:
+                self._pending_pipeline_learning.pop(rid, None)
+            self._pipeline_learning_failures = self._pipeline_learning_failures[-200:]
+            if promoted:
+                self.retention.save()
+                memory = (systems or self._systems).get("conversation_memory")
+                if memory is not None:
+                    try:
+                        self.retention.bridge_to_memory(memory, limit=min(8, promoted))
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_dream_trainer.py:resolve_pipeline_learning_candidates",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "resolve_pipeline_learning", "source_file": "aurora_dream_trainer.py"},
+                        )
+                        pass
+            self._save_pipeline_learning_state()
+            result = {
+                "response_id": rid,
+                "evidence_id": str(evidence_id or rid),
+                "outcome_kind": "candidate_level",
+                "resolved": resolved,
+                "promoted": promoted,
+                "rejected": rejected,
+                "pending": len(remaining),
+                "candidate_results": candidate_results,
+            }
+            target_systems = systems or self._systems
+            if target_systems is not None:
+                target_systems["_last_pipeline_learning_resolution"] = dict(result)
+                if not remaining and str(target_systems.get("_last_staged_pipeline_response_id", "") or "") == rid:
+                    target_systems.pop("_last_staged_pipeline_response_id", None)
+            return result
+
+        self._pending_pipeline_learning.pop(rid, None)
+        promoted = 0
+        rejected = 0
+        if kind == "positive":
+            for candidate in candidates:
+                candidate_tags = list(candidate.get("tags", []) or [])
+                candidate_tags.extend(["receiver_validated", "pipeline_positive"])
+                if self.retention.record(
+                    str(candidate.get("text", "") or ""),
+                    source=str(candidate.get("source", "pipeline") or "pipeline"),
+                    confidence=max(
+                        float(candidate.get("confidence", 0.0) or 0.0),
+                        min(0.95, max(0.55, float(score or 0.0))),
+                    ),
+                    context_type=str(candidate.get("context_type", "") or ""),
+                    topic_words=list(candidate.get("topic_words", []) or []),
+                    tags=candidate_tags,
+                ):
+                    promoted += 1
+        else:
+            rejected = len(candidates)
+            for candidate in candidates:
+                self._pipeline_learning_failures.append({
+                    "response_id": rid,
+                    "evidence_id": str(evidence_id or rid),
+                    "outcome_kind": kind,
+                    "score": max(0.0, min(1.0, float(score or 0.0))),
+                    "observed_effect": str(observed_effect or ""),
+                    "turn_tick": int(turn_tick or 0),
+                    "text": str(candidate.get("text", "") or "")[:320],
+                    "source": str(candidate.get("source", "") or ""),
+                    "timestamp": time.time(),
+                })
+            self._pipeline_learning_failures = self._pipeline_learning_failures[-200:]
+
+        if promoted:
+            self.retention.save()
+            memory = (systems or self._systems).get("conversation_memory")
+            if memory is not None:
+                try:
+                    self.retention.bridge_to_memory(memory, limit=min(8, promoted))
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_dream_trainer.py:resolve_pipeline_learning_legacy",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "resolve_pipeline_learning", "source_file": "aurora_dream_trainer.py"},
+                    )
+                    pass
+        self._save_pipeline_learning_state()
+        result = {
+            "response_id": rid,
+            "evidence_id": str(evidence_id or rid),
+            "outcome_kind": kind,
+            "resolved": len(candidates),
+            "promoted": promoted,
+            "rejected": rejected,
+        }
+        target_systems = systems or self._systems
+        if target_systems is not None:
+            target_systems["_last_pipeline_learning_resolution"] = dict(result)
+            if str(target_systems.get("_last_staged_pipeline_response_id", "") or "") == rid:
+                target_systems.pop("_last_staged_pipeline_response_id", None)
+        return result
+
+    def expire_staged_pipeline_learning(
+        self,
+        current_turn: int,
+        *,
+        max_age_turns: int = 3,
+    ) -> int:
+        """Drop abandoned candidates without turning them into knowledge."""
+        now_turn = int(current_turn or 0)
+        age_limit = max(1, int(max_age_turns or 1))
+        expired = 0
+        for response_id, candidates in list(self._pending_pipeline_learning.items()):
+            keep: List[Dict[str, Any]] = []
+            for candidate in list(candidates or []):
+                candidate_turn = int(candidate.get("turn_tick", 0) or 0)
+                if now_turn > candidate_turn and now_turn - candidate_turn > age_limit:
+                    self._pipeline_learning_failures.append({
+                        "response_id": str(response_id),
+                        "outcome_kind": "expired",
+                        "text": str(candidate.get("text", "") or "")[:320],
+                        "source": str(candidate.get("source", "") or ""),
+                        "turn_tick": now_turn,
+                        "timestamp": time.time(),
+                    })
+                    expired += 1
+                else:
+                    keep.append(candidate)
+            if keep:
+                self._pending_pipeline_learning[response_id] = keep[-24:]
+            else:
+                self._pending_pipeline_learning.pop(response_id, None)
+        if expired:
+            self._pipeline_learning_failures = self._pipeline_learning_failures[-200:]
+            self._save_pipeline_learning_state()
+        return expired
+
+    @property
+    def pending_pipeline_learning_count(self) -> int:
+        return sum(len(items) for items in self._pending_pipeline_learning.values())
 
     def force_bridge_learnings_to_oets(self, systems: Dict[str, Any]) -> int:
         """Force OETS bridge regardless of interval."""

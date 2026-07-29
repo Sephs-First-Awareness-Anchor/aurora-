@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
 from aurora_interaction_engine import InteractionEngine
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 from aurora_persistence_utils import atomic_write_json, checksum_dict
 
 
@@ -84,6 +85,42 @@ class InteractionNode:
             "is_relic": self.is_relic,
             "checksum": self.checksum,
         }
+
+    def to_crystal(self, crystal_cls: Any, crystal_order: Any) -> Any:
+        """Recreate the persisted crystal shell for a processing layer.
+
+        Point-law objects are engine-specific and are restored by
+        ``InteractionProcessing``; this method restores the durable node
+        identity, facets, lineage, and order without importing that engine
+        back into the memory module.
+        """
+        kwargs = {
+            "crystal_id": self.node_id,
+            "order": crystal_order,
+            "facet_values": dict(self.payload or {}),
+            "resolution_fidelity": float(self.resolution_fidelity or 0.0),
+            "base_event_ids": list(self.base_event_ids or []),
+            "parent_ids": list(self.parent_ids or []),
+            "child_ids": list(self.child_ids or []),
+            "created_at": str(self.created_at or ""),
+            "tags": list(self.tags or []),
+            "lineage_meta": dict(self.lineage_meta or {}),
+        }
+        try:
+            return crystal_cls(
+                **kwargs,
+                execution_surface=dict(self.execution_surface or {}),
+                interaction_family=str(dict(self.lineage_meta or {}).get("family_key", "") or ""),
+            )
+        except TypeError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_interaction_memory.py:to_crystal",
+                exc=_aurora_boundary_exc,
+                context={"function": "to_crystal", "source_file": "aurora_interaction_memory.py"},
+            )
+            return crystal_cls(**kwargs)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "InteractionNode":

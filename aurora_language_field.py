@@ -32,7 +32,10 @@ import os
 import sys
 import time
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+from aurora_persistence_utils import atomic_write_json
 
 _STATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "aurora_state")
 _LSA_PATH  = os.path.join(_STATE_DIR, "lexical_semantic_archive.json")
@@ -147,6 +150,14 @@ class LSAEntry:
     # Consequence loop: what changed the last time this crossing was confirmed
     # true (n_cost/b_gate deltas + use). "What changes because this is true."
     consequence:         Dict[str, float] = field(default_factory=dict)
+    # Receiver-validation ledger.  These fields are deliberately separate from
+    # internal re-entry fidelity so lexical fluency cannot masquerade as
+    # successful communication.
+    validated_success_count: int = 0
+    validated_failure_count: int = 0
+    receiver_outcome_mean:   float = 0.0
+    last_receiver_label:     str = ""
+    last_evidence_confidence: float = 0.0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -230,8 +241,12 @@ class LanguageField(WarpCapable):
     def _save_lsa(self):
         try:
             os.makedirs(os.path.dirname(_LSA_PATH), exist_ok=True)
-            with open(_LSA_PATH, "w") as f:
-                json.dump({k: v.to_dict() for k, v in self._lsa.items()}, f, indent=2)
+            atomic_write_json(
+                Path(_LSA_PATH),
+                {k: v.to_dict() for k, v in self._lsa.items()},
+                indent=2,
+                default=str,
+            )
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -689,6 +704,28 @@ class LanguageField(WarpCapable):
         mag_b = math.sqrt(sum(v ** 2 for v in ctx_b.values())) or 1.0
         return max(0.0, min(1.0, dot / (mag_a * mag_b)))
 
+    @staticmethod
+    def _receiver_reliability(entry: LSAEntry) -> float:
+        """Return a bounded receiver-evidence prior for one crossing path.
+
+        Internal re-entry fidelity is deliberately excluded.  With fewer
+        than two explicit receiver outcomes the path remains neutral; after
+        that, validated success rate and outcome score provide a supporting
+        route-selection signal.
+        """
+        successes = int(getattr(entry, "validated_success_count", 0) or 0)
+        failures = int(getattr(entry, "validated_failure_count", 0) or 0)
+        total = successes + failures
+        if total < 2:
+            return 0.5
+        success_rate = successes / max(total, 1)
+        raw_mean = getattr(entry, "receiver_outcome_mean", None)
+        outcome_mean = max(
+            0.0,
+            min(1.0, 0.5 if raw_mean is None else float(raw_mean)),
+        )
+        return round((0.60 * success_rate) + (0.40 * outcome_mean), 4)
+
     def select_crossing_path(self, proto: ProtoLanguage) -> dict:
         """
         Two-factor gate path selection.
@@ -702,7 +739,8 @@ class LanguageField(WarpCapable):
         close-but-not-quite, the gate rejects it and the field is pushed toward
         a novel or metaphor crossing.
 
-        Returns dict: path_key, n_cost, b_gate, b_match, is_novel, is_metaphor
+        Returns dict: path_key, n_cost, b_gate, b_match, is_novel,
+        is_metaphor, and the supporting receiver_reliability prior.
         """
         pkey = self._path_key(proto.comparison_type, proto.dominant_axes)
         current_ctx = proto.context_fingerprint()
@@ -710,6 +748,11 @@ class LanguageField(WarpCapable):
         if pkey in self._lsa:
             entry = self._lsa[pkey]
             b_match = self._context_similarity(current_ctx, entry.context_fingerprint)
+            receiver_samples = (
+                int(getattr(entry, "validated_success_count", 0) or 0)
+                + int(getattr(entry, "validated_failure_count", 0) or 0)
+            )
+            receiver_reliability = self._receiver_reliability(entry)
 
             # Recency surcharge: a path used in the last 5 crossings must
             # clear a higher bar — the field needs distinctly different context
@@ -717,7 +760,9 @@ class LanguageField(WarpCapable):
             recency_surcharge = 0.35 if pkey in self._recent_paths else 0.0
             effective_gate = min(_B_GATE_CAP, entry.b_gate + recency_surcharge)
 
-            if b_match >= effective_gate:
+            if b_match >= effective_gate and not (
+                receiver_samples >= 2 and receiver_reliability < 0.35
+            ):
                 # Both factors satisfied — unlock the path.
                 # CPM crystal stage modulates N-cost: well-developed constraint
                 # physics at the current head position makes crossing cheaper.
@@ -729,6 +774,7 @@ class LanguageField(WarpCapable):
                     "is_novel":    False,
                     "is_metaphor": False,
                     "use_count":   entry.use_count,
+                    "receiver_reliability": receiver_reliability,
                 }
             # B-gate rejects (possibly due to recency). Seek metaphor proxy.
             proxy = self._find_metaphor_proxy(proto, exclude=pkey)
@@ -794,7 +840,18 @@ class LanguageField(WarpCapable):
         best_entry: Optional[LSAEntry] = None
 
         for pk, entry in self._lsa.items():
-            if pk == exclude or entry.last_fidelity < 0.45:
+            receiver_samples = (
+                int(getattr(entry, "validated_success_count", 0) or 0)
+                + int(getattr(entry, "validated_failure_count", 0) or 0)
+            )
+            if (
+                pk == exclude
+                or entry.last_fidelity < 0.45
+                or (
+                    receiver_samples >= 2
+                    and self._receiver_reliability(entry) < 0.35
+                )
+            ):
                 continue
             sim = self._context_similarity(proto.raw_axes, entry.context_fingerprint)
             if sim > best_sim:
@@ -808,6 +865,7 @@ class LanguageField(WarpCapable):
                 "b_gate":    best_entry.b_gate,
                 "b_match":   best_sim,
                 "use_count": best_entry.use_count,
+                "receiver_reliability": self._receiver_reliability(best_entry),
             }
         return None
 
@@ -1159,6 +1217,51 @@ class LanguageField(WarpCapable):
         resonance = (jaccard * 0.4) + (length_ratio * 0.3) + ack_score
         return round(min(1.0, resonance), 3)
 
+    def apply_receiver_outcome(
+        self,
+        path_key: str,
+        outcome_score: float,
+        label: str,
+        evidence_confidence: float = 0.0,
+    ) -> bool:
+        """Record explicit receiver evidence for one language crossing.
+
+        ``measure_resonance`` remains a supporting signal.  Only an explicit
+        validated outcome changes this ledger; indeterminate continuation is
+        intentionally ignored.
+        """
+        entry = self._lsa.get(str(path_key or ""))
+        if entry is None:
+            return False
+        normalized = str(label or "").strip().lower()
+        positive = {
+            "resolved_fully", "resolved_partially", "confirmed", "accepted",
+            "clarification_supplied", "selection_supplied",
+        }
+        negative = {
+            "corrected", "regression_introduced", "no_change_observed",
+            "resolved_partially__followup_gap_appeared", "expression_unclear",
+        }
+        if normalized not in positive and normalized not in negative:
+            return False
+        score = max(0.0, min(1.0, float(outcome_score or 0.0)))
+        confidence = max(0.0, min(1.0, float(evidence_confidence or 0.0)))
+        if normalized in positive:
+            entry.validated_success_count += 1
+        else:
+            entry.validated_failure_count += 1
+        previous_n = entry.validated_success_count + entry.validated_failure_count - 1
+        if previous_n <= 0:
+            entry.receiver_outcome_mean = score
+        else:
+            entry.receiver_outcome_mean = (
+                entry.receiver_outcome_mean * 0.8 + score * 0.2
+            )
+        entry.last_receiver_label = normalized
+        entry.last_evidence_confidence = confidence
+        self._save_lsa()
+        return True
+
     # ── Tone / Prosody from N-axis ────────────────────────────────────────────
 
     def extract_tone_prosody(self, proto: ProtoLanguage) -> dict:
@@ -1217,11 +1320,15 @@ class LanguageField(WarpCapable):
             sum(e.last_fidelity for e in self._lsa.values()) / len(self._lsa)
             if self._lsa else 0.0
         )
+        validated_success = sum(e.validated_success_count for e in self._lsa.values())
+        validated_failure = sum(e.validated_failure_count for e in self._lsa.values())
         return {
             "lsa_entries":      len(self._lsa),
             "worn_paths":       worn,
             "novel_paths":      novel,
             "avg_fidelity":     round(avg_f, 3),
+            "validated_successes": validated_success,
+            "validated_failures": validated_failure,
             "silence_events":   len(self._silence_log),
             "tensor_confirmed": self._tensor_confirmed,
             "cpm_confirmed":    self._cpm_confirmed,

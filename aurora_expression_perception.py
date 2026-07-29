@@ -4459,6 +4459,7 @@ class ExpressionPerceptionEngine(WarpCapable):
             if not tables:
                 return
             self._repr_active = tables
+            self._repr_active_id = str(getattr(component, "component_id", "") or "authored_seed")
             self._save_representations(component)
             try:
                 self.lexicon._invalidate_noncomp_index()
@@ -4484,16 +4485,17 @@ class ExpressionPerceptionEngine(WarpCapable):
     def _save_representations(self, component) -> None:
         try:
             import json as _j
-            os.makedirs(os.path.dirname(self._REPR_STATE_PATH), exist_ok=True)
+            path = str(getattr(self, "_repr_state_path", self._REPR_STATE_PATH))
+            os.makedirs(os.path.dirname(path), exist_ok=True)
             data = {"active": self._repr_active,
                     "component_id": component.component_id,
                     "name": component.name,
                     "degrees": component.parameters.get("degrees", {}),
                     "promoted_at": time.time()}
-            tmp = self._REPR_STATE_PATH + ".tmp"
+            tmp = path + ".tmp"
             with open(tmp, "w") as f:
                 _j.dump(data, f)
-            os.replace(tmp, self._REPR_STATE_PATH)
+            os.replace(tmp, path)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -4507,8 +4509,12 @@ class ExpressionPerceptionEngine(WarpCapable):
     def _load_representations(self):
         try:
             import json as _j
-            if os.path.exists(self._REPR_STATE_PATH):
-                return _j.load(open(self._REPR_STATE_PATH)).get("active")
+            path = str(getattr(self, "_repr_state_path", self._REPR_STATE_PATH))
+            if os.path.exists(path):
+                with open(path, encoding="utf-8") as handle:
+                    payload = dict(_j.load(handle) or {})
+                self._repr_active_id = str(payload.get("component_id") or "authored_seed")
+                return payload.get("active")
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -4518,6 +4524,7 @@ class ExpressionPerceptionEngine(WarpCapable):
                 context={"function": "_load_representations", "handler_line": 4280, "source_file": "aurora_expression_perception.py"},
             )
             pass
+        self._repr_active_id = "authored_seed"
         return None
 
     def save_lexicon(self) -> bool:
@@ -4543,6 +4550,14 @@ class ExpressionPerceptionEngine(WarpCapable):
 
     def __init__(self, contract: Optional[FoundationalContract] = None, state_dir: Optional[str] = None):
         self.contract = contract or FoundationalContract()
+        self._state_dir = os.path.abspath(state_dir or os.path.join(os.path.dirname(os.path.abspath(__file__)), "aurora_state"))
+        self._repr_state_path = os.path.join(self._state_dir, "representations.json")
+        self._repr_communication_path = os.path.join(
+            self._state_dir, "representation_communication_outcomes.json"
+        )
+        self._repr_active_id = "authored_seed"
+        self._repr_communication_ledger: Dict[str, Dict[str, Any]] = {}
+        self._load_representation_communication_ledger()
         self._sedimemory = None  # L3.5 SediMemory (injected externally via connect_sedimemory)
         self.hardware = None
         self.sensory_engine = None
@@ -4592,6 +4607,93 @@ class ExpressionPerceptionEngine(WarpCapable):
         self._dominant_axis: str = ""
         self._dominant_emotion: str = "neutral"
         self._axis_depth: int = 2
+
+    def active_representation_id(self) -> str:
+        """Return the stable ID of the representation lens in use."""
+        return str(getattr(self, "_repr_active_id", "authored_seed") or "authored_seed")
+
+    def representation_diagnostics(self) -> Dict[str, Any]:
+        active_id = self.active_representation_id()
+        record = dict(self._repr_communication_ledger.get(active_id) or {})
+        return {
+            "active_representation_id": active_id,
+            "communication_record": record,
+            "trial_count": len(getattr(self, "_warp_trials", {}) or {}),
+            "promoted_count": len(getattr(self, "_warp_promoted", {}) or {}),
+        }
+
+    def record_communication_outcome(
+        self,
+        representation_id: str,
+        *,
+        outcome_kind: str,
+        meaning_failure: bool,
+        internal_fidelity: float = 0.0,
+        grammaticality: float = 0.0,
+        context_key: str = "",
+    ) -> Dict[str, Any]:
+        """Aggregate attributed receiver outcomes without single-turn pressure."""
+        rid = str(representation_id or self.active_representation_id())
+        record = dict(self._repr_communication_ledger.get(rid) or {
+            "sample_count": 0,
+            "meaning_failures": 0,
+            "high_quality_failures": 0,
+            "contexts": [],
+            "insufficiency_evidence": 0,
+        })
+        record["sample_count"] = int(record.get("sample_count", 0) or 0) + 1
+        if meaning_failure:
+            record["meaning_failures"] = int(record.get("meaning_failures", 0) or 0) + 1
+        if meaning_failure and float(internal_fidelity or 0.0) >= 0.75 and float(grammaticality or 0.0) >= 0.75:
+            record["high_quality_failures"] = int(record.get("high_quality_failures", 0) or 0) + 1
+        contexts = list(record.get("contexts", []) or [])
+        if context_key and context_key not in contexts:
+            contexts.append(str(context_key)[:80])
+        record["contexts"] = contexts[-20:]
+        if (
+            int(record.get("sample_count", 0) or 0) >= 3
+            and len(record["contexts"]) >= 2
+            and int(record.get("meaning_failures", 0) or 0) >= 2
+            and int(record.get("high_quality_failures", 0) or 0) >= 2
+        ):
+            record["insufficiency_evidence"] = int(record.get("insufficiency_evidence", 0) or 0) + 1
+        self._repr_communication_ledger[rid] = record
+        self._save_representation_communication_ledger()
+        return {"representation_id": rid, **record}
+
+    def _load_representation_communication_ledger(self) -> None:
+        try:
+            if os.path.exists(self._repr_communication_path):
+                import json as _j
+                with open(self._repr_communication_path, encoding="utf-8") as handle:
+                    self._repr_communication_ledger = dict(_j.load(handle) or {})
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:_load_representation_communication_ledger",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_representation_communication_ledger", "source_file": "aurora_expression_perception.py"},
+            )
+            self._repr_communication_ledger = {}
+
+    def _save_representation_communication_ledger(self) -> None:
+        try:
+            import json as _j
+            os.makedirs(os.path.dirname(self._repr_communication_path), exist_ok=True)
+            tmp = self._repr_communication_path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as handle:
+                _j.dump(self._repr_communication_ledger, handle, indent=2, sort_keys=True)
+            os.replace(tmp, self._repr_communication_path)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:_save_representation_communication_ledger",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_representation_communication_ledger", "source_file": "aurora_expression_perception.py"},
+            )
+            pass
 
     def set_personality(self, traits: Dict[str, float]):
         """Accept personality traits from L6 for expression shaping."""

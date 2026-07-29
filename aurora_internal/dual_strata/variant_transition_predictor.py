@@ -106,6 +106,7 @@ class VariantTransitionPredictor:
         self._path = os.path.join(self._state_dir, STATE_FILENAME) if self._state_dir else None
         self._transitions: Dict[Tuple[str, str], TransitionRecord] = {}
         self.last_variant_id: Optional[str] = None
+        self._last_transition_key: Optional[Tuple[str, str]] = None
         self._dirty = False
         if self._path:
             self._load()
@@ -173,8 +174,10 @@ class VariantTransitionPredictor:
         prev = self.last_variant_id
         self.last_variant_id = variant_id
         if not prev or not variant_id:
+            self._last_transition_key = None
             return None
         key = (prev, variant_id)
+        self._last_transition_key = key
         now = time.time()
         rec = self._transitions.get(key)
         if rec is None:
@@ -188,6 +191,24 @@ class VariantTransitionPredictor:
             rec.outcome_negative += 1
         self._dirty = True
         return rec
+
+    def record_turn_outcome(self, *, positive: bool) -> bool:
+        """Attach delayed receiver evidence to the latest transition."""
+        key = self._last_transition_key
+        if key is None:
+            return False
+        record = self._transitions.get(key)
+        if record is None:
+            self._last_transition_key = None
+            return False
+        if positive:
+            record.outcome_positive += 1
+        else:
+            record.outcome_negative += 1
+        self._last_transition_key = None
+        self._dirty = True
+        self.save()
+        return True
 
     def predict_next(self, current_variant_id: str, *, limit: int = DEFAULT_PREDICTION_LIMIT) -> List[TransitionPrediction]:
         """Rank the variants historically observed to follow
