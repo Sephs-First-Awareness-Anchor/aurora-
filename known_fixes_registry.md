@@ -6711,3 +6711,102 @@ work, adjacent to `_emit_honest_abstain_and_seek` in the same file),
 and `tests/test_waveform_pressure.py` -- the full set of files
 touching `quasiarch`, the abstain chokepoint, or `aurora_ci_segment.py`
 -- all 77 pass, zero regression.
+
+## FIX-A055 (RUNTIME BUG, multi-instance) — dead comprehension-gap wiring, Communication Credit Unification Phase 0, 2026-07-28
+
+**Category:** RUNTIME BUG.
+
+Sunni supplied an external audit document ("Aurora Communication
+Credit Unification Specification") proposing a "Validated
+Communicative Re-entry Circuit" -- routing delayed next-turn outcome
+evidence back to the interaction crystal, grammar motifs, semantic
+variants, and concept crystals that produced a response, instead of
+crediting responses on Aurora's own pre-reaction confidence. Before
+any implementation, every one of its 13 numbered "Break" claims was
+checked against the actual current code (not trusted on faith) --
+11/13 confirmed accurate, citations nearly exact. Break 1's central
+claim ("the comprehension-gap system is unreachable on ordinary
+turns") was **found false**: a separate, correctly-wired call path
+already exists via `dual_question_pipeline()` calling
+`ComprehensionGapSystem.process()` with the right key and signature on
+essentially every normal turn. Phase 0 was re-scoped accordingly: only
+the genuinely dead legacy hooks the audit found (plus two more found
+while writing this fix's own tests) needed repair, not a rebuild.
+
+**Bug 1 -- `_cgs` NameError, silently escaping instead of being
+absorbed.** `aurora.py`'s `_run_live_response_turn()`, inside the
+parser's own `except Exception:` block, called `hasattr(_cgs, ...)`
+where `_cgs` was never locally bound in this function's scope (only
+inside the boot function, a different scope) -- guaranteed
+`NameError` on every real parser failure. The sibling
+`except Exception: pass` two lines below does **not** catch it (a
+sibling of the same try, not a wrapper around this except's own body,
+confirmed by direct Python reproduction) -- so on a genuine parse
+failure, the NameError propagated out of the whole fallback path
+instead of being silently absorbed the way it looked on inspection.
+**Fix:** bind `_cgs = systems.get("comprehension_gap_system")` at the
+top of the except block, the real canonical key (matches how it's
+mounted at boot).
+
+**Bug 2 -- `perception.ingest_interaction()` called with the wrong
+signature.** Same function, `_perc_a6.ingest_interaction(user_text,
+_resp_text_p)` -- two positional strings. The real signature,
+`ingest_interaction(self, interaction: Dict[str, Any], mode: str =
+"sim")`, immediately does `interaction.get('input', '')` --
+`AttributeError` on literally every turn, silently swallowed by the
+surrounding `except Exception: pass`. Confirmed every OTHER call site
+of `ingest_interaction(` in the codebase already passes a dict; this
+was the one caller written against a signature that never existed.
+Confirmed the real method never reads a `'response'` key at all
+(only `input`/`tone`/`features`/`i_state`), so `_resp_text_p` was
+never usable here regardless. **Fix:**
+`_perc_a6.ingest_interaction({"input": user_text}, mode="persistent")`
+-- `mode="persistent"` (not the default `"sim"`/`BOUNDED`) because
+this is genuine live dialogue, not a simulation episode.
+
+**Bug 3 -- dead `_cgs3`/`track_resolution()` block, removed.** A third
+hook read `systems.get("_comprehension_gap")` (a key never assigned
+anywhere in the codebase) and called `.track_resolution()` (a method
+that does not exist anywhere in `ComprehensionGapSystem`) -- an
+unconditional no-op. Removed outright per the audit's own recommended
+fix; there was no real intent left to recover.
+
+**Bugs 4 & 5 -- found while writing this fix's own tests, not in the
+original audit.** A repo-wide grep for the same dead
+`"_comprehension_gap"` key (once flagged as suspicious by Bug 3) found
+two more instances:
+- `aurora.py`'s two gap-resolution helper functions (inline-lookup
+  resolution and unknown-vocabulary repair) each read
+  `systems.get("_comprehension_gap") or systems.get(
+  "comprehension_gap_system")` -- harmless (the `or` always falls
+  through to the real key) but pointlessly dead-key-checking.
+  Simplified to the one real key.
+- The "FIX 1: ClarificationMemory → fail ledger" block (recurring
+  comprehension-gap types feeding the dream-training fail ledger every
+  5 turns) read `_cgs_fl = systems.get("_comprehension_gap")` with **no
+  fallback at all** -- unlike bugs 1-3, this wasn't even a no-op
+  documented anywhere as suspect; it's a genuinely useful-sounding
+  feature that has been permanently dead since it was written, for the
+  exact same wrong-key reason. Fixed to the real key -- this feature
+  should now actually run for the first time.
+
+**Tests:** `tests/test_comm_credit_phase0_dead_wiring.py` (8) --
+direct source-level structural verification (this campaign's
+established pattern for call sites deeply embedded in
+`_run_live_response_turn()`, a ~1300-line function requiring a full
+live boot to exercise end-to-end -- see
+`test_m1_1a_relation_pairs.py`'s `test_chain_down5_understanding_
+calls_tier2_logger` for precedent) confirming `_cgs` is bound before
+use, the dead `"_comprehension_gap"` key and `.track_resolution(` call
+are both fully gone, the `ingest_interaction` call site passes a dict
+in the right place gated by the same unchanged outer condition, and
+the fail-ledger routing now reads the real key. Plus a real behavioral
+test (not just source-text matching) confirming the FIXED call shape
+works cleanly against the actual, unmodified
+`ExpressionPerceptionEngine.ingest_interaction()`, and a companion test
+confirming the OLD broken shape genuinely does raise `AttributeError`
+against that same real method -- proving the bug was real, not
+theoretical.
+
+**First Seen:** Communication Credit Unification spec verification and
+Phase 0 implementation, 2026-07-28.

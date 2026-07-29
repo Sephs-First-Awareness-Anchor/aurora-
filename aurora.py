@@ -10996,7 +10996,12 @@ def _apply_word_meaning_learning(
     )
     resolved = applicator.apply(gap, systems)
 
-    gap_system = systems.get("_comprehension_gap") or systems.get("comprehension_gap_system")
+    # Communication Credit Unification, Break 1 cleanup (2026-07-28): the
+    # canonical key is 'comprehension_gap_system' (boot's own assignment);
+    # '_comprehension_gap' is never assigned anywhere, so this used to be
+    # a harmless-but-pointless dead-key check before always falling
+    # through the `or`. Simplified to the one real key.
+    gap_system = systems.get("comprehension_gap_system")
     gap_memory = getattr(gap_system, "memory", None)
     if gap_memory is not None and hasattr(gap_memory, "store_resolved"):
         try:
@@ -11175,7 +11180,12 @@ def _repair_unknown_vocabulary_inline(
 
     stated_name = _extract_user_name(text)
     skipped = {stated_name.lower()} if stated_name else set()
-    gap_system = systems.get("_comprehension_gap") or systems.get("comprehension_gap_system")
+    # Communication Credit Unification, Break 1 cleanup (2026-07-28): the
+    # canonical key is 'comprehension_gap_system' (boot's own assignment);
+    # '_comprehension_gap' is never assigned anywhere, so this used to be
+    # a harmless-but-pointless dead-key check before always falling
+    # through the `or`. Simplified to the one real key.
+    gap_system = systems.get("comprehension_gap_system")
     gap_memory = getattr(gap_system, "memory", None)
     applicator = GapResolutionApplicator()
     applied: List[Dict[str, Any]] = []
@@ -23576,6 +23586,17 @@ def _run_live_response_turn(
         }
     except Exception:
         _raw_understood = {}
+        # Communication Credit Unification, Break 1 (2026-07-28): _cgs was
+        # never bound in this function's scope -- only inside the boot
+        # function, a different scope -- so hasattr(_cgs, ...) below raised
+        # NameError on every real parser failure, and the sibling
+        # `except Exception: pass` two lines down does NOT catch it (it
+        # guards the outer try, not this except's own body), so the
+        # NameError propagated out of this fallback entirely instead of
+        # being silently absorbed as it looked like on inspection. Bind it
+        # to the real, canonical systems key (matches how it's mounted at
+        # boot: systems['comprehension_gap_system'] = ComprehensionGapSystem()).
+        _cgs = systems.get("comprehension_gap_system")
         _allow_inline_vocab = not _should_prefer_live_perspective(
             user_text,
             understood=_raw_understood,
@@ -24432,7 +24453,20 @@ def _run_live_response_turn(
         _resp_text_p = str(getattr(resp_A, "content", "") or "").strip()
         if _perc_a6 and user_text and _resp_text_p:
             if hasattr(_perc_a6, "ingest_interaction"):
-                _perc_a6.ingest_interaction(user_text, _resp_text_p)
+                # Communication Credit Unification, Break 2 (2026-07-28): the
+                # real signature is ingest_interaction(interaction: dict,
+                # mode: str = "sim") -- this call passed two positional
+                # strings, so `interaction.get(...)` raised AttributeError
+                # on literally every turn, silently swallowed by this same
+                # try's except below. Every other call site in the codebase
+                # already passes a dict; this was the one caller written
+                # against a signature that never existed. The real method
+                # only ever reads 'input'/'tone'/'features'/'i_state' keys
+                # (confirmed by reading its body) -- it has no 'response'
+                # parameter, so _resp_text_p was never usable here anyway.
+                # mode="persistent" (not the default "sim"/BOUNDED) because
+                # this is genuine live dialogue, not a simulation episode.
+                _perc_a6.ingest_interaction({"input": user_text}, mode="persistent")
             _pic = int(systems.get("_perc_ingest_count", 0)) + 1
             systems["_perc_ingest_count"] = _pic
             if _pic % 5 == 0 and hasattr(_perc_a6, "consolidate"):
@@ -24440,20 +24474,31 @@ def _run_live_response_turn(
     except Exception:
         pass
 
-    try:
-        _cgs3 = systems.get("_comprehension_gap")
-        _resp_cgs = str(getattr(resp_A, "content", "") or "").strip()
-        if _cgs3 and _resp_cgs and hasattr(_cgs3, "track_resolution"):
-            _cgs3.track_resolution(_resp_cgs)
-    except Exception:
-        pass
+    # Communication Credit Unification, Break 1 cleanup (2026-07-28): this
+    # block was permanently dead -- systems['_comprehension_gap'] is never
+    # assigned anywhere in the codebase (the real, canonical key is
+    # 'comprehension_gap_system', already read correctly above and by
+    # dual_question_pipeline()'s own comprehension-gap call), and
+    # ComprehensionGapSystem has no track_resolution() method anywhere, so
+    # `_cgs3` was always None and the whole `if` was an unconditional
+    # no-op. Removed rather than repointed -- there's no real intent left
+    # to recover: the response text isn't resolution evidence on its own
+    # without the receiver's next turn (that's Communication Credit's own
+    # later phases' job, not this dead hook's).
 
     # ---- FIX 1: ClarificationMemory → fail ledger ----
     # Recurring gap types are learning targets, not just turn-level events.
     # Every 5 turns, scan resolved gaps for patterns and feed them to the
     # dream curriculum so Aurora grows past her recurring comprehension failures.
     try:
-        _cgs_fl = systems.get("_comprehension_gap")
+        # Communication Credit Unification, Break 1 cleanup (2026-07-28):
+        # '_comprehension_gap' is never assigned anywhere in the codebase
+        # (confirmed by repo-wide grep) -- this whole feature (recurring
+        # comprehension-gap types feeding the dream fail ledger every 5
+        # turns) has been permanently dead since it was written, since
+        # _cgs_fl was always None and the `if` below never once fired.
+        # Fixed to the real, canonical boot key.
+        _cgs_fl = systems.get("comprehension_gap_system")
         _dt_fl = systems.get("dream_trainer")
         _fl_turn = int(systems.get("_episode_compile_count", 0))
         if _cgs_fl and _dt_fl and _fl_turn % 5 == 0:
