@@ -28,6 +28,7 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -305,7 +306,14 @@ class ICCLedger:
                     fh.flush()
                     os.fsync(fh.fileno())
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:308",
+                exc=_aurora_boundary_exc,
+                context={"function": "_write_entry", "handler_line": 308, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return False
 
     def _log_violation(self, reason: str, detail: Dict[str, Any]) -> None:
@@ -319,7 +327,14 @@ class ICCLedger:
                     }) + "\n")
                     fh.flush()
                     os.fsync(fh.fileno())
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:322",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_violation", "handler_line": 322, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             pass
 
     def _verify_loaded_chain(self) -> bool:
@@ -421,7 +436,14 @@ class ICCLedger:
             if entry is not None:
                 self._minted_intake_ids.add(intake_id)
             return entry
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:424",
+                exc=_aurora_boundary_exc,
+                context={"function": "mint_if_eligible", "handler_line": 424, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return None
 
     def mint_from_contradiction_resolution(
@@ -453,7 +475,14 @@ class ICCLedger:
                 tick=tick, source="contradiction_resolution",
                 axes=dict(axes or {}), minted=minted, evidence=evidence,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:456",
+                exc=_aurora_boundary_exc,
+                context={"function": "mint_from_contradiction_resolution", "handler_line": 456, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return None
 
     def _append(
@@ -491,7 +520,14 @@ class ICCLedger:
         try:
             sweep_passed = all(bool(getattr(r, "passed", False)) for r in results)
             self._guard_pass_window.append(sweep_passed)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:494",
+                exc=_aurora_boundary_exc,
+                context={"function": "record_guard_sweep", "handler_line": 494, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             pass
 
     # ------------------------------------------------------------------
@@ -510,7 +546,14 @@ class ICCLedger:
                 age = float(current_tick - e.tick)
                 total += e.minted * math.exp(-_HISTORICAL_DECAY_LAMBDA * age)
             return total / (1.0 + total)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:513",
+                exc=_aurora_boundary_exc,
+                context={"function": "_historical_weight", "handler_line": 513, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return 0.0
 
     def _active_coherence(
@@ -533,7 +576,14 @@ class ICCLedger:
             else:
                 base = 0.85 * _SATURATION_PENALTY
             return max(_ACTIVE_COHERENCE_FLOOR, base)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:536",
+                exc=_aurora_boundary_exc,
+                context={"function": "_active_coherence", "handler_line": 536, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return _ACTIVE_COHERENCE_FLOOR
 
     def _moral_standing(self, moral_ledger: Optional[MoralWeightLedger]) -> float:
@@ -546,7 +596,14 @@ class ICCLedger:
             if denom <= 0.0:
                 return 0.0
             return min(1.0, total / denom)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:549",
+                exc=_aurora_boundary_exc,
+                context={"function": "_moral_standing", "handler_line": 549, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return 0.0
 
     def _intent_integrity(self) -> float:
@@ -555,7 +612,14 @@ class ICCLedger:
                 return 1.0
             passed = sum(1 for p in self._guard_pass_window if p)
             return passed / len(self._guard_pass_window)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:558",
+                exc=_aurora_boundary_exc,
+                context={"function": "_intent_integrity", "handler_line": 558, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return 0.0
 
     # ------------------------------------------------------------------
@@ -576,7 +640,14 @@ class ICCLedger:
             ms = self._moral_standing(moral_ledger)
             ii = self._intent_integrity()
             return hw * ac * ms * ii
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:579",
+                exc=_aurora_boundary_exc,
+                context={"function": "current_balance", "handler_line": 579, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return 0.0
 
     def balance_trajectory(
@@ -602,7 +673,14 @@ class ICCLedger:
                 )
                 for e in recent
             ]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:605",
+                exc=_aurora_boundary_exc,
+                context={"function": "balance_trajectory", "handler_line": 605, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return []
 
     def summary(self) -> Dict[str, Any]:
@@ -616,7 +694,14 @@ class ICCLedger:
                 "total_minted":   round(sum(e.minted for e in self._entries), 6),
                 "mint_sources":   sorted({e.source for e in self._entries}),
             }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_icc_ledger.py:619",
+                exc=_aurora_boundary_exc,
+                context={"function": "summary", "handler_line": 619, "source_file": "aurora_internal/aurora_icc_ledger.py"},
+            )
             return {"entry_count": 0, "chain_intact": False, "frozen": True,
                      "total_minted": 0.0, "mint_sources": []}
 

@@ -34,6 +34,7 @@ Deduplication:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -125,6 +126,13 @@ class CapabilityAssimilator:
         try:
             from aurora_internal.aurora_frontier_ops import _FRONTIER_CLASSES  # type: ignore
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:127",
+                exc=exc,
+                context={"function": "assimilate_frontier_ops", "handler_line": 127, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+            )
             return {"registered": 0, "error": str(exc)}
 
         registered = 0
@@ -160,7 +168,14 @@ class CapabilityAssimilator:
                     registered += 1
                 else:
                     skipped += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:163",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "assimilate_frontier_ops", "handler_line": 163, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+                )
                 skipped += 1
 
         return {"registered": registered, "skipped": skipped}
@@ -224,7 +239,14 @@ class CapabilityAssimilator:
                     registered += 1
                 else:
                     skipped += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:227",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "assimilate_gen2_surfaces", "handler_line": 227, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+                )
                 skipped += 1
 
         return {"registered": registered, "skipped": skipped, "total_in_registry": len(registry)}
@@ -277,7 +299,14 @@ class CapabilityAssimilator:
                     registered += 1
                 else:
                     skipped += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:280",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "assimilate_compound_axes", "handler_line": 280, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+                )
                 skipped += 1
 
         return {"registered": registered, "skipped": skipped}
@@ -322,7 +351,14 @@ class CapabilityAssimilator:
                             }
                         )
                         seeded += 1
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:325",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "seed_curriculum", "handler_line": 325, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+                    )
                     pass
 
         # seed emergence dimensions (always low count — compound axes just emerged)
@@ -346,14 +382,28 @@ class CapabilityAssimilator:
                         }
                     )
                     seeded += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:349",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "seed_curriculum", "handler_line": 349, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+                )
                 pass
 
         if seeded > 0:
             self._assimilated.add(seed_id)
             try:
                 fail_ledger.save()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:356",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "seed_curriculum", "handler_line": 356, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+                )
                 pass
 
         return {"seeded": seeded}
@@ -368,7 +418,14 @@ class CapabilityAssimilator:
             mod = importlib.reload(mod)
             reg = getattr(mod, "_SURFACE_REGISTRY", None)
             return dict(reg) if isinstance(reg, dict) else {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:371",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_surface_registry", "handler_line": 371, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+            )
             return {}
 
     def _load_compound_axes(self) -> Dict[str, Any]:
@@ -379,7 +436,14 @@ class CapabilityAssimilator:
             with open(path, encoding="utf-8") as fh:
                 data = json.load(fh)
             return data if isinstance(data, dict) else {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:382",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_compound_axes", "handler_line": 382, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+            )
             return {}
 
     def _load_assimilated(self) -> Set[str]:
@@ -390,7 +454,14 @@ class CapabilityAssimilator:
             with open(path, encoding="utf-8") as fh:
                 data = json.load(fh)
             return set(data) if isinstance(data, list) else set()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:393",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_assimilated", "handler_line": 393, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+            )
             return set()
 
     def _save_assimilated(self) -> None:
@@ -398,5 +469,12 @@ class CapabilityAssimilator:
         try:
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(sorted(self._assimilated), fh, indent=2)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_capability_assimilator.py:401",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_assimilated", "handler_line": 401, "source_file": "aurora_internal/aurora_capability_assimilator.py"},
+            )
             pass

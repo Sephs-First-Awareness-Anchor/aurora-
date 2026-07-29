@@ -28,6 +28,7 @@ produced nothing):
 
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -96,7 +97,14 @@ def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
     try:
         from aurora_internal.aurora_utterance_parser import parse_utterance
         parsed = parse_utterance(text)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:99",
+            exc=_aurora_boundary_exc,
+            context={"function": "_extract_triple_from_thought_text", "handler_line": 99, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         parsed = {}
 
     topic = str(parsed.get("topic", "") or "").strip()
@@ -213,7 +221,14 @@ def _frame_from_claims(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
         if not candidates:
             return None
         best = max(candidates, key=lambda n: substrate.score_claim(n))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:216",
+            exc=_aurora_boundary_exc,
+            context={"function": "_frame_from_claims", "handler_line": 216, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         return None
 
     subject = str(best.get("subject", "") or "").strip()
@@ -257,7 +272,14 @@ def _frame_from_turn_local_claims(systems: Dict[str, Any]) -> Optional[Propositi
         if not candidates:
             return None
         best = candidates[-1]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:260",
+            exc=_aurora_boundary_exc,
+            context={"function": "_frame_from_turn_local_claims", "handler_line": 260, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         return None
 
     subject = str(best.get("subject", "") or "").strip()
@@ -295,24 +317,52 @@ def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFram
         frame = _frame_from_thought_state(systems)
         if frame is not None:
             return frame
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:298",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "handler_line": 298, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         pass
     try:
         frame = _frame_from_claims(systems)
         if frame is not None:
             return frame
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:304",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "handler_line": 304, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         pass
     try:
         frame = _frame_from_turn_local_claims(systems)
         if frame is not None:
             return frame
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:310",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "handler_line": 310, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         pass
     try:
         frame = _frame_from_anchor(systems, state)
         if frame is not None:
             return frame
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:316",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "handler_line": 316, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         pass
     return None

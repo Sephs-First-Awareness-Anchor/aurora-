@@ -18,6 +18,7 @@ Storage architecture
 """
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import itertools
 import json
@@ -622,7 +623,14 @@ class FileStorageBackend:
         try:
             lines = journal_path.read_text(encoding="utf-8").strip().splitlines()
             return [json.loads(line) for line in lines[-tail:]]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/quasiarch_observer/dimensional_memory.py:625",
+                exc=_aurora_boundary_exc,
+                context={"function": "read_journal", "handler_line": 625, "source_file": "aurora_internal/quasiarch_observer/dimensional_memory.py"},
+            )
             return []
 
     def read_journal_for_node(self, node_id: str) -> List[Dict[str, Any]]:
@@ -639,7 +647,14 @@ class FileStorageBackend:
                 if entry.get("node_id") == node_id:
                     result.append(entry)
             return result
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/quasiarch_observer/dimensional_memory.py:642",
+                exc=_aurora_boundary_exc,
+                context={"function": "read_journal_for_node", "handler_line": 642, "source_file": "aurora_internal/quasiarch_observer/dimensional_memory.py"},
+            )
             return []
 
 
@@ -1242,7 +1257,14 @@ class DimensionalMemory:
                 key=lambda p: p.stat().st_mtime,
                 reverse=True,
             )
-        except OSError:
+        except OSError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/quasiarch_observer/dimensional_memory.py:1245",
+                exc=_aurora_boundary_exc,
+                context={"function": "load_all", "handler_line": 1245, "source_file": "aurora_internal/quasiarch_observer/dimensional_memory.py"},
+            )
             edge_paths = []
         for path in _cap(iter(edge_paths), max_per_type):
             try:
@@ -1251,7 +1273,14 @@ class DimensionalMemory:
                 edge = LineageEdge.from_dict(data)
                 self._edges[edge.edge_id] = edge
                 counts["edges"] += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/quasiarch_observer/dimensional_memory.py:1254",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "load_all", "handler_line": 1254, "source_file": "aurora_internal/quasiarch_observer/dimensional_memory.py"},
+                )
                 pass
 
         # Load indexes (small number of files per type — no cap needed here)
@@ -1542,7 +1571,14 @@ class IntegratedMemoryPipeline:
         try:
             refs = self._build_anchor_refs(crystal, issue_category)
             self.ghost_relics.create_relic(crystal, anchor_refs=refs, reason=reason)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/quasiarch_observer/dimensional_memory.py:1545",
+                exc=_aurora_boundary_exc,
+                context={"function": "_capture_ghost_relic", "handler_line": 1545, "source_file": "aurora_internal/quasiarch_observer/dimensional_memory.py"},
+            )
             return
 
     def _maybe_apply_ghost_relic(
@@ -1559,7 +1595,14 @@ class IntegratedMemoryPipeline:
             return
         try:
             self.ghost_relics.apply_relic(relic, crystal, match_score=match_score)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/quasiarch_observer/dimensional_memory.py:1562",
+                exc=_aurora_boundary_exc,
+                context={"function": "_maybe_apply_ghost_relic", "handler_line": 1562, "source_file": "aurora_internal/quasiarch_observer/dimensional_memory.py"},
+            )
             return
 
     def get_ghost_relic_stats(self) -> Dict[str, Any]:

@@ -114,8 +114,16 @@ def test_aurora_py_reads_toroidal_signature_from_coordinator_not_layer_directly(
     anchor = source.index('_mtsl_coordinator.latest_snapshot.toroidal_signature')
     head = source[max(0, anchor - 3000):anchor]
     assert "try:" in head
-    tail = source[anchor:anchor + 500]
-    assert "except Exception:\n        pass" in tail
+    # Widened from 500, and the bare "except Exception:\n        pass"
+    # literal relaxed to just its two halves (zip integration phase D,
+    # 2026-07-29): every handler in the file now binds its exception
+    # via "as _aurora_boundary_exc" and has an instrumentation call
+    # between the except line and the trailing pass, but the handler
+    # still swallows and falls through to pass -- the actual property
+    # under test (read-only/advisory, never raises) is unchanged.
+    tail = source[anchor:anchor + 900]
+    assert "except Exception as _aurora_boundary_exc:" in tail
+    assert tail.rstrip().endswith("pass") or "\n        pass\n" in tail
 
 
 def test_consciousness_engine_is_the_single_observer_of_the_coordinator():

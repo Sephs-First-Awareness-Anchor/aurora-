@@ -52,6 +52,7 @@ DOCTRINE:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import time
@@ -1339,7 +1340,14 @@ class ResearchStudyMode:
             from aurora_expression_perception import infer_word_role
             try:
                 role = infer_word_role(word)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_ontological_scaffolding.py:1342",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "teach_concept", "handler_line": 1342, "source_file": "aurora_internal/aurora_ontological_scaffolding.py"},
+                )
                 role = "noun"
             self.web.add_node(word, role, 0.0, meaning="waiting_for_teaching")
 
@@ -1492,7 +1500,14 @@ class ResearchStudyMode:
         if self._fetch_definition:
             try:
                 return self._fetch_definition(word)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_ontological_scaffolding.py:1495",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_research_word", "handler_line": 1495, "source_file": "aurora_internal/aurora_ontological_scaffolding.py"},
+                )
                 pass
 
         # Fallback: internal inference only
@@ -1582,7 +1597,14 @@ class ResearchStudyMode:
                     try:
                         from aurora_expression_perception import infer_word_role
                         role = infer_word_role(raw)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_ontological_scaffolding.py:1585",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_integrate_result", "handler_line": 1585, "source_file": "aurora_internal/aurora_ontological_scaffolding.py"},
+                        )
                         role = "noun"
                     self.web.add_node(raw, role, 0.0,
                                       meaning=f"from_definition:{word}")
@@ -2162,7 +2184,14 @@ class OntologicalScaffoldingEngine:
             os.makedirs(os.path.dirname(log_path), exist_ok=True)
             with open(log_path, 'a') as f:
                 f.write(_j.dumps(event.to_dict()) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_ontological_scaffolding.py:2165",
+                exc=_aurora_boundary_exc,
+                context={"function": "log_study_event", "handler_line": 2165, "source_file": "aurora_internal/aurora_ontological_scaffolding.py"},
+            )
             pass
 
     def set_announce_thresholds(self, min_connections: int = 3,

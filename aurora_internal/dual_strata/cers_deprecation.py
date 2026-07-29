@@ -20,6 +20,7 @@ grounds to deprecate that signal; it's evidence to route it, which is a
 separate decision this ledger only surfaces, never makes.
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -109,7 +110,14 @@ class SubsystemDeprecationLedger:
             self._latest_actively_trialing = list(raw.get("latest_actively_trialing", []) or [])
             self._latest_confirmed_benefits = dict(raw.get("latest_confirmed_benefits", {}) or {})
             self._latest_confirmed_inert = list(raw.get("latest_confirmed_inert", []) or [])
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/cers_deprecation.py:112",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load", "handler_line": 112, "source_file": "aurora_internal/dual_strata/cers_deprecation.py"},
+            )
             # Corrupt ledger never blocks evaluation -- start clean.
             pass
 
@@ -141,7 +149,14 @@ class SubsystemDeprecationLedger:
             with open(tmp, "w", encoding="utf-8") as fh:
                 json.dump(payload, fh, indent=1)
             os.replace(tmp, self._path)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/cers_deprecation.py:144",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save", "handler_line": 144, "source_file": "aurora_internal/dual_strata/cers_deprecation.py"},
+            )
             pass
 
     def record(self, equivalence_entry: Dict[str, Any]) -> None:

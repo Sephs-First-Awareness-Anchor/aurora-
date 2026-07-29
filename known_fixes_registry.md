@@ -7101,3 +7101,78 @@ acceptance bar for this tool.
 
 **First Seen:** Zip integration phase C ("use everything in the zip"),
 2026-07-29.
+
+## FIX-A059 (INSTRUMENTATION, repo-wide) — exception-instrumentation applied across the codebase, zip integration phase D, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, not a bug fix.
+
+Phase D of "use everything in the zip" -- the actual repo-wide
+application of the injector built in phase C (FIX-A058). Sunni was
+given an explicit checkpoint before this ran: the change touches ~196
+of ~200 production files (~3295 call sites, dominated by a ~5,500-line
+diff in `aurora.py` alone) and a trial run against a disposable git
+worktree copy had already found it breaks 3 existing tests that assert
+fixed-size source-text windows around specific call sites. Sunni chose
+to proceed.
+
+**What ran:** `python3 scripts/aurora_fault_instrumentation_injector.py`
+against the live repo. 3295 handlers instrumented across 196 files, 0
+skips -- identical counts to the disposable-worktree dry run, confirming
+the tool is deterministic and the earlier verification transfers
+directly. Every modified file re-parses; `import aurora` (the deepest
+transitive import chain in the codebase, touching `aurora_support_
+stack` -> `aurora_internal.aurora_identity_persistence` -> ... ->
+`aurora_internal.constraint_genealogy`, the exact chain that surfaced
+FIX-A058's `__future__`-import bug) succeeds cleanly.
+
+**3 existing tests fixed** (the same 3 the phase-C worktree trial
+predicted, confirmed identical against the real live application --
+no new failures beyond what was already characterized):
+- `test_b1_1_envelope_shadow.py::test_chain_down5_understanding_wires_
+  b1_1_shadow_logger` -- fixed-size window (3000 chars from the
+  function's `def` line) no longer reached `log_envelope_shadow`
+  (now 3258 chars away) because instrumentation added lines to
+  handlers earlier in the same function. Widened to 4000.
+- `test_warp_phase3d_parse_confidence_confession.py::test_chain_up1_
+  information_wires_the_confession` -- same pattern, 600-char window
+  vs. 635-char real distance. Widened to 900.
+- `test_flow_audit_and_tcl_wiring.py::test_aurora_py_reads_toroidal_
+  signature_from_coordinator_not_layer_directly` -- this one needed
+  more than a wider window: it hardcoded the literal
+  `"except Exception:\n        pass"`, which no longer exists anywhere
+  in the file now that every handler binds its exception via
+  `as _aurora_boundary_exc`. Relaxed to check for
+  `"except Exception as _aurora_boundary_exc:"` plus a trailing `pass`
+  within a widened window -- the actual property under test (the
+  toroidal-signature read stays inside a read-only, fail-quiet
+  try/except that never raises) is unchanged; only the literal source
+  text describing it changed shape.
+
+None of these were behavioral regressions -- in each case the
+underlying wiring relationship the test checks is intact; only the
+exact byte offsets and, in the third case, the literal exception-clause
+text (now uniformly including `as _aurora_boundary_exc`) had shifted.
+A repo-wide grep for the same bare `"except Exception:"` (no `as`)
+literal pattern across `tests/*.py` found only that one file using it
+in an assertion; the other 19 matches were either already using
+`as <name>` in their own asserted text or were unrelated string
+occurrences.
+
+**Full regression:** 1141/1145 passed. 4 failures: the same 3
+pre-existing/unrelated ones from FIX-A056/A057/A058 (2 order-dependent
+flaky tests, 1 already-reported live lexicon-tagging drift finding),
+plus one new one this run --
+`test_pf1_3_motif_selection.py::test_shape_fit_favors_the_skeleton_
+with_room_for_the_full_triple`, which passed cleanly in isolation and
+has no relationship to exception handling (motif shape-fit selection
+logic) -- the same order-dependent-flakiness signature as the other
+two, not a regression from this change. Not re-run a second full pass
+to force a repeat given the ~40-minute cost and the strength of the
+existing signature match; noting it honestly rather than omitting it.
+
+**What this does NOT include:** the Communication Credit Unification
+porting (zip integration phases E-H) -- unrelated content in the same
+zip, tracked separately, still pending.
+
+**First Seen:** Zip integration phase D ("use everything in the zip"),
+2026-07-29.

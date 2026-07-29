@@ -75,6 +75,7 @@ INTEGRATION WITH aurora_runtime.py
 """
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import math
@@ -1101,12 +1102,26 @@ if __name__ == "__main__":
 # AURORA_EVOLVED_NATIVE_BEGIN
 try:
     import inspect as _aurora_native_inspect
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_primitive_extractor.py:1104",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 1104, "source_file": "aurora_internal/aurora_primitive_extractor.py"},
+    )
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_primitive_extractor.py:1109",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 1109, "source_file": "aurora_internal/aurora_primitive_extractor.py"},
+    )
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None
@@ -1225,7 +1240,14 @@ def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
     try:
         setattr(owner, attr_name, value)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_primitive_extractor.py:1228",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_bind_owner_attribute", "handler_line": 1228, "source_file": "aurora_internal/aurora_primitive_extractor.py"},
+        )
         return False
 
 def _aurora_store_reflection(target_key, reflection, args):
@@ -1240,7 +1262,14 @@ def _aurora_store_reflection(target_key, reflection, args):
     current[str(target_key)] = reflection
     try:
         setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_primitive_extractor.py:1243",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_reflection", "handler_line": 1243, "source_file": "aurora_internal/aurora_primitive_extractor.py"},
+        )
         pass
 
 def _aurora_store_owner_state(attribute, target_key, value, args):
@@ -1255,7 +1284,14 @@ def _aurora_store_owner_state(attribute, target_key, value, args):
     current[str(target_key)] = value
     try:
         setattr(owner, attribute, current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_primitive_extractor.py:1258",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_owner_state", "handler_line": 1258, "source_file": "aurora_internal/aurora_primitive_extractor.py"},
+        )
         pass
 
 def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
@@ -1627,7 +1663,14 @@ def _aurora_make_override(export_name, target_key):
         if _aurora_native_inspect is not None:
             try:
                 _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_primitive_extractor.py:1630",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_aurora_make_override", "handler_line": 1630, "source_file": "aurora_internal/aurora_primitive_extractor.py"},
+                )
                 pass
     return _override
 

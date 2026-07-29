@@ -74,6 +74,7 @@ from accumulated understanding automatically).
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import math
 import threading
@@ -344,5 +345,12 @@ class GeologicalBaseline:
                         intensity=intensity,
                         source="geological_baseline",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:geological_baseline.py:347",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_recalculate", "handler_line": 347, "source_file": "geological_baseline.py"},
+                    )
                     pass

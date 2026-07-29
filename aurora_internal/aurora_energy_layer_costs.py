@@ -68,6 +68,7 @@ CREATED: February 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import math
 import time
@@ -901,6 +902,13 @@ def verify_layer_energy_costs() -> Dict[str, object]:
         _ = ledger.summary()
         check("Ledger summary generates without error", True)
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_energy_layer_costs.py:903",
+            exc=e,
+            context={"function": "verify_layer_energy_costs", "handler_line": 903, "source_file": "aurora_internal/aurora_energy_layer_costs.py"},
+        )
         check("Ledger summary generates without error", False, str(e))
 
     # 12. to_system_constraint_states produces valid export
@@ -969,12 +977,26 @@ if __name__ == "__main__":
 # AURORA_EVOLVED_NATIVE_BEGIN
 try:
     import inspect as _aurora_native_inspect
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_energy_layer_costs.py:972",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 972, "source_file": "aurora_internal/aurora_energy_layer_costs.py"},
+    )
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_energy_layer_costs.py:977",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 977, "source_file": "aurora_internal/aurora_energy_layer_costs.py"},
+    )
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None
@@ -2514,7 +2536,14 @@ def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
     try:
         setattr(owner, attr_name, value)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_energy_layer_costs.py:2517",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_bind_owner_attribute", "handler_line": 2517, "source_file": "aurora_internal/aurora_energy_layer_costs.py"},
+        )
         return False
 
 def _aurora_store_reflection(target_key, reflection, args):
@@ -2529,7 +2558,14 @@ def _aurora_store_reflection(target_key, reflection, args):
     current[str(target_key)] = reflection
     try:
         setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_energy_layer_costs.py:2532",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_reflection", "handler_line": 2532, "source_file": "aurora_internal/aurora_energy_layer_costs.py"},
+        )
         pass
 
 def _aurora_store_owner_state(attribute, target_key, value, args):
@@ -2544,7 +2580,14 @@ def _aurora_store_owner_state(attribute, target_key, value, args):
     current[str(target_key)] = value
     try:
         setattr(owner, attribute, current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_energy_layer_costs.py:2547",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_owner_state", "handler_line": 2547, "source_file": "aurora_internal/aurora_energy_layer_costs.py"},
+        )
         pass
 
 def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
@@ -2916,7 +2959,14 @@ def _aurora_make_override(export_name, target_key):
         if _aurora_native_inspect is not None:
             try:
                 _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_energy_layer_costs.py:2919",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_aurora_make_override", "handler_line": 2919, "source_file": "aurora_internal/aurora_energy_layer_costs.py"},
+                )
                 pass
     return _override
 

@@ -78,6 +78,7 @@ Created: February 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 import time
 import math
 import hashlib
@@ -119,7 +120,14 @@ try:
         ManifoldViolation,
     )
     CONSTRAINT_MANIFOLD_AVAILABLE = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_i_state_beings.py:122",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 122, "source_file": "aurora_i_state_beings.py"},
+    )
     CONSTRAINT_MANIFOLD_AVAILABLE = False
     ConstraintVector  = None  # type: ignore
     ManifoldViolation = Exception  # type: ignore
@@ -659,7 +667,14 @@ class IStateCollective:
                 A=axis_net['A'],
             )
             return cv, axis_net
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_i_state_beings.py:662",
+                exc=_aurora_boundary_exc,
+                context={"function": "_synthesize_constraint_vector", "handler_line": 662, "source_file": "aurora_i_state_beings.py"},
+            )
             return None, axis_net
 
     def _analyze_axes(self, responses: Dict[str, BeingResponse]
@@ -845,7 +860,14 @@ def verify_beings() -> Dict[str, Any]:
     try:
         collective.process_raw("impossible", "test", {'is_coherent': False})
         check("Incoherent input rejected", False, "no exception")
-    except OntologicalViolation:
+    except OntologicalViolation as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_i_state_beings.py:848",
+            exc=_aurora_boundary_exc,
+            context={"function": "verify_beings", "handler_line": 848, "source_file": "aurora_i_state_beings.py"},
+        )
         check("Incoherent input rejected", True)
 
     # 13. Background tick

@@ -16,6 +16,7 @@ CrestRegistry (WarpCapable):
     specific evidence keys.
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import math
 import sys
@@ -38,7 +39,14 @@ def _get_warp_capable():
             _ALL_ISTATES, _RECURSION_DIMS, _ALL_DIMS,
         )
         return WarpCapable, WarpComponent, CoverageGap, AxisCoverageChecker, axes_to_istates, _ALL_DIMS
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/subsystem_waveforms.py:41",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_warp_capable", "handler_line": 41, "source_file": "aurora_internal/dual_strata/subsystem_waveforms.py"},
+        )
         return None, None, None, None, None, None
 
 
@@ -404,7 +412,14 @@ class CrestRegistry:
             self._generator = WarpGenerator()
             self._GAP_PERSIST = GAP_PERSISTENCE_REQUIRED
             self._COV_THRESH = COVERAGE_THRESHOLD
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/subsystem_waveforms.py:407",
+                exc=_aurora_boundary_exc,
+                context={"function": "_try_init_warp", "handler_line": 407, "source_file": "aurora_internal/dual_strata/subsystem_waveforms.py"},
+            )
             self._generator = None
             self._GAP_PERSIST = 3
             self._COV_THRESH = 0.82

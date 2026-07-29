@@ -13,6 +13,7 @@ except-branch. Every function is total — it never raises; on catastrophic
 failure it returns a safe, neutral perception so the caller never crashes.
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 from typing import Any, Dict, Optional, Tuple
 
 
@@ -71,7 +72,14 @@ def perceive_frame(jpeg_bytes: Any, prev_gray: Any = None) -> Tuple[Dict[str, An
             "source":          "python_fallback",
         }
         return obs, gray
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_sensory_fallback.py:74",
+            exc=_aurora_boundary_exc,
+            context={"function": "perceive_frame", "handler_line": 74, "source_file": "aurora_sensory_fallback.py"},
+        )
         # Catastrophic — return a safe neutral perception so nothing crashes.
         return (
             {

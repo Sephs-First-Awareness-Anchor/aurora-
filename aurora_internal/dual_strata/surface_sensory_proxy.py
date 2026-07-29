@@ -1,5 +1,6 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import time
 from pathlib import Path
@@ -29,7 +30,14 @@ class TransientSensorySnapshotProxy:
 
             self._growth_crystal = build_aurora_sensory_crystal(state_dir=str(self.state_dir))
             self._growth_crystal.start_session(self._session_id)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/surface_sensory_proxy.py:32",
+                exc=_aurora_boundary_exc,
+                context={"function": "__init__", "handler_line": 32, "source_file": "aurora_internal/dual_strata/surface_sensory_proxy.py"},
+            )
             self._growth_crystal = None
 
         self._audio: Dict[str, Any] = getattr(self._growth_crystal, "_audio", {}) if self._growth_crystal is not None else {}
@@ -79,7 +87,14 @@ class TransientSensorySnapshotProxy:
             try:
                 session_id = f"{self._session_id}_{int(snapshot_ts)}"
                 self._growth_crystal.observe_frame(audio_vec, visual_vec, session_id=session_id)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/surface_sensory_proxy.py:82",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_consume_latest_snapshot", "handler_line": 82, "source_file": "aurora_internal/dual_strata/surface_sensory_proxy.py"},
+                )
                 pass
         return snapshot
 
@@ -89,7 +104,14 @@ class TransientSensorySnapshotProxy:
         if self._growth_crystal is not None and hasattr(self._growth_crystal, "get_state"):
             try:
                 state = dict(self._growth_crystal.get_state() or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/surface_sensory_proxy.py:92",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_state", "handler_line": 92, "source_file": "aurora_internal/dual_strata/surface_sensory_proxy.py"},
+                )
                 state = {}
         surface_state = dict(snapshot.get("sensory_state") or {})
         recent_surface = list(dict(surface_state.get("recognitions") or {}).get("recent") or [])
@@ -125,7 +147,14 @@ class TransientSensorySnapshotProxy:
             try:
                 self._growth_crystal.save()
                 return True
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/surface_sensory_proxy.py:128",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "save", "handler_line": 128, "source_file": "aurora_internal/dual_strata/surface_sensory_proxy.py"},
+                )
                 return False
         return True
 
@@ -134,7 +163,14 @@ class TransientSensorySnapshotProxy:
         if self._growth_crystal is not None and hasattr(self._growth_crystal, "start_session"):
             try:
                 self._growth_crystal.start_session(self._session_id)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/surface_sensory_proxy.py:137",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "start_session", "handler_line": 137, "source_file": "aurora_internal/dual_strata/surface_sensory_proxy.py"},
+                )
                 return False
         return True
 
@@ -143,7 +179,14 @@ class TransientSensorySnapshotProxy:
         if self._growth_crystal is not None and hasattr(self._growth_crystal, "end_session"):
             try:
                 return list(self._growth_crystal.end_session() or [])
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/surface_sensory_proxy.py:146",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "end_session", "handler_line": 146, "source_file": "aurora_internal/dual_strata/surface_sensory_proxy.py"},
+                )
                 return []
         return []
 

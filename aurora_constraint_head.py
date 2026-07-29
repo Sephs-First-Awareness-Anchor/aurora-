@@ -18,6 +18,7 @@ Crystal bucket addressing uses [0.0, 1.0]. Mapping: (polarity + 1.0) / 2.0
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 from dataclasses import dataclass, field
 from typing import Any, Deque, Dict, List, Optional, Tuple
 from collections import deque
@@ -83,7 +84,14 @@ class ConstraintHead:
         try:
             from concept_crystal import ConceptCrystalRegistry
             bucket = ConceptCrystalRegistry._to_bucket(axes)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_constraint_head.py:86",
+                exc=_aurora_boundary_exc,
+                context={"function": "advance", "handler_line": 86, "source_file": "aurora_constraint_head.py"},
+            )
             bucket = tuple(round(axes.get(k, 0.5) / 0.10) * 0.10 for k in ("X", "T", "N", "B", "A"))
 
         crystal = self._registry.query(axes)

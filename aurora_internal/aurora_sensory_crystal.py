@@ -57,6 +57,7 @@ State persisted to:
 """
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import gzip
 import json
@@ -76,7 +77,14 @@ _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 try:
     import numpy as np
     HAS_NUMPY = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:79",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 79, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+    )
     HAS_NUMPY = False
 
 logger = logging.getLogger(__name__)
@@ -341,12 +349,26 @@ def audio_dict_to_crystal_20d(audio_data: Dict[str, Any]) -> List[float]:
             if key in audio_data and audio_data.get(key) is not None:
                 try:
                     return float(audio_data.get(key))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:344",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_pull", "handler_line": 344, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+                    )
                     pass
             if key in feat and feat.get(key) is not None:
                 try:
                     return float(feat.get(key))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:349",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_pull", "handler_line": 349, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+                    )
                     pass
         return float(default)
     out     = [0.0] * 20
@@ -664,13 +686,27 @@ class SensoryClusterFacet:
                     }
                     with open(str(_tlog), "a") as _fh:
                         _fh.write(_json.dumps(_entry) + "\n")
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:667",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "tick_advanced_promotion", "handler_line": 667, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+                    )
                     pass
                 # Inject into DPS crystal order ladder (BASE→COMPOSITE→FULL→QUASI)
                 if self.promotion_hook is not None:
                     try:
                         self.promotion_hook(self.domain, self.facet, node)
                     except Exception as _ph_e:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:673",
+                            exc=_ph_e,
+                            context={"function": "tick_advanced_promotion", "handler_line": 673, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+                        )
                         logger.debug("[SensoryCrystal] promotion_hook error: %s", _ph_e)
                 if self._evolution_hook is not None:
                     try:
@@ -702,6 +738,13 @@ class SensoryClusterFacet:
                         }
                         self._evolution_hook(evidence)
                     except Exception as _ev_e:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:704",
+                            exc=_ev_e,
+                            context={"function": "tick_advanced_promotion", "handler_line": 704, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+                        )
                         logger.debug("[SensoryCrystal] evolution_hook error: %s", _ev_e)
         return out
 
@@ -1105,6 +1148,13 @@ class AuroraSensoryCrystal:
                             domain, facet_name, node.node_id[:8],
                             getattr(crystal.level, "name", str(crystal.level)))
         except Exception as _e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:1107",
+                exc=_e,
+                context={"function": "_inject_to_dps", "handler_line": 1107, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+            )
             logger.debug("[SensoryCrystal] DPS injection failed for %s:%s: %s",
                          domain, facet_name, _e)
 
@@ -1151,6 +1201,13 @@ class AuroraSensoryCrystal:
                     getattr(crystal.level, "name", str(crystal.level)),
                 )
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:1153",
+                exc=exc,
+                context={"function": "_inject_semantic_to_dps", "handler_line": 1153, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+            )
             logger.debug("[SensoryCrystal] semantic DPS injection failed for %s: %s", node.node_id[:8], exc)
 
     def _sync_to_dps(self, *, count_use: bool) -> None:
@@ -1207,7 +1264,14 @@ class AuroraSensoryCrystal:
             sig[axis] = round(old * 0.85 + confidence * 0.15, 4)
             crystal.constraint_signature = sig
             crystal.evolve()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:1210",
+                exc=_aurora_boundary_exc,
+                context={"function": "_dps_route_observation", "handler_line": 1210, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+            )
             pass
 
     # ------------------------------------------------------------------
@@ -1457,7 +1521,14 @@ class AuroraSensoryCrystal:
                 if source:
                     crystal.add_facet("semantic_source", source[:40], confidence=0.50)
                 crystal.evolve()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:1460",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "ingest", "handler_line": 1460, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+                )
                 pass
 
     def observe_semantic(self, concept: str, weight: float = 1.0,
@@ -1561,7 +1632,14 @@ class AuroraSensoryCrystal:
             import json as _json
             with open(str(hub_path), "w") as _fh:
                 _json.dump(hub_state, _fh)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:1564",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save", "handler_line": 1564, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+            )
             pass
 
     # ------------------------------------------------------------------
@@ -1683,7 +1761,14 @@ def _make_lineage_trait_spec() -> Optional[Any]:
         from aurora_internal.aurora_ability_lineage_compiler import (
             LineageStage, SystemWriteback,
         )
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:1686",
+            exc=_aurora_boundary_exc,
+            context={"function": "_make_lineage_trait_spec", "handler_line": 1686, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+        )
         return None
 
     stages = (
@@ -2019,6 +2104,13 @@ def ensure_sensory_crystal_lineage(systems: Dict[str, Any],
                 logger.info("[SensoryCrystal] Injected %d sensory AbilityProfiles into genealogy "
                             "causal chain", injected)
         except Exception as _ga_e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:2021",
+                exc=_ga_e,
+                context={"function": "ensure_sensory_crystal_lineage", "handler_line": 2021, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+            )
             logger.debug("[SensoryCrystal] Genealogy AbilityProfile injection failed: %s", _ga_e)
 
     return bool(result)
@@ -2097,7 +2189,14 @@ def build_vision_57d_from_image_file(image_path: str) -> Optional[List[float]]:
     """
     try:
         from PIL import Image as _PILImg
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:2100",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_vision_57d_from_image_file", "handler_line": 2100, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+        )
         return None
 
     try:
@@ -2147,7 +2246,14 @@ def build_vision_57d_from_image_file(image_path: str) -> Optional[List[float]]:
         vec.extend([0.0] * 17)
         vec.extend([0.0] * 6)  # motion facet — zeros for static image
         return vec[:57]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:2150",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_vision_57d_from_image_file", "handler_line": 2150, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+        )
         return None
 
 

@@ -37,6 +37,7 @@ EMOTION FIREWALL:
 Emotion is weather, not input. It shapes the landscape without being on the map.
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import copy
 import json
@@ -111,7 +112,14 @@ class ActiveSelfState:
                     if v is not None:
                         preds[attr] = str(v)
                 state.identity_predicates = preds
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:114",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 114, "source_file": "aurora_thought_formation.py"},
+            )
             pass
         # PressureVec
         try:
@@ -126,27 +134,55 @@ class ActiveSelfState:
                         "B": float(getattr(pv, "B", 0.5)),
                         "A": float(getattr(pv, "A", 0.5)),
                     }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:129",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 129, "source_file": "aurora_thought_formation.py"},
+            )
             pass
         # Dominant constraint field
         try:
             field_map = systems.get("field_map") or systems.get("constraint_field_map")
             if field_map and hasattr(field_map, "dominant_field"):
                 state.dominant_field = str(field_map.dominant_field or "")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:136",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 136, "source_file": "aurora_thought_formation.py"},
+            )
             pass
         # Not-me register — populated by SelfGroundingFallback if available
         try:
             from aurora_self_grounding import _NOT_ME_REGISTER
             state.not_me_summary = list(_NOT_ME_REGISTER)[-10:]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:142",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 142, "source_file": "aurora_thought_formation.py"},
+            )
             pass
         # Tick
         try:
             lat = systems.get("lattice")
             if lat and hasattr(lat, "generation"):
                 state.tick = int(lat.generation)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:149",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 149, "source_file": "aurora_thought_formation.py"},
+            )
             pass
 
         cls._CACHE = state
@@ -637,7 +673,14 @@ class ThoughtIntegrationSpace:
             try:
                 ts = self._do_integrate()
                 _result_holder.append(ts)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_thought_formation.py:640",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_integration", "handler_line": 640, "source_file": "aurora_thought_formation.py"},
+                )
                 _result_holder.append(ThoughtState(tick=self.self_state.tick, partial=True))
             finally:
                 done_flag.set()
@@ -1141,7 +1184,14 @@ class WarpStreamEntry:
                     if pv:
                         for ax in _AXES:
                             axis_weights[ax] = float(getattr(pv, ax, 0.5))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_thought_formation.py:1144",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_read_istates", "handler_line": 1144, "source_file": "aurora_thought_formation.py"},
+                )
                 pass
 
         # IVM polarity — signed [-1, +1] — tells us positive vs negative I-state weight
@@ -1153,7 +1203,14 @@ class WarpStreamEntry:
                     for ax in _AXES:
                         if ax in pol:
                             ivm_polarity[ax] = float(pol[ax])
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:1156",
+                exc=_aurora_boundary_exc,
+                context={"function": "_read_istates", "handler_line": 1156, "source_file": "aurora_thought_formation.py"},
+            )
             pass
 
         base = axes_to_istates(axis_weights, ivm_polarity)
@@ -1177,7 +1234,14 @@ class WarpStreamEntry:
                     lvl = int(getattr(node, "recursion_level", 0))
                     lvl = min(4, max(0, lvl))
                     rec_totals[lvl] += _VOTE_W.get(lvl, 0.01)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:1180",
+                exc=_aurora_boundary_exc,
+                context={"function": "_read_istates", "handler_line": 1180, "source_file": "aurora_thought_formation.py"},
+            )
             pass
 
         total_rec = sum(rec_totals.values())
@@ -1203,7 +1267,14 @@ class WarpStreamEntry:
                 pv = dim._current_pressure_vec()
                 if pv:
                     return {a: float(getattr(pv, a, 0.5)) for a in _AXES}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:1206",
+                exc=_aurora_boundary_exc,
+                context={"function": "_read_axes", "handler_line": 1206, "source_file": "aurora_thought_formation.py"},
+            )
             pass
         return {ax: 0.5 for ax in _AXES}
 
@@ -1474,7 +1545,14 @@ class ThoughtBraid(WarpCapable):
                 elif hasattr(sm, "recent_strata"):
                     strata = sm.recent_strata(n=3)
                     signal["strata_topics"] = [str(s) for s in strata][:3]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:1477",
+                exc=_aurora_boundary_exc,
+                context={"function": "_update_memory", "handler_line": 1477, "source_file": "aurora_thought_formation.py"},
+            )
             pass
         self._memory_stream.append(signal)
 
@@ -1490,7 +1568,14 @@ class ThoughtBraid(WarpCapable):
                     signal["topic_weight"] = float(session.topic_weight)
             open_loops = systems.get("_open_loops") or []
             signal["open_loop_pressure"] = min(1.0, len(open_loops) * 0.1)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:1493",
+                exc=_aurora_boundary_exc,
+                context={"function": "_update_sensory", "handler_line": 1493, "source_file": "aurora_thought_formation.py"},
+            )
             pass
         self._sensory_stream.append(signal)
 
@@ -1512,7 +1597,14 @@ class ThoughtBraid(WarpCapable):
             field_map = systems.get("field_map") or systems.get("constraint_field_map")
             if field_map and hasattr(field_map, "dominant_field"):
                 signal["dominant_field"] = str(field_map.dominant_field or "")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:1515",
+                exc=_aurora_boundary_exc,
+                context={"function": "_update_predictive", "handler_line": 1515, "source_file": "aurora_thought_formation.py"},
+            )
             pass
         self._predictive_stream.append(signal)
 
@@ -1555,7 +1647,14 @@ class ThoughtBraid(WarpCapable):
                         "B": b_val - 0.5,
                         "A": a_val - 0.5,
                     }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_thought_formation.py:1558",
+                exc=_aurora_boundary_exc,
+                context={"function": "_update_emotion", "handler_line": 1558, "source_file": "aurora_thought_formation.py"},
+            )
             pass
 
         # Decay previous emotional state if signal is low
@@ -1621,13 +1720,27 @@ class StreamingThoughtThread:
             while not self._stop_event.is_set():
                 try:
                     self.braid.advance(self.systems)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_thought_formation.py:1624",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_loop", "handler_line": 1624, "source_file": "aurora_thought_formation.py"},
+                    )
                     pass
                 try:
                     _cpm = self.systems.get('cpm')
                     if _cpm is not None:
                         _cpm.advance()
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_thought_formation.py:1630",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_loop", "handler_line": 1630, "source_file": "aurora_thought_formation.py"},
+                    )
                     pass
                 # Waveform pressure from braid state — thought activity
                 # propagates through the manifold so curiosity, reasoning,
@@ -1656,7 +1769,14 @@ class StreamingThoughtThread:
                                 coupling_mode="full",
                             )
                             _pump.inject(_bdist, _ifield)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_thought_formation.py:1659",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_loop", "handler_line": 1659, "source_file": "aurora_thought_formation.py"},
+                    )
                     pass
                 self._stop_event.wait(timeout=self.tick_interval_s)
 

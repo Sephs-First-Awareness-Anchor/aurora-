@@ -43,6 +43,7 @@ Sources used (in priority order):
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -291,9 +292,23 @@ class PressureClassifier:
                             v = float(snap.get(ax, 0.0) or 0.0)
                             sums[ax]   += v
                             counts[ax] += 1
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_pressure_classifier.py:294",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_axis_pressure_from_log", "handler_line": 294, "source_file": "aurora_internal/aurora_pressure_classifier.py"},
+                    )
                     pass
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_pressure_classifier.py:296",
+                exc=_aurora_boundary_exc,
+                context={"function": "_axis_pressure_from_log", "handler_line": 296, "source_file": "aurora_internal/aurora_pressure_classifier.py"},
+            )
             pass
         return {ax: round(sums[ax] / max(1, counts[ax]), 4) for ax in _AXES if counts[ax] > 0}
 
@@ -381,7 +396,14 @@ class PressureClassifier:
             with open(path, encoding="utf-8") as fh:
                 data = json.load(fh)
             return data if isinstance(data, dict) else {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_pressure_classifier.py:384",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_json", "handler_line": 384, "source_file": "aurora_internal/aurora_pressure_classifier.py"},
+            )
             return {}
 
     def _path(self, rel: str) -> str:

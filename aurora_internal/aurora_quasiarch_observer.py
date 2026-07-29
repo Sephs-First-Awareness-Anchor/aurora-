@@ -8,6 +8,7 @@ can be queried for hypotheses. Active steering is opt-in.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import itertools
 import json
@@ -38,7 +39,14 @@ def _fast_file_count(directory: str, limit: int) -> int:
     try:
         with os.scandir(directory) as it:
             return sum(1 for _ in itertools.islice(it, limit))
-    except (OSError, FileNotFoundError):
+    except (OSError, FileNotFoundError) as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:41",
+            exc=_aurora_boundary_exc,
+            context={"function": "_fast_file_count", "handler_line": 41, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+        )
         return 0
 
 
@@ -86,11 +94,25 @@ def build_quasiarch_pressure_vector(
     if gateway is not None:
         try:
             exploration_depth = min(1.0, len(getattr(gateway, "_exploration_queue", []) or []) / 6.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:89",
+                exc=_aurora_boundary_exc,
+                context={"function": "build_quasiarch_pressure_vector", "handler_line": 89, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             exploration_depth = 0.0
         try:
             quarantine_depth = min(1.0, len(getattr(gateway, "quarantine", {}) or {}) / 4.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:93",
+                exc=_aurora_boundary_exc,
+                context={"function": "build_quasiarch_pressure_vector", "handler_line": 93, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             quarantine_depth = 0.0
 
     search_attempts = float(getattr(search_adapter, "_search_attempts", 0) or 0)
@@ -106,7 +128,14 @@ def build_quasiarch_pressure_vector(
             es = consciousness.entropy.state
             coherence = float(getattr(es, "coherence", 1.0) or 1.0)
             stagnation = float(getattr(es, "stagnation_score", 0.0) or 0.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:109",
+                exc=_aurora_boundary_exc,
+                context={"function": "build_quasiarch_pressure_vector", "handler_line": 109, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             pass
 
     coherence_deficit = _clamp(1.0 - coherence)
@@ -191,7 +220,14 @@ def build_quasiarch_constraint_context(
                 for axis, value in dict(genealogy.pressure_orientation() or {}).items()
                 if str(axis or "").upper() in {"X", "T", "N", "B", "A"}
             }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:194",
+                exc=_aurora_boundary_exc,
+                context={"function": "build_quasiarch_constraint_context", "handler_line": 194, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             genealogy_orientation = {}
     for axis in ("X", "T", "N", "B", "A"):
         scores[axis] += 0.18 * _clamp(float(genealogy_orientation.get(axis, 0.0) or 0.0))
@@ -385,7 +421,14 @@ class AuroraQuasiArchObserver:
         else:
             try:
                 self.pipeline.memory.load_all()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:388",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "__init__", "handler_line": 388, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+                )
                 pass
         self._mode_requested = mode
         self.mode = str(mode or os.environ.get("AURORA_QUASIARCH_MODE", "advisory")).strip().lower()
@@ -483,7 +526,14 @@ class AuroraQuasiArchObserver:
         try:
             with open(self._state_path, "r", encoding="utf-8") as handle:
                 data = json.load(handle)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:486",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_state", "handler_line": 486, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             return
         loaded_mode = str(data.get("mode", self.mode) or self.mode).lower()
         if loaded_mode not in {"shadow", "advisory", "gated"}:
@@ -545,7 +595,14 @@ class AuroraQuasiArchObserver:
             with open(self._state_path, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:548",
+                exc=_aurora_boundary_exc,
+                context={"function": "_write_runtime_state", "handler_line": 548, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             return False
 
     def save(self) -> bool:
@@ -553,22 +610,50 @@ class AuroraQuasiArchObserver:
             self.pipeline.memory.live_save()
             try:
                 self.pipeline.ghost_relics.save()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:556",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "save", "handler_line": 556, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+                )
                 pass
             return self._write_runtime_state()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:559",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 559, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             return False
 
     def get_status(self) -> Dict[str, Any]:
         stats = {}
         try:
             stats = self.pipeline.memory.stats()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:566",
+                exc=_aurora_boundary_exc,
+                context={"function": "get_status", "handler_line": 566, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             stats = {}
         relic_stats = {}
         try:
             relic_stats = self.pipeline.get_ghost_relic_stats()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:571",
+                exc=_aurora_boundary_exc,
+                context={"function": "get_status", "handler_line": 571, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             relic_stats = {}
         return {
             "mode": self.mode,
@@ -626,7 +711,14 @@ class AuroraQuasiArchObserver:
                 },
                 min_confidence=confidence_floor,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:629",
+                exc=_aurora_boundary_exc,
+                context={"function": "get_doctrine_candidates", "handler_line": 629, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             candidates = []
         result: List[Dict[str, Any]] = []
         for candidate in candidates[: max(0, int(limit))]:
@@ -670,7 +762,14 @@ class AuroraQuasiArchObserver:
                 event,
                 min_confidence=confidence_floor,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:673",
+                exc=_aurora_boundary_exc,
+                context={"function": "reason_about_event", "handler_line": 673, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             candidates = []
 
         analyses: List[Dict[str, Any]] = []
@@ -683,7 +782,14 @@ class AuroraQuasiArchObserver:
                 for rotation_name in list(doctrine.available_rotations or []):
                     try:
                         rotation = self.pipeline.rotate_and_record(doctrine.quasi_id, rotation_name)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:686",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "reason_about_event", "handler_line": 686, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+                        )
                         rotation = None
                     if rotation is None:
                         continue
@@ -1460,7 +1566,14 @@ class AuroraQuasiArchObserver:
                 try:
                     with open(_qsig_path, encoding="utf-8") as _qsf:
                         _existing_qsig = _json_qao.load(_qsf) or {}
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:1463",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "advise_training_plan", "handler_line": 1463, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+                    )
                     pass
                 # Only write if previous signal was consumed (don't overwrite pending work)
                 if bool(_existing_qsig.get("consumed", True)):
@@ -1472,7 +1585,14 @@ class AuroraQuasiArchObserver:
                             "ts": _t_qao.time(),
                             "consumed": False,
                         }, _qsfw, indent=2)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:1475",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "advise_training_plan", "handler_line": 1475, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+                )
                 pass
         elif self.mode == "advisory":
             patched["rationale"].append(
@@ -1496,7 +1616,14 @@ class AuroraQuasiArchObserver:
                 },
                 min_confidence=self.advisory_confidence,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_quasiarch_observer.py:1499",
+                exc=_aurora_boundary_exc,
+                context={"function": "_select_doctrine", "handler_line": 1499, "source_file": "aurora_internal/aurora_quasiarch_observer.py"},
+            )
             candidates = []
         if candidates:
             return candidates[0]

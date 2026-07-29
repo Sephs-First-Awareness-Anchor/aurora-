@@ -56,6 +56,7 @@ CREATED: February 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import math
@@ -504,7 +505,14 @@ def verify_dna_strand_schema() -> Dict[str, object]:
         bad = StrandBead(Constraint.X, NonCompChannel.M, BeadDirection.POSITIVE,
                          ExistenceMode.TRANSIENT, 1, 0.1, 2.0)  # polarity > 1
         check("StrandBead rejects polarity_state > 1", False, "no exception raised")
-    except ManifoldViolation:
+    except ManifoldViolation as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_dna_strand_schema-2.py:507",
+            exc=_aurora_boundary_exc,
+            context={"function": "verify_dna_strand_schema", "handler_line": 507, "source_file": "aurora_internal/aurora_dna_strand_schema-2.py"},
+        )
         check("StrandBead rejects polarity_state > 1", True)
 
     # 2. direction_from_polarity
@@ -536,7 +544,14 @@ def verify_dna_strand_schema() -> Dict[str, object]:
     try:
         strand5.append(make_bead(tick=2))
         check("DNAStrand.append() raises after seal", False, "no exception")
-    except RuntimeError:
+    except RuntimeError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_dna_strand_schema-2.py:539",
+            exc=_aurora_boundary_exc,
+            context={"function": "verify_dna_strand_schema", "handler_line": 539, "source_file": "aurora_internal/aurora_dna_strand_schema-2.py"},
+        )
         check("DNAStrand.append() raises after seal", True)
 
     # 6. Seal ID is deterministic

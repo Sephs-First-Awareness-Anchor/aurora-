@@ -76,6 +76,7 @@ USAGE
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import argparse
 import hashlib
@@ -96,7 +97,14 @@ from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Set, T
 
 try:
     from aurora_internal.lineage_canonical import constraints_for_operation as _canonical_constraints_for_operation
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_runtime.py:99",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 99, "source_file": "aurora_runtime.py"},
+    )
     def _canonical_constraints_for_operation(op_name: str, axis: Optional[str] = None,
                                              requires: Optional[Iterable[str]] = None,
                                              effect_tags: Optional[Iterable[str]] = None) -> Tuple[str, ...]:
@@ -104,12 +112,26 @@ except Exception:
 
 try:
     from aurora_internal.aurora_recommendation_hub import enqueue_recommendation as _enqueue_recommendation
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_runtime.py:107",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 107, "source_file": "aurora_runtime.py"},
+    )
     _enqueue_recommendation = None
 
 try:
     from aurora_emergence_surface import EmergenceMonitor as _EmergenceMonitor
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_runtime.py:112",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 112, "source_file": "aurora_runtime.py"},
+    )
     _EmergenceMonitor = None
 
 # =============================================================================
@@ -144,7 +166,14 @@ def _soft(module: str, names: List[str]) -> Dict[str, Any]:
         import importlib
         mod = importlib.import_module(module)
         return {n: getattr(mod, n) for n in names}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:147",
+            exc=_aurora_boundary_exc,
+            context={"function": "_soft", "handler_line": 147, "source_file": "aurora_runtime.py"},
+        )
         return {}
 
 
@@ -420,7 +449,14 @@ def _env_float(name: str, default: float) -> float:
         return float(default)
     try:
         return float(raw)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:423",
+            exc=_aurora_boundary_exc,
+            context={"function": "_env_float", "handler_line": 423, "source_file": "aurora_runtime.py"},
+        )
         return float(default)
 
 
@@ -697,10 +733,24 @@ def _restore_genealogy_state(
                 if callable(normalize):
                     try:
                         normalize()
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_runtime.py:700",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_restore_genealogy_state", "handler_line": 700, "source_file": "aurora_runtime.py"},
+                        )
                         pass
             restored["abilities"] = len(getattr(logger, "abilities", {}))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:703",
+                exc=_aurora_boundary_exc,
+                context={"function": "_restore_genealogy_state", "handler_line": 703, "source_file": "aurora_runtime.py"},
+            )
             pass
 
     # links.json
@@ -748,12 +798,26 @@ def _restore_genealogy_state(
                     for lnk in links_loaded.values():
                         try:
                             reg_link_ability(lnk)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_runtime.py:751",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_restore_genealogy_state", "handler_line": 751, "source_file": "aurora_runtime.py"},
+                            )
                             continue
 
             restored["links"] = len(getattr(logger, "links", {}))
             restored["abilities"] = len(getattr(logger, "abilities", {}))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:756",
+                exc=_aurora_boundary_exc,
+                context={"function": "_restore_genealogy_state", "handler_line": 756, "source_file": "aurora_runtime.py"},
+            )
             pass
 
     # couplings.json (canonical coupling roots + persistent pressure root state)
@@ -778,7 +842,14 @@ def _restore_genealogy_state(
                     logger._experiment_trials = [dict(t) for t in trials if isinstance(t, dict)]
                 if isinstance(adoptions, list):
                     logger._experiment_adoptions = [dict(a) for a in adoptions if isinstance(a, dict)]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:781",
+                exc=_aurora_boundary_exc,
+                context={"function": "_restore_genealogy_state", "handler_line": 781, "source_file": "aurora_runtime.py"},
+            )
             pass
 
     # Restore relief_event_count and tick_count from events_recent.json or tick_state.json.
@@ -795,7 +866,14 @@ def _restore_genealogy_state(
             logger.relief_event_count = _total_events
             logger.tick_count = max(int(getattr(logger, "tick_count", 0)), _snap_tick)
             restored["events"] = _total_events
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:798",
+                exc=_aurora_boundary_exc,
+                context={"function": "_restore_genealogy_state", "handler_line": 798, "source_file": "aurora_runtime.py"},
+            )
             pass
     if _total_events == 0 and os.path.exists(_tick_state):
         # Fall back: no events file yet, but tick_state has the count
@@ -805,7 +883,14 @@ def _restore_genealogy_state(
             _snap_tick = int(_ts.get("tick_count", 0) or 0)
             logger.tick_count = max(int(getattr(logger, "tick_count", 0)), _snap_tick)
             restored["events"] = _snap_tick
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:808",
+                exc=_aurora_boundary_exc,
+                context={"function": "_restore_genealogy_state", "handler_line": 808, "source_file": "aurora_runtime.py"},
+            )
             pass
 
     if verbose:
@@ -819,7 +904,14 @@ def _restore_genealogy_state(
             restored["pair_stats"] = n_pairs
             if verbose and n_pairs > 0:
                 print(f"  [RESTORE] Pair stats: {n_pairs} pairs resumed")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:822",
+                exc=_aurora_boundary_exc,
+                context={"function": "_restore_genealogy_state", "handler_line": 822, "source_file": "aurora_runtime.py"},
+            )
             pass
 
     return restored
@@ -850,7 +942,14 @@ def _restore_operator_gradients(
             restored[ax] = val
         if verbose:
             print("  [RESTORE] Operator gradients: " + ", ".join([f"{ax}={restored[ax]:.11f}" for ax in AXES]))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:853",
+            exc=_aurora_boundary_exc,
+            context={"function": "_restore_operator_gradients", "handler_line": 853, "source_file": "aurora_runtime.py"},
+        )
         pass
 
     return restored
@@ -967,7 +1066,14 @@ def boot_stack(state_dir:  str = "aurora_state",
                     scale=_i % 5,
                 )
                 _n_seeded += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:970",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "boot_stack", "handler_line": 970, "source_file": "aurora_runtime.py"},
+                )
                 pass
     if verbose:
         print(f"  [SEED] Lattice seeded with {_n_seeded} nodes across all 5 ExistenceModes")
@@ -979,6 +1085,13 @@ def boot_stack(state_dir:  str = "aurora_state",
             _log("L2     DimensionalSystems", True,
                  "DPS / DMC / DER / DMM active")
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:981",
+                exc=e,
+                context={"function": "boot_stack", "handler_line": 981, "source_file": "aurora_runtime.py"},
+            )
             _log("L2     DimensionalSystems", False, str(e))
     else:
         _log("L2     DimensionalSystems", False, "module not available")
@@ -1004,6 +1117,13 @@ def boot_stack(state_dir:  str = "aurora_state",
         systems.strand_builder = StrandBuilder()
         _log("STEP9-14 Intake Pipeline", True, "metabolize->worth->solidify->variant->DNA")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:1006",
+            exc=e,
+            context={"function": "boot_stack", "handler_line": 1006, "source_file": "aurora_runtime.py"},
+        )
         _log("STEP9-14 Intake Pipeline", False, str(e))
 
     # — Auxiliary cognition modules (entropy/awareness/language substrate) —
@@ -1021,6 +1141,13 @@ def boot_stack(state_dir:  str = "aurora_state",
         systems.language_orchestra = ExpressionEvolutionOrchestra()
         _log("AUX    Cognition Modules", True, "entropy+gap+attention+substrate+language online")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:1023",
+            exc=e,
+            context={"function": "boot_stack", "handler_line": 1023, "source_file": "aurora_runtime.py"},
+        )
         _log("AUX    Cognition Modules", False, str(e))
 
     # — L5: Expression / Perception —
@@ -1029,6 +1156,13 @@ def boot_stack(state_dir:  str = "aurora_state",
             systems.perception = ExpressionPerceptionEngine(systems.contract)
             _log("L5     ExpressionPerceptionEngine", True)
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1031",
+                exc=e,
+                context={"function": "boot_stack", "handler_line": 1031, "source_file": "aurora_runtime.py"},
+            )
             _log("L5     ExpressionPerceptionEngine", False, str(e))
     else:
         _log("L5     ExpressionPerceptionEngine", False, "module not available")
@@ -1039,6 +1173,13 @@ def boot_stack(state_dir:  str = "aurora_state",
             systems.identity = BehavioralIdentityEngine(systems.contract)
             _log("L6     BehavioralIdentityEngine", True)
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1041",
+                exc=e,
+                context={"function": "boot_stack", "handler_line": 1041, "source_file": "aurora_runtime.py"},
+            )
             _log("L6     BehavioralIdentityEngine", False, str(e))
     else:
         _log("L6     BehavioralIdentityEngine", False, "module not available")
@@ -1053,6 +1194,13 @@ def boot_stack(state_dir:  str = "aurora_state",
             )
             _log("L7     SimulationEngine", True)
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1055",
+                exc=e,
+                context={"function": "boot_stack", "handler_line": 1055, "source_file": "aurora_runtime.py"},
+            )
             _log("L7     SimulationEngine", False, str(e))
     else:
         _log("L7     SimulationEngine", False, "module not available")
@@ -1069,17 +1217,38 @@ def boot_stack(state_dir:  str = "aurora_state",
         _restored_genealogy = _restore_genealogy_state(systems.genealogy, output_dir=output_dir, verbose=verbose)
         try:
             systems._boot_metrics["restored_genealogy"] = dict(_restored_genealogy)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1072",
+                exc=_aurora_boundary_exc,
+                context={"function": "boot_stack", "handler_line": 1072, "source_file": "aurora_runtime.py"},
+            )
             pass
         try:
             if systems.dimensional is not None and hasattr(systems.dimensional, "set_genealogy"):
                 systems.dimensional.set_genealogy(systems.genealogy)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1077",
+                exc=_aurora_boundary_exc,
+                context={"function": "boot_stack", "handler_line": 1077, "source_file": "aurora_runtime.py"},
+            )
             pass
         systems.printer = ChainSummaryPrinter(systems.genealogy)
         _log("GEN    ConstraintGenealogyLogger", True,
              f"K_MIN={gen_config.K_MIN}  RELIEF_EPS={gen_config.RELIEF_EPS}")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:1082",
+            exc=e,
+            context={"function": "boot_stack", "handler_line": 1082, "source_file": "aurora_runtime.py"},
+        )
         _log("GEN    ConstraintGenealogyLogger", False, str(e))
 
     # — Emergence Monitor: promoted genealogy links → operational capabilities —
@@ -1095,6 +1264,13 @@ def boot_stack(state_dir:  str = "aurora_state",
             systems.emergence_monitor = None
             _log("AUX    EmergenceMonitor", False, "genealogy unavailable")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:1097",
+            exc=e,
+            context={"function": "boot_stack", "handler_line": 1097, "source_file": "aurora_runtime.py"},
+        )
         systems.emergence_monitor = None
         _log("AUX    EmergenceMonitor", False, str(e))
 
@@ -1121,6 +1297,13 @@ def boot_stack(state_dir:  str = "aurora_state",
         else:
             _log("AUX    PrimitiveExtractor", False, "no genealogy")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:1123",
+            exc=e,
+            context={"function": "boot_stack", "handler_line": 1123, "source_file": "aurora_runtime.py"},
+        )
         _log("AUX    PrimitiveExtractor", False, str(e))
 
     # — Checkpoint Manager —
@@ -1135,7 +1318,14 @@ def boot_stack(state_dir:  str = "aurora_state",
             restored = systems.checkpoint.restore()
             try:
                 systems._boot_metrics["checkpoint_restored"] = bool(restored)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:1138",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "boot_stack", "handler_line": 1138, "source_file": "aurora_runtime.py"},
+                )
                 pass
             if verbose and restored:
                 cursor = systems.checkpoint.cursor
@@ -1145,6 +1335,13 @@ def boot_stack(state_dir:  str = "aurora_state",
             systems.checkpoint.start_auto_save(300.0)
             _log("CKP    CheckpointManager", True)
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1147",
+                exc=e,
+                context={"function": "boot_stack", "handler_line": 1147, "source_file": "aurora_runtime.py"},
+            )
             _log("CKP    CheckpointManager", False, str(e))
 
     if verbose:
@@ -1219,7 +1416,14 @@ class ChainSimBridge:
                 raw = s[len(prefix):]
                 try:
                     return cast(raw)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:1222",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_link_tag_value", "handler_line": 1222, "source_file": "aurora_runtime.py"},
+                    )
                     return default
         return default
 
@@ -1575,7 +1779,14 @@ class ChainSimBridge:
                 # Advance learner observation count to reflect the crossing
                 learner.total_observations += transferred
 
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1578",
+                exc=_aurora_boundary_exc,
+                context={"function": "_forward_to_sim", "handler_line": 1578, "source_file": "aurora_runtime.py"},
+            )
             pass  # simulation + expression are optional — never block on it
 
     def stats(self) -> Dict[str, Any]:
@@ -1689,7 +1900,14 @@ class UniverseSteerer:
                     c = getattr(Constraint, ax)
                     self._base_flip_thresholds[c] = float(REGISTRY.polarity(c).flip_threshold)
                     self._effective_flip_thresholds[ax] = float(REGISTRY.polarity(c).flip_threshold)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:1692",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "__init__", "handler_line": 1692, "source_file": "aurora_runtime.py"},
+                )
                 self._base_flip_thresholds = {}
                 self._effective_flip_thresholds = {}
         self._plateau_metric_counts: Dict[str, int] = {"relief": 0, "bridge": 0, "fitness": 0, "links_total": 0, "abilities_total": 0}
@@ -1772,7 +1990,14 @@ class UniverseSteerer:
                 if callable(self._code_pressure_guidance_fn):
                     try:
                         code_guidance = self._code_pressure_guidance_fn() or {}
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_runtime.py:1775",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_refresh_operator_gradients", "handler_line": 1775, "source_file": "aurora_runtime.py"},
+                        )
                         code_guidance = None
                 if isinstance(code_guidance, dict) and code_guidance:
                     # Blend cross-scale signal so code substrate pressure influences steering.
@@ -1793,7 +2018,14 @@ class UniverseSteerer:
                     'primary_channel': _CONSTRAINT_TO_DER_CHANNEL.get(primary_key),
                     'secondary_channel': _CONSTRAINT_TO_DER_CHANNEL.get(secondary_key),
                 })
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1796",
+                exc=_aurora_boundary_exc,
+                context={"function": "_refresh_operator_gradients", "handler_line": 1796, "source_file": "aurora_runtime.py"},
+            )
             return
 
     def _auto_seed_directive(self,
@@ -1868,7 +2100,14 @@ class UniverseSteerer:
             from aurora_internal.aurora_dna_strand_schema import NonCompChannel
             from aurora_internal.aurora_constraint_manifold_patched import Constraint
             from foundational_contract import ExistenceMode
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1871",
+                exc=_aurora_boundary_exc,
+                context={"function": "_intake_log_depth_beads", "handler_line": 1871, "source_file": "aurora_runtime.py"},
+            )
             return
 
         _mode_to_constraint = {
@@ -1885,12 +2124,26 @@ class UniverseSteerer:
         def _pol(c: Any) -> float:
             try:
                 return max(-1.0, min(1.0, float(accountant.slot(c).polarity)))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:1888",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_pol", "handler_line": 1888, "source_file": "aurora_runtime.py"},
+                )
                 return 0.0
 
         try:
             target_idx = _mode_order.index(current_mode)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1893",
+                exc=_aurora_boundary_exc,
+                context={"function": "_intake_log_depth_beads", "handler_line": 1893, "source_file": "aurora_runtime.py"},
+            )
             target_idx = 0
 
         for mode in _mode_order[1:target_idx + 1]:
@@ -1924,13 +2177,27 @@ class UniverseSteerer:
             from aurora_internal.aurora_dna_strand_schema import NonCompChannel
             from aurora_internal.aurora_constraint_manifold_patched import Constraint
             from foundational_contract import ExistenceMode
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:1927",
+                exc=_aurora_boundary_exc,
+                context={"function": "_advance_intake_pipeline", "handler_line": 1927, "source_file": "aurora_runtime.py"},
+            )
             return
 
         def _pol(c: Any) -> float:
             try:
                 return max(-1.0, min(1.0, float(accountant.slot(c).polarity)))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:1933",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_pol", "handler_line": 1933, "source_file": "aurora_runtime.py"},
+                )
                 return 0.0
 
         # Persistent per-intake state.
@@ -1945,7 +2212,14 @@ class UniverseSteerer:
         if bias_engine is not None and hasattr(bias_engine, "compute_nudges"):
             try:
                 bias_engine.compute_nudges(accountant)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:1948",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_intake_pipeline", "handler_line": 1948, "source_file": "aurora_runtime.py"},
+                )
                 pass
 
         # Stage 1: intake receive.
@@ -1988,7 +2262,14 @@ class UniverseSteerer:
                             accountant=accountant,
                             current_tick=tick,
                         )
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_runtime.py:1991",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_advance_intake_pipeline", "handler_line": 1991, "source_file": "aurora_runtime.py"},
+                        )
                         continue
                     worth_reports[iid] = (rec, report)
                     if getattr(report, "horizon", None) is not None and iid not in pending_hz:
@@ -1999,7 +2280,14 @@ class UniverseSteerer:
             for iid, horizon in list(pending_hz.items()):
                 try:
                     eligible = bool(horizon.eligible_at(tick))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:2002",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_advance_intake_pipeline", "handler_line": 2002, "source_file": "aurora_runtime.py"},
+                    )
                     eligible = False
                 if not eligible:
                     continue
@@ -2015,7 +2303,14 @@ class UniverseSteerer:
                         accountant=accountant,
                         polarity_coherent=bool(getattr(report, "polarity_coherent", False)),
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:2018",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_advance_intake_pipeline", "handler_line": 2018, "source_file": "aurora_runtime.py"},
+                    )
                     pass
                 pending_hz.pop(iid, None)
 
@@ -2028,7 +2323,14 @@ class UniverseSteerer:
                         polarity_coherent=bool(getattr(report, "polarity_coherent", False)),
                         energy_spent=float(getattr(rec, "entry_toll", 0.0) or 0.0),
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:2031",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_advance_intake_pipeline", "handler_line": 2031, "source_file": "aurora_runtime.py"},
+                    )
                     pass
                 event_log.setdefault(iid, []).append(
                     (Constraint.B, NonCompChannel.DIFF, 0.0, 1.0 if bool(getattr(report, "polarity_coherent", False)) else -1.0, tick, rec.current_mode)
@@ -2038,12 +2340,26 @@ class UniverseSteerer:
         if solidification is not None and variant_promoter is not None:
             try:
                 solidified = list(solidification.drain_solidified() or [])
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2041",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_intake_pipeline", "handler_line": 2041, "source_file": "aurora_runtime.py"},
+                )
                 solidified = []
             if solidified:
                 try:
                     variants = list(variant_promoter.process_solidified(solidified, current_tick=tick) or [])
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:2046",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_advance_intake_pipeline", "handler_line": 2046, "source_file": "aurora_runtime.py"},
+                    )
                     variants = []
                 if strand_lib is not None and strand_builder is not None and variants:
                     for variant in variants:
@@ -2051,13 +2367,27 @@ class UniverseSteerer:
                         events = list(event_log.get(iid, []))
                         try:
                             events.append((variant.deepest_constraint, NonCompChannel.O, 0.0, 0.0, tick, variant.depth_reached))
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_runtime.py:2054",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_advance_intake_pipeline", "handler_line": 2054, "source_file": "aurora_runtime.py"},
+                            )
                             pass
                         if events:
                             try:
                                 strand = strand_builder.build(variant, events)
                                 strand_lib.register(strand, current_tick=tick)
-                            except Exception:
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:aurora_runtime.py:2060",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "_advance_intake_pipeline", "handler_line": 2060, "source_file": "aurora_runtime.py"},
+                                )
                                 pass
                         event_log.pop(iid, None)
                         depth_seen.pop(iid, None)
@@ -2085,7 +2415,14 @@ class UniverseSteerer:
                     "working_memory": None,
                 }
                 self._last_gap_event = gap_sys.process(payload, systems_view, turn_count=self._user_turn_count)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2088",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe_input_text", "handler_line": 2088, "source_file": "aurora_runtime.py"},
+                )
                 self._last_gap_event = None
 
         # Braided substrate update
@@ -2122,7 +2459,14 @@ class UniverseSteerer:
                         "X": 0.28 + _b_stab * 0.25,        # stability → X-axis existence
                     }
                     _ifield_braid.ingest_external_input(_braid_axes, intensity=0.18, source="braided_substrate")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2125",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe_input_text", "handler_line": 2125, "source_file": "aurora_runtime.py"},
+                )
                 self._last_braid_snapshot = None
 
         # Language evolution observe
@@ -2131,7 +2475,14 @@ class UniverseSteerer:
             try:
                 lang.observe_user(payload)
                 self._last_language_status = lang.status()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2134",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe_input_text", "handler_line": 2134, "source_file": "aurora_runtime.py"},
+                )
                 self._last_language_status = None
 
         self._record_function_outcome("aux.observe_input", 1.0, evidence=1.0)
@@ -2144,7 +2495,14 @@ class UniverseSteerer:
             mem = getattr(gap_sys, "memory", None)
             if mem is not None and hasattr(mem, "has_pending"):
                 return bool(mem.has_pending())
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:2147",
+                exc=_aurora_boundary_exc,
+                context={"function": "has_pending_gap", "handler_line": 2147, "source_file": "aurora_runtime.py"},
+            )
             return False
         return False
 
@@ -2209,7 +2567,14 @@ class UniverseSteerer:
                                     intensity=min(0.35, 0.15 + will.resonance * 0.30),
                                     source=f"will_intent:{will.class_name}",
                                 )
-                            except Exception:
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:aurora_runtime.py:2212",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "_advance_auxiliary_modules", "handler_line": 2212, "source_file": "aurora_runtime.py"},
+                                )
                                 pass
 
                     # 6. Meaning Formation Trigger
@@ -2251,9 +2616,23 @@ class UniverseSteerer:
                                             _anchor,
                                             f"attention anchor at resonance {res:.3f}",
                                         )
-                            except Exception:
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:aurora_runtime.py:2254",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "_advance_auxiliary_modules", "handler_line": 2254, "source_file": "aurora_runtime.py"},
+                                )
                                 pass
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2256",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_auxiliary_modules", "handler_line": 2256, "source_file": "aurora_runtime.py"},
+                )
                 self._last_attention_frame = None
 
         # Always-on leverage scalar path: consume leverage each tick and apply
@@ -2270,10 +2649,24 @@ class UniverseSteerer:
                     try:
                         REGISTRY.polarity(c).flip_threshold = float(th)
                         self._effective_flip_thresholds[str(getattr(c, "name", c))] = float(th)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_runtime.py:2273",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_advance_auxiliary_modules", "handler_line": 2273, "source_file": "aurora_runtime.py"},
+                        )
                         continue
                 self._last_leverage_band = str(getattr(bias_engine, "band_position", "inside"))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2276",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_auxiliary_modules", "handler_line": 2276, "source_file": "aurora_runtime.py"},
+                )
                 pass
 
         # Entropy saturation signal
@@ -2304,7 +2697,14 @@ class UniverseSteerer:
                     try:
                         op = REGISTRY.operator(target)
                         op.pressure_gradient = float(op.pressure_gradient) + gain
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_runtime.py:2307",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_advance_auxiliary_modules", "handler_line": 2307, "source_file": "aurora_runtime.py"},
+                        )
                         pass
                     self._last_entropy_regulation_tick = int(tick)
                     if _enqueue_recommendation is not None:
@@ -2321,9 +2721,23 @@ class UniverseSteerer:
                                 priority=0.62 if level_name in {"CRITICAL", "EMERGENCY"} else 0.42,
                                 context={"tick": int(tick), "level": level_name, "target": str(getattr(target, "name", "N"))},
                             )
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_runtime.py:2324",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_advance_auxiliary_modules", "handler_line": 2324, "source_file": "aurora_runtime.py"},
+                            )
                             pass
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2326",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_auxiliary_modules", "handler_line": 2326, "source_file": "aurora_runtime.py"},
+                )
                 self._last_entropy_signal = None
 
         # Primitive extractor read lens (periodic).
@@ -2349,13 +2763,27 @@ class UniverseSteerer:
                                 try:
                                     op_d = REGISTRY.operator(c_dom)
                                     op_d.pressure_gradient = max(0.0, float(op_d.pressure_gradient) - 0.0004)
-                                except Exception:
+                                except Exception as _aurora_boundary_exc:
+                                    _aurora_record_exception_from_locals(
+                                        locals(),
+                                        module=__name__,
+                                        operation="exception_handler:aurora_runtime.py:2352",
+                                        exc=_aurora_boundary_exc,
+                                        context={"function": "_advance_auxiliary_modules", "handler_line": 2352, "source_file": "aurora_runtime.py"},
+                                    )
                                     pass
                             if c_weak is not None:
                                 try:
                                     op_w = REGISTRY.operator(c_weak)
                                     op_w.pressure_gradient = float(op_w.pressure_gradient) + 0.0009
-                                except Exception:
+                                except Exception as _aurora_boundary_exc:
+                                    _aurora_record_exception_from_locals(
+                                        locals(),
+                                        module=__name__,
+                                        operation="exception_handler:aurora_runtime.py:2358",
+                                        exc=_aurora_boundary_exc,
+                                        context={"function": "_advance_auxiliary_modules", "handler_line": 2358, "source_file": "aurora_runtime.py"},
+                                    )
                                     pass
                             self._last_primitive_regulation_tick = int(tick)
                             if _enqueue_recommendation is not None:
@@ -2372,9 +2800,23 @@ class UniverseSteerer:
                                         priority=0.36,
                                         context={"tick": int(tick), "dominant": dominant_ax, "weak": weakest_ax},
                                     )
-                                except Exception:
+                                except Exception as _aurora_boundary_exc:
+                                    _aurora_record_exception_from_locals(
+                                        locals(),
+                                        module=__name__,
+                                        operation="exception_handler:aurora_runtime.py:2375",
+                                        exc=_aurora_boundary_exc,
+                                        context={"function": "_advance_auxiliary_modules", "handler_line": 2375, "source_file": "aurora_runtime.py"},
+                                    )
                                     pass
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2377",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_auxiliary_modules", "handler_line": 2377, "source_file": "aurora_runtime.py"},
+                )
                 self._last_primitive_vocab = None
 
         # Language LSV metrics update
@@ -2388,7 +2830,14 @@ class UniverseSteerer:
                 if g is not None:
                     try:
                         max_depth = max([int(getattr(v, "depth", 0) or 0) for v in getattr(g, "links", {}).values()] or [0])
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_runtime.py:2391",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_advance_auxiliary_modules", "handler_line": 2391, "source_file": "aurora_runtime.py"},
+                        )
                         max_depth = 0
                 contradictions = int(getattr(self, "_session_conflicts_injected", 0))
                 chain_ticks = max(1, int(getattr(self, "_session_chain_ticks", 0)))
@@ -2410,7 +2859,14 @@ class UniverseSteerer:
                 )
                 lang.update_lsv(metrics)
                 self._last_language_status = lang.status()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2413",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_auxiliary_modules", "handler_line": 2413, "source_file": "aurora_runtime.py"},
+                )
                 pass
 
         # EmergenceMonitor: surface newly promoted genealogy links as capabilities
@@ -2423,7 +2879,14 @@ class UniverseSteerer:
                     if autonomy is not None and hasattr(autonomy, "study_scheduler"):
                         for ability_id in emerged:
                             autonomy.study_scheduler.add_topic(f"emerged:{ability_id}")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2426",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_auxiliary_modules", "handler_line": 2426, "source_file": "aurora_runtime.py"},
+                )
                 pass
 
         self._record_function_outcome("aux.tick_modules", 1.0, evidence=1.0)
@@ -2486,7 +2949,14 @@ class UniverseSteerer:
                 continue
             try:
                 attr = getattr(obj, name)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:2489",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_register_object_operations", "handler_line": 2489, "source_file": "aurora_runtime.py"},
+                )
                 continue
             if not callable(attr):
                 continue
@@ -3024,11 +3494,25 @@ class UniverseSteerer:
             r = self._s.chamber.tick(t)
             try:
                 self._advance_intake_pipeline(stimulus_text=str(getattr(t, "name", "tick")), tick=self._tick_cursor + 1)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:3027",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "tick", "handler_line": 3027, "source_file": "aurora_runtime.py"},
+                )
                 pass
             try:
                 self._advance_auxiliary_modules(stimulus_text=str(getattr(t, "name", "tick")), tick=self._tick_cursor + 1)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:3031",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "tick", "handler_line": 3031, "source_file": "aurora_runtime.py"},
+                )
                 pass
             results.append(r)
             self._tick_cursor += 1
@@ -3101,11 +3585,25 @@ class UniverseSteerer:
             result = self._s.chamber.tick(trace)
             try:
                 self._advance_intake_pipeline(stimulus_text=str(name), tick=self._tick_cursor + 1)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:3104",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "inject_custom", "handler_line": 3104, "source_file": "aurora_runtime.py"},
+                )
                 pass
             try:
                 self._advance_auxiliary_modules(stimulus_text=str(name), tick=self._tick_cursor + 1)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:3108",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "inject_custom", "handler_line": 3108, "source_file": "aurora_runtime.py"},
+                )
                 pass
             self._tick_cursor += 1
         self._session_chain_ticks += 1
@@ -3153,12 +3651,26 @@ class UniverseSteerer:
             try:
                 _stim = str(action_name or getattr(action_trace, "name", "chain_burst"))
                 self._advance_intake_pipeline(stimulus_text=_stim, tick=self._tick_cursor + 1)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:3156",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "chain_burst", "handler_line": 3156, "source_file": "aurora_runtime.py"},
+                )
                 pass
             try:
                 _stim = str(action_name or getattr(action_trace, "name", "chain_burst"))
                 self._advance_auxiliary_modules(stimulus_text=_stim, tick=self._tick_cursor + 1)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:3161",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "chain_burst", "handler_line": 3161, "source_file": "aurora_runtime.py"},
+                )
                 pass
             if result is not None:
                 relief_events += 1
@@ -3214,7 +3726,14 @@ class UniverseSteerer:
         if self._s.has("genealogy"):
             try:
                 self._s.genealogy.flush_files()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:3217",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "chain_burst", "handler_line": 3217, "source_file": "aurora_runtime.py"},
+                )
                 pass
 
         self._session_chain_ticks += n
@@ -3280,7 +3799,14 @@ class UniverseSteerer:
                 try:
                     if self._s is not None and self._s.has("genealogy"):
                         run_output_dir = str(getattr(self._s.genealogy, "output_dir", out_dir) or out_dir)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:3283",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "chain_burst", "handler_line": 3283, "source_file": "aurora_runtime.py"},
+                    )
                     pass
 
                 priority = 0.25
@@ -3314,7 +3840,14 @@ class UniverseSteerer:
                         "run_output_dir": os.path.abspath(run_output_dir),
                     },
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:3317",
+                exc=_aurora_boundary_exc,
+                context={"function": "chain_burst", "handler_line": 3317, "source_file": "aurora_runtime.py"},
+            )
             pass
 
         return summary
@@ -3331,7 +3864,14 @@ class UniverseSteerer:
             ordered = [Constraint.X, Constraint.T, Constraint.N, Constraint.B, Constraint.A]
             for c in ordered:
                 out[c.name] = float(pc.get(c, 0.0))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:3334",
+                exc=_aurora_boundary_exc,
+                context={"function": "_pressure_contrib_snapshot", "handler_line": 3334, "source_file": "aurora_runtime.py"},
+            )
             pass
         return out
 
@@ -3745,7 +4285,14 @@ class UniverseSteerer:
                 latest_experiment_trial = cr.get("latest_experiment_trial")
                 latest_experiment_adoption = cr.get("latest_experiment_adoption")
                 promotion_stats = dict(cr.get("promotion_stats", {}) or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:3748",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "evolution_report", "handler_line": 3748, "source_file": "aurora_runtime.py"},
+                )
                 top_coupling_effects = []
 
         return {
@@ -4201,14 +4748,28 @@ class UniverseSteerer:
         snap = None
         try:
             snap = self._s.pressure_snapshot()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:4204",
+                exc=_aurora_boundary_exc,
+                context={"function": "pressure_report", "handler_line": 4204, "source_file": "aurora_runtime.py"},
+            )
             snap = None
 
         op_pressures = None
         if snap:
             try:
                 op_pressures = per_operator_pressure(snap)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:4211",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "pressure_report", "handler_line": 4211, "source_file": "aurora_runtime.py"},
+                )
                 op_pressures = None
 
         # Bridge: write live contributions into canonical OperatorParams.pressure_gradient (EMA-smoothed)
@@ -4218,7 +4779,14 @@ class UniverseSteerer:
                 try:
                     op = REGISTRY.operator(c)
                     op.pressure_gradient = (1.0 - alpha) * op.pressure_gradient + (alpha * float(contrib))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:4221",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "pressure_report", "handler_line": 4221, "source_file": "aurora_runtime.py"},
+                    )
                     # keep reporting alive even if one operator can't be updated
                     pass
 
@@ -4272,7 +4840,14 @@ class UniverseSteerer:
                         )
                 else:
                     print(f"  Mutation state   : {ms}")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:4275",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "pressure_report", "handler_line": 4275, "source_file": "aurora_runtime.py"},
+                )
                 pass
         print(f"  Total contrib    : {total_contrib:.11f}")
         dominant = dominant_pressure_axis(snap)
@@ -4480,7 +5055,14 @@ class UniverseSteerer:
                 agency_cost_coeff = float(getattr(chamber.K, "agency_cost_coefficient", 0.0))
                 agency_max_magnitude = float(getattr(chamber.K, "agency_max_magnitude", 0.0))
                 energy_floor = float(getattr(chamber.K, "energy_budget_floor", 0.0))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:4483",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "available_actions", "handler_line": 4483, "source_file": "aurora_runtime.py"},
+                )
                 budget_available = None
 
         print("\n  AVAILABLE NAMED ACTIONS:")
@@ -4649,7 +5231,14 @@ class AuroraRuntime:
             ck = bool(bm.get("checkpoint_restored", False))
             self.steerer._register_function_ancestry("runtime.restore_checkpoint", {"existence", "temporal", "boundary"})
             self.steerer._record_function_outcome("runtime.restore_checkpoint", 1.0 if ck else 0.25, evidence=1.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:4652",
+                exc=_aurora_boundary_exc,
+                context={"function": "boot", "handler_line": 4652, "source_file": "aurora_runtime.py"},
+            )
             pass
         if self._code_enabled and CodeEvolutionChamber is not None:
             try:
@@ -4698,7 +5287,14 @@ class AuroraRuntime:
         if self.code_chamber is not None and hasattr(self.code_chamber, "guidance_payload"):
             try:
                 base = dict(self.code_chamber.guidance_payload() or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:4701",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_code_pressure_guidance", "handler_line": 4701, "source_file": "aurora_runtime.py"},
+                )
                 base = {}
         timing = dict(self._code_timing_feedback or {})
         agency = float(timing.get("agency_ema", 0.0) or 0.0)
@@ -4819,17 +5415,38 @@ class AuroraRuntime:
             elif tag.startswith("agency_time_credit:"):
                 try:
                     agency_credit = float(tag.split(":", 1)[1])
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:4822",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_parse_code_evolution_feedback_record", "handler_line": 4822, "source_file": "aurora_runtime.py"},
+                    )
                     agency_credit = 0.0
             elif tag.startswith("temporal_overhead_penalty:"):
                 try:
                     temporal_penalty = float(tag.split(":", 1)[1])
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:4827",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_parse_code_evolution_feedback_record", "handler_line": 4827, "source_file": "aurora_runtime.py"},
+                    )
                     temporal_penalty = 0.0
             elif tag.startswith("mutation_score:"):
                 try:
                     mutation_score = float(tag.split(":", 1)[1])
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:4832",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_parse_code_evolution_feedback_record", "handler_line": 4832, "source_file": "aurora_runtime.py"},
+                    )
                     mutation_score = 0.0
         if not operator_key:
             m = re.search(r"operator_key=([a-zA-Z0-9_]+)", notes)
@@ -4856,7 +5473,14 @@ class AuroraRuntime:
             st = os.stat(path)
             mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
             size = int(st.st_size)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:4859",
+                exc=_aurora_boundary_exc,
+                context={"function": "_code_operator_feedback_summary", "handler_line": 4859, "source_file": "aurora_runtime.py"},
+            )
             return {"operators": {}, "record_count": 0}
         cache = dict(self._code_operator_feedback_cache or {})
         if (
@@ -4869,7 +5493,14 @@ class AuroraRuntime:
         try:
             with open(path, "r", encoding="utf-8") as fh:
                 raw = json.load(fh) or {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:4872",
+                exc=_aurora_boundary_exc,
+                context={"function": "_code_operator_feedback_summary", "handler_line": 4872, "source_file": "aurora_runtime.py"},
+            )
             raw = {}
         if isinstance(raw, dict):
             items = list(raw.values())
@@ -5085,7 +5716,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         try:
             with open(path, "r", encoding="utf-8") as fh:
                 data = json.load(fh) or {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5088",
+                exc=_aurora_boundary_exc,
+                context={"function": "_developmental_surface_targets", "handler_line": 5088, "source_file": "aurora_runtime.py"},
+            )
             return targets
         if not include_native:
             return targets
@@ -5136,7 +5774,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
                 raw = json.load(fh) or {}
             if not isinstance(raw, dict):
                 raw = {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5139",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_developmental_sync_state", "handler_line": 5139, "source_file": "aurora_runtime.py"},
+            )
             raw = {}
         raw.setdefault("boot_count", 0)
         raw.setdefault("save_count", 0)
@@ -5155,7 +5800,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(self._developmental_sync_state, fh, ensure_ascii=True, indent=2, sort_keys=True)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5158",
+                exc=_aurora_boundary_exc,
+                context={"function": "_persist_developmental_sync_state", "handler_line": 5158, "source_file": "aurora_runtime.py"},
+            )
             return False
 
     def _developmental_sync_inputs(self) -> Dict[str, str]:
@@ -5178,7 +5830,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
                     "mtime_ns": int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000))),
                     "size": int(st.st_size),
                 }
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:5181",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_developmental_sync_input_stamps", "handler_line": 5181, "source_file": "aurora_runtime.py"},
+                )
                 out[name] = {"path": path, "mtime_ns": 0, "size": 0}
         return out
 
@@ -5234,7 +5893,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
                         dry_run=False,
                         verbose=False,
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:5237",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_loop", "handler_line": 5237, "source_file": "aurora_runtime.py"},
+                    )
                     continue
 
         thread = threading.Thread(
@@ -5260,7 +5926,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         if thread is not None and thread.is_alive():
             try:
                 thread.join(timeout=2.0)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:5263",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_stop_developmental_sync_scheduler", "handler_line": 5263, "source_file": "aurora_runtime.py"},
+                )
                 pass
 
     def developmental_sync_status(self) -> Dict[str, Any]:
@@ -5369,7 +6042,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
                         1.0,
                         evidence=1.0,
                     )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:5372",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "maybe_sync_developmental_surfaces", "handler_line": 5372, "source_file": "aurora_runtime.py"},
+                )
                 pass
             if verbose:
                 stat = dict((result or {}).get("status", {}) or {})
@@ -5399,12 +6079,26 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         if hasattr(engine, "capability_report"):
             try:
                 report = dict(engine.capability_report() or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:5402",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "evolved_surface_status", "handler_line": 5402, "source_file": "aurora_runtime.py"},
+                )
                 report = {}
         if hasattr(engine, "lineage_manifest"):
             try:
                 report["manifest"] = dict(engine.lineage_manifest() or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:5407",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "evolved_surface_status", "handler_line": 5407, "source_file": "aurora_runtime.py"},
+                )
                 pass
         report["sync"] = self.developmental_sync_status()
         return report
@@ -5426,7 +6120,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         if hasattr(engine, "describe_capability"):
             try:
                 meta = dict(engine.describe_capability(fn_name) or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:5429",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "invoke_evolved_surface", "handler_line": 5429, "source_file": "aurora_runtime.py"},
+                )
                 meta = {}
         constraints = set(str(c).strip().lower() for c in (meta.get("constraints", []) or []) if str(c).strip())
         if self.steerer is not None:
@@ -5498,6 +6199,13 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
             try:
                 py_compile.compile(path, doraise=True)
             except Exception as e:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:5500",
+                    exc=e,
+                    context={"function": "_run_code_checks", "handler_line": 5500, "source_file": "aurora_runtime.py"},
+                )
                 ok = False
                 details["compile_failures"].append({"file": path, "error": str(e)})
         details["compile_passed"] = bool(ok)
@@ -5632,7 +6340,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         for raw in targets:
             try:
                 rel = os.path.relpath(str(raw), _HERE).replace("\\", "/")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:5635",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_feedback_code_mutation_to_genealogy", "handler_line": 5635, "source_file": "aurora_runtime.py"},
+                )
                 rel = str(raw).replace("\\", "/")
             rel_targets.append(rel)
             module = rel[:-3].replace("/", ".") if rel.endswith(".py") else rel.replace("/", ".")
@@ -5667,6 +6382,13 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         try:
             return dict(genealogy.register_code_evolution_outcome(payload) or {})
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5669",
+                exc=e,
+                context={"function": "_feedback_code_mutation_to_genealogy", "handler_line": 5669, "source_file": "aurora_runtime.py"},
+            )
             return {"registered": False, "reason": f"genealogy_feedback_error: {e}"}
 
     def code_simulate_mutation(self,
@@ -5697,7 +6419,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
                 )
                 score = 1.0 if bool(result.get("passed", False)) else 0.0
                 self.steerer._record_function_outcome("runtime.code_simulate_mutation", score, evidence=1.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5700",
+                exc=_aurora_boundary_exc,
+                context={"function": "code_simulate_mutation", "handler_line": 5700, "source_file": "aurora_runtime.py"},
+            )
             pass
         return result
 
@@ -5751,7 +6480,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
                 if timing_feedback:
                     score = max(0.0, min(1.0, score + (0.20 * float(timing_feedback.get("agency_time_credit", 0.0) or 0.0)) - (0.15 * float(timing_feedback.get("temporal_overhead_penalty", 0.0) or 0.0))))
                 self.steerer._record_function_outcome("runtime.finalize_code_mutation", score, evidence=1.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5754",
+                exc=_aurora_boundary_exc,
+                context={"function": "finalize_code_mutation", "handler_line": 5754, "source_file": "aurora_runtime.py"},
+            )
             pass
         return result
 
@@ -5761,7 +6497,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         if self.code_chamber is not None and hasattr(self.code_chamber, "lineage_report"):
             try:
                 chamber_lineage = dict(self.code_chamber.lineage_report() or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:5764",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "code_mutation_status", "handler_line": 5764, "source_file": "aurora_runtime.py"},
+                )
                 chamber_lineage = {}
         return {
             "enabled": bool(self.code_chamber is not None),
@@ -5866,7 +6609,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
                 score = 1.0 if bool(accepted) else 0.0
                 score = max(0.0, min(1.0, score + (0.25 * float(timing_feedback.get("agency_time_credit", 0.0) or 0.0)) - (0.20 * float(timing_feedback.get("temporal_overhead_penalty", 0.0) or 0.0))))
                 self.steerer._record_function_outcome("runtime.code_autoevolve_once", score, evidence=1.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5869",
+                exc=_aurora_boundary_exc,
+                context={"function": "code_autoevolve_once", "handler_line": 5869, "source_file": "aurora_runtime.py"},
+            )
             pass
         return result
 
@@ -5933,7 +6683,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         try:
             if self.steerer is not None:
                 self.steerer._record_function_outcome("review_before_save", 1.0 if aligned else 0.0, evidence=1.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5936",
+                exc=_aurora_boundary_exc,
+                context={"function": "review_before_save", "handler_line": 5936, "source_file": "aurora_runtime.py"},
+            )
             pass
 
         if not self.require_save_gate:
@@ -5953,7 +6710,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         )
         try:
             answer = input(prompt).strip().lower()
-        except EOFError:
+        except EOFError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5956",
+                exc=_aurora_boundary_exc,
+                context={"function": "review_before_save", "handler_line": 5956, "source_file": "aurora_runtime.py"},
+            )
             answer = ""
         return answer in ("y", "yes")
 
@@ -5986,7 +6750,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
             if self.steerer is not None:
                 self.steerer._register_function_ancestry("runtime.persist_operator_gradients", {"energy", "temporal", "boundary"})
                 self.steerer._record_function_outcome("runtime.persist_operator_gradients", 1.0 if _pg_ok else 0.0, evidence=1.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:5989",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 5989, "source_file": "aurora_runtime.py"},
+            )
             pass
 
         # Genealogy flush — flush_files() writes JSONL fossil record + abilities.json + links.json
@@ -6029,7 +6800,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         try:
             if self.steerer is not None:
                 self.steerer._record_function_outcome("save", 1.0 if saved else 0.0, evidence=1.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:6032",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 6032, "source_file": "aurora_runtime.py"},
+            )
             pass
         return saved
 
@@ -6053,14 +6831,28 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         if self.systems is not None and self.systems.has("checkpoint"):
             try:
                 self.systems.checkpoint.stop_auto_save()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:6056",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "shutdown", "handler_line": 6056, "source_file": "aurora_runtime.py"},
+                )
                 pass
 
         # Close genealogy file handles
         if self.systems is not None and self.systems.has("genealogy"):
             try:
                 self.systems.genealogy.close()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:6063",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "shutdown", "handler_line": 6063, "source_file": "aurora_runtime.py"},
+                )
                 pass
 
         self._stop_developmental_sync_scheduler()
@@ -6068,7 +6860,14 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         try:
             if self.steerer is not None:
                 self.steerer._record_function_outcome("shutdown", 1.0, evidence=1.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:6071",
+                exc=_aurora_boundary_exc,
+                context={"function": "shutdown", "handler_line": 6071, "source_file": "aurora_runtime.py"},
+            )
             pass
         if verbose:
             print(f"[RUNTIME] Uptime: {self.uptime():.1f}s. Goodbye.\n")
@@ -6151,7 +6950,14 @@ class RuntimeCLI:
         while self._running:
             try:
                 raw = input("aurora> ").strip()
-            except EOFError:
+            except EOFError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:6154",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "run", "handler_line": 6154, "source_file": "aurora_runtime.py"},
+                )
                 break
 
             if not raw:
@@ -6198,7 +7004,14 @@ class RuntimeCLI:
                 try:
                     if self.runtime.steerer is not None:
                         self.runtime.steerer.observe_input_text(raw)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:6201",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 6201, "source_file": "aurora_runtime.py"},
+                    )
                     pass
 
             self._dispatch(cmd, args)
@@ -6542,6 +7355,13 @@ def mode_test(state_dir: str, output_dir: str) -> None:
         runtime.systems.genealogy.flush_files()
         chk("genealogy.flush_files() runs", True)
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:6544",
+            exc=e,
+            context={"function": "mode_test", "handler_line": 6544, "source_file": "aurora_runtime.py"},
+        )
         chk("genealogy.flush_files() runs", False, str(e))
 
     # — Genealogy attributes —
@@ -6561,6 +7381,13 @@ def mode_test(state_dir: str, output_dir: str) -> None:
             str(rep.get("missing_base_constraints", [])))
         chk("steerer ancestry validation passes", s.validate_ancestry())
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:6563",
+            exc=e,
+            context={"function": "mode_test", "handler_line": 6563, "source_file": "aurora_runtime.py"},
+        )
         chk("steerer ancestry validation passes", False, str(e))
 
     # — Code evolution stage/finalize —
@@ -6581,6 +7408,13 @@ def mode_test(state_dir: str, output_dir: str) -> None:
         chk("code mutation finalized", isinstance(finalized, dict), str(finalized))
         chk("code mutation finalized has accepted bool", isinstance(finalized.get("accepted", None), bool))
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:6583",
+            exc=e,
+            context={"function": "mode_test", "handler_line": 6583, "source_file": "aurora_runtime.py"},
+        )
         chk("code mutation stage/finalize", False, str(e))
 
     try:
@@ -6594,6 +7428,13 @@ def mode_test(state_dir: str, output_dir: str) -> None:
         )
         chk("code autoevolve dry-run executes", isinstance(auto, dict), str(auto))
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:6596",
+            exc=e,
+            context={"function": "mode_test", "handler_line": 6596, "source_file": "aurora_runtime.py"},
+        )
         chk("code autoevolve dry-run executes", False, str(e))
 
     try:
@@ -6602,6 +7443,13 @@ def mode_test(state_dir: str, output_dir: str) -> None:
         chk("code pressure has subsystem map", isinstance(cpr.get("subsystem_pressures", None), dict))
         chk("code pressure has governor report", isinstance(cpr.get("governor", None), dict))
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:6604",
+            exc=e,
+            context={"function": "mode_test", "handler_line": 6604, "source_file": "aurora_runtime.py"},
+        )
         chk("code pressure report available", False, str(e))
 
     # — Printer uses print_epoch not print_summary —
@@ -6666,6 +7514,13 @@ def mode_test(state_dir: str, output_dir: str) -> None:
             s.status()
         chk("status() runs without error", True)
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:6668",
+            exc=e,
+            context={"function": "mode_test", "handler_line": 6668, "source_file": "aurora_runtime.py"},
+        )
         chk("status() runs without error", False, str(e))
 
     # — Pressure report —
@@ -6676,6 +7531,13 @@ def mode_test(state_dir: str, output_dir: str) -> None:
             s.pressure_report()
         chk("pressure_report() runs without error", True)
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:6678",
+            exc=e,
+            context={"function": "mode_test", "handler_line": 6678, "source_file": "aurora_runtime.py"},
+        )
         chk("pressure_report() runs without error", False, str(e))
 
     # — Save —
@@ -6683,6 +7545,13 @@ def mode_test(state_dir: str, output_dir: str) -> None:
         runtime.save(verbose=False)
         chk("save() runs", True)
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:6685",
+            exc=e,
+            context={"function": "mode_test", "handler_line": 6685, "source_file": "aurora_runtime.py"},
+        )
         chk("save() runs", False, str(e))
 
     runtime.shutdown(save=False, verbose=False)
@@ -6719,7 +7588,14 @@ def mode_burn(runtime:     AuroraRuntime,
         try:
             chamber_tick = getattr(runtime.systems.chamber, "tick_count", 0)
             runtime.systems.printer.print_epoch(chamber_tick=chamber_tick)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:6722",
+                exc=_aurora_boundary_exc,
+                context={"function": "mode_burn", "handler_line": 6722, "source_file": "aurora_runtime.py"},
+            )
             s.links()
 
 
@@ -6810,7 +7686,14 @@ def mode_speedrun(runtime:           AuroraRuntime,
         try:
             chamber_tick = getattr(runtime.systems.chamber, "tick_count", 0)
             runtime.systems.printer.print_epoch(chamber_tick=chamber_tick)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:6813",
+                exc=_aurora_boundary_exc,
+                context={"function": "mode_speedrun", "handler_line": 6813, "source_file": "aurora_runtime.py"},
+            )
             s.links()
 
 
@@ -7054,7 +7937,14 @@ Examples:
             cli.run()
             return  # CLI handles its own shutdown
 
-    except KeyboardInterrupt:
+    except KeyboardInterrupt as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:7057",
+            exc=_aurora_boundary_exc,
+            context={"function": "main", "handler_line": 7057, "source_file": "aurora_runtime.py"},
+        )
         pass
 
     finally:
@@ -7068,12 +7958,26 @@ if __name__ == "__main__":
 # AURORA_EVOLVED_NATIVE_BEGIN
 try:
     import inspect as _aurora_native_inspect
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_runtime.py:7071",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 7071, "source_file": "aurora_runtime.py"},
+    )
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_runtime.py:7076",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 7076, "source_file": "aurora_runtime.py"},
+    )
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None
@@ -7250,7 +8154,14 @@ def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
     try:
         setattr(owner, attr_name, value)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:7253",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_bind_owner_attribute", "handler_line": 7253, "source_file": "aurora_runtime.py"},
+        )
         return False
 
 def _aurora_store_reflection(target_key, reflection, args):
@@ -7265,7 +8176,14 @@ def _aurora_store_reflection(target_key, reflection, args):
     current[str(target_key)] = reflection
     try:
         setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:7268",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_reflection", "handler_line": 7268, "source_file": "aurora_runtime.py"},
+        )
         pass
 
 def _aurora_store_owner_state(attribute, target_key, value, args):
@@ -7280,7 +8198,14 @@ def _aurora_store_owner_state(attribute, target_key, value, args):
     current[str(target_key)] = value
     try:
         setattr(owner, attribute, current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:7283",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_owner_state", "handler_line": 7283, "source_file": "aurora_runtime.py"},
+        )
         pass
 
 def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
@@ -7652,7 +8577,14 @@ def _aurora_make_override(export_name, target_key):
         if _aurora_native_inspect is not None:
             try:
                 _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:7655",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_aurora_make_override", "handler_line": 7655, "source_file": "aurora_runtime.py"},
+                )
                 pass
     return _override
 

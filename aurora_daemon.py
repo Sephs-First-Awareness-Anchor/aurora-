@@ -24,6 +24,7 @@ cycles still run.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import os
 import sys
@@ -65,7 +66,14 @@ try:
         get_axes as _acm_get_axes,
         run as _acm_run,
     )
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_daemon.py:68",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 68, "source_file": "aurora_daemon.py"},
+    )
     _acm_read_axes = None
     _acm_get_axes = None
     _acm_run = None
@@ -86,7 +94,14 @@ def _resolve_oets_web_paths() -> List[Path]:
     for candidate in raw_candidates:
         try:
             key = str(candidate.resolve())
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:89",
+                exc=_aurora_boundary_exc,
+                context={"function": "_resolve_oets_web_paths", "handler_line": 89, "source_file": "aurora_daemon.py"},
+            )
             key = str(candidate)
         if key in seen:
             continue
@@ -99,7 +114,14 @@ def _read_json_file(path: Path, default: Any) -> Any:
     if path.exists():
         try:
             return json.loads(path.read_text())
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:102",
+                exc=_aurora_boundary_exc,
+                context={"function": "_read_json_file", "handler_line": 102, "source_file": "aurora_daemon.py"},
+            )
             pass
     return default
 
@@ -139,7 +161,14 @@ def _write_subsurface_repair_signal(
         with open(tmp, "w") as handle:
             json.dump(payload, handle, indent=2)
         os.replace(tmp, str(_SUBSURFACE_REPAIR_SIGNAL))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:142",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_subsurface_repair_signal", "handler_line": 142, "source_file": "aurora_daemon.py"},
+        )
         pass
 
 
@@ -206,10 +235,24 @@ def _surface_channel_recently_active(window_s: float = 120.0) -> bool:
             try:
                 if path.exists() and (now - path.stat().st_mtime) <= horizon:
                     return True
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:209",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_surface_channel_recently_active", "handler_line": 209, "source_file": "aurora_daemon.py"},
+                )
                 continue
         return False
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:212",
+            exc=_aurora_boundary_exc,
+            context={"function": "_surface_channel_recently_active", "handler_line": 212, "source_file": "aurora_daemon.py"},
+        )
         return False
 
 
@@ -266,6 +309,13 @@ def _log(msg: str) -> None:
         with open(_DAEMON_LOG, "a") as f:
             f.write(line + "\n")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:268",
+            exc=e,
+            context={"function": "_log", "handler_line": 268, "source_file": "aurora_daemon.py"},
+        )
         _log(f"Logging failed: {e}")
 
 
@@ -319,7 +369,14 @@ def _speak(text: str, systems: Dict[str, Any], tone: str = "warm") -> bool:
             return bool(speak_with_system_voice(text, systems, tone=tone))
         finally:
             _aurora_speaking_evt.clear()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:322",
+            exc=_aurora_boundary_exc,
+            context={"function": "_speak", "handler_line": 322, "source_file": "aurora_daemon.py"},
+        )
         _aurora_speaking_evt.clear()
         return False
 
@@ -333,6 +390,13 @@ def _notify(title: str, body: str) -> None:
             timeout=5,
         )
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:335",
+            exc=e,
+            context={"function": "_notify", "handler_line": 335, "source_file": "aurora_daemon.py"},
+        )
         _log(f"Notification failed: {e}")
 
 
@@ -353,13 +417,27 @@ def _state_write_lock_active() -> bool:
     now = time.time()
     try:
         age = max(0.0, now - float(lock_path.stat().st_mtime))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:356",
+            exc=_aurora_boundary_exc,
+            context={"function": "_state_write_lock_active", "handler_line": 356, "source_file": "aurora_daemon.py"},
+        )
         age = 0.0
 
     pid_text = ""
     try:
         pid_text = lock_path.read_text(encoding="utf-8").strip()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:362",
+            exc=_aurora_boundary_exc,
+            context={"function": "_state_write_lock_active", "handler_line": 362, "source_file": "aurora_daemon.py"},
+        )
         pid_text = ""
 
     def _clear_stale(reason: str) -> bool:
@@ -367,13 +445,27 @@ def _state_write_lock_active() -> bool:
             lock_path.unlink()
             _log(f"  [LOCK] Cleared stale state-write lock ({reason}).")
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:369",
+                exc=exc,
+                context={"function": "_clear_stale", "handler_line": 369, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [LOCK] Stale state-write lock remains ({reason}): {exc}")
             return True
         return False
 
     try:
         pid = int(pid_text)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:376",
+            exc=_aurora_boundary_exc,
+            context={"function": "_state_write_lock_active", "handler_line": 376, "source_file": "aurora_daemon.py"},
+        )
         if age > _STATE_WRITE_LOCK_MAX_AGE:
             return _clear_stale("invalid pid")
         return True
@@ -382,9 +474,23 @@ def _state_write_lock_active() -> bool:
     try:
         raw_cmdline = Path(f"/proc/{pid}/cmdline").read_bytes()
         cmdline = raw_cmdline.replace(b"\x00", b" ").decode("utf-8", "ignore").strip()
-    except FileNotFoundError:
+    except FileNotFoundError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:385",
+            exc=_aurora_boundary_exc,
+            context={"function": "_state_write_lock_active", "handler_line": 385, "source_file": "aurora_daemon.py"},
+        )
         return _clear_stale(f"pid {pid} no longer exists")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:387",
+            exc=_aurora_boundary_exc,
+            context={"function": "_state_write_lock_active", "handler_line": 387, "source_file": "aurora_daemon.py"},
+        )
         if age > _STATE_WRITE_LOCK_MAX_AGE:
             return _clear_stale(f"pid {pid} unreadable and lock age {int(age)}s")
         return True
@@ -402,7 +508,14 @@ def _load_messages() -> List[Dict[str, Any]]:
     if _MESSAGES_FILE.exists():
         try:
             return json.loads(_MESSAGES_FILE.read_text())
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:405",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_messages", "handler_line": 405, "source_file": "aurora_daemon.py"},
+            )
             pass
     return []
 
@@ -523,7 +636,14 @@ class ReactivityMonitor:
                         data={"axis": _ax, "value": _val},
                     ))
             self._last_axis = {k: float(v or 0.0) for k, v in _axes_raw.items()}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:526",
+                exc=_aurora_boundary_exc,
+                context={"function": "scan", "handler_line": 526, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # 2. Heat escalation
@@ -538,7 +658,14 @@ class ReactivityMonitor:
                     data={"heat": heat, "prev": self._last_heat},
                 ))
             self._last_heat = heat
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:541",
+                exc=_aurora_boundary_exc,
+                context={"function": "scan", "handler_line": 541, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # 3. Sensory crystal promotions
@@ -589,10 +716,24 @@ class ReactivityMonitor:
                             dim = systems.get("dimensional")
                             if dim and hasattr(dim, "apply_delta"):
                                 dim.apply_delta("X", 0.12)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:592",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "scan", "handler_line": 592, "source_file": "aurora_daemon.py"},
+                            )
                             pass
                         break # One surprise per scan
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:595",
+                exc=_aurora_boundary_exc,
+                context={"function": "scan", "handler_line": 595, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # 4. DCE coherence drop streak
@@ -608,7 +749,14 @@ class ReactivityMonitor:
                             _streak += 1
                         else:
                             break
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:611",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "scan", "handler_line": 611, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                 if _streak >= 4 and _streak > self._last_dce_seq:
                     events.append(_ReactivityEvent(
@@ -617,7 +765,14 @@ class ReactivityMonitor:
                         data={"streak": _streak},
                     ))
                 self._last_dce_seq = _streak
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:620",
+                exc=_aurora_boundary_exc,
+                context={"function": "scan", "handler_line": 620, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # 5. Fail dimension severity spike
@@ -638,7 +793,14 @@ class ReactivityMonitor:
                                 data={"dim": _dim, "severity": _cur_sev},
                             ))
                         self._last_fail_sev[_dim] = _cur_sev
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:641",
+                exc=_aurora_boundary_exc,
+                context={"function": "scan", "handler_line": 641, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # Deduplicate: don't fire the same kind twice in quick succession
@@ -685,7 +847,14 @@ def _collect_unresolved_issues(systems: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "source": "repair_signal",
                 "severity": float(_sig.get("intensity", 0.5) or 0.5),
             })
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:688",
+            exc=_aurora_boundary_exc,
+            context={"function": "_collect_unresolved_issues", "handler_line": 688, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # 2. QuasiArch proposals with high confidence that need human input.
@@ -709,7 +878,14 @@ def _collect_unresolved_issues(systems: Dict[str, Any]) -> List[Dict[str, Any]]:
                         "source": "quasiarch",
                         "severity": _conf,
                     })
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:712",
+            exc=_aurora_boundary_exc,
+            context={"function": "_collect_unresolved_issues", "handler_line": 712, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # 3. Telemetry zero-confidence reports (complete subsystem failures).
@@ -722,7 +898,14 @@ def _collect_unresolved_issues(systems: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "source": "telemetry",
                 "severity": 0.9,
             })
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:725",
+            exc=_aurora_boundary_exc,
+            context={"function": "_collect_unresolved_issues", "handler_line": 725, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     issues.sort(key=lambda x: float(x.get("severity", 0.0)), reverse=True)
@@ -775,6 +958,13 @@ def _should_reach_out(systems: Dict[str, Any], heat_level: str) -> bool:
         if sc is not None:
             sc_state = sc.get_state()
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:777",
+            exc=e,
+            context={"function": "_should_reach_out", "handler_line": 777, "source_file": "aurora_daemon.py"},
+        )
         _log(f"Error retrieving sensory crystal state: {e}")
 
     # --- DCE recent coherence trend -----------------------------------------
@@ -796,8 +986,22 @@ def _should_reach_out(systems: Dict[str, Any], heat_level: str) -> bool:
                     else:
                         break
                 except Exception as e:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:798",
+                        exc=e,
+                        context={"function": "_should_reach_out", "handler_line": 798, "source_file": "aurora_daemon.py"},
+                    )
                     _log(f"Error processing dce log line: {e}")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:800",
+            exc=e,
+            context={"function": "_should_reach_out", "handler_line": 800, "source_file": "aurora_daemon.py"},
+        )
         _log(f"Error in DCE recent coherence trend: {e}")
 
     # --- Build probability ---------------------------------------------------
@@ -884,7 +1088,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                         'B': 'study',
                         'A': 'express',
                     }.get(_field_dominant_axis, 'study')
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:887",
+                exc=_aurora_boundary_exc,
+                context={"function": "_reach_out_to_user", "handler_line": 887, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # ── 1. Gather experiential content ──────────────────────────────────
@@ -924,7 +1135,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                                     _content = _ep_lesson[:220]
                                     _source = "dream"
                                     break
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:927",
+                exc=_aurora_boundary_exc,
+                context={"function": "_reach_out_to_user", "handler_line": 927, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # ConsciousLearner shards — conclusions reached through experiential cycles
@@ -952,7 +1170,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                             _content = _u[:220]
                             _source = "understanding"
                             break
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:955",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_reach_out_to_user", "handler_line": 955, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # OETS — something she's been actively studying
@@ -978,7 +1203,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                             _content = f"{_nk} — {_def[:180]}"
                             _source = "study"
                             break
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:981",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_reach_out_to_user", "handler_line": 981, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # SediMemory B/A axis — settled deep memory with high resonance
@@ -1002,7 +1234,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                             _content = _candidate[:220]
                             _source = "memory"
                             break
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:1005",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_reach_out_to_user", "handler_line": 1005, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # Working memory topic — what she has been thinking about
@@ -1020,7 +1259,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                             _content = _cand[:200]
                             _source = "working_memory"
                             break
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:1023",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_reach_out_to_user", "handler_line": 1023, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # ── If nothing experiential yet: initiate learning rather than go quiet ──
@@ -1054,7 +1300,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                                                getattr(_pg, "target_term", "") or "").strip()
                             _gap_context = str(getattr(_pg, "context_snippet", "") or "").strip()
                             _suggest_mode = "visual"
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:1057",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_reach_out_to_user", "handler_line": 1057, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
             # OETS: concept with lowest confidence / activation — something she started but didn't finish
@@ -1083,7 +1336,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                                 # Suggest study: she can look this up through her research path
                                 _suggest_mode = "study"
                                 break
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:1086",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_reach_out_to_user", "handler_line": 1086, "source_file": "aurora_daemon.py"},
+                    )
                     pass
 
             # Dream ledger: top-fail dimension she keeps struggling with
@@ -1111,7 +1371,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                                     _suggest_mode = "study"
                                 else:
                                     _suggest_mode = "visual"
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:1114",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_reach_out_to_user", "handler_line": 1114, "source_file": "aurora_daemon.py"},
+                    )
                     pass
 
             if _gap_concept:
@@ -1135,7 +1402,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                         _lookup_text = str(
                             _poedex_ask(_query, cat="researcher", lane="self", timeout=10.0) or ""
                         ).strip()
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:1138",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_reach_out_to_user", "handler_line": 1138, "source_file": "aurora_daemon.py"},
+                        )
                         _lookup_text = ""
                     if len(_lookup_text) > 20:
                         _claim_parts.append(f"Poedex grounded meaning: {_lookup_text[:120]}")
@@ -1149,7 +1423,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                             )
                             if _oets_study is not None and hasattr(_oets_study, "study"):
                                 _oets_study.study(_gap_concept, depth=2)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:1152",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_reach_out_to_user", "handler_line": 1152, "source_file": "aurora_daemon.py"},
+                            )
                             pass
 
                 _content = "; ".join(_claim_parts)
@@ -1173,7 +1454,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                 _ep         = _cs.get("entropy", {})
                 _novelty    = float(_ep.get("novelty", 0.5))
                 _stagnation = float(_ep.get("stagnation", 0.0))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:1176",
+                exc=_aurora_boundary_exc,
+                context={"function": "_reach_out_to_user", "handler_line": 1176, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # Tone: how she's holding herself together determines how she opens
@@ -1204,7 +1492,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                     mode="proactive",
                 )
                 text = str(_expr_out.get("expression", "") or "").strip()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:1207",
+                exc=_aurora_boundary_exc,
+                context={"function": "_reach_out_to_user", "handler_line": 1207, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # Fall back: pass content through working memory's speech renderer if available
@@ -1223,7 +1518,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                         supporting_concepts=[],
                         constraints=[],
                     ) or ""
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:1226",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_reach_out_to_user", "handler_line": 1226, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # Last resort: use the content directly as-is (it already came from her experience)
@@ -1253,7 +1555,14 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
                 _reach_tone    = _prosody_reach.get('tone', 'warm')
             else:
                 _reach_tone = "warm"
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:1256",
+                exc=_aurora_boundary_exc,
+                context={"function": "_reach_out_to_user", "handler_line": 1256, "source_file": "aurora_daemon.py"},
+            )
             _reach_tone = "warm"
 
         if not _in_quiet_window():
@@ -1261,6 +1570,13 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
             _notify("Aurora", text[:120])
 
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1263",
+            exc=e,
+            context={"function": "_reach_out_to_user", "handler_line": 1263, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [REACH] Failed: {e}")
 
 
@@ -1279,7 +1595,14 @@ def _build_reactive_message(
     try:
         from aurora_state_voice import express_brief
         _state_ctx = express_brief(state_dir=str(_STATE_DIR))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1282",
+            exc=_aurora_boundary_exc,
+            context={"function": "_build_reactive_message", "handler_line": 1282, "source_file": "aurora_daemon.py"},
+        )
         _state_ctx = ""
 
     _REACTION_TEMPLATES: Dict[str, List[str]] = {
@@ -1351,7 +1674,14 @@ def _build_reactive_message(
             summary=str(event.data.get("summary", "I noticed something shift.")),
             subject=str(event.data.get("subject", "something")),
         )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1354",
+            exc=_aurora_boundary_exc,
+            context={"function": "_build_reactive_message", "handler_line": 1354, "source_file": "aurora_daemon.py"},
+        )
         msg = event.description
 
     if _state_ctx:
@@ -1379,7 +1709,14 @@ def _send_reactive_message(
             _msgs = _rj.loads(_msg_path.read_text()) if _msg_path.exists() else []
             if not isinstance(_msgs, list):
                 _msgs = []
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:1382",
+                exc=_aurora_boundary_exc,
+                context={"function": "_send_reactive_message", "handler_line": 1382, "source_file": "aurora_daemon.py"},
+            )
             _msgs = []
         _msgs.append({
             "role": "aurora",
@@ -1392,7 +1729,14 @@ def _send_reactive_message(
             _msgs = _msgs[-200:]
         _msg_path.write_text(_rj.dumps(_msgs, indent=2))
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1395",
+            exc=_aurora_boundary_exc,
+            context={"function": "_send_reactive_message", "handler_line": 1395, "source_file": "aurora_daemon.py"},
+        )
         return False
 
 
@@ -1435,10 +1779,24 @@ def _daemon_send_aurora_message(
                 })
                 _rs["commands"] = _cmds[-20:]
                 _rs_path.write_text(_dij.dumps(_rs, indent=2))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:1438",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_daemon_send_aurora_message", "handler_line": 1438, "source_file": "aurora_daemon.py"},
+                )
                 pass
         return _sent
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1441",
+            exc=_aurora_boundary_exc,
+            context={"function": "_daemon_send_aurora_message", "handler_line": 1441, "source_file": "aurora_daemon.py"},
+        )
         return False
 
 
@@ -1483,7 +1841,14 @@ def _express_dream_completion(
         msg = _build_reactive_message(systems, event)
         if msg:
             _daemon_send_aurora_message(systems, msg, source="DREAM_COMPLETED")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1486",
+            exc=_aurora_boundary_exc,
+            context={"function": "_express_dream_completion", "handler_line": 1486, "source_file": "aurora_daemon.py"},
+        )
         pass
 
 
@@ -1519,7 +1884,14 @@ def _express_study_completion(
         msg = _build_reactive_message(systems, event)
         if msg:
             _daemon_send_aurora_message(systems, msg, source="STUDY_COMPLETED")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1522",
+            exc=_aurora_boundary_exc,
+            context={"function": "_express_study_completion", "handler_line": 1522, "source_file": "aurora_daemon.py"},
+        )
         pass
 
 
@@ -1599,7 +1971,14 @@ def _gather_daemon_pressure_evidence(systems: Dict[str, Any]) -> List[Dict[str, 
                 },
                 "pressure_profile": {"total_confidence": sev},
             })
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1602",
+            exc=_aurora_boundary_exc,
+            context={"function": "_gather_daemon_pressure_evidence", "handler_line": 1602, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # 2. Dream-trainer ledger top fails
@@ -1629,7 +2008,14 @@ def _gather_daemon_pressure_evidence(systems: Dict[str, Any]) -> List[Dict[str, 
                     },
                     "pressure_profile": {"total_confidence": conf},
                 })
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1632",
+            exc=_aurora_boundary_exc,
+            context={"function": "_gather_daemon_pressure_evidence", "handler_line": 1632, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # 3. Lattice heat pressure (only at HIGH or above)
@@ -1655,7 +2041,14 @@ def _gather_daemon_pressure_evidence(systems: Dict[str, Any]) -> List[Dict[str, 
                 },
                 "pressure_profile": {"total_confidence": heat_sev},
             })
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1658",
+            exc=_aurora_boundary_exc,
+            context={"function": "_gather_daemon_pressure_evidence", "handler_line": 1658, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     return evidences
@@ -1670,7 +2063,14 @@ def _feed_evolution_evidence(systems: Dict[str, Any]) -> None:
     for ev in evidences:
         try:
             chamber.observe_external_evidence(ev)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:1673",
+                exc=_aurora_boundary_exc,
+                context={"function": "_feed_evolution_evidence", "handler_line": 1673, "source_file": "aurora_daemon.py"},
+            )
             pass
     if evidences:
         _log(f"  [EVO] Fed {len(evidences)} evidence pulse(s) into chamber.")
@@ -1699,6 +2099,13 @@ def _run_assimilation_cycle(systems: Dict[str, Any]) -> None:
         if new:
             _log(f"  [ASSIM] Assimilated {new} new capability/compound op(s).")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1701",
+            exc=e,
+            context={"function": "_run_assimilation_cycle", "handler_line": 1701, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [ASSIM] Assimilation error: {e}")
     try:
         from aurora_internal.aurora_second_gen import SecondGenEvolutionInjector
@@ -1708,6 +2115,13 @@ def _run_assimilation_cycle(systems: Dict[str, Any]) -> None:
         if added:
             _log(f"  [GEN2] Injected {added} gen-2 surface(s) into descriptor pool.")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1710",
+            exc=e,
+            context={"function": "_run_assimilation_cycle", "handler_line": 1710, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [GEN2] Injector error: {e}")
 
 
@@ -1742,11 +2156,25 @@ def _select_code_mutation_operator_from_hints(*, advance_rotation: bool) -> Dict
             if ax in {"X", "T", "N", "B", "A"}:
                 try:
                     bias[ax] = float(raw_value or 0.0)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:1745",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_select_code_mutation_operator_from_hints", "handler_line": 1745, "source_file": "aurora_daemon.py"},
+                    )
                     bias[ax] = 0.0
         routing = str(hints.get("routing_type", "") or "")
         dominant_bias = max(bias, key=lambda k: abs(float(bias.get(k, 0.0) or 0.0))) if bias else ""
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1749",
+            exc=_aurora_boundary_exc,
+            context={"function": "_select_code_mutation_operator_from_hints", "handler_line": 1749, "source_file": "aurora_daemon.py"},
+        )
         return {
             "op_key": _rotation_pick(),
             "routing": routing,
@@ -1839,7 +2267,14 @@ def _parse_relief_guidance(result: str, plan: Dict[str, Any]) -> Dict[str, Any]:
                         break
             if operator:
                 confidence = 0.9
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1842",
+            exc=_aurora_boundary_exc,
+            context={"function": "_parse_relief_guidance", "handler_line": 1842, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # 2. Keyword scan in text
@@ -1876,7 +2311,14 @@ def _parse_relief_guidance(result: str, plan: Dict[str, Any]) -> Dict[str, Any]:
                 existing_hints = json.loads(hints_path.read_text()) or {}
                 if not isinstance(existing_hints, dict):
                     existing_hints = {}
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:1879",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_parse_relief_guidance", "handler_line": 1879, "source_file": "aurora_daemon.py"},
+                )
                 pass
         # Merge axis biases (new biases take precedence)
         merged_bias = dict(existing_hints.get("evolver_bias_hints", {}) or {})
@@ -1892,6 +2334,13 @@ def _parse_relief_guidance(result: str, plan: Dict[str, Any]) -> Dict[str, Any]:
         existing_hints["relief_parsed_at_str"] = time.strftime("%Y-%m-%d %H:%M:%S")
         hints_path.write_text(json.dumps(existing_hints, indent=2))
     except Exception as _he:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1894",
+            exc=_he,
+            context={"function": "_parse_relief_guidance", "handler_line": 1894, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [RELIEF] adapter_hints write failed: {_he}")
 
     return {
@@ -1957,15 +2406,36 @@ def _stage_low_resource_evolution_relief(
 
     try:
         prev = json.loads(plan_path.read_text()) if plan_path.exists() else {}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1960",
+            exc=_aurora_boundary_exc,
+            context={"function": "_stage_low_resource_evolution_relief", "handler_line": 1960, "source_file": "aurora_daemon.py"},
+        )
         prev = {}
     try:
         qbias = json.loads(query_bias_path.read_text()) if query_bias_path.exists() else {}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1964",
+            exc=_aurora_boundary_exc,
+            context={"function": "_stage_low_resource_evolution_relief", "handler_line": 1964, "source_file": "aurora_daemon.py"},
+        )
         qbias = {}
     try:
         daemon_status = json.loads(daemon_status_path.read_text()) if daemon_status_path.exists() else {}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:1968",
+            exc=_aurora_boundary_exc,
+            context={"function": "_stage_low_resource_evolution_relief", "handler_line": 1968, "source_file": "aurora_daemon.py"},
+        )
         daemon_status = {}
 
     pressure_scores = dict(qbias.get("pressure_scores") or {})
@@ -2076,7 +2546,14 @@ def _stage_low_resource_evolution_relief(
     }
     try:
         plan_path.write_text(json.dumps(payload, indent=2))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2079",
+            exc=_aurora_boundary_exc,
+            context={"function": "_stage_low_resource_evolution_relief", "handler_line": 2079, "source_file": "aurora_daemon.py"},
+        )
         return False
 
     should_announce = (not same_signature) or (now_ts - float(prev.get("generated_at", 0.0) or 0.0) >= 900)
@@ -2102,7 +2579,14 @@ def _stage_low_resource_evolution_relief(
                 notes = []
             notes.append(note_entry)
             notes_path.write_text(json.dumps(notes[-200:], indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:2105",
+                exc=_aurora_boundary_exc,
+                context={"function": "_stage_low_resource_evolution_relief", "handler_line": 2105, "source_file": "aurora_daemon.py"},
+            )
             pass
         try:
             activity = json.loads(activity_path.read_text()) if activity_path.exists() else []
@@ -2116,7 +2600,14 @@ def _stage_low_resource_evolution_relief(
                 "category": "action",
             })
             activity_path.write_text(json.dumps(activity[-500:], indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:2119",
+                exc=_aurora_boundary_exc,
+                context={"function": "_stage_low_resource_evolution_relief", "handler_line": 2119, "source_file": "aurora_daemon.py"},
+            )
             pass
 
     systems["_low_resource_evolution_relief"] = payload
@@ -2131,7 +2622,14 @@ def _clear_low_resource_evolution_relief(task_name: str = "") -> None:
     plan_path = _STATE_DIR / "evolution_relief_plan.json"
     try:
         plan = json.loads(plan_path.read_text()) if plan_path.exists() else {}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2134",
+            exc=_aurora_boundary_exc,
+            context={"function": "_clear_low_resource_evolution_relief", "handler_line": 2134, "source_file": "aurora_daemon.py"},
+        )
         return
     if not isinstance(plan, dict) or not plan.get("active"):
         return
@@ -2154,7 +2652,14 @@ def _clear_low_resource_evolution_relief(task_name: str = "") -> None:
 
     try:
         plan_path.write_text(json.dumps(plan, indent=2))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2157",
+            exc=_aurora_boundary_exc,
+            context={"function": "_clear_low_resource_evolution_relief", "handler_line": 2157, "source_file": "aurora_daemon.py"},
+        )
         pass
 
 
@@ -2173,7 +2678,14 @@ def _maybe_consume_low_resource_evolution_relief(
 
     try:
         plan = json.loads(plan_path.read_text()) if plan_path.exists() else {}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2176",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2176, "source_file": "aurora_daemon.py"},
+        )
         return False
     if not isinstance(plan, dict) or not plan.get("active"):
         return False
@@ -2182,7 +2694,14 @@ def _maybe_consume_low_resource_evolution_relief(
         try:
             plan_path.write_text(json.dumps(cur, indent=2))
             systems["_low_resource_evolution_relief"] = cur
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:2185",
+                exc=_aurora_boundary_exc,
+                context={"function": "_persist", "handler_line": 2185, "source_file": "aurora_daemon.py"},
+            )
             pass
 
     question = str(plan.get("poedex_question", "") or "").strip()
@@ -2275,7 +2794,14 @@ def _maybe_consume_low_resource_evolution_relief(
     try:
         _signal_operator("scan_tab", {"tab": "Evolution"})
         _signal_operator("scan_tab", {"tab": "Poedex"})
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2278",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2278, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     result = _poedex_ask(question, cat="researcher", lane="self", timeout=12.0)
@@ -2316,7 +2842,14 @@ def _maybe_consume_low_resource_evolution_relief(
                 "source": "daemon_evolution_relief_fallback",
             })
             notes_path.write_text(json.dumps(notes[-200:], indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:2319",
+                exc=_aurora_boundary_exc,
+                context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2319, "source_file": "aurora_daemon.py"},
+            )
             pass
         try:
             activity = json.loads(activity_path.read_text()) if activity_path.exists() else []
@@ -2330,7 +2863,14 @@ def _maybe_consume_low_resource_evolution_relief(
                 "category": "change",
             })
             activity_path.write_text(json.dumps(activity[-500:], indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:2333",
+                exc=_aurora_boundary_exc,
+                context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2333, "source_file": "aurora_daemon.py"},
+            )
             pass
         _log("  [RELIEF] Staged evolution handoff fell back to local relief guidance.")
         return True
@@ -2390,7 +2930,14 @@ def _maybe_consume_low_resource_evolution_relief(
                 notes = []
             notes.append(note_entry)
             notes_path.write_text(json.dumps(notes[-200:], indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:2393",
+                exc=_aurora_boundary_exc,
+                context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2393, "source_file": "aurora_daemon.py"},
+            )
             pass
         try:
             activity = json.loads(activity_path.read_text()) if activity_path.exists() else []
@@ -2404,7 +2951,14 @@ def _maybe_consume_low_resource_evolution_relief(
                 "category": "action",
             })
             activity_path.write_text(json.dumps(activity[-500:], indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:2407",
+                exc=_aurora_boundary_exc,
+                context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2407, "source_file": "aurora_daemon.py"},
+            )
             pass
 
     _log(
@@ -2481,7 +3035,14 @@ def _qao_check_surface_integrity(systems: Dict[str, Any], op_key: str = "") -> b
                         observed_effect="method_name_mismatch",
                         context={"op_key": op_key, "broken_bindings": missing[:30]},
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:2484",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_qao_check_surface_integrity", "handler_line": 2484, "source_file": "aurora_daemon.py"},
+                    )
                     pass
             return False
         else:
@@ -2489,6 +3050,13 @@ def _qao_check_surface_integrity(systems: Dict[str, Any], op_key: str = "") -> b
             return True
 
     except Exception as _e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2491",
+            exc=_e,
+            context={"function": "_qao_check_surface_integrity", "handler_line": 2491, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [QAO] Surface integrity check error: {_e}")
         return True   # error in the check itself — don't block
 
@@ -2524,7 +3092,14 @@ def _select_discovery_driven_operator() -> str:
                 _hd["warp_emergence_consumed"] = True
                 hints_path.write_text(json.dumps(_hd, indent=2))
                 return "architectural_reflection"
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2527",
+            exc=_aurora_boundary_exc,
+            context={"function": "_select_discovery_driven_operator", "handler_line": 2527, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # 2. QAO doctrine gate signal written by advise_training_plan() when
@@ -2545,7 +3120,14 @@ def _select_discovery_driven_operator() -> str:
                 _qsig.write_text(json.dumps(_qd, indent=2))
                 if _qop in _CODE_MUTATION_OPERATORS:
                     return _qop
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2548",
+            exc=_aurora_boundary_exc,
+            context={"function": "_select_discovery_driven_operator", "handler_line": 2548, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # 3. Existing adapter_hints bias / rotation
@@ -2607,6 +3189,13 @@ def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
             try:
                 py_compile.compile(str(path), doraise=True)
             except Exception as ce:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:2609",
+                    exc=ce,
+                    context={"function": "_run_code_mutation_cycle", "handler_line": 2609, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [MUTATE] Compile FAILED on {path}: {ce} — rolling back.")
                 compile_ok = False
                 break
@@ -2633,6 +3222,13 @@ def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
             else:
                 _importlib.import_module(_ivm_name)
         except Exception as _ie:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:2635",
+                exc=_ie,
+                context={"function": "_run_code_mutation_cycle", "handler_line": 2635, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [MUTATE] Import-check FAILED after {op_key}: {_ie} — rolling back.")
             if backups:
                 autoevolver.rollback(backups)
@@ -2652,6 +3248,13 @@ def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
         _run_assimilation_cycle(systems)
 
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2654",
+            exc=e,
+            context={"function": "_run_code_mutation_cycle", "handler_line": 2654, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [MUTATE] Code mutation error: {e}")
 
 
@@ -2713,7 +3316,14 @@ def _process_expression_gap_queue(systems: Dict[str, Any]) -> None:
             elif oets is not None and hasattr(oets, "study"):
                 try:
                     oets.study(f"{domain} {anchor}", depth=2)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:2716",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_process_expression_gap_queue", "handler_line": 2716, "source_file": "aurora_daemon.py"},
+                    )
                     pass
 
             # 2. Record fail on DreamTrainer's FailPointLedger
@@ -2732,6 +3342,13 @@ def _process_expression_gap_queue(systems: Dict[str, Any]) -> None:
 
         _log(f"  [GAP-QUEUE] {processed_count} expression gap(s) processed.")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2734",
+            exc=e,
+            context={"function": "_process_expression_gap_queue", "handler_line": 2734, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [GAP-QUEUE] Error: {e}")
 
 def _run_study_cycle(systems: Dict[str, Any]) -> None:
@@ -2757,7 +3374,14 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
                     _perc_d.commit_representation(_comp_d)
                     _log(f"  [WARP-REPR] live representation COMMITTED: "
                          f"{getattr(_comp_d, 'name', _rid_d)}")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2760",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_study_cycle", "handler_line": 2760, "source_file": "aurora_daemon.py"},
+        )
         pass
     try:
         perception = systems.get("perception")
@@ -2772,6 +3396,13 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
                 oets.consolidate()
         _log("  [STUDY] Done.")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2774",
+            exc=e,
+            context={"function": "_run_study_cycle", "handler_line": 2774, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [STUDY] Error: {e}")
     
     # Process the expression gap queue at the end of study cycle
@@ -2798,6 +3429,13 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
             if _n:
                 _log(f"  [IMAGER] {_n} concept image(s) ingested into sensory crystal.")
     except Exception as _img_e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2800",
+            exc=_img_e,
+            context={"function": "_run_study_cycle", "handler_line": 2800, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [IMAGER] Concept image cycle error: {_img_e}")
 
     # Crystal gap-fill cycle — autonomous modality completion so crystals promote.
@@ -2820,6 +3458,13 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
                             ingest_concept_image(_img_p, _word, _hw, _sc)
                             _log(f"  [GAP-FILL] Visual gap closed: '{_word}'")
                 except Exception as _vge:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:2822",
+                        exc=_vge,
+                        context={"function": "_run_study_cycle", "handler_line": 2822, "source_file": "aurora_daemon.py"},
+                    )
                     _log(f"  [GAP-FILL] Visual gap-fill error: {_vge}")
 
             # Audio gaps → DER synthesis (gives third modality without a mic)
@@ -2841,6 +3486,13 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
                     _log(f"  [GAP-FILL] Audio modality → "
                          f"{min(10, len(_needs_audio))} concept(s)")
                 except Exception as _age:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:2843",
+                        exc=_age,
+                        context={"function": "_run_study_cycle", "handler_line": 2843, "source_file": "aurora_daemon.py"},
+                    )
                     _log(f"  [GAP-FILL] Audio gap-fill error: {_age}")
 
             # Tick promotions — anything that just met its gate advances
@@ -2849,9 +3501,23 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
                 if _promoted:
                     _log(f"  [GAP-FILL] Promoted {len(_promoted)} concept(s): "
                          f"{_promoted[:5]}")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:2852",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_study_cycle", "handler_line": 2852, "source_file": "aurora_daemon.py"},
+                )
                 pass
     except Exception as _gfe:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2854",
+            exc=_gfe,
+            context={"function": "_run_study_cycle", "handler_line": 2854, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [GAP-FILL] Crystal gap cycle error: {_gfe}")
 
     # AxisEmergenceDetector — scan codebase for novel axis co-occurrences
@@ -2863,6 +3529,13 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
         if _new_slots:
             _log(f"  [AXIS] {_new_slots} new virtual channel(s) registered.")
     except Exception as _aed_e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2865",
+            exc=_aed_e,
+            context={"function": "_run_study_cycle", "handler_line": 2865, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [AXIS] AxisEmergenceDetector error: {_aed_e}")
 
     # ---- QUANTUM DREAM SUBSTRATE — start idle-cycle dream engine ----
@@ -2871,6 +3544,13 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
         _start_dream(systems, cycle_interval_s=600.0)
         _log("  [DREAM] QuantumDreamSubstrate started (10-min cycles)")
     except Exception as _dream_e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2873",
+            exc=_dream_e,
+            context={"function": "_run_study_cycle", "handler_line": 2873, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [DREAM] QuantumDreamSubstrate unavailable: {_dream_e}")
 
     # ---- EVOLUTIONARY SIM — compressed constraint-physics development ----
@@ -2905,6 +3585,13 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
                 _log(f"  [EVO]  Evolutionary sim: {_integrated} nodes integrated "
                      f"(gen {_evo_sim.summary()['generation']})")
     except Exception as _evo_e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2907",
+            exc=_evo_e,
+            context={"function": "_run_study_cycle", "handler_line": 2907, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [EVO]  EvolutionarySimulator error: {_evo_e}")
 
 
@@ -2918,7 +3605,14 @@ def _poedex_room_responder_available() -> bool:
             timeout=1.0,
         )
         return proc.returncode == 0
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:2921",
+            exc=_aurora_boundary_exc,
+            context={"function": "_poedex_room_responder_available", "handler_line": 2921, "source_file": "aurora_daemon.py"},
+        )
         return False
 
 
@@ -3011,7 +3705,14 @@ def _poedex_headless_lookup(question: str, cat: str = "define",
                             related.append(f"opposite:{ant}")
                 if parts:
                     sources.append("dictionaryapi.dev")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:3014",
+                exc=_aurora_boundary_exc,
+                context={"function": "_poedex_headless_lookup", "handler_line": 3014, "source_file": "aurora_daemon.py"},
+            )
             pass
 
     # DuckDuckGo instant answer: broad concept/context.
@@ -3031,7 +3732,14 @@ def _poedex_headless_lookup(question: str, cat: str = "define",
                 text = str(item.get("Text", "") or "").strip()
                 if text:
                     parts.append(text)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3034",
+            exc=_aurora_boundary_exc,
+            context={"function": "_poedex_headless_lookup", "handler_line": 3034, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # Wikipedia summary/search: fallback for concepts and entities.
@@ -3045,7 +3753,14 @@ def _poedex_headless_lookup(question: str, cat: str = "define",
         if extract:
             parts.append(extract)
             sources.append("wikipedia")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3048",
+            exc=_aurora_boundary_exc,
+            context={"function": "_poedex_headless_lookup", "handler_line": 3048, "source_file": "aurora_daemon.py"},
+        )
         try:
             search_url = (
                 "https://en.wikipedia.org/w/api.php?action=query&list=search"
@@ -3058,7 +3773,14 @@ def _poedex_headless_lookup(question: str, cat: str = "define",
                 if snippet:
                     parts.append(snippet)
                     sources.append("wikipedia-search")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:3061",
+                exc=_aurora_boundary_exc,
+                context={"function": "_poedex_headless_lookup", "handler_line": 3061, "source_file": "aurora_daemon.py"},
+            )
             pass
 
     if not parts:
@@ -3130,7 +3852,14 @@ def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
         if not _poedex_room_responder_available():
             try:
                 query_path.unlink(missing_ok=True)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3133",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_poedex_ask", "handler_line": 3133, "source_file": "aurora_daemon.py"},
+                )
                 pass
             result = _poedex_headless_lookup(question, cat=cat, lane=lane)
             if result:
@@ -3146,7 +3875,14 @@ def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
                         "ts": time.time(),
                         "ts_str": time.strftime("%Y-%m-%d %H:%M:%S"),
                     }, indent=2))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:3149",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_poedex_ask", "handler_line": 3149, "source_file": "aurora_daemon.py"},
+                    )
                     pass
                 _log(f"  [POEDEX] headless result: {question[:60]}")
                 return result
@@ -3170,20 +3906,48 @@ def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
                         # Clean up both files
                         try:
                             result_path.unlink(missing_ok=True)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:3173",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_poedex_ask", "handler_line": 3173, "source_file": "aurora_daemon.py"},
+                            )
                             pass
                         try:
                             query_path.unlink(missing_ok=True)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:3177",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_poedex_ask", "handler_line": 3177, "source_file": "aurora_daemon.py"},
+                            )
                             pass
                         return result
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:3180",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_poedex_ask", "handler_line": 3180, "source_file": "aurora_daemon.py"},
+                    )
                     pass
 
         # Timeout — remove the dangling queue file
         try:
             query_path.unlink(missing_ok=True)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:3186",
+                exc=_aurora_boundary_exc,
+                context={"function": "_poedex_ask", "handler_line": 3186, "source_file": "aurora_daemon.py"},
+            )
             pass
         result = _poedex_headless_lookup(question, cat=cat, lane=lane)
         if result:
@@ -3199,7 +3963,14 @@ def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
                     "ts": time.time(),
                     "ts_str": time.strftime("%Y-%m-%d %H:%M:%S"),
                 }, indent=2))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3202",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_poedex_ask", "handler_line": 3202, "source_file": "aurora_daemon.py"},
+                )
                 pass
             _log(
                 f"  [POEDEX] room timeout after {effective_timeout:.1f}s; "
@@ -3209,6 +3980,13 @@ def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
         _log(f"  [POEDEX] query timeout after {effective_timeout:.1f}s: {question[:60]}")
         return ""
     except Exception as ex:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3211",
+            exc=ex,
+            context={"function": "_poedex_ask", "handler_line": 3211, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [POEDEX] ask error: {ex}")
         return ""
 
@@ -3250,7 +4028,14 @@ def _poedex_deliver_tutorial(systems: Dict[str, Any]) -> None:
                 notes = json.loads(notes_path.read_text())
                 if not isinstance(notes, list):
                     notes = []
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3253",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_poedex_deliver_tutorial", "handler_line": 3253, "source_file": "aurora_daemon.py"},
+                )
                 notes = []
 
         now = time.time()
@@ -3318,7 +4103,14 @@ def _poedex_deliver_tutorial(systems: Dict[str, Any]) -> None:
                 activity = json.loads(activity_path.read_text())
                 if not isinstance(activity, list):
                     activity = []
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3321",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_poedex_deliver_tutorial", "handler_line": 3321, "source_file": "aurora_daemon.py"},
+                )
                 activity = []
         activity.append({
             "ts":       now,
@@ -3339,6 +4131,13 @@ def _poedex_deliver_tutorial(systems: Dict[str, Any]) -> None:
              f"operator touring {len(tab_tour)} tabs.")
 
     except Exception as ex:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3341",
+            exc=ex,
+            context={"function": "_poedex_deliver_tutorial", "handler_line": 3341, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [POEDEX] Tutorial delivery error: {ex}")
 
 
@@ -3364,7 +4163,14 @@ def _poedex_post_study_scan(systems: Dict[str, Any]) -> None:
                 ds = json.loads(daemon_status_path.read_text())
                 raw = ds.get("runtime_governor_axes") or ds.get("axes", {})
                 axes = {k: float(v) for k, v in raw.items() if isinstance(v, (int, float))}
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3367",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_poedex_post_study_scan", "handler_line": 3367, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # Lowest axis values = most constrained = most engaged during study
@@ -3402,7 +4208,14 @@ def _poedex_post_study_scan(systems: Dict[str, Any]) -> None:
                 entries = json.loads(poedex_log_path.read_text())
                 if not isinstance(entries, list):
                     entries = []
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3405",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_poedex_post_study_scan", "handler_line": 3405, "source_file": "aurora_daemon.py"},
+                )
                 entries = []
 
         now_ts  = time.time()
@@ -3432,7 +4245,14 @@ def _poedex_post_study_scan(systems: Dict[str, Any]) -> None:
                 activity = json.loads(activity_path.read_text())
                 if not isinstance(activity, list):
                     activity = []
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3435",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_poedex_post_study_scan", "handler_line": 3435, "source_file": "aurora_daemon.py"},
+                )
                 activity = []
         activity.append({
             "ts":       now_ts,
@@ -3447,6 +4267,13 @@ def _poedex_post_study_scan(systems: Dict[str, Any]) -> None:
         _log(f"  [POEDEX] Study scan complete — shelf seeded: {', '.join(topics)}")
 
     except Exception as ex:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3449",
+            exc=ex,
+            context={"function": "_poedex_post_study_scan", "handler_line": 3449, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [POEDEX] Post-study scan error: {ex}")
 
 
@@ -3455,7 +4282,14 @@ def _load_quasiarch_diag_report() -> Dict[str, Any]:
     try:
         report = json.loads(report_path.read_text()) if report_path.exists() else {}
         return report if isinstance(report, dict) else {}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3458",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_quasiarch_diag_report", "handler_line": 3458, "source_file": "aurora_daemon.py"},
+        )
         return {}
 
 
@@ -3525,6 +4359,13 @@ def _apply_autonomous_repair_proposal(proposal: Dict[str, Any]) -> bool:
         _log(f"  [ENFORCER] Autonomous apply committed for {proposal_id}.")
         return True
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3527",
+            exc=exc,
+            context={"function": "_apply_autonomous_repair_proposal", "handler_line": 3527, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [ENFORCER] Autonomous apply exception for {proposal_id}: {exc}")
         return False
 
@@ -3541,7 +4382,14 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
 
     try:
         status = json.loads(status_path.read_text()) if status_path.exists() else {}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3544",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_research_recurring_issue", "handler_line": 3544, "source_file": "aurora_daemon.py"},
+        )
         status = {}
 
     fail_summary = list(status.get("fail_summary") or [])
@@ -3574,7 +4422,14 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
     now_ts = time.time()
     try:
         prev = json.loads(state_path.read_text()) if state_path.exists() else {}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3577",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_research_recurring_issue", "handler_line": 3577, "source_file": "aurora_daemon.py"},
+        )
         prev = {}
 
     prev_issue = str(prev.get("issue", "") or "")
@@ -3672,7 +4527,14 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
             notes = []
         notes.append(note_entry)
         notes_path.write_text(json.dumps(notes[-200:], indent=2))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3675",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_research_recurring_issue", "handler_line": 3675, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     try:
@@ -3687,7 +4549,14 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
             "category": "action",
         })
         activity_path.write_text(json.dumps(activity[-500:], indent=2))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3690",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_research_recurring_issue", "handler_line": 3690, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     selected_proposal = _select_autonomous_repair_proposal(signal_issue)
@@ -3706,7 +4575,14 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
                 "category": "change",
             })
             activity_path.write_text(json.dumps(activity[-500:], indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:3709",
+                exc=_aurora_boundary_exc,
+                context={"function": "_maybe_research_recurring_issue", "handler_line": 3709, "source_file": "aurora_daemon.py"},
+            )
             pass
         if _apply_autonomous_repair_proposal(selected_proposal):
             applied_proposal_id = selected_id
@@ -3728,7 +4604,14 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
                     "source": "daemon_quasiarch_enforcer",
                 })
                 notes_path.write_text(json.dumps(notes[-200:], indent=2))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3731",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_maybe_research_recurring_issue", "handler_line": 3731, "source_file": "aurora_daemon.py"},
+                )
                 pass
             _write_subsurface_repair_signal(
                 "enforce",
@@ -3749,7 +4632,14 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
             "selected_proposal_id": str(selected_proposal.get("proposal_id", "") or "") if selected_proposal else "",
             "applied_proposal_id": applied_proposal_id,
         }, indent=2))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3752",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_research_recurring_issue", "handler_line": 3752, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     _log(f"  [POEDEX] Autonomous issue research captured for {candidate_dim} (qao={qao_recent}).")
@@ -3792,6 +4682,13 @@ def _run_classroom_cycle(systems: Dict[str, Any]) -> None:
         )
         _log(f"  [CLASSROOM] Ran {len(results)} lessons: {plan_desc}")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3794",
+            exc=e,
+            context={"function": "_run_classroom_cycle", "handler_line": 3794, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [CLASSROOM] Error: {e}")
 
 
@@ -3809,7 +4706,14 @@ def _run_dream_burst(systems: Dict[str, Any]) -> None:
             if _oets_obj and hasattr(_oets_obj, "get_stats"):
                 _oets_stats_before = dict(_oets_obj.get_stats() or {})
                 _dream_oets_before = int(_oets_stats_before.get("total_nodes", 0) or 0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:3812",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_dream_burst", "handler_line": 3812, "source_file": "aurora_daemon.py"},
+            )
             pass
         simulation_burst(systems, episodes=4, verbose=False)
         # Bridge learnings into OETS
@@ -3829,7 +4733,14 @@ def _run_dream_burst(systems: Dict[str, Any]) -> None:
                     for _dim, _score in dt.ledger.get_top_fails(4):
                         if float(_score or 0.0) >= 0.15:
                             _dream_lessons.append(f"{_dim}: consolidated ({_score:.2f})")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3832",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_dream_burst", "handler_line": 3832, "source_file": "aurora_daemon.py"},
+                )
                 pass
         # Snapshot OETS after to measure growth.
         try:
@@ -3838,10 +4749,24 @@ def _run_dream_burst(systems: Dict[str, Any]) -> None:
             if _oets_obj2 and hasattr(_oets_obj2, "get_stats"):
                 _oets_stats_after = dict(_oets_obj2.get_stats() or {})
                 _dream_oets_after = int(_oets_stats_after.get("total_nodes", 0) or 0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:3841",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_dream_burst", "handler_line": 3841, "source_file": "aurora_daemon.py"},
+            )
             pass
         _log("  [DREAM] Done.")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3844",
+            exc=e,
+            context={"function": "_run_dream_burst", "handler_line": 3844, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [DREAM] Error: {e}")
     # Dream outputs make the richest pressure source — feed them immediately.
     _feed_evolution_evidence(systems)
@@ -3855,7 +4780,14 @@ def _run_dream_burst(systems: Dict[str, Any]) -> None:
         if _proj_path.exists():
             try:
                 _proj_now = dict(json.loads(_proj_path.read_text()) or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:3858",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_dream_burst", "handler_line": 3858, "source_file": "aurora_daemon.py"},
+                )
                 _proj_now = {}
         _oets_growth = max(0, _dream_oets_after - _dream_oets_before)
         _insight_summary = (
@@ -3872,6 +4804,13 @@ def _run_dream_burst(systems: Dict[str, Any]) -> None:
         os.replace(tmp, str(_proj_path))
         _log(f"  [DREAM] Projection updated: {len(_dream_lessons)} lesson(s), {_oets_growth} OETS growth.")
     except Exception as _de:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3874",
+            exc=_de,
+            context={"function": "_run_dream_burst", "handler_line": 3874, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [DREAM] Projection update error: {_de}")
 
 
@@ -4038,7 +4977,14 @@ def _run_force_shard_bridge(systems: Dict[str, Any]) -> None:
     try:
         if oets and hasattr(oets, "get_stats"):
             _oets_before = int((oets.get_stats() or {}).get("total_nodes", 0) or 0)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4041",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_force_shard_bridge", "handler_line": 4041, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # Choose which dimensions to target: top fails first, then remainder
@@ -4046,7 +4992,14 @@ def _run_force_shard_bridge(systems: Dict[str, Any]) -> None:
     if dt and hasattr(dt, "ledger") and hasattr(dt.ledger, "get_top_fails"):
         try:
             top_dims = [d for d, _ in dt.ledger.get_top_fails(4)]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4049",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_force_shard_bridge", "handler_line": 4049, "source_file": "aurora_daemon.py"},
+            )
             pass
     if not top_dims:
         top_dims = list(_FORCE_SHARD_SEEDS.keys())
@@ -4079,7 +5032,14 @@ def _run_force_shard_bridge(systems: Dict[str, Any]) -> None:
                 )
                 if shard is not None:
                     injected_total += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4082",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_force_shard_bridge", "handler_line": 4082, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
     _log(f"  [SHARD] Injected {injected_total} understanding shards (epoch={burst_epoch}).")
@@ -4093,17 +5053,38 @@ def _run_force_shard_bridge(systems: Dict[str, Any]) -> None:
             try:
                 _after_direct = int((oets.get_stats() or {}).get("total_nodes", 0) or 0)
                 oets_delta = max(0, _after_direct - _before_direct)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4096",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_force_shard_bridge", "handler_line": 4096, "source_file": "aurora_daemon.py"},
+                )
                 oets_delta = n_direct  # fallback: count injections
             _log(f"  [SHARD] OETS inject: {n_direct} shards processed, +{oets_delta} new nodes.")
         except Exception as _ie:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4099",
+                exc=_ie,
+                context={"function": "_run_force_shard_bridge", "handler_line": 4099, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [SHARD] OETS inject error: {_ie}")
 
     # Also run the DreamTrainer bridge for belt-and-suspenders
     if oets is not None and dt is not None and hasattr(dt, "force_bridge_learnings_to_oets"):
         try:
             dt.force_bridge_learnings_to_oets(oets)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4106",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_force_shard_bridge", "handler_line": 4106, "source_file": "aurora_daemon.py"},
+            )
             pass
 
     # Update projection so force_evolve.py can detect completion and measure growth
@@ -4113,7 +5094,14 @@ def _run_force_shard_bridge(systems: Dict[str, Any]) -> None:
         if _proj_path.exists():
             try:
                 _proj_now = dict(json.loads(_proj_path.read_text()) or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4116",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_force_shard_bridge", "handler_line": 4116, "source_file": "aurora_daemon.py"},
+                )
                 _proj_now = {}
         _proj_now["dream_completed"] = True
         _proj_now["dream_completed_at"] = time.time()
@@ -4128,6 +5116,13 @@ def _run_force_shard_bridge(systems: Dict[str, Any]) -> None:
         os.replace(tmp, str(_proj_path))
         _log(f"  [SHARD] Projection updated: +{oets_delta} OETS nodes.")
     except Exception as _de:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4130",
+            exc=_de,
+            context={"function": "_run_force_shard_bridge", "handler_line": 4130, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [SHARD] Projection update error: {_de}")
 
 
@@ -4144,7 +5139,14 @@ def _run_dream_burst_heavy(systems: Dict[str, Any]) -> None:
         _oets_obj = getattr(perception, "oets", None) if perception else None
         if _oets_obj and hasattr(_oets_obj, "get_stats"):
             _oets_before = int((_oets_obj.get_stats() or {}).get("total_nodes", 0) or 0)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4147",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_dream_burst_heavy", "handler_line": 4147, "source_file": "aurora_daemon.py"},
+        )
         pass
     try:
         from corpus_runner import simulation_burst
@@ -4159,6 +5161,13 @@ def _run_dream_burst_heavy(systems: Dict[str, Any]) -> None:
             if oets and hasattr(dt, "force_bridge_learnings_to_oets"):
                 dt.force_bridge_learnings_to_oets(oets)
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4161",
+            exc=e,
+            context={"function": "_run_dream_burst_heavy", "handler_line": 4161, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [DREAM_HEAVY] simulation_burst error: {e}")
     _feed_evolution_evidence(systems)
     try:
@@ -4166,7 +5175,14 @@ def _run_dream_burst_heavy(systems: Dict[str, Any]) -> None:
         _oets_obj3 = getattr(perception3, "oets", None) if perception3 else None
         if _oets_obj3 and hasattr(_oets_obj3, "get_stats"):
             _oets_after = int((_oets_obj3.get_stats() or {}).get("total_nodes", 0) or 0)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4169",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_dream_burst_heavy", "handler_line": 4169, "source_file": "aurora_daemon.py"},
+        )
         pass
     _oets_growth = max(0, _oets_after - _oets_before)
     try:
@@ -4175,7 +5191,14 @@ def _run_dream_burst_heavy(systems: Dict[str, Any]) -> None:
         if _proj_path.exists():
             try:
                 _proj_now = dict(json.loads(_proj_path.read_text()) or {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4178",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_dream_burst_heavy", "handler_line": 4178, "source_file": "aurora_daemon.py"},
+                )
                 _proj_now = {}
         _proj_now["dream_completed"] = True
         _proj_now["dream_completed_at"] = time.time()
@@ -4187,6 +5210,13 @@ def _run_dream_burst_heavy(systems: Dict[str, Any]) -> None:
         os.replace(tmp, str(_proj_path))
         _log(f"  [DREAM_HEAVY] Done. OETS growth: {_oets_growth}")
     except Exception as _de:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4189",
+            exc=_de,
+            context={"function": "_run_dream_burst_heavy", "handler_line": 4189, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [DREAM_HEAVY] Projection update error: {_de}")
 
 
@@ -4205,12 +5235,26 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
     try:
         from aurora_voice import get_system_voice_label
         voice_selected = get_system_voice_label(systems)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4208",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4208, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     try:
         runtime_governor = dict(systems.get("_runtime_governor_status") or {})
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4213",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4213, "source_file": "aurora_daemon.py"},
+        )
         runtime_governor = {}
 
     # Outlet fraction
@@ -4219,7 +5263,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
         lattice = systems.get("lattice")
         if lattice and hasattr(lattice, "outlet_push_fraction"):
             outlet = round(lattice.outlet_push_fraction, 4)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4222",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4222, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # ── Telemetry: mechanistic fails from current turn ────────────────────────
@@ -4233,7 +5284,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
         telemetry_fails = [{"dim": d, "severity": round(s, 3)} for d, s in weighted[:5]]
         if weighted:
             telemetry_weakest = weighted[0][0]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4236",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4236, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # ── Constraint axis orientation (genealogy chain report) ──────────────────
@@ -4250,9 +5308,23 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
                 cr = _gen.chain_report()
                 axis_orient = {ax: round(v, 3) for ax, v in cr.get("pressure_orientation", {}).items()}
                 outlet_frac = round(cr.get("outlet_push_fraction", 0.0), 4)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4253",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_write_daemon_status", "handler_line": 4253, "source_file": "aurora_daemon.py"},
+                )
                 pass
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4255",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4255, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # ── Time dilation ─────────────────────────────────────────────────────────
@@ -4265,7 +5337,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
             dilation_factor = round(gov.get_current_dilation_factor(), 3)
             _ds = getattr(gov, "stability_state", None)
             dilation_state = str(_ds.value if hasattr(_ds, "value") else _ds)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4268",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4268, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # ── QAO: recent intervention count + top issue ────────────────────────────
@@ -4280,7 +5359,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
                 from collections import Counter as _Counter
                 issues = _Counter(e.get("issue_category", "") for e in evts if isinstance(e, dict))
                 qao_top_issue = issues.most_common(1)[0][0] if issues else "?"
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4283",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4283, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # ── Fail-points ledger summary ────────────────────────────────────────────
@@ -4303,7 +5389,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
             }
             for d, v in ranked[:4] if v.get("fail_count", 0) > 0
         ]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4306",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4306, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # ── Distillation telemetry ───────────────────────────────────────────────
@@ -4322,7 +5415,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
             distill_coherence = float(_dist.get("coherence_ratio", 0.0) or 0.0)
             distill_vortices = int(_dist.get("vortex_count", 0) or 0)
             distill_knots = int(_dist.get("knot_count", 0) or 0)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4325",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4325, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # ── Interaction quasi routing ─────────────────────────────────────────────
@@ -4333,7 +5433,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
             _ipath = _STATE_DIR / "interaction_status.json"
             if _ipath.exists():
                 interaction_status = dict(json.loads(_ipath.read_text()) or {})
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4336",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4336, "source_file": "aurora_daemon.py"},
+        )
         interaction_status = {}
 
     surface_snapshot = _read_surface_snapshot()
@@ -4347,7 +5454,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
         _sc_state = systems.get("sensory_crystal")
         if _sc_state is not None and hasattr(_sc_state, "get_state"):
             subsurface_sensory = dict(_sc_state.get_state() or {})
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4350",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4350, "source_file": "aurora_daemon.py"},
+        )
         subsurface_sensory = {}
 
     # ── Identity / generation ─────────────────────────────────────────────────
@@ -4356,7 +5470,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
         identity = systems.get("identity")
         if identity:
             generation = getattr(identity, "generation", "?")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4359",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4359, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     status = {
@@ -4444,7 +5565,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
         with open(tmp, "w") as f:
             json.dump(status, f, indent=2)
         os.replace(tmp, str(_STATE_DIR / "daemon_status.json"))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4447",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4447, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     try:
@@ -4452,7 +5580,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
         with open(tmp, "w") as f:
             json.dump(status, f, indent=2)
         os.replace(tmp, str(_SUBSURFACE_STATUS))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4455",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4455, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     try:
@@ -4465,7 +5600,14 @@ def _write_daemon_status(systems: Dict[str, Any], heat: str) -> None:
         with open(tmp, "w") as f:
             json.dump(projection, f, indent=2)
         os.replace(tmp, str(_SUBSURFACE_PROJECTION))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4468",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_daemon_status", "handler_line": 4468, "source_file": "aurora_daemon.py"},
+        )
         pass
 
 
@@ -4502,9 +5644,23 @@ def _run_sensory_crystal_consolidation(systems: Dict[str, Any]) -> None:
                                 cause_of_death  = str(_sw.get("cause_of_death",    "cull")),
                                 generation      = int(_sw.get("generation",         0)),
                             ))
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:4505",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_run_sensory_crystal_consolidation", "handler_line": 4505, "source_file": "aurora_daemon.py"},
+                            )
                             pass
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:4507",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_sensory_crystal_consolidation", "handler_line": 4507, "source_file": "aurora_daemon.py"},
+                    )
                     pass
         # Start a fresh daemon session immediately
         import time as _time_sc
@@ -4514,6 +5670,13 @@ def _run_sensory_crystal_consolidation(systems: Dict[str, Any]) -> None:
         _log(f"  [SENSORY-CRYSTAL] Consolidation complete: "
              f"{len(wisdom_shards)} wisdom shards, {sc_nodes} nodes active")
     except Exception as _sce:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4516",
+            exc=_sce,
+            context={"function": "_run_sensory_crystal_consolidation", "handler_line": 4516, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [SENSORY-CRYSTAL] Consolidation error: {_sce}")
 
 
@@ -4532,20 +5695,41 @@ def _save_state(systems: Dict[str, Any]) -> None:
             from aurora_developmental_log import record_developmental_snapshot
 
             record_developmental_snapshot(systems)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4535",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_state", "handler_line": 4535, "source_file": "aurora_daemon.py"},
+            )
             pass
         try:
             from aurora import save_sensory_skill_state
 
             save_sensory_skill_state(systems, verbose=False)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4541",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_state", "handler_line": 4541, "source_file": "aurora_daemon.py"},
+            )
             pass
         # Mid-session snapshot of sensory crystal (no promotion, just persist)
         sc = systems.get("sensory_crystal")
         if sc is not None and hasattr(sc, "save"):
             try:
                 sc.save()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4548",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_save_state", "handler_line": 4548, "source_file": "aurora_daemon.py"},
+                )
                 pass
         perception = systems.get("perception")
         if perception and hasattr(perception, "oets") and perception.oets:
@@ -4574,7 +5758,14 @@ def _save_state(systems: Dict[str, Any]) -> None:
                 }
                 _ep_path = _STATE_DIR / "expression_perception_state.json"
                 _ep_path.write_text(json.dumps(_ep_snap, indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4577",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_state", "handler_line": 4577, "source_file": "aurora_daemon.py"},
+            )
             pass
         # Write corpus_progress.json with idle defaults if corpus isn't running,
         # so the hub always has something to display rather than "--" everywhere.
@@ -4592,7 +5783,14 @@ def _save_state(systems: Dict[str, Any]) -> None:
                 if _cp_data.get("status") in ("idle", None, ""):
                     _cp_data["updated"] = time.strftime("%H:%M:%S")
                     _cp_path.write_text(json.dumps(_cp_data, indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4595",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_state", "handler_line": 4595, "source_file": "aurora_daemon.py"},
+            )
             pass
         # L3.5 — SediMemory deep save (B/A axes only — X/T are ephemeral)
         _sedi = systems.get("sedimemory")
@@ -4605,10 +5803,24 @@ def _save_state(systems: Dict[str, Any]) -> None:
                     "sedimemory_channels": _sedi.save_channels(),
                 }
                 _sedi_path.write_text(_sj.dumps(_sedi_data))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4608",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_save_state", "handler_line": 4608, "source_file": "aurora_daemon.py"},
+                )
                 pass
         _log("  [SAVE] State saved.")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4611",
+            exc=e,
+            context={"function": "_save_state", "handler_line": 4611, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [SAVE] Error: {e}")
 
 
@@ -4633,6 +5845,13 @@ def _restart_user_service(candidates: List[str], *, label: str) -> None:
                 timeout=12,
             )
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4635",
+                exc=e,
+                context={"function": "_restart_user_service", "handler_line": 4635, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [{label}] Startup check failed for {service_name}: {e}")
             continue
 
@@ -4688,7 +5907,14 @@ def _signal_operator(event: str, payload: Optional[Dict] = None) -> None:
         return
     try:
         _OP_SIGNAL.put_nowait({"event": event, **(payload or {})})
-    except _op_queue.Full:
+    except _op_queue.Full as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4691",
+            exc=_aurora_boundary_exc,
+            context={"function": "_signal_operator", "handler_line": 4691, "source_file": "aurora_daemon.py"},
+        )
         pass  # queue full — drop, operator is busy
 
 
@@ -4708,6 +5934,13 @@ def _room_operator_thread() -> None:
     try:
         from aurora_room_operator import RoomOperator
     except ImportError as _ie:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:4710",
+            exc=_ie,
+            context={"function": "_room_operator_thread", "handler_line": 4710, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [OPERATOR] Import failed: {_ie}")
         return
 
@@ -4727,7 +5960,14 @@ def _room_operator_thread() -> None:
                 notes = json.loads(notes_path.read_text())
                 if not isinstance(notes, list):
                     notes = []
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4730",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_append_note", "handler_line": 4730, "source_file": "aurora_daemon.py"},
+                )
                 pass
         notes.append({
             "ts":      time.time(),
@@ -4745,7 +5985,14 @@ def _room_operator_thread() -> None:
                 activity = json.loads(activity_path.read_text())
                 if not isinstance(activity, list):
                     activity = []
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4748",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_log_activity", "handler_line": 4748, "source_file": "aurora_daemon.py"},
+                )
                 pass
         activity.append({
             "ts":       time.time(),
@@ -4770,6 +6017,13 @@ def _room_operator_thread() -> None:
                 readings[tab] = text[:300] if text else "(unreadable)"
                 time.sleep(0.5)
             except Exception as ex:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:4772",
+                    exc=ex,
+                    context={"function": "_do_boot_tour", "handler_line": 4772, "source_file": "aurora_daemon.py"},
+                )
                 readings[tab] = f"(error: {ex})"
         summary_lines = [f"BOOT ROOM TOUR — {time.strftime('%Y-%m-%d %H:%M:%S')}\n"]
         try:
@@ -4777,7 +6031,14 @@ def _room_operator_thread() -> None:
             for tab, text in readings.items():
                 voiced = express_after_tab(tab, ocr_text=text, state_dir=str(_STATE_DIR))
                 summary_lines.append(f"── {tab} ──\n{voiced}\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4780",
+                exc=_aurora_boundary_exc,
+                context={"function": "_do_boot_tour", "handler_line": 4780, "source_file": "aurora_daemon.py"},
+            )
             for tab, text in readings.items():
                 summary_lines.append(f"── {tab} ──\n{text}\n")
         _append_note("\n".join(summary_lines), note_type="boot_tour", source="room_operator")
@@ -4794,7 +6055,14 @@ def _room_operator_thread() -> None:
                 try:
                     from aurora_state_voice import express_after_tab
                     voiced = express_after_tab("Poedex", ocr_text=text, state_dir=str(_STATE_DIR))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:4797",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_do_post_study_visit", "handler_line": 4797, "source_file": "aurora_daemon.py"},
+                    )
                     voiced = text[:400]
                 _append_note(
                     f"POST-STUDY POEDEX READ — {time.strftime('%H:%M:%S')}\n\n{voiced}",
@@ -4803,6 +6071,13 @@ def _room_operator_thread() -> None:
                 _log_activity("post-study poedex visit", f"{len(text)} chars read")
                 _log(f"  [OPERATOR] Post-study Poedex read: {len(text)} chars")
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4805",
+                exc=ex,
+                context={"function": "_do_post_study_visit", "handler_line": 4805, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [OPERATOR] Post-study visit error: {ex}")
 
     def _do_poedex_query(question: str, cat: str, lane: str) -> None:
@@ -4812,6 +6087,13 @@ def _room_operator_thread() -> None:
             text = op.poedex_query(question, cat=cat, lane=lane)
             _log(f"  [OPERATOR] Poedex visual query '{question}': {len(text)} chars from screen")
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4814",
+                exc=ex,
+                context={"function": "_do_poedex_query", "handler_line": 4814, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [OPERATOR] Poedex query error: {ex}")
 
     def _do_scan_tab(tab: str) -> None:
@@ -4821,6 +6103,13 @@ def _room_operator_thread() -> None:
             text = op.look_at_tab(tab)
             _log(f"  [OPERATOR] Tab scan '{tab}': {len(text)} chars")
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4823",
+                exc=ex,
+                context={"function": "_do_scan_tab", "handler_line": 4823, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [OPERATOR] Tab scan error: {ex}")
 
     # ── room command queue (Aurora requests her own navigation) ──────────────
@@ -4846,7 +6135,14 @@ def _room_operator_thread() -> None:
                 _do_poedex_query(q, cat=cat, lane="self")
             elif "boot_tour" in cmd:
                 _do_boot_tour()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4849",
+                exc=_aurora_boundary_exc,
+                context={"function": "_check_room_cmd", "handler_line": 4849, "source_file": "aurora_daemon.py"},
+            )
             pass
 
     # ── capability note ───────────────────────────────────────────────────────
@@ -4917,7 +6213,14 @@ def _room_operator_thread() -> None:
                 raw = ds.get("runtime_governor_axes") or ds.get("axes", {})
                 axes = {k: float(v) for k, v in raw.items()
                         if isinstance(v, (int, float))}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4920",
+                exc=_aurora_boundary_exc,
+                context={"function": "_do_idle_scan", "handler_line": 4920, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         if axes:
@@ -4936,7 +6239,14 @@ def _room_operator_thread() -> None:
                 try:
                     from aurora_state_voice import express_after_tab
                     voiced = express_after_tab(target_tab, ocr_text=text, state_dir=str(_STATE_DIR))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:4939",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_do_idle_scan", "handler_line": 4939, "source_file": "aurora_daemon.py"},
+                    )
                     voiced = text[:350]
                 _append_note(
                     f"SELF-DIRECTED SCAN — {time.strftime('%H:%M:%S')}\n"
@@ -4947,6 +6257,13 @@ def _room_operator_thread() -> None:
                 _log_activity("idle scan", f"{target_tab} ({len(text)} chars)")
                 _log(f"  [OPERATOR] Idle scan: {target_tab} ({len(text)} chars)")
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4949",
+                exc=ex,
+                context={"function": "_do_idle_scan", "handler_line": 4949, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [OPERATOR] Idle scan error: {ex}")
 
     _log("  [OPERATOR] Room operator thread started")
@@ -4974,12 +6291,26 @@ def _room_operator_thread() -> None:
                 )
             elif event == "scan_tab":
                 _do_scan_tab(task.get("tab", "Self"))
-        except _op_queue.Empty:
+        except _op_queue.Empty as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4977",
+                exc=_aurora_boundary_exc,
+                context={"function": "_room_operator_thread", "handler_line": 4977, "source_file": "aurora_daemon.py"},
+            )
             # Idle tick — check room command queue + maybe self-directed scan
             op._window = None  # refresh window reference
             _check_room_cmd()
             _do_idle_scan()
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:4982",
+                exc=ex,
+                context={"function": "_room_operator_thread", "handler_line": 4982, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [OPERATOR] Thread error: {ex}")
 
 
@@ -5002,7 +6333,14 @@ def _get_heat(systems: Dict[str, Any]) -> str:
         lattice = systems.get("lattice")
         if lattice and hasattr(lattice, "get_heat_level"):
             return lattice.get_heat_level().name  # e.g. "NORMAL", "HIGH"
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5005",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_heat", "handler_line": 5005, "source_file": "aurora_daemon.py"},
+        )
         pass
     return "NORMAL"
 
@@ -5059,11 +6397,25 @@ def _start_voice_listener(
         _start_file_ptt_watcher(systems, log_fn=log)
         return listener
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5061",
+            exc=e,
+            context={"function": "_start_voice_listener", "handler_line": 5061, "source_file": "aurora_daemon.py"},
+        )
         log(f"  [VOICE] Voice listener unavailable: {e}")
         log(f"  [VOICE] Falling back to file-based PTT trigger ({_VOICE_TRIGGER_FILE.name}).")
         try:
             _start_file_ptt_watcher(systems, log_fn=log)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:5066",
+                exc=_aurora_boundary_exc,
+                context={"function": "_start_voice_listener", "handler_line": 5066, "source_file": "aurora_daemon.py"},
+            )
             pass
         return None
 
@@ -5150,7 +6502,14 @@ def _start_file_ptt_watcher(
                             payload = json.loads(_VOICE_TRIGGER_FILE.read_text() or "{}")
                             if not isinstance(payload, dict):
                                 payload = {}
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:5153",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_trigger_loop", "handler_line": 5153, "source_file": "aurora_daemon.py"},
+                            )
                             payload = {}
                         should_trigger = bool(payload.get("trigger", True))
                         if should_trigger:
@@ -5162,16 +6521,37 @@ def _start_file_ptt_watcher(
                                 daemon_voice_session(systems)
                                 log("  [VOICE] Voice session ended.")
                             except Exception as e:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:aurora_daemon.py:5164",
+                                    exc=e,
+                                    context={"function": "_trigger_loop", "handler_line": 5164, "source_file": "aurora_daemon.py"},
+                                )
                                 log(f"  [VOICE] File-triggered voice session failed: {e}")
                             try:
                                 _VOICE_TRIGGER_FILE.write_text(json.dumps({
                                     "trigger": False,
                                     "handled_at": time.time(),
                                 }, indent=2))
-                            except Exception:
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:aurora_daemon.py:5171",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "_trigger_loop", "handler_line": 5171, "source_file": "aurora_daemon.py"},
+                                )
                                 pass
                 time.sleep(0.35)
             except Exception as e:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5174",
+                    exc=e,
+                    context={"function": "_trigger_loop", "handler_line": 5174, "source_file": "aurora_daemon.py"},
+                )
                 log(f"  [VOICE] File-based PTT watcher error: {e}")
                 time.sleep(1.0)
 
@@ -5234,12 +6614,26 @@ def _start_ambient_response_listener(
         try:
             import sounddevice as _sd
             import numpy as _np
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:5237",
+                exc=_aurora_boundary_exc,
+                context={"function": "_ambient_loop", "handler_line": 5237, "source_file": "aurora_daemon.py"},
+            )
             log("  [AMBIENT] sounddevice not available — ambient listener inactive")
             return
         try:
             from aurora_voice import transcribe as _transcribe, _speak_with_system_voice as _speak
         except Exception as _ie:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:5242",
+                exc=_ie,
+                context={"function": "_ambient_loop", "handler_line": 5242, "source_file": "aurora_daemon.py"},
+            )
             log(f"  [AMBIENT] voice imports failed: {_ie}")
             return
 
@@ -5262,7 +6656,14 @@ def _start_ambient_response_listener(
             _listener_state["updated_at"] = _t.time()
             try:
                 systems["_ambient_listener_state"] = dict(_listener_state)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5265",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_set_listener_state", "handler_line": 5265, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         def _audio_cb(indata, frames, time_info, status):
@@ -5281,6 +6682,13 @@ def _start_ambient_response_listener(
                 _set_listener_state(active=True)
                 retry_delay = 1.0
             except Exception as _se:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5283",
+                    exc=_se,
+                    context={"function": "_ambient_loop", "handler_line": 5283, "source_file": "aurora_daemon.py"},
+                )
                 _set_listener_state(active=False, last_error=str(_se))
                 log(f"  [AMBIENT] Could not open ambient stream: {_se}")
                 _t.sleep(min(retry_delay, 10.0))
@@ -5343,6 +6751,13 @@ def _start_ambient_response_listener(
                                     )
                                 _speech_buf.clear()
             except Exception as _se:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5345",
+                    exc=_se,
+                    context={"function": "_ambient_loop", "handler_line": 5345, "source_file": "aurora_daemon.py"},
+                )
                 _set_listener_state(active=False, last_error=str(_se))
                 log(f"  [AMBIENT] Ambient stream stopped: {_se}")
                 _t.sleep(min(retry_delay, 10.0))
@@ -5357,7 +6772,14 @@ def _start_ambient_response_listener(
             pcm16 = (_np.clip(audio_arr, -1.0, 1.0) * 32767).astype(_np.int16).tobytes()
             audio_data = _sr.AudioData(pcm16, sample_rate, 2)
             text = transcribe_fn(audio_data).strip()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:5360",
+                exc=_aurora_boundary_exc,
+                context={"function": "_process_utterance", "handler_line": 5360, "source_file": "aurora_daemon.py"},
+            )
             return
 
         if not text:
@@ -5370,7 +6792,14 @@ def _start_ambient_response_listener(
             wm = systems.get("working_memory")
             if wm is not None and hasattr(wm, "note_user_facts"):
                 wm.note_user_facts(f"[ambient:{role}] {text}")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:5373",
+                exc=_aurora_boundary_exc,
+                context={"function": "_process_utterance", "handler_line": 5373, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         if role == 'direct':
@@ -5385,7 +6814,14 @@ def _start_ambient_response_listener(
             try:
                 from aurora_voice import _generate_response as _gen_resp
                 response_text, tone = _gen_resp(text, systems)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5388",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_process_utterance", "handler_line": 5388, "source_file": "aurora_daemon.py"},
+                )
                 return
 
             if not response_text:
@@ -5401,7 +6837,14 @@ def _start_ambient_response_listener(
                     "time": _tv.strftime("%H:%M:%S"),
                     "role": role,
                 }
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5404",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_process_utterance", "handler_line": 5404, "source_file": "aurora_daemon.py"},
+                )
                 pass
             try:
                 _aurora_speaking_evt.set()
@@ -5410,7 +6853,14 @@ def _start_ambient_response_listener(
                     log("  [AMBIENT] Response spoken.")
                 else:
                     log("  [AMBIENT] Response generation succeeded but playback failed.")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5413",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_process_utterance", "handler_line": 5413, "source_file": "aurora_daemon.py"},
+                )
                 log("  [AMBIENT] Response playback raised an exception.")
             finally:
                 _aurora_speaking_evt.clear()
@@ -5431,7 +6881,14 @@ def _away_mode_active() -> bool:
             return False
         data = json.loads(_AWAY_MODE_FILE.read_text())
         return bool(data.get("active", False))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5434",
+            exc=_aurora_boundary_exc,
+            context={"function": "_away_mode_active", "handler_line": 5434, "source_file": "aurora_daemon.py"},
+        )
         return False
 
 
@@ -5440,7 +6897,14 @@ def _away_mode_interval() -> int:
     try:
         data = json.loads(_AWAY_MODE_FILE.read_text())
         return int(data.get("interval_minutes", 30)) * 60
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5443",
+            exc=_aurora_boundary_exc,
+            context={"function": "_away_mode_interval", "handler_line": 5443, "source_file": "aurora_daemon.py"},
+        )
         return 1800
 
 
@@ -5458,7 +6922,14 @@ def _document_session_learnings(systems: Dict[str, Any], exchanges: list, topic:
     try:
         if dt is not None:
             top_fails = [(d, float(s)) for d, s in dt.ledger.get_top_fails(5)]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5461",
+            exc=_aurora_boundary_exc,
+            context={"function": "_document_session_learnings", "handler_line": 5461, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # Count new genealogy links since session start
@@ -5468,7 +6939,14 @@ def _document_session_learnings(systems: Dict[str, Any], exchanges: list, topic:
             gen = getattr(chamber, "_genealogy", None)
             if gen is not None:
                 link_count = int(getattr(gen, "link_count", 0) or len(getattr(gen, "links", {}) or {}))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5471",
+            exc=_aurora_boundary_exc,
+            context={"function": "_document_session_learnings", "handler_line": 5471, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # Extract OETS new entries (rough proxy: count entries in oets web file)
@@ -5479,7 +6957,14 @@ def _document_session_learnings(systems: Dict[str, Any], exchanges: list, topic:
                 continue
             try:
                 raw = json.loads(oets_path.read_text())
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5482",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_document_session_learnings", "handler_line": 5482, "source_file": "aurora_daemon.py"},
+                )
                 continue
             if isinstance(raw, dict):
                 relations = raw.get("relations")
@@ -5493,7 +6978,14 @@ def _document_session_learnings(systems: Dict[str, Any], exchanges: list, topic:
             elif isinstance(raw, list):
                 oets_count = len(raw)
             break
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5496",
+            exc=_aurora_boundary_exc,
+            context={"function": "_document_session_learnings", "handler_line": 5496, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # Build a readable lesson summary from the exchange content
@@ -5525,13 +7017,27 @@ def _document_session_learnings(systems: Dict[str, Any], exchanges: list, topic:
         if _SOCIAL_LEARN_LOG.exists():
             try:
                 existing = json.loads(_SOCIAL_LEARN_LOG.read_text())
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5528",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_document_session_learnings", "handler_line": 5528, "source_file": "aurora_daemon.py"},
+                )
                 existing = []
         if not isinstance(existing, list):
             existing = []
         existing.append(record)
         _SOCIAL_LEARN_LOG.write_text(json.dumps(existing[-50:], indent=2))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5534",
+            exc=_aurora_boundary_exc,
+            context={"function": "_document_session_learnings", "handler_line": 5534, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # Daemon log summary
@@ -5546,6 +7052,13 @@ def _document_session_learnings(systems: Dict[str, Any], exchanges: list, topic:
         executed_task = True
         _log("  [SOCIAL-LEARN] Applied: OETS study cycle ran to integrate session learnings.")
     except Exception as _e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5548",
+            exc=_e,
+            context={"function": "_document_session_learnings", "handler_line": 5548, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [SOCIAL-LEARN] OETS apply error: {_e}")
 
 
@@ -5574,6 +7087,13 @@ def _run_socialize(systems: Dict[str, Any], turns: int = 8, topic: Optional[str]
                 )
                 return result.get("resp_A") if isinstance(result, dict) else None
             except Exception as e:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5576",
+                    exc=e,
+                    context={"function": "_gen", "handler_line": 5576, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [SOCIAL] generator error: {e}")
                 return None
 
@@ -5582,6 +7102,13 @@ def _run_socialize(systems: Dict[str, Any], turns: int = 8, topic: Optional[str]
         # Document and apply what was learned
         _document_session_learnings(systems, exchanges or [], topic=topic)
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5584",
+            exc=e,
+            context={"function": "_run_socialize", "handler_line": 5584, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [SOCIAL] socialize error: {e}")
     finally:
         systems.pop("_generate_fn", None)
@@ -5607,6 +7134,13 @@ def _run_distillation_cycle(systems: Dict[str, Any], force: bool = False) -> Non
                 f"{telemetry.get('summary', 'idle')}"
             )
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5609",
+            exc=e,
+            context={"function": "_run_distillation_cycle", "handler_line": 5609, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [DISTILL] error: {e}")
 
 
@@ -5622,6 +7156,13 @@ def _run_restore_distillation_cycle(systems: Dict[str, Any], run_id: Optional[st
             f"run={telemetry.get('restored_run_id', '') or run_id or 'latest'}"
         )
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5624",
+            exc=e,
+            context={"function": "_run_restore_distillation_cycle", "handler_line": 5624, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [RESTORE] error: {e}")
 
 
@@ -5640,10 +7181,24 @@ def _check_daemon_cmd(
         raw = _CMD_FILE.read_text(encoding="utf-8").strip()
         _CMD_FILE.unlink(missing_ok=True)
         cmd = json.loads(raw)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5643",
+            exc=_aurora_boundary_exc,
+            context={"function": "_check_daemon_cmd", "handler_line": 5643, "source_file": "aurora_daemon.py"},
+        )
         try:
             _CMD_FILE.unlink(missing_ok=True)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:5646",
+                exc=_aurora_boundary_exc,
+                context={"function": "_check_daemon_cmd", "handler_line": 5646, "source_file": "aurora_daemon.py"},
+            )
             pass
         return
     name = str(cmd.get("cmd", "")).lower().strip()
@@ -5677,6 +7232,13 @@ def _check_daemon_cmd(
                     f"{float(decision.get('floor', 0.0) or 0.0):.2f}"
                 )
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:5679",
+                exc=e,
+                context={"function": "_check_daemon_cmd", "handler_line": 5679, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [CMD] Governor evaluation error: {e}")
 
     executed_task = False
@@ -5772,6 +7334,13 @@ def _check_daemon_cmd(
                     if reply_text and not _is_quiet_mode():
                         _speak(reply_text, systems, tone="warm")
             except Exception as e:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:5774",
+                    exc=e,
+                    context={"function": "_check_daemon_cmd", "handler_line": 5774, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [HUB] Chat error: {e}")
     else:
         _log(f"  [CMD] Unknown command: {name!r}")
@@ -5780,7 +7349,14 @@ def _check_daemon_cmd(
         try:
             governor.note_task_run(task_name)
             systems["_runtime_governor_status"] = governor.status()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:5783",
+                exc=_aurora_boundary_exc,
+                context={"function": "_check_daemon_cmd", "handler_line": 5783, "source_file": "aurora_daemon.py"},
+            )
             pass
 
 
@@ -5814,7 +7390,14 @@ def _process_room_commands(
         return
     try:
         state = json.loads(_ROOM_STATE.read_text())
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:5817",
+            exc=_aurora_boundary_exc,
+            context={"function": "_process_room_commands", "handler_line": 5817, "source_file": "aurora_daemon.py"},
+        )
         return
 
     pending: List[Dict] = state.get("pending", [])
@@ -5874,7 +7457,14 @@ def _process_room_commands(
                             msgs = json.loads(_ROOM_MSGS.read_text())
                             if not isinstance(msgs, list):
                                 msgs = []
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:5877",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_process_room_commands", "handler_line": 5877, "source_file": "aurora_daemon.py"},
+                            )
                             msgs = []
                     msgs.append({
                         "from":    "aurora",
@@ -5901,7 +7491,14 @@ def _process_room_commands(
                             msgs = json.loads(_ROOM_MSGS.read_text())
                             if not isinstance(msgs, list):
                                 msgs = []
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:5904",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_process_room_commands", "handler_line": 5904, "source_file": "aurora_daemon.py"},
+                            )
                             msgs = []
                     msgs.append({
                         "from":    "aurora",
@@ -5938,6 +7535,13 @@ def _process_room_commands(
                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                             )
                     except Exception as e:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:5940",
+                            exc=e,
+                            context={"function": "_process_room_commands", "handler_line": 5940, "source_file": "aurora_daemon.py"},
+                        )
                         _log(f"  [ROOM] Proposal approval failed: {e}")
 
             elif cmd_type == "reverse_proposal":
@@ -5962,6 +7566,13 @@ def _process_room_commands(
                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                             )
                     except Exception as e:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:5964",
+                            exc=e,
+                            context={"function": "_process_room_commands", "handler_line": 5964, "source_file": "aurora_daemon.py"},
+                        )
                         _log(f"  [ROOM] Proposal revert failed: {e}")
 
             elif cmd_type == "start_corpus_training":
@@ -5977,10 +7588,24 @@ def _process_room_commands(
                     for pid_str in result.stdout.strip().split():
                         try:
                             os.kill(int(pid_str), 15)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:5980",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_process_room_commands", "handler_line": 5980, "source_file": "aurora_daemon.py"},
+                            )
                             pass
                     time.sleep(1)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:5983",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_process_room_commands", "handler_line": 5983, "source_file": "aurora_daemon.py"},
+                    )
                     pass
                 # Launch fresh corpus runner
                 proc = subprocess.Popen(
@@ -6005,10 +7630,24 @@ def _process_room_commands(
                         try:
                             os.kill(int(pid_str), 15)
                             killed += 1
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_daemon.py:6008",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_process_room_commands", "handler_line": 6008, "source_file": "aurora_daemon.py"},
+                            )
                             pass
                     _log(f"  [ROOM] Corpus training stopped (killed {killed} process(es)).")
                 except Exception as e:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:6011",
+                        exc=e,
+                        context={"function": "_process_room_commands", "handler_line": 6011, "source_file": "aurora_daemon.py"},
+                    )
                     _log(f"  [ROOM] Stop corpus training error: {e}")
 
             elif cmd_type in ("dream", "study", "distill"):
@@ -6022,6 +7661,13 @@ def _process_room_commands(
             executed.append(cmd)
 
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:6024",
+                exc=e,
+                context={"function": "_process_room_commands", "handler_line": 6024, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [ROOM] Error processing {cmd_type!r}: {e}")
             executed.append(cmd)  # mark as consumed regardless
 
@@ -6030,7 +7676,14 @@ def _process_room_commands(
     state["last_processed"] = time.time()
     try:
         _ROOM_STATE.write_text(json.dumps(state, indent=2))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6033",
+            exc=_aurora_boundary_exc,
+            context={"function": "_process_room_commands", "handler_line": 6033, "source_file": "aurora_daemon.py"},
+        )
         pass
 
 
@@ -6045,6 +7698,13 @@ def _deliver_boot_greeting(systems: Dict[str, Any]) -> None:
         daemon_startup_greeting(systems)
         _log("  [VOICE] Startup greeting delivered.")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6047",
+            exc=e,
+            context={"function": "_deliver_boot_greeting", "handler_line": 6047, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [VOICE] Startup greeting skipped: {e}")
 
 
@@ -6073,7 +7733,14 @@ def _sample_sleep_ambient_audio(systems: Dict[str, Any]) -> Optional[Dict[str, A
         payload = json.loads(ambient_path.read_text())
         if not isinstance(payload, dict):
             return None
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6076",
+            exc=_aurora_boundary_exc,
+            context={"function": "_sample_sleep_ambient_audio", "handler_line": 6076, "source_file": "aurora_daemon.py"},
+        )
         return None
 
     activity = str(payload.get("activity", "ambient") or "ambient")
@@ -6118,7 +7785,14 @@ def _sample_sleep_ambient_audio(systems: Dict[str, Any]) -> Optional[Dict[str, A
                     sem_node = (getattr(sc, "_semantic", {}) or {}).get(sem_node_id)
                     if sem_node is not None:
                         visual_prediction = str(getattr(sem_node, "summary", "") or getattr(sem_node, "label", "") or "")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6121",
+            exc=_aurora_boundary_exc,
+            context={"function": "_sample_sleep_ambient_audio", "handler_line": 6121, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     observation = {
@@ -6137,7 +7811,14 @@ def _sample_sleep_ambient_audio(systems: Dict[str, Any]) -> Optional[Dict[str, A
                 raw = json.loads(_SLEEP_AUDIO_LOG.read_text())
                 if isinstance(raw, list):
                     existing = raw
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6140",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_sample_sleep_ambient_audio", "handler_line": 6140, "source_file": "aurora_daemon.py"},
+                )
                 existing = []
         existing.append(observation)
         existing = existing[-48:]   # keep at most 4h of 5-min samples
@@ -6145,7 +7826,14 @@ def _sample_sleep_ambient_audio(systems: Dict[str, Any]) -> Optional[Dict[str, A
         with open(tmp, "w") as _f:
             json.dump(existing, _f, indent=2)
         os.replace(tmp, str(_SLEEP_AUDIO_LOG))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6148",
+            exc=_aurora_boundary_exc,
+            context={"function": "_sample_sleep_ambient_audio", "handler_line": 6148, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     return observation
@@ -6162,7 +7850,14 @@ def _build_sleep_dream_context(systems: Dict[str, Any]) -> Dict[str, Any]:
             raw = json.loads(_SLEEP_AUDIO_LOG.read_text())
             if isinstance(raw, list):
                 observations = raw
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6165",
+            exc=_aurora_boundary_exc,
+            context={"function": "_build_sleep_dream_context", "handler_line": 6165, "source_file": "aurora_daemon.py"},
+        )
         observations = []
 
     if not observations:
@@ -6199,7 +7894,14 @@ def _build_sleep_dream_context(systems: Dict[str, Any]) -> Dict[str, Any]:
         with open(tmp, "w") as _f:
             json.dump(context, _f, indent=2)
         os.replace(tmp, str(_STATE_DIR / "sleep_dream_context.json"))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6202",
+            exc=_aurora_boundary_exc,
+            context={"function": "_build_sleep_dream_context", "handler_line": 6202, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     systems["_sleep_dream_context"] = context
@@ -6225,7 +7927,14 @@ def _tick_sleep_cycle(systems: Dict[str, Any], surface_awake_since: List[float])
             mark_dream_triggered,
             read_sleep_state,
         )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6228",
+            exc=_aurora_boundary_exc,
+            context={"function": "_tick_sleep_cycle", "handler_line": 6228, "source_file": "aurora_daemon.py"},
+        )
         return
 
     now = time.time()
@@ -6261,11 +7970,25 @@ def _tick_sleep_cycle(systems: Dict[str, Any], surface_awake_since: List[float])
                 _run_dream_burst(systems)
                 mark_dream_triggered(_STATE_DIR)
             except Exception as exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6263",
+                    exc=exc,
+                    context={"function": "_tick_sleep_cycle", "handler_line": 6263, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [SLEEP] Dream burst error: {exc}")
             # Clear the sleep audio log after the dream consumes it
             try:
                 _SLEEP_AUDIO_LOG.unlink(missing_ok=True)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6268",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_tick_sleep_cycle", "handler_line": 6268, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # Time to wake up?
@@ -6276,7 +7999,14 @@ def _tick_sleep_cycle(systems: Dict[str, Any], surface_awake_since: List[float])
             _log("  [SLEEP] Sleep period ended — Surface waking.")
             try:
                 _save_message("I'm waking up.", trigger="sleep_wake")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6279",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_tick_sleep_cycle", "handler_line": 6279, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
     else:
@@ -6288,7 +8018,14 @@ def _tick_sleep_cycle(systems: Dict[str, Any], surface_awake_since: List[float])
             _log(f"  [SLEEP] Entering sleep period — Surface dormant until {wake_str}.")
             try:
                 _save_message(f"Going to sleep. I'll be back around {wake_str}.", trigger="sleep_enter")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6291",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_tick_sleep_cycle", "handler_line": 6291, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
 
@@ -6307,7 +8044,14 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
     try:
         from aurora_internal.dual_strata.surface_continuity_feed import read_and_clear_continuity_packets
         packets = read_and_clear_continuity_packets(_STATE_DIR)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6310",
+            exc=_aurora_boundary_exc,
+            context={"function": "_consume_surface_continuity_feed", "handler_line": 6310, "source_file": "aurora_daemon.py"},
+        )
         return
     if not packets:
         return
@@ -6319,7 +8063,14 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
             raw = json.loads(integration_log_path.read_text())
             if isinstance(raw, list):
                 log_entries = raw
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6322",
+            exc=_aurora_boundary_exc,
+            context={"function": "_consume_surface_continuity_feed", "handler_line": 6322, "source_file": "aurora_daemon.py"},
+        )
         log_entries = []
 
     for packet in packets:
@@ -6374,7 +8125,14 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
                     source="surface_continuity_handoff",
                     existence_mode=ExistenceMode.PERSISTENT,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:6377",
+                exc=_aurora_boundary_exc,
+                context={"function": "_consume_surface_continuity_feed", "handler_line": 6377, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # 2. Feed concepts to sensory crystal for passive cross-modal learning.
@@ -6389,9 +8147,23 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
                             label=str(concept),
                             features={"source": "surface_continuity", "coherence": coherence},
                         )
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:6392",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_consume_surface_continuity_feed", "handler_line": 6392, "source_file": "aurora_daemon.py"},
+                        )
                         pass
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:6394",
+                exc=_aurora_boundary_exc,
+                context={"function": "_consume_surface_continuity_feed", "handler_line": 6394, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # 3. Write to the wrong-signal repair tracker if Surface flagged something.
@@ -6405,7 +8177,14 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
                     reason="surface_continuity_handoff reported felt_wrong",
                     intensity=max(0.3, min(0.8, 1.0 - coherence)),
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6408",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_consume_surface_continuity_feed", "handler_line": 6408, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # 4. Keep the most recent packet accessible to other subsurface systems.
@@ -6471,7 +8250,14 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
                             },
                             "pressure_profile": {"total_confidence": _unres_mag},
                         })
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:6474",
+                exc=_aurora_boundary_exc,
+                context={"function": "_consume_surface_continuity_feed", "handler_line": 6474, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # 6. GAP 6 FIX: Feed surface coherence into subsurface pressure tracking.
@@ -6513,7 +8299,14 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
                         reason=f"surface coherence={coherence:.2f} below 0.4 threshold",
                         intensity=round(min(0.6, _coh_pressure), 4),
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:6516",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_consume_surface_continuity_feed", "handler_line": 6516, "source_file": "aurora_daemon.py"},
+                    )
                     pass
             elif coherence > 0.7:
                 # Surface is fluid — treat as pressure relief on X axis.
@@ -6540,7 +8333,14 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
                         },
                         "pressure_profile": {"total_confidence": round(coherence * 0.4, 4)},
                     })
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:6543",
+                exc=_aurora_boundary_exc,
+                context={"function": "_consume_surface_continuity_feed", "handler_line": 6543, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         log_entries.append({
@@ -6561,7 +8361,14 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
         with open(tmp, "w") as _f:
             json.dump(log_entries, _f, indent=2)
         os.replace(tmp, str(integration_log_path))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6564",
+            exc=_aurora_boundary_exc,
+            context={"function": "_consume_surface_continuity_feed", "handler_line": 6564, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     if packets:
@@ -6596,6 +8403,13 @@ def _run_pressure_routing(systems: Dict[str, Any]) -> None:
                     f" axes={active_axes or '-'}"
                 )
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6598",
+            exc=e,
+            context={"function": "_run_pressure_routing", "handler_line": 6598, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [ADAPT] Pressure adapter error: {e}")
 
     try:
@@ -6605,6 +8419,13 @@ def _run_pressure_routing(systems: Dict[str, Any]) -> None:
         dominant = result.get("dominant_type", "?") if isinstance(result, dict) else "?"
         _log(f"  [PRESSURE] Routed → dominant={dominant}")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6607",
+            exc=e,
+            context={"function": "_run_pressure_routing", "handler_line": 6607, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [PRESSURE] Routing error: {e}")
 
 
@@ -6628,6 +8449,13 @@ def _run_leverage_relief(systems: Dict[str, Any]) -> None:
         elif action == "idle" and ratio > 0.7:
             _log(f"  [LEVERAGE] Monitoring — overhead_ratio={ratio:.2f} net={net:+.1f}")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6630",
+            exc=e,
+            context={"function": "_run_leverage_relief", "handler_line": 6630, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [LEVERAGE] Relief error: {e}")
 
 
@@ -6654,7 +8482,14 @@ def _run_sensory_competency_cycle(systems: Dict[str, Any]) -> None:
                 _vis = _sc_state.get("visual", {}) or {}
                 if _vis and any(float(v or 0) > 0.0 for v in _vis.values()):
                     sensory.process_visual_input(_vis, mode="observation")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6657",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_sensory_competency_cycle", "handler_line": 6657, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # Audio training — pull from sensory crystal audio lane
@@ -6665,9 +8500,23 @@ def _run_sensory_competency_cycle(systems: Dict[str, Any]) -> None:
                 _aud = _sc_state.get("audio", {}) or {}
                 if _aud and any(float(v or 0) > 0.0 for v in _aud.values()):
                     sensory.process_audio_input(_aud, mode="observation")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6668",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_sensory_competency_cycle", "handler_line": 6668, "source_file": "aurora_daemon.py"},
+                )
                 pass
     except Exception as _sce:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6670",
+            exc=_sce,
+            context={"function": "_run_sensory_competency_cycle", "handler_line": 6670, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [SENSORY-TRAIN] Error: {_sce}")
 
 
@@ -6692,7 +8541,14 @@ def _run_corpus_hunt_cycle(systems: Dict[str, Any]) -> None:
         all_done = all(p.get("done", False) for p in passes.values()) if passes else False
         if not all_done:
             return  # corpus still running
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6695",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_corpus_hunt_cycle", "handler_line": 6695, "source_file": "aurora_daemon.py"},
+        )
         return
 
     # Check if corpus_runner is already running
@@ -6703,7 +8559,14 @@ def _run_corpus_hunt_cycle(systems: Dict[str, Any]) -> None:
         )
         if _check.stdout.strip():
             return  # already running
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6706",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_corpus_hunt_cycle", "handler_line": 6706, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     # Use corpus_hunter tool to find new material
@@ -6718,7 +8581,14 @@ def _run_corpus_hunt_cycle(systems: Dict[str, Any]) -> None:
                 _fails = getattr(getattr(_dt, "ledger", None), "get_top_fails", lambda n: [])(1)
                 if _fails:
                     _topic = str(_fails[0][0]).replace("_", " ")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:6721",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_corpus_hunt_cycle", "handler_line": 6721, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         _hunt_result = _tool_call(
@@ -6739,10 +8609,24 @@ def _run_corpus_hunt_cycle(systems: Dict[str, Any]) -> None:
                 )
                 _log("  [CORPUS] corpus_runner.py started in background")
             except Exception as _cpe:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6741",
+                    exc=_cpe,
+                    context={"function": "_run_corpus_hunt_cycle", "handler_line": 6741, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [CORPUS] Failed to start corpus_runner: {_cpe}")
         else:
             _log("  [CORPUS] Hunt found no new material this cycle")
     except Exception as _che:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6745",
+            exc=_che,
+            context={"function": "_run_corpus_hunt_cycle", "handler_line": 6745, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [CORPUS] Hunt error: {_che}")
 
 
@@ -6773,7 +8657,14 @@ def _run_grammar_motif_training(systems: Dict[str, Any]) -> None:
             )
             if _promoted_count >= 5:
                 return  # enough motifs already
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6776",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_grammar_motif_training", "handler_line": 6776, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     try:
@@ -6793,6 +8684,13 @@ def _run_grammar_motif_training(systems: Dict[str, Any]) -> None:
                     mode=_ExistenceMode.AGENTIC,
                 )
             except Exception as _ep_e:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6795",
+                    exc=_ep_e,
+                    context={"function": "_run_grammar_motif_training", "handler_line": 6795, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [GRAMMAR] Epoch {_ep_i} error: {_ep_e}")
                 break
         # Save updated grammar state
@@ -6800,10 +8698,24 @@ def _run_grammar_motif_training(systems: Dict[str, Any]) -> None:
             _aurora_gw = systems.get("aurora")
             if _aurora_gw is not None and hasattr(_aurora_gw, "save_state"):
                 _aurora_gw.save_state()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:6803",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_grammar_motif_training", "handler_line": 6803, "source_file": "aurora_daemon.py"},
+            )
             pass
         _log("  [GRAMMAR] Autonomous training burst complete")
     except Exception as _gte:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6806",
+            exc=_gte,
+            context={"function": "_run_grammar_motif_training", "handler_line": 6806, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [GRAMMAR] Training error: {_gte}")
 
 
@@ -6866,7 +8778,14 @@ def run(systems: Dict[str, Any]) -> None:
                 if _cpm_lf is not None and hasattr(_lf_d, 'set_cpm'):
                     try:
                         _lf_d.set_cpm(_cpm_lf)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:6869",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 6869, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                 _lf_stat = _lf_d.status()
                 _log(f"  [LANGUAGE FIELD] Daemon online — "
@@ -6874,6 +8793,13 @@ def run(systems: Dict[str, Any]) -> None:
                      f"tensor={'confirmed' if _lf_stat.get('tensor_live') else 'fallback'} "
                      f"cpm={'live' if _lf_stat.get('cpm_live') else 'absent'}")
         except Exception as _lf_de:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:6876",
+                exc=_lf_de,
+                context={"function": "run", "handler_line": 6876, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [LANGUAGE FIELD] Daemon init failed: {_lf_de}")
 
     # Reactivity monitor — tracks internal state changes between cycles
@@ -6902,6 +8828,13 @@ def run(systems: Dict[str, Any]) -> None:
                 _sc_boot.start_session(f"daemon_{int(_time_sc_boot.time())}")
                 _log("  [SENSORY-CRYSTAL] Daemon session started.")
             except Exception as _sce_boot:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6904",
+                    exc=_sce_boot,
+                    context={"function": "run", "handler_line": 6904, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [SENSORY-CRYSTAL] Session start failed: {_sce_boot}")
 
     if not surface_owned_sensory:
@@ -6928,6 +8861,13 @@ def run(systems: Dict[str, Any]) -> None:
                 else:
                     _log("  [SENSORY] Mic listener unavailable (no microphone or disabled).")
             except Exception as _sie_e:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6930",
+                    exc=_sie_e,
+                    context={"function": "run", "handler_line": 6930, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [SENSORY] Mic listener start failed: {_sie_e}")
 
     shutdown = False
@@ -6944,7 +8884,14 @@ def run(systems: Dict[str, Any]) -> None:
                 visual = _hw.capture_visual()
                 if visual is not None:
                     _hw.process_visual(visual, None)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:6947",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_camera_capture_loop", "handler_line": 6947, "source_file": "aurora_daemon.py"},
+                )
                 pass
             _ct.sleep(3.0)
 
@@ -6961,6 +8908,13 @@ def run(systems: Dict[str, Any]) -> None:
             systems["screen_observer"] = _boot_sobs(systems, interval=5.0)
             _log("  [VISION] ScreenObserver started (visual inquiry active, 5s interval).")
         except Exception as _sobs_e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:6963",
+                exc=_sobs_e,
+                context={"function": "run", "handler_line": 6963, "source_file": "aurora_daemon.py"},
+            )
             _log(f"  [VISION] ScreenObserver unavailable: {_sobs_e}")
 
     # Start autonomous CuriosityEngine — runs 3-cycle idle batches, pauses during user turns.
@@ -6989,6 +8943,13 @@ def run(systems: Dict[str, Any]) -> None:
         _start_curiosity(_curiosity_engine, tick_interval_s=60.0)
         _log("  [CURIOSITY] Autonomous curiosity engine started (60s idle cycle).")
     except Exception as _ce:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:6991",
+            exc=_ce,
+            context={"function": "run", "handler_line": 6991, "source_file": "aurora_daemon.py"},
+        )
         _log(f"  [CURIOSITY] Engine unavailable: {_ce}")
 
     def _handle_signal(sig, frame):
@@ -7083,7 +9044,14 @@ def run(systems: Dict[str, Any]) -> None:
         if now >= next_grammar_train:
             try:
                 _run_grammar_motif_training(systems)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7086",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "run", "handler_line": 7086, "source_file": "aurora_daemon.py"},
+                )
                 pass
             next_grammar_train = now + 1800  # retry every 30 min
 
@@ -7092,7 +9060,14 @@ def run(systems: Dict[str, Any]) -> None:
         if now >= next_sensory_train:
             try:
                 _run_sensory_competency_cycle(systems)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7095",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "run", "handler_line": 7095, "source_file": "aurora_daemon.py"},
+                )
                 pass
             next_sensory_train = now + 120  # every 2 minutes
 
@@ -7101,7 +9076,14 @@ def run(systems: Dict[str, Any]) -> None:
         if now >= next_corpus_hunt:
             try:
                 _run_corpus_hunt_cycle(systems)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7104",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "run", "handler_line": 7104, "source_file": "aurora_daemon.py"},
+                )
                 pass
             next_corpus_hunt = now + 3600  # check hourly
 
@@ -7118,13 +9100,27 @@ def run(systems: Dict[str, Any]) -> None:
                 try:
                     governor.note_energy_income("study_complete", quality=1.0,
                                                 notes="OETS study cycle completed")
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7121",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7121, "source_file": "aurora_daemon.py"},
+                    )
                     pass
                 try:
                     _rm_study = systems.get("_reactivity_monitor")
                     if _rm_study is not None:
                         _express_study_completion(systems, {}, _rm_study)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7127",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7127, "source_file": "aurora_daemon.py"},
+                    )
                     pass
             else:
                 next_study = now + max(60, int(decision.get("retry_in", 300) or 300))
@@ -7139,13 +9135,27 @@ def run(systems: Dict[str, Any]) -> None:
                 try:
                     governor.note_energy_income("dream_complete", quality=1.0,
                                                 notes="Dream burst completed")
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7142",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7142, "source_file": "aurora_daemon.py"},
+                    )
                     pass
                 try:
                     _rm_post = systems.get("_reactivity_monitor")
                     if _rm_post is not None:
                         _express_dream_completion(systems, {}, _rm_post)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7148",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7148, "source_file": "aurora_daemon.py"},
+                    )
                     pass
 
                 post_assim = _governed_decision("assimilation", now, heat, quiet, state_write_lock, log_tag="ASSIM")
@@ -7158,7 +9168,14 @@ def run(systems: Dict[str, Any]) -> None:
                     try:
                         governor.note_energy_income("assimilation_complete", quality=1.0,
                                                     notes="Post-dream assimilation")
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7161",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7161, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                 else:
                     _stage_low_resource_evolution_relief(systems, "assimilation", post_assim)
@@ -7205,7 +9222,14 @@ def run(systems: Dict[str, Any]) -> None:
                 try:
                     governor.note_energy_income("classroom_complete", quality=1.0,
                                                 notes="Targeted classroom curriculum completed")
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7208",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7208, "source_file": "aurora_daemon.py"},
+                    )
                     pass
                 next_classroom = now + _jitter(CLASSROOM_INTERVAL, 0.25)
             else:
@@ -7243,7 +9267,14 @@ def run(systems: Dict[str, Any]) -> None:
                             f"channels={_sedi_stats.get('path_registry', {}).get('active_channels', 0)}"
                         ),
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7246",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7246, "source_file": "aurora_daemon.py"},
+                    )
                     pass
 
                 # Section 7 — QAO Observer hook: record sedimemory state as ground truth
@@ -7263,7 +9294,14 @@ def run(systems: Dict[str, Any]) -> None:
                             source="OBSERVER",
                             timestamp=_t.time(),
                         )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7266",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7266, "source_file": "aurora_daemon.py"},
+                    )
                     pass
 
                 # Section 8 — WisdomStore bridge: A-axis compression → propose_shard
@@ -7288,10 +9326,24 @@ def run(systems: Dict[str, Any]) -> None:
                                         confidence=0.6,
                                         provenance="sedimemory",
                                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7291",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7291, "source_file": "aurora_daemon.py"},
+                    )
                     pass
 
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7294",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "run", "handler_line": 7294, "source_file": "aurora_daemon.py"},
+                )
                 pass
 
         # Evolution chamber tick — keeps genealogy evolving in real-time
@@ -7330,7 +9382,14 @@ def run(systems: Dict[str, Any]) -> None:
                         systems["_predictive_stager_offset"] = _ps_next_offset
                         if _ps_staged:
                             _record_task_run("predictive_stager", now)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7333",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7333, "source_file": "aurora_daemon.py"},
+                        )
                         pass
 
                     # ActivationField — Subsurface spreading-activation cycle:
@@ -7344,7 +9403,14 @@ def run(systems: Dict[str, Any]) -> None:
                         _af_result = run_activation_cycle(systems)
                         if _af_result:
                             _record_task_run("activation_field", now)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7347",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7347, "source_file": "aurora_daemon.py"},
+                        )
                         pass
 
                     # SensoryObservation — "accelerated sim leaves a message
@@ -7359,7 +9425,14 @@ def run(systems: Dict[str, Any]) -> None:
                         _so_result = run_sensory_observation_cycle(systems)
                         if _so_result:
                             _record_task_run("sensory_observation", now)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7362",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7362, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                 # Fast-path study cycle — fires every 90s when WARP has queued
                 # priority research targets from shallow concept seeks.
@@ -7382,7 +9455,14 @@ def run(systems: Dict[str, Any]) -> None:
                                     f"  [WARP-STUDY] fast-path study cycle: "
                                     f"{len(_warp_pending)} shallow concept(s) processed"
                                 )
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7385",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7385, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                     next_warp_study = now + WARP_STUDY_INTERVAL
 
@@ -7417,9 +9497,23 @@ def run(systems: Dict[str, Any]) -> None:
                         if flush_decision.get("allowed", False):
                             _gen.flush_files()
                             _record_task_run("genealogy_flush", now)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7420",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7420, "source_file": "aurora_daemon.py"},
+                        )
                         pass
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:7422",
+                exc=_aurora_boundary_exc,
+                context={"function": "run", "handler_line": 7422, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # Hub status write — every 60s so evolution metrics stay fresh
@@ -7448,7 +9542,14 @@ def run(systems: Dict[str, Any]) -> None:
                             _source, quality=_conf,
                             notes=f"arch={_arch[:30]} conf={_conf:.2f} quasi={_quasi_count}",
                         )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7451",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7451, "source_file": "aurora_daemon.py"},
+                    )
                     pass
             else:
                 next_status = now + max(60, int(decision.get("retry_in", 60) or 60))
@@ -7481,6 +9582,13 @@ def run(systems: Dict[str, Any]) -> None:
                     )
                     _log("  [QUASIARCH] Automatic diagnostic sweep launched.")
             except Exception as _qswe:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7483",
+                    exc=_qswe,
+                    context={"function": "run", "handler_line": 7483, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [QUASIARCH] Sweep launch error: {_qswe}")
             next_quasiarch_sweep = now + 1800
 
@@ -7496,6 +9604,13 @@ def run(systems: Dict[str, Any]) -> None:
                     )
                     _log("  [QUASIARCH] Automatic enforcer feedback learn launched.")
             except Exception as _qle:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7498",
+                    exc=_qle,
+                    context={"function": "run", "handler_line": 7498, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [QUASIARCH] Learn launch error: {_qle}")
             next_quasiarch_learn = now + 1800
 
@@ -7510,7 +9625,14 @@ def run(systems: Dict[str, Any]) -> None:
                 try:
                     governor.note_energy_income("assimilation_complete", quality=1.0,
                                                 notes="Scheduled assimilation cycle")
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7513",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7513, "source_file": "aurora_daemon.py"},
+                    )
                     pass
             else:
                 _stage_low_resource_evolution_relief(systems, "assimilation", decision)
@@ -7569,7 +9691,14 @@ def run(systems: Dict[str, Any]) -> None:
                     quality = min(1.0, 0.5 + crystals * 0.05)
                     governor.note_energy_income("distill_complete", quality=quality,
                                                 notes=f"Distillation: {crystals} crystals")
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:7572",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "run", "handler_line": 7572, "source_file": "aurora_daemon.py"},
+                    )
                     pass
             else:
                 next_distill = now + max(60, int(decision.get("retry_in", 2400) or 2400))
@@ -7622,7 +9751,14 @@ def run(systems: Dict[str, Any]) -> None:
                                 "B": float(getattr(_pvec_t, "B", 0.5)),
                                 "A": float(getattr(_pvec_t, "A", 0.5)),
                             }
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7625",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7625, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                 if _pv_t:
                     _dom_ax_t = max(_pv_t, key=lambda k: _pv_t[k])
@@ -7662,14 +9798,28 @@ def run(systems: Dict[str, Any]) -> None:
                                 self_relevance=0.6,
                                 axis_signature=["N", "X"],
                             ))
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7665",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7665, "source_file": "aurora_daemon.py"},
+                        )
                         pass
 
                 if _tspace.active_processes:
                     _raw_t = _tspace.integrate()
                     _settled_t = _gc().carry_forward(_raw_t)
                     systems["_active_thought_state"] = _settled_t
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7672",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "run", "handler_line": 7672, "source_file": "aurora_daemon.py"},
+                )
                 pass
             next_thought_tick = now + 30
 
@@ -7696,7 +9846,14 @@ def run(systems: Dict[str, Any]) -> None:
                             _ifield_d.ingest_sensory_event('visual', intensity=min(1.0, _vis_mat * 0.7), novelty=0.25, spatial=0.3, valence=0.0)
                         if _aud_mat > 0.02:
                             _ifield_d.ingest_sensory_event('auditory', intensity=min(1.0, _aud_mat * 0.7), novelty=0.2, valence=0.0)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7699",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7699, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                 # Screen observer → visual spatial pressure
                 _so_d = systems.get('screen_observer')
@@ -7711,7 +9868,14 @@ def run(systems: Dict[str, Any]) -> None:
                                 spatial=min(1.0, float(_scene_d.get('edge_density', 0.3) or 0.3)),
                                 valence=0.0,
                             )
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7714",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7714, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                 # Dimensional pressure vector → external input pump
                 if hasattr(_ifield_d, 'ingest_external_input'):
@@ -7731,7 +9895,14 @@ def run(systems: Dict[str, Any]) -> None:
                                     intensity=0.25,
                                     source='daemon_ambient',
                                 )
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7734",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7734, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                 # Consciousness engine heartbeat signals → internal pump
                 if hasattr(_ifield_d, 'ingest_internal_signal'):
@@ -7745,9 +9916,23 @@ def run(systems: Dict[str, Any]) -> None:
                                 _ifield_d.ingest_internal_signal('emotion', magnitude=_stag_d * 0.3, source_axis='N')
                             if _coh_d < 0.75:
                                 _ifield_d.ingest_internal_signal('reasoning', magnitude=(1.0 - _coh_d) * 0.25, source_axis='B')
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7748",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7748, "source_file": "aurora_daemon.py"},
+                        )
                         pass
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:7750",
+                exc=_aurora_boundary_exc,
+                context={"function": "run", "handler_line": 7750, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # ---- REACTIVITY: scan for significant internal state changes ----
@@ -7768,7 +9953,14 @@ def run(systems: Dict[str, Any]) -> None:
                         _q.append(_r_ev)
                         if len(_q) > 10:
                             _q[:] = _q[-10:]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:7771",
+                exc=_aurora_boundary_exc,
+                context={"function": "run", "handler_line": 7771, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # Proactive user reach (independent of dream/study — pure internal impulse)
@@ -7784,7 +9976,14 @@ def run(systems: Dict[str, Any]) -> None:
                             if _pev_msg:
                                 _send_reactive_message(systems, _pev_msg, _pev.kind)
                                 _log(f"  [REACT] queued {_pev.kind}: {_pev.description}")
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_daemon.py:7787",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "run", "handler_line": 7787, "source_file": "aurora_daemon.py"},
+                        )
                         pass
                     _reach_out_to_user(systems, trigger=f"heat_{heat.lower()}")
                     _record_task_run("reach_out", now)
@@ -7826,6 +10025,13 @@ def run(systems: Dict[str, Any]) -> None:
                 if _expired:
                     _log(f"  [CORRESPONDENCE] {len(_expired)} prediction(s) expired unresolved.")
             except Exception as _corr_ingest_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7828",
+                    exc=_corr_ingest_exc,
+                    context={"function": "run", "handler_line": 7828, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [CORRESPONDENCE] ingest/expiry sweep failed: {_corr_ingest_exc}")
 
         if (_auto_reach_out_enabled(systems) and not quiet
@@ -7840,6 +10046,13 @@ def run(systems: Dict[str, Any]) -> None:
                     _log(f"  [CORRESPONDENCE] posted prediction-sealed message "
                          f"{_posted['message_id']!r} to aurora_to_user.json.")
             except Exception as _corr_post_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7842",
+                    exc=_corr_post_exc,
+                    context={"function": "run", "handler_line": 7842, "source_file": "aurora_daemon.py"},
+                )
                 _log(f"  [CORRESPONDENCE] draft/post failed: {_corr_post_exc}")
 
         # ---- VISUAL INQUIRY — check if screen observer queued a novel-scene question ----
@@ -7856,7 +10069,14 @@ def run(systems: Dict[str, Any]) -> None:
                         source="visual_inquiry",
                     )
                     _log(f"  [VISION] Novel-scene inquiry queued for surface pipeline.")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:7859",
+                exc=_aurora_boundary_exc,
+                context={"function": "run", "handler_line": 7859, "source_file": "aurora_daemon.py"},
+            )
             pass
 
         # Sleep short interval — responsive to shutdown signal
@@ -7869,7 +10089,14 @@ def run(systems: Dict[str, Any]) -> None:
     try:
         from aurora_curiosity_engine import stop_curiosity_background as _stop_curiosity
         _stop_curiosity()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:7872",
+            exc=_aurora_boundary_exc,
+            context={"function": "run", "handler_line": 7872, "source_file": "aurora_daemon.py"},
+        )
         pass
 
     _log("Saving state before shutdown...")
@@ -7910,7 +10137,14 @@ def main(runtime_profile: str = "full") -> None:
                     if "sedimemory_channels" in _sedi_data:
                         _sedi_boot.load_channels(_sedi_data["sedimemory_channels"])
                     _log("  [L3.5] SediMemory restored from checkpoint.")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:7913",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "main", "handler_line": 7913, "source_file": "aurora_daemon.py"},
+                )
                 pass
         # Register Poedex as a first-class tool in systems so the comprehension
         # pipeline can call it directly for concept gaps, rather than going through
@@ -7926,6 +10160,13 @@ def main(runtime_profile: str = "full") -> None:
             _signal_operator("boot_tour")
         run(systems)
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:7928",
+            exc=e,
+            context={"function": "main", "handler_line": 7928, "source_file": "aurora_daemon.py"},
+        )
         import traceback as _tb
         _log(f"FATAL boot error: {e}\n{_tb.format_exc()}")
         sys.exit(1)

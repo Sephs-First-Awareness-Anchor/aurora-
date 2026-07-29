@@ -30,6 +30,7 @@ DOCTRINE:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import time
@@ -102,7 +103,14 @@ if not _SKIP_OETS_IMPORTS:
             OntologicalScaffoldingEngine, ResearchResult
         )
         _OETS_AVAILABLE = True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_expression_perception.py:105",
+            exc=_aurora_boundary_exc,
+            context={"function": "<module>", "handler_line": 105, "source_file": "aurora_expression_perception.py"},
+        )
         pass
 
 # Language State  -- Expression Evolution (CSSEE)
@@ -113,7 +121,14 @@ if not _SKIP_LANG_IMPORTS:
             ExpressionEvolutionOrchestra, LSVMetrics
         )
         _LANG_STATE_AVAILABLE = True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_expression_perception.py:116",
+            exc=_aurora_boundary_exc,
+            context={"function": "<module>", "handler_line": 116, "source_file": "aurora_expression_perception.py"},
+        )
         pass
 
 
@@ -212,7 +227,14 @@ def _extract_rich_audio_features(
                 estimated_freq = float(sample_rate / peak_lag)
                 features["pitch"] = _clamp((estimated_freq - 50.0) / 450.0)
                 features["features"]["estimated_freq"] = estimated_freq
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_expression_perception.py:215",
+            exc=_aurora_boundary_exc,
+            context={"function": "_extract_rich_audio_features", "handler_line": 215, "source_file": "aurora_expression_perception.py"},
+        )
         pass
 
     diff = np.abs(np.diff(audio)) if len(audio) > 1 else np.zeros(0, dtype=np.float32)
@@ -454,7 +476,14 @@ class LexicalMemory:
                 _j.dump({"version": 1, "entries": data}, f)
             _os.replace(tmp, p)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:457",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 457, "source_file": "aurora_expression_perception.py"},
+            )
             return False
 
     def load(self, path: str = "") -> int:
@@ -481,7 +510,14 @@ class LexicalMemory:
                 )
                 loaded += 1
             return loaded
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:484",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 484, "source_file": "aurora_expression_perception.py"},
+            )
             return 0
 
 @dataclass
@@ -1025,7 +1061,14 @@ class ImpressionCascade:
                 _j.dump({"version": 1, "entries": data}, f)
             _os.replace(tmp, p)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:1028",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 1028, "source_file": "aurora_expression_perception.py"},
+            )
             return False
 
     def load(self, path: str = "") -> int:
@@ -1052,7 +1095,14 @@ class ImpressionCascade:
                 )
                 loaded += 1
             return loaded
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:1055",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 1055, "source_file": "aurora_expression_perception.py"},
+            )
             return 0
 
     @property
@@ -1884,7 +1934,14 @@ class SentenceComposer:
             if engine is not None and hasattr(engine, "observe_exchange"):
                 engine.observe_exchange("", text, success=True,
                                         clarity=0.6, tone=tone)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:1887",
+                exc=_aurora_boundary_exc,
+                context={"function": "absorb", "handler_line": 1887, "source_file": "aurora_expression_perception.py"},
+            )
             pass
         return
 
@@ -2402,7 +2459,14 @@ class SentenceComposer:
         try:
             for ax in ("X", "T", "N", "B", "A"):
                 orientation[ax] = float((assembly.adjusted_axes or {}).get(ax, 0.5))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:2405",
+                exc=_aurora_boundary_exc,
+                context={"function": "compose", "handler_line": 2405, "source_file": "aurora_expression_perception.py"},
+            )
             orientation = {ax: 0.5 for ax in ("X", "T", "N", "B", "A")}
         # Register bias flows into the N (Energy) axis of the orientation —
         # sensory energy is constraint pressure, not a styling flag.
@@ -2466,7 +2530,14 @@ class SentenceComposer:
                         )
                     else:
                         motif = lineage.best_for_pressure(_orient, outlet)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_expression_perception.py:2469",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "compose", "handler_line": 2469, "source_file": "aurora_expression_perception.py"},
+                    )
                     motif = None
             sent = self._compose_from_motif(motif, orientation, valence_target,
                                             i_state, s_i,
@@ -2540,7 +2611,14 @@ class SentenceComposer:
         if motif is not None:
             try:
                 roles = [getattr(r, "value", str(r)) for r in motif.role_sequence]
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:2543",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_compose_from_motif", "handler_line": 2543, "source_file": "aurora_expression_perception.py"},
+                )
                 roles = []
         if not roles:
             # Pre-promotion minimal assembly: agent-action-object from her
@@ -2556,7 +2634,14 @@ class SentenceComposer:
             if frame is not None:
                 try:
                     word = self._bind_slot_from_frame(role, frame, sentence_roles, words)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_expression_perception.py:2559",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_compose_from_motif", "handler_line": 2559, "source_file": "aurora_expression_perception.py"},
+                    )
                     word = None
             if word:
                 words.append(word)
@@ -2970,7 +3055,14 @@ class SentenceComposer:
                       "timestamp": time.time()}
             with open(path, "a", encoding="utf-8") as f:
                 f.write(_json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:2973",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_register", "handler_line": 2973, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     # F5.2: ring width per register. serious=1 (deterministic top pick,
@@ -3032,7 +3124,14 @@ class SentenceComposer:
                       "register": register, "ring_rank": ring_rank, "timestamp": time.time()}
             with open(path, "a", encoding="utf-8") as f:
                 f.write(_json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:3035",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_exploration_attempt", "handler_line": 3035, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     def apply_correction(self, word: str, anchor_words: list, correction_type: str,
@@ -3057,7 +3156,14 @@ class SentenceComposer:
         web = self._oets.web
         try:
             from aurora_internal.aurora_ontological_scaffolding import RelationType
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:3060",
+                exc=_aurora_boundary_exc,
+                context={"function": "apply_correction", "handler_line": 3060, "source_file": "aurora_expression_perception.py"},
+            )
             return False
         try:
             if correction_type == "confirmation":
@@ -3076,7 +3182,14 @@ class SentenceComposer:
                                            knowledge_source="correction")
                     applied = applied or rel is not None
                 return applied
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:3079",
+                exc=_aurora_boundary_exc,
+                context={"function": "apply_correction", "handler_line": 3079, "source_file": "aurora_expression_perception.py"},
+            )
             return False
         return False
 
@@ -3108,7 +3221,14 @@ class SentenceComposer:
             }
             with open(path, "a", encoding="utf-8") as f:
                 f.write(_json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:3111",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_abstain", "handler_line": 3111, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     # R1.9.3 L2: structural role -> allowed grammatical categories. A hard
@@ -3171,7 +3291,14 @@ class SentenceComposer:
             }
             with open(path, "a", encoding="utf-8") as f:
                 f.write(_json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:3174",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_pos_unknown", "handler_line": 3174, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     def _descriptor_neighborhood(self, frame) -> set:
@@ -3227,7 +3354,14 @@ class SentenceComposer:
         for term in terms:
             try:
                 rels = get_all(term) or []
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:3230",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_descriptor_neighborhood", "handler_line": 3230, "source_file": "aurora_expression_perception.py"},
+                )
                 continue
             for rel in rels:
                 if getattr(rel, "source_of_knowledge", "") in _EXCLUDED_RELATION_SOURCES:
@@ -3307,7 +3441,14 @@ class SentenceComposer:
                         if _e is not None and self._pos_ok(_e, role):
                             candidates.append(_e)
                             _candidate_source.setdefault(_e.word.lower(), "dps_crystal")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:3310",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_select_constraint_word", "handler_line": 3310, "source_file": "aurora_expression_perception.py"},
+                )
                 pass
 
         # R1.9.2 G1: no early-exit here -- collect from every char before
@@ -3328,7 +3469,14 @@ class SentenceComposer:
                     if e.word.lower() not in seen and self._pos_ok(e, role):
                         candidates.append(e)
                         _candidate_source.setdefault(e.word.lower(), "find_by_noncomp")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:3331",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_select_constraint_word", "handler_line": 3331, "source_file": "aurora_expression_perception.py"},
+                )
                 pass
 
         if not candidates and chars:
@@ -3343,7 +3491,14 @@ class SentenceComposer:
                         if e.word.lower() not in seen and self._pos_ok(e, role):
                             candidates.append(e)
                             _candidate_source.setdefault(e.word.lower(), "cross_axis")
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_expression_perception.py:3346",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_select_constraint_word", "handler_line": 3346, "source_file": "aurora_expression_perception.py"},
+                    )
                     pass
 
         if not candidates:
@@ -3363,7 +3518,14 @@ class SentenceComposer:
                               if e.word.lower() not in seen and self._pos_ok(e, role)]
                 for e in candidates:
                     _candidate_source.setdefault(e.word.lower(), "role_fallback")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:3366",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_select_constraint_word", "handler_line": 3366, "source_file": "aurora_expression_perception.py"},
+                )
                 candidates = []
 
         if not candidates:
@@ -3457,7 +3619,14 @@ class SentenceComposer:
                 "usage_count_at_selection": int(getattr(chosen, "usage_count", 0) or 0),
             }
             chosen.usage_count += 1
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:3460",
+                exc=_aurora_boundary_exc,
+                context={"function": "_select_constraint_word", "handler_line": 3460, "source_file": "aurora_expression_perception.py"},
+            )
             pass
         return chosen.word
 
@@ -3504,7 +3673,14 @@ class SentenceComposer:
                         )
                     else:
                         lineage.record_fail(m.role_sequence)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:3507",
+                exc=_aurora_boundary_exc,
+                context={"function": "feedback", "handler_line": 3507, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     def _log_motif_grounding(self, skeleton_id: str, sentence: str, grammatical: bool,
@@ -3526,7 +3702,14 @@ class SentenceComposer:
             }
             with open(path, "a", encoding="utf-8") as f:
                 f.write(_json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:3529",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_motif_grounding", "handler_line": 3529, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     def _check_goodhart_divergence(self, skeleton_id: str, grammatical: bool, fitness: float) -> None:
@@ -3557,7 +3740,14 @@ class SentenceComposer:
                     }
                     with open(path, "a", encoding="utf-8") as f:
                         f.write(_json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:3560",
+                exc=_aurora_boundary_exc,
+                context={"function": "_check_goodhart_divergence", "handler_line": 3560, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
 
@@ -4033,7 +4223,14 @@ def json_dumps_safe(obj) -> str:
     import json as _j
     try:
         return _j.dumps(obj, sort_keys=True)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_expression_perception.py:4036",
+            exc=_aurora_boundary_exc,
+            context={"function": "json_dumps_safe", "handler_line": 4036, "source_file": "aurora_expression_perception.py"},
+        )
         return str(obj)
 
 
@@ -4112,7 +4309,14 @@ class ExpressionPerceptionEngine(WarpCapable):
                 return
             self._repr_gap_count = 0
             self._spawn_representation_trial(disp)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4115",
+                exc=_aurora_boundary_exc,
+                context={"function": "observe_encoding", "handler_line": 4115, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     @staticmethod
@@ -4231,7 +4435,14 @@ class ExpressionPerceptionEngine(WarpCapable):
             if translation < 0.5:
                 return 0.0          # fails the invariance gate
             return round(0.7 * gain + 0.3 * translation, 4)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4234",
+                exc=_aurora_boundary_exc,
+                context={"function": "_score_trial", "handler_line": 4234, "source_file": "aurora_expression_perception.py"},
+            )
             return 0.0
 
     def _dissolve_warp(self, component_id: str) -> None:
@@ -4251,9 +4462,23 @@ class ExpressionPerceptionEngine(WarpCapable):
             self._save_representations(component)
             try:
                 self.lexicon._invalidate_noncomp_index()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:4254",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "commit_representation", "handler_line": 4254, "source_file": "aurora_expression_perception.py"},
+                )
                 pass
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4256",
+                exc=_aurora_boundary_exc,
+                context={"function": "commit_representation", "handler_line": 4256, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     def _save_representations(self, component) -> None:
@@ -4269,7 +4494,14 @@ class ExpressionPerceptionEngine(WarpCapable):
             with open(tmp, "w") as f:
                 _j.dump(data, f)
             os.replace(tmp, self._REPR_STATE_PATH)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4272",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_representations", "handler_line": 4272, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     def _load_representations(self):
@@ -4277,7 +4509,14 @@ class ExpressionPerceptionEngine(WarpCapable):
             import json as _j
             if os.path.exists(self._REPR_STATE_PATH):
                 return _j.load(open(self._REPR_STATE_PATH)).get("active")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4280",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_representations", "handler_line": 4280, "source_file": "aurora_expression_perception.py"},
+            )
             pass
         return None
 
@@ -4285,7 +4524,14 @@ class ExpressionPerceptionEngine(WarpCapable):
         """Persist the vocabulary via the lexicon's own save path."""
         try:
             return bool(self.lexicon.save())
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4288",
+                exc=_aurora_boundary_exc,
+                context={"function": "save_lexicon", "handler_line": 4288, "source_file": "aurora_expression_perception.py"},
+            )
             return False
 
     """
@@ -4365,7 +4611,14 @@ class ExpressionPerceptionEngine(WarpCapable):
             self.evo.set_grammar(engine)
         try:
             self.composer.grammar_engine = engine
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4368",
+                exc=_aurora_boundary_exc,
+                context={"function": "set_grammar", "handler_line": 4368, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
     def get_thought_log(self, n: int = 10) -> List[Dict]:
@@ -4400,7 +4653,14 @@ class ExpressionPerceptionEngine(WarpCapable):
                     grounding_index=oets_metrics.get("grounding_index", 0.0),
                 )
                 self.evo.update_lsv(m)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:4403",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "set_lsv_metrics", "handler_line": 4403, "source_file": "aurora_expression_perception.py"},
+                )
                 pass
 
     def _maybe_update_lsv(self):
@@ -4418,7 +4678,14 @@ class ExpressionPerceptionEngine(WarpCapable):
             if self._ivm_lattice:
                 try:
                     heat = self._ivm_lattice.get_global_heat()
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_expression_perception.py:4421",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_maybe_update_lsv", "handler_line": 4421, "source_file": "aurora_expression_perception.py"},
+                    )
                     pass
             self.set_lsv_metrics({
                 "node_count": web_stats.get("total_nodes", 0),
@@ -4430,7 +4697,14 @@ class ExpressionPerceptionEngine(WarpCapable):
                 "topic_tracking": understanding.get("topic_tracking", 0.0),
                 "grounding_index": understanding.get("grounding_index", 0.0),
             })
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4433",
+                exc=_aurora_boundary_exc,
+                context={"function": "_maybe_update_lsv", "handler_line": 4433, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
         # Nudge LSV dimensions from constraint axis orientation every 50 turns.
@@ -4443,7 +4717,14 @@ class ExpressionPerceptionEngine(WarpCapable):
                     orientation     = genealogy.pressure_orientation()
                     outlet_fraction = genealogy._outlet_fraction()
                     self.evo.nudge_lsv_from_axes(orientation, outlet_fraction)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:4446",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_maybe_update_lsv", "handler_line": 4446, "source_file": "aurora_expression_perception.py"},
+                )
                 pass
 
     def set_genealogy_ref(self, genealogy):
@@ -4578,7 +4859,14 @@ class ExpressionPerceptionEngine(WarpCapable):
                 dimension_hint="framing_selection",
                 detail=f"tone={offspring.tone} fitness={_fit:.3f}",
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4581",
+                exc=_aurora_boundary_exc,
+                context={"function": "express", "handler_line": 4581, "source_file": "aurora_expression_perception.py"},
+            )
             pass
 
         # 5. Feed fitness back to the templates that produced this expression
@@ -4597,7 +4885,14 @@ class ExpressionPerceptionEngine(WarpCapable):
                 if self._ivm_lattice is not None:
                     try:
                         ivm_heat = self._ivm_lattice.get_global_heat()
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_expression_perception.py:4600",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "express", "handler_line": 4600, "source_file": "aurora_expression_perception.py"},
+                        )
                         pass
 
                 autonomy_str = "EXPLORER"
@@ -4628,7 +4923,14 @@ class ExpressionPerceptionEngine(WarpCapable):
                 # Update LSV with current OETS metrics
                 self._maybe_update_lsv()
 
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:4631",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "express", "handler_line": 4631, "source_file": "aurora_expression_perception.py"},
+                )
                 pass  # degrade gracefully  -- original expression is already set
 
         return {
@@ -4730,7 +5032,14 @@ class ExpressionPerceptionEngine(WarpCapable):
                     dimension_hint="semantic_precision",
                     detail=f"oets_hits={_oets_hits}/{_oets_checked}",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:4733",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_build_expression", "handler_line": 4733, "source_file": "aurora_expression_perception.py"},
+                )
                 pass
 
         # Gather personality traits if identity engine is connected
@@ -4747,7 +5056,14 @@ class ExpressionPerceptionEngine(WarpCapable):
             if is_capture_enabled():
                 record_composer_raw(_compose_result)
                 record_word_sources_and_motifs(self.composer)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:4750",
+                exc=_aurora_boundary_exc,
+                context={"function": "_build_expression", "handler_line": 4750, "source_file": "aurora_expression_perception.py"},
+            )
             pass
         return _compose_result
 
@@ -4828,7 +5144,14 @@ class ExpressionPerceptionEngine(WarpCapable):
                     i_state=i_state,
                     perception=self,
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:4831",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "ingest_interaction", "handler_line": 4831, "source_file": "aurora_expression_perception.py"},
+                )
                 pass
 
         # Feed context keywords to composer -- shapes next expression.
@@ -4975,7 +5298,14 @@ def build_layer5_associative_modules(
             perception.hardware = modules.get('hardware')
             perception.sensory_engine = modules.get('sensory')
             perception.identity = identity
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_expression_perception.py:4978",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_layer5_associative_modules", "handler_line": 4978, "source_file": "aurora_expression_perception.py"},
+        )
         pass
 
     if verbose: print("  [L5+] Vision Bootstrap...", end=" ", flush=True)
@@ -5587,12 +5917,26 @@ def _lazy_import_hardware():
 # AURORA_EVOLVED_NATIVE_BEGIN
 try:
     import inspect as _aurora_native_inspect
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_expression_perception.py:5590",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 5590, "source_file": "aurora_expression_perception.py"},
+    )
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_expression_perception.py:5595",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 5595, "source_file": "aurora_expression_perception.py"},
+    )
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None
@@ -5905,7 +6249,14 @@ def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
     try:
         setattr(owner, attr_name, value)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_expression_perception.py:5908",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_bind_owner_attribute", "handler_line": 5908, "source_file": "aurora_expression_perception.py"},
+        )
         return False
 
 def _aurora_store_reflection(target_key, reflection, args):
@@ -5920,7 +6271,14 @@ def _aurora_store_reflection(target_key, reflection, args):
     current[str(target_key)] = reflection
     try:
         setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_expression_perception.py:5923",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_reflection", "handler_line": 5923, "source_file": "aurora_expression_perception.py"},
+        )
         pass
 
 def _aurora_store_owner_state(attribute, target_key, value, args):
@@ -5935,7 +6293,14 @@ def _aurora_store_owner_state(attribute, target_key, value, args):
     current[str(target_key)] = value
     try:
         setattr(owner, attribute, current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_expression_perception.py:5938",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_owner_state", "handler_line": 5938, "source_file": "aurora_expression_perception.py"},
+        )
         pass
 
 def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
@@ -6307,7 +6672,14 @@ def _aurora_make_override(export_name, target_key):
         if _aurora_native_inspect is not None:
             try:
                 _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_expression_perception.py:6310",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_aurora_make_override", "handler_line": 6310, "source_file": "aurora_expression_perception.py"},
+                )
                 pass
     return _override
 

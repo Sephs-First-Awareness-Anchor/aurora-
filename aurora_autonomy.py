@@ -31,6 +31,7 @@ BOUNDARIES:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import os
 import sys
@@ -347,7 +348,14 @@ class FilesystemExplorer:
             size = os.path.getsize(path)
             if size > 400 * 1024 * 1024:
                 return False, "File too large (>10MB)"
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_autonomy.py:350",
+                exc=_aurora_boundary_exc,
+                context={"function": "can_read", "handler_line": 350, "source_file": "aurora_autonomy.py"},
+            )
             return False, "Cannot determine file size"
 
         return True, "OK"
@@ -377,6 +385,13 @@ class FilesystemExplorer:
             return content, f"Read {len(lines)} lines from {path}"
 
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_autonomy.py:379",
+                exc=e,
+                context={"function": "read_file", "handler_line": 379, "source_file": "aurora_autonomy.py"},
+            )
             return None, f"Error reading file: {e}"
 
     def list_directory(self, path: str, max_items: int = 100) -> Tuple[Optional[List[str]], str]:
@@ -401,6 +416,13 @@ class FilesystemExplorer:
                     items.append(item)
             return items, f"Listed {len(items)} items in {path}"
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_autonomy.py:403",
+                exc=e,
+                context={"function": "list_directory", "handler_line": 403, "source_file": "aurora_autonomy.py"},
+            )
             return None, f"Error listing directory: {e}"
 
     def search_files(self, directory: str, pattern: str,
@@ -428,6 +450,13 @@ class FilesystemExplorer:
                             if len(results) >= max_results:
                                 return results
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_autonomy.py:430",
+                exc=e,
+                context={"function": "search_files", "handler_line": 430, "source_file": "aurora_autonomy.py"},
+            )
             logger.debug(f"[AUTONOMY] Search error: {e}")
 
         return results
@@ -520,6 +549,13 @@ class RateLimitedSearch:
             remaining = self.boundaries.daily_inquiry_limit - self.quotas.inquiries_used
             return results, f"Search complete ({remaining} autonomous inquiries remaining today)"
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_autonomy.py:522",
+                exc=e,
+                context={"function": "autonomous_search", "handler_line": 522, "source_file": "aurora_autonomy.py"},
+            )
             return [], f"Search failed: {e}"
 
     def user_search(self, query: str, max_chars: int = 2000) -> List[Dict]:
@@ -629,6 +665,13 @@ class AutonomyEngine:
             )
             logger.info("[AUTONOMY] Dream evolution orchestrator attached")
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_autonomy.py:631",
+                exc=e,
+                context={"function": "__init__", "handler_line": 631, "source_file": "aurora_autonomy.py"},
+            )
             logger.debug(f"[AUTONOMY] Dream evolution not available: {e}")
 
         # Pressure mathematics tracker
@@ -642,6 +685,13 @@ class AutonomyEngine:
             )
             logger.info("[AUTONOMY] Pressure mathematics tracker attached")
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_autonomy.py:644",
+                exc=e,
+                context={"function": "__init__", "handler_line": 644, "source_file": "aurora_autonomy.py"},
+            )
             logger.debug(f"[AUTONOMY] Pressure math tracker not available: {e}")
 
         # Load state
@@ -680,7 +730,14 @@ class AutonomyEngine:
         if perception and hasattr(perception, 'oets') and perception.oets:
             try:
                 perception.oets.set_announce_thresholds(min_connections, min_confidence)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_autonomy.py:683",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "set_announce_thresholds", "handler_line": 683, "source_file": "aurora_autonomy.py"},
+                )
                 pass
 
     def start(self):
@@ -920,6 +977,13 @@ class AutonomyEngine:
                 if evo_seed:
                     return evo_seed
             except Exception as e:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_autonomy.py:922",
+                    exc=e,
+                    context={"function": "_build_dream_seed", "handler_line": 922, "source_file": "aurora_autonomy.py"},
+                )
                 logger.debug(f"[AUTONOMY] Dream evo seed fallback: {e}")
 
         # Original seed logic (fallback)
@@ -940,7 +1004,14 @@ class AutonomyEngine:
                     word = t.get('word')
                     if word:
                         candidates.append(f"concept:{word}")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_autonomy.py:943",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_build_dream_seed", "handler_line": 943, "source_file": "aurora_autonomy.py"},
+                )
                 pass
 
         if not candidates:
@@ -987,6 +1058,13 @@ class AutonomyEngine:
                     # Apply results into live systems
                     self._dream_evo.apply(self.systems)
                 except Exception as e:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_autonomy.py:989",
+                        exc=e,
+                        context={"function": "_check_dreams", "handler_line": 989, "source_file": "aurora_autonomy.py"},
+                    )
                     logger.debug(f"[AUTONOMY] Dream evo pipeline: {e}")
 
             # --- Pressure mathematics capture ---
@@ -995,6 +1073,13 @@ class AutonomyEngine:
                     p_metrics = self._pressure_tracker.capture(self.systems)
                     self._pressure_tracker.apply_feedback(self.systems)
                 except Exception as e:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_autonomy.py:997",
+                        exc=e,
+                        context={"function": "_check_dreams", "handler_line": 997, "source_file": "aurora_autonomy.py"},
+                    )
                     logger.debug(f"[AUTONOMY] Pressure math capture: {e}")
 
             # Build thought with evolution context if available
@@ -1017,6 +1102,13 @@ class AutonomyEngine:
                         if n_shards > 0:
                             logger.info(f"[AUTONOMY] Injected {n_shards} understanding shard(s) into OETS.")
                     except Exception as e_bridge:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_autonomy.py:1019",
+                            exc=e_bridge,
+                            context={"function": "_check_dreams", "handler_line": 1019, "source_file": "aurora_autonomy.py"},
+                        )
                         logger.debug(f"[AUTONOMY] OETS injection error: {e_bridge}")
 
             self.action_log.log(
@@ -1045,6 +1137,13 @@ class AutonomyEngine:
                     ),
                 })
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_autonomy.py:1047",
+                exc=e,
+                context={"function": "_check_dreams", "handler_line": 1047, "source_file": "aurora_autonomy.py"},
+            )
             logger.debug(f"[AUTONOMY] Dream cycle skipped: {e}")
 
     def _check_observations(self):
@@ -1078,6 +1177,13 @@ class AutonomyEngine:
                 self.on_observation(f"Concepts active: {', '.join(context['concepts_active'][:3])}")
 
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_autonomy.py:1080",
+                exc=e,
+                context={"function": "_check_observations", "handler_line": 1080, "source_file": "aurora_autonomy.py"},
+            )
             logger.debug(f"[AUTONOMY] Observation error: {e}")
 
     def _gather_context(self) -> Dict[str, Any]:
@@ -1093,7 +1199,14 @@ class AutonomyEngine:
         if integration:
             try:
                 context["sensory"] = integration.get_sensory_context()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_autonomy.py:1096",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_gather_context", "handler_line": 1096, "source_file": "aurora_autonomy.py"},
+                )
                 pass
 
         return context

@@ -46,6 +46,7 @@ a first-pass heuristic, not a sourced pre-existing rule — treat it as the one
 part of this file to look over most critically.
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -155,7 +156,14 @@ def _watchdog_ack_timestamp(state_dir: Path) -> Optional[float]:
     try:
         with open(state_dir / _WATCHDOG_ACK_FILE, "r", encoding="utf-8") as f:
             return float(json.load(f).get("acked_at", 0.0) or 0.0)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_classroom.py:158",
+            exc=_aurora_boundary_exc,
+            context={"function": "_watchdog_ack_timestamp", "handler_line": 158, "source_file": "aurora_classroom.py"},
+        )
         return None
 
 
@@ -171,7 +179,14 @@ def _consecutive_zero_divergence_tail(state_dir: Path) -> int:
     try:
         with open(log_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_classroom.py:174",
+            exc=_aurora_boundary_exc,
+            context={"function": "_consecutive_zero_divergence_tail", "handler_line": 174, "source_file": "aurora_classroom.py"},
+        )
         return 0
     ack_ts = _watchdog_ack_timestamp(state_dir)
     count = 0
@@ -183,7 +198,14 @@ def _consecutive_zero_divergence_tail(state_dir: Path) -> int:
             entry = json.loads(line)
             score = float(entry.get("divergence_score"))
             entry_ts = float(entry.get("timestamp", 0.0) or 0.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_classroom.py:186",
+                exc=_aurora_boundary_exc,
+                context={"function": "_consecutive_zero_divergence_tail", "handler_line": 186, "source_file": "aurora_classroom.py"},
+            )
             break
         if ack_ts is not None and entry_ts <= ack_ts:
             break
@@ -373,7 +395,14 @@ def _load_fail_points(state_dir: Path) -> Dict[str, Any]:
     try:
         with open(state_dir / "fail_points.json", "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_classroom.py:376",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_fail_points", "handler_line": 376, "source_file": "aurora_classroom.py"},
+        )
         return {}
 
 
@@ -394,7 +423,14 @@ def _load_rotation_state(state_dir: Path) -> Dict[str, List[str]]:
             data = json.load(f)
         if isinstance(data, dict):
             return {str(dim): [str(i) for i in (ids or [])] for dim, ids in data.items()}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_classroom.py:397",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_rotation_state", "handler_line": 397, "source_file": "aurora_classroom.py"},
+        )
         pass
     return {}
 
@@ -406,7 +442,14 @@ def _save_rotation_state(state_dir: Path, state: Dict[str, List[str]]) -> None:
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2)
         os.replace(tmp, state_dir / _ROTATION_FILE)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_classroom.py:409",
+            exc=_aurora_boundary_exc,
+            context={"function": "_save_rotation_state", "handler_line": 409, "source_file": "aurora_classroom.py"},
+        )
         pass
 
 
@@ -457,7 +500,14 @@ def _real_example_seed(
     try:
         bridge = get_directed_training_corpus_bridge()
         corpus_samples = bridge.samples_for_dimensions([dimension], limit=64).get(dimension, [])
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_classroom.py:460",
+            exc=_aurora_boundary_exc,
+            context={"function": "_real_example_seed", "handler_line": 460, "source_file": "aurora_classroom.py"},
+        )
         corpus_samples = []
     for i, snippet in enumerate(corpus_samples):
         seed = str(snippet or "").strip()
@@ -476,7 +526,14 @@ def _real_example_seed(
     try:
         from aurora_internal.aurora_semantic_probe_battery import is_seed_excluded
         candidates = [c for c in candidates if not is_seed_excluded(c[1])]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_classroom.py:479",
+            exc=_aurora_boundary_exc,
+            context={"function": "_real_example_seed", "handler_line": 479, "source_file": "aurora_classroom.py"},
+        )
         pass
 
     if not candidates:
@@ -511,7 +568,14 @@ def _recent_dimension_counts(state_dir: Path, window: int = _SCHEDULER_BALANCE_W
     try:
         with open(log_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_classroom.py:514",
+            exc=_aurora_boundary_exc,
+            context={"function": "_recent_dimension_counts", "handler_line": 514, "source_file": "aurora_classroom.py"},
+        )
         return {}
     counts: Dict[str, int] = {}
     for line in lines[-window:]:
@@ -520,7 +584,14 @@ def _recent_dimension_counts(state_dir: Path, window: int = _SCHEDULER_BALANCE_W
             continue
         try:
             dim = json.loads(line).get("target_dimension")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_classroom.py:523",
+                exc=_aurora_boundary_exc,
+                context={"function": "_recent_dimension_counts", "handler_line": 523, "source_file": "aurora_classroom.py"},
+            )
             continue
         if dim:
             counts[dim] = counts.get(dim, 0) + 1
@@ -818,7 +889,14 @@ class ClassroomSession:
         # persisted fine.
         try:
             self._run_mtsl_perturbation_probe()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_classroom.py:821",
+                exc=_aurora_boundary_exc,
+                context={"function": "run_lesson", "handler_line": 821, "source_file": "aurora_classroom.py"},
+            )
             pass
 
         return result

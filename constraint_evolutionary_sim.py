@@ -60,6 +60,7 @@ not us defining it for her.
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import math
 import random
@@ -299,7 +300,14 @@ class ConstraintEvolutionarySimulator:
                     intensity=0.20,
                     source="constraint_evo_elite",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:constraint_evolutionary_sim.py:302",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "run_generation", "handler_line": 302, "source_file": "constraint_evolutionary_sim.py"},
+                )
                 pass
 
         elapsed = time.time() - t0
@@ -550,6 +558,13 @@ class ConstraintEvolutionarySimulator:
                 n_integrated += 1
 
             except Exception as exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:constraint_evolutionary_sim.py:552",
+                    exc=exc,
+                    context={"function": "_integrate", "handler_line": 552, "source_file": "constraint_evolutionary_sim.py"},
+                )
                 log.debug("Integration failed for node at %s: %s", bkt, exc)
                 continue
 
@@ -558,7 +573,14 @@ class ConstraintEvolutionarySimulator:
         if sedimemory is not None and elite and n_integrated > 0:
             try:
                 _deposit_evo_insight(sedimemory, elite[0], self._generation)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:constraint_evolutionary_sim.py:561",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_integrate", "handler_line": 561, "source_file": "constraint_evolutionary_sim.py"},
+                )
                 pass
 
         return n_integrated
@@ -569,10 +591,24 @@ def _deposit_evo_insight(sedimemory: Any, best: Tuple, generation: int) -> None:
     fit, _, best_axes = best
     try:
         from aurora_sedimemory import ConstraintVector  # type: ignore
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:constraint_evolutionary_sim.py:572",
+            exc=_aurora_boundary_exc,
+            context={"function": "_deposit_evo_insight", "handler_line": 572, "source_file": "constraint_evolutionary_sim.py"},
+        )
         try:
             from aurora_sedimemory import ConstraintVector  # type: ignore
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:constraint_evolutionary_sim.py:575",
+                exc=_aurora_boundary_exc,
+                context={"function": "_deposit_evo_insight", "handler_line": 575, "source_file": "constraint_evolutionary_sim.py"},
+            )
             return
     cv = ConstraintVector(
         X=float(best_axes.get("X", 0.5)),

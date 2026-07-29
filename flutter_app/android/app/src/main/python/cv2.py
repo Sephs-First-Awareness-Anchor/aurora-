@@ -8,6 +8,7 @@ Kotlin CameraX bridge through aurora_bridge.provide_camera_frame().
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import threading
 from typing import Optional, Tuple
@@ -125,7 +126,14 @@ def imwrite(filename: str, img: np.ndarray, params=None) -> bool:
         arr = img[:, :, ::-1] if img.ndim == 3 and img.shape[2] >= 3 else img
         Image.fromarray(arr.astype(np.uint8)).save(filename)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/cv2.py:128",
+            exc=_aurora_boundary_exc,
+            context={"function": "imwrite", "handler_line": 128, "source_file": "flutter_app/android/app/src/main/python/cv2.py"},
+        )
         return False
 
 
@@ -137,7 +145,14 @@ def imread(filename: str, flags: int = IMREAD_COLOR) -> Optional[np.ndarray]:
         if flags != IMREAD_GRAYSCALE and arr.ndim == 3:
             return arr[:, :, ::-1].copy()  # RGB → BGR
         return arr
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/cv2.py:140",
+            exc=_aurora_boundary_exc,
+            context={"function": "imread", "handler_line": 140, "source_file": "flutter_app/android/app/src/main/python/cv2.py"},
+        )
         return None
 
 

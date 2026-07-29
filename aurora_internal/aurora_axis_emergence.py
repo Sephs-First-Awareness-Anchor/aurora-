@@ -47,6 +47,7 @@ Usage:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import math
@@ -185,7 +186,14 @@ class AxisEmergenceDetector:
                     row_ch, col_ch = str(slot).split("×")
                     channels.add(row_ch)
                     channels.add(col_ch)
-                except ValueError:
+                except ValueError as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_axis_emergence.py:188",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "load_empty_virtual_channels", "handler_line": 188, "source_file": "aurora_internal/aurora_axis_emergence.py"},
+                    )
                     pass
         return frozenset(channels)
 
@@ -233,9 +241,23 @@ class AxisEmergenceDetector:
                             if isinstance(snap, dict):
                                 row = {ax: float(snap.get(ax, 0.0) or 0.0) for ax in _AXES}
                                 obs.append(row)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_internal/aurora_axis_emergence.py:236",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_collect_observations", "handler_line": 236, "source_file": "aurora_internal/aurora_axis_emergence.py"},
+                            )
                             pass
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_axis_emergence.py:238",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_collect_observations", "handler_line": 238, "source_file": "aurora_internal/aurora_axis_emergence.py"},
+                )
                 pass
 
         # Source 2: evo_625_pressure_map.json  (slot axis_pressure profiles)
@@ -254,7 +276,14 @@ class AxisEmergenceDetector:
                     if isinstance(ap, dict):
                         row = {ax: float(ap.get(ax, 0.0) or 0.0) for ax in _AXES}
                         obs.append(row)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_axis_emergence.py:257",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_collect_observations", "handler_line": 257, "source_file": "aurora_internal/aurora_axis_emergence.py"},
+                )
                 pass
 
         return obs
@@ -347,7 +376,14 @@ class AxisEmergenceDetector:
             with open(path, encoding="utf-8") as fh:
                 data = json.load(fh)
             return data if isinstance(data, dict) else {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_axis_emergence.py:350",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_compounds", "handler_line": 350, "source_file": "aurora_internal/aurora_axis_emergence.py"},
+            )
             return {}
 
     def _save_compounds(self, data: Dict[str, Any]) -> None:
@@ -356,7 +392,14 @@ class AxisEmergenceDetector:
         try:
             with open(path, "w", encoding="utf-8") as fh:
                 json.dump(data, fh, indent=2, sort_keys=True, ensure_ascii=True)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_axis_emergence.py:359",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_compounds", "handler_line": 359, "source_file": "aurora_internal/aurora_axis_emergence.py"},
+            )
             pass
 
     def _path(self, rel: str) -> str:
@@ -372,7 +415,14 @@ def empty_virtual_channels(repo_root: str) -> FrozenSet[str]:
     """
     try:
         return AxisEmergenceDetector(repo_root).load_empty_virtual_channels()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_axis_emergence.py:375",
+            exc=_aurora_boundary_exc,
+            context={"function": "empty_virtual_channels", "handler_line": 375, "source_file": "aurora_internal/aurora_axis_emergence.py"},
+        )
         return frozenset()
 
 

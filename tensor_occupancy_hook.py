@@ -38,6 +38,7 @@ works the same way:
     tensor_occupancy_hook.install(field_slot_cls=FieldSlot)
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 import json
 import time
 from pathlib import Path
@@ -123,7 +124,14 @@ def _logging_deposit(self, constraint: int, comp: int, state: int,
                 candidate = _resolve_nc_name(*triple)
                 if aurora_manifold_lookup.load_noncomp(candidate) is not None:
                     resolved_nc_name = candidate
-            except KeyError:
+            except KeyError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:tensor_occupancy_hook.py:126",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_logging_deposit", "handler_line": 126, "source_file": "tensor_occupancy_hook.py"},
+                )
                 pass
 
         LOG_PATH.parent.mkdir(exist_ok=True)
@@ -143,7 +151,14 @@ def _logging_deposit(self, constraint: int, comp: int, state: int,
                     "X": vec.X, "T": vec.T, "N": vec.N, "B": vec.B, "A": vec.A,
                 } if vec is not None else None,
             }) + "\n")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:tensor_occupancy_hook.py:146",
+            exc=_aurora_boundary_exc,
+            context={"function": "_logging_deposit", "handler_line": 146, "source_file": "tensor_occupancy_hook.py"},
+        )
         pass  # logging must never break the actual deposit
 
     return _original_deposit(self, constraint, comp, state, recursion, vec)

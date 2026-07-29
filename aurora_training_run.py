@@ -9,6 +9,7 @@ Phases:
   3. Conversation turns — L0→L8 full pipeline via stdin
   4. Exploration cycles — autonomous reasoning
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 
@@ -90,7 +91,14 @@ def run_phase(label, cmd, env=None, stdin_text=None, timeout=600):
     except KeyboardInterrupt:
         proc.kill()
         raise
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_training_run.py:93",
+            exc=_aurora_boundary_exc,
+            context={"function": "run_phase", "handler_line": 93, "source_file": "aurora_training_run.py"},
+        )
         proc.kill()
 
     elapsed = time.time() - start
@@ -114,7 +122,14 @@ def read_state():
     try:
         with open(path) as f:
             return json.load(f)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_training_run.py:117",
+            exc=_aurora_boundary_exc,
+            context={"function": "read_state", "handler_line": 117, "source_file": "aurora_training_run.py"},
+        )
         return {}
 
 
@@ -127,7 +142,14 @@ def read_oets_stats():
             "concepts": len(data.get("nodes", {})),
             "relations": len(data.get("edges", {})),
         }
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_training_run.py:130",
+            exc=_aurora_boundary_exc,
+            context={"function": "read_oets_stats", "handler_line": 130, "source_file": "aurora_training_run.py"},
+        )
         return {}
 
 

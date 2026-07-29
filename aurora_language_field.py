@@ -22,6 +22,7 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import collections
 import hashlib
@@ -47,7 +48,14 @@ try:
         warp_guard, WarpTrigger,
     )
     _WARP_AVAILABLE = True
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_language_field.py:50",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 50, "source_file": "aurora_language_field.py"},
+    )
     WarpCapable = object  # type: ignore[misc,assignment]
     _WARP_AVAILABLE = False
 
@@ -209,7 +217,14 @@ class LanguageField(WarpCapable):
                 with open(_LSA_PATH) as f:
                     raw = json.load(f)
                 self._lsa = {k: LSAEntry.from_dict(v) for k, v in raw.items()}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:212",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_lsa", "handler_line": 212, "source_file": "aurora_language_field.py"},
+            )
             self._lsa = {}
 
     def _save_lsa(self):
@@ -217,7 +232,14 @@ class LanguageField(WarpCapable):
             os.makedirs(os.path.dirname(_LSA_PATH), exist_ok=True)
             with open(_LSA_PATH, "w") as f:
                 json.dump({k: v.to_dict() for k, v in self._lsa.items()}, f, indent=2)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:220",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_lsa", "handler_line": 220, "source_file": "aurora_language_field.py"},
+            )
             pass
 
     # ── WarpCapable interface ─────────────────────────────────────────────────
@@ -311,7 +333,14 @@ class LanguageField(WarpCapable):
             istate_profile["REC_CORE"]     = 0.00
             self.check_and_extend(istate_profile, source="language_ignite", tick=0)
             self.evaluate_warp_trials()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:314",
+                exc=_aurora_boundary_exc,
+                context={"function": "_check_comparison_coverage", "handler_line": 314, "source_file": "aurora_language_field.py"},
+            )
             pass
 
     # ── Tensor state helper ───────────────────────────────────────────────────
@@ -331,7 +360,14 @@ class LanguageField(WarpCapable):
                 if not self._tensor_confirmed:
                     self._tensor_confirmed = True
                 return result
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_language_field.py:334",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_tensor_state", "handler_line": 334, "source_file": "aurora_language_field.py"},
+                )
                 pass
         # Tensor layer absent or call failed — falling back to identity field approximation.
         # This is expected in daemon context (tensor not always wired) but should be rare
@@ -340,7 +376,14 @@ class LanguageField(WarpCapable):
         # Fallback: approximate from raw axis topology
         try:
             topo = self._ifield.status().get("pressure_topology", {})
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:343",
+                exc=_aurora_boundary_exc,
+                context={"function": "_tensor_state", "handler_line": 343, "source_file": "aurora_language_field.py"},
+            )
             topo = {}
         x = float(topo.get("X", 0.3))
         t = float(topo.get("T", 0.3))
@@ -379,7 +422,14 @@ class LanguageField(WarpCapable):
         try:
             topo = self._ifield.status().get("pressure_topology", {})
             return {ax: float(topo.get(ax, 0.3)) for ax in "XTNBA"}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:382",
+                exc=_aurora_boundary_exc,
+                context={"function": "_axis_pressures", "handler_line": 382, "source_file": "aurora_language_field.py"},
+            )
             return {ax: 0.3 for ax in "XTNBA"}
 
     # ── Stage 1-7: Ignition Sequence ─────────────────────────────────────────
@@ -609,7 +659,14 @@ class LanguageField(WarpCapable):
                 severity=0.4,
                 persistence_key="comparison_type:" + "".join(sorted(dominant)),
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:612",
+                exc=_aurora_boundary_exc,
+                context={"function": "_confess_comparison_uncertainty", "handler_line": 612, "source_file": "aurora_language_field.py"},
+            )
             pass
 
     # ── Lexical-Semantic Archive: Two-Factor Gate ─────────────────────────────
@@ -712,7 +769,14 @@ class LanguageField(WarpCapable):
                 return max(_N_COST_FLOOR, base_cost * 0.92)
             if stage is None:
                 return min(1.0, base_cost * 1.10)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:715",
+                exc=_aurora_boundary_exc,
+                context={"function": "_cpm_n_cost", "handler_line": 715, "source_file": "aurora_language_field.py"},
+            )
             pass
         return base_cost
 
@@ -850,7 +914,14 @@ class LanguageField(WarpCapable):
                 ) / max(len(type_axes), 1)
 
                 geometric_score = (cosine_sim * 0.70) + (type_coverage * 0.30)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:853",
+                exc=_aurora_boundary_exc,
+                context={"function": "measure_fidelity", "handler_line": 853, "source_file": "aurora_language_field.py"},
+            )
             geometric_score = 0.5
 
         # ── 2. LEXICAL COHERENCE GUARD (weight: 0.25) ─────────────────────────
@@ -876,7 +947,14 @@ class LanguageField(WarpCapable):
                 lexical_factors += 0.3
 
             lexical_score = lexical_score / max(lexical_factors, 1.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:879",
+                exc=_aurora_boundary_exc,
+                context={"function": "measure_fidelity", "handler_line": 879, "source_file": "aurora_language_field.py"},
+            )
             lexical_score = 0.5
 
         # ── 3. COMBINED SCORE ─────────────────────────────────────────────────
@@ -921,7 +999,14 @@ class LanguageField(WarpCapable):
                 intensity=max(0.20, fidelity),
                 source="utterance_reentry",
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_language_field.py:924",
+                exc=_aurora_boundary_exc,
+                context={"function": "reentry", "handler_line": 924, "source_file": "aurora_language_field.py"},
+            )
             pass
 
         # Update LSA

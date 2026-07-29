@@ -28,6 +28,7 @@ Reference stability:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import os
@@ -178,7 +179,14 @@ class RoleTagger:
             try:
                 import nltk
                 self._nltk_tagger = nltk.pos_tag
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_grammar_engine.py:181",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "__init__", "handler_line": 181, "source_file": "aurora_grammar_engine.py"},
+                )
                 self._use_nltk = False
 
     def tag(self, text: str) -> List[Tuple[str, TokenRole]]:
@@ -321,7 +329,14 @@ class RoleTagger:
             pos_tagged = self._nltk_tagger(tokens)
             return [(tok, _POS_MAP.get(pos, TokenRole.UNKNOWN))
                     for tok, pos in pos_tagged]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:324",
+                exc=_aurora_boundary_exc,
+                context={"function": "_tag_with_nltk", "handler_line": 324, "source_file": "aurora_grammar_engine.py"},
+            )
             return self._tag_rule_based(text)
 
 
@@ -561,7 +576,14 @@ class MotifLineage:
             }
             with open(path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:564",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_skeleton_skip", "handler_line": 564, "source_file": "aurora_grammar_engine.py"},
+            )
             pass
 
     def _log_starvation_alert(self, eligible_count: int, promoted_count: int) -> None:
@@ -579,7 +601,14 @@ class MotifLineage:
             }
             with open(path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:582",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_starvation_alert", "handler_line": 582, "source_file": "aurora_grammar_engine.py"},
+            )
             pass
 
     # ---- pattern key ------------------------------------------------------
@@ -840,7 +869,14 @@ class MotifLineage:
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
             os.replace(tmp, self._state_path)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:843",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save", "handler_line": 843, "source_file": "aurora_grammar_engine.py"},
+            )
             pass
 
     def _load(self):
@@ -852,7 +888,14 @@ class MotifLineage:
                     self._motifs[k] = StructuralMotif.from_dict(v)
                 for k, v in data.get("discourse", {}).items():
                     self._discourse[k] = DiscourseMotif.from_dict(v)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:855",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load", "handler_line": 855, "source_file": "aurora_grammar_engine.py"},
+            )
             pass
 
 
@@ -1026,7 +1069,14 @@ class MotifMiner:
         try:
             with open(corpus_path, encoding="utf-8", errors="replace") as f:
                 corpus = json.load(f)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:1029",
+                exc=_aurora_boundary_exc,
+                context={"function": "mine_corpus", "handler_line": 1029, "source_file": "aurora_grammar_engine.py"},
+            )
             return []
 
         convs = corpus if isinstance(corpus, list) else corpus.get("conversations", [])
@@ -1112,7 +1162,14 @@ class MotifMiner:
         try:
             with open(corpus_path, encoding="utf-8", errors="replace") as f:
                 corpus = json.load(f)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:1115",
+                exc=_aurora_boundary_exc,
+                context={"function": "mine_discourse", "handler_line": 1115, "source_file": "aurora_grammar_engine.py"},
+            )
             return []
 
         transitions: Counter = Counter()
@@ -1295,7 +1352,14 @@ class GrammarEngine:
                 ax: 0.8 + 0.6 * (cnt / max_count)
                 for ax, cnt in counts.items()
             }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:1298",
+                exc=_aurora_boundary_exc,
+                context={"function": "_axis_bias_from_links", "handler_line": 1298, "source_file": "aurora_grammar_engine.py"},
+            )
             return {}
 
     def _pressure_state(self) -> Tuple[Dict[str, float], float]:
@@ -1334,7 +1398,14 @@ class GrammarEngine:
                         orientation[ax] = 0.70 * orientation[ax] + 0.30 * link_bias[ax]
 
             return orientation, float(outlet_fraction)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:1337",
+                exc=_aurora_boundary_exc,
+                context={"function": "_pressure_state", "handler_line": 1337, "source_file": "aurora_grammar_engine.py"},
+            )
             return {a: 1.0 for a in ("X", "T", "N", "B", "A")}, 0.05
 
     def _log_relief_to_genealogy(
@@ -1395,7 +1466,14 @@ class GrammarEngine:
                 },
                 difference_snapshot=None,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:1398",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_relief_to_genealogy", "handler_line": 1398, "source_file": "aurora_grammar_engine.py"},
+            )
             pass
 
     @staticmethod
@@ -1451,7 +1529,14 @@ class GrammarEngine:
                 }
                 for _ax, _mult in _DISC_AXIS_BIAS.get(_disc_type, {}).items():
                     orientation[_ax] = _clamp(orientation.get(_ax, 1.0) * _mult, 0.5, 2.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:1454",
+                exc=_aurora_boundary_exc,
+                context={"function": "suggest_structure", "handler_line": 1454, "source_file": "aurora_grammar_engine.py"},
+            )
             pass
 
         # IVM heat modulates clause complexity preference.
@@ -1465,7 +1550,14 @@ class GrammarEngine:
                         # Suppress B-axis orientation so complex clause motifs
                         # are deprioritized under high cognitive load
                         orientation["B"] = orientation.get("B", 1.0) * (1.0 - 0.4 * heat)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_grammar_engine.py:1468",
+                exc=_aurora_boundary_exc,
+                context={"function": "suggest_structure", "handler_line": 1468, "source_file": "aurora_grammar_engine.py"},
+            )
             pass
 
         best = self._lineage.best_for_pressure(orientation, outlet)
@@ -1588,7 +1680,14 @@ class GrammarEngine:
                             if c:
                                 c.add_facet("motif_promotion",
                                             str(pattern), confidence=0.5)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_grammar_engine.py:1591",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "observe_exchange", "handler_line": 1591, "source_file": "aurora_grammar_engine.py"},
+                        )
                         pass
         else:
             self._lineage.record_fail(pattern)

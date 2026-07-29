@@ -8,6 +8,7 @@ formation when a new issue family begins to reform along a similar geometry.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -109,13 +110,27 @@ class GhostRelicSystem:
         try:
             with open(self.storage_path, "r", encoding="utf-8") as handle:
                 payload = json.load(handle)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/quasiarch_observer/ghost_relics.py:112",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load", "handler_line": 112, "source_file": "aurora_internal/quasiarch_observer/ghost_relics.py"},
+            )
             return
         self.total_reformations = int(payload.get("total_reformations", 0) or 0)
         for relic_id, relic_data in dict(payload.get("relics", {}) or {}).items():
             try:
                 relic = GhostRelic.from_dict(relic_data)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/quasiarch_observer/ghost_relics.py:118",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_load", "handler_line": 118, "source_file": "aurora_internal/quasiarch_observer/ghost_relics.py"},
+                )
                 continue
             if not relic.relic_id:
                 relic.relic_id = str(relic_id)
@@ -134,7 +149,14 @@ class GhostRelicSystem:
             with open(self.storage_path, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/quasiarch_observer/ghost_relics.py:137",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 137, "source_file": "aurora_internal/quasiarch_observer/ghost_relics.py"},
+            )
             return False
 
     def create_relic(
@@ -152,7 +174,14 @@ class GhostRelicSystem:
         for point_name, point in dict(getattr(crystal, "relational_points", {}) or {}).items():
             try:
                 point_template[str(point_name)] = float(getattr(point, "score", 0.0) or 0.0)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/quasiarch_observer/ghost_relics.py:155",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "create_relic", "handler_line": 155, "source_file": "aurora_internal/quasiarch_observer/ghost_relics.py"},
+                )
                 continue
         relic = GhostRelic(
             relic_id=relic_id,

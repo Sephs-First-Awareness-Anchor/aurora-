@@ -2,6 +2,7 @@
 """Interaction crystal formation, promotion, collapse, and routing."""
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import re
 import statistics
@@ -18,11 +19,25 @@ from aurora_constraint_engine import (
 _FC = _FoundationalContract()
 try:
     from quasiarch_observer import CrystalInstance, CrystalOrder
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_interaction_processing.py:21",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 21, "source_file": "aurora_interaction_processing.py"},
+    )
     from aurora_internal.quasiarch_observer import CrystalInstance, CrystalOrder
 try:
     from dimensional_processing_system_standalone_demo import RelationalPoint
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_interaction_processing.py:25",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 25, "source_file": "aurora_interaction_processing.py"},
+    )
     from aurora_internal.quasiarch_observer.dimensional_processing import RelationalPoint
 
 from aurora_interaction_engine import (

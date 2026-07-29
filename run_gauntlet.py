@@ -36,6 +36,7 @@ Usage:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import os
@@ -101,7 +102,14 @@ def _find_daemon_pid() -> int | None:
         ).strip()
         pids = [int(p) for p in out.splitlines() if p.strip()]
         return pids[0] if pids else None
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_gauntlet.py:104",
+            exc=_aurora_boundary_exc,
+            context={"function": "_find_daemon_pid", "handler_line": 104, "source_file": "run_gauntlet.py"},
+        )
         return None
 
 
@@ -113,7 +121,14 @@ def _stop_daemon(timeout: int = 30) -> bool:
     _log(f"  Sending SIGTERM to daemon PID {pid}...")
     try:
         os.kill(pid, signal.SIGTERM)
-    except ProcessLookupError:
+    except ProcessLookupError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_gauntlet.py:116",
+            exc=_aurora_boundary_exc,
+            context={"function": "_stop_daemon", "handler_line": 116, "source_file": "run_gauntlet.py"},
+        )
         return True
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -124,7 +139,14 @@ def _stop_daemon(timeout: int = 30) -> bool:
     _log(f"  Daemon still running after {timeout}s — sending SIGKILL.")
     try:
         os.kill(pid, signal.SIGKILL)
-    except ProcessLookupError:
+    except ProcessLookupError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_gauntlet.py:127",
+            exc=_aurora_boundary_exc,
+            context={"function": "_stop_daemon", "handler_line": 127, "source_file": "run_gauntlet.py"},
+        )
         pass
     time.sleep(2)
     return _find_daemon_pid() is None
@@ -483,7 +505,14 @@ def _log_chain_stats():
         ts         = json.loads(ts_path.read_text()) if ts_path.exists() else {}
         ticks      = ts.get("tick_count", "?")
         _log(f"  Genealogy: {n_links} links | {n_ab} abilities | {ticks} ticks total")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_gauntlet.py:486",
+            exc=_aurora_boundary_exc,
+            context={"function": "_log_chain_stats", "handler_line": 486, "source_file": "run_gauntlet.py"},
+        )
         pass
 
 
@@ -561,7 +590,14 @@ print(json.dumps({{
             text=True,
             timeout=90,
         )
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_gauntlet.py:564",
+            exc=_aurora_boundary_exc,
+            context={"function": "_log_competency_snapshot", "handler_line": 564, "source_file": "run_gauntlet.py"},
+        )
         _log(f"  Competency snapshot{tag}: timed out.")
         return
 
@@ -574,7 +610,14 @@ print(json.dumps({{
     last_line = result.stdout.strip().splitlines()[-1]
     try:
         snap = json.loads(last_line)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_gauntlet.py:577",
+            exc=_aurora_boundary_exc,
+            context={"function": "_log_competency_snapshot", "handler_line": 577, "source_file": "run_gauntlet.py"},
+        )
         _log(f"  Competency snapshot{tag}: parse error — {last_line[:200]}")
         return
 
@@ -591,7 +634,14 @@ print(json.dumps({{
             else:
                 try:
                     parts.append(f"{k}={float(v):.3f}")
-                except (TypeError, ValueError):
+                except (TypeError, ValueError) as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:run_gauntlet.py:594",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_fmt", "handler_line": 594, "source_file": "run_gauntlet.py"},
+                    )
                     parts.append(f"{k}={v}")
         return "  ".join(parts)
 

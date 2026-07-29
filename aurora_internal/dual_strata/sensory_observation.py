@@ -1,5 +1,6 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -31,7 +32,14 @@ def _string_list(values: Any, *, limit: int = 10) -> List[str]:
 def _vector_signal(values: Any) -> float:
     try:
         vec = [abs(float(v or 0.0)) for v in list(values or [])]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/sensory_observation.py:34",
+            exc=_aurora_boundary_exc,
+            context={"function": "_vector_signal", "handler_line": 34, "source_file": "aurora_internal/dual_strata/sensory_observation.py"},
+        )
         vec = []
     if not vec:
         return 0.0
@@ -229,7 +237,14 @@ def _load_json(path: Path, default: Any) -> Any:
             data = json.loads(path.read_text())
             if data is not None:
                 return data
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/sensory_observation.py:232",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_json", "handler_line": 232, "source_file": "aurora_internal/dual_strata/sensory_observation.py"},
+        )
         pass
     return default
 
@@ -241,7 +256,14 @@ def _save_json(path: Path, data: Any) -> None:
         with open(tmp, "w") as f:
             json.dump(data, f, indent=2)
         os.replace(tmp, str(path))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/sensory_observation.py:244",
+            exc=_aurora_boundary_exc,
+            context={"function": "_save_json", "handler_line": 244, "source_file": "aurora_internal/dual_strata/sensory_observation.py"},
+        )
         pass
 
 
@@ -280,5 +302,12 @@ def run_sensory_observation_cycle(systems: Dict[str, Any]) -> Dict[str, Any]:
             systems["_sensory_observation_pending"] = packet
 
         return {"packet": packet, "spoken": spoken, "gate_state": new_gate_state}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/sensory_observation.py:283",
+            exc=_aurora_boundary_exc,
+            context={"function": "run_sensory_observation_cycle", "handler_line": 283, "source_file": "aurora_internal/dual_strata/sensory_observation.py"},
+        )
         return {}

@@ -18,6 +18,7 @@ their representations.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import copy
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -66,7 +67,14 @@ def canonical_signature(value: Any) -> str:
                 continue
             try:
                 count = int(float(raw_count or 0))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_meaning_evolution.py:69",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "canonical_signature", "handler_line": 69, "source_file": "aurora_internal/aurora_meaning_evolution.py"},
+                )
                 count = 0
             if count > 0:
                 counts[axis] += count
@@ -92,7 +100,14 @@ def canonical_signature(value: Any) -> str:
                     continue
                 try:
                     count = int(float(raw_count.strip() or 0))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_meaning_evolution.py:95",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "canonical_signature", "handler_line": 95, "source_file": "aurora_internal/aurora_meaning_evolution.py"},
+                    )
                     count = 0
                 if count > 0:
                     counts[axis] += count

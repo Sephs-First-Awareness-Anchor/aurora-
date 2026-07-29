@@ -11,6 +11,7 @@ conserves CPU, memory, disk, and concurrency when the machine is under load.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import os
 import time
@@ -162,7 +163,14 @@ def _normalize_axis_map(raw: Any) -> Dict[str, float]:
             continue
         try:
             out[axis] = _clamp(float(value))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:165",
+                exc=_aurora_boundary_exc,
+                context={"function": "_normalize_axis_map", "handler_line": 165, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             continue
     return out
 
@@ -249,7 +257,14 @@ class RuntimeConstraintGovernor:
                 if _ov.get("active") and (time.time() - float(_ov.get("written_at", 0))) < 1800:
                     _sweep_overlay = _ov
                     heat = str(_ov.get("heat_hint", heat))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:252",
+                exc=_aurora_boundary_exc,
+                context={"function": "evaluate_task", "handler_line": 252, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             pass
 
         budgets = self._runtime_budgets(host, pressure, heat, quiet=quiet, state_write_lock=state_write_lock)
@@ -431,7 +446,14 @@ class RuntimeConstraintGovernor:
             _ef = os.path.join(self.state_dir, "energy_income.json") if self.state_dir else ""
             if _ef:
                 open(_ef, "w", encoding="utf-8").write(_json.dumps(live, indent=2))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:434",
+                exc=_aurora_boundary_exc,
+                context={"function": "note_energy_income", "handler_line": 434, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             pass
 
     def _load_energy_income(self) -> list:
@@ -441,7 +463,14 @@ class RuntimeConstraintGovernor:
             if not _ef or not os.path.exists(_ef):
                 return []
             return list(_json.loads(open(_ef, encoding="utf-8").read()) or [])
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:444",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_energy_income", "handler_line": 444, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             return []
 
     def energy_income_summary(self) -> Dict[str, Any]:
@@ -620,7 +649,14 @@ class RuntimeConstraintGovernor:
                         axes[ax] = _clamp(float(orientation.get(ax, 0.0) or 0.0) / max_val)
                     dominant_axis = max(axes, key=lambda ax: axes[ax])
                     return {"axes": axes, "dominant_axis": dominant_axis}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:623",
+                exc=_aurora_boundary_exc,
+                context={"function": "_pressure_state", "handler_line": 623, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             pass
 
         # Source 3: pressure classifier's axis_pressure from query_bias.json
@@ -637,7 +673,14 @@ class RuntimeConstraintGovernor:
                 for ax in _AXES:
                     axes[ax] = _clamp(float(qb_axes.get(ax, axes[ax]) or axes[ax]))
                 dominant_axis = max(axes, key=lambda ax: axes[ax])
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:640",
+                exc=_aurora_boundary_exc,
+                context={"function": "_pressure_state", "handler_line": 640, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             pass
 
         return {"axes": axes, "dominant_axis": dominant_axis}
@@ -719,7 +762,14 @@ class RuntimeConstraintGovernor:
         load5 = 0.0
         try:
             load1, load5, _ = os.getloadavg()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:722",
+                exc=_aurora_boundary_exc,
+                context={"function": "_host_metrics", "handler_line": 722, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             pass
         mem_total_kb = 0.0
         mem_available_kb = 0.0
@@ -730,7 +780,14 @@ class RuntimeConstraintGovernor:
                         mem_total_kb = float(line.split()[1])
                     elif line.startswith("MemAvailable:"):
                         mem_available_kb = float(line.split()[1])
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:733",
+                exc=_aurora_boundary_exc,
+                context={"function": "_host_metrics", "handler_line": 733, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             pass
         mem_pressure = 0.0
         if mem_total_kb > 0 and mem_available_kb >= 0:
@@ -741,7 +798,14 @@ class RuntimeConstraintGovernor:
             stat = os.statvfs(target)
             if stat.f_blocks > 0:
                 disk_free_ratio = _clamp(float(stat.f_bavail) / float(stat.f_blocks))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:744",
+                exc=_aurora_boundary_exc,
+                context={"function": "_host_metrics", "handler_line": 744, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             pass
         rss_mb = 0.0
         try:
@@ -750,7 +814,14 @@ class RuntimeConstraintGovernor:
             if len(parts) >= 2:
                 page_size = float(os.sysconf("SC_PAGE_SIZE"))
                 rss_mb = (float(parts[1]) * page_size) / (1024.0 * 1024.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_runtime_constraint_governor.py:753",
+                exc=_aurora_boundary_exc,
+                context={"function": "_host_metrics", "handler_line": 753, "source_file": "aurora_internal/aurora_runtime_constraint_governor.py"},
+            )
             pass
         return {
             "cpu_count": cpu_count,

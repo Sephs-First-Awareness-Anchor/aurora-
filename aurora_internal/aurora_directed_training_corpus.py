@@ -12,6 +12,7 @@ specs by:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -135,7 +136,14 @@ class DirectedTrainingCorpusBridge:
         try:
             with self.cache_path.open("r", encoding="utf-8") as handle:
                 payload = json.load(handle)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_directed_training_corpus.py:138",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_cache", "handler_line": 138, "source_file": "aurora_internal/aurora_directed_training_corpus.py"},
+            )
             return False
         # If the source corpus is present, the cache must match its current
         # signature or we rebuild fresh. If the source is absent (train.txt
@@ -163,7 +171,14 @@ class DirectedTrainingCorpusBridge:
             }
             with self.cache_path.open("w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_directed_training_corpus.py:166",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_cache", "handler_line": 166, "source_file": "aurora_internal/aurora_directed_training_corpus.py"},
+            )
             pass
 
     def _build_cache(self) -> None:

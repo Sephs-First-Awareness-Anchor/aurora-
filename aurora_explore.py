@@ -7,6 +7,7 @@ reads QAO journal after each exchange, and logs everything for analysis.
 
 Output: aurora_state/exploration_log.json
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import sys, os, json, time, datetime, traceback, re
 from collections import Counter, defaultdict
@@ -129,7 +130,14 @@ def _journal_line_count():
     try:
         with open(JOURNAL_PATH, "rb") as f:
             return sum(1 for _ in f)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_explore.py:132",
+            exc=_aurora_boundary_exc,
+            context={"function": "_journal_line_count", "handler_line": 132, "source_file": "aurora_explore.py"},
+        )
         return 0
 
 
@@ -151,9 +159,23 @@ def _read_issues_from(start_line):
                                 t = t.strip().strip("'\"")
                                 if t:
                                     issues.append(t)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_explore.py:154",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_read_issues_from", "handler_line": 154, "source_file": "aurora_explore.py"},
+                    )
                     pass
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_explore.py:156",
+            exc=_aurora_boundary_exc,
+            context={"function": "_read_issues_from", "handler_line": 156, "source_file": "aurora_explore.py"},
+        )
         pass
     return issues
 
@@ -187,6 +209,13 @@ def _run_prompt(user_text, systems, turn_tick=1):
         }
         return response, pipeline_state
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_explore.py:189",
+            exc=e,
+            context={"function": "_run_prompt", "handler_line": 189, "source_file": "aurora_explore.py"},
+        )
         return f"[ERROR: {e}]", {}
 
 
@@ -385,7 +414,14 @@ def main():
         if cm and hasattr(cm, "record_session_end"):
             cm.record_session_end()
             print("[EXPLORE] Conversation session closed.")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_explore.py:388",
+            exc=_aurora_boundary_exc,
+            context={"function": "main", "handler_line": 388, "source_file": "aurora_explore.py"},
+        )
         pass
 
     print(f"{'='*70}\n")

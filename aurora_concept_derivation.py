@@ -48,6 +48,7 @@ both modules are fully loaded.
 """
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import time
@@ -192,7 +193,14 @@ def _extract_geometry(text: str) -> Optional[Any]:
             from corpus_runner import GeometryExtractor
             _geom_extractor = GeometryExtractor()
         return _geom_extractor.extract(text)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_concept_derivation.py:195",
+            exc=_aurora_boundary_exc,
+            context={"function": "_extract_geometry", "handler_line": 195, "source_file": "aurora_concept_derivation.py"},
+        )
         return None
 
 
@@ -202,7 +210,14 @@ def _derive_channel(geom: Any, role: str, valence: float, word: str,
     try:
         from corpus_runner import derive_noncomp_channel
         return derive_noncomp_channel(geom, role, valence, word) or ""
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_concept_derivation.py:205",
+            exc=_aurora_boundary_exc,
+            context={"function": "_derive_channel", "handler_line": 205, "source_file": "aurora_concept_derivation.py"},
+        )
         return ""
 
 
@@ -233,7 +248,14 @@ def _associate_in_lexicon(word: str, channel: str, lexicon: Any) -> None:
     try:
         if lexicon is not None and hasattr(lexicon, "associate"):
             lexicon.associate(word, channel, strength=0.8)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_concept_derivation.py:236",
+            exc=_aurora_boundary_exc,
+            context={"function": "_associate_in_lexicon", "handler_line": 236, "source_file": "aurora_concept_derivation.py"},
+        )
         pass
 
 
@@ -293,5 +315,12 @@ def _ensure_oets_concept(
         node.axis_profile = axis_profile
         node.seed_word = word
         node.concept_channel = channel
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_concept_derivation.py:296",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ensure_oets_concept", "handler_line": 296, "source_file": "aurora_concept_derivation.py"},
+        )
         pass

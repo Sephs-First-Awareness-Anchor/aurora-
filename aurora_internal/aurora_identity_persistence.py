@@ -25,6 +25,7 @@ DOCTRINE:
 Authors: Sunni (Sir) Morningstar and Cael Devo
 Created: February 2026
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import json
@@ -199,7 +200,14 @@ def _ensure_memory_residue_lineage() -> None:
         return
     try:
         ensure_lineage_trait_materialized(_MEMORY_RESIDUE_LINEAGE_SPEC)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_identity_persistence.py:202",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ensure_memory_residue_lineage", "handler_line": 202, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+        )
         return
     _MEMORY_RESIDUE_LINEAGE_READY = True
 
@@ -432,7 +440,14 @@ class OETSPersistence:
                 str(self.state_dir.expanduser().resolve())
                 != str(Path(_STATE_ROOT).expanduser().resolve())
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_identity_persistence.py:435",
+                exc=_aurora_boundary_exc,
+                context={"function": "__init__", "handler_line": 435, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+            )
             self._isolated = str(self.state_dir) != str(_STATE_ROOT)
 
     def _web_candidates(self) -> List[Path]:
@@ -443,7 +458,14 @@ class OETSPersistence:
         for candidate in sources:
             try:
                 key = str(candidate.expanduser().resolve())
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_identity_persistence.py:446",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_web_candidates", "handler_line": 446, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+                )
                 key = str(candidate)
             if key in seen:
                 continue
@@ -598,7 +620,14 @@ class OETSPersistence:
         def _ts(d):
             try:
                 return float(d.get("timestamp", 0) or 0)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_identity_persistence.py:601",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_ts", "handler_line": 601, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+                )
                 return 0.0
 
         snapshot_entry = next(((p, d) for p, d in valid if str(p) == str(self.snapshot_web_file)), None)
@@ -631,7 +660,14 @@ class OETSPersistence:
                     },
                     reason=reason,
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_identity_persistence.py:634",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "load_web", "handler_line": 634, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+                )
                 pass
         else:
             web_path, data = valid[0]
@@ -752,6 +788,13 @@ class OETSPersistence:
                         "cluster_count": len(oets_engine.cluster_engine.clusters),
                     }
                 except Exception as exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_identity_persistence.py:754",
+                        exc=exc,
+                        context={"function": "_restore_clusters", "handler_line": 754, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+                    )
                     oets_engine._cluster_restore_status = {
                         "status": "failed",
                         "mode": "sync" if force_sync or (node_count < 250 and relation_count < 750) else "async",
@@ -784,12 +827,26 @@ class OETSPersistence:
                 try:
                     if str(target.resolve()) == str(web_path.resolve()):
                         continue
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_identity_persistence.py:787",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "load_web", "handler_line": 787, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+                    )
                     if str(target) == str(web_path):
                         continue
                 try:
                     self._write_web_payload(target, data)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_identity_persistence.py:792",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "load_web", "handler_line": 792, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+                    )
                     pass
 
             return True
@@ -822,7 +879,14 @@ class OETSPersistence:
             with open(self.memory_file, 'r') as f:
                 data = json.load(f)
             return ConversationMemory.from_dict(data)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_identity_persistence.py:825",
+                exc=_aurora_boundary_exc,
+                context={"function": "load_conversation_memory", "handler_line": 825, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+            )
             return None
 
     # ---- Core Identity Save/Load ----
@@ -834,7 +898,14 @@ class OETSPersistence:
             with open(self.identity_file, 'w') as f:
                 json.dump(data, f, indent=2, default=str)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_identity_persistence.py:837",
+                exc=_aurora_boundary_exc,
+                context={"function": "save_identity", "handler_line": 837, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+            )
             return False
 
     def load_identity(self) -> CoreRelationalIdentity:
@@ -845,7 +916,14 @@ class OETSPersistence:
             with open(self.identity_file, 'r') as f:
                 data = json.load(f)
             return CoreRelationalIdentity.from_dict(data)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_identity_persistence.py:848",
+                exc=_aurora_boundary_exc,
+                context={"function": "load_identity", "handler_line": 848, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+            )
             return CoreRelationalIdentity()
 
 
@@ -1701,7 +1779,14 @@ def seed_identity_into_dna(identity_engine, core_identity: CoreRelationalIdentit
                 truths,
                 mode=ExistenceMode.AGENTIC,
             ) or 0)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_identity_persistence.py:1704",
+            exc=_aurora_boundary_exc,
+            context={"function": "seed_identity_into_dna", "handler_line": 1704, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+        )
         pass
 
     seeded = 0
@@ -1721,7 +1806,14 @@ def seed_identity_into_dna(identity_engine, core_identity: CoreRelationalIdentit
             )
             if anchor is not None:
                 seeded += 1
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_identity_persistence.py:1724",
+                exc=_aurora_boundary_exc,
+                context={"function": "seed_identity_into_dna", "handler_line": 1724, "source_file": "aurora_internal/aurora_identity_persistence.py"},
+            )
             pass
     return seeded
 

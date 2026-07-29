@@ -30,6 +30,7 @@ Created: February 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -64,7 +65,14 @@ try:
         OntologicalStatus,
     )
     _CLOSURE_BASIS_AVAILABLE = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/constraint_genealogy.py:67",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 67, "source_file": "aurora_internal/constraint_genealogy.py"},
+    )
     _CLOSURE_BASIS_AVAILABLE = False
 
 try:
@@ -73,7 +81,14 @@ try:
         constraints_for_operation as _canonical_constraints_for_operation,
         operator_action_for_axis as _canonical_operator_action_for_axis,
     )
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/constraint_genealogy.py:76",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 76, "source_file": "aurora_internal/constraint_genealogy.py"},
+    )
     def _canonical_axis_token_shared(raw: str):
         return None
 
@@ -87,7 +102,14 @@ try:
     from aurora_internal.aurora_meaning_evolution import (
         meaning_profile_for_counts as _meaning_profile_for_counts,
     )
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/constraint_genealogy.py:90",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 90, "source_file": "aurora_internal/constraint_genealogy.py"},
+    )
     def _meaning_profile_for_counts(counts):
         return None
 
@@ -651,7 +673,14 @@ def _lineage_counts_from_signature(signature: str) -> Dict[str, int]:
             axis = axis.strip().upper()
             try:
                 exp_n = int(float(exp_s.strip()))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/constraint_genealogy.py:654",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_lineage_counts_from_signature", "handler_line": 654, "source_file": "aurora_internal/constraint_genealogy.py"},
+                )
                 exp_n = 0
         else:
             axis = part.strip().upper()
@@ -669,10 +698,24 @@ def _axis_count_value(raw: Any) -> int:
         return int(total)
     try:
         return int(raw)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/constraint_genealogy.py:672",
+            exc=_aurora_boundary_exc,
+            context={"function": "_axis_count_value", "handler_line": 672, "source_file": "aurora_internal/constraint_genealogy.py"},
+        )
         try:
             return int(float(raw))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:675",
+                exc=_aurora_boundary_exc,
+                context={"function": "_axis_count_value", "handler_line": 675, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             return 0
 
 
@@ -738,7 +781,14 @@ def _lineage_grade_payload(
             ))
             payload["generation_role"] = _generation_role_name(int(payload["generation"]))
             return payload
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:741",
+                exc=_aurora_boundary_exc,
+                context={"function": "_lineage_grade_payload", "handler_line": 741, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             pass  # fall through to heuristic on any error
 
     # Original heuristic fallback
@@ -1895,7 +1945,14 @@ class ConstraintGenealogyLogger:
         if self._dps is not None:
             try:
                 _active_concepts = self._dps.get_recently_active(5)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/constraint_genealogy.py:1898",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe", "handler_line": 1898, "source_file": "aurora_internal/constraint_genealogy.py"},
+                )
                 pass
 
         # --- Build record ---
@@ -1925,7 +1982,14 @@ class ConstraintGenealogyLogger:
             try:
                 self._dps.note_relief_event(_active_concepts, dominant_axis,
                                             self.tick_count)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/constraint_genealogy.py:1928",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe", "handler_line": 1928, "source_file": "aurora_internal/constraint_genealogy.py"},
+                )
                 pass
 
         # --- Governor update ---
@@ -1948,7 +2012,14 @@ class ConstraintGenealogyLogger:
         # --- Check pending pressure application outcomes ---
         try:
             self._check_pending_outcomes()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:1951",
+                exc=_aurora_boundary_exc,
+                context={"function": "observe", "handler_line": 1951, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             pass
 
         # --- Environment observation (always, even single-item traces) ---
@@ -2006,7 +2077,14 @@ class ConstraintGenealogyLogger:
                 # Axis outcome: outlet is shared, but per-axis correction
                 # converges independently via prediction residuals
                 self._axis_curves[ax].record_outcome(current_outlet)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:2009",
+                exc=_aurora_boundary_exc,
+                context={"function": "observe", "handler_line": 2009, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             pass
 
         return record
@@ -2261,7 +2339,14 @@ class ConstraintGenealogyLogger:
                 self.tick_count = saved_tick
                 self._last_promotion_tick = saved_last
                 return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:2264",
+                exc=_aurora_boundary_exc,
+                context={"function": "restore_tick_state", "handler_line": 2264, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             pass
         return False
 
@@ -2280,7 +2365,14 @@ class ConstraintGenealogyLogger:
                 "tick_count": int(self.tick_count),
                 "records": recent,
             })
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:2283",
+                exc=_aurora_boundary_exc,
+                context={"function": "_write_events_recent_file", "handler_line": 2283, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             pass
 
     def _write_pair_stats_file(self) -> None:
@@ -2359,7 +2451,14 @@ class ConstraintGenealogyLogger:
                     ps.pos_count[a]      = ps.pos_count.get(a, 0)        + int((rec.get("pos_count")        or {}).get(a, 0))
                     ps.cost_sum[a]       = ps.cost_sum.get(a, 0.0)       + float((rec.get("cost_sum")       or {}).get(a, 0.0))
                 restored += 1
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:2362",
+                exc=_aurora_boundary_exc,
+                context={"function": "restore_pair_stats", "handler_line": 2362, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             pass
         if restored > 0 and len(self.links) == 0:
             # Seed stagnation pressure from recovered pair maturity so short runs can
@@ -2570,7 +2669,14 @@ class ConstraintGenealogyLogger:
                 axis = axis.strip().upper()
                 try:
                     exp_n = int(float(exp_s.strip()))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/constraint_genealogy.py:2573",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_counts_from_signature", "handler_line": 2573, "source_file": "aurora_internal/constraint_genealogy.py"},
+                    )
                     exp_n = 0
             else:
                 axis = part.strip().upper()
@@ -3281,7 +3387,14 @@ class ConstraintGenealogyLogger:
                     p = abs(float(difference_snapshot.value(Constraint.A))) * abs(float(difference_snapshot.value(Constraint.N))) * abs(float(difference_snapshot.value(Constraint.T)))
                     rate = max(0.001, min(0.5, float(getattr(self.cfg, "COUPLING_EMA_RATE", 0.08))))
                     self._persistent_pressure_root_ema = ((1.0 - rate) * float(self._persistent_pressure_root_ema)) + (rate * p)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/constraint_genealogy.py:3284",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_update_coupling_roots", "handler_line": 3284, "source_file": "aurora_internal/constraint_genealogy.py"},
+                    )
                     pass
             return {}
 
@@ -3402,7 +3515,14 @@ class ConstraintGenealogyLogger:
             try:
                 p = abs(float(difference_snapshot.value(Constraint.A))) * abs(float(difference_snapshot.value(Constraint.N))) * abs(float(difference_snapshot.value(Constraint.T)))
                 self._persistent_pressure_root_ema = ((1.0 - rate) * float(self._persistent_pressure_root_ema)) + (rate * p)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/constraint_genealogy.py:3405",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_update_coupling_roots", "handler_line": 3405, "source_file": "aurora_internal/constraint_genealogy.py"},
+                )
                 pass
 
         if touched:
@@ -4253,7 +4373,14 @@ class ConstraintGenealogyLogger:
         # Import here to avoid circular dep
         try:
             from aurora_dream_trainer import DIMENSION_AXIS as _DA
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:4256",
+                exc=_aurora_boundary_exc,
+                context={"function": "get_pressure_recommendations", "handler_line": 4256, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             _DA = {}
 
         recommendations = []
@@ -4669,7 +4796,14 @@ class ConstraintGenealogyLogger:
             val = 0.0
             try:
                 val = abs(float(difference_snapshot.value(c)))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/constraint_genealogy.py:4672",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_update_gradient_memory", "handler_line": 4672, "source_file": "aurora_internal/constraint_genealogy.py"},
+                )
                 val = 0.0
             prev = float(self._gradient_axis_ema.get(ax, 0.0))
             self._gradient_axis_ema[ax] = ((1.0 - rate) * prev) + (rate * val)
@@ -4927,7 +5061,14 @@ class ConstraintGenealogyLogger:
                     },
                     source="genealogy",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/constraint_genealogy.py:4930",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_try_promote", "handler_line": 4930, "source_file": "aurora_internal/constraint_genealogy.py"},
+                )
                 pass
             return None
 
@@ -5031,7 +5172,14 @@ class ConstraintGenealogyLogger:
                         },
                         source="genealogy",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/constraint_genealogy.py:5034",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_try_promote", "handler_line": 5034, "source_file": "aurora_internal/constraint_genealogy.py"},
+                    )
                     pass
                 return None
 
@@ -5062,7 +5210,14 @@ class ConstraintGenealogyLogger:
                 _gr = _h_gr.get("genealogy_gate_relief", {})
                 if _gr.get("active"):
                     _gate_relief_factor = max(0.05, min(1.0, float(_gr.get("relief_factor", 1.0))))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:5065",
+                exc=_aurora_boundary_exc,
+                context={"function": "_try_promote", "handler_line": 5065, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             pass
         if _gate_relief_factor < 1.0:
             # Boost drive (x1/factor) and soften cost scale (×factor) symmetrically.
@@ -5134,7 +5289,14 @@ class ConstraintGenealogyLogger:
                     },
                     source="genealogy",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/constraint_genealogy.py:5137",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_try_promote", "handler_line": 5137, "source_file": "aurora_internal/constraint_genealogy.py"},
+                )
                 pass
             return None
         if compression_gain > 0.0:
@@ -5246,7 +5408,14 @@ class ConstraintGenealogyLogger:
                     },
                     ledger=_PEL.get(),
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/constraint_genealogy.py:5249",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_try_promote", "handler_line": 5249, "source_file": "aurora_internal/constraint_genealogy.py"},
+                )
                 pass
 
         return ConstraintLink(
@@ -5308,7 +5477,14 @@ class ConstraintGenealogyLogger:
                     raw = s[len(prefix):]
                     try:
                         return cast(raw)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/constraint_genealogy.py:5311",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_tag_value", "handler_line": 5311, "source_file": "aurora_internal/constraint_genealogy.py"},
+                        )
                         return default
             return default
 
@@ -5521,7 +5697,14 @@ class ConstraintGenealogyLogger:
                 for aid, adict in on_disk.items():
                     if aid not in data:
                         data[aid] = adict
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:5524",
+                exc=_aurora_boundary_exc,
+                context={"function": "_write_abilities_file", "handler_line": 5524, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             pass
         # Atomic (temp file + os.replace) under a process-wide lock: this file
         # can exceed 20MB, and flush_files() is called from multiple threads
@@ -5545,7 +5728,14 @@ class ConstraintGenealogyLogger:
                 for lid, ldict in on_disk.items():
                     if lid not in data:
                         data[lid] = ldict
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/constraint_genealogy.py:5548",
+                exc=_aurora_boundary_exc,
+                context={"function": "_write_links_file", "handler_line": 5548, "source_file": "aurora_internal/constraint_genealogy.py"},
+            )
             pass
         from pathlib import Path
         atomic_write_json(Path(path), data, indent=2)
@@ -5910,12 +6100,26 @@ if __name__ == "__main__":
 # AURORA_EVOLVED_NATIVE_BEGIN
 try:
     import inspect as _aurora_native_inspect
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/constraint_genealogy.py:5913",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 5913, "source_file": "aurora_internal/constraint_genealogy.py"},
+    )
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/constraint_genealogy.py:5918",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 5918, "source_file": "aurora_internal/constraint_genealogy.py"},
+    )
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None
@@ -6216,7 +6420,14 @@ def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
     try:
         setattr(owner, attr_name, value)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/constraint_genealogy.py:6219",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_bind_owner_attribute", "handler_line": 6219, "source_file": "aurora_internal/constraint_genealogy.py"},
+        )
         return False
 
 def _aurora_store_reflection(target_key, reflection, args):
@@ -6231,7 +6442,14 @@ def _aurora_store_reflection(target_key, reflection, args):
     current[str(target_key)] = reflection
     try:
         setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/constraint_genealogy.py:6234",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_reflection", "handler_line": 6234, "source_file": "aurora_internal/constraint_genealogy.py"},
+        )
         pass
 
 def _aurora_store_owner_state(attribute, target_key, value, args):
@@ -6246,7 +6464,14 @@ def _aurora_store_owner_state(attribute, target_key, value, args):
     current[str(target_key)] = value
     try:
         setattr(owner, attribute, current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/constraint_genealogy.py:6249",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_owner_state", "handler_line": 6249, "source_file": "aurora_internal/constraint_genealogy.py"},
+        )
         pass
 
 def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
@@ -6618,7 +6843,14 @@ def _aurora_make_override(export_name, target_key):
         if _aurora_native_inspect is not None:
             try:
                 _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/constraint_genealogy.py:6621",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_aurora_make_override", "handler_line": 6621, "source_file": "aurora_internal/constraint_genealogy.py"},
+                )
                 pass
     return _override
 

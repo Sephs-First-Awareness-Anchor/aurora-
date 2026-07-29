@@ -5,6 +5,7 @@ Subsurface owns the sleep/wake clock. Surface checks is_sleeping().
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import time
@@ -22,7 +23,14 @@ def _read(state_dir: Any) -> Dict[str, Any]:
     p = _path(state_dir)
     try:
         return dict(json.loads(p.read_text(encoding="utf-8")))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/sleep_cycle.py:25",
+            exc=_aurora_boundary_exc,
+            context={"function": "_read", "handler_line": 25, "source_file": "aurora_internal/sleep_cycle.py"},
+        )
         return {"sleeping": False, "wake_at": 0.0, "dream_triggered": False}
 
 
