@@ -7307,3 +7307,97 @@ tests before moving on.
 
 **First Seen:** Zip integration phase E ("use everything in the zip"),
 2026-07-29.
+
+## FIX-A061 (NEW FUNCTIONS, ported) — Communication Credit Unification core aurora.py functions, zip integration phase F, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, not a bug fix.
+
+Phase F of the Communication Credit Unification port. Adds the 5
+top-level `aurora.py` functions that form the actual credit-routing
+logic, ported into the same relative position the zip has them
+(confirmed by the identical surrounding function -- `_observe_
+interaction_runtime_turn` immediately before, `_describe_pending_
+code_proposals` immediately after -- and the same `_turn_has_no_
+known_anchor` neighbor position between `_response_is_grounded` and
+`_discourse_anchor_context`):
+
+- `_build_communication_contributors(systems, interaction_runtime=None)`
+  -- reads the systems-dict producer keys phase E's ported subsystems
+  already populate at runtime (`_last_pipeline_state`, `_last_
+  interaction_route`, `_last_grammar_trace`, `_last_lf_fidelity`,
+  `_last_lf_reentry`, `_last_concept_crystal_trace`, `_last_rubric_
+  evidence`, `_last_gap_result`) and assembles the exact contributor
+  IDs (interaction base/quasi, grammar motif, representation,
+  semantic variant, language-field path, concept crystal,
+  interaction route, comprehension gap) touched by one emitted
+  response.
+- `_classify_validated_communication(systems, understanding_
+  observation, user_text)` -- translates the understanding contract's
+  accuracy label (phase E's `expression_unclear`/`corrected`/
+  `confirmed`/etc.) plus explicit user-text clarification-request
+  phrases into a conservative `(observed_effect, outcome_kind)` pair;
+  conservative by design -- anything short of an explicit positive or
+  negative signal stays `"pending_verification"`/`"indeterminate"`,
+  never guessed.
+- `_finalize_validated_communication(systems, understanding_
+  observation, user_text, *, session_id="", turn_tick=0)` -- the
+  actual fan-out: routes the classified outcome to every phase-E
+  subsystem method (`interaction_processing.finalize_base_
+  interaction`, `grammar_engine.record_motif_outcome`, `coordinator.
+  record_variant_outcome`, `_variant_transition_predictor.record_
+  turn_outcome`, `language_field.apply_receiver_outcome`,
+  `perception.record_communication_outcome`, `_concept_crystal_
+  registry.record_receiver_outcome`+`observe_sedi`, `dream_trainer.
+  resolve_pipeline_learning`, `dream_trainer.ledger.record_fail`),
+  each gated on `hasattr(...)` plus the relevant positive/meaning-
+  issue/expression-issue condition, and persists the outcome to
+  `communication_outcomes.json`.
+- `_record_learning_delta(systems, *, current_response, current_
+  reaction, validated_outcome=None, turn_tick=0)` -- persists a
+  before/after response+reaction delta once both halves of a pair
+  exist, via the newly-ported `aurora_internal/aurora_learning_
+  pipeline.py` (see below).
+- `_turn_has_no_known_anchor(user_text, systems, state=None)` --
+  question-shaped-turn guard comparing substantive input tokens
+  against Aurora's actual lexicon/OETS/composer vocabulary, so a
+  parser assigning a plausible frame to invented tokens can't be
+  mistaken for real understanding. Limited to question turns with no
+  authoritative answer already selected.
+
+**New module:** `aurora_internal/aurora_learning_pipeline.py`, ported
+verbatim (self-contained, stdlib + `aurora_persistence_utils` only).
+`assess_text_quality()`/`LearningQualityGate` (a cheap thin/duplicate/
+stagnant-text quality gate, distinct from outcome classification --
+short confirmations can be excellent receiver evidence, so this is for
+learning-candidate material, not for judging whether a response
+succeeded) and `build_learning_delta()`/`LearningDeltaLedger` (bounded,
+atomically-persisted before/after response+reaction records,
+deduplicated by `response_id`, with an `unreplayed()`/`mark_replayed()`
+consumption tracking pair for a downstream training bridge). Used by
+`_record_learning_delta` now; `assess_text_quality`/`LearningQualityGate`
+are also what phase E's `DreamTrainer.stage_pipeline_learning()`
+already reaches for (gracefully degrading to `quality={}` before this
+phase landed) and what phase H's corpus-ingestion quality gate will use.
+
+**Not yet wired:** none of these 5 functions are called from
+`_run_live_response_turn` or anywhere else yet (confirmed by grep --
+the only reference to any of them in `aurora.py` is `_finalize_
+validated_communication`'s own internal call to `_classify_validated_
+communication`). That wiring, plus the 4 non-additive immediate-credit
+replacements it requires, is phase G.
+
+**Tests:** `tests/test_comm_credit_phase_f_core_functions.py` (8) --
+`test_finalizer_routes_exact_interaction_id` and `test_negative_
+credit_is_diagnosis_scoped` are the zip's own two most consequential
+acceptance tests for `_finalize_validated_communication` (positive
+outcome finalizes the exact addressed interaction base; a `"corrected"`
+negative outcome routes to the coordinator and concept crystal for
+meaning-repair but explicitly does NOT address grammar or language
+field, which are scoped to positive/expression-issue outcomes only),
+run directly against the real ported function. Plus direct coverage of
+`_classify_validated_communication`, `_build_communication_
+contributors`, `_turn_has_no_known_anchor`, `_record_learning_delta`,
+and the learning-pipeline quality gate.
+
+**First Seen:** Zip integration phase F ("use everything in the zip"),
+2026-07-29.

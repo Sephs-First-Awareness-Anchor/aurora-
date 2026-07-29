@@ -6467,6 +6467,621 @@ def _observe_interaction_runtime_turn(
     return status
 
 
+def _build_communication_contributors(
+    systems: Dict[str, Any],
+    interaction_runtime: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Capture IDs for structures touched by one emitted response."""
+    pipeline_state = dict(systems.get("_last_pipeline_state") or {})
+    route_summary = dict(systems.get("_last_interaction_route") or {})
+    contributors: Dict[str, Any] = {}
+    interaction = dict(interaction_runtime or systems.get("_last_interaction_status") or {})
+    base_id = str(interaction.get("interaction_base_id") or "")
+    if base_id:
+        contributors["interaction_base_id"] = base_id
+    quasi_id = str(
+        interaction.get("interaction_quasi_id")
+        or route_summary.get("quasi_id")
+        or ""
+    )
+    if quasi_id:
+        contributors["interaction_quasi_id"] = quasi_id
+
+    grammar_trace = dict(systems.get("_last_grammar_trace") or {})
+    motif_id = str(
+        pipeline_state.get("grammar_motif_id")
+        or grammar_trace.get("motif_id")
+        or ""
+    )
+    if motif_id:
+        contributors["grammar_motif"] = {
+            "motif_id": motif_id,
+            "role_sequence": list(
+                pipeline_state.get("grammar_role_sequence")
+                or grammar_trace.get("role_sequence")
+                or []
+            ),
+            "constraint_fit": float(
+                pipeline_state.get("grammar_constraint_fit")
+                or grammar_trace.get("constraint_fit", 0.0)
+                or 0.0
+            ),
+        }
+
+    perception = systems.get("perception")
+    if perception is not None and hasattr(perception, "active_representation_id"):
+        try:
+            diagnostics = dict(
+                perception.representation_diagnostics()
+                if hasattr(perception, "representation_diagnostics")
+                else {}
+            )
+            contributors["representation"] = {
+                "component_id": str(perception.active_representation_id() or "authored_seed"),
+                "name": str((diagnostics.get("communication_record") or {}).get("name") or ""),
+                "internal_fidelity": float(systems.get("_last_lf_fidelity", 0.0) or 0.0),
+                "grammaticality": float(pipeline_state.get("grammar_constraint_fit", 0.0) or 0.0),
+            }
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_build_communication_contributors",
+                exc=_aurora_boundary_exc,
+                context={"function": "_build_communication_contributors", "source_file": "aurora.py"},
+            )
+            pass
+
+    snapshot = dict(systems.get("_mtsl_snapshot") or {})
+    semantic_variant_id = str(snapshot.get("semantic_variant_id") or "")
+    manifold_slot_id = str(snapshot.get("manifold_slot_id") or "")
+    topology_id = ""
+    if semantic_variant_id and manifold_slot_id:
+        prefix = f"{manifold_slot_id}:"
+        if semantic_variant_id.startswith(prefix):
+            topology_id = semantic_variant_id[len(prefix):]
+    if manifold_slot_id and topology_id:
+        contributors["semantic_variant"] = {
+            "semantic_variant_id": semantic_variant_id,
+            "manifold_slot_id": manifold_slot_id,
+            "topology_id": topology_id,
+            "confidence": snapshot.get("variant_confidence"),
+            "understanding_classification": str(snapshot.get("understanding_classification") or ""),
+        }
+
+    lf_reentry = dict(systems.get("_last_lf_reentry") or {})
+    path_key = str(lf_reentry.get("path_key") or "")
+    if path_key:
+        contributors["language_field"] = {
+            "path_key": path_key,
+            "internal_fidelity": float(systems.get("_last_lf_fidelity", 0.0) or 0.0),
+        }
+
+    concept = dict(systems.get("_last_concept_crystal_trace") or {})
+    if concept.get("crystal_id"):
+        contributors["concept_crystal"] = concept
+
+    if route_summary.get("input_signature"):
+        contributors["interaction_route"] = {
+            "input_signature": str(route_summary.get("input_signature") or ""),
+            "interpretive_issue": str(route_summary.get("interpretive_issue") or ""),
+        }
+    rubric_evidence = dict(systems.get("_last_rubric_evidence") or {})
+    contributors["expression"] = {
+        "response_source": str(pipeline_state.get("response_source") or ""),
+        "strategy": str(route_summary.get("primary_response_strategy") or ""),
+        "internal_fidelity": float(systems.get("_last_lf_fidelity", 0.0) or 0.0),
+        "grammaticality": float(pipeline_state.get("grammar_constraint_fit", 0.0) or 0.0),
+        "rubric_scores": dict(rubric_evidence.get("scores", {}) or {}),
+    }
+    gap = dict(systems.get("_last_gap_result") or {})
+    if gap:
+        contributors["comprehension"] = {
+            "gap_type": str(gap.get("gap_type") or ""),
+            "action": str(gap.get("action") or ""),
+        }
+    return contributors
+
+
+def _classify_validated_communication(
+    systems: Dict[str, Any],
+    understanding_observation: Dict[str, Any],
+    user_text: str,
+) -> Dict[str, Any]:
+    """Translate explicit next-turn evidence into a conservative outcome."""
+    accuracy = dict(understanding_observation.get("accuracy") or {})
+    label = str(accuracy.get("label") or "unvalidated").strip().lower()
+    score = max(0.0, min(1.0, float(accuracy.get("score", 0.0) or 0.0)))
+    gap_result = dict(
+        systems.get("_cgs_turn_result")
+        or systems.get("_last_gap_result")
+        or {}
+    )
+    gap_action = str(gap_result.get("action") or "").strip().lower()
+    _user_low = str(user_text or "").lower().replace("’", "'")
+
+    def _has_user_phrase(phrase: str) -> bool:
+        clean = str(phrase or "").strip().strip(".,!?;:")
+        return bool(
+            clean
+            and re.search(rf"(?<!\w){re.escape(clean)}(?!\w)", _user_low)
+        )
+
+    clarification_request = any(
+        _has_user_phrase(marker)
+        for marker in (
+            "what do you mean",
+            "not clear",
+            "unclear",
+            "please clarify",
+            "can you clarify",
+            "i don't understand",
+            "i do not understand",
+            "i didn't understand",
+            "i did not understand",
+            "doesn't make sense",
+            "does not make sense",
+            "confusing",
+            "i'm confused",
+            "im confused",
+            "clarify that",
+            "explain that",
+        )
+    )
+    meaning_issue = label == "corrected"
+    expression_issue = bool(
+        label == "expression_unclear"
+        or clarification_request
+        or (gap_action in {"ask", "applied"} and not meaning_issue)
+    )
+
+    positive_labels = {"confirmed", "accepted", "clarification_supplied", "selection_supplied"}
+    if label in positive_labels and score >= 0.80:
+        effect = "resolved_fully"
+        kind = "positive"
+    elif label == "expression_unclear" or clarification_request:
+        effect = "resolved_partially__followup_gap_appeared"
+        kind = "negative"
+    elif label == "coherent_followup" and score >= 0.70:
+        effect = "resolved_partially"
+        kind = "positive"
+    elif label == "corrected":
+        effect = (
+            "resolved_partially__followup_gap_appeared"
+            if gap_action in {"ask", "applied"}
+            else "regression_introduced"
+        )
+        kind = "negative"
+    else:
+        # Engagement or continuation without explicit validation is useful
+        # context, but it is not a communication success signal.
+        effect = "pending_verification"
+        kind = "indeterminate"
+
+    return {
+        "observed_effect": effect,
+        "outcome_kind": kind,
+        "label": label,
+        "score": score,
+        "evidence_confidence": score if label not in {"unvalidated", "unresolved"} else 0.0,
+        "fit_reason": str(accuracy.get("fit_reason") or ""),
+        "receiver_resonance": systems.get("_pending_receiver_resonance"),
+        "user_text": str(user_text or "")[:260],
+        "meaning_issue": meaning_issue,
+        "expression_issue": expression_issue,
+    }
+
+
+def _finalize_validated_communication(
+    systems: Dict[str, Any],
+    understanding_observation: Dict[str, Any],
+    user_text: str,
+    *,
+    session_id: str = "",
+    turn_tick: int = 0,
+) -> Dict[str, Any]:
+    """Fan one validated next-turn result into the exact contributor IDs."""
+    pending = dict(understanding_observation.get("validated_response") or {})
+    if not pending:
+        return {}
+    contributors = dict(pending.get("contributors") or {})
+    outcome = _classify_validated_communication(systems, understanding_observation, user_text)
+    effect = str(outcome.get("observed_effect") or "pending_verification")
+    kind = str(outcome.get("outcome_kind") or "indeterminate")
+    positive = kind == "positive"
+    meaning_issue = bool(outcome.get("meaning_issue", False))
+    expression_issue = bool(outcome.get("expression_issue", False))
+    evidence_id = str(pending.get("response_id") or f"{session_id}:{turn_tick}")
+    receiver_meta = dict(outcome)
+    receiver_meta["response_id"] = evidence_id
+    receiver_meta["session_id"] = str(session_id or "")
+    receiver_meta["turn_tick"] = int(turn_tick or 0)
+    finalized: Dict[str, Any] = {
+        "response_id": evidence_id,
+        "response_text": str(pending.get("summary", "") or "")[:320],
+        "observed_effect": effect,
+        "outcome_kind": kind,
+        "label": str(outcome.get("label") or ""),
+        "score": float(outcome.get("score", 0.0) or 0.0),
+        "evidence_confidence": float(outcome.get("evidence_confidence", 0.0) or 0.0),
+        "fit_reason": str(outcome.get("fit_reason") or ""),
+        "receiver_resonance": outcome.get("receiver_resonance"),
+        "user_text": str(user_text or "")[:260],
+        "meaning_issue": meaning_issue,
+        "expression_issue": expression_issue,
+        "contributors": contributors,
+        "timestamp": time.time(),
+    }
+
+    if contributors.get("interaction_base_id"):
+        processing = systems.get("interaction_processing")
+        if processing is not None and hasattr(processing, "finalize_base_interaction"):
+            try:
+                interaction_result = processing.finalize_base_interaction(
+                    str(contributors["interaction_base_id"]),
+                    effect,
+                    receiver_meta,
+                    auto_promote=kind != "indeterminate",
+                )
+                finalized["interaction"] = {
+                    "ok": bool(interaction_result.get("ok")),
+                    "base_id": str(interaction_result.get("base_id") or ""),
+                    "advance": bool(interaction_result.get("advance")),
+                }
+            except Exception as exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_finalize_validated_communication_interaction",
+                    exc=exc,
+                    context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+                )
+                finalized["interaction"] = {"ok": False, "error": str(exc)[:160]}
+
+    if kind != "indeterminate":
+        grammar = dict(contributors.get("grammar_motif") or {})
+        grammar_engine = systems.get("grammar_engine")
+        if (
+            grammar.get("motif_id")
+            and grammar_engine is not None
+            and hasattr(grammar_engine, "record_motif_outcome")
+            and (positive or expression_issue)
+        ):
+            try:
+                finalized["grammar"] = bool(grammar_engine.record_motif_outcome(
+                    str(grammar["motif_id"]),
+                    "positive" if positive else "negative",
+                    clarity=float(outcome.get("score", 0.0) or 0.0),
+                    context_text=user_text,
+                ))
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_finalize_validated_communication_grammar",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+                )
+                finalized["grammar"] = False
+
+        variant = dict(contributors.get("semantic_variant") or {})
+        dimensional = systems.get("dimensional")
+        coordinator = getattr(dimensional, "_mtsl_coordinator", None) if dimensional is not None else None
+        dps = getattr(dimensional, "dps", None) if dimensional is not None else None
+        if (
+            variant
+            and coordinator is not None
+            and hasattr(coordinator, "record_variant_outcome")
+            and (positive or meaning_issue)
+        ):
+            try:
+                routed = coordinator.record_variant_outcome(
+                    manifold_slot_id=str(variant.get("manifold_slot_id") or ""),
+                    topology_id=str(variant.get("topology_id") or ""),
+                    positive=positive,
+                    dps=dps,
+                )
+                finalized["semantic_variant"] = bool(routed is not None)
+                if hasattr(dimensional, "save_state"):
+                    dimensional.save_state(str(systems.get("state_dir") or "aurora_state"))
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_finalize_validated_communication_semantic_variant",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+                )
+                finalized["semantic_variant"] = False
+
+        # Semantic-variant transitions are observed at emission time and
+        # receive their explicit outcome only after the next user turn.  Keep
+        # that delayed bridge separate from the addressed variant credit
+        # above; it is predictive/descriptive and has no response authority.
+        transition_predictor = systems.get("_variant_transition_predictor")
+        if (
+            transition_predictor is not None
+            and hasattr(transition_predictor, "record_turn_outcome")
+            and (positive or meaning_issue)
+        ):
+            try:
+                finalized["variant_transition"] = bool(
+                    transition_predictor.record_turn_outcome(positive=positive)
+                )
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_finalize_validated_communication_variant_transition",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+                )
+                finalized["variant_transition"] = False
+
+        language_field = systems.get("language_field")
+        language = dict(contributors.get("language_field") or {})
+        if (
+            language_field is not None
+            and language.get("path_key")
+            and hasattr(language_field, "apply_receiver_outcome")
+            and (positive or expression_issue)
+        ):
+            try:
+                finalized["language_field"] = bool(language_field.apply_receiver_outcome(
+                    str(language["path_key"]),
+                    float(outcome.get("score", 0.0) or 0.0),
+                    effect if effect != "pending_verification" else str(outcome.get("label") or ""),
+                    float(outcome.get("evidence_confidence", 0.0) or 0.0),
+                ))
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_finalize_validated_communication_language_field",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+                )
+                finalized["language_field"] = False
+
+        representation = dict(contributors.get("representation") or {})
+        if representation.get("component_id"):
+            perception = systems.get("perception")
+            if perception is not None and hasattr(perception, "record_communication_outcome"):
+                try:
+                    prior_route = dict(contributors.get("interaction_route") or {})
+                    finalized["representation"] = perception.record_communication_outcome(
+                        str(representation["component_id"]),
+                        outcome_kind=kind,
+                        meaning_failure=meaning_issue,
+                        internal_fidelity=float(representation.get("internal_fidelity", 0.0) or 0.0),
+                        grammaticality=float(representation.get("grammaticality", 0.0) or 0.0),
+                        context_key=str(
+                            prior_route.get("interpretive_issue")
+                            or prior_route.get("input_signature")
+                            or user_text[:60]
+                        ),
+                    )
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora.py:_finalize_validated_communication_representation",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+                    )
+                    finalized["representation"] = False
+
+        concept = dict(contributors.get("concept_crystal") or {})
+        registry = systems.get("_concept_crystal_registry")
+        if (
+            registry is not None
+            and concept.get("crystal_id")
+            and hasattr(registry, "record_receiver_outcome")
+            and (positive or meaning_issue)
+        ):
+            try:
+                dimension = "semantic_precision" if positive else "misunderstanding_repair"
+                applied = registry.record_receiver_outcome(
+                    str(concept.get("crystal_id")),
+                    str(concept.get("lsa_facet_role") or ""),
+                    positive=positive,
+                    outcome_score=float(outcome.get("score", 0.0) or 0.0),
+                    evidence_id=evidence_id,
+                    failpoint_dimension=dimension,
+                )
+                if positive and concept.get("axis_bucket") and hasattr(registry, "observe_sedi"):
+                    registry.observe_sedi(dict(concept["axis_bucket"]), delta=round(float(outcome.get("score", 0.0) or 0.0) * 0.06, 4))
+                if hasattr(registry, "save"):
+                    registry.save(str(systems.get("state_dir") or "aurora_state"))
+                finalized["concept_crystal"] = bool(applied)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_finalize_validated_communication_concept_crystal",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+                )
+                finalized["concept_crystal"] = False
+
+    # Cross-pipeline concepts/frames are only candidates until this exact
+    # response receives a receiver outcome.  Resolve them here, alongside the
+    # other contributor-specific credit paths, so early exits and ordinary
+    # turns share one promotion boundary.
+    try:
+        dream_trainer = systems.get("dream_trainer")
+        if dream_trainer is not None and hasattr(dream_trainer, "resolve_pipeline_learning"):
+            _candidate_outcomes = pending.get("candidate_outcomes")
+            if not isinstance(_candidate_outcomes, dict):
+                _candidate_outcomes = outcome.get("candidate_outcomes")
+            _pipeline_resolution_kwargs = {
+                "outcome_kind": kind,
+                "evidence_id": evidence_id,
+                "score": float(outcome.get("score", 0.0) or 0.0),
+                "observed_effect": effect,
+                "turn_tick": int(turn_tick or 0),
+                "systems": systems,
+            }
+            # Claim-level evidence is explicit and optional.  Without it the
+            # established response-level boundary remains the safe fallback.
+            if isinstance(_candidate_outcomes, dict):
+                _pipeline_resolution_kwargs["candidate_outcomes"] = _candidate_outcomes
+            finalized["pipeline_learning"] = dream_trainer.resolve_pipeline_learning(
+                evidence_id,
+                **_pipeline_resolution_kwargs,
+            )
+    except Exception as _pipeline_resolution_exc:
+        try:
+            from aurora_internal.aurora_runtime_faults import record_runtime_fault
+            record_runtime_fault(
+                systems,
+                subsystem="pipeline_learning",
+                operation="resolve_receiver_credit",
+                exc=_pipeline_resolution_exc,
+                context={"response_id": evidence_id, "outcome_kind": kind},
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_finalize_validated_communication_pipeline_learning",
+                exc=_aurora_boundary_exc,
+                context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+            )
+            pass
+        finalized["pipeline_learning"] = {}
+
+    events = list(systems.get("_finalized_communication_outcomes", []) or [])
+    events.append(finalized)
+    systems["_finalized_communication_outcomes"] = events[-200:]
+    systems["_last_validated_communication_outcome"] = finalized
+    if kind == "negative":
+        dream_trainer = systems.get("dream_trainer")
+        ledger = getattr(dream_trainer, "ledger", None) if dream_trainer is not None else None
+        if ledger is not None and hasattr(ledger, "record_fail"):
+            try:
+                dimension = "communication_meaning" if str(outcome.get("label") or "") == "corrected" else "communication_expression"
+                ledger.record_fail(
+                    dimension,
+                    max(0.05, 1.0 - float(outcome.get("score", 0.0) or 0.0)),
+                    {
+                        "source": "finalized_communication_outcome",
+                        "evidence_type": "receiver_validated_communication",
+                        "response_id": evidence_id,
+                        "contributors": contributors,
+                        "observed_effect": effect,
+                    },
+                )
+                systems["_last_dream_communication_evidence"] = {
+                    "response_id": evidence_id,
+                    "dimension": dimension,
+                    "contributors": contributors,
+                }
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_finalize_validated_communication_dream_fail",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+                )
+                pass
+    try:
+        from aurora_persistence_utils import atomic_write_json
+        atomic_write_json(
+            Path(str(systems.get("state_dir") or "aurora_state")) / "communication_outcomes.json",
+            {"outcomes": systems["_finalized_communication_outcomes"]},
+            indent=2,
+            default=str,
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_finalize_validated_communication_persist",
+            exc=_aurora_boundary_exc,
+            context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+        )
+        pass
+    return finalized
+
+
+def _record_learning_delta(
+    systems: Dict[str, Any],
+    *,
+    current_response: Any,
+    current_reaction: str,
+    validated_outcome: Optional[Dict[str, Any]] = None,
+    turn_tick: int = 0,
+) -> Dict[str, Any]:
+    """Persist the before/after response and receiver-reaction delta."""
+    response_after = str(getattr(current_response, "content", current_response) or "").strip()
+    reaction_after = str(current_reaction or "").strip()
+    response_before = str(systems.get("_last_learning_response", "") or "").strip()
+    reaction_before = str(systems.get("_last_learning_reaction", "") or "").strip()
+    outcome = dict(validated_outcome or {})
+    response_id = str(
+        outcome.get("response_id")
+        or systems.get("_last_learning_response_id", "")
+        or ""
+    )
+    record: Dict[str, Any] = {}
+    if response_before and response_after and reaction_before and reaction_after:
+        try:
+            from aurora_internal.aurora_learning_pipeline import (
+                LearningDeltaLedger,
+                build_learning_delta,
+            )
+            delta = build_learning_delta(
+                response_before=response_before,
+                response_after=response_after,
+                reaction_before=reaction_before,
+                reaction_after=reaction_after,
+                response_id=response_id,
+                outcome_kind=str(outcome.get("outcome_kind") or "indeterminate"),
+                observed_effect=str(outcome.get("observed_effect") or "pending_verification"),
+                score=float(outcome.get("score", 0.0) or 0.0),
+                turn_tick=int(turn_tick or 0),
+                evidence_id=str(outcome.get("response_id") or response_id),
+            )
+            state_dir = Path(str(systems.get("state_dir") or "aurora_state"))
+            ledger = systems.get("_learning_delta_ledger")
+            if ledger is None:
+                ledger = LearningDeltaLedger(str(state_dir / "learning_deltas.json"))
+                systems["_learning_delta_ledger"] = ledger
+            record = ledger.record(delta)
+            systems["_last_learning_delta"] = dict(record)
+        except Exception as _delta_record_exc:
+            try:
+                from aurora_internal.aurora_runtime_faults import record_runtime_fault
+                record_runtime_fault(
+                    systems,
+                    subsystem="learning_delta_ledger",
+                    operation="record_response_reaction_delta",
+                    exc=_delta_record_exc,
+                    context={"response_id": response_id, "turn_tick": int(turn_tick or 0)},
+                )
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_record_learning_delta",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_record_learning_delta", "source_file": "aurora.py"},
+                )
+                pass
+            record = {}
+
+    # Advance the pair even if the first turn could not form a delta.  This
+    # makes the next turn's comparison reflect the actual immediately prior
+    # exchange rather than an older one.
+    systems["_last_learning_response"] = response_after
+    systems["_last_learning_reaction"] = reaction_after
+    if response_id:
+        systems["_last_learning_response_id"] = response_id
+    return record
+
+
 def _describe_pending_code_proposals(
     systems: Dict[str, Any],
     *,
@@ -13033,6 +13648,61 @@ def _response_is_grounded(text: str, user_text: str, systems: Dict[str, Any]) ->
     # user's exact vocabulary. Enforcing overlap was silencing valid abstract,
     # introspective, and semantically-displaced replies.
     return True
+
+
+def _turn_has_no_known_anchor(user_text: str, systems: Dict[str, Any], state: Any = None) -> bool:
+    """Recognize an unanchored question before language generation can fill
+    the gap with unrelated learned words.
+
+    A parser can assign an exploratory/factual frame to an invented token
+    sequence, so frame presence alone is not evidence of understanding. This
+    guard compares substantive input tokens with Aurora's actual lexicon,
+    OETS nodes, and active conversational topic. It is deliberately limited
+    to question-shaped turns and is used only when no authoritative answer
+    has already been selected; unknown classroom vocabulary can therefore
+    still be learned or looked up through the normal paths.
+    """
+    raw = str(user_text or "").strip().lower()
+    if not raw or "?" not in raw:
+        return False
+    parsed = dict(getattr(state, "parsed", {}) or {}) if state is not None else {}
+    if str(parsed.get("utterance_type", "") or "").lower() not in {"question", ""}:
+        return False
+    stopwords = {
+        "a", "an", "and", "are", "as", "at", "be", "can", "could", "do",
+        "does", "for", "from", "how", "i", "in", "is", "it", "me", "my",
+        "of", "on", "or", "please", "the", "this", "to", "was", "we", "what",
+        "when", "where", "which", "who", "why", "will", "with", "would", "you",
+        "your",
+    }
+    tokens = [token for token in re.findall(r"[a-z][a-z0-9']*", raw) if token not in stopwords]
+    if not tokens:
+        return False
+    known = set()
+    try:
+        _pre_turn_known = systems.get("_pre_turn_known_anchors") if isinstance(systems, dict) else None
+        if isinstance(_pre_turn_known, (set, frozenset, list, tuple)):
+            known.update(str(word).lower() for word in _pre_turn_known)
+        else:
+            perception = systems.get("perception") if isinstance(systems, dict) else None
+            lexicon = getattr(perception, "lexicon", None)
+            known.update(str(word).lower() for word in getattr(lexicon, "entries", {}) or {})
+            composer = getattr(perception, "composer", None)
+            composer_lexicon = getattr(composer, "lexicon", None)
+            known.update(str(word).lower() for word in getattr(composer_lexicon, "entries", {}) or {})
+            oets = getattr(perception, "oets", None)
+            nodes = getattr(getattr(oets, "web", None), "nodes", {}) or {}
+            known.update(str(word).lower() for word in nodes)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_turn_has_no_known_anchor",
+            exc=_aurora_boundary_exc,
+            context={"function": "_turn_has_no_known_anchor", "source_file": "aurora.py"},
+        )
+        return False
+    return not any(token in known for token in tokens)
 
 
 def _discourse_anchor_context(
