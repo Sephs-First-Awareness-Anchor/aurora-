@@ -7009,3 +7009,95 @@ starts with the genealogy bridge fully inert.
 
 **First Seen:** Zip integration phase B ("use everything in the zip"),
 2026-07-29.
+
+## FIX-A058 (NEW TOOL, built) — exception-instrumentation injector, zip integration phase C, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, not a bug fix.
+
+Phase C of "use everything in the zip": Sunni's uploaded zip
+demonstrated a codebase-wide pass that inserted
+`_aurora_record_exception_from_locals(...)` calls into 3336 silent
+exception handlers across 198 files, but the actual tool that produced
+that pass was not included in the zip -- only its output, plus the
+already-ported read-only `aurora_fault_audit.py` scanner. Built a fresh
+injector, `scripts/aurora_fault_instrumentation_injector.py`, that
+reproduces the zip's exact demonstrated call shape using
+`aurora_fault_audit`'s own classification helpers (`_category`,
+`_contains_visibility`, `production_files`) imported directly rather
+than re-implemented, so the audit and the injector cannot drift apart.
+
+**Design:** uses `tokenize` (not regex/naive text splicing) to find the
+exact `:` that ends an `except` clause's header, so the header/body
+split works correctly regardless of whether the clause is single-line
+or spans multiple lines (e.g. a parenthesized exception tuple). Every
+qualifying handler in a file is processed bottom-up by line number so
+earlier edits never invalidate line indices still needed for handlers
+above them. Every rewritten file is re-parsed with `ast.parse` before
+being kept; a file that fails to re-parse is left completely untouched
+and reported as a skip rather than partially written.
+
+**2 real bugs caught during development, before any repo file was
+touched for real** (both found by testing against a disposable git
+worktree copy of the whole repo, not the live tree):
+
+1. **Single-line handler bodies.** `except Exception: pass` has its
+   body on the *same physical line* as the `except` clause. The first
+   working version located the body's first statement by AST line
+   number and inserted new lines immediately before it -- for a
+   single-line handler this landed the instrumentation block *above*
+   the `except` line itself, breaking the try/except structure
+   entirely (`SyntaxError: expected 'except' or 'finally' block`).
+   Reproduced against a full worktree dry run: 4 real files
+   (`aurora.py`, `aurora_acm_bridge.py`,
+   `aurora_internal/aurora_room_operator.py`,
+   `aurora_reflexive_interpreter.py`) hit this and were skipped.
+   **Fix:** rewrote the per-handler loop to always split at the header
+   colon (found via `tokenize`) and move any trailing same-line body
+   content onto its own new line after the injected block, unifying
+   the single-line and multi-line cases through one code path instead
+   of two.
+2. **`from __future__ import annotations`.** Several modules
+   (`aurora_support_stack.py`'s import chain touches many of them) have
+   a module docstring followed immediately by
+   `from __future__ import annotations`, which Python requires to be
+   the first real statement in the file. The import-insertion helper
+   only skipped past the docstring, not past a following
+   `__future__` import, so the injected
+   `from aurora_internal.aurora_runtime_faults import ...` line landed
+   between them -- a hard `SyntaxError` at import time in every one of
+   those modules, which only surfaced when running the actual test
+   suite against a fully-instrumented worktree (every test that
+   transitively imports `aurora.py` failed to collect, ~104 collection
+   errors) since per-file syntax checking alone doesn't catch a
+   statement-ordering rule that spans two originally-separate
+   docstring/import statements landing adjacent to each other.
+   **Fix:** `_insert_import` now walks the real module AST and skips
+   past both the docstring *and* any leading `__future__` import
+   before choosing where to insert.
+
+**Verification, in order:** (1) dry run against the live repo -- 3295
+handlers across 196 files, 0 skips (first run: 4 skips, bug 1 above);
+(2) `git worktree add` a disposable copy of the repo and run the
+injector for real there, never touching the live tree; (3) confirm
+every modified file re-parses; (4) `import aurora` directly against the
+instrumented worktree to catch import-order failures a per-file parse
+check can't see (this is what caught bug 2 -- first attempt: 104 pytest
+collection errors, all the same `from __future__ import annotations
+... SyntaxError`); (5) full regression suite run against the
+instrumented worktree.
+
+**Tests:** `tests/test_fault_instrumentation_injector.py` (10) --
+synthetic single-line and multi-line handler shapes, an existing `as`
+clause being reused rather than duplicated, a synthetic multi-line
+tuple exception header (no real example exists anywhere in the current
+codebase, confirmed by scanning `production_files()`, so this path is
+otherwise unverified against real content), the
+`aurora-fault-boundary: intentional` marker being respected, an
+already-visible (logged) handler being left alone, the import line
+landing after a docstring and after a `__future__` import and never
+duplicating, nested except-in-except handling, and the same
+zero-skips dry-run check against the real live repo as a standing
+acceptance bar for this tool.
+
+**First Seen:** Zip integration phase C ("use everything in the zip"),
+2026-07-29.
