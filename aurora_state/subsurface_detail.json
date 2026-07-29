@@ -54,7 +54,7 @@
     "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "N",
+      "axis_signature": "X",
       "certainty_band": "low",
       "intent_type": "followup",
       "topic": ""
@@ -74,7 +74,7 @@
   },
   "readiness": 0.5555,
   "recalled_fragments": [
-    "Use this corpus fr\n[recalled:use] Use this corpus fr [recalled:corpus] Use this corpus fr [recalled:approach] This balanced approach to d..."
+    "Use this corpus fr\n[recalled:use] Use this corpus fr [recalled:corpus] Use this corpus fr [recalled:economic] INTRODUCTION There is growi..."
   ],
   "salience_weights": {
     "A": 0.0,
@@ -83,7 +83,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785283611.1500094,
+  "saved_at": 1785290210.7926328,
   "sub_crests": [
     {
       "axis": "X",
