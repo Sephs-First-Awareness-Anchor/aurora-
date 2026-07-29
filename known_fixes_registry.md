@@ -6810,3 +6810,122 @@ theoretical.
 
 **First Seen:** Communication Credit Unification spec verification and
 Phase 0 implementation, 2026-07-28.
+
+## FIX-A056 (NEW MODULES, ported) — operational fault ledger + explicit runtime readiness, zip integration phase A, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, not a bug fix.
+
+Sunni supplied a zip snapshot (`auroramainoperationalhardenedv5warp.zip`)
+-- a plain-file fork of this repo taken immediately after WARP Phase 3d,
+then run through an undocumented external process that added a
+codebase-wide exception-instrumentation pass (3336 call sites across
+198 files) backed by 3 new self-contained support modules, plus a
+substantial Communication Credit Unification implementation. Verified
+via a dedicated background agent before porting anything. Instructed
+to "use everything in the zip." This is phase A of that integration:
+porting the 3 new support modules and their test file verbatim, since
+none of the 4 files previously existed in the current repo (confirmed
+by `ls` before copying) and none of them import from or are imported
+by anything else in the codebase (confirmed by repo-wide grep after
+copying) -- zero drift risk, zero coupling to port.
+
+**`aurora_internal/aurora_runtime_faults.py`** -- a bounded, structured
+fault ledger for best-effort exception boundaries. `record_runtime_fault()`
+normalizes any severity label or bare exception into one of three
+operational classes (`info`/`warning`, `subsystem_degradation`,
+`invariant_violation`) via `_severity_from_exception()`, using explicit
+labels when given and inferring from exception type / message content
+otherwise (e.g. `FileNotFoundError`/`ModuleNotFoundError`/network errors
+default to an expected-fallback `warning`; `AttributeError`/`TypeError`/
+`KeyError`/etc. and "cannot import name"/"has no attribute" text default
+to `invariant_violation`). Persists to `<state_dir>/runtime_faults.jsonl`
+(append-only) and mirrors a capped in-memory tail (`_runtime_faults`,
+last 100) onto the `systems` dict. `record_exception_from_locals()` is
+the instrumented-call-site convenience wrapper: given a handler's local
+`scope` (its `locals()`), it locates the active `systems` dict and state
+dir by walking known key names on `scope` and on `scope['self']`, so
+call sites don't need to thread `systems`/`state_dir` through explicitly.
+`fault_summary()` merges the persisted and in-memory ledgers, dedupes by
+`(timestamp, operation, traceback_hash)` keeping the higher-severity copy
+when both exist, and re-runs schema-v1 `"degraded"` records through
+inference (`_legacy_degraded_should_be_inferred`) so old archives don't
+stay permanently mislabeled. Every public function is wrapped in its own
+`except Exception: return {}` -- a diagnostics boundary is explicitly
+never allowed to become a new fault itself.
+
+**`aurora_internal/aurora_runtime_health.py`** -- explicit readiness law
+on top of the fault ledger. `compute_runtime_health()`: any of
+`_runtime_unready`/`_boot_failed`/`_self_check_failed` on `systems`, or
+any recorded `invariant_violation`, forces `overall="unready"` --
+non-negotiable, `allow_degraded` cannot override it. Any recorded
+`subsystem_degradation` (with no invariant violation) yields
+`overall="degraded"`, ready only if the caller explicitly passed
+`allow_degraded=True`. Otherwise `overall="healthy"`. The `ready`
+computation is written as an explicit disjunction
+(`healthy or (degraded and allow_degraded)) and not unready`) rather than
+the shorter `overall != "unready"`, specifically so a future third
+overall-value addition can't silently become ready-by-default.
+`publish_runtime_health()` stores the computed health onto
+`systems["_runtime_health"/"_runtime_status"/"_runtime_ready"]` and
+persists it atomically (`.json.tmp` + `os.replace`) to
+`<state_dir>/runtime_health.json`; if the persistence write itself fails,
+that failure is not swallowed -- it forces the runtime unready with the
+write error as the reason, since a health report that can't be recorded
+is itself a readiness failure. `mark_runtime_unready()` is the one-way
+door: sets `_runtime_unready` and republishes with `allow_degraded=False`,
+unconditionally.
+
+**`aurora_internal/aurora_fault_audit.py`** -- a read-only AST scanner
+(`ast.NodeVisitor`), not a code-rewriting tool (the actual injector that
+produced the zip's 3336 instrumented call sites was not included in the
+zip -- confirmed by the verification agent; building an equivalent
+injector is tracked separately as zip integration phase C).
+`audit_source_tree()` walks every `except` handler in the production
+file set (`production_files()`: root-level `*.py`, `aurora_internal/**`,
+`flutter_app/.../python/**`, excluding `tests`/`__pycache__`/state dirs
+and the audit's own support files) and classifies each one as
+`silent_pass` (body is only `pass`/`continue`), `silent_fallback` (body
+assigns/returns/augments a fallback value), or `other`. A handler is
+"visible" if its body raises, asserts, or calls anything matching a
+logging/telemetry/fault-recording name pattern (including the new
+`record_runtime_fault`/`record_exception_from_locals` names, so
+instrumented sites self-exempt from being flagged as silent). A handler
+is "intentional" if its source line carries the literal marker comment
+`aurora-fault-boundary: intentional`. `critical_unreported` handlers --
+silent, invisible, unintentional, AND inside a function named in
+`deploy/fault-boundary-policy.json`'s `critical_functions` list (the
+repo has no such policy file yet, so this list is currently empty and no
+handler is flagged critical) -- are the audit's headline number.
+
+**Tests:** `tests/test_runtime_hardening.py` (7, ported verbatim) --
+degraded-without-permission is not ready, unready can never be made
+ready even with `allow_degraded=True`, faults persist to the active
+state tree, a persisted `invariant_violation` marks the runtime unready
+on load, persisted and in-memory copies of the same event dedupe to one,
+an expected-fallback `FileNotFoundError` stays healthy/ready as a
+warning, and `audit_source_tree()` parses this actual current repo
+(444+ files) with zero parse errors. All 7 pass unmodified against
+current `HEAD` with no adaptation needed -- confirming the zip's fork
+point (immediately post-WARP-3d) left these files' dependencies
+(stdlib only, plus each other) untouched by anything since.
+
+**Full regression:** 1126/1129 passed. 2 failures
+(`test_concept_image_ingestion_import.py::test_ingest_concept_image_
+succeeds_against_real_fixture`,
+`test_waveform_pressure.py::TestCuriosityManifoldSelfSelection::
+test_flat_manifold_no_boost`) reproduce only under the full-suite run
+and pass cleanly in isolation -- pre-existing order-dependent flakiness,
+confirmed unrelated by construction: none of this fix's 4 new files are
+imported by anything else in the repo yet (repo-wide grep), so they
+cannot have influenced any other test's behavior. The third failure,
+`test_m1_2_provenance_hygiene.py::test_blind_origin_entries_are_tagged_
+legacy_unverified`, reproduces in isolation too but is a live-data
+finding, not a code defect: the real `aurora_state/lexicon.json` now
+has 2 blind-origin words ("lang", "connectio") learned since the M1.2
+tagging directive last ran, missing the `legacy-unverified:` lineage
+tag. Same zero-coupling argument applies (this fix touches no lexicon
+code), and it predates this fix in the persisted state. Reported to
+Sunni separately as a standalone finding, not folded into this fix.
+
+**First Seen:** Zip integration phase A ("use everything in the zip"),
+2026-07-29.
