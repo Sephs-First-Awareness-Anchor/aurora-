@@ -19949,42 +19949,36 @@ def _run_reasoning_pipeline(
             )
             pass
 
-    # ---- GRAMMAR ENGINE — post-turn exchange observation (FIX-A008) ----
-    # Closes the motif learning loop. suggest_structure() only READS promoted
-    # motifs; observe_exchange() is the WRITE path that lets motifs accumulate
-    # success_count / contexts_seen and reach should_promote(). This call was
-    # documented above as "runs post-turn" but was never actually wired, so
-    # the lineage never promoted and the >= 8 promoted gate never opened.
+    # ---- GRAMMAR ENGINE — delayed receiver attribution ----
+    # The motif ID is carried in the pending response contributor trace.  The
+    # next turn's explicit validation calls record_motif_outcome(); a same-turn
+    # length/clarity proxy is not a communication success signal.
     if state.response_content:
         try:
-            _ge_obs = systems.get("grammar_engine")
-            if _ge_obs and hasattr(_ge_obs, "observe_exchange"):
-                _resp_txt = str(state.response_content).strip()
-                _obs_success = len(_resp_txt.split()) >= 3
-                _obs_clarity = 0.65
-                try:
-                    _uc_obs = systems.get("understanding_contract")
-                    _acc_obs = getattr(_uc_obs, "accuracy", None) if _uc_obs is not None else None
-                    if _acc_obs is not None:
-                        _obs_clarity = max(0.0, min(1.0, float(_acc_obs)))
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:16810",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_reasoning_pipeline", "handler_line": 16810, "source_file": "aurora.py"},
+            _grammar_trace = {}
+            if isinstance(state.pipeline_state, dict) and state.pipeline_state.get("grammar_motif_id"):
+                _grammar_trace = {
+                    "motif_id": str(state.pipeline_state.get("grammar_motif_id") or ""),
+                    "role_sequence": list(state.pipeline_state.get("grammar_role_sequence") or []),
+                    "constraint_fit": float(state.pipeline_state.get("grammar_constraint_fit", 0.0) or 0.0),
+                }
+            else:
+                _ge_trace = systems.get("grammar_engine")
+                if _ge_trace is not None and hasattr(_ge_trace, "prepare_response_trace"):
+                    _grammar_trace = dict(
+                        _ge_trace.prepare_response_trace(
+                            state.response_content,
+                            context_text=user_text,
+                            tone=state.response_tone,
+                        )
+                        or {}
                     )
-                    pass
-                _ge_obs.observe_exchange(
-                    str(user_text or ""),
-                    _resp_txt,
-                    success=_obs_success,
-                    clarity=_obs_clarity,
-                    tone=str(state.response_tone or "neutral"),
-                    passion=str(state.emotional_state.get("passion", "observant")),
-                    drive=str(state.emotional_state.get("drive", "steady")),
-                )
+            if _grammar_trace.get("motif_id"):
+                systems["_last_grammar_trace"] = _grammar_trace
+                if isinstance(state.pipeline_state, dict):
+                    state.pipeline_state["grammar_motif_id"] = str(_grammar_trace.get("motif_id") or "")
+                    state.pipeline_state["grammar_role_sequence"] = list(_grammar_trace.get("role_sequence") or [])
+                    state.pipeline_state["grammar_constraint_fit"] = float(_grammar_trace.get("constraint_fit", 0.0) or 0.0)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -28015,6 +28009,35 @@ def _run_live_response_turn(
     understanding_contract = systems.get('understanding_contract')
     systems["_last_articulation_result"] = {}
     systems["_last_dual_strata_runtime"] = {}
+    # Per-turn guards: the canonical live observation below is the only
+    # receiver-contract observation for this user turn.  Clear stale
+    # contributor state before building the next response.
+    systems.pop("_live_contract_observation_done", None)
+    systems.pop("_last_grammar_trace", None)
+    systems.pop("_last_concept_crystal_trace", None)
+    systems.pop("_last_gap_result", None)
+    systems.pop("_last_rubric_evidence", None)
+
+    # Measure the previous emitted response against the current receiver turn
+    # before observation validation clears the pending contract record.  The
+    # old placement ran after the current response was committed and therefore
+    # described the wrong response/turn pair.
+    systems["_pending_receiver_resonance"] = None
+    try:
+        _lf_prev = systems.get("language_field")
+        _prev_response = str(systems.get("_last_aurora_response", "") or "")
+        if _lf_prev is not None and _prev_response and hasattr(_lf_prev, "measure_resonance"):
+            systems["_pending_receiver_resonance"] = _lf_prev.measure_resonance(_prev_response, user_text)
+            systems["_last_field_resonance"] = systems["_pending_receiver_resonance"]
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_run_live_response_turn_pending_resonance",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
+        pass
 
     if update_interactive_state and isinstance(interactive_state, dict):
         interactive_state['last_user_turn_time'] = time.time()
@@ -28581,6 +28604,7 @@ def _run_live_response_turn(
                 )
                 or {}
             )
+            systems["_live_contract_observation_done"] = True
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -28590,11 +28614,96 @@ def _run_live_response_turn(
                 context={"function": "_run_live_response_turn", "handler_line": 23828, "source_file": "aurora.py"},
             )
             understanding_observation = {}
+    systems["_last_understanding_observation"] = dict(understanding_observation or {})
+
+    def _finalize_early_validation() -> Dict[str, Any]:
+        """Do not discard receiver evidence on high-priority early exits."""
+        try:
+            result = _finalize_validated_communication(
+                systems,
+                understanding_observation,
+                user_text,
+                session_id=session_id,
+                turn_tick=int(turn_tick or 0),
+            )
+            if result:
+                systems["_last_validated_communication_outcome"] = result
+            systems.pop("_live_contract_observation_done", None)
+            return dict(result or {})
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_finalize_early_validation",
+                exc=_aurora_boundary_exc,
+                context={"function": "_finalize_early_validation", "source_file": "aurora.py"},
+            )
+            systems.pop("_live_contract_observation_done", None)
+            return {}
+
+    def _commit_early_response(response: Any, response_source: str) -> Dict[str, Any]:
+        """Keep high-priority responses learnable by the next receiver turn."""
+        _early_contributors: Dict[str, Any] = {}
+        try:
+            _early_grammar = systems.get("grammar_engine")
+            if _early_grammar is not None and hasattr(_early_grammar, "prepare_response_trace"):
+                _early_trace = dict(
+                    _early_grammar.prepare_response_trace(
+                        str(getattr(response, "content", "") or ""),
+                        context_text=user_text,
+                        tone=str(getattr(response, "emotional_tone", "neutral") or "neutral"),
+                    )
+                    or {}
+                )
+                if _early_trace.get("motif_id"):
+                    systems["_last_grammar_trace"] = _early_trace
+                    _early_contributors["grammar_motif"] = _early_trace
+            if understanding_contract is None or not hasattr(understanding_contract, "commit_application"):
+                return {}
+            application = dict(
+                understanding_contract.commit_application(
+                    systems,
+                    user_text,
+                    str(getattr(response, "content", "") or ""),
+                    response_source=str(response_source or ""),
+                    tone=str(getattr(response, "emotional_tone", "") or ""),
+                    confidence=float(getattr(response, "confidence", 0.0) or 0.0),
+                    understood=dict(turn_understood or {}),
+                    offered_lookup=False,
+                    source=str(systems.get("_pipeline_source", "runtime_dialogue") or "runtime_dialogue"),
+                    session_id=session_id,
+                    # Early exits did not run the current turn's interaction,
+                    # semantic-variant, language-field, or concept stages;
+                    # never inherit those IDs from the preceding response.
+                    contributors=_early_contributors,
+                )
+                or {}
+            )
+            systems["_last_aurora_response"] = str(getattr(response, "content", "") or "").strip()
+            _record_learning_delta(
+                systems,
+                current_response=response,
+                current_reaction=user_text,
+                validated_outcome=dict(systems.get("_last_validated_communication_outcome") or {}),
+                turn_tick=int(turn_tick or 0),
+            )
+            return application
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_commit_early_response",
+                exc=_aurora_boundary_exc,
+                context={"function": "_commit_early_response", "source_file": "aurora.py"},
+            )
+            return {}
+
     wants_search = False
     if is_question and auto_search_enabled:
         wants_search = _should_use_search_for_question(user_text)
-    check_trigger = bool(re.search(r'\\bcheck yourself\\b', str(user_text or '').lower()))
+    check_trigger = bool(re.search(r'\bcheck yourself\b', str(user_text or '').lower()))
     if check_trigger and working_memory:
+        _early_validation = _finalize_early_validation()
         memory_sweep = working_memory.memory_sweep_snapshot(
             conversation_memory=conversation_memory
         )
@@ -28611,6 +28720,7 @@ def _run_live_response_turn(
             confidence=0.0,
             src="memory_sweep",
         )
+        _early_application = _commit_early_response(resp_A, "memory_sweep")
         return {
             'input': user_text,
             'resp_A': resp_A,
@@ -28623,8 +28733,9 @@ def _run_live_response_turn(
             'interaction_runtime': {},
             'trace_id': trace_id,
             'turn_tick': turn_tick,
-            'understanding_observation': {},
-            'understanding_application': {},
+            'understanding_observation': understanding_observation,
+            'understanding_application': _early_application,
+            'validated_communication': _early_validation,
             'memory_sweep': memory_sweep,
         }
 
@@ -28634,23 +28745,29 @@ def _run_live_response_turn(
         # 1. Process actual teaching input if we were awaiting it
         teach_reply = teaching_engine.process_teaching_input(user_text, turn_understood)
         if teach_reply:
+             _early_validation = _finalize_early_validation()
              resp_A = SimpleNamespace(content=teach_reply, emotional_tone="happy", confidence=0.95, src="teaching")
+             _early_application = _commit_early_response(resp_A, "teaching")
              return {
                  'input': user_text, 'resp_A': resp_A, 'resp_B': None, 'offered_lookup': False,
                  'is_question': False, 'elapsed_A': 0.0, 'src': "teaching", 'turn_tick': turn_tick,
                  'trace_id': trace_id, 'interaction_runtime': {}, 'quasiarch_runtime': None,
-                 'understanding_observation': {}, 'understanding_application': {},
+                 'understanding_observation': understanding_observation, 'understanding_application': _early_application,
+                 'validated_communication': _early_validation,
              }
 
         # 2. Check for a new offer to teach
         offer_reply = teaching_engine.check_teaching_offer(user_text)
         if offer_reply:
+             _early_validation = _finalize_early_validation()
              resp_A = SimpleNamespace(content=offer_reply, emotional_tone="attentive", confidence=0.90, src="teaching")
+             _early_application = _commit_early_response(resp_A, "teaching")
              return {
                  'input': user_text, 'resp_A': resp_A, 'resp_B': None, 'offered_lookup': False,
                  'is_question': False, 'elapsed_A': 0.0, 'src': "teaching", 'turn_tick': turn_tick,
                  'trace_id': trace_id, 'interaction_runtime': {}, 'quasiarch_runtime': None,
-                 'understanding_observation': {}, 'understanding_application': {},
+                 'understanding_observation': understanding_observation, 'understanding_application': _early_application,
+                 'validated_communication': _early_validation,
              }
 
     resp_A, resp_B, offered_lookup = dual_question_pipeline(
@@ -28674,7 +28791,28 @@ def _run_live_response_turn(
         ):
             src = "search"
 
-
+    # Validate the previous response only after the current turn's canonical
+    # comprehension-gap pipeline has had a chance to contribute evidence.
+    _validated_now: Dict[str, Any] = {}
+    try:
+        _validated_now = _finalize_validated_communication(
+            systems,
+            understanding_observation,
+            user_text,
+            session_id=session_id,
+            turn_tick=int(turn_tick or 0),
+        )
+        if _validated_now:
+            systems["_last_validated_communication_outcome"] = _validated_now
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_run_live_response_turn_main_finalize",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
+        _validated_now = {}
 
     # ---- RECOMMENDATION HUB — surface pending coaching recommendations ----
     if not bool(getattr(resp_A, '_preserve_literal', False)):
@@ -29043,6 +29181,7 @@ def _run_live_response_turn(
                         offered_lookup=bool(offered_lookup),
                         source=str(systems.get('_pipeline_source', 'runtime_dialogue') or 'runtime_dialogue'),
                         session_id=session_id,
+                        contributors=_build_communication_contributors(systems, interaction_runtime),
                     )
                     or {}
                 )
@@ -29056,23 +29195,8 @@ def _run_live_response_turn(
                 )
                 understanding_application = {}
 
-    # ---- LANGUAGE FIELD — inter-field resonance (prior aurora → this user turn) ----
-    try:
-        _lf_res = systems.get('language_field')
-        _last_aurora_lf = str(systems.get('_last_aurora_response', '') or '')
-        if _lf_res is not None and _last_aurora_lf and hasattr(_lf_res, 'measure_resonance'):
-            _field_resonance = _lf_res.measure_resonance(_last_aurora_lf, user_text)
-            systems['_last_field_resonance'] = _field_resonance
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:24191",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_live_response_turn", "handler_line": 24191, "source_file": "aurora.py"},
-        )
-        pass
-    # Store this response as prior aurora text for next turn's resonance measurement
+    # Store this response as prior text.  Its receiver resonance was measured
+    # at turn entry, before this response was emitted.
     try:
         systems['_last_aurora_response'] = str(getattr(resp_A, 'content', '') or '').strip()
     except Exception as _aurora_boundary_exc:
@@ -29658,10 +29782,19 @@ def _run_live_response_turn(
                 str((systems.get('_last_lf_reentry') or {}).get('path_key', '') or '') or
                 f"turn:{session_id}:{turn_tick}"
             )
-            _ccr_lsa.observe_lsa(_ax_dict_lsa, _pkey_ccr)
-            _fid_lsa = float(systems.get('_last_lf_fidelity', 0.5) or 0.5)
-            if _fid_lsa > 0.5:
-                _ccr_lsa.observe_sedi(_ax_dict_lsa, delta=round(_fid_lsa * 0.06, 4))
+            _ccr_crystal = _ccr_lsa.observe_lsa(_ax_dict_lsa, _pkey_ccr)
+            _ccr_id = str(
+                getattr(_ccr_crystal, "crystal_id", "")
+                or getattr(_ccr_crystal, "node_id", "")
+                or ""
+            )
+            if _ccr_id:
+                systems["_last_concept_crystal_trace"] = {
+                    "crystal_id": _ccr_id,
+                    "lsa_facet_role": f"lsa:{_pkey_ccr[:30]}",
+                    "path_key": _pkey_ccr,
+                    "axis_bucket": dict(_ax_dict_lsa),
+                }
             systems['_ccr_needs_overlay_clear'] = True
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -29670,6 +29803,23 @@ def _run_live_response_turn(
             operation="exception_handler:aurora.py:24616",
             exc=_aurora_boundary_exc,
             context={"function": "_run_live_response_turn", "handler_line": 24616, "source_file": "aurora.py"},
+        )
+        pass
+
+    # The concept crystal is observed after application commit.  Attach its
+    # exact ID to this response before the next turn validates the record.
+    try:
+        if understanding_contract is not None and hasattr(understanding_contract, "attach_pending_contributors"):
+            understanding_contract.attach_pending_contributors(
+                _build_communication_contributors(systems, interaction_runtime)
+            )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_run_live_response_turn_attach_pending_contributors",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
         )
         pass
 
@@ -30025,19 +30175,18 @@ def _retain_cross_pipeline_learning(
 ) -> int:
     dream_trainer = systems.get('dream_trainer')
     working_memory = systems.get('working_memory')
-    conversation_memory = systems.get('conversation_memory')
     if dream_trainer is None or working_memory is None:
         return 0
-    if not hasattr(dream_trainer, 'record_pipeline_learning'):
+    if not hasattr(dream_trainer, 'stage_pipeline_learning'):
         return 0
 
-    retained = 0
-    pipeline_source = str(systems.get('_pipeline_source', 'runtime_dialogue') or 'runtime_dialogue')
-    topic_words = [
-        str(word).strip()
-        for word in re.findall(r"[a-z]{3,}", str(getattr(working_memory, 'current_topic', '') or '').lower())
-    ][:6]
-
+    contract = systems.get('understanding_contract')
+    pending = dict(getattr(contract, 'state', {}).get('pending_validation', {}) or {}) if contract is not None else {}
+    response_id = str(pending.get('response_id', '') or '').strip()
+    if not response_id:
+        # The response must be committed before these candidates can be tied
+        # to receiver evidence.  Never fall back to immediate durable memory.
+        return 0
     try:
         current_turn = int(getattr(working_memory, 'turn_count', 0) or 0)
     except Exception as _aurora_boundary_exc:
@@ -30049,6 +30198,29 @@ def _retain_cross_pipeline_learning(
             context={"function": "_retain_cross_pipeline_learning", "handler_line": 24951, "source_file": "aurora.py"},
         )
         current_turn = 0
+    if hasattr(dream_trainer, 'expire_staged_pipeline_learning'):
+        try:
+            dream_trainer.expire_staged_pipeline_learning(current_turn)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_retain_cross_pipeline_learning_expire",
+                exc=_aurora_boundary_exc,
+                context={"function": "_retain_cross_pipeline_learning", "source_file": "aurora.py"},
+            )
+            pass
+
+    # Staging owns eventual memory promotion.  Keep the old local name out of
+    # the active path so a legacy branch cannot bridge a candidate immediately.
+    conversation_memory = None
+
+    retained = 0
+    pipeline_source = str(systems.get('_pipeline_source', 'runtime_dialogue') or 'runtime_dialogue')
+    topic_words = [
+        str(word).strip()
+        for word in re.findall(r"[a-z]{3,}", str(getattr(working_memory, 'current_topic', '') or '').lower())
+    ][:6]
 
     try:
         for concept in list(getattr(working_memory, 'concept_meanings', {}).values() or []):
@@ -30060,13 +30232,15 @@ def _retain_cross_pipeline_learning(
             meaning = str(concept.get('meaning', '') or '').strip()
             if not term or not meaning:
                 continue
-            if dream_trainer.record_pipeline_learning(
+            if dream_trainer.stage_pipeline_learning(
                 f"{term} means {meaning}",
+                response_id=response_id,
                 source=f"{pipeline_source}:concept",
                 confidence=0.9,
                 context_type='definition',
                 topic_words=[term] + topic_words,
                 systems=systems,
+                turn_tick=current_turn,
                 tags=['concept', src or 'comprehension'],
             ):
                 retained += 1
@@ -30107,13 +30281,15 @@ def _retain_cross_pipeline_learning(
             kind = str(frame.get('kind', '') or 'frame').strip()
             if len(summary.split()) < 3:
                 continue
-            if dream_trainer.record_pipeline_learning(
+            if dream_trainer.stage_pipeline_learning(
                 summary,
+                response_id=response_id,
                 source=f"{pipeline_source}:semantic_frame",
                 confidence=min(0.94, float(frame.get('confidence', 0.82) or 0.82)),
                 context_type='semantic_frame',
                 topic_words=topic_words + ([anchor] if anchor else []),
                 systems=systems,
+                turn_tick=current_turn,
                 tags=['semantic_frame', kind, src or 'comprehension'],
             ):
                 retained += 1
@@ -30152,13 +30328,15 @@ def _retain_cross_pipeline_learning(
             kind = str(event.get('kind', '') or 'lineage_event').strip()
             if len(summary.split()) < 3 and not ident:
                 continue
-            if dream_trainer.record_pipeline_learning(
+            if dream_trainer.stage_pipeline_learning(
                 summary or ident or kind,
+                response_id=response_id,
                 source=f"{pipeline_source}:lineage_event",
                 confidence=min(0.93, float(event.get('confidence', 0.84) or 0.84)),
                 context_type='lineage_event',
                 topic_words=topic_words + ([ident] if ident else []),
                 systems=systems,
+                turn_tick=current_turn,
                 tags=['lineage_event', kind, src or 'runtime'],
             ):
                 retained += 1
@@ -30199,13 +30377,15 @@ def _retain_cross_pipeline_learning(
                 relation = str(focus_claim.get('relation', '') or '').strip()
                 if relation:
                     tags.append(relation)
-                if dream_trainer.record_pipeline_learning(
+                if dream_trainer.stage_pipeline_learning(
                     summary,
+                    response_id=response_id,
                     source=f"{pipeline_source}:claim",
                     confidence=min(0.95, confidence),
                     context_type='claim',
                     topic_words=topic_words + [str(focus_claim.get('subject', '') or '')],
                     systems=systems,
+                    turn_tick=current_turn,
                     tags=tags,
                 ):
                     retained += 1
@@ -30235,6 +30415,9 @@ def _retain_cross_pipeline_learning(
             )
             pass
 
+    if retained:
+        systems["_last_staged_pipeline_response_id"] = response_id
+        systems["_last_staged_pipeline_candidate_count"] = retained
     return retained
 
 

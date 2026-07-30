@@ -7401,3 +7401,115 @@ and the learning-pipeline quality gate.
 
 **First Seen:** Zip integration phase F ("use everything in the zip"),
 2026-07-29.
+
+## FIX-A062 (RUNTIME WIRING, multi-site) — Communication Credit Unification wired into the live turn, zip integration phase G, 2026-07-29
+
+**Category:** RUNTIME WIRING -- the highest-risk phase of this campaign's largest single feature port.
+
+Phase G wires phases E and F's ported-but-unreferenced methods and
+functions into `_run_live_response_turn`'s actual call path, and swaps
+4 previously-immediate credit paths for the delayed, receiver-evidence
+pattern the rest of the feature depends on. All changes verified by
+direct diff against the zip at the exact insertion points (confirmed
+identical surrounding code before editing, matching this campaign's
+established practice for changes inside this ~1300+-line function).
+
+**Wiring added:**
+1. **Resonance measurement moved to turn entry.** The old post-response
+   `"LANGUAGE FIELD — inter-field resonance"` block (ran after the
+   current response was already committed, so it measured the wrong
+   response/turn pair) is deleted. A new block at the top of
+   `_run_live_response_turn`, right after per-turn guard-clearing
+   (`_live_contract_observation_done`, `_last_grammar_trace`,
+   `_last_concept_crystal_trace`, `_last_gap_result`,
+   `_last_rubric_evidence` all popped fresh each turn), measures the
+   *previous* emitted response against the *current* receiver turn
+   into `systems["_pending_receiver_resonance"]` (aliased to the old
+   `_last_field_resonance` key for compatibility) before observation
+   validation clears the pending contract record.
+2. **`_finalize_early_validation()` / `_commit_early_response()`
+   closures**, defined once near the top of the function, wired into
+   all 3 high-priority early-exit paths (`check_trigger` "check
+   yourself" memory-sweep, `teaching_engine.process_teaching_input`
+   reply, `teaching_engine.check_teaching_offer` reply) so receiver
+   evidence and grammar/interaction contributor traces are not
+   silently discarded just because a turn took a fast exit.
+3. **Main-path finalize call**: `_finalize_validated_communication(...)`
+   now runs once per ordinary turn, right after `src` classification
+   and before the response is persisted, storing its result on
+   `systems["_last_validated_communication_outcome"]`.
+4. **`_build_communication_contributors(systems, interaction_runtime)`**
+   wired into both the main-path `understanding_contract.
+   commit_application(..., contributors=...)` call and a new
+   `understanding_contract.attach_pending_contributors(...)` call
+   placed right after the concept-crystal LSA observation (since that
+   contributor forms *after* the response commit -- it needs a way to
+   attach itself to the already-pending record).
+
+**Non-additive replacements (the actual behavior swaps, each one a
+real credit-routing change, not just an addition):**
+1. **Grammar**: deleted the `"GRAMMAR ENGINE — post-turn exchange
+   observation (FIX-A008)"` block, which called `observe_exchange(...,
+   success=len(resp_text.split())>=3, ...)` immediately every turn --
+   crediting or penalizing a motif based on response *length* as a
+   proxy, never on whether the receiver actually understood. Replaced
+   with `"GRAMMAR ENGINE — delayed receiver attribution"`: stages a
+   trace only (`prepare_response_trace` → `systems["_last_grammar_
+   trace"]`), deferring the real success/fail write to
+   `record_motif_outcome` inside `_finalize_validated_communication`
+   on the *next* turn.
+2. **Concept crystal**: the `"CONCEPT CRYSTAL — observe LSA crossing"`
+   block's immediate `_ccr_lsa.observe_sedi(_ax_dict_lsa, delta=...)`
+   call (fired whenever internal language-field fidelity exceeded
+   0.5, regardless of receiver evidence) is removed. Replaced with
+   capturing `systems["_last_concept_crystal_trace"]` (crystal ID,
+   LSA facet role, path key, axis bucket) so the sedi credit is
+   applied later, receiver-gated, via `record_receiver_outcome`+
+   `observe_sedi` inside the finalizer.
+3. **Cross-pipeline learning**: `_retain_cross_pipeline_learning`
+   rewritten wholesale -- all 4 `dream_trainer.record_pipeline_
+   learning(...)` call sites (concept, semantic-frame, lineage-event,
+   claim candidates) became `dream_trainer.stage_pipeline_learning(...,
+   response_id=response_id, turn_tick=current_turn, ...)`. The
+   function now hard-gates on a real `response_id` pulled from
+   `understanding_contract.state['pending_validation']['response_id']`
+   -- returns `0` immediately if none exists yet ("the response must
+   be committed before these candidates can be tied to receiver
+   evidence; never fall back to immediate durable memory"), calls
+   `dream_trainer.expire_staged_pipeline_learning(current_turn)` first
+   to drop abandoned candidates, and sets `conversation_memory = None`
+   locally so the old "bridge to memory immediately" branches become
+   permanently unreachable dead code rather than being deleted (kept
+   exactly as the zip has it, so a future accidental re-wire can't
+   silently reintroduce immediate crediting).
+
+**Deliberately deferred, not part of this phase:** the zip also adds a
+"Final response boundary" abstain/composer-unified resolution block
+immediately after `dual_question_pipeline()` in
+`_run_live_response_turn`, built on the phase-F-ported
+`_turn_has_no_known_anchor()`. Investigated directly: this exact block
+(`_boundary_abstain`, `_boundary_unanchored`, `_a_src_boundary`) does
+not exist anywhere in the current repo -- confirmed by grep, zero
+hits. A structurally similar, pre-existing block already lives inside
+`_run_reasoning_pipeline` (referenced by the zip's own comment: "can
+bypass the D2.1 block inside `_run_reasoning_pipeline`"), so the zip's
+new block is a *separate* safety-net duplicate for callers that invoke
+`_run_live_response_turn` directly. This is a distinct
+hallucination/abstain-suppression feature, not part of Communication
+Credit's receiver-evidence routing, that happens to sit adjacent in
+the diff purely from insertion proximity. Left out of this phase
+deliberately rather than folded in without its own dedicated
+verification; noted here so it isn't silently lost.
+
+**Tests:** `tests/test_comm_credit_phase_g_live_wiring.py` (8) -- 7
+structural tests confirming each wiring point and each non-additive
+replacement by direct source inspection (matching this campaign's
+established pattern for `_run_live_response_turn` changes), plus one
+real live-boot test (`test_live_two_turn_conversation_wires_receiver_
+credit`, following `test_b1_1_envelope_shadow.py`'s established
+`boot_aurora` + `process_external_user_turn` pattern against a scratch
+copy of `aurora_state`) running an actual 2-turn conversation and
+confirming the wiring fires for real, not just structurally.
+
+**First Seen:** Zip integration phase G ("use everything in the zip"),
+2026-07-29.
