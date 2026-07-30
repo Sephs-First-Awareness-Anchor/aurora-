@@ -7642,10 +7642,52 @@ this repo had already diverged from.
 **Tests:** `tests/test_communication_credit_unification.py` (14, ported
 verbatim from the zip, unmodified) -- all pass. Combined with phases
 E-H's own test files (phase E: 17, phase F: 8, phase G: 8, phase H: 6),
-Communication Credit Unification now has 53 dedicated tests, plus the
-full `pytest tests/` regression sweep (deferred across phases E-H at
-Sunni's explicit request, run once at the end of phase I per that same
-instruction).
+Communication Credit Unification now has 53 dedicated tests.
+
+**Full regression sweep** (deferred across phases E-H at Sunni's
+explicit request, run once at the end of phase I per that same
+instruction): `pytest tests/`, 1198 collected, 1194 passed, 4 failed,
+1:10:25 total. All 4 failures investigated and confirmed pre-existing,
+not caused by this campaign -- verified by running each in isolation
+(all pass alone, on both this branch and the pre-campaign commit
+`7bd85a3ed` via a throwaway `git worktree`) and by tracing each
+failure's actual cause:
+- `test_blind_origin_entries_are_tagged_legacy_unverified` (M1.2) --
+  fails identically on `7bd85a3ed`, before any Comm Credit code
+  existed. Genuinely pre-existing lexicon-tagging gap, unrelated.
+- `test_ingest_concept_image_succeeds_against_real_fixture` -- passes
+  alone on both commits; only fails inside the full suite (`cv2` module
+  state/fixture contention across tests). `aurora_concept_imager.py`
+  was never touched by this campaign.
+- `test_retries_away_from_a_strictly_thinner_draw_when_a_richer_one_exists`
+  (PF3.4a) -- passes alone on both commits. Its 30-draw retry check
+  depends on `SentenceComposer._motif_for_proposition_avoiding_thinning`'s
+  unseeded fitness-proportional sampling (`aurora_expression_
+  perception.py`); global `random` state carried over from earlier
+  tests in the full-suite run shifts which draws land. Phase E's own
+  additions to that file (communication-outcome ledger) are a separate
+  code path from the sampling logic under test.
+- `test_flat_manifold_no_boost` (curiosity manifold) -- passes alone on
+  both commits. Traced to `aurora_curiosity_engine.py`'s `_step1_
+  emergence` reading `aurora_warp_protocol.get_warp_field()`, a
+  process-wide global singleton, not scoped per-test; by the time this
+  test runs inside the full suite, `dream_trainer.record_fail()` (a
+  pre-existing WARP-campaign function, unmodified by phases E-I) had
+  already pushed 3 recurring `failed_prediction` demands into the
+  shared anomaly ledger, crossing the urgency threshold this test
+  checks. Not this campaign's code, and not scoped to a fresh instance
+  per test -- a pre-existing test-isolation gap in the WARP anomaly
+  ledger's global-singleton design.
+
+**KNOWN-GAP: test-isolation for `aurora_warp_protocol.get_warp_field()`
+and unseeded RNG sampling in `SentenceComposer`.** Both are pre-existing
+weaknesses this regression sweep surfaced but did not cause: the WARP
+anomaly ledger is a process-wide singleton with no reset-between-tests
+hook, and `_motif_for_proposition_avoiding_thinning`'s retry sampling
+has no seedable/injectable RNG. Either can make otherwise-correct tests
+order-dependent when run as part of the full suite. Out of scope for
+this campaign; noted here so it isn't mistaken for a Comm Credit
+regression on a future full-suite run.
 
 **First Seen:** Zip integration phase I ("use everything in the zip"),
 2026-07-29.
