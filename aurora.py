@@ -17654,10 +17654,16 @@ def _chain_up5_understanding(user_text: str, systems: dict, state: Any, *, turn_
     """Stage 5 up -- Understanding (A axis) -- THE APEX.
     Agency: integration pressure across domains produces cross-domain consistency.
     Contract observation, developmental chain assessment, learned hints."""
-    # Understanding contract ingest
+    # Understanding contract ingest.  The live response loop performs one
+    # canonical observation before the pipeline; reuse that result here so
+    # the same receiver turn cannot advance the contract twice.
     try:
         contract = systems.get("understanding_contract")
-        if contract and hasattr(contract, "ingest_observation"):
+        if systems.get("_live_contract_observation_done"):
+            state.understanding_observation = dict(
+                systems.get("_last_understanding_observation") or {}
+            )
+        elif contract and hasattr(contract, "ingest_observation"):
             state.understanding_observation = dict(
                 contract.ingest_observation(
                     systems=systems,

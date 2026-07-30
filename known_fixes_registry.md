@@ -7594,3 +7594,58 @@ actually written to disk.
 
 **First Seen:** Zip integration phase H ("use everything in the zip"),
 2026-07-29.
+
+## FIX-A064 (RUNTIME BUG, 1 function) — Communication Credit Unification acceptance suite + double-observation fix, zip integration phase I, 2026-07-29
+
+**Category:** RUNTIME BUG + TEST PORT -- final phase of the Communication Credit Unification port.
+
+Ported the zip's own `tests/test_communication_credit_unification.py`
+verbatim (14 tests, not 13 as originally scoped -- an earlier count
+missed one) as this feature's authoritative acceptance suite, run
+against the real ported functions rather than the campaign's own
+structural/unit tests (phases E-H). Running it surfaced one real,
+verified gap in phase G's wiring:
+
+**Bug:** `_chain_up5_understanding` (the reasoning pipeline's own call
+into `understanding_contract.ingest_observation`) had no guard against
+double-observing the same receiver turn. Phase G added
+`systems["_live_contract_observation_done"]` /
+`systems["_last_understanding_observation"]` bookkeeping to
+`_run_live_response_turn` specifically so its own early-exit paths
+wouldn't re-observe, but never propagated the same guard into
+`_chain_up5_understanding`, which the main reasoning pipeline calls
+unconditionally on every turn (`aurora.py` around line 19514 in the
+zip). Left as-is, a normal (non-early-exit) live turn would have called
+`ingest_observation` twice per receiver turn -- once from
+`_run_live_response_turn`'s own pre-pipeline observation, once again
+from `_chain_up5_understanding` inside the reasoning pipeline it calls
+-- silently double-advancing the understanding contract's state
+(clearing `pending_validation` and consuming deferred-validation
+windows twice) on every ordinary turn.
+
+**Fix:** ported the zip's exact guard: `_chain_up5_understanding` now
+checks `systems.get("_live_contract_observation_done")` first and, if
+set, copies `state.understanding_observation` from
+`systems.get("_last_understanding_observation")` instead of calling
+`contract.ingest_observation(...)` again; the original unconditional
+call remains as the `elif` fallback for callers that never took the
+live-turn's canonical observation (matching this campaign's established
+"copy the zip's own guard exactly" practice for `_run_live_response_turn`-
+adjacent functions).
+
+Confirmed as a real, not stale-test, gap: reverted the fix locally and
+re-ran `test_live_pipeline_reuses_canonical_contract_observation` alone
+-- failed with `contract.calls == 1`, not the expected `0`, i.e. the
+dedup guard was genuinely missing, not a pre-existing test assumption
+this repo had already diverged from.
+
+**Tests:** `tests/test_communication_credit_unification.py` (14, ported
+verbatim from the zip, unmodified) -- all pass. Combined with phases
+E-H's own test files (phase E: 17, phase F: 8, phase G: 8, phase H: 6),
+Communication Credit Unification now has 53 dedicated tests, plus the
+full `pytest tests/` regression sweep (deferred across phases E-H at
+Sunni's explicit request, run once at the end of phase I per that same
+instruction).
+
+**First Seen:** Zip integration phase I ("use everything in the zip"),
+2026-07-29.
