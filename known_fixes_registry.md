@@ -7513,3 +7513,84 @@ confirming the wiring fires for real, not just structurally.
 
 **First Seen:** Zip integration phase G ("use everything in the zip"),
 2026-07-29.
+
+## FIX-A063 (RUNTIME WIRING, one function) — Communication Credit Unification corpus-ingestion bridge, zip integration phase H, 2026-07-29
+
+**Category:** RUNTIME WIRING -- `run_corpus_ingestion`'s equivalent of phase G's live-turn wiring.
+
+Corpus ingestion (`run_corpus_ingestion`) has its own live-turn-shaped
+surface -- `generate_reply()` calls `process_external_user_turn()` and
+`witness()` feeds truth continuations back in, the same
+response/receiver-evidence shape phases E-G give the interactive live
+turn. Phase H gives it the same delayed, gated treatment instead of
+letting it default to immediate, ungated ingestion.
+
+**Wiring added:**
+1. **`LearningQualityGate` gating `witness()`.** `witness()` now runs
+   every observation through a per-ingestion-run `_corpus_quality_gate
+   .observe(content, role=role)` (phase-F-ported
+   `aurora_internal/aurora_learning_pipeline.py`) before anything else.
+   The observation (and any `missing_context` markers) is always
+   recorded via the new `_record_corpus_observation()` into a bounded
+   `systems["_corpus_observation_ledger"]` (last 500) /
+   `systems["_corpus_context_gaps"]` (last 100), but the function now
+   returns `None` early -- skipping the `aurora.gateway.receive(...,
+   stream_type=StreamType.KNOWLEDGE_FEED, ...)` call and the
+   `conversation_memory.learn_fact(...)` call entirely -- whenever
+   `quality.get('eligible_for_learning')` is false. Thin/duplicate/
+   stagnant corpus material is now kept as an observation, never
+   promoted to knowledge, matching the same gate phase F ported for
+   the interactive path.
+2. **`_persist_corpus_observations()`**, a new nested function, atomically
+   writes `<state_dir>/corpus_observations.json` (schema_version 1:
+   `observations`, `context_gaps`, `quality_status` from the gate's own
+   `.status()`). Called exactly once, at the very end of
+   `run_corpus_ingestion`, immediately before the final `_full_save(...)`
+   -- matching the zip's own placement.
+3. **`_resolve_corpus_response_learning(pressure, phase)`**, a new nested
+   function, treats each responder/reverse pass's corpus truth
+   continuation as receiver evidence: pulls the pending
+   `systems['_last_staged_pipeline_response_id']` (staged by phase G's
+   rewritten `_retain_cross_pipeline_learning`), classifies
+   positive/negative purely from `pressure['signal'] >=
+   pressure['threshold']`, and calls `dream_trainer.
+   resolve_pipeline_learning(response_id, outcome_kind=..., evidence_id=
+   f'corpus:{phase}:{response_id}', score=signal, observed_effect=
+   'corpus_truth_alignment', turn_tick=..., systems=systems)`. No-ops
+   (returns immediately) if no pressure signal or no staged response_id
+   exists yet -- same "never fall back to immediate crediting" gate as
+   phase G.
+4. **`pass_responder()`/`pass_reverse()`** both now capture
+   `_record_corpus_response_pressure(...)`'s return value as `_pressure`,
+   bump a new `systems['_corpus_learning_tick']` counter, and call
+   `_resolve_corpus_response_learning(_pressure, 'responder' | 'reverse')`
+   right after -- before the truth continuation is witnessed.
+
+**Non-additive fix (the actual behavior change, not just an addition):**
+`_record_corpus_response_pressure()` computed a real pressure signal
+(`kind`, `signal`, `threshold`, `truth_alignment`, `prompt_grounding`,
+`length_fit`, `counter_pressure`) every call, fed it to the response
+pressure tuner and the QuasiArch observer, and then fell through the end
+of the function with **no return statement at all** -- every caller got
+`None` unconditionally, silently discarding the computed signal. Return
+type annotation corrected from `-> None` to `-> Dict[str, Any]`, the
+early no-`aurora_text` guard changed from bare `return` to `return {}`,
+and a final `return {...}` (all 8 computed fields) added at the end of
+the function -- this is what makes items 3-4 above possible; without a
+real return value there's nothing for `_resolve_corpus_response_learning`
+to act on.
+
+**Tests:** `tests/test_comm_credit_phase_h_corpus_bridge.py` (6) -- 5
+structural/unit tests (quality-gate ordering inside `witness()`, the
+`_persist_corpus_observations()` call site relative to `_full_save`,
+`_record_corpus_response_pressure`'s new return value on both the
+populated and empty-`aurora_text` paths, both pass functions wired to
+`_resolve_corpus_response_learning`), plus one real functional test
+(`test_observer_pass_persists_corpus_observations_for_real`) booting
+Aurora against a scratch `aurora_state` copy and running an actual
+observer-pass ingestion over a tiny synthetic OpenAI export, confirming
+`_corpus_observation_ledger` populates and `corpus_observations.json` is
+actually written to disk.
+
+**First Seen:** Zip integration phase H ("use everything in the zip"),
+2026-07-29.

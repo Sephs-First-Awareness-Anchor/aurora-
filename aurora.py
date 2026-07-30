@@ -33283,11 +33283,11 @@ def _record_corpus_response_pressure(
     aurora_text: str,
     truth_text: str,
     phase: str,
-) -> None:
+) -> Dict[str, Any]:
     from aurora_internal.aurora_response_pressure_tuner import ResponsePressureTuner
 
     if not aurora_text:
-        return
+        return {}
 
     tuner = systems.get('_corpus_response_pressure_tuner')
     if tuner is None:
@@ -33386,6 +33386,16 @@ def _record_corpus_response_pressure(
                 context={"function": "_record_corpus_response_pressure", "handler_line": 27741, "source_file": "aurora.py"},
             )
             pass
+    return {
+        'kind': kind,
+        'signal': round(signal, 4),
+        'threshold': round(threshold, 4),
+        'truth_alignment': round(truth_alignment, 4),
+        'prompt_grounding': round(prompt_grounding, 4),
+        'length_fit': round(length_fit, 4),
+        'counter_pressure': round(counter_pressure, 4),
+        'phase': str(phase or ''),
+    }
 
 
 def run_corpus_ingestion(
@@ -33418,6 +33428,8 @@ def run_corpus_ingestion(
         systems['_corpus_response_pressure_tuner'] = ResponsePressureTuner(
             namespace='corpus.ingestion'
         )
+    from aurora_internal.aurora_learning_pipeline import LearningQualityGate
+    _corpus_quality_gate = LearningQualityGate()
 
     corpus_path = os.path.expanduser(corpus_path)
 
@@ -33455,7 +33467,61 @@ def run_corpus_ingestion(
             print("  [CORPUS] No usable messages found. Aborting.")
         return
 
+    def _record_corpus_observation(role: str, content: str, quality: Dict[str, Any], source: str) -> None:
+        ledger = systems.setdefault('_corpus_observation_ledger', [])
+        ledger.append({
+            'role': str(role or ''),
+            'source': str(source or ''),
+            'content': str(content or '')[:320],
+            'quality': dict(quality or {}),
+            'timestamp': time.time(),
+        })
+        systems['_corpus_observation_ledger'] = ledger[-500:]
+        if quality.get('missing_context'):
+            gaps = systems.setdefault('_corpus_context_gaps', [])
+            gaps.append({
+                'role': str(role or ''),
+                'content': str(content or '')[:240],
+                'markers': list(quality.get('missing_context') or []),
+                'timestamp': time.time(),
+            })
+            systems['_corpus_context_gaps'] = gaps[-100:]
+
+    def _persist_corpus_observations() -> None:
+        try:
+            from aurora_persistence_utils import atomic_write_json
+            atomic_write_json(
+                Path(str(systems.get('state_dir') or 'aurora_state')) / 'corpus_observations.json',
+                {
+                    'schema_version': 1,
+                    'observations': list(systems.get('_corpus_observation_ledger', []) or [])[-500:],
+                    'context_gaps': list(systems.get('_corpus_context_gaps', []) or [])[-100:],
+                    'quality_status': _corpus_quality_gate.status(),
+                },
+                indent=2,
+                default=str,
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_persist_corpus_observations",
+                exc=_aurora_boundary_exc,
+                context={"function": "_persist_corpus_observations", "source_file": "aurora.py"},
+            )
+            pass
+
     def witness(role: str, content: str, source: str):
+        # Keep stale/thin corpus material as an observation, not as new
+        # knowledge.  This gate is intentionally separate from response
+        # outcome classification: a short "yes" can validate a response, but
+        # it should not become a corpus fact by itself.
+        quality = _corpus_quality_gate.observe(content, role=role)
+        _record_corpus_observation(role, content, quality, source)
+        systems['_last_corpus_quality'] = dict(quality)
+        if not quality.get('eligible_for_learning'):
+            return None
+
         # Feed into Aurora as knowledge feed (bounded so it can form meaning)
         response = aurora.gateway.receive(
             content=f"[{role.upper()}] {content}",
@@ -33480,6 +33546,42 @@ def run_corpus_ingestion(
                 )
                 pass
         return response
+
+    def _resolve_corpus_response_learning(pressure: Dict[str, Any], phase: str) -> None:
+        """Use the corpus truth pair as explicit, bounded receiver evidence."""
+        if not pressure or 'signal' not in pressure:
+            return
+        dt = systems.get('dream_trainer')
+        if dt is None or not hasattr(dt, 'resolve_pipeline_learning'):
+            return
+        response_id = str(
+            systems.get('_last_staged_pipeline_response_id')
+            or ''
+        ).strip()
+        if not response_id:
+            return
+        signal = float(pressure.get('signal', 0.0) or 0.0)
+        threshold = float(pressure.get('threshold', 1.0) or 1.0)
+        kind = 'positive' if signal >= threshold else 'negative'
+        try:
+            dt.resolve_pipeline_learning(
+                response_id,
+                outcome_kind=kind,
+                evidence_id=f'corpus:{phase}:{response_id}',
+                score=signal,
+                observed_effect='corpus_truth_alignment',
+                turn_tick=int(systems.get('_corpus_learning_tick', 0) or 0),
+                systems=systems,
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_resolve_corpus_response_learning",
+                exc=_aurora_boundary_exc,
+                context={"function": "_resolve_corpus_response_learning", "source_file": "aurora.py"},
+            )
+            pass
 
     def generate_reply(prompt_text: str, source: str):
         if not prompt_text or len(prompt_text.split()) < 3:
@@ -33550,13 +33652,17 @@ def run_corpus_ingestion(
                 counter += 1
                 # Prompt Aurora to respond
                 resp = generate_reply(content, source="corpus_responder")
-                _record_corpus_response_pressure(
+                _pressure = _record_corpus_response_pressure(
                     systems,
                     prompt_text=content,
                     aurora_text=getattr(resp, 'content', ''),
                     truth_text=next_content,
                     phase='corpus_responder',
                 )
+                systems['_corpus_learning_tick'] = int(
+                    systems.get('_corpus_learning_tick', 0) or 0
+                ) + 1
+                _resolve_corpus_response_learning(_pressure, 'responder')
                 # Then show the "true" assistant reply as ground-truth continuation
                 witness("assistant_truth", next_content, source="corpus_responder_truth")
 
@@ -33587,13 +33693,17 @@ def run_corpus_ingestion(
             if role == "assistant" and next_role == "user":
                 counter += 1
                 resp = generate_reply(content, source="corpus_reverse")
-                _record_corpus_response_pressure(
+                _pressure = _record_corpus_response_pressure(
                     systems,
                     prompt_text=content,
                     aurora_text=getattr(resp, 'content', ''),
                     truth_text=next_content,
                     phase='corpus_reverse',
                 )
+                systems['_corpus_learning_tick'] = int(
+                    systems.get('_corpus_learning_tick', 0) or 0
+                ) + 1
+                _resolve_corpus_response_learning(_pressure, 'reverse')
                 witness("user_truth", next_content, source="corpus_reverse_truth")
 
                 if verbose and counter % 50 == 0:
@@ -33629,6 +33739,7 @@ def run_corpus_ingestion(
 
     if verbose:
         print("\n  [CORPUS] Ingestion complete. Final save.")
+    _persist_corpus_observations()
     _full_save(systems, verbose=verbose)
 def main():
     parser = argparse.ArgumentParser(
