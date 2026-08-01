@@ -45,11 +45,60 @@ class PropositionFrame:
     unresolved: List[str] = field(default_factory=list)
     topic: str = ""
     source: str = ""  # "thought" | "claim" | "anchor"
+    # Directive P2: raw regional-density reading, kept separate from
+    # `stance` so downstream consumers can tell "low because untested"
+    # (corroboration-only) from "low because unfamiliar territory"
+    # (density-driven). None when sedimemory was absent/empty/not
+    # consulted -- never a fabricated number.
+    density: Optional[float] = None
 
 
 # Same noise/length gate SemanticIntentionBridge already uses for
 # thought-text token extraction -- reused, not reinvented.
 _MIN_TOKEN_LEN = 3
+
+
+def density_confidence(systems: Dict[str, Any], topic: str, axis: str) -> Optional[float]:
+    """Directive P2 -- regional density confidence, the missing stance
+    signal. Not a classifier over the proposition's words: a lookup
+    into how populated the region of her own constraint-space is that
+    the proposition's configuration falls into, via SediMemory's
+    existing `recall_semantic` (axis-filtered query over deposited
+    fragments already organized onto the 25-slot NC lattice). Two
+    propositions with identical phrasing but different topics get
+    different readings only because one lands somewhere she's lived
+    and the other doesn't.
+
+    Fail-quiet: no sedimemory, no topic, or an empty result set all
+    return None -- never a fabricated number. Normalized via the
+    simplest honest function available (count share of max_results,
+    scaled by mean resonance) -- no tuned constants.
+    """
+    topic = str(topic or "").strip()
+    if not topic:
+        return None
+    sedimemory = systems.get("sedimemory") if isinstance(systems, dict) else None
+    if sedimemory is None or not hasattr(sedimemory, "recall_semantic"):
+        return None
+    try:
+        results = sedimemory.recall_semantic(
+            query_text=topic, axis_filter=str(axis or "").strip() or None, max_results=8,
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:density_confidence",
+            exc=_aurora_boundary_exc,
+            context={"function": "density_confidence", "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
+        return None
+    if not results:
+        return None
+    resonances = [float(r.get("resonance", 0.0) or 0.0) for r in results]
+    mean_resonance = sum(resonances) / len(resonances)
+    count_share = min(1.0, len(results) / 8.0)
+    return max(0.0, min(1.0, count_share * mean_resonance))
 
 
 # PF1.4's own real-world verification (60-probe live-boot run) caught
