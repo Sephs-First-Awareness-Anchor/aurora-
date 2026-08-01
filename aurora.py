@@ -12470,6 +12470,79 @@ def _boot_noncomp_manifold_runtime(systems: Dict[str, Any], *, verbose: bool = F
             print(f"  [NONCOMP] Manifold runtime unavailable: {noncomp_exc}")
 
 
+def _self_state_axis_pressures(systems: Dict[str, Any]) -> Dict[str, float]:
+    """Blend identity-field axis pressure with the I-State collective's most
+    recent polarity tensions into one self-state pressure reading -- the
+    substrate relational_comparison.ground_to_self grounds concepts against
+    (wiring audit RW4: 'self-state (I-State polarities + identity field)')."""
+    _AXES = ("X", "T", "N", "B", "A")
+    pressures: Dict[str, float] = {}
+    ifield = systems.get("identity_field")
+    if ifield is not None and hasattr(ifield, "axis_pressure"):
+        try:
+            for i, ax in enumerate(_AXES):
+                pressures[ax] = float(ifield.axis_pressure(i))
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_self_state_axis_pressures:identity_field",
+                exc=_aurora_boundary_exc,
+                context={"function": "_self_state_axis_pressures", "source_file": "aurora.py"},
+            )
+    collective = systems.get("collective")
+    history = getattr(collective, "history", None) if collective is not None else None
+    if history:
+        try:
+            tensions = dict(history[-1].axis_tensions or {})
+            for ax in _AXES:
+                istate_signal = abs(float(tensions.get(ax, 0.0)))
+                pressures[ax] = (
+                    (pressures[ax] + istate_signal) / 2.0 if ax in pressures else istate_signal
+                )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_self_state_axis_pressures:istate_collective",
+                exc=_aurora_boundary_exc,
+                context={"function": "_self_state_axis_pressures", "source_file": "aurora.py"},
+            )
+    return pressures
+
+
+def _compute_self_relation(systems: Dict[str, Any], anchor: str) -> Dict[str, Any]:
+    """RW4 -- relation-to-self into comprehension (closes F5, wiring audit
+    2026-07-20). RelationalComparisonEngine is mounted at boot but the audit
+    found zero repo-wide readers of systems['relational_comparison']; this
+    grounds the turn's anchor concept against Aurora's own current
+    constraint state, producing the self-relation scalar the organ exists
+    to compute."""
+    rce = systems.get("relational_comparison")
+    if rce is None or not anchor or not hasattr(rce, "ground_to_self"):
+        return {}
+    try:
+        pressures = _self_state_axis_pressures(systems)
+        delta = rce.ground_to_self(anchor, pressures)
+        return {
+            "anchor": anchor,
+            "similarity": delta.similarity,
+            "pressure_delta": delta.pressure_delta,
+            "salience_gap": delta.salience_gap,
+            "relational_type": getattr(delta.relational_type, "value", str(delta.relational_type)),
+            "description": delta.description,
+        }
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_compute_self_relation",
+            exc=_aurora_boundary_exc,
+            context={"function": "_compute_self_relation", "source_file": "aurora.py"},
+        )
+        return {}
+
+
 def _apply_noncomp_input_guidance(
     systems: Dict[str, Any],
     state: Any,
@@ -12483,6 +12556,7 @@ def _apply_noncomp_input_guidance(
     pipeline_state = getattr(state, "pipeline_state", None)
     understood = dict(getattr(state, "parsed", {}) or {})
     anchor = _select_noncomp_anchor(user_text, understood=understood, pipeline_state=pipeline_state)
+    self_relation = _compute_self_relation(systems, anchor)
     try:
         summary = dict(interpreter.interpret(user_text).to_dict() or {})
     except Exception as _aurora_boundary_exc:
@@ -12498,6 +12572,7 @@ def _apply_noncomp_input_guidance(
     summary["context"] = "input"
     summary["band_pos"] = band_pos
     summary["anchor"] = anchor
+    summary["self_relation"] = self_relation
     prefer_live_perspective = _should_prefer_live_perspective(
         user_text,
         understood=understood,

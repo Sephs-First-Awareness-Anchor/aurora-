@@ -7691,3 +7691,47 @@ regression on a future full-suite run.
 
 **First Seen:** Zip integration phase I ("use everything in the zip"),
 2026-07-29.
+
+## FIX-A065 (RUNTIME WIRING, new functions) — RW4: relation-to-self into comprehension (closes F5), Architecture Wiring Audit 2026-07-20
+
+**Category:** RUNTIME WIRING -- Architecture Wiring Audit (Sunni & Cael, 2026-07-20), finding F5.
+
+F5: `RelationalComparisonEngine` (`aurora_internal/aurora_relational_
+comparison.py`) is mounted at every boot (`systems['relational_
+comparison']`, `aurora.py`) but the audit's repo-wide census found zero
+readers -- the organ implementing the design doctrine's "comparison-to-
+self as the origin of meaning" was built and consulted by nothing.
+
+**Wiring added** (`aurora.py`, both new top-level functions just before
+`_apply_noncomp_input_guidance`):
+1. `_self_state_axis_pressures(systems)` -- blends `identity_field.
+   axis_pressure(i)` (the same per-axis pressure reading `aurora_
+   curiosity_engine.py`'s `_step1_emergence` already uses) with the
+   I-State collective's most recent polarity tensions
+   (`systems['collective'].history[-1].axis_tensions`, the signed net
+   between each of the 5 I-State polarity pairs -- IS/ISNT, CAN/CANT,
+   DO/DONT, SAW/SAUNT, DID/DIDNT) into one X/T/N/B/A pressure dict --
+   RW4's own "self-state (I-State polarities + identity field)" phrase,
+   taken literally rather than picking just one source.
+2. `_compute_self_relation(systems, anchor)` -- calls `relational_
+   comparison.ground_to_self(anchor, pressures)` (the engine's own
+   "Concept-Self Comparison (Grounding)" method, previously unreferenced
+   anywhere) and returns a JSON-safe dict (similarity, pressure_delta,
+   salience_gap, relational_type, description).
+3. Wired into `_apply_noncomp_input_guidance` exactly where RW4
+   specifies: `self_relation = _compute_self_relation(systems, anchor)`
+   right after `anchor = _select_noncomp_anchor(...)`, then `summary
+   ["self_relation"] = self_relation` deposited into the same input
+   summary dict that already flows to `state.noncomp_input_state`,
+   `pipeline_state["noncomp_input"]`, and `systems["_last_noncomp_
+   input"]` -- RW4's "smallest honest wiring" instruction, verbatim.
+
+**Tests:** `tests/test_rw4_relation_to_self.py` (9) -- structural wiring
+check, unit tests for both new helpers against a real `Relational
+ComparisonEngine` + `OntologicalWeb` (not mocks), and one real live-boot
+test confirming `self_relation` actually appears in `systems["_last_
+noncomp_input"]` after a real turn.
+
+**First Seen:** Architecture Wiring Audit RW4 ("use your judgment" on
+implementation while the audit's own scope was authoritative),
+2026-08-01.
