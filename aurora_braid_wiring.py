@@ -571,6 +571,62 @@ def ensure_proposition_frame_for_turn(systems: Dict[str, Any]) -> None:
         pass
 
 
+def reset_stance_signal_for_turn(systems: Dict[str, Any]) -> None:
+    """Directive P2/P1 Track ST: composer._stance_signal is only ever
+    REFRESHED, inside ensure_stance_signal_for_turn below -- same
+    staleness risk reset_proposition_frame_for_turn exists to close for
+    the frame itself (a turn where the stance-signal refresh doesn't
+    run must not silently reuse the last turn's hedge/no-hedge
+    decision). Call unconditionally at the start of every turn,
+    alongside reset_proposition_frame_for_turn."""
+    try:
+        composer = getattr(systems.get("perception"), "composer", None)
+        if composer is not None:
+            composer.set_stance_signal(None)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_braid_wiring.py:reset_stance_signal_for_turn",
+            exc=_aurora_boundary_exc,
+            context={"function": "reset_stance_signal_for_turn", "source_file": "aurora_braid_wiring.py"},
+        )
+        pass
+
+
+def ensure_stance_signal_for_turn(systems: Dict[str, Any]) -> None:
+    """Directive P2/P1 Track ST: transport this turn's PropositionFrame.
+    stance (P2's regional-density-blended confidence) into the composer,
+    mirroring ensure_proposition_frame_for_turn's own idempotent, safe-
+    to-call-more-than-once pattern -- a fresh build_frame() call each
+    time rather than trusting systems['_proposition_frame'] to already
+    be current, since this function may run on a different call path
+    than whichever ensure_proposition_frame_for_turn call happened (or
+    didn't happen) earlier this turn. None (no frame produced this
+    turn) means no stance signal -- the STANCE slot is skipped, never
+    defaults to hedging."""
+    try:
+        import types
+        from aurora_internal.aurora_proposition_frame import build_frame
+        perception = systems.get('perception')
+        composer = getattr(perception, 'composer', None) if perception else None
+        if composer is not None:
+            state_shim = types.SimpleNamespace(
+                noncomp_input_state=dict(systems.get('_last_noncomp_input') or {})
+            )
+            frame = build_frame(systems, state_shim)
+            composer.set_stance_signal(frame.stance if frame is not None else None)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_braid_wiring.py:ensure_stance_signal_for_turn",
+            exc=_aurora_boundary_exc,
+            context={"function": "ensure_stance_signal_for_turn", "source_file": "aurora_braid_wiring.py"},
+        )
+        pass
+
+
 def begin_expression(systems: Dict[str, Any]) -> None:
     """
     CALL SITE 3 — Just BEFORE perception.express() is called.
@@ -645,6 +701,9 @@ def begin_expression(systems: Dict[str, Any]) -> None:
         # composer. Fail-quiet, additive -- compose() does not read either
         # yet (PF1.3/PF1.4), so this cannot change delivered output.
         ensure_proposition_frame_for_turn(systems)
+        # Directive P2/P1 Track ST: same per-turn transport for the
+        # stance signal, right alongside the frame it's derived from.
+        ensure_stance_signal_for_turn(systems)
         try:
             perception = systems.get('perception')
             composer = getattr(perception, 'composer', None) if perception else None

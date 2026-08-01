@@ -19444,6 +19444,23 @@ def _run_reasoning_pipeline(
         )
         pass
 
+    # Directive P2/P1 Track ST: same unconditional per-turn reset as
+    # reset_proposition_frame_for_turn immediately above, for the same
+    # reason -- a turn where the stance-signal refresh is skipped later
+    # must not silently reuse the last turn's hedge/no-hedge decision.
+    try:
+        from aurora_braid_wiring import reset_stance_signal_for_turn
+        reset_stance_signal_for_turn(systems)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:reset_stance_signal_for_turn",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
+        )
+        pass
+
     # ---- GAP 3 FIX: SEDI SURFACE FRAGS — inject temporal continuity fragments ----
     # SediMemory surface recall is loaded by the surface daemon before calling
     # process_external_user_turn, but the frags were never threaded into the
@@ -20809,6 +20826,21 @@ def _run_reasoning_pipeline(
             operation="exception_handler:aurora.py:17381",
             exc=_aurora_boundary_exc,
             context={"function": "_run_reasoning_pipeline", "handler_line": 17381, "source_file": "aurora.py"},
+        )
+        pass
+    # Directive P2/P1 Track ST: same "call it here too, this compose()
+    # site is reached even when begin_expression() was skipped earlier"
+    # reasoning as ensure_proposition_frame_for_turn immediately above.
+    try:
+        from aurora_braid_wiring import ensure_stance_signal_for_turn
+        ensure_stance_signal_for_turn(systems)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:ensure_stance_signal_for_turn",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
         )
         pass
     try:

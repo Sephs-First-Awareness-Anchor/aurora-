@@ -1794,6 +1794,13 @@ class SentenceComposer:
         self._proposition_frame = None
         self._expression_guidance = None
 
+        # Directive P2/P1 Track ST: regional-density stance confidence for
+        # this turn's proposition, transported in the same reset/ensure
+        # per-turn pattern as _proposition_frame (never stale across
+        # turns). None means "no stance signal available" -- the STANCE
+        # slot is skipped entirely, never defaults to hedging.
+        self._stance_signal = None
+
         # Sensory register bias — set per-compose from sensory_context.
         # +1.0 high-energy input, -1.0 low-energy, 0.0 neutral. Nudges the
         # N (Energy) axis of the live constraint orientation during composition.
@@ -2369,6 +2376,15 @@ class SentenceComposer:
         F1). Symmetric with set_context(); not yet read by compose()."""
         self._expression_guidance = guidance
 
+    def set_stance_signal(self, stance) -> None:
+        """Directive P2/P1 Track ST: transport in this turn's
+        PropositionFrame.stance (P2's regional-density-blended
+        confidence, or None if no frame was built this turn). Symmetric
+        with set_proposition_frame() -- same per-turn reset/ensure
+        transport pattern, read by _select_constraint_word's STANCE
+        slot (role=="context") in _compose_from_motif."""
+        self._stance_signal = stance
+
     # ================================================================
     # COMPOSITION  -- The main output (scaffolding-aware)
     # ================================================================
@@ -2600,11 +2616,18 @@ class SentenceComposer:
             # R1.9.4 Step 3b: determiner is a closed structural class like
             # agent/connector, not a concept-axis-driven slot.
             "determiner": (),
+            # Directive P2/P1 Track ST: STANCE is a third closed
+            # structural class, same family as determiner/connector --
+            # state-driven (self._stance_signal), never concept-axis-
+            # driven, and never chosen by anchor/topic relevance
+            # (content never picks stance).
+            "context":    (),
         }
         _role_lexroles = {
             "action": "verb", "object": "noun",
             "descriptor": "adjective", "connector": "connector",
             "agent": "pronoun", "determiner": "determiner",
+            "context": "context",
         }
 
         roles = []
@@ -3396,6 +3419,26 @@ class SentenceComposer:
             # Her agent position is herself unless boundary pressure points
             # outward -- derived, not scripted.
             return "I" if dominant_axis != "B" or _r.random() < 0.7 else "you"
+
+        if role == "context":
+            # Directive P2/P1 Track ST: STANCE slot. self._stance_signal
+            # is PropositionFrame.stance (P2's regional-density-blended
+            # confidence), transported per-turn via set_stance_signal(),
+            # or None if no frame was built this turn -- no signal means
+            # no stance slot, never a default hedge. 0.5 is not a tuned
+            # threshold: it's the same neutral baseline PropositionFrame.
+            # stance already defaults to everywhere else in this module --
+            # "at least as confident as her own baseline" skips the slot
+            # (empty, matching the directive's "confident -> slot empty"
+            # branch); below it, the slot fills from the stance lexicon
+            # scaled by how far below baseline the signal is. Content
+            # relevance never enters this branch -- affect never picks
+            # content, content never picks stance.
+            stance = getattr(self, "_stance_signal", None)
+            if stance is None or float(stance) >= 0.5:
+                return ""
+            from aurora_internal.aurora_stance_lexicon import hedge_for_strength
+            return hedge_for_strength(1.0 - float(stance), already)
 
         candidates = []
         seen = set(w.lower() for w in already)
