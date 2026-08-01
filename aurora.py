@@ -25041,6 +25041,25 @@ def boot_aurora(
             systems['field_balancer'] = _field_balancer
             # Restore corpus-trained links so they inject on first session
             _restore_genealogy_state(_genealogy, output_dir=_gen_dir, verbose=False)
+            # RW5 (wiring audit 2026-07-20, closes F9): PrimitiveExtractor
+            # mounted only in aurora_runtime.py's boot_stack, never on the
+            # live daemon spine -- the primitive-extraction genealogy lens
+            # did not exist on the live device path. Mirror boot_stack's
+            # mount here so both spines carry it.
+            systems['primitive_extractor'] = None
+            try:
+                from aurora_internal.aurora_primitive_extractor import PrimitiveExtractor
+                systems['primitive_extractor'] = PrimitiveExtractor(_genealogy)
+                if verbose:
+                    print(f"  [EVO] PrimitiveExtractor active (genealogy lens)")
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:boot_aurora:primitive_extractor",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "boot_aurora", "source_file": "aurora.py"},
+                )
             systems['_chain_bridge'] = ChainSimBridge(_SysProxy(systems))
             if verbose:
                 n_links = len(getattr(_genealogy, 'links', {}))

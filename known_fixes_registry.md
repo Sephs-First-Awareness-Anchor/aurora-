@@ -7735,3 +7735,47 @@ noncomp_input"]` after a real turn.
 **First Seen:** Architecture Wiring Audit RW4 ("use your judgment" on
 implementation while the audit's own scope was authoritative),
 2026-08-01.
+
+## FIX-A066 (RUNTIME WIRING + tracking deliverable) — RW5: boot-spine unification (closes F9), Architecture Wiring Audit 2026-07-20
+
+**Category:** RUNTIME WIRING + regression guard -- Architecture Wiring Audit, finding F9.
+
+F9: two independent boot paths (`aurora.py:boot_aurora`, the live
+daemon spine, vs `aurora_runtime.py:boot_stack`, the offline/batch CLI
+stack behind `AuroraRuntime`) silently mount divergent organ sets.
+Confirmed case: `PrimitiveExtractor` (genealogy lens) mounted only in
+`boot_stack` -- the live device path never had primitive-extraction at
+all.
+
+**Fixed:** `boot_aurora` now mounts `systems['primitive_extractor'] =
+PrimitiveExtractor(_genealogy)` right after genealogy state restore,
+mirroring `boot_stack`'s own pattern exactly (same class, same
+single-genealogy-argument construction).
+
+**Deliverable:** `aurora_internal/aurora_boot_parity.py` -- a `BOOT_
+PARITY` tracking module, not a one-time diff. `extract_boot_aurora_
+organs()`/`extract_boot_stack_organs()` statically scan both boot
+functions' `systems[...] =` assignments (same method the audit itself
+used); `boot_parity_report()` aliases known naming-drift pairs
+(`_attention_engine`/`attention_engine`, etc.) and reports `stack_only`/
+`aurora_only`/`unexpected_stack_only`. `KNOWN_BOOT_STACK_ONLY` records
+5 organs (`_boot_metrics`, `emergence_monitor`, `entropy_detector` --
+now RECONCILED as of RW6c, see FIX-A067 --, `language_orchestra`,
+`printer`) the audit did not byte-verify for a live-mount decision,
+left stack-only deliberately rather than blindly force-mounted;
+`RECONCILED` records `primitive_extractor`. This is a tracking
+deliverable, not a mandate to mirror every organ in both spines --
+`boot_stack` is a smaller, purpose-built batch stack, not a second
+live-serving path.
+
+**Tests:** `tests/test_rw5_boot_parity.py` (7) -- confirms the
+PrimitiveExtractor mount survives in both spines and reuses boot_
+aurora's own genealogy object (not a second instance), asserts the
+tracked divergence stays exactly the documented set (a *new*
+one-spine-only organ not already in `KNOWN_BOOT_STACK_ONLY`/
+`RECONCILED` fails the test -- the actual regression guard F9 exists to
+add), and one real boot confirming `systems['primitive_extractor']` is
+a working instance wired to the real genealogy logger.
+
+**First Seen:** Architecture Wiring Audit RW5, 2026-08-01.
+
