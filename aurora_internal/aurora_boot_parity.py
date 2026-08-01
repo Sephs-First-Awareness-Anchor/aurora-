@@ -51,14 +51,18 @@ NAME_ALIASES: Dict[str, str] = {
 KNOWN_BOOT_STACK_ONLY: Set[str] = {
     "_boot_metrics",       # boot bookkeeping (restore counters), not a subsystem organ
     "emergence_monitor",   # promoted-link capability surface, batch-stack only
-    "entropy_detector",    # batch-stack only
     "language_orchestra",  # ExpressionEvolutionOrchestra, batch-stack only
     "printer",             # ChainSummaryPrinter, CLI console output helper
 }
 
-# Organs RW5 has reconciled -- mounted in both spines as of this pass.
+# Organs reconciled -- mounted in both spines. primitive_extractor: RW5.
+# entropy_detector: RW6(c)/Track-1 (FIX-A067) mounted it in boot_aurora
+# too so EntropySaturationDetector.measure() could run live; this table
+# was not updated at that commit, caught by this file's own regression
+# test on the next full suite run -- fixed here, not a behavioral bug.
 RECONCILED: Set[str] = {
     "primitive_extractor",
+    "entropy_detector",
 }
 
 
