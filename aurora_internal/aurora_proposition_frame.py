@@ -358,7 +358,7 @@ def _frame_from_anchor(systems: Dict[str, Any], state: Any) -> Optional[Proposit
     )
 
 
-def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFrame]:
+def _derive_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFrame]:
     """Fail-quiet derivation ladder. Returns None (never raises) if no
     rung produces a usable frame -- callers must treat None exactly like
     "no PropositionFrame available," preserving today's behavior."""
@@ -411,7 +411,38 @@ def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFram
             module=__name__,
             operation="exception_handler:aurora_internal/aurora_proposition_frame.py:316",
             exc=_aurora_boundary_exc,
-            context={"function": "build_frame", "handler_line": 316, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+            context={"function": "_derive_frame", "handler_line": 316, "source_file": "aurora_internal/aurora_proposition_frame.py"},
         )
         pass
     return None
+
+
+def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFrame]:
+    """Directive PF1.1's fail-quiet derivation ladder (_derive_frame),
+    plus Directive P2's regional-density blend: whichever rung fires,
+    the resulting frame's stance can never exceed what her own
+    experiential density in that region supports -- a proposition
+    can't claim more confidence than she has standing to back it with,
+    but a low corroboration-confidence claim in well-known territory
+    isn't artificially dragged down further. Never raises; density
+    blending is itself fail-quiet (a lookup failure just leaves
+    stance/density as the ladder produced them)."""
+    frame = _derive_frame(systems, state)
+    if frame is None:
+        return frame
+    try:
+        axis = str(dict(systems.get("_last_noncomp_input") or {}).get("constraint", "") or "").strip()
+        topic = frame.topic or f"{frame.subject} {frame.obj}".strip()
+        density = density_confidence(systems, topic, axis)
+        frame.density = density
+        if density is not None:
+            frame.stance = min(frame.stance, density)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:build_frame:density_blend",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
+    return frame
