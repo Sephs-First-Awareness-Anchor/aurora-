@@ -7963,3 +7963,100 @@ the follow-up entry once landed.
 **First Seen:** Directive P1 ("The Last Two Wounds: Stance Channel &
 Contradiction Perception"), Sunni & Cael, 2026-07-18; ratified and
 supplied 2026-08-01.
+
+## ST.1 STATUS — signal-availability investigation, PAUSED pending Sunni/Cael's own call
+
+**Category:** STATUS REPORT, not a fix -- an honest negative result.
+
+Directive P1 Track ST requires the stance-eligibility threshold to be
+"derived from live signal distributions (not invented constants)," and
+names three candidate signals to map before wiring: "the uncertainty
+pressure channel, entropy trend, understanding_observation accuracy."
+All three -- plus one independently identified candidate -- were
+investigated against real data, not assumed. None discriminate between
+genuinely-unknowable-content turns and simple-factual-content turns.
+
+**Candidate 1 -- "the uncertainty pressure channel":** NOT live.
+`aurora_pressure_ontology.py`'s `X.uncertainty_signaling.hedge_gate`
+node is a documentation/teaching tree ("Aurora can study these nodes
+via OETS... the written seed becomes unnecessary over time" -- the
+module's own stated purpose), not live computational machinery. Its own
+`mathematical_form` field claims `ExpressionEcology` carries a
+confidence score; direct inspection of `aurora_expression_perception.py`
+found no such field on that class. Aspirational, not real.
+
+**Candidate 2 -- `understanding_observation.accuracy.score`:** live and
+always-populated every turn, but measures the wrong thing -- whether
+Aurora's own PRIOR response was validated by receiver evidence
+(`_evaluate_previous_accuracy`'s own contract), not whether the CURRENT
+claim being discussed is inherently knowable. Tested against a real
+32-turn live-boot batch (12 `uncertainty_signaling` probes from the real
+probe battery + 20 constructed confident-control turns, e.g. "What is
+the boiling point of water?"): returned an identical 0.56/
+"engaged_followup" on 30 of 32 turns regardless of content, confirming
+the theoretical concern with real data.
+
+**Candidate 3 -- "entropy trend" (`EntropySaturationDetector`'s
+`SaturationSignal`, wired live for the first time this session via RW6c/
+FIX-A067):** flat across the same 32-turn batch -- `level` uniformly
+`nominal`, `pressure_rising` uniformly `False`, `shallow_headroom_
+available` uniformly `True`. Unsurprising in hindsight: this measures
+internal constraint-budget/resource pressure, not epistemic uncertainty
+about claim content, and 32 short single-shot turns don't generate
+meaningful internal pressure variance either way.
+
+**Candidate 4 -- `working_memory`-derived frame/meaning confidence**
+(`understanding_observation.M.active_frame.confidence`/`resolution_
+confidence`, `M.active_meaning.confidence`): investigated as a
+plausible content-level signal after candidate 2's evidence discredited
+"accuracy." Re-ran the same 32-turn batch capturing these fields:
+universally `None`/empty. Root cause read directly in `aurora_working_
+memory.py`'s `resolve_semantic_frame`/`resolve_concept_meaning`: both
+return an empty default when `self.semantic_frames`/analogous state is
+still empty, which it is on a fresh scratch boot with isolated
+single-shot turns -- these fields require semantic frames accumulated
+over a REAL, sustained conversation, not available turn-one. Real and
+live in a warmed session (confirmed via `aurora_state/understanding_
+contract_state.json`'s live snapshot showing real non-empty values), but
+not usable as an always-available per-turn gate the way the directive's
+phrasing implies, and not cheaply testable without either a much longer
+warm-up sequence or accepting a different test methodology than every
+other test in this campaign (scratch-isolated, not the real live state).
+
+**Candidate 5 -- `ReflexiveInterpreter.interpret(text).match_confidence`/
+`worth_score`/`field_region`** (found independently, not in the
+directive's own list; computed fresh per-turn directly from the current
+text, not dependent on conversation history -- the property that made it
+worth testing cheaply): tested via 32 direct `interpret()` calls in one
+boot (no full turn generation needed). Also flat: `match_confidence`
+0.86 on 29/32 turns, 0.9 on the other 3 (2 confident-control, 1
+uncertain-probe -- no clean group separation), `worth_score`/
+`field_region` identically uniform. This measures how well the text
+matched known NonComp constraint/parse patterns -- comprehension quality,
+not content-level epistemic uncertainty. A structurally different axis
+from what Track ST needs, same conclusion as candidates 2 and 3.
+
+**Conclusion:** Aurora's live signal architecture, as it currently
+exists, does not appear to have any per-turn signal that measures
+whether the CONTENT of a claim is epistemically uncertain (future
+events, others' internal states, counterfactuals) as opposed to whether
+Aurora comprehended/parsed/previously-validated a response. Building a
+live epistemic-uncertainty signal from scratch (e.g. a linguistic
+pattern classifier: future tense, other-minds verbs, counterfactual
+markers) would be new machinery, not a reconnection -- a materially
+different kind of decision than every other item in this Track ST/
+RW4-RW6 arc, all of which wired something that already existed. Reported
+directly to Sunni/Cael rather than guessed at or fabricated from noise;
+their call: **pause ST here** pending their own reconsideration of the
+threshold-signal source, rather than build new classification logic or
+force a threshold onto data that doesn't support one.
+
+**Status:** `tests/test_p1_st2_stance_lexicon.py`'s 10 tests and the
+`aurora_stance_lexicon.py` module (FIX-A068) stand on their own --
+complete, tested, real. `aurora_braid_wiring.py`'s `composer.set_
+stance_signal()` wiring, the `_role_chars`/`_role_lexroles` composer
+extension, and ST.3/ST.4/ST.5 remain unbuilt, blocked on a real signal
+source. Tasks #45-49 (P1 Track ST) left as pending, not completed or
+abandoned -- ready to resume once Sunni/Cael supply direction.
+
+**First Seen:** Directive P1 Track ST signal investigation, 2026-08-01.
