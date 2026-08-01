@@ -952,7 +952,7 @@ class RetainedLearningBank:
                 break
         return out
 
-    def bridge_to_memory(self, memory: Any, limit: int = 6) -> int:
+    def bridge_to_memory(self, memory: Any, limit: int = 6, keys: Optional[List[str]] = None) -> int:
         if memory is None or not hasattr(memory, "learn_fact"):
             return 0
         existing = {
@@ -961,7 +961,18 @@ class RetainedLearningBank:
             if isinstance(fact, dict)
         }
         injected = 0
-        for rec in sorted(self._records.values(), key=lambda item: (item.confidence, item.sightings), reverse=True)[:max(1, int(limit or 1))]:
+        # When the caller already knows exactly which records were just
+        # promoted (e.g. resolve_pipeline_learning's receiver-evidence
+        # promotion), bridge those specifically instead of a generic
+        # top-N-by-confidence sweep that could re-surface older records
+        # and skip the ones evidence just validated.
+        if keys:
+            candidate_records = [self._records[key] for key in keys if key in self._records]
+        else:
+            candidate_records = sorted(
+                self._records.values(), key=lambda item: (item.confidence, item.sightings), reverse=True
+            )[:max(1, int(limit or 1))]
+        for rec in candidate_records:
             key = self._key(rec.text)
             if key in existing:
                 continue
@@ -3502,6 +3513,7 @@ class DreamTrainer:
             remaining: List[Dict[str, Any]] = []
             candidate_results: List[Dict[str, Any]] = []
             promoted = 0
+            promoted_keys: List[str] = []
             rejected = 0
             resolved = 0
             for candidate in candidates:
@@ -3535,8 +3547,9 @@ class DreamTrainer:
                 if candidate_kind == "positive":
                     candidate_tags = list(candidate.get("tags", []) or [])
                     candidate_tags.extend(["receiver_validated", "pipeline_positive", candidate_id])
+                    candidate_text = str(candidate.get("text", "") or "")
                     if self.retention.record(
-                        str(candidate.get("text", "") or ""),
+                        candidate_text,
                         source=str(candidate.get("source", "pipeline") or "pipeline"),
                         confidence=max(
                             float(candidate.get("confidence", 0.0) or 0.0),
@@ -3547,6 +3560,8 @@ class DreamTrainer:
                         tags=candidate_tags,
                     ):
                         promoted += 1
+                        promoted_keys.append(self.retention._key(candidate_text))
+                        self._promote_candidate_into_oets(candidate, systems or self._systems)
                     candidate_results.append({
                         "candidate_id": candidate_id,
                         "status": "promoted",
@@ -3584,7 +3599,7 @@ class DreamTrainer:
                 memory = (systems or self._systems).get("conversation_memory")
                 if memory is not None:
                     try:
-                        self.retention.bridge_to_memory(memory, limit=min(8, promoted))
+                        self.retention.bridge_to_memory(memory, limit=min(8, promoted), keys=promoted_keys)
                     except Exception as _aurora_boundary_exc:
                         _aurora_record_exception_from_locals(
                             locals(),
@@ -3614,13 +3629,15 @@ class DreamTrainer:
 
         self._pending_pipeline_learning.pop(rid, None)
         promoted = 0
+        promoted_keys: List[str] = []
         rejected = 0
         if kind == "positive":
             for candidate in candidates:
                 candidate_tags = list(candidate.get("tags", []) or [])
                 candidate_tags.extend(["receiver_validated", "pipeline_positive"])
+                candidate_text = str(candidate.get("text", "") or "")
                 if self.retention.record(
-                    str(candidate.get("text", "") or ""),
+                    candidate_text,
                     source=str(candidate.get("source", "pipeline") or "pipeline"),
                     confidence=max(
                         float(candidate.get("confidence", 0.0) or 0.0),
@@ -3631,6 +3648,8 @@ class DreamTrainer:
                     tags=candidate_tags,
                 ):
                     promoted += 1
+                    promoted_keys.append(self.retention._key(candidate_text))
+                    self._promote_candidate_into_oets(candidate, systems or self._systems)
         else:
             rejected = len(candidates)
             for candidate in candidates:
@@ -3652,7 +3671,7 @@ class DreamTrainer:
             memory = (systems or self._systems).get("conversation_memory")
             if memory is not None:
                 try:
-                    self.retention.bridge_to_memory(memory, limit=min(8, promoted))
+                    self.retention.bridge_to_memory(memory, limit=min(8, promoted), keys=promoted_keys)
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(),
@@ -3846,6 +3865,54 @@ class DreamTrainer:
                 context={"function": "_get_oets", "handler_line": 3188, "source_file": "aurora_dream_trainer.py"},
             )
             return None
+
+    def _promote_candidate_into_oets(self, candidate: Dict[str, Any], systems: Optional[Dict[str, Any]]) -> bool:
+        """A promoted definition candidate is a term/meaning pair Aurora
+        just got receiver-confirmed evidence for -- give it a native OETS
+        node instead of leaving it as prose in RetainedLearningBank, so
+        future recall can reason over it as a concept (encounter/depth/
+        relations) rather than re-surfacing the sentence verbatim.
+        Definition candidates are staged as f"{term} means {meaning}" with
+        term always topic_words[0] (aurora.py's concept-staging call site,
+        e.g. line ~30437) -- reconstructed here rather than needing a new
+        staged field, since the shape is already fixed at staging time.
+        """
+        if str(candidate.get("context_type", "") or "") != "definition":
+            return False
+        topic_words = list(candidate.get("topic_words", []) or [])
+        term = str(topic_words[0] if topic_words else "").strip().lower()
+        if not term or not re.match(r'^[a-z][a-z0-9_\- ]{0,79}$', term):
+            return False
+        text = str(candidate.get("text", "") or "")
+        prefix = f"{term} means "
+        if not text.lower().startswith(prefix):
+            return False
+        meaning = text[len(prefix):].strip()
+        if not meaning:
+            return False
+        if not isinstance(systems, dict):
+            return False
+        oets = self._get_oets(systems)
+        if oets is None or not hasattr(oets, "add_node"):
+            return False
+        try:
+            source = str(candidate.get("source", "") or "pipeline")
+            node = oets.add_node(word=term, role="noun", meaning=meaning, lineage=source)
+            node.add_definition(
+                meaning,
+                source=source,
+                confidence=max(0.55, min(0.95, float(candidate.get("confidence", 0.7) or 0.7))),
+            )
+            return True
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:_promote_candidate_into_oets",
+                exc=_aurora_boundary_exc,
+                context={"function": "_promote_candidate_into_oets", "source_file": "aurora_dream_trainer.py"},
+            )
+            return False
 
     def run_introspective_simulation(
         self,
