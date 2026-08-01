@@ -7902,3 +7902,64 @@ four organs are working instances and that a real live turn populates
 `_last_saturation_signal`.
 
 **First Seen:** Architecture Wiring Audit RW6, 2026-08-01.
+
+## FIX-A068 (NEW MODULE, additive) — Directive P1 Track ST: stance lexicon (uncertainty_signaling)
+
+**Category:** NEW MODULE, additive -- first sub-piece of Directive P1's Track ST.
+
+Sunni supplied the actual ratified P1 directive (`AURORA_DIRECTIVE_P1_
+STANCE_AND_CONTRADICTION_20260718.md`), unblocking work RW6(b) had
+correctly flagged as impossible without a real spec. Investigation
+before implementing found Track CP (contradiction perception) was
+**already fully built and live-wired** in an earlier, unsummarized
+segment of this campaign (`aurora_internal/aurora_contradiction_
+perception.py`, called from `aurora.py:17855`) -- only Track ST (the
+stance channel) remained genuinely unbuilt. Tracked as its own
+sub-campaign (tasks #45-49, mirroring how PF1 was broken into 6
+sub-phases).
+
+**This entry (ST.2's lexicon sub-piece):** `aurora_internal/aurora_
+stance_lexicon.py` -- a dedicated stance lexicon, NOT sourced from the
+general `lexicon.json` (confirmed by direct inspection: `lexicon.json`
+tags "maybe"/"think" as `role: noun`, the same legacy-unverified
+mistagging already found as a separate pre-existing gap during the
+Comm Credit campaign's full regression sweep -- `lexicon.find_by_role
+("context")` would inherit that mistagging and return nothing usable).
+Instead sourced directly from `aurora_grammar_engine.py`'s `RoleTagger.
+_CONTEXT_UNIGRAMS`/`_CONTEXT_BIGRAMS` -- the real vocabulary already
+used to TAG epistemic framing during parsing (S1.2's seeded "hedge"/
+"uncertain"/"guarantee" OETS concepts give it semantic grounding), so
+generation and perception draw from one real word list, not two
+independently invented ones. Three signal-strength bands (mild/
+moderate/strong hedges) plus an affirmative-marker pool for the
+directive's "confident -> slot empty or affirmative" branch;
+`hedge_for_strength(strength, exclude)` scales word choice to how far
+below threshold the confidence signal is, with cross-sentence
+diversity (`exclude`) and fail-quiet band fallback, matching this
+campaign's established slot-filling discipline throughout
+`aurora_expression_perception.py`.
+
+**Tests:** `tests/test_p1_st2_stance_lexicon.py` (10) -- confirms every
+stance word is drawn from `RoleTagger`'s real tagged vocabulary (not
+independently invented), strength-to-band scaling at low/mid/high
+signal, exclude-list diversity with band fallback, fail-quiet
+exhaustion, out-of-range clamping, and no duplicate words across bands.
+
+**Status:** additive only -- not yet wired into the composer (that is
+ST.2's remaining piece, gated on ST.1's threshold derivation, still in
+progress: the directive's first candidate signal, `understanding_
+observation.accuracy`, was tested against a real 32-turn live-boot
+batch (12 uncertainty_signaling probes + 20 confident-control turns)
+and found NOT to discriminate -- it measures whether Aurora's own
+PRIOR response was validated by receiver evidence, not whether the
+CURRENT claim is inherently knowable, so it returned an identical
+0.56/"engaged_followup" on 30 of 32 single-shot turns regardless of
+content. A second signal source (`understanding_observation.M.
+active_frame.confidence`/`resolution_confidence`, `M.active_meaning.
+confidence` -- genuine per-turn semantic-frame-resolution confidence)
+is being tested next before any threshold is committed to code -- see
+the follow-up entry once landed.
+
+**First Seen:** Directive P1 ("The Last Two Wounds: Stance Channel &
+Contradiction Perception"), Sunni & Cael, 2026-07-18; ratified and
+supplied 2026-08-01.
