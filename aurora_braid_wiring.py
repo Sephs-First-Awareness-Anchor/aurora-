@@ -554,10 +554,20 @@ def ensure_proposition_frame_for_turn(systems: Dict[str, Any]) -> None:
         perception = systems.get('perception')
         composer = getattr(perception, 'composer', None) if perception else None
         if composer is not None:
-            state_shim = types.SimpleNamespace(
-                noncomp_input_state=dict(systems.get('_last_noncomp_input') or {})
-            )
-            frame = build_frame(systems, state_shim)
+            # Zip patch (generative-communication, 2026-08-01): the live
+            # chain owns the complete TurnUnderstandingState. Use it when
+            # available so the frame builder reads the SAME frozen
+            # per-turn noncomp_input_state the upward pass captured,
+            # rather than systems['_last_noncomp_input'] (a systems-global
+            # mutable dict that a future call path could repurpose
+            # mid-turn). The shim remains for older/background callers
+            # that do not enter through the live turn pipeline.
+            state = systems.get('_active_turn_state')
+            if state is None:
+                state = types.SimpleNamespace(
+                    noncomp_input_state=dict(systems.get('_last_noncomp_input') or {})
+                )
+            frame = build_frame(systems, state)
             systems['_proposition_frame'] = frame
             composer.set_proposition_frame(frame)
     except Exception as _aurora_boundary_exc:
@@ -611,10 +621,15 @@ def ensure_stance_signal_for_turn(systems: Dict[str, Any]) -> None:
         perception = systems.get('perception')
         composer = getattr(perception, 'composer', None) if perception else None
         if composer is not None:
-            state_shim = types.SimpleNamespace(
-                noncomp_input_state=dict(systems.get('_last_noncomp_input') or {})
-            )
-            frame = build_frame(systems, state_shim)
+            # Zip patch (generative-communication, 2026-08-01): prefer the
+            # live chain's real TurnUnderstandingState, same reasoning as
+            # ensure_proposition_frame_for_turn immediately above.
+            state = systems.get('_active_turn_state')
+            if state is None:
+                state = types.SimpleNamespace(
+                    noncomp_input_state=dict(systems.get('_last_noncomp_input') or {})
+                )
+            frame = build_frame(systems, state)
             composer.set_stance_signal(frame.stance if frame is not None else None)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
