@@ -25384,6 +25384,44 @@ def boot_aurora(
         if verbose:
             print(f"  [RELATIONAL] RelationalComparisonEngine unavailable: {_rce_e}")
 
+    # RW6(c) -- Track-1 (ICC Landing / Strategic Horizon / Operator
+    # Composition directive, 2026-07-14), wiring audit F7: all three
+    # modules existed with zero repo-wide imports. Mounted here; live
+    # feeds wired at their documented hook points (_advance_intake_
+    # pipeline for EntropySaturationDetector, aurora_ci_segment.py's
+    # maintenance cadence for OperatorComposer -- see FIX-A065).
+    # ICCLedger.mint_if_eligible/mint_from_contradiction_resolution and
+    # StrategicHorizonLayer.assess/grant_bias remain deliberately
+    # un-called live: both need a worth_score/immediate_worth currency
+    # magnitude that is not derivable from any publicly-exposed
+    # WorthReport/WorthHistory field (their own docstrings: "raw worth
+    # score -- never exposed"), and even this module's own test suite
+    # uses a placeholder 0.0 rather than a real derivation. Minting a
+    # fabricated amount into a hash-chained, tamper-evident, append-only
+    # ledger is not a wiring guess to make silently -- stubbed per the
+    # module's own established practice (mint_from_contradiction_
+    # resolution's existing comment: "if ambiguous, stub the hook with a
+    # TODO and flag rather than guessing").
+    systems['entropy_detector'] = None
+    systems['icc_ledger'] = None
+    systems['strategic_horizon'] = None
+    systems['operator_composer'] = None
+    try:
+        from aurora_internal.aurora_entropy_detector import make_entropy_detector
+        from aurora_internal.aurora_icc_ledger import ICCLedger
+        from aurora_internal.aurora_strategic_horizon import StrategicHorizonLayer
+        from aurora_internal.aurora_operator_composer import OperatorComposer
+
+        systems['entropy_detector'] = make_entropy_detector()
+        systems['icc_ledger'] = ICCLedger(state_dir=state_dir)
+        systems['strategic_horizon'] = StrategicHorizonLayer(state_dir=state_dir)
+        systems['operator_composer'] = OperatorComposer(repo_root=os.path.dirname(os.path.abspath(__file__)))
+        if verbose:
+            print(f"  [TRACK-1] ICC ledger + strategic horizon + operator composer + entropy detector mounted")
+    except Exception as _track1_e:
+        if verbose:
+            print(f"  [TRACK-1] Track-1 modules unavailable: {_track1_e}")
+
     # Dream Trainer — fail-point ledger + lesson plan engine + OETS bridge
     systems['dream_trainer'] = None
     try:
@@ -27619,6 +27657,25 @@ def _advance_intake_pipeline(
                     context={"function": "_advance_intake_pipeline", "handler_line": 23008, "source_file": "aurora.py"},
                 )
                 systems["_last_bias_nudges"] = {}
+
+        # RW6(c) Track-1: EntropySaturationDetector.measure() must run once
+        # per tick right after accountant.tick() (the module's own
+        # documented INTEGRATION contract). Gives StrategicHorizonLayer.
+        # assess() a real SaturationSignal for its NOMINAL-level gate,
+        # where previously the live spine had no saturation detector at
+        # all (boot_stack-only per the boot-parity table, RW5).
+        entropy_detector = systems.get('entropy_detector')
+        if entropy_detector is not None:
+            try:
+                systems['_last_saturation_signal'] = entropy_detector.measure(accountant, tick)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_advance_intake_pipeline:entropy_detector",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_intake_pipeline", "source_file": "aurora.py"},
+                )
 
         # ── STAGE 1: Register intake — X.M + T.O arrival beads ──────────
         energy_payload = max(10.0, min(200.0, len(user_text) * 0.8))

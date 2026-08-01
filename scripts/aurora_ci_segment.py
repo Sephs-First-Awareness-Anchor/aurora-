@@ -220,6 +220,37 @@ def _run_quasiarch_maintenance_consult(systems):
     return summary
 
 
+def _run_operator_composer_maintenance_tick(systems):
+    """RW6(c) Track-1 (ICC Landing / Strategic Horizon / Operator
+    Composition directive, 2026-07-14; Architecture Wiring Audit,
+    2026-07-20, F7): OperatorComposer existed with zero repo-wide
+    imports -- composition was never actually run. Reuses this script's
+    same recurring autonomous cadence as RW3's QuasiArch consult (the
+    closest real equivalent to a scheduled maintenance window).
+
+    Fully self-contained per-tick call: compose_tick() loads its own
+    descriptor state and coupling shapes when not supplied, and every
+    containment gate (both-parents-promoted, non-declining trajectory,
+    per-tick cap, latent-pool ceiling) lives inside the module itself.
+    No currency/worth magnitude is fabricated here -- candidates are
+    gated purely on trajectory DIRECTION (already publicly exposed) and
+    promotion status, never on a raw worth score."""
+    summary = {"composites_proposed": 0}
+    composer = systems.get("operator_composer")
+    if composer is None:
+        return summary
+    try:
+        current_tick = float(getattr(systems.get("working_memory"), "turn_count", 0) or 0)
+        accepted = composer.compose_tick(
+            current_tick=current_tick,
+            worth_evaluator=systems.get("worth_eval"),
+        )
+        summary["composites_proposed"] = len(accepted)
+    except Exception:
+        pass
+    return summary
+
+
 def main() -> int:
     dev_timeline_path = os.path.join(SD, "developmental_timeline.jsonl")
     dev_index_start = _last_dev_index(dev_timeline_path)
@@ -284,6 +315,13 @@ def main() -> int:
             print(f">>> [aurora-ci] quasiarch maintenance consult: {quasiarch_summary}", flush=True)
     except Exception as exc:
         print(f">>> [aurora-ci] quasiarch maintenance consult skipped: {exc}", flush=True)
+
+    try:
+        composer_summary = _run_operator_composer_maintenance_tick(systems)
+        if composer_summary["composites_proposed"]:
+            print(f">>> [aurora-ci] operator composer tick: {composer_summary}", flush=True)
+    except Exception as exc:
+        print(f">>> [aurora-ci] operator composer tick skipped: {exc}", flush=True)
 
     # Concept-image grounding: there's no camera/mic in this headless CI
     # environment, so AuroraSensoryCrystal.observe_frame() never fires from

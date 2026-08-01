@@ -223,9 +223,14 @@ class EntropySaturationDetector:
         magnitudes = accountant.magnitudes()
 
         # --- Update windows --------------------------------------------
+        # accountant.magnitudes() may carry extra non-constraint telemetry
+        # keys (e.g. self-healing rewrite-profile bookkeeping) alongside
+        # the 5 canonical constraints -- this detector only tracks the
+        # constraints it was constructed with windows for.
         self._entropy_window.append((current_tick, entropy))
         for c in magnitudes:
-            self._mag_windows[c].append(magnitudes[c])
+            if c in self._mag_windows:
+                self._mag_windows[c].append(magnitudes[c])
 
         # --- Consecutive warn count ------------------------------------
         if entropy >= _ENTROPY_WARN:
@@ -325,9 +330,18 @@ class EntropySaturationDetector:
         cheapest-layer magnitude shift without going critical.
         """
         available = accountant.pool
+        # Some accountant instances have their `pool` property replaced at
+        # runtime by an "evolved surfaces" self-healing wrapper (a plain
+        # callable, not a property), so attribute access alone can hand
+        # back a bound method instead of a float. Normalize defensively
+        # rather than assume either shape.
+        if callable(available):
+            available = available()
+        if not isinstance(available, (int, float)):
+            available = getattr(accountant, '_pool', 0.0)
         x_shift_unit = REGISTRY.cost(Constraint.X).shift_cost_coeff
         t_shift_unit = REGISTRY.cost(Constraint.T).shift_cost_coeff
-        return available >= min(x_shift_unit, t_shift_unit)
+        return float(available) >= min(x_shift_unit, t_shift_unit)
 
     def _classify_level(
         self,

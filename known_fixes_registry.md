@@ -7779,3 +7779,126 @@ a working instance wired to the real genealogy logger.
 
 **First Seen:** Architecture Wiring Audit RW5, 2026-08-01.
 
+## FIX-A067 (STATUS + RUNTIME WIRING, partial) — RW6: land the pending (CP branch fate, P1 stance, Track-1), Architecture Wiring Audit 2026-07-20
+
+**Category:** STATUS REPORT (a) + DEFERRED, no ratified spec (b) + RUNTIME WIRING, scoped (c).
+
+**(a) CP branch fate (F11):** already fully determined and reported --
+see this file's own "Architecture Wiring Audit — F11 determination +
+RW7 attribution run" entry. `aurora_contradiction_perception.py` and
+the whole D2/S1/M1/B1/P1/PS1 campaign are committed on this branch but
+absent from `origin/main` (never merged) -- a branch-state gap, not a
+missing-file bug. No further action.
+
+**(b) P1 stance channel:** the audit's own F11 note says this directive
+was "awaiting ratification" as of 2026-07-20 -- not yet ratified even
+at audit time. No ratified P1 directive text exists anywhere in this
+repo, the uploaded campaign documents, or session history. Asked
+Sunni/Cael directly whether to locate the real directive, defer, or
+scope it independently; instructed to scope independently for Track-1
+(c) but P1 remains a genuinely different case -- "stance slots" +
+"uncertainty-pressure channel" describes a wholly new subsystem with
+zero existing code to reconnect (unlike every other RW item, which
+reconnects something already built). Inventing a new constraint-bearing
+channel from an 11-word fragment is a rebuild, not a reconnection, and
+risks producing something that contradicts whatever Sunni/Cael actually
+ratify later. Left undone, flagged here rather than guessed.
+
+**(c) Track-1 (ICC ledger / Strategic Horizon / Operator Composer,
+F7):** all three modules existed with zero repo-wide imports, but
+turned out to be large, directive-specific (a real "2026-07-14 ICC
+Landing / Strategic Horizon / Operator Composition directive" this repo
+has no copy of), and self-documenting -- including explicit `TODO: wire
+from X call site` comments already left by whoever built them,
+following the exact "if ambiguous, stub the hook with a TODO and flag
+rather than guessing" discipline this campaign already uses. Landed
+what is mechanically safe to wire; left currency-bearing hooks stubbed
+per that same existing discipline:
+
+*Wired:*
+- All four modules mounted at boot: `icc_ledger`, `strategic_horizon`,
+  `operator_composer`, and `entropy_detector` (the last previously
+  existed only in `boot_stack` per RW5's boot-parity table -- now
+  RECONCILED there too, since `boot_aurora` mounts it as well).
+- `EntropySaturationDetector.measure(accountant, tick)` runs once per
+  tick inside `_advance_intake_pipeline`, immediately after `accountant.
+  tick()` per the module's own documented INTEGRATION contract,
+  depositing a real `SaturationSignal` into `systems['_last_saturation_
+  signal']` -- the live spine had never had a saturation detector at
+  all before this.
+- `OperatorComposer.compose_tick()` runs on RW3's already-established
+  maintenance cadence (`scripts/aurora_ci_segment.py`, the closest real
+  equivalent to a recurring "60s/idle" window), via the new `_run_
+  operator_composer_maintenance_tick(systems)`. Fully self-contained
+  (loads its own descriptor state and coupling shapes when not
+  supplied); every containment gate (both-parents-promoted, non-
+  declining trajectory, per-tick cap, latent-pool ceiling) lives inside
+  the module itself. Gated purely on trajectory *direction* (already
+  publicly exposed by `WorthHistory`) and promotion status -- no
+  currency value needed or fabricated.
+
+*Deliberately NOT wired:* `ICCLedger.mint_if_eligible`, `ICCLedger.
+mint_from_contradiction_resolution` (already a documented stub in the
+module itself), `StrategicHorizonLayer.assess`/`grant_bias`. All four
+need a `worth_score`/`immediate_worth`/`minted` currency magnitude.
+`WorthReport`'s own docstring is explicit: "WHAT IS NOT EXPOSED: raw
+worth score -- never." Even these modules' own test suites (`tests/
+test_icc_ledger.py`, `tests/test_strategic_horizon.py`) use a
+placeholder `0.0`/`0.1` rather than a real derivation -- confirming no
+production-value source exists anywhere accessible. `ICCLedger` is
+explicitly "hash-chained, tamper-evident, append-only... the only way
+credit is created" -- fabricating an amount here is not a wiring guess
+to make silently, it is inventing a permanent financial record. Also
+not wired: `record_guard_sweep` -- `FailureGuardSuite` (`aurora_
+constraint_engine.py`) has zero live call sites anywhere in `aurora.py`
+(not just this module's consumer -- the guard suite itself was never
+stood up live), a separate, unscoped prerequisite gap.
+
+**Two real, pre-existing bugs in `aurora_internal/aurora_entropy_
+detector.py` found and fixed** -- surfaced only because `Entropy
+SaturationDetector.measure()` had never been called on a real live
+accountant before (boot_stack-only per RW5's boot-parity table; nothing
+confirms boot_stack was ever actually exercised against this shape of
+accountant either):
+
+1. `measure()` did `for c in magnitudes: self._mag_windows[c].append(...)`
+   assuming `accountant.magnitudes()` returns exactly the 5 canonical
+   `Constraint` keys `_mag_windows` was constructed with. In practice it
+   also carries unrelated self-healing telemetry keys (`_aurora_rewrite_
+   profile`, `_aurora_genealogy_strategy`, `_aurora_rewrite_feedback`,
+   `_aurora_contract_profile`, `_aurora_evolved_reflection`, `generic_
+   adaptation` -- confirmed by direct inspection of a real booted
+   accountant's `magnitudes()` output; `_slots` itself only ever holds
+   the 5 canonical keys, so this is `magnitudes()`'s own contract
+   drifting from what callers expect). First live call raised a raw
+   `KeyError`. Fixed by skipping any key `measure()` wasn't constructed
+   with a window for -- the 5 constraints are still tracked correctly.
+2. `_has_shallow_headroom()` read `accountant.pool` as a plain
+   `@property` access. `aurora_energy_layer_costs.py`'s "evolved
+   surfaces" self-healing mechanism replaces `LayerEnergyAccountant.
+   pool` at import time with a plain override function
+   (`_aurora_make_override('pool_evolved', 'LayerEnergyAccountant.pool')`,
+   assigned directly onto the class) -- so `accountant.pool` returns a
+   *bound method*, not a float, and the subsequent `available >=
+   min(...)` comparison raised `TypeError: '>=' not supported between
+   instances of 'method' and 'float'`. Fixed defensively in `_has_
+   shallow_headroom` (call it if callable, fall back to the private
+   `_pool` attribute if the result still isn't numeric) rather than
+   touching the evolved-surfaces override system itself, which is
+   unrelated, pre-existing, cross-cutting infrastructure well outside
+   this landing's scope.
+
+Both confirmed as real bugs, not test artifacts, by direct inspection of
+a real booted accountant (`_slots` keys vs `magnitudes()` keys; `accountant.
+pool`'s actual runtime type) before writing either fix.
+
+**Tests:** `tests/test_rw6c_track1_wiring.py` (9) -- mount + wiring
+structural checks, confirms the un-wired hooks stay un-wired (the scope
+decision didn't silently expand), unit tests for the new maintenance-
+tick function against a fake composer, two regression tests reproducing
+each `aurora_entropy_detector.py` bug in isolation (extra non-Constraint
+magnitude keys; a callable `pool`), and one real boot confirming all
+four organs are working instances and that a real live turn populates
+`_last_saturation_signal`.
+
+**First Seen:** Architecture Wiring Audit RW6, 2026-08-01.
