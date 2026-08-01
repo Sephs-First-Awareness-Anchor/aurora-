@@ -19405,6 +19405,14 @@ def _run_reasoning_pipeline(
         state.pipeline_state["interaction_search_policy"] = str(interaction_route.get("search_policy", "allow") or "allow")
     if isinstance(systems, dict):
         systems["_last_pipeline_state"] = state.pipeline_state
+        # Zip patch (generative-communication, 2026-08-01): SemanticIntentionBridge
+        # reads this key to prefer the live upward-pass parse (state.parsed/
+        # salient_concepts/raw_text) over ThoughtState's diagnostic prose when
+        # building spoken content keywords. `state` is mutated in place by the
+        # later _chain_up*/_chain_down* stage calls (same object, not a copy),
+        # so storing the reference here means later reads see the fully
+        # populated turn -- no separate refresh needed downstream.
+        systems["_active_turn_state"] = state
 
     try:
         _umeta2 = dict(systems.pop("_utterance_meta", {}) or {})

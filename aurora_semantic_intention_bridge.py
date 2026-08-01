@@ -14,6 +14,12 @@ EXTRACTION_NOISE = {
     'from', 'this', 'that', 'what', 'which', 'some', 'have',
     'been', 'will', 'axis', 'tick', 'process', 'braid',
     'current', 'continuous', 'forming', 'lane', 'thread',
+    # Braid bookkeeping is useful to the field but is not a semantic
+    # target for a spoken response.
+    'sedi', 'ambient', 'recalled', 'linguistic', 'predictive',
+    'identity', 'predicates', 'memory', 'presence',
+    'constraint', 'unresolved', 'tension', 'conflict', 'conflicts',
+    'session', 'xaxis', 'comprehension',
 }
 
 AXIS_TONE_MAP: Dict[str, str] = {
@@ -52,37 +58,102 @@ class SemanticIntentionBridge:
         expression_guidance: Any = None,
         systems: Any = None,
     ) -> SemanticIntention:
-        # 1. Content keyword extraction — Aurora's own meaning words
+        # 1. Content keyword extraction — Aurora's own meaning words.
+        # The live TurnUnderstandingState is preferred when present.  Its
+        # parsed/salient terms are the result of Aurora's upward pass; the
+        # raw linguistic braid context is still useful, but comes second so
+        # a greeting or direct address cannot crowd out the actual topic.
         source_strings: List[str] = []
-        unified = getattr(thought_state, 'unified_interpretation', None)
-        if unified:
-            source_strings.append(str(unified))
-        self_app = getattr(thought_state, 'self_application', None)
-        if self_app:
-            source_strings.append(str(self_app))
+        live_state = systems.get('_active_turn_state') if isinstance(systems, dict) else None
+        live_terms: List[str] = []
+        if live_state is not None:
+            try:
+                parsed = dict(getattr(live_state, 'parsed', {}) or {})
+                live_terms.extend(list(parsed.get('topic_words', []) or []))
+                live_terms.extend(list(parsed.get('entities', []) or []))
+                live_terms.extend(list(getattr(live_state, 'salient_concepts', []) or []))
+                topic = str(parsed.get('topic', '') or '').strip()
+                if topic:
+                    live_terms.append(topic)
+            except Exception:
+                live_terms = []
+        # The parser has already removed direct address and function words
+        # from these terms.  Treat them as the authority for which words in
+        # the received utterance are meaningful; otherwise the diagnostic
+        # ThoughtState prose below can reintroduce "Hello Aurora" as if it
+        # were a response topic.
+        live_semantic_words = {
+            re.sub(r'[^\w]', '', str(term or '')).lower()
+            for term in live_terms
+            if str(term or '').strip()
+        }
+        raw_turn = " ".join(str(getattr(live_state, 'raw_text', '') or '').lower().split())
+        raw_turn_words = set(re.findall(r"[a-z]+", raw_turn))
+        # A parsed live topic is already the most faithful external meaning
+        # signal.  The current ThoughtState serializes its internal status
+        # as prose (axis readings, unresolved conflicts, etc.); it may inform
+        # pressure and tone, but must not dilute the content anchors that are
+        # handed to language selection.  The older diagnostic fallback stays
+        # available only when Aurora truly has no parsed semantic material.
+        if not live_semantic_words:
+            unified = getattr(thought_state, 'unified_interpretation', None)
+            if unified:
+                source_strings.append(str(unified))
+            self_app = getattr(thought_state, 'self_application', None)
+            if self_app:
+                source_strings.append(str(self_app))
         dominant_thread = getattr(thought_state, 'dominant_thread', None) or []
-        for ctx in dominant_thread:
-            what = getattr(ctx, 'what_it_is_operating_on', None)
-            if what:
-                source_strings.append(str(what))
+        if not live_semantic_words:
+            for ctx in dominant_thread:
+                what = getattr(ctx, 'what_it_is_operating_on', None)
+                context_text = str(what or '')
+                if raw_turn and " ".join(context_text.lower().split()) == raw_turn:
+                    # The received utterance is already represented by
+                    # ``live_terms`` above.  Re-adding it here would restore a
+                    # direct address as if it were Aurora's own topic.
+                    continue
+                if what:
+                    source_strings.append(str(what))
 
         keywords: List[str] = []
         seen: set = set()
+
+        def add_keyword(raw: Any) -> bool:
+            word = re.sub(r'[^\w]', '', str(raw or '')).lower()
+            if (len(word) < 3 or word in seen
+                    or "_" in word):
+                return False
+            if not any(ch.isalpha() for ch in word):
+                return False
+            # Internal bookkeeping should never become a spoken target,
+            # unless the user actually made that word a parsed topic.
+            if word in EXTRACTION_NOISE and word not in live_semantic_words:
+                return False
+            # Raw turn words that the parser did not retain are address or
+            # syntax, not content.  This keeps the diagnostics' echo of the
+            # full user turn from bypassing the parser's direct-address pass.
+            if live_semantic_words and word in raw_turn_words and word not in live_semantic_words:
+                return False
+            # Axis telemetry frequently appears as x050/t050/etc. in the
+            # dominant thread.  It is a coordinate, never a spoken concept.
+            if re.fullmatch(r'[xtnba]\d+', word):
+                return False
+            role = infer_word_role(word)
+            if role not in ('verb', 'noun', 'adjective', 'adverb'):
+                return False
+            keywords.append(word)
+            seen.add(word)
+            return True
+
+        for raw in live_terms:
+            add_keyword(raw)
+            if len(keywords) >= 12:
+                break
+
         for src in source_strings:
             tokens = re.split(r'[\s|:;]+', src)
             for raw in tokens:
-                word = re.sub(r'[^\w]', '', raw).lower()
-                if len(word) < 4:
-                    continue
-                if word in EXTRACTION_NOISE:
-                    continue
-                if word in seen:
-                    continue
-                role = infer_word_role(word)
-                if role not in ('verb', 'noun', 'adjective', 'adverb'):
-                    continue
-                keywords.append(word)
-                seen.add(word)
+                add_keyword(raw)
                 if len(keywords) >= 12:
                     break
             if len(keywords) >= 12:
