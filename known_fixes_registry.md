@@ -8060,3 +8060,83 @@ source. Tasks #45-49 (P1 Track ST) left as pending, not completed or
 abandoned -- ready to resume once Sunni/Cael supply direction.
 
 **First Seen:** Directive P1 Track ST signal investigation, 2026-08-01.
+
+---
+
+## Directive P2 -- Regional Density Confidence (resolves Track ST's blocker)
+
+Sunni & Cael's direct answer to the Track ST signal-availability dead end
+above: not a text/word classifier, a density LOOKUP into `SediMemory.
+recall_semantic()` -- how populated the relevant region of Aurora's own
+constraint-space/memory is, independent of whether the exact claim was
+asserted before. Explicitly distinct from `PropositionSubstrate.
+_refresh_confidence`'s corroboration/track-record signal, which the
+directive itself names as "the wrong axis" for epistemic uncertainty.
+Four phases, full regression run between each, halt on failure.
+
+**P2.1 -- `density_confidence(systems, topic, axis)`**
+(`aurora_internal/aurora_proposition_frame.py`): new, additive query
+function. Axis-filtered `recall_semantic()` call against SediMemory,
+`count_share * mean_resonance` clamped to [0, 1]. Empty topic, absent
+sedimemory, empty results, or any exception all fail-quiet to `None`
+(never a fabricated zero). 8 new tests (`tests/
+test_p2_1_density_confidence.py`). Commit `fccca5dfd`.
+
+**P2.2 -- blend into `build_frame`**: `PropositionFrame` gets a new
+`density: Optional[float]` field. `build_frame`'s prior derivation
+ladder (thought -> claim -> turn-local-claims -> anchor -> None) is
+preserved unchanged as `_derive_frame`; the new `build_frame` wrapper
+calls it, then queries `density_confidence` and applies "combine, never
+replace": `frame.stance = min(frame.stance, density) if density is not
+None else frame.stance`. A claim can't out-claim her own experiential
+density, but sparse corroboration in a well-populated region isn't
+dragged down further. 6 new tests (`tests/
+test_p2_2_density_stance_blend.py`). Commit `14c896141`.
+
+**P2.3 -- wire into the stance lexicon consult point**: STANCE added
+as a third closed structural motif slot family (content, function-word,
+STANCE) in `aurora_expression_perception.py`'s `_select_constraint_word`
+and `_compose_from_motif`'s `_role_chars`/`_role_lexroles`, mirroring
+the existing `role=="agent"` early-return pattern. `composer.
+set_stance_signal()` transports `frame.stance` per turn via new
+`reset_stance_signal_for_turn`/`ensure_stance_signal_for_turn`
+(`aurora_braid_wiring.py`), same reset/ensure pattern and same call
+sites (`aurora.py`'s `_run_reasoning_pipeline`, `aurora_braid_wiring.py`'s
+`begin_expression`) already used for `set_proposition_frame`. `stance >=
+0.5` (PropositionFrame's own pre-existing default, not a new tuned
+constant) skips the slot; below it, the slot fills from `aurora_
+stance_lexicon.hedge_for_strength`, scaled by distance below baseline.
+No signal means no slot -- never a default hedge. 9 new tests (`tests/
+test_p2_3_stance_composer_wiring.py`), including the directive's own
+gate (hedge selection differs between matched-corroboration high- and
+low-density claims) and one real live-boot verification. Commit
+`59809e3a7`.
+
+**Full regression (run across P2.2 + P2.3's combined working-tree
+state, since P2.3 was already written when this run started):** 1245
+passed, 2 failed -- both pre-existing and already documented above in
+this registry: `test_concept_image_ingestion_import.py::test_ingest_
+concept_image_succeeds_against_real_fixture` (`cv2.imdecode`
+AttributeError, the long-standing test-order-dependent fixture flake)
+and `test_m1_2_provenance_hygiene.py::test_blind_origin_entries_are_
+tagged_legacy_unverified` (`lang`/`connectio` provenance-tag drift).
+Neither introduced by P2. Halt-on-failure gate: clear to proceed.
+
+**P2.4 -- this entry, plus the directive's own required FIX-A014 text
+below (copied verbatim per the directive's explicit instruction; the
+non-sequential ID -- after FIX-A068 -- is the directive's own choice,
+not a renumbering).**
+
+### FIX-A014: Corroboration Confidence Mistaken for Epistemic Confidence.
+
+**Category** ARCHITECTURAL. **Pattern:** a claim/proposition confidence
+field built from assertion-history (evidence count, support/contradiction
+edges) gets treated as if it measured whether the proposition's content
+is inherently knowable -- the two are orthogonal; a first-time claim in
+familiar territory and a well-corroborated claim in an unfamiliar one
+are conflated by a track-record-only signal. **Correct form:**
+knowability/uncertainty signals should be sourced from experiential
+density (how populated the relevant region of her own memory/
+constraint-space is), kept as a distinct field from corroboration
+confidence, and combined explicitly rather than substituted. **First
+seen:** P2 investigation, 2026-07-22.
