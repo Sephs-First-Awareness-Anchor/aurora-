@@ -8140,3 +8140,57 @@ density (how populated the relevant region of her own memory/
 constraint-space is), kept as a distinct field from corroboration
 confidence, and combined explicitly rather than substituted. **First
 seen:** P2 investigation, 2026-07-22.
+
+---
+
+## FIX-A069: SemanticIntentionBridge Content Extraction Had No Live-Parse Path
+
+**Category** ARCHITECTURAL / DEAD-DEPENDENCY. **Pattern:**
+`aurora_semantic_intention_bridge.py`'s content-keyword extraction only
+ever read from `ThoughtState`'s diagnostic prose fields
+(`unified_interpretation`, `self_application`, `dominant_thread`'s
+`what_it_is_operating_on`) -- internal status narration, not a curated
+meaning representation. Two consequences: (1) braid bookkeeping
+vocabulary ('sedi', 'ambient', 'recalled', 'constraint', 'unresolved',
+'tension', 'session', ...) could surface as if it were spoken-content
+topic material, and (2) `dominant_thread` entries that echoed the raw
+user utterance verbatim let direct-address words ("hello", "aurora")
+back in as topic keywords even though the parser had already stripped
+them. Found while investigating `auroragenerativecommunicationpatched.
+zip` (uploaded 2026-08-01) -- the zip's patched version of this file
+already had the fix (a live-parse-first extraction path reading
+`TurnUnderstandingState.parsed`/`.salient_concepts`/`.raw_text`), but
+that patch depended on `systems['_active_turn_state']`, a key that did
+not exist anywhere in this repo -- porting the file content alone
+would have been a silent no-op (same shape as every other "wired but
+the key it reads was never set" finding in this campaign, e.g. RW5's
+boot-parity gap).
+
+**Correct form:** `aurora.py`'s `_run_reasoning_pipeline` now stores
+its `TurnUnderstandingState` under `systems['_active_turn_state']`
+right alongside the existing `systems["_last_pipeline_state"]`
+assignment -- same object reference, so the later `_chain_up*`/
+`_chain_down*` stage calls' mutations to `.parsed`/`.salient_concepts`
+are visible when `SemanticIntentionBridge.extract()` reads it
+downstream. When a live parse exists, its `topic_words`/`entities`/
+`salient_concepts`/`topic` become the sole content-keyword source for
+that turn (the diagnostic-prose path is skipped entirely, not merged);
+the old path remains the fallback, unchanged, for turns with no live
+parse. `EXTRACTION_NOISE` gained the newly-identified bookkeeping
+terms; a new axis-telemetry filter (`x050`, `t012`-style tokens) and a
+minimum-keyword-length reduction (4 -> 3 chars) came with the same
+patch.
+
+**Verified:** 8 new tests (`tests/test_semantic_bridge_live_state.py`):
+wiring presence, extraction-noise coverage, live-parse precedence over
+diagnostic prose, raw-address filtering, bookkeeping-word filtering in
+the fallback path, axis-telemetry filtering, no-active-state fallback
+safety, one real live-boot verification. Existing `tests/
+test_semantic_intention_bridge.py` (58 tests, unrelated -- covers
+`aurora_internal/dual_strata/semantic_intention_bridge.py`, a
+same-named but different class) and `tests/test_mtsl_live_wiring.py`/
+`test_mtsl_acceptance_report.py` re-run clean; no other test file
+imports the root-level module directly.
+
+**First Seen:** `auroragenerativecommunicationpatched.zip`
+investigation, 2026-08-01.
