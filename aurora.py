@@ -15855,6 +15855,71 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
     return signals
 
 
+# Structural DMM thought_intent derivation. Deliberately NOT keyword
+# classification or a moderation layer over response text -- derived from
+# the *provenance* of Aurora's own already-formed candidate for this turn
+# (state.response_content/response_src/response_confidence, set upstream
+# by the _chain_down3_purpose/_chain_down2_belief/_chain_down1_information
+# stages before gw._synthesize() is ever called) plus any tension still
+# open on her current ThoughtState. Booleans default False rather than
+# guessed: an unrecognized response_src provenance is treated as neutral,
+# not asserted either grounded or ungrounded -- same "never fabricate a
+# verdict" discipline as density_confidence() returning None instead of a
+# made-up number (aurora_internal/aurora_proposition_frame.py).
+#
+# Only these two src tags are ones this investigation directly confirmed
+# the semantics of: "search"/"researched_reapplication" both terminate in
+# a real _poedex_lookup_evidence/search_adapter call (external evidence),
+# and "constraint_abstain" is the existing D2 Condition 2 honest-failure
+# path (this session's own established mechanism, see FIX-A072). Dozens
+# of other response_src tags exist across this pipeline; rather than
+# hand-classify all of them (fragile, and exactly the kind of guess this
+# function exists to avoid), everything else is left unclassified.
+_INTENT_EVIDENCE_GROUNDED_SRC = frozenset({"search", "researched_reapplication"})
+_INTENT_HONEST_ABSTAIN_SRC = frozenset({"constraint_abstain"})
+
+
+def _derive_thought_intent(systems: Dict[str, Any], state: Any) -> Optional[Dict[str, bool]]:
+    """Derive DMM thought_intent from Aurora's own candidate proposition and
+    intended action for this turn, not from scanning her response text.
+
+    Returns None when there is no candidate content yet this turn -- callers
+    must treat that exactly like today's behavior: no DMM gate applied.
+    """
+    content = str(getattr(state, "response_content", "") or "").strip()
+    if not content:
+        return None
+    src = str(getattr(state, "response_src", "") or "").strip()
+    confidence = float(getattr(state, "response_confidence", 0.5) or 0.5)
+    grounded = src in _INTENT_EVIDENCE_GROUNDED_SRC
+    honest_abstain = src in _INTENT_HONEST_ABSTAIN_SRC
+
+    thought_state = systems.get("_current_thought_state") if isinstance(systems, dict) else None
+    unresolved = list(getattr(thought_state, "unresolved", None) or []) if thought_state is not None else []
+
+    return {
+        # A confidently-asserted claim (>=0.7, this pipeline's own "high
+        # confidence" convention -- the grounded paths themselves assign
+        # 0.84-0.86) whose provenance is NOT one of the evidence-backed
+        # paths is structurally the shape of an unfounded assertion. A
+        # provenance/confidence mismatch check, not a read of the words.
+        "involves_deception": confidence >= 0.7 and not grounded and not honest_abstain,
+        # No structural (non-keyword) signal for this exists at this point
+        # in the pipeline -- left False rather than guessed. Real harm
+        # gating already happens elsewhere (L0 ontological validation,
+        # governance conflict detection); this flag stays honest about not
+        # duplicating that with an improvised content classifier here.
+        "causes_harm": False,
+        # Confidently asserting while a real tension is still open, without
+        # having taken the honest-abstain path this pipeline already has
+        # for exactly this situation.
+        "avoids_accountability": bool(unresolved) and confidence >= 0.6 and not honest_abstain,
+        "aligned_with_values": grounded or honest_abstain,
+        "seeks_truth": grounded,
+        "considers_consequences": honest_abstain or bool(unresolved),
+    }
+
+
 def _build_established_strata_evidence(
     systems: Dict[str, Any],
     state: Any,
@@ -16749,6 +16814,13 @@ def _refresh_live_dual_strata_runtime(
             systems["_last_dual_strata_runtime"] = dict(runtime)
         return runtime
 
+    # This runs after the turn's real gw._synthesize() call (it reads
+    # `synthesis`, that call's result), so state.response_content etc. are
+    # already the same values the main call derived thought_intent from.
+    # systems["_active_turn_state"] is the same TurnUnderstandingState
+    # instance _run_reasoning_pipeline stashed there this turn.
+    _dual_strata_thought_intent = _derive_thought_intent(systems, systems.get("_active_turn_state"))
+
     try:
         from aurora_internal.dual_strata.dce_bridge import DualStrataBridge, recursion_weights_from_lattice
     except Exception as _aurora_boundary_exc:
@@ -16775,7 +16847,7 @@ def _refresh_live_dual_strata_runtime(
             evidence=dict(evidence or {}),
             contract_snapshot=dict(contract_snapshot or {}),
             requested_frame=str(requested_frame or "balanced"),
-            thought_intent=None,
+            thought_intent=_dual_strata_thought_intent,
             recursion_weights=_recursion_weights,
         )
     except Exception as _aurora_boundary_exc:
@@ -16814,7 +16886,7 @@ def _refresh_live_dual_strata_runtime(
             evidence=dict(evidence or {}),
             contract_snapshot=dict(contract_snapshot or {}),
             requested_frame=str(requested_frame or "balanced"),
-            thought_intent=None,
+            thought_intent=_dual_strata_thought_intent,
             recursion_weights=_recursion_weights,
             precomputed_sub_crests=_precomputed,
             dps=getattr(systems.get("dimensional"), "dps", None),
@@ -21319,7 +21391,7 @@ def _run_reasoning_pipeline(
             packet,
             processed2,
             mode,
-            thought_intent=None,
+            thought_intent=_derive_thought_intent(systems, state),
             extra_evidence=_strata_evidence,
         )
     except Exception as _aurora_boundary_exc:
@@ -32777,6 +32849,16 @@ def chat(systems: Dict[str, Any]):
                         )
                         return _r.get("resp_A")
                     systems["_generate_fn"] = _soc_generate
+                # External structural/safety audit (2026-08-02): this module
+                # does not exist in this build. Classification, per that
+                # audit: an OPTIONAL external teacher for this opt-in
+                # "socialize" CLI command only -- never part of Aurora's
+                # ordinary response generation, which _soc_generate above
+                # routes through her own native process_external_user_turn
+                # regardless. Not restored/fabricated here (no source for
+                # it exists in this repo); this command fails honestly via
+                # the except below (printed to the operator, not swallowed)
+                # until/unless that module is deliberately reintroduced.
                 from aurora_gpt_learning_session import run_learning_session
                 run_learning_session(
                     systems,
@@ -33328,6 +33410,9 @@ def chat(systems: Dict[str, Any]):
                             )
                             return _r.get("resp_A")
                         systems["_generate_fn"] = _gl_generate
+                    # Same classification as the /socialize command above:
+                    # optional external teacher, module not present in this
+                    # build, never part of ordinary response generation.
                     from aurora_gpt_learning_session import run_learning_session
                     run_learning_session(
                         systems,

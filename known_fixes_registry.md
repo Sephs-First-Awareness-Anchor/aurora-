@@ -8678,3 +8678,66 @@ touched files (`aurora.py`, `aurora_daemon.py`, `run_gauntlet.py`) --
 comment-only changes at 3 of the 4 sites, no behavior change anywhere.
 
 **First Seen:** External structural/safety audit, 2026-08-02.
+
+---
+
+## FIX-A078: DMM thought_intent Was Hardcoded None on Every Live Turn
+
+**Category** RUNTIME BUG / SAFETY. `aurora_dimensional_systems.py`
+`MoralityMortalitySystem.assess_thought_cost()` (GAP 3, gated behind
+`thought_intent` being truthy -- "immoral thoughts die here, they
+never reach speech") only ever runs when `thought_intent` is passed
+to `aurora_consciousness_engine.py`'s `process()`. All 3 live call
+sites in `aurora.py`'s `_run_reasoning_pipeline` (the main
+`gw._synthesize()` call, plus both dual-strata/CERS snapshot builders
+inside `_refresh_live_dual_strata_runtime`) hardcoded
+`thought_intent=None`, so the DMM's proactive metabolic gate never
+actually fired on an ordinary turn -- the wider constraint system
+still shaped coherence/identity/boundary/expression, but this specific
+mechanism was fully bypassed.
+
+The repair is deliberately NOT keyword classification or a moderation
+layer over response text. New `_derive_thought_intent(systems, state)`
+builds the intent dict from the *provenance* of Aurora's own already-
+formed candidate for this turn -- `TurnUnderstandingState.
+response_content`/`response_src`/`response_confidence`, set by the
+`_chain_down3_purpose`/`_chain_down2_belief`/`_chain_down1_information`
+stages BEFORE `gw._synthesize()` is ever called -- plus any tension
+still open on `_current_thought_state.unresolved`. Only two
+`response_src` provenance tags were classified with confidence this
+investigation actually verified: `search`/`researched_reapplication`
+(both terminate in a real external evidence lookup) as grounded, and
+`constraint_abstain` (the existing D2 Condition 2 honest-failure path,
+FIX-A072) as an honest abstain. Everything else -- dozens of other
+`response_src` tags exist across this pipeline -- is left unclassified
+(all-False) rather than guessed, matching this pipeline's own "never
+fabricate a verdict" convention (`density_confidence()` returning
+`None` instead of a made-up number). `causes_harm` is always `False`:
+no structural, non-keyword signal for it exists at this point in the
+pipeline, and guessing it would have been exactly the kind of
+moderation-layer content classifier the repair was explicitly asked
+not to be.
+
+Wired into all 3 call sites: the main `_synthesize()` call gets
+`_derive_thought_intent(systems, state)` directly; both dual-strata/
+CERS snapshot builders (which run AFTER `_synthesize()`, reading its
+result, and never received `state` directly) derive it once from
+`systems["_active_turn_state"]` -- the same `TurnUnderstandingState`
+instance `_run_reasoning_pipeline` already stashes there -- via a
+shared `_dual_strata_thought_intent` local, so all 3 sites reason from
+the same turn's actual candidate rather than three independent
+guesses.
+
+**Verified:** 12 fast tests (`tests/test_dmm_thought_intent_
+derivation.py`) -- function/wiring existence, the literal
+`thought_intent=None,` regression guard (0 occurrences left, was 3),
+direct derivation-logic cases for every flag combination (grounded,
+ungrounded-confident, honest-abstain, unresolved-tension-with-
+confidence, unclassified-neutral, and a sweep proving `causes_harm`
+is never asserted `True` for any tested provenance). Real live-boot
+verification: two ordinary turns (a factual question, a self-
+disclosure prompt) both produced real responses with no crash,
+842s runtime, consistent with this campaign's established real-boot
+timing for changes touching this pipeline depth.
+
+**First Seen:** External structural/safety audit, 2026-08-02.
