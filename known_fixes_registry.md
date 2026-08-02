@@ -8520,3 +8520,49 @@ changes. Real build/run verification is still owed and explicitly
 flagged as unverified, not claimed.
 
 **First Seen:** Flutter/ACM UI-parity request, 2026-08-02.
+
+---
+
+## FIX-A074: Face Updates Continuously, Not Just Per-Turn
+
+**Category** ARCHITECTURAL. Closes the "known limitation" flagged in
+FIX-A073: axis state reached Flutter only inside the `sendMessage()`
+response (`AuroraService.kt`), so the face (FIX-A073) was static
+between conversational turns even though `aurora_bridge.py`'s own
+`_self_monitor_loop` (~12s) and `_proactive_loop` (~20-90s, salience-
+gated) already keep `_last_axis_state` drifting continuously in the
+background regardless of whether anyone is talking to her.
+
+Added `AuroraService.pollAxisState()` — a plain 1s coroutine loop,
+started alongside the existing `pollPendingReport()` in `onCreate()`,
+that calls the already-existing `get_axis_state()` and pushes it to
+the same `"axis_state"` event Flutter already handled. No Dart-side
+event-handling change was needed for this half.
+
+Because the underlying Python state only actually changes in
+~12-20s increments while idle, a raw 1Hz poll would have made the
+face visibly snap once per real change rather than read as alive.
+Added client-side easing in `aurora_orb.dart`: `_AuroraOrbState` now
+holds `_prevAxis`/`_targetAxis` and a 900ms `AnimationController`
+(`_axisAnim`), and interpolates between the last two received
+snapshots (`_lerpAxes`, `Curves.easeInOut`) every frame rather than
+snapping the painter straight to the newest value on arrival. This is
+additive motion on top of the ACM-faithful geometry (FIX-A073), not a
+replacement for it -- the kernel doesn't need it because it redraws
+from fresh axis state at 60Hz; the bridge can't push that fast, so
+the smoothing compensates on the client instead of pretending the
+kernel's own scripting-free philosophy required no such compromise.
+
+**Verified:** manual review only, same environment constraint as
+FIX-A073 -- no Flutter/Dart SDK or Android toolchain available in
+this remote execution environment, so this could not be built or run
+here. Reviewed `AuroraService.kt`'s addition against the existing
+`pollPendingReport()`/`sendMessage()` push pattern it mirrors (same
+JSON shape, same `eventSink` call), and the Dart addition for
+lifecycle correctness (`_axisAnim` disposed, `didUpdateWidget`
+re-anchors `_prevAxis` from the live interpolated value rather than
+the stale target so a snapshot arriving mid-ease doesn't jump).
+Real build/run verification still owed, same as FIX-A073.
+
+**First Seen:** Follow-up to FIX-A073, 2026-08-02, per explicit
+request ("id like the face to update continuously").

@@ -4,8 +4,12 @@
 // The ACM kernel's own philosophy: "the face is her body surface... nothing is
 // scripted or hardcoded" — every geometric and color parameter below is a pure
 // function of live axis state (X/T/N/B/A), matching the kernel's derivation
-// exactly. No blink cycles, no idle-fidget animation: liveliness comes only
-// from the axis field changing, same as on the bare-metal kernel.
+// exactly. No blink cycles, no idle-fidget animation — the only motion this
+// widget adds on top of the kernel's own math is an ease between successive
+// axis snapshots (see _axisAnim below), so the face reads as continuously
+// alive rather than snapping once per snapshot; the kernel doesn't need this
+// because it redraws from fresh axis state at 60 Hz, but the bridge can only
+// push snapshots to Flutter roughly once a second.
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
@@ -101,6 +105,15 @@ bool _axesEqual(Map<String, double> a, Map<String, double> b) {
   return true;
 }
 
+Map<String, double> _lerpAxes(Map<String, double> a, Map<String, double> b, double t) {
+  final out = <String, double>{};
+  for (final k in const ['X', 'T', 'N', 'B', 'A']) {
+    final av = a[k] ?? 0.5, bv = b[k] ?? 0.5;
+    out[k] = av + (bv - av) * t;
+  }
+  return out;
+}
+
 class AuroraOrb extends StatefulWidget {
   final OrbState state;
   final double size;
@@ -125,7 +138,48 @@ class AuroraOrb extends StatefulWidget {
   State<AuroraOrb> createState() => _AuroraOrbState();
 }
 
-class _AuroraOrbState extends State<AuroraOrb> {
+class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMixin {
+  // Axis snapshots arrive discretely (bridge pushes ~1/s, and the underlying
+  // state itself only drifts every ~12-20 s while idle) — easing between the
+  // last two snapshots is what makes the face read as continuously alive
+  // rather than snapping to a new expression once a second.
+  late final AnimationController _axisAnim;
+  late Map<String, double> _prevAxis;
+  late Map<String, double> _targetAxis;
+
+  Map<String, double> get _liveAxis => _lerpAxes(_prevAxis, _targetAxis, Curves.easeInOut.transform(_axisAnim.value));
+
+  @override
+  void initState() {
+    super.initState();
+    _prevAxis = widget.axisState;
+    _targetAxis = widget.axisState;
+    _axisAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+      value: 1.0,
+    );
+  }
+
+  @override
+  void didUpdateWidget(AuroraOrb old) {
+    super.didUpdateWidget(old);
+    if (!_axesEqual(_targetAxis, widget.axisState)) {
+      _prevAxis = _liveAxis;
+      _targetAxis = widget.axisState;
+      _axisAnim
+        ..stop()
+        ..value = 0.0
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _axisAnim.dispose();
+    super.dispose();
+  }
+
   // Not part of the ACM face itself — a state-feedback glow layered behind
   // it, since listening/thinking/speaking are app-level STT/TTS states the
   // bare-metal kernel has no concept of.
@@ -144,10 +198,10 @@ class _AuroraOrbState extends State<AuroraOrb> {
         width: double.infinity,
         height: widget.height ?? widget.size * 1.9,
         child: AnimatedBuilder(
-          animation: widget.pulse,
+          animation: Listenable.merge([widget.pulse, _axisAnim]),
           builder: (_, __) => CustomPaint(
             painter: _FacePainter(
-              axisState:  widget.axisState,
+              axisState:  _liveAxis,
               glowEnergy: _glowEnergy,
             ),
             child: const SizedBox.expand(),
