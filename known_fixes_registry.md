@@ -8277,3 +8277,89 @@ one). Existing `tests/test_comm_credit_phase_e/g/h*.py` (23 tests) and
 
 **First Seen:** `auroragenerativecommunicationpatched.zip`
 investigation, 2026-08-01/02.
+
+---
+
+## FIX-A071: `_current_semantic_intention` Staleness + Investigation Close-Out (`auroragenerativecommunicationpatched.zip`)
+
+**Category** ARCHITECTURAL (small fix) + investigation summary.
+`systems['_current_semantic_intention']` is only ever set inside
+`aurora_braid_wiring.py`'s `begin_expression`, gated behind `thought_
+state`/`composer` both being present, and was never cleared -- unlike
+`_proposition_frame` and `_stance_signal`, which both already carry an
+unconditional per-turn reset for exactly this reason (a turn where the
+wiring is skipped or fails must not silently reuse a previous turn's
+value). A stale value would feed `LanguageStructureFitness.score()`
+(`aurora.py`, ~line 19880) the WRONG comparison target -- scoring this
+turn's expressed text against a previous turn's intention instead of
+`None`. Fixed with the same reset, wired alongside the other two.
+Verified: 1 structural test + 1 real live-boot verification (`tests/
+test_zip_semantic_intention_reset.py`).
+
+**Closing this out:** `aurora.py` was the last unexamined file in
+`auroragenerativecommunicationpatched.zip`. A subagent diffed it
+against the closest matching historical commit (~2400 diff lines) and
+found the same pattern as every other file in this zip: mostly stale/
+superseded, with a handful of real findings.
+
+- **One substantial candidate identified but deliberately NOT built
+  this pass:** a "public-fact vs. private-context gap research" router
+  (~900 of the 2400 diff lines, ~13 new functions -- `_explicit_
+  public_question_target`, `_research_public_gap`, `_detect_
+  researchable_gap`, `_render_user_context_clarification`, etc.).
+  Today, `gap_action == "ask"` always returns a clarification question
+  immediately; this feature would classify whether the missing
+  information is publicly researchable (e.g. "Who was Marie Curie?")
+  vs. only the user can supply it, auto-research the former via the
+  already-live `_poedex_lookup_evidence`, and re-apply the result as a
+  turn-local, non-durably-promoted semantic bridge (durable promotion
+  still deferred to receiver feedback, consistent with Communication
+  Credit Unification, not duplicative of it). Every function it calls
+  already exists live; no collision found. Not built because it
+  reorders/branches the core `dual_question_pipeline` "ask" path and
+  the downward reasoning pass -- shared, heavily-exercised control
+  flow that changes user-visible behavior (auto-research instead of
+  always asking) -- and deserves its own directive-level design pass
+  and acceptance testing, not a wrap-up-pass port. Left here as a
+  scoped, ready-to-pick-up option.
+- **Confirmed NOT portable:** a 977-line `aurora_internal/aurora_
+  cascade_understanding.py` module (`ConstraintCascadeReasoner`,
+  `AutonomousConclusionEngine`, etc.) and a delivery-outcome tracker
+  (`_infer_explicit_delivery_outcome`, `_apply_delivery_outcome`,
+  etc.) -- both built entirely against the zip's own superseded
+  `DreamTrainer.attest_staged_candidates`/`resolve_staged_delivery`
+  API (same collision shape as FIX-A070's `StagedLearningCandidate`
+  finding), which does not exist on live `DreamTrainer`. Live already
+  has this covered, more maturely, via `aurora_internal/aurora_
+  understanding_contract.py` plus the shipped `stage_pipeline_
+  learning`/`resolve_pipeline_learning` flow. Porting either as-is
+  would compile (calls are try/except-wrapped) but silently never
+  retain anything.
+- **Noise (~25-30% of the diff):** reverts of fixes already applied
+  live (comprehension-gap dead-key repoints, `ingest_interaction()`
+  call-signature fix, FIX-A008's grammar post-turn wiring, a QuasiArch
+  honest-abstain hook) and a `_retain_cross_pipeline_learning`
+  rewrite that turns out to already be independently implemented,
+  more completely, in live `aurora.py` (~line 30366) -- zip is stale
+  here, nothing to port, nothing to revert.
+
+**Investigation summary across all 6 patched files in this zip**
+(`aurora_semantic_intention_bridge.py`/FIX-A069, `aurora_braid_
+wiring.py`, `aurora_dream_trainer.py`/FIX-A070, `aurora_expression_
+perception.py` -- import-path "fix" correctly NOT applied, see the
+Directive-P1-era `perception.evo`/"post-Language-Reset" entry above --
+`aurora_working_memory.py` -- claim-fidelity guard built then reverted
+per the same evo-dead-path finding, see conversation record -- and
+`aurora.py`): the zip predates this repo's Communication Credit
+Unification work by roughly a month and largely represents an earlier,
+independent iteration of the same underlying idea (deferred,
+evidence-gated learning). Almost everything worth keeping from it was
+a small number of genuinely novel, isolated pieces re-implemented
+against the live API rather than ported verbatim -- never a wholesale
+merge. Six real, tested, committed fixes came out of it (FIX-A069
+through this entry); the one deferred candidate (the gap-research
+router) is documented above for a future directive rather than left
+as an unlabeled loose end.
+
+**First Seen:** `auroragenerativecommunicationpatched.zip`
+investigation, 2026-08-02.
