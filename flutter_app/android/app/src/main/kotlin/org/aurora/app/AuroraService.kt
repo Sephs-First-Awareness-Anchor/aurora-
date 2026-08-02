@@ -309,6 +309,28 @@ class AuroraService : Service() {
 
         scope!!.launch { bootPython() }
         scope!!.launch { pollPendingReport() }
+        scope!!.launch { pollAxisState() }
+    }
+
+    private suspend fun pollAxisState() {
+        // Keeps the face live independent of conversation turns — axis state
+        // already drifts continuously in the background (aurora_bridge.py's
+        // _self_monitor_loop / _proactive_loop update it every ~12-20 s even
+        // when nobody is talking to her); this just makes sure Flutter sees
+        // that drift instead of only ever seeing a snapshot from the last
+        // sendMessage() call.
+        while (true) {
+            kotlinx.coroutines.delay(1_000L)
+            try {
+                val axisJson = Python.getInstance()
+                    .getModule("aurora_bridge")
+                    .callAttr("get_axis_state").toString()
+                val axisObj = JSONObject(axisJson)
+                    .put("source", "aurora")
+                    .put("type", "axis_state")
+                withContext(Dispatchers.Main) { eventSink?.success(axisObj.toString()) }
+            } catch (_: Exception) { /* Python not ready yet — skip this tick */ }
+        }
     }
 
     private suspend fun pollPendingReport() {
