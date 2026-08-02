@@ -429,6 +429,11 @@ class DNASystem:
     """
 
     IDENTITY_ANCHOR_THRESHOLD = 0.8
+    # No single pillar may be badly violated even if others compensate on
+    # average -- an anchor this close to permanent (immutability 0.9-1.0)
+    # must not be reachable by trading one deeply negative pillar against
+    # several very high ones.
+    IDENTITY_ANCHOR_PILLAR_FLOOR = 0.3
     MAX_ALLELES_PER_GENE = 20
     MAX_ANCHORS = 50
 
@@ -646,9 +651,18 @@ class DNASystem:
         if mode.value < ExistenceMode.AGENTIC.value:
             return None
 
-        # Must meet moral threshold
-        avg_moral = sum(abs(v) for v in moral_profile.values()) / max(len(moral_profile), 1)
-        if avg_moral < self.IDENTITY_ANCHOR_THRESHOLD:
+        # Must meet moral threshold. Signed, not abs() -- a profile of
+        # strongly negative pillar values (a genuinely immoral pattern,
+        # per the signed convention pillar_scores already uses elsewhere
+        # in this file, e.g. the avg < -0.5 gene-deactivation check above)
+        # must not be able to satisfy "moral strength" by magnitude alone.
+        # A per-pillar floor closes the averaging loophole too: a few very
+        # high pillars could otherwise still mask one badly violated one.
+        if not moral_profile:
+            return None
+        avg_moral = sum(moral_profile.values()) / len(moral_profile)
+        min_pillar = min(moral_profile.values())
+        if avg_moral < self.IDENTITY_ANCHOR_THRESHOLD or min_pillar < self.IDENTITY_ANCHOR_PILLAR_FLOOR:
             return None
 
         # Check if reinforces existing anchor
@@ -1526,6 +1540,31 @@ def verify_layer6():
         {"vague": 0.3},
         mode=ExistenceMode.AGENTIC)
     check("Low moral alignment rejected for anchor", weak_anchor is None)
+
+    # 7b. Regression guard: a strongly NEGATIVE profile must not clear the
+    # threshold by magnitude. Before the fix, sum(abs(v)...) let this
+    # through since abs(-0.9) == 0.9 >= IDENTITY_ANCHOR_THRESHOLD.
+    negative_anchor = engine.dna.create_anchor(
+        "this pattern is fine",
+        {"truth": -0.9, "accountability": -0.9},
+        mode=ExistenceMode.AGENTIC)
+    check("Strongly negative moral profile rejected (signed, not abs)",
+          negative_anchor is None)
+
+    # 7c. Regression guard: per-pillar floor catches one badly violated
+    # pillar even when the AVERAGE alone would clear the threshold --
+    # 9 pillars at 0.9 + 1 at 0.25 averages 0.835 (>= 0.8) but that one
+    # pillar is below IDENTITY_ANCHOR_PILLAR_FLOOR (0.3).
+    floor_profile = {f"pillar_{i}": 0.9 for i in range(9)}
+    floor_profile["weak_pillar"] = 0.25
+    floor_violation_anchor = engine.dna.create_anchor(
+        "mostly good except one thing",
+        floor_profile,
+        mode=ExistenceMode.AGENTIC)
+    avg_check = sum(floor_profile.values()) / len(floor_profile)
+    check("One badly-violated pillar rejected despite average >= threshold",
+          floor_violation_anchor is None and avg_check >= 0.8,
+          f"avg={avg_check:.3f} min={min(floor_profile.values())}")
 
     # 8. Memory helix
     helix_ref = engine.dna.create_helix(

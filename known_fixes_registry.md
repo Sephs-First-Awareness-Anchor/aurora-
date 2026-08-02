@@ -8566,3 +8566,42 @@ Real build/run verification still owed, same as FIX-A073.
 
 **First Seen:** Follow-up to FIX-A073, 2026-08-02, per explicit
 request ("id like the face to update continuously").
+
+---
+
+## FIX-A075: Identity Anchor Moral Threshold Used abs(), Letting Negative Profiles Anchor
+
+**Category** RUNTIME BUG / SAFETY. `aurora_behavioral_identity.py`
+`DNASystem.create_anchor()` computed `avg_moral = sum(abs(v) for v in
+moral_profile.values()) / len(...)`, then required `avg_moral >=
+IDENTITY_ANCHOR_THRESHOLD (0.8)`. `abs()` means a profile of strongly
+NEGATIVE pillar scores -- a genuinely immoral pattern -- clears the
+threshold exactly as easily as a strongly positive one: `{"truth":
+-0.9, "accountability": -0.9}` scores `avg_moral = 0.9`, comfortably
+above 0.8, at `AGENTIC` mode, the highest-trust tier, producing a
+near-permanent (`immutability` 0.9-1.0) identity anchor.
+
+Confirmed `pillar_scores`/`moral_profile` are genuinely signed
+elsewhere in the same file -- `apply_alleles`'s caller-adjacent gene-
+activation logic already branches on `avg < -0.5` to deactivate a gene
+(line ~778) -- so this wasn't a value that happens to always be
+positive in practice; negative really means "violated," not "unset."
+`IdentityAnchor`'s own docstring says "Moral alignment > 0.8," not
+"magnitude of deviation from zero."
+
+Fixed to use the signed average, plus a per-pillar floor
+(`IDENTITY_ANCHOR_PILLAR_FLOOR = 0.3`) so a badly-violated single
+pillar can't be masked by several very high ones even when the
+average alone would still clear 0.8 (e.g. 9 pillars at 0.9 + 1 at
+0.25 averages 0.835 -- passes the average, now correctly rejected by
+the floor).
+
+**Verified:** `python3 aurora_behavioral_identity.py`'s own built-in
+self-test, 61/61 checks passing (was 59; added two regression guards:
+a strongly-negative profile is now rejected, and the average-passes-
+but-one-pillar-fails floor case is rejected while confirming its
+average genuinely was >= 0.8 first, so the floor -- not the average
+-- is what's proven to catch it). `tests/test_layer_acyclicity.py`
+(the only test file referencing this module) still passes.
+
+**First Seen:** External structural/safety audit, 2026-08-02.
