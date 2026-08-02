@@ -19469,6 +19469,15 @@ def _run_reasoning_pipeline(
         )
         pass
 
+    # Zip patch (generative-communication, 2026-08-02): same unconditional
+    # per-turn reset as the two above -- systems['_current_semantic_intention']
+    # is only ever set inside aurora_braid_wiring.py's begin_expression, gated
+    # behind thought_state/composer both being present, and never cleared.
+    # A turn where that wiring is skipped or fails must not silently let
+    # LanguageStructureFitness.score() (aurora.py, ~line 19880) compare this
+    # turn's expressed text against a PREVIOUS turn's intention.
+    systems['_current_semantic_intention'] = None
+
     # ---- GAP 3 FIX: SEDI SURFACE FRAGS — inject temporal continuity fragments ----
     # SediMemory surface recall is loaded by the surface daemon before calling
     # process_external_user_turn, but the frags were never threaded into the
