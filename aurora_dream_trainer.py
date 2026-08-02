@@ -2752,16 +2752,29 @@ class DreamTrainer:
         systems: Dict[str, Any],
         raw_samples: List[str],
         *,
+        response_id: str,
         dims: Optional[List[str]] = None,
         source: str = "train_txt_observer",
     ) -> int:
+        """Directed-training samples are lesson attempts, not yet confirmed
+        understanding -- stage them through the same stage_pipeline_
+        learning/resolve_pipeline_learning evidence gate the live
+        conversational path already uses (Communication Credit
+        Unification, tasks #36-44), rather than committing to memory/
+        retention immediately on witness. train_on_bundle resolves the
+        response_id after the training episode's fitness score is known,
+        so a lesson attempt that didn't land doesn't get durably learned
+        just for having been attempted. gateway.receive() stays
+        immediate -- that is Aurora perceiving/experiencing the sample
+        this tick, not a durable-memory commitment.
+        """
         aurora = systems.get("aurora")
         gateway = getattr(aurora, "gateway", None)
         stream_type = systems.get("StreamType")
         existence_mode = systems.get("ExistenceMode")
-        memory = systems.get("conversation_memory")
         witnessed = 0
         topic_words = _dedupe_texts(list(dims or []), limit=4)
+        rid = str(response_id or "").strip()
 
         for sample in _dedupe_texts(list(raw_samples or []), limit=2):
             if len(sample.split()) < 4:
@@ -2784,57 +2797,28 @@ class DreamTrainer:
                 )
                 pass
 
-            if memory is not None and hasattr(memory, "learn_fact"):
+            if rid:
                 try:
-                    memory.learn_fact(
-                        fact=f"[TRAIN_TXT] {sample[:280]}",
+                    self.stage_pipeline_learning(
+                        sample[:320],
+                        response_id=rid,
                         source=source,
-                        confidence=0.58,
+                        confidence=0.62,
+                        context_type="train_txt_observer",
+                        topic_words=topic_words,
+                        systems=systems,
+                        tags=["train_txt", "directed_training", "observer"],
                     )
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(),
                         module=__name__,
-                        operation="exception_handler:aurora_dream_trainer.py:2540",
+                        operation="exception_handler:aurora_dream_trainer.py:2552",
                         exc=_aurora_boundary_exc,
-                        context={"function": "_witness_directed_training_samples", "handler_line": 2540, "source_file": "aurora_dream_trainer.py"},
+                        context={"function": "_witness_directed_training_samples", "handler_line": 2552, "source_file": "aurora_dream_trainer.py"},
                     )
                     pass
-
-            try:
-                self.retention.record(
-                    sample[:320],
-                    source=source,
-                    confidence=0.62,
-                    context_type="train_txt_observer",
-                    topic_words=topic_words,
-                    tags=["train_txt", "directed_training", "observer"],
-                )
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dream_trainer.py:2552",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_witness_directed_training_samples", "handler_line": 2552, "source_file": "aurora_dream_trainer.py"},
-                )
-                pass
             witnessed += 1
-
-        if witnessed > 0:
-            if memory is not None:
-                try:
-                    self.retention.bridge_to_memory(memory, limit=4)
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_dream_trainer.py:2560",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_witness_directed_training_samples", "handler_line": 2560, "source_file": "aurora_dream_trainer.py"},
-                    )
-                    pass
-            self.retention.save()
 
         return witnessed
 
@@ -3186,8 +3170,14 @@ class DreamTrainer:
         primary_dim = top_fails[0][0] if top_fails else "context_carryover"
         secondary_dim = top_fails[1][0] if len(top_fails) > 1 else "coherence_maintenance"
 
-        # Pull topic hint template for the primary dim, override prompt with bundle context
-        topic_hints = session._DIMENSION_TOPIC_HINTS.get(primary_dim, {})
+        # Pull topic hint template for the primary dim, override prompt with bundle context.
+        # Pre-existing bug (unrelated to this patch, found while real-live-boot
+        # verifying it): SimulationSession has never actually carried a
+        # _DIMENSION_TOPIC_HINTS attribute, so every real call to train_on_bundle
+        # crashed here with AttributeError before reaching any of its own logic.
+        # Both call sites already .get() their way to safe defaults, so an empty
+        # dict is a correct, non-behavior-changing fallback.
+        topic_hints = getattr(session, '_DIMENSION_TOPIC_HINTS', {}).get(primary_dim, {})
         bundle_prompt = bundle.summary_prompt()
         # Trim to fit — use just enough to give context without overwhelming
         short_prompt = " | ".join(
@@ -3216,9 +3206,16 @@ class DreamTrainer:
                     f"What effect would that shift have next?",
                 ]
             )
-        self._witness_directed_training_samples(
+        # Stable per-episode id, reused as the pipeline-learning response_id
+        # -- this is a training episode, not a live conversational turn, so
+        # there is no understanding_contract response_id to key off; the
+        # bundle's own conv_id already uniquely identifies this attempt
+        # (also used as avatar_id/source_episode_ids below).
+        training_response_id = f"bundle_{bundle.conv_id}"
+        witnessed_count = self._witness_directed_training_samples(
             systems,
             list(directed_bundle.get("raw_samples", []) or []),
+            response_id=training_response_id,
             dims=[primary_dim, secondary_dim],
             source="train_txt_observer.bundle",
         )
@@ -3237,7 +3234,7 @@ class DreamTrainer:
                 secondary_dim: 0.60,
             },
             "behavior_modes": dict(
-                session._DIMENSION_TOPIC_HINTS.get(primary_dim, {}).get("behavior_modes", {})
+                getattr(session, '_DIMENSION_TOPIC_HINTS', {}).get(primary_dim, {}).get("behavior_modes", {})
                 or {}
             ),
             "code_hints": code_hints,
@@ -3293,11 +3290,15 @@ class DreamTrainer:
             if verbose:
                 print(f"  [DREAM] bundle episode error: {e}")
 
+        # Computed unconditionally (not inside the try below) so it stays
+        # available for the pipeline-learning resolve step even if
+        # PressureExperienceLedger recording itself fails.
+        _fitness = float(result.get("avg_fitness", result.get("fitness", 0.0)) or 0.0)
+        _resolved = _fitness > 0.5
+
         # Record the causal experience of this lesson attempt
         try:
             from aurora_internal.aurora_pressure_ledger import PressureExperienceLedger as _PEL
-            _fitness = float(result.get("avg_fitness", result.get("fitness", 0.0)) or 0.0)
-            _resolved = _fitness > 0.5
             _oets = self._get_oets(systems)
             _PEL.get().record(
                 anchor=primary_dim,
@@ -3330,6 +3331,31 @@ class DreamTrainer:
                 context={"function": "train_on_bundle", "handler_line": 3007, "source_file": "aurora_dream_trainer.py"},
             )
             pass
+
+        # Resolve this episode's staged directed-training samples now that
+        # the episode's own fitness score is the receiver evidence for
+        # whether the lesson landed -- same evidence-gated promote/reject
+        # path the live conversational turn already uses, reusing the same
+        # 0.5 threshold _resolved above already applies to this fitness
+        # score (not a new tuned constant).
+        if witnessed_count > 0:
+            try:
+                self.resolve_pipeline_learning(
+                    training_response_id,
+                    outcome_kind="positive" if _resolved else "negative",
+                    score=_fitness,
+                    observed_effect="dream_bundle_episode",
+                    systems=systems,
+                )
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:train_on_bundle_resolve",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "train_on_bundle", "source_file": "aurora_dream_trainer.py"},
+                )
+                pass
 
         # Bridge learnings into OETS
         self._bridge_learnings_to_oets(systems)
