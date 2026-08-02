@@ -8363,3 +8363,95 @@ as an unlabeled loose end.
 
 **First Seen:** `auroragenerativecommunicationpatched.zip`
 investigation, 2026-08-02.
+
+---
+
+## FIX-A072: Gap Research Router Built (Per Explicit Direction) + Two Real Bugs It Surfaced
+
+**Category** ARCHITECTURAL / RUNTIME BUG. The "public fact vs. private
+context" gap research router documented above (FIX-A071) as a deferred
+candidate was, per the author's explicit follow-up direction ("that
+should be in there as it was designed"), built faithfully in full.
+14 new functions + 2 module constants (`_explicit_public_question_
+target`, `_gap_information_source`, `_user_context_anchor_needed`,
+`_research_target_for_gap`, `_public_question_needs_research`,
+`_research_summary_is_usable`, `_build_research_reapplication`,
+`_research_public_gap`, `_detect_researchable_gap`, `_render_user_
+context_clarification`, `_render_research_unresolved_response`,
+`_apply_research_reapplication_to_state`, `_render_reapplied_research_
+claim`, `_gap_type_value`), wired into `_chain_down3_purpose`, `_run_
+reasoning_pipeline` (new `research_reapplication` param), and `dual_
+question_pipeline` (private-anchor early return, full `gap_action==
+"ask"` routing, implicit-gap/automatic-factual-question fallback
+blocks, evidence-fetch widening).
+
+Rigorous real live-boot testing (this campaign's own established
+standard) surfaced two real, serious bugs before this was safe to
+ship -- exactly the kind of thing that standard exists to catch:
+
+**Bug 1 -- missing `provisional` kwarg.** The zip's `_poedex_lookup_
+evidence`/`_broadcast_poedex_result` both take a `provisional: bool =
+False` parameter that live's versions did not have at all.
+`provisional=True` is the entire mechanism that makes `_broadcast_
+poedex_result` short-circuit BEFORE any `conversation_memory.
+learn_fact`/`understanding_contract.ingest_observation` call -- i.e.
+what keeps automatic research turn-local instead of immediately
+durable (consistent with Communication Credit Unification's deferred-
+promotion model, not a duplicate of it). Without this, every call in
+the new router would have raised an unhandled `TypeError` on any real
+"ask" turn. Extended both functions to match the zip.
+
+**Bug 2 -- a genuine multi-hour test hang, root-caused precisely.**
+`_try_poedex_lookup(use_researcher=True)` polls a daemon queue for up
+to 35 SECONDS regardless of the `timeout=` argument passed in, gated
+on a `_room_likely_up` heuristic (`aurora.py`, ~line 11122) that reads
+"the `poedex_results` directory's own mtime is under 300s old" as "a
+daemon is listening". `shutil.copytree` -- used by literally every
+real-boot test's scratch-state setup across this entire campaign --
+touches the destination directory's mtime on every write into it, so
+a freshly-copied `aurora_state/` always looks like a live room for 5
+minutes after copy, even against a real repo where the daemon has
+been dormant for 12+ days (confirmed: against the real, uncopied
+`aurora_state/`, the call returns in ~0.0001s). `use_researcher=True`
+was previously reachable only via an explicit MANUAL lookup (a human
+asked Aurora to search, consenting to the wait); this router's
+automatic paths were the first code to reach it on every ordinary
+"ask"-shaped turn, including pure gibberish with nothing real to
+research -- confirmed to hang `tests/test_d2_condition2_abstain_
+sanity.py`'s live gibberish-turn test for a very long time (initially
+observed at 2h49m before being killed and diagnosed). Fixed by
+reserving `use_researcher=True` (and its 35s ceiling) for explicit
+manual lookups only; the automatic/implicit paths added here use
+`use_researcher=False` with a short 2.0s timeout, bounding the worst
+case even when `_room_likely_up` false-positives.
+
+**Bug 2b -- found while fixing Bug 2.** Once the hang stopped masking
+it, the same live gibberish-turn test revealed the router's three
+`route == "unresolved"` branches were returning an early canned
+"couldn't research this" response (`src="research_unresolved"`) --
+silently overriding this codebase's own existing, specifically-tested
+`constraint_abstain` honest-failure path (D2 Condition 2, a carefully
+root-caused prior fix for genuinely ungroundable input like pure
+gibberish). A failed automatic research attempt must never preclude
+an existing, more specific honesty mechanism -- fixed by having
+`"unresolved"` fall through to whatever the pipeline would already do
+without it, at all three call sites, rather than returning early.
+
+**Verified:** 26 fast tests + 3 independent real live-boot
+verifications (`tests/test_zip_gap_research_router.py`, including
+direct regression guards for both bugs -- the fake-room-mtime
+scenario tested against the real dormant `aurora_state/`, and a
+source-level guard that no `route == "unresolved"` branch may return
+early). `tests/test_d2_condition2_abstain_sanity.py` (broken by both
+bugs above during development) now passes clean in its normal ~22min
+real-boot runtime.
+
+**Process note:** the caution in FIX-A071 about this router touching
+"shared, heavily-exercised control flow" was not misplaced -- both
+bugs found here are exactly the class of problem that caution
+anticipated. The fix was to build it properly with full real live-boot
+rigor rather than to avoid building it.
+
+**First Seen:** `auroragenerativecommunicationpatched.zip`
+investigation, 2026-08-02, per explicit author direction to build the
+previously-deferred candidate.
