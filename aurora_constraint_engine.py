@@ -6,6 +6,7 @@
 # Zero external Aurora dependencies
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import enum
 import json
@@ -1177,7 +1178,14 @@ class ConstraintEngine:
         try:
             import tensor_occupancy_hook as _tensor_occupancy_hook
             _tensor_occupancy_hook.install(field_slot_cls=FieldSlot)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_constraint_engine.py:1180",
+                exc=_aurora_boundary_exc,
+                context={"function": "__init__", "handler_line": 1180, "source_file": "aurora_constraint_engine.py"},
+            )
             pass
 
         # INV-13: engine always boots under repair (snapshot ground truth)
@@ -1609,14 +1617,28 @@ if __name__ == "__main__":
         try:
             ConstraintVector(X=0.0, T=1.0, N=1.0, B=1.0, A=1.0)
             failures.append("PhysicsCore: X=0 must raise ManifoldViolation")
-        except ManifoldViolation:
+        except ManifoldViolation as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_constraint_engine.py:1612",
+                exc=_aurora_boundary_exc,
+                context={"function": "<module>", "handler_line": 1612, "source_file": "aurora_constraint_engine.py"},
+            )
             pass
 
         # Immutability
         try:
             cv.X = 99.0  # type: ignore[misc]
             failures.append("PhysicsCore: ConstraintVector must be immutable")
-        except ManifoldViolation:
+        except ManifoldViolation as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_constraint_engine.py:1619",
+                exc=_aurora_boundary_exc,
+                context={"function": "<module>", "handler_line": 1619, "source_file": "aurora_constraint_engine.py"},
+            )
             pass
 
         # span_check and axis_count
@@ -1690,7 +1712,14 @@ if __name__ == "__main__":
         try:
             contract.make_claim(ExistenceMode.REFERENCE, IStatePredicate.I_DID)
             failures.append("OntologicalContract: must raise OntologicalViolation")
-        except OntologicalViolation:
+        except OntologicalViolation as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_constraint_engine.py:1693",
+                exc=_aurora_boundary_exc,
+                context={"function": "<module>", "handler_line": 1693, "source_file": "aurora_constraint_engine.py"},
+            )
             pass
 
         # Valid claim — displacement X > 0
@@ -1791,7 +1820,14 @@ if __name__ == "__main__":
         try:
             gov.govern({"primary_axis": "X"}, "diagonal")
             failures.append("RuntimeGovernor: invalid routing_mode must raise")
-        except ValueError:
+        except ValueError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_constraint_engine.py:1794",
+                exc=_aurora_boundary_exc,
+                context={"function": "<module>", "handler_line": 1794, "source_file": "aurora_constraint_engine.py"},
+            )
             pass
 
         print(f"  {_PASS} RuntimeGovernor")
@@ -1881,7 +1917,14 @@ if __name__ == "__main__":
         try:
             SedimentBasin(axis="X", dimension=NonCompDimension.POLARITY)
             failures.append("MemorySubstrate: X-axis basin must raise ManifoldViolation")
-        except ManifoldViolation:
+        except ManifoldViolation as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_constraint_engine.py:1884",
+                exc=_aurora_boundary_exc,
+                context={"function": "<module>", "handler_line": 1884, "source_file": "aurora_constraint_engine.py"},
+            )
             pass
 
         # ChannelRouter
@@ -2044,7 +2087,14 @@ if __name__ == "__main__":
         try:
             ANCHOR_AURORA.valence = 0.0   # type: ignore[misc]
             failures.append("SemanticAnchors: ANCHOR_AURORA must be immutable")
-        except ManifoldViolation:
+        except ManifoldViolation as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_constraint_engine.py:2047",
+                exc=_aurora_boundary_exc,
+                context={"function": "<module>", "handler_line": 2047, "source_file": "aurora_constraint_engine.py"},
+            )
             pass
 
         print(f"  {_PASS} SemanticAnchors")

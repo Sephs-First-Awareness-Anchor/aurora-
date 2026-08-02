@@ -8,6 +8,7 @@ Tracks topics, claims, facts, conversation history, and semantic anchors.
 
 Extracted from aurora.py to its dedicated module.
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import re
 import json
@@ -30,7 +31,14 @@ def _recall_semantic_sedimemory(systems, query, **kwargs):
     try:
         from aurora import _recall_semantic_sedimemory as _fn
         return _fn(systems, query, **kwargs)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_working_memory.py:33",
+            exc=_aurora_boundary_exc,
+            context={"function": "_recall_semantic_sedimemory", "handler_line": 33, "source_file": "aurora_working_memory.py"},
+        )
         return []
 
 
@@ -38,7 +46,14 @@ def _answer_from_sedimemory_context(user_text, recalled, **kwargs):
     try:
         from aurora import _answer_from_sedimemory_context as _fn
         return _fn(user_text, recalled, **kwargs)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_working_memory.py:41",
+            exc=_aurora_boundary_exc,
+            context={"function": "_answer_from_sedimemory_context", "handler_line": 41, "source_file": "aurora_working_memory.py"},
+        )
         return ""
 
 
@@ -46,7 +61,14 @@ def _render_runtime_intent(systems, core_claim, **kwargs):
     try:
         from aurora import _render_runtime_intent as _fn
         return _fn(systems, core_claim, **kwargs)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_working_memory.py:49",
+            exc=_aurora_boundary_exc,
+            context={"function": "_render_runtime_intent", "handler_line": 49, "source_file": "aurora_working_memory.py"},
+        )
         return core_claim or ""
 
 
@@ -59,7 +81,14 @@ def _classify_input_intent(text, **kwargs):
     try:
         from aurora import _classify_input_intent as _fn
         return _fn(text, **kwargs)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_working_memory.py:62",
+            exc=_aurora_boundary_exc,
+            context={"function": "_classify_input_intent", "handler_line": 62, "source_file": "aurora_working_memory.py"},
+        )
         return ""
 
 
@@ -67,7 +96,14 @@ def _is_understanding_challenge(text):
     try:
         from aurora import _is_understanding_challenge as _fn
         return _fn(text)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_working_memory.py:70",
+            exc=_aurora_boundary_exc,
+            context={"function": "_is_understanding_challenge", "handler_line": 70, "source_file": "aurora_working_memory.py"},
+        )
         return False
 
 
@@ -75,7 +111,14 @@ def _meaning_profile_for_value(value):
     try:
         from aurora import _meaning_profile_for_value as _fn
         return _fn(value)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_working_memory.py:78",
+            exc=_aurora_boundary_exc,
+            context={"function": "_meaning_profile_for_value", "handler_line": 78, "source_file": "aurora_working_memory.py"},
+        )
         return {}
 
 
@@ -83,7 +126,14 @@ def _log_claim_resolution_relief(genealogy, **kwargs):
     try:
         from aurora import _log_claim_resolution_relief as _fn
         return _fn(genealogy, **kwargs)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_working_memory.py:86",
+            exc=_aurora_boundary_exc,
+            context={"function": "_log_claim_resolution_relief", "handler_line": 86, "source_file": "aurora_working_memory.py"},
+        )
         return None
 
 
@@ -286,7 +336,14 @@ class WorkingMemory:
         try:
             from aurora_internal.aurora_proposition_substrate import PropositionSubstrate as _PS
             self.proposition_substrate = _PS()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_working_memory.py:289",
+                exc=_aurora_boundary_exc,
+                context={"function": "__init__", "handler_line": 289, "source_file": "aurora_working_memory.py"},
+            )
             self.proposition_substrate = None
         self._contradiction_ledger = None  # ContradictionLedger — injected externally via connect_contradiction_ledger
         # Semantic anchor pool: persists concept anchors beyond semantic_frames rotation.
@@ -333,7 +390,14 @@ class WorkingMemory:
             else:
                 try:
                     items = list(value or [])
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_working_memory.py:336",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_ensure_runtime_deques", "handler_line": 336, "source_file": "aurora_working_memory.py"},
+                    )
                     items = []
             setattr(self, attr, deque(items, maxlen=maxlen))
 
@@ -732,7 +796,14 @@ class WorkingMemory:
 
         try:
             resolved = self.resolve_concept_meaning(user_text, understood) or {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_working_memory.py:735",
+                exc=_aurora_boundary_exc,
+                context={"function": "_resolve_session_readdress_anchor", "handler_line": 735, "source_file": "aurora_working_memory.py"},
+            )
             resolved = {}
         term = self._normalize_mention(resolved.get('term', ''))
         if term:
@@ -754,7 +825,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:757",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "resolve_session_readdress", "handler_line": 757, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
 
         text_low = str(user_text or '').lower()
@@ -890,7 +968,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(raw)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:893",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "note_semantic_principles", "handler_line": 893, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
 
         native = self._native_turn_payload(raw, understood)
@@ -1128,7 +1213,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:1131",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "resolve_semantic_frame", "handler_line": 1131, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
         result = {
             'frame': {},
@@ -1341,7 +1433,14 @@ class WorkingMemory:
                     intensity=0.80,
                     source="correction_event",
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_working_memory.py:1344",
+                exc=_aurora_boundary_exc,
+                context={"function": "compose_context_control_response", "handler_line": 1344, "source_file": "aurora_working_memory.py"},
+            )
             pass
 
         response = self._render_from_comprehension_intent(
@@ -1498,7 +1597,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:1501",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_extract_context_targets", "handler_line": 1501, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
         text_low = str(user_text or '').lower()
         explicit_target = ""
@@ -1610,7 +1716,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:1613",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "detect_context_directive", "handler_line": 1613, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
         text_low = str(user_text or '').lower().strip()
         explicit_delete = any(
@@ -2004,7 +2117,14 @@ class WorkingMemory:
         if conversation_memory is not None:
             try:
                 conversation_summary = conversation_memory.memory_sweep_summary()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:2007",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "memory_sweep_snapshot", "handler_line": 2007, "source_file": "aurora_working_memory.py"},
+                )
                 conversation_summary = {}
         # Build a readable summary of all live contexts (ordered by salience).
         # No salience numbers in output — those are internal.
@@ -2060,7 +2180,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:2063",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "answer_from_behavior_alignment", "handler_line": 2063, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
         behavior_markers = (
             'what did i ask',
@@ -2117,7 +2244,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:2120",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "answer_from_speaker_owned_facts", "handler_line": 2120, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
         text_low = self._normalize_mention(user_text)
         if not text_low:
@@ -2175,7 +2309,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:2178",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "answer_from_recent_utterance_recall", "handler_line": 2178, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
         text_low = str(user_text or '').lower()
         current_terms = set(self._utterance_terms(user_text, understood))
@@ -2305,7 +2446,14 @@ class WorkingMemory:
         try:
             target_info = dict(self._extract_context_targets(user_text, understood) or {})
             targets = list(target_info.get('targets', []) or [])
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_working_memory.py:2308",
+                exc=_aurora_boundary_exc,
+                context={"function": "answer_from_context_carryover", "handler_line": 2308, "source_file": "aurora_working_memory.py"},
+            )
             targets = []
 
         if isinstance(systems, dict):
@@ -2332,7 +2480,14 @@ class WorkingMemory:
             for target in targets[:4]:
                 try:
                     recalled = list(conversation_memory.recall_about(target) or [])
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_working_memory.py:2335",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "answer_from_context_carryover", "handler_line": 2335, "source_file": "aurora_working_memory.py"},
+                    )
                     recalled = []
                 if recalled:
                     rendered = _render_runtime_intent(
@@ -2359,7 +2514,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:2362",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "apply_context_control", "handler_line": 2362, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
 
         preview = self.detect_context_directive(user_text, understood)
@@ -2546,7 +2708,14 @@ class WorkingMemory:
                             reason='user_context_control',
                         ) or {}
                     )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:2549",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "apply_context_control", "handler_line": 2549, "source_file": "aurora_working_memory.py"},
+                )
                 persistent_removed = {}
 
         added_claims: List[Dict[str, Any]] = []
@@ -2574,7 +2743,14 @@ class WorkingMemory:
                             claim['proposition_id'] = str(node.get('proposition_id', '') or '')
                             claim['branch_id'] = str(node.get('branch_id', '') or '')
                             claim['confidence'] = float(node.get('confidence', 0.0) or 0.0)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_working_memory.py:2577",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "apply_context_control", "handler_line": 2577, "source_file": "aurora_working_memory.py"},
+                            )
                             pass
                 added_claims = extracted_claims
 
@@ -2733,7 +2909,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(raw)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:2736",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "note_concept_clarification", "handler_line": 2736, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
 
         native = self._native_turn_payload(raw, understood)
@@ -2945,7 +3128,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:2948",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "resolve_concept_meaning", "handler_line": 2948, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
 
         result = {
@@ -3124,7 +3314,14 @@ class WorkingMemory:
                     intent_match=max(0.5, min(0.98, float(certainty or 0.7))),
                 ) or {}
                 expression_candidate = str(expr_result.get('expression', '') or '').strip()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_working_memory.py:3127",
+                exc=_aurora_boundary_exc,
+                context={"function": "_render_from_comprehension_intent", "handler_line": 3127, "source_file": "aurora_working_memory.py"},
+            )
             expression_candidate = ""
 
         if expression_candidate and not self._candidate_preserves_claim(
@@ -3154,7 +3351,14 @@ class WorkingMemory:
                     if hasattr(native_meaning_obj, "to_dict"):
                         try:
                             native_meaning = dict(native_meaning_obj.to_dict() or {})
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_working_memory.py:3157",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_render_from_comprehension_intent", "handler_line": 3157, "source_file": "aurora_working_memory.py"},
+                            )
                             native_meaning = {}
                 if not native_meaning:
                     native_meaning = dict(systems.get("native_meaning") or {})
@@ -3201,7 +3405,14 @@ class WorkingMemory:
                 if lattice is not None and hasattr(lattice, 'get_global_heat'):
                     try:
                         ivm_heat = float(lattice.get_global_heat() or 0.3)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_working_memory.py:3204",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_render_from_comprehension_intent", "handler_line": 3204, "source_file": "aurora_working_memory.py"},
+                        )
                         ivm_heat = 0.3
 
                 # Feed crossing path geometry back into the identity field as substrate signal.
@@ -3220,7 +3431,14 @@ class WorkingMemory:
                         if hasattr(_lf_rci, "silence_check"):
                             try:
                                 _silence_res = _lf_rci.silence_check(_proto_rci) or {}
-                            except Exception:
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:aurora_working_memory.py:3223",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "_render_from_comprehension_intent", "handler_line": 3223, "source_file": "aurora_working_memory.py"},
+                                )
                                 pass
                         if _silence_res.get("silence"):
                             # Field chose silence: inject n_topology as field state, not output
@@ -3244,7 +3462,14 @@ class WorkingMemory:
                                     # Worn path: field settling into familiar, grounded territory
                                     _xpulse = {"X": 0.45 + _bm * 0.20, "T": 0.50 + _bm * 0.20, "N": 0.28, "B": 0.38, "A": 0.35}
                                     _ifield_rci.ingest_external_input(_xpulse, intensity=0.25, source="crossing_worn")
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_working_memory.py:3247",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_render_from_comprehension_intent", "handler_line": 3247, "source_file": "aurora_working_memory.py"},
+                        )
                         pass
 
                 # autonomy_mode reads the field's live N-axis after all signals have settled
@@ -3257,7 +3482,14 @@ class WorkingMemory:
                             _autonomy_mode = "EXPLORER"
                         elif _fld_n >= 0.48:
                             _autonomy_mode = "EXPANSIVE"
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_working_memory.py:3260",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_render_from_comprehension_intent", "handler_line": 3260, "source_file": "aurora_working_memory.py"},
+                        )
                         pass
 
                 draft = evo.multi_draft.generate(
@@ -3345,7 +3577,14 @@ class WorkingMemory:
                     },
                     draft=draft,
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:3348",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_render_from_comprehension_intent", "handler_line": 3348, "source_file": "aurora_working_memory.py"},
+                )
                 reflection = None
 
             if isinstance(systems, dict):
@@ -3355,7 +3594,14 @@ class WorkingMemory:
                     systems['_native_reflection'] = refl_dict
                     try:
                         systems['_native_reflection_history'] = evo.get_last_reflections(5)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_working_memory.py:3358",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_render_from_comprehension_intent", "handler_line": 3358, "source_file": "aurora_working_memory.py"},
+                        )
                         systems['_native_reflection_history'] = [refl_dict]
                     # Build and store RenderRecord so the turn pipeline has a
                     # complete render→meaning→stance→drift record.
@@ -3379,10 +3625,24 @@ class WorkingMemory:
                             feedback_status="applied" if refl_dict.get("future_bias_notes") else "pending",
                         )
                         systems['_render_record'] = _render_rec.to_dict()
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_working_memory.py:3382",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_render_from_comprehension_intent", "handler_line": 3382, "source_file": "aurora_working_memory.py"},
+                        )
                         pass
             return final_text or self._data_to_minimal_speech(clean, emotion_tone, relationship_signal)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_working_memory.py:3385",
+                exc=_aurora_boundary_exc,
+                context={"function": "_render_from_comprehension_intent", "handler_line": 3385, "source_file": "aurora_working_memory.py"},
+            )
             return self._data_to_minimal_speech(clean, emotion_tone, relationship_signal)
 
     @staticmethod
@@ -3629,7 +3889,14 @@ class WorkingMemory:
             if working_memory is not None:
                 try:
                     concept_entry = dict(getattr(working_memory, "concept_meanings", {}).get(term, {}) or {})
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_working_memory.py:3632",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "answer_from_meanings", "handler_line": 3632, "source_file": "aurora_working_memory.py"},
+                    )
                     concept_entry = {}
         representation_variants = [
             str(item).strip()
@@ -3877,7 +4144,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:3880",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "align_response_to_active_meaning", "handler_line": 3880, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
         if self.detect_context_directive(user_text, understood).get('detected'):
             return {'revised': False, 'text': candidate}
@@ -4196,7 +4470,14 @@ class WorkingMemory:
                         remaining_pairs=list(active_pair_keys),
                         reason=reason or 'resolved_claim_conflict',
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_working_memory.py:4199",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "refresh_claim_conflicts", "handler_line": 4199, "source_file": "aurora_working_memory.py"},
+                    )
                     pass
             if self._contradiction_ledger is not None:
                 for pair_key in removed_pairs:
@@ -4208,7 +4489,14 @@ class WorkingMemory:
                             cid,
                             resolution_note=str(reason or 'resolved_claim_conflict'),
                         )
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_working_memory.py:4211",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "refresh_claim_conflicts", "handler_line": 4211, "source_file": "aurora_working_memory.py"},
+                        )
                         pass
         elif self.claim_conflicts:
             self.last_conflict_relief = {}
@@ -4260,7 +4548,14 @@ class WorkingMemory:
                     source_b=str(right.get('source', '') or ''),
                 )
                 conflict_entry['contradiction_id'] = str(record.contradiction_id)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:4263",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_register_claim_conflict", "handler_line": 4263, "source_file": "aurora_working_memory.py"},
+                )
                 pass
         self.claim_conflicts.appendleft(conflict_entry)
 
@@ -4581,7 +4876,14 @@ class WorkingMemory:
         if self.proposition_substrate is not None:
             try:
                 self.proposition_substrate.note_claim_bundle(claims, raw_text=text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:4584",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "note_claims", "handler_line": 4584, "source_file": "aurora_working_memory.py"},
+                )
                 pass
         self.refresh_claim_conflicts(preferred_claim=claims[0] if claims else None)
         return claims
@@ -4606,7 +4908,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:4609",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "resolve_claims", "handler_line": 4609, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
 
         result = {
@@ -4991,7 +5300,14 @@ class WorkingMemory:
             return
         try:
             understood = UtteranceParser().parse(aurora_text)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_working_memory.py:4994",
+                exc=_aurora_boundary_exc,
+                context={"function": "_register_response_mentions", "handler_line": 4994, "source_file": "aurora_working_memory.py"},
+            )
             understood = {
                 'topic': '',
                 'topic_words': re.findall(r'[a-z]{4,}', aurora_text.lower())[:4],
@@ -5004,7 +5320,14 @@ class WorkingMemory:
             return None
         try:
             understood = UtteranceParser().parse(self.last_aurora_response)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_working_memory.py:5007",
+                exc=_aurora_boundary_exc,
+                context={"function": "_aurora_reply_anchor", "handler_line": 5007, "source_file": "aurora_working_memory.py"},
+            )
             understood = {
                 'topic': '',
                 'topic_words': re.findall(r'[a-z]{4,}', self.last_aurora_response.lower())[:5],
@@ -5083,7 +5406,14 @@ class WorkingMemory:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:5086",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "resolve_referents", "handler_line": 5086, "source_file": "aurora_working_memory.py"},
+                )
                 understood = {}
 
         native = self._native_turn_payload(user_text, understood)
@@ -5414,7 +5744,14 @@ class WorkingMemory:
             self._context_control_skip_text = ""
         try:
             anchor_resolution = self.resolve_claims(user_text, understood) or {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_working_memory.py:5417",
+                exc=_aurora_boundary_exc,
+                context={"function": "update_from_turn", "handler_line": 5417, "source_file": "aurora_working_memory.py"},
+            )
             anchor_resolution = {}
         anchor_claim = dict(anchor_resolution.get('focus_claim', {}) or {})
         if anchor_claim:

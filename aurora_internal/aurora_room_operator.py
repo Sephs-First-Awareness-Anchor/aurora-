@@ -19,6 +19,7 @@ The daemon calls this when Aurora should actively engage with her room.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -33,13 +34,27 @@ from typing import Optional, Tuple, Dict, List
 try:
     from PIL import Image, ImageGrab
     _PIL_OK = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_room_operator.py:36",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 36, "source_file": "aurora_internal/aurora_room_operator.py"},
+    )
     _PIL_OK = False
 
 try:
     import pytesseract
     _TESS_OK = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_room_operator.py:42",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 42, "source_file": "aurora_internal/aurora_room_operator.py"},
+    )
     _TESS_OK = False
 
 try:
@@ -48,14 +63,28 @@ try:
     import Xlib.ext.xtest
     import Xlib.XK
     _XLIB_OK = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_room_operator.py:51",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 51, "source_file": "aurora_internal/aurora_room_operator.py"},
+    )
     _XLIB_OK = False
 
 try:
     import cv2 as _cv2
     import numpy as _np
     _CV2_OK = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_room_operator.py:58",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 58, "source_file": "aurora_internal/aurora_room_operator.py"},
+    )
     _CV2_OK = False
 
 # ── paths ──────────────────────────────────────────────────────────────────
@@ -89,7 +118,14 @@ def _log_entry(action: str, detail: str = "") -> None:
                 entries = json.loads(_OPERATOR_LOG.read_text())
                 if not isinstance(entries, list):
                     entries = []
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_room_operator.py:92",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_log_entry", "handler_line": 92, "source_file": "aurora_internal/aurora_room_operator.py"},
+                )
                 pass
         entries.append({
             "ts":     time.time(),
@@ -98,7 +134,14 @@ def _log_entry(action: str, detail: str = "") -> None:
             "detail": detail,
         })
         _OPERATOR_LOG.write_text(json.dumps(entries[-200:], indent=2))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_room_operator.py:101",
+            exc=_aurora_boundary_exc,
+            context={"function": "_log_entry", "handler_line": 101, "source_file": "aurora_internal/aurora_room_operator.py"},
+        )
         pass
 
 
@@ -134,6 +177,13 @@ class RoomOperator:
             self._ready   = True
             _log_entry("init_ok", "operator ready")
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:136",
+                exc=ex,
+                context={"function": "__init__", "handler_line": 136, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("init_fail", str(ex))
 
     # ── window discovery ──────────────────────────────────────────────────
@@ -149,6 +199,13 @@ class RoomOperator:
                 self._geom = self._window.get_geometry()
                 return True
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:151",
+                exc=ex,
+                context={"function": "_find_window", "handler_line": 151, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("find_window_fail", str(ex))
         return False
 
@@ -159,14 +216,28 @@ class RoomOperator:
             t = node.get_wm_name() or ""
             if title_fragment.lower() in t.lower():
                 return node
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:162",
+                exc=_aurora_boundary_exc,
+                context={"function": "_search_tree", "handler_line": 162, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             pass
         try:
             for child in node.query_tree().children:
                 result = self._search_tree(child, title_fragment, depth + 1)
                 if result:
                     return result
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:169",
+                exc=_aurora_boundary_exc,
+                context={"function": "_search_tree", "handler_line": 169, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             pass
         return None
 
@@ -177,7 +248,14 @@ class RoomOperator:
             # Verify still alive
             self._geom = self._window.get_geometry()
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:180",
+                exc=_aurora_boundary_exc,
+                context={"function": "_ensure_window", "handler_line": 180, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             self._window = None
             return self._find_window()
 
@@ -227,6 +305,13 @@ class RoomOperator:
                 img.save(str(path))
             return img
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:229",
+                exc=ex,
+                context={"function": "screenshot", "handler_line": 229, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("screenshot_fail", str(ex))
             return None
 
@@ -257,6 +342,13 @@ class RoomOperator:
             text = pytesseract.image_to_string(img, config="--psm 6")
             return text.strip()
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:259",
+                exc=ex,
+                context={"function": "read_screen", "handler_line": 259, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("ocr_fail", str(ex))
             return ""
 
@@ -294,6 +386,13 @@ class RoomOperator:
                 if tab.lower() in text_lower:
                     return tab
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:296",
+                exc=ex,
+                context={"function": "identify_active_tab", "handler_line": 296, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("identify_tab_fail", str(ex))
         return ""
 
@@ -308,7 +407,14 @@ class RoomOperator:
             translated = self._window.translate_coords(
                 self._display.screen().root, rel_x, rel_y)
             return translated.x, translated.y
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:311",
+                exc=_aurora_boundary_exc,
+                context={"function": "_abs_pos", "handler_line": 311, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             g = self._geom
             return g.x + rel_x, g.y + rel_y
 
@@ -322,6 +428,13 @@ class RoomOperator:
             self._display.sync()
             time.sleep(0.05)
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:324",
+                exc=ex,
+                context={"function": "mouse_move", "handler_line": 324, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("mouse_move_fail", str(ex))
 
     def click(self, rel_x: int, rel_y: int, button: int = 1,
@@ -350,6 +463,13 @@ class RoomOperator:
                 d.sync()
             time.sleep(0.1)
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:352",
+                exc=ex,
+                context={"function": "click", "handler_line": 352, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("click_fail", str(ex))
 
     def type_text(self, text: str) -> None:
@@ -380,6 +500,13 @@ class RoomOperator:
                 d.sync()
                 time.sleep(0.02)
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:382",
+                exc=ex,
+                context={"function": "type_text", "handler_line": 382, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("type_fail", str(ex))
 
     def press_key(self, key_name: str) -> None:
@@ -424,6 +551,13 @@ class RoomOperator:
             d.sync()
             time.sleep(0.06)
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:426",
+                exc=ex,
+                context={"function": "press_key", "handler_line": 426, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("key_fail", f"{key_name}: {ex}")
 
     # ── tab navigation ────────────────────────────────────────────────────
@@ -455,6 +589,13 @@ class RoomOperator:
                     y = 20  # vertically centred in tab bar
                     return (x, y)
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:457",
+                exc=ex,
+                context={"function": "_locate_tab", "handler_line": 457, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("locate_tab_fail", f"{tab_name}: {ex}")
         # Fallback: estimate tab position by index
         try:
@@ -463,7 +604,14 @@ class RoomOperator:
             tab_w = g.width // len(ROOM_TABS)
             x = idx * tab_w + tab_w // 2
             return (x, 20)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:466",
+                exc=_aurora_boundary_exc,
+                context={"function": "_locate_tab", "handler_line": 466, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             return None
 
     def switch_tab(self, tab_name: str) -> bool:
@@ -516,6 +664,13 @@ class RoomOperator:
                     y = offset_y + data["top"][i] // 2 + data["height"][i] // 4 + 20
                     return (x, y)
         except Exception as ex:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_room_operator.py:518",
+                exc=ex,
+                context={"function": "_locate_widget_by_ocr", "handler_line": 518, "source_file": "aurora_internal/aurora_room_operator.py"},
+            )
             _log_entry("locate_widget_fail", f"{label_text}: {ex}")
         return None
 
@@ -576,11 +731,34 @@ class RoomOperator:
                             result_text = self.read_screen(img=img, region=result_region)
                         # Clean up files
                         try: _result_file.unlink(missing_ok=True)
-                        except Exception: pass
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_internal/aurora_room_operator.py:579",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "poedex_query", "handler_line": 579, "source_file": "aurora_internal/aurora_room_operator.py"},
+                            )
+                            pass
                         try: _query_file.unlink(missing_ok=True)
-                        except Exception: pass
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_internal/aurora_room_operator.py:581",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "poedex_query", "handler_line": 581, "source_file": "aurora_internal/aurora_room_operator.py"},
+                            )
+                            pass
                         break
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_room_operator.py:583",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "poedex_query", "handler_line": 583, "source_file": "aurora_internal/aurora_room_operator.py"},
+                    )
                     pass
 
         _log_entry("poedex_query_done",

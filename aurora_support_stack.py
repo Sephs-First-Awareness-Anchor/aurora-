@@ -4,6 +4,7 @@ AURORA SUPPORT STACK (Consolidated Facade)
 =========================================
 Consolidates non-core support modules used by canonical runtime layers.
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 # Parser
@@ -26,7 +27,14 @@ StatePersistence = EnhancedStatePersistence
 try:
     from aurora_governance_persistence_gateway import AuroraStateSnapshot
     from aurora_persistence_utils import DeviceAwareness, RcloneInterface, DriveSync
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_support_stack.py:29",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 29, "source_file": "aurora_support_stack.py"},
+    )
     AuroraStateSnapshot = None
     DeviceAwareness     = None
     RcloneInterface     = None
@@ -39,7 +47,14 @@ try:
         ResearchResult,
         RelationType,
     )
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_support_stack.py:42",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 42, "source_file": "aurora_support_stack.py"},
+    )
     OntologicalScaffoldingEngine = None
     ResearchResult = None
     RelationType = None
@@ -50,7 +65,14 @@ try:
         ExpressionEvolutionOrchestra,
         LSVMetrics,
     )
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_support_stack.py:53",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 53, "source_file": "aurora_support_stack.py"},
+    )
     ExpressionEvolutionOrchestra = None
     LSVMetrics = None
 
@@ -60,14 +82,28 @@ try:
         RelationalComparisonEngine,
         RelationalDelta,
     )
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_support_stack.py:63",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 63, "source_file": "aurora_support_stack.py"},
+    )
     RelationalComparisonEngine = None
     RelationalDelta = None
 
 # Noncomp manifold compiler compatibility re-export
 try:
     from aurora_noncomp_manifold_compiler import *  # noqa: F401,F403
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_support_stack.py:70",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 70, "source_file": "aurora_support_stack.py"},
+    )
     pass
 
 __all__ = [

@@ -38,6 +38,7 @@ Usage from aurora_runtime (or any autonomy loop):
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import time
 from collections import defaultdict
@@ -95,7 +96,14 @@ class SurfaceDispatcher:
         try:
             from aurora_internal.aurora_surface_doc import full_report  # type: ignore
             cards = full_report()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_surface_dispatcher.py:98",
+                exc=_aurora_boundary_exc,
+                context={"function": "build_routing_table", "handler_line": 98, "source_file": "aurora_internal/aurora_surface_dispatcher.py"},
+            )
             return {ax: 0 for ax in _AXES}
 
         table: Dict[str, List[Tuple[float, str]]] = defaultdict(list)
@@ -182,6 +190,13 @@ class SurfaceDispatcher:
             self._last_fired[surface_name] = self._tick_count
             return dict(result) if isinstance(result, dict) else {"result": result}
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_surface_dispatcher.py:184",
+                exc=exc,
+                context={"function": "invoke", "handler_line": 184, "source_file": "aurora_internal/aurora_surface_dispatcher.py"},
+            )
             return {"error": str(exc), "surface": surface_name}
 
     # ── main tick ─────────────────────────────────────────────────────────────
@@ -212,7 +227,14 @@ class SurfaceDispatcher:
         try:
             status = chamber.status()
             intent_pressure = dict(status.get("intent_pressure", {}) or {})
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_surface_dispatcher.py:215",
+                exc=_aurora_boundary_exc,
+                context={"function": "tick", "handler_line": 215, "source_file": "aurora_internal/aurora_surface_dispatcher.py"},
+            )
             return evidence_out
 
         # evaluate

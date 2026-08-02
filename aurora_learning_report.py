@@ -13,6 +13,7 @@ Real signals:
   genealogy/links.json         — constraint link depth and per-axis relief stats
   aurora_state.json            — evolutionary state
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 
@@ -30,7 +31,14 @@ def load(filename):
     try:
         with open(path) as f:
             return json.load(f)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_learning_report.py:33",
+            exc=_aurora_boundary_exc,
+            context={"function": "load", "handler_line": 33, "source_file": "aurora_learning_report.py"},
+        )
         return {}
 
 

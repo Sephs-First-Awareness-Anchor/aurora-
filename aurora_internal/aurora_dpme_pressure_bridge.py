@@ -30,6 +30,7 @@ half strength — matching DPME's existing secondary channel behavior.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -80,6 +81,13 @@ class DPMEPressureBridge:
         try:
             from aurora_consciousness_engine import set_external_pressure_guidance  # type: ignore
         except ImportError as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_dpme_pressure_bridge.py:82",
+                exc=exc,
+                context={"function": "apply", "handler_line": 82, "source_file": "aurora_internal/aurora_dpme_pressure_bridge.py"},
+            )
             return {"applied": False, "reason": f"import_error: {exc}"}
 
         hints = self._load_hints()
@@ -158,7 +166,14 @@ class DPMEPressureBridge:
             with open(path, encoding="utf-8") as fh:
                 data = json.load(fh)
             return data if isinstance(data, dict) else {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_dpme_pressure_bridge.py:161",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_hints", "handler_line": 161, "source_file": "aurora_internal/aurora_dpme_pressure_bridge.py"},
+            )
             return {}
 
     @staticmethod
@@ -180,4 +195,11 @@ def apply_pressure_to_dpme(repo_root: str) -> Dict[str, Any]:
     try:
         return DPMEPressureBridge(repo_root).apply()
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_dpme_pressure_bridge.py:182",
+            exc=exc,
+            context={"function": "apply_pressure_to_dpme", "handler_line": 182, "source_file": "aurora_internal/aurora_dpme_pressure_bridge.py"},
+        )
         return {"applied": False, "reason": str(exc)}

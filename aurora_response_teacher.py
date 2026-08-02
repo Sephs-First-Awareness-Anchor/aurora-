@@ -35,6 +35,7 @@ Usage:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import time
@@ -62,7 +63,14 @@ def _get_scorer():
     try:
         from aurora_browser_agent import HumannessScorer
         return HumannessScorer()
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_response_teacher.py:65",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_scorer", "handler_line": 65, "source_file": "aurora_response_teacher.py"},
+        )
         return None
 
 
@@ -80,7 +88,14 @@ def _safe_fetch(url: str, timeout: int = 8) -> Optional[str]:
         )
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.read().decode("utf-8", errors="ignore")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_response_teacher.py:83",
+            exc=_aurora_boundary_exc,
+            context={"function": "_safe_fetch", "handler_line": 83, "source_file": "aurora_response_teacher.py"},
+        )
         return None
 
 
@@ -129,7 +144,14 @@ class RedditCollector:
                     "content": selftext[:800],
                     "score": pd.get("score", 0),
                 })
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_response_teacher.py:132",
+                exc=_aurora_boundary_exc,
+                context={"function": "collect", "handler_line": 132, "source_file": "aurora_response_teacher.py"},
+            )
             pass
 
         return results
@@ -178,7 +200,14 @@ class HackerNewsCollector:
                 })
                 if len(results) >= n:
                     break
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_response_teacher.py:181",
+                exc=_aurora_boundary_exc,
+                context={"function": "collect", "handler_line": 181, "source_file": "aurora_response_teacher.py"},
+            )
             pass
 
         return results
@@ -230,7 +259,14 @@ class WikipediaCollector:
                     "content": extract[:1000],
                     "score": 1,
                 })
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_response_teacher.py:233",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "collect", "handler_line": 233, "source_file": "aurora_response_teacher.py"},
+                )
                 continue
         return results
 
@@ -278,7 +314,14 @@ class DuckDuckGoCollector:
                         "content": text[:400],
                         "score": 1,
                     })
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_response_teacher.py:281",
+                exc=_aurora_boundary_exc,
+                context={"function": "collect", "handler_line": 281, "source_file": "aurora_response_teacher.py"},
+            )
             pass
         return results
 
@@ -418,7 +461,14 @@ class LessonDeliverer:
             try:
                 self._deliver_one(lesson, systems)
                 count += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_response_teacher.py:421",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "deliver", "handler_line": 421, "source_file": "aurora_response_teacher.py"},
+                )
                 pass
         return count
 
@@ -435,7 +485,14 @@ class LessonDeliverer:
                     source="human_response_teacher",
                     mode=ExistenceMode.BOUNDED,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_response_teacher.py:438",
+                exc=_aurora_boundary_exc,
+                context={"function": "_deliver_one", "handler_line": 438, "source_file": "aurora_response_teacher.py"},
+            )
             pass
 
         # 2. Dream trainer — record the example as a truth target
@@ -448,7 +505,14 @@ class LessonDeliverer:
                     truth=lesson.example,
                     mismatch=1.0 - lesson.humanness_score,
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_response_teacher.py:451",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_deliver_one", "handler_line": 451, "source_file": "aurora_response_teacher.py"},
+                )
                 pass
 
         # 3. OETS — log as a study event
@@ -461,7 +525,14 @@ class LessonDeliverer:
                     content=lesson.teaching_text[:400],
                     source="human_response_teacher",
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_response_teacher.py:464",
+                exc=_aurora_boundary_exc,
+                context={"function": "_deliver_one", "handler_line": 464, "source_file": "aurora_response_teacher.py"},
+            )
             pass
 
 
@@ -568,7 +639,14 @@ class HumanResponseTeacher:
         if _LESSON_LOG.exists():
             try:
                 log = json.loads(_LESSON_LOG.read_text())
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_response_teacher.py:571",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_log_session", "handler_line": 571, "source_file": "aurora_response_teacher.py"},
+                )
                 pass
         log.append({
             "time": datetime.datetime.now().isoformat(),
@@ -588,7 +666,14 @@ class HumanResponseTeacher:
             return "No teaching sessions yet."
         try:
             log = json.loads(_LESSON_LOG.read_text())
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_response_teacher.py:591",
+                exc=_aurora_boundary_exc,
+                context={"function": "summary", "handler_line": 591, "source_file": "aurora_response_teacher.py"},
+            )
             return "Could not read lesson log."
         if not log:
             return "No sessions logged."

@@ -8,6 +8,7 @@ Pack and restore Aurora's local state with CrystalZip.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import argparse
 import json
@@ -321,7 +322,14 @@ def inspect_state_bundle(archive: str | Path) -> Dict[str, Any]:
             manifest_path = bundle_root / "bundle_manifest.json"
             if manifest_path.exists():
                 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_crystal_state_bridge.py:324",
+                exc=_aurora_boundary_exc,
+                context={"function": "inspect_state_bundle", "handler_line": 324, "source_file": "aurora_crystal_state_bridge.py"},
+            )
             manifest = {}
     return {"crystalzip": info, "bundle_manifest": manifest}
 

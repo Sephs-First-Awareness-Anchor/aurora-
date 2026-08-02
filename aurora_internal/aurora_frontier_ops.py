@@ -22,6 +22,7 @@ operation descriptor pool so the evolver can reflect on them immediately.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -573,6 +574,13 @@ def inject_frontier_descriptors(repo_root: str) -> Dict[str, Any]:
         with open(pool_path, "r", encoding="utf-8") as fh:
             state: Dict[str, Any] = json.load(fh)
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_frontier_ops.py:575",
+            exc=exc,
+            context={"function": "inject_frontier_descriptors", "handler_line": 575, "source_file": "aurora_internal/aurora_frontier_ops.py"},
+        )
         return {"error": str(exc)}
 
     ops: List[Dict[str, Any]] = list(state.get("operations", []) or [])
@@ -602,6 +610,13 @@ def inject_frontier_descriptors(repo_root: str) -> Dict[str, Any]:
             with open(pool_path, "w", encoding="utf-8") as fh:
                 json.dump(state, fh, indent=2, sort_keys=True, ensure_ascii=True)
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_frontier_ops.py:604",
+                exc=exc,
+                context={"function": "inject_frontier_descriptors", "handler_line": 604, "source_file": "aurora_internal/aurora_frontier_ops.py"},
+            )
             return {"error": str(exc), "added": added}
 
     return {

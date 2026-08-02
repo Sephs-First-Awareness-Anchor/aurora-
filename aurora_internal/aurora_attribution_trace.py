@@ -17,6 +17,7 @@ used elsewhere in this codebase, e.g. aurora_offline_resilience.py).
 
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 from typing import Any, Dict, Optional
 
 _ENABLED = False
@@ -55,7 +56,14 @@ def record_composer_raw(text: Any) -> None:
         if isinstance(text, dict):
             text = text.get("expression", "")
         _composer_raw = str(text or "")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_attribution_trace.py:58",
+            exc=_aurora_boundary_exc,
+            context={"function": "record_composer_raw", "handler_line": 58, "source_file": "aurora_internal/aurora_attribution_trace.py"},
+        )
         pass
 
 
@@ -83,7 +91,14 @@ def record_word_sources_and_motifs(composer: Any) -> None:
         return
     try:
         _word_sources = dict(getattr(composer, "_last_word_sources", {}) or {})
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_attribution_trace.py:86",
+            exc=_aurora_boundary_exc,
+            context={"function": "record_word_sources_and_motifs", "handler_line": 86, "source_file": "aurora_internal/aurora_attribution_trace.py"},
+        )
         _word_sources = None
     try:
         motifs = list(getattr(composer, "_last_motifs_used", []) or [])
@@ -91,14 +106,28 @@ def record_word_sources_and_motifs(composer: Any) -> None:
         for m in motifs:
             try:
                 roles = [getattr(r, "value", str(r)) for r in getattr(m, "role_sequence", [])]
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_attribution_trace.py:94",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "record_word_sources_and_motifs", "handler_line": 94, "source_file": "aurora_internal/aurora_attribution_trace.py"},
+                )
                 roles = []
             summaries.append({
                 "motif_id": str(getattr(m, "pattern_id", id(m))),
                 "role_sequence": roles,
             })
         _motif_summaries = summaries
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_attribution_trace.py:101",
+            exc=_aurora_boundary_exc,
+            context={"function": "record_word_sources_and_motifs", "handler_line": 101, "source_file": "aurora_internal/aurora_attribution_trace.py"},
+        )
         _motif_summaries = None
 
 
@@ -135,7 +164,14 @@ def record_turn(probe_id: str, dimension: str, user_text: str,
                 composer_raw and final_delivered and composer_raw.strip() == final_delivered.strip()
             ),
         })
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_attribution_trace.py:138",
+            exc=_aurora_boundary_exc,
+            context={"function": "record_turn", "handler_line": 138, "source_file": "aurora_internal/aurora_attribution_trace.py"},
+        )
         pass
 
 

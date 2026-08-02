@@ -9,6 +9,7 @@ who chooses one action per recommendation:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -47,7 +48,14 @@ def _read_jsonl(path: str) -> List[Dict[str, Any]]:
                 continue
             try:
                 obj = json.loads(line)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_recommendation_hub.py:50",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_read_jsonl", "handler_line": 50, "source_file": "aurora_internal/aurora_recommendation_hub.py"},
+                )
                 continue
             if isinstance(obj, dict):
                 out.append(obj)
@@ -134,7 +142,14 @@ def _parse_iso_epoch(value: Any) -> float:
         if not txt:
             return 0.0
         return datetime.fromisoformat(txt).timestamp()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_recommendation_hub.py:137",
+            exc=_aurora_boundary_exc,
+            context={"function": "_parse_iso_epoch", "handler_line": 137, "source_file": "aurora_internal/aurora_recommendation_hub.py"},
+        )
         return 0.0
 
 
@@ -214,6 +229,13 @@ def process_pending_for_aurora(
             msg = f"{title}: {body}"
             try:
                 discuss_callback(msg, rec)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_recommendation_hub.py:217",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "process_pending_for_aurora", "handler_line": 217, "source_file": "aurora_internal/aurora_recommendation_hub.py"},
+                )
                 pass
     return done

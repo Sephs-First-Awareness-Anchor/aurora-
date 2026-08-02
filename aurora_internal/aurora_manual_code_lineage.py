@@ -11,6 +11,7 @@ branch.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -107,7 +108,14 @@ def _signature_counts(signature: str) -> Dict[str, int]:
             continue
         try:
             counts[axis] += max(0, int(float(str(value or "0").strip())))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:110",
+                exc=_aurora_boundary_exc,
+                context={"function": "_signature_counts", "handler_line": 110, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+            )
             continue
     return counts
 
@@ -149,7 +157,14 @@ class ManualCodeLineageAssimilator:
         try:
             with open(self.state_path, "r", encoding="utf-8") as fh:
                 raw = dict(json.load(fh) or {})
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:152",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_state", "handler_line": 152, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+            )
             return
         self._state = {
             "initialized": bool(raw.get("initialized", False)),
@@ -168,7 +183,14 @@ class ManualCodeLineageAssimilator:
             with open(self.state_path, "w", encoding="utf-8") as fh:
                 json.dump(payload, fh, ensure_ascii=True, indent=2, sort_keys=True)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:171",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 171, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+            )
             return False
 
     def status(self) -> Dict[str, Any]:
@@ -201,7 +223,14 @@ class ManualCodeLineageAssimilator:
             with open(path, "rb") as fh:
                 for chunk in iter(lambda: fh.read(131072), b""):
                     digest.update(chunk)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:204",
+                exc=_aurora_boundary_exc,
+                context={"function": "_file_sha1", "handler_line": 204, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+            )
             return ""
         return digest.hexdigest()
 
@@ -211,7 +240,14 @@ class ManualCodeLineageAssimilator:
             path = os.path.join(self.repo_root, rel_path)
             try:
                 st = os.stat(path)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:214",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_scan_manifest", "handler_line": 214, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+                )
                 continue
             manifest[rel_path] = {
                 "mtime_ns": int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000))),
@@ -253,7 +289,14 @@ class ManualCodeLineageAssimilator:
             st = os.stat(path)
             mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
             size = int(st.st_size)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:256",
+                exc=_aurora_boundary_exc,
+                context={"function": "_descriptor_operations", "handler_line": 256, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+            )
             return []
         cache = dict(self._descriptor_cache or {})
         if (
@@ -265,7 +308,14 @@ class ManualCodeLineageAssimilator:
         try:
             with open(path, "r", encoding="utf-8") as fh:
                 raw = dict(json.load(fh) or {})
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:268",
+                exc=_aurora_boundary_exc,
+                context={"function": "_descriptor_operations", "handler_line": 268, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+            )
             return []
         ops = [dict(row) for row in (raw.get("operations", []) or []) if isinstance(row, dict)]
         self._descriptor_cache = {
@@ -374,7 +424,14 @@ class ManualCodeLineageAssimilator:
         try:
             if hasattr(journal, "record_event"):
                 journal.record_event(event)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:377",
+                exc=_aurora_boundary_exc,
+                context={"function": "_record_journal_event", "handler_line": 377, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+            )
             pass
 
     def assimilate(self, systems: Any, *, source: str = "runtime.boot", force: bool = False) -> List[Dict[str, Any]]:
@@ -427,7 +484,14 @@ class ManualCodeLineageAssimilator:
             if genealogy is not None and hasattr(genealogy, "register_manual_code_assimilation"):
                 try:
                     reg = dict(genealogy.register_manual_code_assimilation(payload) or {})
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:430",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "assimilate", "handler_line": 430, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+                    )
                     reg = {"registered": False, "ability_id": matched_ability_id}
             result = {
                 "change_id": payload["change_id"],
@@ -484,7 +548,14 @@ class ManualCodeLineageAssimilator:
                         severity=0.6 if str(change.get("kind", "")) == "added" else 0.45,
                         persistence_key=str(payload["target_modules"][0] or "")[:48],
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:487",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "assimilate", "handler_line": 487, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+                    )
                     pass
 
         history = list(self._state.get("history", []) or [])

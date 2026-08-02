@@ -15,6 +15,7 @@ Components:
 - ToolIdentityIntegrator: integrates session tool history into identity
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import time
@@ -121,7 +122,14 @@ def build_intention_frame(
         self_state_before["axis_activation"] = {k: round(float(v), 3) for k, v in axis_activation.items()}
         self_state_before["dominant_axis"] = dominant_axis
         self_state_before["coherence"] = round(float(pipeline_state.get("coherence", 1.0)), 3)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_tool_mind.py:124",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_intention_frame", "handler_line": 124, "source_file": "aurora_tool_mind.py"},
+        )
         pass
     # Unresolved tension from pipeline
     unresolved_tension = ""
@@ -130,14 +138,28 @@ def build_intention_frame(
             unresolved_tension = f"paradoxes: {len(pipeline_state['paradoxes'])}"
         elif pipeline_state.get("stagnation", 0.0) > 0.6:
             unresolved_tension = f"stagnation: {pipeline_state.get('stagnation', 0.0):.2f}"
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_tool_mind.py:133",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_intention_frame", "handler_line": 133, "source_file": "aurora_tool_mind.py"},
+        )
         pass
     tick = 0
     try:
         lat = systems.get("lattice")
         if lat and hasattr(lat, "generation"):
             tick = int(lat.generation)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_tool_mind.py:140",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_intention_frame", "handler_line": 140, "source_file": "aurora_tool_mind.py"},
+        )
         pass
     return ToolIntentionFrame(
         tool_name=tool_name,
@@ -189,16 +211,37 @@ class ToolChoiceObserver:
                 new_a = min(1.0, current_a + a_spike * 0.3)
                 try:
                     object.__setattr__(pressure_vec, "A", new_a)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_tool_mind.py:192",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "on_tool_chosen", "handler_line": 192, "source_file": "aurora_tool_mind.py"},
+                    )
                     pass
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_tool_mind.py:194",
+                exc=_aurora_boundary_exc,
+                context={"function": "on_tool_chosen", "handler_line": 194, "source_file": "aurora_tool_mind.py"},
+            )
             pass
 
         # Update field_map with triggered axis combination
         try:
             if field_map and hasattr(field_map, "update"):
                 field_map.update(pressure_vec)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_tool_mind.py:201",
+                exc=_aurora_boundary_exc,
+                context={"function": "on_tool_chosen", "handler_line": 201, "source_file": "aurora_tool_mind.py"},
+            )
             pass
 
         # Log to tool_intention_log.jsonl (append only, never overwrites)
@@ -209,7 +252,14 @@ class ToolChoiceObserver:
             _TOOL_INTENTION_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
             with open(_TOOL_INTENTION_LOG_PATH, "a", encoding="utf-8") as f:
                 f.write(json.dumps(intention.to_dict(), ensure_ascii=False) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_tool_mind.py:212",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_intention", "handler_line": 212, "source_file": "aurora_tool_mind.py"},
+            )
             pass
 
 
@@ -310,7 +360,14 @@ def ingest_tool_result(
         genealogy = systems.get("genealogy")
         if genealogy and hasattr(genealogy, "observe"):
             genealogy.observe(result_axes, source=f"tool:{intention.tool_name}")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_tool_mind.py:313",
+            exc=_aurora_boundary_exc,
+            context={"function": "ingest_tool_result", "handler_line": 313, "source_file": "aurora_tool_mind.py"},
+        )
         pass
 
     # 2. Pass to field_map.update()
@@ -324,7 +381,14 @@ def ingest_tool_result(
             for ax, val in result_axes.items():
                 setattr(pv, ax, val)
             field_map.update(pv)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_tool_mind.py:327",
+            exc=_aurora_boundary_exc,
+            context={"function": "ingest_tool_result", "handler_line": 327, "source_file": "aurora_tool_mind.py"},
+        )
         pass
 
     # 3. If tension not resolved → flag as open_loop
@@ -335,7 +399,14 @@ def ingest_tool_result(
                 "tension": intention.unresolved_tension,
                 "ts": time.time(),
             })
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_tool_mind.py:338",
+                exc=_aurora_boundary_exc,
+                context={"function": "ingest_tool_result", "handler_line": 338, "source_file": "aurora_tool_mind.py"},
+            )
             pass
 
     # 4. If identity_relevance > 0.5 → route through UNDERSTANDING pass
@@ -347,7 +418,14 @@ def ingest_tool_result(
                 "identity_relevance": identity_relevance,
                 "ts": time.time(),
             }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_tool_mind.py:350",
+                exc=_aurora_boundary_exc,
+                context={"function": "ingest_tool_result", "handler_line": 350, "source_file": "aurora_tool_mind.py"},
+            )
             pass
 
     return packet
@@ -442,7 +520,14 @@ class ToolIdentityIntegrator:
             # Attempt to find live sedimemory in caller context — if not found,
             # store delta in aurora_logs for manual reconciliation
             pass  # Caller must pass sedimemory reference — see aurora_daemon.py integration
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_tool_mind.py:445",
+                exc=_aurora_boundary_exc,
+                context={"function": "integrate_session", "handler_line": 445, "source_file": "aurora_tool_mind.py"},
+            )
             pass
 
         # Log delta to aurora_logs
@@ -453,7 +538,14 @@ class ToolIdentityIntegrator:
                 entry = delta.to_dict()
                 entry["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_tool_mind.py:456",
+                exc=_aurora_boundary_exc,
+                context={"function": "integrate_session", "handler_line": 456, "source_file": "aurora_tool_mind.py"},
+            )
             pass
 
         return delta

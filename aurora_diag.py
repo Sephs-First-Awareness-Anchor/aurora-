@@ -6,6 +6,7 @@ that fire DURING each interaction, and produces a causal diagnostic report.
 Usage:
     python3 aurora_diag.py
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
@@ -133,7 +134,14 @@ def _journal_line_count() -> int:
     try:
         with open(JOURNAL_PATH, "rb") as f:
             return sum(1 for _ in f)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_diag.py:136",
+            exc=_aurora_boundary_exc,
+            context={"function": "_journal_line_count", "handler_line": 136, "source_file": "aurora_diag.py"},
+        )
         return 0
 
 
@@ -153,9 +161,23 @@ def _read_journal_from(start_line: int) -> list:
                     detail = d.get("detail", "")
                     if "issues=[" in detail and "issues=[]" not in detail:
                         issues.append(d)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_diag.py:156",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_read_journal_from", "handler_line": 156, "source_file": "aurora_diag.py"},
+                    )
                     pass
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_diag.py:158",
+            exc=_aurora_boundary_exc,
+            context={"function": "_read_journal_from", "handler_line": 158, "source_file": "aurora_diag.py"},
+        )
         pass
     return issues
 
@@ -177,14 +199,28 @@ def _parse_issues_from_entries(entries: list) -> list:
 def _load_qao_runtime() -> dict:
     try:
         return json.load(open(QAO_RUNTIME_PATH))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_diag.py:180",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_qao_runtime", "handler_line": 180, "source_file": "aurora_diag.py"},
+        )
         return {}
 
 
 def _load_fail_points() -> dict:
     try:
         return json.load(open(FAIL_POINTS_PATH))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_diag.py:187",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_fail_points", "handler_line": 187, "source_file": "aurora_diag.py"},
+        )
         return {}
 
 
@@ -207,6 +243,13 @@ def _run_prompt(user_text: str, systems: dict, turn_tick: int = 1) -> str:
         resp_A = result.get('resp_A')
         return str(getattr(resp_A, 'content', '') or '').strip()
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_diag.py:209",
+            exc=e,
+            context={"function": "_run_prompt", "handler_line": 209, "source_file": "aurora_diag.py"},
+        )
         return f"[ERROR: {e}]"
 
 
@@ -288,6 +331,13 @@ def _apply_sensor_feedback(axis_results: dict, systems: dict, lines: list) -> No
             applied.append((dim, ax, severity, count))
             lines.append(f"  [{ax}] {dim}: severity={severity:.2f}  (fired {count}x) → pressure injected")
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_diag.py:290",
+                exc=e,
+                context={"function": "_apply_sensor_feedback", "handler_line": 290, "source_file": "aurora_diag.py"},
+            )
             lines.append(f"  [sensor] Error recording {dim}: {e}")
 
     if skipped:
@@ -300,6 +350,13 @@ def _apply_sensor_feedback(axis_results: dict, systems: dict, lines: list) -> No
             ledger.save()
             lines.append(f"  [sensor] fail_points.json saved ({len(applied)} dims updated)")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_diag.py:302",
+            exc=e,
+            context={"function": "_apply_sensor_feedback", "handler_line": 302, "source_file": "aurora_diag.py"},
+        )
         lines.append(f"  [sensor] ledger.save() error: {e}")
 
     # Persist genealogy pair stats + links
@@ -308,6 +365,13 @@ def _apply_sensor_feedback(axis_results: dict, systems: dict, lines: list) -> No
             genealogy.flush_files()
             lines.append("  [sensor] genealogy.flush_files() — pair stats + links persisted")
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_diag.py:310",
+            exc=e,
+            context={"function": "_apply_sensor_feedback", "handler_line": 310, "source_file": "aurora_diag.py"},
+        )
         lines.append(f"  [sensor] genealogy.flush_files() error: {e}")
 
     # If total severity is high (multiple noisy axes), trigger lesson flush
@@ -316,6 +380,13 @@ def _apply_sensor_feedback(axis_results: dict, systems: dict, lines: list) -> No
             dream_trainer.flush_lessons_to_simulation(systems)
             lines.append(f"  [sensor] High total severity ({total_sev:.2f}) → flush_lessons_to_simulation() triggered")
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_diag.py:318",
+                exc=e,
+                context={"function": "_apply_sensor_feedback", "handler_line": 318, "source_file": "aurora_diag.py"},
+            )
             lines.append(f"  [sensor] flush_lessons error: {e}")
 
     lines.append(f"\n  [sensor] Summary: {len(applied)} dimensions reinforced, total severity={total_sev:.2f}")

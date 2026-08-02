@@ -28,6 +28,7 @@ WIRING
 Call wire_crystallization_loops(systems) once after boot_aurora().
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 from typing import Any, Dict
 
@@ -93,7 +94,14 @@ def _crystallize_pressure_exp(exp: Any, dps: Any) -> None:
         crystal.add_facet(role=role, content=pursuing[:120], confidence=worth)
         crystal.use()
         crystal.evolve()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_crystal_ingestion.py:96",
+            exc=_aurora_boundary_exc,
+            context={"function": "_crystallize_pressure_exp", "handler_line": 96, "source_file": "aurora_crystal_ingestion.py"},
+        )
         pass
 
 
@@ -103,7 +111,14 @@ def _install_pressure_dps_hook(dps: Any) -> None:
         from aurora_internal.aurora_pressure_ledger import PressureExperienceLedger
         ledger = PressureExperienceLedger.get()
         ledger._crystal_hook = lambda exp: _crystallize_pressure_exp(exp, dps)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_crystal_ingestion.py:106",
+            exc=_aurora_boundary_exc,
+            context={"function": "_install_pressure_dps_hook", "handler_line": 106, "source_file": "aurora_crystal_ingestion.py"},
+        )
         pass
 
 
@@ -138,7 +153,14 @@ def _route_behavioral_to_dps(sensory_engine: Any, dps: Any) -> None:
                 )
                 crystal.use()
                 crystal.evolve()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_crystal_ingestion.py:141",
+            exc=_aurora_boundary_exc,
+            context={"function": "_route_behavioral_to_dps", "handler_line": 141, "source_file": "aurora_crystal_ingestion.py"},
+        )
         pass
 
 
@@ -181,7 +203,14 @@ def maybe_sediment_frame(frame_dict: Dict[str, Any], sedimemory: Any) -> None:
             source="dual_strata_frame",
             existence_mode=ExistenceMode.AGENTIC,
         )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_crystal_ingestion.py:184",
+            exc=_aurora_boundary_exc,
+            context={"function": "maybe_sediment_frame", "handler_line": 184, "source_file": "aurora_crystal_ingestion.py"},
+        )
         pass
 
 
@@ -190,7 +219,14 @@ def _install_dce_sediment_hook(dce_bridge: Any, sedimemory: Any) -> None:
     try:
         if dce_bridge is not None and sedimemory is not None:
             dce_bridge._sedimemory_ref = sedimemory
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_crystal_ingestion.py:193",
+            exc=_aurora_boundary_exc,
+            context={"function": "_install_dce_sediment_hook", "handler_line": 193, "source_file": "aurora_crystal_ingestion.py"},
+        )
         pass
 
 
@@ -254,7 +290,14 @@ def seed_dps_from_lexicon_and_oets(dps: Any, systems: Dict[str, Any]) -> int:
                 crystal.evolve()
                 seeded += 1
 
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_crystal_ingestion.py:257",
+            exc=_aurora_boundary_exc,
+            context={"function": "seed_dps_from_lexicon_and_oets", "handler_line": 257, "source_file": "aurora_crystal_ingestion.py"},
+        )
         pass
     return seeded
 

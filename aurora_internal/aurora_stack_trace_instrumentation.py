@@ -8,6 +8,7 @@ evolutionary trace records with pressure-before/after and applied effects.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import time
 from functools import wraps
@@ -31,7 +32,14 @@ def _is_wrappable_callable(fn: Any) -> bool:
 def _safe_name(obj: Any) -> str:
     try:
         return str(getattr(obj, "__name__", "")) or str(type(obj).__name__)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_stack_trace_instrumentation.py:34",
+            exc=_aurora_boundary_exc,
+            context={"function": "_safe_name", "handler_line": 34, "source_file": "aurora_internal/aurora_stack_trace_instrumentation.py"},
+        )
         return "unknown"
 
 
@@ -45,7 +53,14 @@ def _derive_applied_effects(before: Dict[str, Any], after: Dict[str, Any]) -> Di
         hb = float(((before or {}).get("heat", {}) or {}).get("score", 0.0) or 0.0)
         ha = float(((after or {}).get("heat", {}) or {}).get("score", 0.0) or 0.0)
         out["heat_delta"] = ha - hb
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_stack_trace_instrumentation.py:48",
+            exc=_aurora_boundary_exc,
+            context={"function": "_derive_applied_effects", "handler_line": 48, "source_file": "aurora_internal/aurora_stack_trace_instrumentation.py"},
+        )
         out["heat_delta"] = 0.0
     return out
 
@@ -84,7 +99,14 @@ def _make_wrapper(
                         ],
                     )
                     opened_here = True
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_stack_trace_instrumentation.py:87",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "wrapped", "handler_line": 87, "source_file": "aurora_internal/aurora_stack_trace_instrumentation.py"},
+                    )
                     trace_id = ""
 
         try:
@@ -113,7 +135,14 @@ def _make_wrapper(
                         pressure_after=after,
                         applied_effects=effects,
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_stack_trace_instrumentation.py:116",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "wrapped", "handler_line": 116, "source_file": "aurora_internal/aurora_stack_trace_instrumentation.py"},
+                    )
                     pass
 
     setattr(wrapped, "_aurora_trace_wrapped", True)
@@ -141,7 +170,14 @@ def _wrap_instance_methods(
                 continue
             try:
                 attr = getattr(obj, name)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_stack_trace_instrumentation.py:144",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_wrap_instance_methods", "handler_line": 144, "source_file": "aurora_internal/aurora_stack_trace_instrumentation.py"},
+                )
                 continue
             if not _is_wrappable_callable(attr):
                 continue
@@ -154,7 +190,14 @@ def _wrap_instance_methods(
                 wrapped = _make_wrapper(attr, f"{type(obj).__name__}.{name}", systems, pressure_fn)
                 setattr(obj, name, wrapped)
                 count += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_stack_trace_instrumentation.py:157",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_wrap_instance_methods", "handler_line": 157, "source_file": "aurora_internal/aurora_stack_trace_instrumentation.py"},
+                )
                 continue
     return count
 
@@ -195,7 +238,14 @@ def instrument_stack(
         try:
             wrapped_methods += _wrap_instance_methods(obj, systems, pressure_fn)
             _INSTRUMENTED_IDS.add(id(obj))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_stack_trace_instrumentation.py:198",
+                exc=_aurora_boundary_exc,
+                context={"function": "instrument_stack", "handler_line": 198, "source_file": "aurora_internal/aurora_stack_trace_instrumentation.py"},
+            )
             continue
 
     # Wrap consolidated layer function map so exported call surface is also traced.

@@ -29,6 +29,7 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -869,7 +870,14 @@ class DreamGenealogyBridge:
             with open(log_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             return data[-count:]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_dream_genealogy_bridge.py:872",
+                exc=_aurora_boundary_exc,
+                context={"function": "load_recent_evidence", "handler_line": 872, "source_file": "aurora_internal/aurora_dream_genealogy_bridge.py"},
+            )
             return []
 
     @property

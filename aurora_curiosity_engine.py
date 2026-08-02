@@ -17,6 +17,7 @@ CuriosityEngine.run_curiosity_cycle() is callable:
 - Maximum 3 cycles per idle period to prevent runaway loops
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import threading
@@ -349,7 +350,14 @@ class CuriosityEngine:
             thought = space.integrate()
             continuity = get_continuity()
             thought = continuity.carry_forward(thought)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:352",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 352, "source_file": "aurora_curiosity_engine.py"},
+            )
             thought = None
 
         # Read unresolved tensions
@@ -357,7 +365,14 @@ class CuriosityEngine:
         try:
             open_loops = self.systems.get("_open_loops") or []
             unresolved_tensions = [item.get("tension", "") for item in open_loops[-5:]]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:360",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 360, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # Read dominant field from field_map
@@ -368,7 +383,14 @@ class CuriosityEngine:
             if self.field_map and hasattr(self.field_map, "dominant_field"):
                 dominant_field = str(self.field_map.dominant_field or "")
                 origin_axis = dominant_field[0] if dominant_field else "A"
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:371",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 371, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # Read recent genealogy promotions
@@ -377,7 +399,14 @@ class CuriosityEngine:
             genealogy = self.systems.get("genealogy")
             if genealogy and hasattr(genealogy, "recent_promotions"):
                 promoted = list(genealogy.recent_promotions or [])[:3]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:380",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 380, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # Prioritize open curiosity loops from previous cycles
@@ -414,7 +443,14 @@ class CuriosityEngine:
                         ),
                         tick=tick,
                     )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:417",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 417, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # --- WARP awareness: promoted structural components become curiosity targets ---
@@ -450,7 +486,14 @@ class CuriosityEngine:
                     ),
                     tick=tick,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:453",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 453, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # --- WARP anomaly candidates become curiosity targets ---
@@ -480,7 +523,14 @@ class CuriosityEngine:
                         ),
                         tick=tick,
                     )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:483",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 483, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # --- WarpField anomaly ledger — recurring unresolved demands become curiosity targets ---
@@ -520,7 +570,14 @@ class CuriosityEngine:
                     ),
                     tick=tick,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:523",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 523, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # --- Crystal gap report — highest priority new curiosity source ---
@@ -579,7 +636,14 @@ class CuriosityEngine:
                         ),
                         tick=tick,
                     )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:582",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 582, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # ── Waveform manifold pressure self-selection ─────────────────────────
@@ -602,7 +666,14 @@ class CuriosityEngine:
                     _manifold_urgency_boost = min(0.30, (_high_p - 0.10) * 1.20)
                     # Override origin_axis toward what the manifold is expressing
                     origin_axis = _manifold_axis
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:605",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 605, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # ── Perceptual curiosity: be curious about what the crystal just sensed ──
@@ -627,7 +698,14 @@ class CuriosityEngine:
                     ),
                     tick=tick,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:630",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 630, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # ── WARP emergence candidate: explore the anomaly that won't fit ────────
@@ -658,7 +736,14 @@ class CuriosityEngine:
                     ),
                     tick=tick,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:661",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 661, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # ── Creator file access: relational awareness curiosity ──────────────────
@@ -702,7 +787,14 @@ class CuriosityEngine:
                     hypothesis=_hyp,
                     tick=tick,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:705",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 705, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # ── Acquired skill curiosity: what does the new capability enable? ──────
@@ -729,7 +821,14 @@ class CuriosityEngine:
                     ),
                     tick=tick,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:732",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 732, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # ── Capability gap curiosity: pursue unresolved inability ─────────────
@@ -762,7 +861,14 @@ class CuriosityEngine:
                     ),
                     tick=tick,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:765",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step1_emergence", "handler_line": 765, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # Form new CuriosityObject from current state
@@ -876,7 +982,14 @@ class CuriosityEngine:
                     if self.pressure_source and hasattr(self.pressure_source, "_current_pressure_vec"):
                         pv = self.pressure_source._current_pressure_vec()
                     self.tool_mind.on_tool_chosen(intention, pv, self.field_map)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_curiosity_engine.py:879",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_step3_execution", "handler_line": 879, "source_file": "aurora_curiosity_engine.py"},
+                    )
                     pass
 
                 # Execute tool — supply the kwargs each tool needs
@@ -903,7 +1016,14 @@ class CuriosityEngine:
                 # Ingest as pressure event
                 packet = ingest_tool_result(intention, result_text, self.systems)
                 record_tool_result(packet)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_curiosity_engine.py:906",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_step3_execution", "handler_line": 906, "source_file": "aurora_curiosity_engine.py"},
+                )
                 results[tool_name] = "error during execution"
                 # ---- OFFLINE RESILIENCE — surface gap to user if offline ----
                 try:
@@ -914,7 +1034,14 @@ class CuriosityEngine:
                                 question=curiosity.subject,
                                 context=str(curiosity.hypothesis or ''),
                             )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_curiosity_engine.py:917",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_step3_execution", "handler_line": 917, "source_file": "aurora_curiosity_engine.py"},
+                    )
                     pass
         return results
 
@@ -944,7 +1071,14 @@ class CuriosityEngine:
             )
             anchor = grounded.anchor_type
             conf_base = grounded.confidence
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:947",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step4_conclusion", "handler_line": 947, "source_file": "aurora_curiosity_engine.py"},
+            )
             anchor = "external"
             conf_base = 0.4
 
@@ -967,7 +1101,14 @@ class CuriosityEngine:
                     v = str(getattr(ci, attr, "") or "")
                     if v and v.lower() in all_results.lower() and "not" in all_results.lower():
                         conflicts.append(f"potential conflict with {attr}={v}")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:970",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step4_conclusion", "handler_line": 970, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         return Conclusion(
@@ -1009,7 +1150,14 @@ class CuriosityEngine:
                     identity_conflict = False  # aligns with values → no conflict
                 elif conclusion.conflicts_with:
                     identity_conflict = True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:1012",
+                exc=_aurora_boundary_exc,
+                context={"function": "_step5_challenge", "handler_line": 1012, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # b) Constraint challenge: X,T,N,B,A as filters
@@ -1093,7 +1241,14 @@ class CuriosityEngine:
                         tags=["curiosity_origin", curiosity.curiosity_type],
                         confidence=conclusion.confidence,
                     )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_curiosity_engine.py:1096",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_step6_settlement", "handler_line": 1096, "source_file": "aurora_curiosity_engine.py"},
+                )
                 pass
             # Update identity predicates if conclusion is identity-relevant (>0.5)
             # [FLAGGED FOR REVIEW: identity predicate update path — verify live API]
@@ -1102,7 +1257,14 @@ class CuriosityEngine:
                     ci = self.systems.get("core_identity")
                     if ci and hasattr(ci, "update_from_curiosity"):
                         ci.update_from_curiosity(conclusion.to_dict())
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_curiosity_engine.py:1105",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_step6_settlement", "handler_line": 1105, "source_file": "aurora_curiosity_engine.py"},
+                )
                 pass
 
             # Gap curiosity settled: trigger training so the newly filled crystal
@@ -1112,7 +1274,14 @@ class CuriosityEngine:
                 try:
                     from aurora_internal.tool_registry import call as _tool_call
                     _tool_call("corpus_train_auto", systems=self.systems)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_curiosity_engine.py:1115",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_step6_settlement", "handler_line": 1115, "source_file": "aurora_curiosity_engine.py"},
+                    )
                     pass
                 # Also tick crystal promotions immediately so the concept advances
                 try:
@@ -1120,7 +1289,14 @@ class CuriosityEngine:
                           getattr(self.systems.get("hardware"), "sensory_crystal", None))
                     if sc is not None and hasattr(sc, "tick_concept_promotions"):
                         sc.tick_concept_promotions()
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_curiosity_engine.py:1123",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_step6_settlement", "handler_line": 1123, "source_file": "aurora_curiosity_engine.py"},
+                    )
                     pass
 
             identity_delta = f"settled:{curiosity.subject[:40]}"
@@ -1135,7 +1311,14 @@ class CuriosityEngine:
                     "tension": f"{curiosity.subject[:40]}:{challenge.strongest_counter[:40]}",
                     "ts": time.time(),
                 })
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_curiosity_engine.py:1138",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_step6_settlement", "handler_line": 1138, "source_file": "aurora_curiosity_engine.py"},
+                )
                 pass
 
             # When a semantic or perceptual gap can't be resolved by tools,
@@ -1174,7 +1357,14 @@ class CuriosityEngine:
                                     intensity=0.72,
                                     source=f"gap_divergence:{subj}",
                                 )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_curiosity_engine.py:1177",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_step6_settlement", "handler_line": 1177, "source_file": "aurora_curiosity_engine.py"},
+                    )
                     pass
 
             return False, None
@@ -1185,7 +1375,14 @@ class CuriosityEngine:
             _THOUGHT_CHAIN_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
             with open(_THOUGHT_CHAIN_LOG_PATH, "a", encoding="utf-8") as f:
                 f.write(json.dumps(record, ensure_ascii=False) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:1188",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_cycle", "handler_line": 1188, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
 
@@ -1217,7 +1414,14 @@ def start_curiosity_background(
                         if _CYCLE_INTERRUPTIBLE.is_set() or _CURIOSITY_STOP.is_set():
                             break
                         engine.run_curiosity_cycle()
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_curiosity_engine.py:1220",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_loop", "handler_line": 1220, "source_file": "aurora_curiosity_engine.py"},
+                    )
                     pass
             _CURIOSITY_STOP.wait(timeout=tick_interval_s)
 
@@ -1248,7 +1452,14 @@ def _get_available_tools() -> set:
     try:
         from aurora_internal.tool_registry import available_tools
         return set(available_tools())
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_curiosity_engine.py:1251",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_available_tools", "handler_line": 1251, "source_file": "aurora_curiosity_engine.py"},
+        )
         return set()
 
 
@@ -1283,7 +1494,14 @@ def _register_background_processes(
             consciousness = systems.get("consciousness")
             if consciousness:
                 sm = getattr(consciousness, "sedimemory", None)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:1286",
+                exc=_aurora_boundary_exc,
+                context={"function": "_register_background_processes", "handler_line": 1286, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
         if sm:
             space.register(make_process_context(
@@ -1309,7 +1527,14 @@ def _register_background_processes(
                     axis_signature=["A", "N"],
                     tick=tick,
                 ))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_curiosity_engine.py:1312",
+                exc=_aurora_boundary_exc,
+                context={"function": "_register_background_processes", "handler_line": 1312, "source_file": "aurora_curiosity_engine.py"},
+            )
             pass
 
         # Constraint process
@@ -1324,5 +1549,12 @@ def _register_background_processes(
                 tick=tick,
                 unresolved_tension_weight=0.6,
             ))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_curiosity_engine.py:1327",
+            exc=_aurora_boundary_exc,
+            context={"function": "_register_background_processes", "handler_line": 1327, "source_file": "aurora_curiosity_engine.py"},
+        )
         pass

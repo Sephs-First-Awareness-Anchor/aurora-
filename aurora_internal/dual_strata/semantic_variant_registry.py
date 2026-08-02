@@ -39,6 +39,7 @@ weights and lifecycle counts are this implementation's first pass,
 about the thresholds.
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -347,7 +348,14 @@ class SemanticVariantRegistry:
                 self._index = {
                     k: list(v) for k, v in (raw.get("index", {}) or {}).items()
                 }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:350",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_index", "handler_line": 350, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
+            )
             pass
 
     def save_index(self) -> bool:
@@ -368,7 +376,14 @@ class SemanticVariantRegistry:
             os.replace(tmp, self._index_path)
             self._dirty = False
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:371",
+                exc=_aurora_boundary_exc,
+                context={"function": "save_index", "handler_line": 371, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
+            )
             return False
 
     def _index_upsert(self, variant: SemanticVariant) -> None:
@@ -399,7 +414,14 @@ class SemanticVariantRegistry:
             if f.role == "variant_state":
                 try:
                     variant = SemanticVariant.from_dict(json.loads(f.content))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:402",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_read_variant", "handler_line": 402, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
+                    )
                     return None
                 if variant.variant_id not in self._seen_this_boot:
                     variant.restart_survivals += 1
@@ -435,11 +457,25 @@ class SemanticVariantRegistry:
             parent.connections[crystal.crystal_id] = max(
                 parent.connections.get(crystal.crystal_id, 0.0), variant.confidence,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:438",
+                exc=_aurora_boundary_exc,
+                context={"function": "_write_variant", "handler_line": 438, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
+            )
             pass
         try:
             crystal.evolve()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/semantic_variant_registry.py:442",
+                exc=_aurora_boundary_exc,
+                context={"function": "_write_variant", "handler_line": 442, "source_file": "aurora_internal/dual_strata/semantic_variant_registry.py"},
+            )
             pass
         self._seen_this_boot.add(variant.variant_id)
 

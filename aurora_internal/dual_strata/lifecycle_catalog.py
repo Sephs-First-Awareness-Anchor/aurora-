@@ -40,6 +40,7 @@ Alive/dead calls, per structure kind (first-pass; not spec-pinned):
                             "it happened" signal left.
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import time
@@ -65,7 +66,14 @@ def _catalog_semantic_variants(dps: Any) -> Dict[str, Any]:
                     continue
                 try:
                     data = json.loads(facet.content)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/dual_strata/lifecycle_catalog.py:68",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_catalog_semantic_variants", "handler_line": 68, "source_file": "aurora_internal/dual_strata/lifecycle_catalog.py"},
+                    )
                     continue
                 status = str(data.get("status", "") or "")
                 entry = {
@@ -152,15 +160,36 @@ def catalog_lifecycle(*, dps: Any = None, warp_hosts: Optional[Dict[str, Any]] =
     just yields empty sections, never raises."""
     try:
         semantic = _catalog_semantic_variants(dps)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/lifecycle_catalog.py:155",
+            exc=_aurora_boundary_exc,
+            context={"function": "catalog_lifecycle", "handler_line": 155, "source_file": "aurora_internal/dual_strata/lifecycle_catalog.py"},
+        )
         semantic = {"alive_count": 0, "dead_count": 0, "alive": [], "dead": []}
     try:
         facets = _catalog_crystal_facets(dps)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/lifecycle_catalog.py:159",
+            exc=_aurora_boundary_exc,
+            context={"function": "catalog_lifecycle", "handler_line": 159, "source_file": "aurora_internal/dual_strata/lifecycle_catalog.py"},
+        )
         facets = {"alive_count": 0, "dead_count": 0, "alive": [], "dead": []}
     try:
         warp = _catalog_warp_components(warp_hosts or {})
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/lifecycle_catalog.py:163",
+            exc=_aurora_boundary_exc,
+            context={"function": "catalog_lifecycle", "handler_line": 163, "source_file": "aurora_internal/dual_strata/lifecycle_catalog.py"},
+        )
         warp = {"alive_count": 0, "dead_count": 0, "alive": [], "dead_note": ""}
 
     return {

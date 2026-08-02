@@ -2,6 +2,7 @@
 """Interaction crystal formation, promotion, collapse, and routing."""
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import re
 import statistics
@@ -18,11 +19,25 @@ from aurora_constraint_engine import (
 _FC = _FoundationalContract()
 try:
     from quasiarch_observer import CrystalInstance, CrystalOrder
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_interaction_processing.py:21",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 21, "source_file": "aurora_interaction_processing.py"},
+    )
     from aurora_internal.quasiarch_observer import CrystalInstance, CrystalOrder
 try:
     from dimensional_processing_system_standalone_demo import RelationalPoint
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_interaction_processing.py:25",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 25, "source_file": "aurora_interaction_processing.py"},
+    )
     from aurora_internal.quasiarch_observer.dimensional_processing import RelationalPoint
 
 from aurora_interaction_engine import (
@@ -115,6 +130,7 @@ class InteractionProcessing:
         self._composites: Dict[str, InteractionCrystalInstance] = {}
         self._higher_orders: Dict[str, InteractionCrystalInstance] = {}
         self._quasicrystals: Dict[str, InteractionCrystalInstance] = {}
+        self._rehydrate_from_memory()
 
     def form_base_interaction(
         self,
@@ -180,6 +196,71 @@ class InteractionProcessing:
         if auto_promote:
             summary["advance"] = self.advance_interaction_family(base.get_facet("interpretive_issue"))
         return summary
+
+    def finalize_base_interaction(
+        self,
+        base_id: str,
+        observed_effect: str,
+        outcome_meta: Optional[Mapping[str, Any]] = None,
+        *,
+        auto_promote: bool = True,
+    ) -> Dict[str, Any]:
+        """Apply receiver evidence to a previously pending base interaction.
+
+        A pending base is deliberately non-promotable.  Its effect and point
+        scores are rewritten only after the next turn supplies evidence, then
+        (and only then) the normal promotion ladder may run.
+        """
+        base = self._bases.get(str(base_id))
+        if base is None:
+            return {"ok": False, "base_id": str(base_id), "reason": "base_missing"}
+
+        effect = str(observed_effect or "pending_verification").strip()
+        if effect not in {
+            "resolved_fully",
+            "resolved_partially",
+            "resolved_partially__followup_gap_appeared",
+            "no_change_observed",
+            "regression_introduced",
+            "pending_verification",
+        }:
+            effect = "pending_verification"
+
+        base.set_facet("observed_effect", effect)
+        meta = dict(outcome_meta or {})
+        receiver_evidence = dict(base.lineage_meta.get("receiver_evidence", {}) or {})
+        receiver_evidence.update(meta)
+        receiver_evidence["observed_effect"] = effect
+        receiver_evidence["finalized_at"] = time.time()
+        base.lineage_meta["receiver_evidence"] = receiver_evidence
+        base.tags = self._unique(list(base.tags) + [f"receiver_outcome:{effect}"])
+        base.resolution_fidelity = self.engine.resolution_fidelity(effect)
+
+        event = {field_name: base.get_facet(field_name) for field_name in BASE_INTERACTION_FACETS}
+        for law in self.engine.point_laws_for_order("BASE"):
+            point = base.relational_points.get(law.name)
+            if point is None:
+                point = RelationalPoint(law=law)
+                base.add_point(point)
+            point.score = self.engine.score_base_point(law.name, event)
+            point.contradiction = point.score < 0.4 and law.name in {
+                "intended_effect__observed_effect",
+                "input_signature__processing_tier",
+                "interpretive_issue__response_action",
+            }
+
+        self.memory.persist(base)
+        advance = None
+        if auto_promote and effect != "pending_verification":
+            advance = self.advance_interaction_family(base.get_facet("interpretive_issue"))
+        return {
+            "ok": True,
+            "base_id": base.crystal_id,
+            "observed_effect": effect,
+            "resolution_fidelity": base.resolution_fidelity,
+            "base": base,
+            "advance": advance,
+        }
 
     def promote_to_composite(self, issue_family: str) -> Tuple[Optional[InteractionCrystalInstance], InteractionPromotion]:
         base_crystals = self._base_family(issue_family)
@@ -305,6 +386,61 @@ class InteractionProcessing:
         self.memory.relic(higher_obj)
         self.ghost_system.remember(quasi)
         return quasi, evaluation
+
+    def _rehydrate_from_memory(self) -> None:
+        """Restore persisted interaction crystals into live lineage maps.
+
+        Retrieval memory already restores serialized nodes, but the processing
+        object previously started with empty `_bases`/promotion maps.  That
+        made persisted base IDs unusable for later promotion and finalization.
+        """
+        node_map = getattr(self.memory, "_nodes", {}) or {}
+        target_maps = {
+            "BASE": self._bases,
+            "COMPOSITE": self._composites,
+            "HIGHER_ORDER": self._higher_orders,
+            "QUASI": self._quasicrystals,
+        }
+        strata_fields = set(InteractionQuasiInnerStrata.__dataclass_fields__)
+        for node in node_map.values():
+            if getattr(node, "is_relic", False):
+                continue
+            order_name = str(getattr(node, "order", "BASE") or "BASE")
+            target = target_maps.get(order_name)
+            order = getattr(CrystalOrder, order_name, None)
+            if target is None or order is None:
+                continue
+            try:
+                crystal = node.to_crystal(InteractionCrystalInstance, order)
+                for law in self.engine.point_laws_for_order(order_name):
+                    if law.name not in dict(node.point_scores or {}):
+                        continue
+                    crystal.add_point(RelationalPoint(
+                        law=law,
+                        score=float(dict(node.point_scores or {}).get(law.name, 0.0) or 0.0),
+                        evidence=f"rehydrated:{node.node_id}",
+                        contradiction=float(dict(node.point_scores or {}).get(law.name, 0.0) or 0.0) < 0.4,
+                    ))
+                if node.quasi_inner_strata and order_name == "QUASI":
+                    payload = {
+                        key: value
+                        for key, value in dict(node.quasi_inner_strata).items()
+                        if key in strata_fields
+                    }
+                    crystal.quasi_strata = InteractionQuasiInnerStrata(**payload)
+                target[crystal.crystal_id] = crystal
+            except Exception as _rehydrate_node_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="rehydrate_historical_interaction_node",
+                    exc=_rehydrate_node_exc,
+                    severity="warning",
+                    context={"function": "_rehydrate_from_memory", "node_id": str(getattr(node, "node_id", ""))},
+                )
+                # A malformed historical node must not prevent newer runtime
+                # interactions from being formed.
+                continue
 
     def advance_interaction_family(self, issue_family: str) -> Dict[str, Any]:
         summary: Dict[str, Any] = {
@@ -551,9 +687,15 @@ class InteractionProcessing:
         return avg_fidelity or 0.5
 
     def _base_family(self, issue_family: str) -> List[InteractionCrystalInstance]:
+        # Only receiver-validated positive outcomes are eligible to teach a
+        # reusable interaction strategy.  A pending, failed, or follow-up-gap
+        # response is evidence about what not to promote, not a stable base
+        # for a composite pattern.
+        positive_effects = {"resolved_fully", "resolved_partially"}
         return [
             crystal for crystal in self._bases.values()
             if str(crystal.get_facet("interpretive_issue") or "") == str(issue_family)
+            and str(crystal.get_facet("observed_effect") or "") in positive_effects
         ]
 
     def _crystals_from_base_ids(self, base_ids: Sequence[str]) -> List[InteractionCrystalInstance]:

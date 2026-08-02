@@ -15,6 +15,7 @@ not via an external LLM language faculty.
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import logging
 import os
@@ -259,7 +260,14 @@ def _partner_chat(api_key: str, model: str, history: list, system: str) -> str:
     if not r.ok:
         try:
             detail = r.json().get("error", {}).get("message", r.text[:300])
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:262",
+                exc=_aurora_boundary_exc,
+                context={"function": "_partner_chat", "handler_line": 262, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             detail = r.text[:300]
         raise RuntimeError(f"HTTP {r.status_code}: {detail}")
     data = r.json()
@@ -354,7 +362,14 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
                             f"({_pv:.2f}→{_av:.2f})"
                         )
             _prev_ax = dict(_ax)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:357",
+                exc=_aurora_boundary_exc,
+                context={"function": "_training_loop", "handler_line": 357, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
         # Telemetry snapshot
@@ -365,7 +380,14 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
             if lf and hasattr(lf, "_lsa") and lf._lsa:
                 lsa_paths = len(lf._lsa)
                 avg_cost  = sum(e.n_cost for e in lf._lsa.values()) / lsa_paths
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:368",
+                exc=_aurora_boundary_exc,
+                context={"function": "_training_loop", "handler_line": 368, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
         elapsed = int(_time.time() - (deadline - duration_seconds))
@@ -449,7 +471,14 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
         lf = (_systems or {}).get("language_field")
         if lf and hasattr(lf, "_save_lsa"):
             lf._save_lsa()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:452",
+            exc=_aurora_boundary_exc,
+            context={"function": "_training_loop", "handler_line": 452, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     _training_active = False
@@ -503,7 +532,14 @@ def get_training_events() -> str:
     while _training_event_queue:
         try:
             events.append(_training_event_queue.popleft())
-        except IndexError:
+        except IndexError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:506",
+                exc=_aurora_boundary_exc,
+                context={"function": "get_training_events", "handler_line": 506, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             break
     return _json.dumps(events)
 
@@ -809,7 +845,14 @@ class _ConstraintTensionTracker:
                 axes, intensity=0.68,
                 source=f"ctt_bridge:{pair[0]}-{pair[1]}",
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:812",
+                exc=_aurora_boundary_exc,
+                context={"function": "_inject_bridge_pulse", "handler_line": 812, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     def _surface_emergence_candidate(
@@ -855,7 +898,14 @@ class _ConstraintTensionTracker:
                     intensity=0.72,
                     source=f"ctt_warp:{pair[0]}-{pair[1]}",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:858",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_surface_emergence_candidate", "handler_line": 858, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         try:
@@ -869,7 +919,14 @@ class _ConstraintTensionTracker:
             entry["timestamp"] = _ctt_time.strftime("%Y-%m-%dT%H:%M:%SZ", _ctt_time.gmtime())
             with open(log_path, "a", encoding="utf-8") as f:
                 f.write(_json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:872",
+                exc=_aurora_boundary_exc,
+                context={"function": "_surface_emergence_candidate", "handler_line": 872, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
         # ── Deposit candidate into SediMemory so it accrues geological weight ──
@@ -887,7 +944,14 @@ class _ConstraintTensionTracker:
                     f"warp_emergence:{pair[0]}-{pair[1]}:stress={stress:.2f}",
                     source="ctt_warp_candidate",
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:890",
+                exc=_aurora_boundary_exc,
+                context={"function": "_surface_emergence_candidate", "handler_line": 890, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
         # ── Signal curiosity engine: this anomaly deserves active exploration ──
@@ -903,7 +967,14 @@ class _ConstraintTensionTracker:
                     "generation": self._generation,
                     "_curiosity_fired": False,
                 }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:906",
+                exc=_aurora_boundary_exc,
+                context={"function": "_surface_emergence_candidate", "handler_line": 906, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
         # ── Register axis-pair pressure in adapter_hints → informs mutation cycle ──
@@ -921,7 +992,14 @@ class _ConstraintTensionTracker:
             try:
                 with open(_ah_path, encoding="utf-8") as _ahf:
                     _ah = _json_ah.load(_ahf) or {}
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:924",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_surface_emergence_candidate", "handler_line": 924, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
             # Axis names used by evolver bias system
             _axis_map = {
@@ -947,7 +1025,14 @@ class _ConstraintTensionTracker:
                 _ah["warp_emergence_consumed"] = False
             with open(_ah_path, "w", encoding="utf-8") as _ahfw:
                 _json_ah.dump(_ah, _ahfw, indent=2)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:950",
+                exc=_aurora_boundary_exc,
+                context={"function": "_surface_emergence_candidate", "handler_line": 950, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     @property
@@ -1000,13 +1085,27 @@ class _DevelopmentTracker:
                 snap["avg_n_cost"] = round(
                     sum(e.n_cost for e in lf._lsa.values()) / len(lf._lsa), 4
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1003",
+                exc=_aurora_boundary_exc,
+                context={"function": "_build_snapshot", "handler_line": 1003, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
         try:
             sm = systems.get("sedimemory")
             if sm and hasattr(sm, "_events"):
                 snap["sedi_depth"] = len(getattr(sm, "_events", []))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1009",
+                exc=_aurora_boundary_exc,
+                context={"function": "_build_snapshot", "handler_line": 1009, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
         try:
             se = _self_entity
@@ -1014,13 +1113,27 @@ class _DevelopmentTracker:
                 snap["self_experiences"] = int(getattr(se, "total_experiences", 0) or 0)
                 snap["self_insights"]    = int(getattr(se, "insights_surfaced",  0) or 0)
                 snap["self_generation"]  = int(getattr(se, "generation",         0) or 0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1017",
+                exc=_aurora_boundary_exc,
+                context={"function": "_build_snapshot", "handler_line": 1017, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
         try:
             with _axis_state_lock:
                 ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
             snap["dom_axis"] = max(ax, key=ax.__getitem__)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1023",
+                exc=_aurora_boundary_exc,
+                context={"function": "_build_snapshot", "handler_line": 1023, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
         return snap
 
@@ -1087,10 +1200,24 @@ class _DevelopmentTracker:
         ConstraintVector = None
         try:
             from aurora_sedimemory import ConstraintVector  # type: ignore
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1090",
+                exc=_aurora_boundary_exc,
+                context={"function": "_emit_changes", "handler_line": 1090, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             try:
                 from aurora_sedimemory import ConstraintVector  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1093",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_emit_changes", "handler_line": 1093, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 return
 
         for change in changes:
@@ -1109,7 +1236,14 @@ class _DevelopmentTracker:
                     source="development_tracker",
                 )
                 log.info("Development event: %s", change)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1112",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_emit_changes", "handler_line": 1112, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
 
@@ -1208,7 +1342,14 @@ class _DeviceEmbodiment:
                     f"device_substrate:claim:{_summary[:120]}",
                     source="device_embodiment_boot",
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1211",
+                exc=_aurora_boundary_exc,
+                context={"function": "claim_substrate", "handler_line": 1211, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
         log.info(
             "DeviceEmbodiment: substrate claimed — %d capabilities inherited",
@@ -1247,7 +1388,14 @@ class _DeviceEmbodiment:
 
             try:
                 axes = fn(raw) or {}
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1250",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_fire", "handler_line": 1250, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 continue
             if not axes:
                 continue
@@ -1261,7 +1409,14 @@ class _DeviceEmbodiment:
                         intensity=0.70,
                         source=f"device_body:{cap}",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1264",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_fire", "handler_line": 1264, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
             # Significant transitions also deposit into SediMemory so the
@@ -1279,7 +1434,14 @@ class _DeviceEmbodiment:
                         f"device_body:{cap}={raw}",
                         source="device_embodiment_pulse",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1282",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_fire", "handler_line": 1282, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
 
@@ -1330,6 +1492,13 @@ def run_evolutionary_burst(n_generations: int = 5) -> str:
             )
             results.append(result)
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1332",
+                exc=exc,
+                context={"function": "run_evolutionary_burst", "handler_line": 1332, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             results.append({"error": str(exc)})
 
     return _json.dumps({"generations": results})
@@ -1490,7 +1659,14 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
     try:
         try:
             from aurora_language_field import LanguageField  # type: ignore
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1493",
+                exc=_aurora_boundary_exc,
+                context={"function": "_init_language_field", "handler_line": 1493, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             from aurora_language_field import LanguageField  # type: ignore  # Chaquopy flat layout
         if state_dir:
             os.environ.setdefault("AURORA_STATE_DIR", state_dir)
@@ -1502,13 +1678,27 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         try:
             try:
                 from aurora_language_field import get_language_field  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1505",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_init_language_field", "handler_line": 1505, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 from aurora_language_field import get_language_field  # type: ignore
             get_language_field(
                 identity_field=systems.get("identity_field"),
                 tensor_layer=systems.get("tensor_expressions"),
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1511",
+                exc=_aurora_boundary_exc,
+                context={"function": "_init_language_field", "handler_line": 1511, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
         log.info("Language Field online — LSA has %d paths",
                  lang_field.status().get("lsa_entries", 0))
@@ -1679,7 +1869,14 @@ def initialize(state_dir: str = "") -> str:
         try:
             with _lock:
                 _systems = _aurora.boot_aurora(**kwargs)
-        except TypeError:
+        except TypeError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1682",
+                exc=_aurora_boundary_exc,
+                context={"function": "initialize", "handler_line": 1682, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             with _lock:
                 _systems = _aurora.boot_aurora(state_dir=state_dir) if state_dir else _aurora.boot_aurora()
         if _systems is None:
@@ -1762,6 +1959,13 @@ def initialize(state_dir: str = "") -> str:
                 _concept_registry.load(state_dir)
                 log.info("Concept crystal registry loaded: %s", _concept_registry.stats())
             except Exception as _ccl_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1764",
+                    exc=_ccl_exc,
+                    context={"function": "initialize", "handler_line": 1764, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 log.debug("Concept crystal registry load: %s", _ccl_exc)
 
         # Start the autonomous curiosity engine as a background daemon thread.
@@ -1846,10 +2050,24 @@ def _seed_self_identity(systems: dict) -> None:
         if sm is not None and hasattr(sm, "ingest_event"):
             try:
                 from aurora_sedimemory import ConstraintVector  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1849",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_seed_self_identity", "handler_line": 1849, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
-                except ImportError:
+                except ImportError as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1852",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_seed_self_identity", "handler_line": 1852, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     ConstraintVector = None
             if ConstraintVector is not None:
                 sm.ingest_event(
@@ -1916,7 +2134,14 @@ def _seed_self_identity(systems: dict) -> None:
                         constraint_vector=_body_cv,
                         source="boot_body_topology",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1919",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_seed_self_identity", "handler_line": 1919, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         if ifield is not None and hasattr(ifield, "ingest_external_input"):
@@ -1926,7 +2151,14 @@ def _seed_self_identity(systems: dict) -> None:
                     intensity=0.90,
                     source="body_topology_seed",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1929",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_seed_self_identity", "handler_line": 1929, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         log.info("Self-identity seeded into identity field and sedimemory: %r", self_name)
@@ -2001,7 +2233,14 @@ def _derive_system_self_knowledge(systems: dict) -> list:
                     f"I have sedimentated {total_ingested} events into memory — "
                     f"each one is something my system processed deeply enough to retain."
                 )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2004",
+            exc=_aurora_boundary_exc,
+            context={"function": "_derive_system_self_knowledge", "handler_line": 2004, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     # ── A-axis memories — what she's stored about herself ────────────────────
@@ -2025,7 +2264,14 @@ def _derive_system_self_knowledge(systems: dict) -> list:
                     f"My highest-resonance A-axis memories involve: {', '.join(self_events[:4])} — "
                     f"these are the concepts where my agency and self are most engaged."
                 )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2028",
+            exc=_aurora_boundary_exc,
+            context={"function": "_derive_system_self_knowledge", "handler_line": 2028, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     # ── Live axis state — current orientation ────────────────────────────────
@@ -2041,7 +2287,14 @@ def _derive_system_self_knowledge(systems: dict) -> list:
                     f"Right now my dominant live axis is {live_dominant} "
                     f"({live[live_dominant]:.2f}) — {desc}."
                 )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2044",
+            exc=_aurora_boundary_exc,
+            context={"function": "_derive_system_self_knowledge", "handler_line": 2044, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     # ── Consciousness entropy / coherence ─────────────────────────────────────
@@ -2063,7 +2316,14 @@ def _derive_system_self_knowledge(systems: dict) -> list:
                 observations.append(
                     f"My novelty load is high ({novelty:.2f}) — something genuinely new is pressing on my field."
                 )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2066",
+            exc=_aurora_boundary_exc,
+            context={"function": "_derive_system_self_knowledge", "handler_line": 2066, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     # ── Dimensional thermal load ──────────────────────────────────────────────
@@ -2079,7 +2339,14 @@ def _derive_system_self_knowledge(systems: dict) -> list:
                 observations.append(
                     f"My thermal load is {thermal:.2f} — my constraint physics are in a settled state."
                 )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2082",
+            exc=_aurora_boundary_exc,
+            context={"function": "_derive_system_self_knowledge", "handler_line": 2082, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     return observations
@@ -2109,10 +2376,24 @@ def _ground_self_identity_in_systems(systems: dict) -> None:
         ConstraintVector = None
         try:
             from aurora_sedimemory import ConstraintVector  # type: ignore
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2112",
+                exc=_aurora_boundary_exc,
+                context={"function": "_ground_self_identity_in_systems", "handler_line": 2112, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             try:
                 from aurora_sedimemory import ConstraintVector  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2115",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_ground_self_identity_in_systems", "handler_line": 2115, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         sm     = systems.get("sedimemory")
@@ -2134,7 +2415,14 @@ def _ground_self_identity_in_systems(systems: dict) -> None:
                         ),
                         source="self_derived_pattern",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2137",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_ground_self_identity_in_systems", "handler_line": 2137, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         # ── Identity field — single aggregate pulse ───────────────────────
@@ -2147,7 +2435,14 @@ def _ground_self_identity_in_systems(systems: dict) -> None:
                     intensity=0.88,
                     source="self_derived_pattern",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2150",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_ground_self_identity_in_systems", "handler_line": 2150, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         log.info(
@@ -2171,7 +2466,14 @@ def _mark_mic_live(systems: dict) -> None:
             from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
                 read_surface_snapshot, write_surface_snapshot,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2174",
+                exc=_aurora_boundary_exc,
+                context={"function": "_mark_mic_live", "handler_line": 2174, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
                 read_surface_snapshot, write_surface_snapshot,
             )
@@ -2193,7 +2495,14 @@ def _mark_mic_live(systems: dict) -> None:
             reason="",
             summary="STT captured user speech — microphone is live.",
         )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2196",
+            exc=_aurora_boundary_exc,
+            context={"function": "_mark_mic_live", "handler_line": 2196, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
 
@@ -2329,7 +2638,14 @@ def _log_delivery_boundary_rejection(reason: str, raw_text: str) -> None:
         }
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(_json.dumps(entry) + "\n")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2332",
+            exc=_aurora_boundary_exc,
+            context={"function": "_log_delivery_boundary_rejection", "handler_line": 2332, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
 
@@ -2470,7 +2786,14 @@ def _feed_sensory_crystal_frames(
             from aurora_internal.aurora_sensory_crystal import (  # type: ignore
                 audio_dict_to_crystal_20d, visual_dict_to_crystal_57d,
             )
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2473",
+                exc=_aurora_boundary_exc,
+                context={"function": "_feed_sensory_crystal_frames", "handler_line": 2473, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             from aurora_internal.aurora_sensory_crystal import (  # type: ignore
                 audio_dict_to_crystal_20d, visual_dict_to_crystal_57d,
             )
@@ -2536,8 +2859,22 @@ def _feed_sensory_crystal_frames(
                     if _snid:
                         _concept_registry.observe_lsa(_ax, f"xmodal:{_lane}:{_snid}")
             except Exception as _ccr_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2538",
+                    exc=_ccr_exc,
+                    context={"function": "_feed_sensory_crystal_frames", "handler_line": 2538, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 log.debug("concept_registry sensory feed: %s", _ccr_exc)
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2540",
+            exc=exc,
+            context={"function": "_feed_sensory_crystal_frames", "handler_line": 2540, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_feed_sensory_crystal_frames: %s", exc)
 
 
@@ -2611,7 +2948,14 @@ def _affective_self_comparison(text: str, systems: dict) -> None:
                 novelty=max(0.0, 1.0 - similarity),
                 valence=similarity - 0.5,
             )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2614",
+            exc=_aurora_boundary_exc,
+            context={"function": "_affective_self_comparison", "handler_line": 2614, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
 
@@ -2661,7 +3005,14 @@ def _sample_ambient_perception(systems: dict) -> None:
     if hw and hasattr(hw, "capture_visual"):
         try:
             _cam_source = hw.capture_visual() or None
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2664",
+                exc=_aurora_boundary_exc,
+                context={"function": "_sample_ambient_perception", "handler_line": 2664, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
     if not _cam_source and _last_camera_observation:
         _cam_source = _last_camera_observation
@@ -2690,7 +3041,14 @@ def _sample_ambient_perception(systems: dict) -> None:
             cam_obs       = ", ".join(parts)
             cam_intensity = min(1.0, brightness + 0.25)
             cam_novelty   = 0.55 if motion else 0.20
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2693",
+                exc=_aurora_boundary_exc,
+                context={"function": "_sample_ambient_perception", "handler_line": 2693, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     # ── Audio — real-time callback path, then JSON file fallback ────────────
@@ -2707,7 +3065,14 @@ def _sample_ambient_perception(systems: dict) -> None:
             _f = _P(_state) / "ambient_audio_latest.json"
             if _f.exists() and _t.time() - _f.stat().st_mtime <= 30:
                 _audio_source = _json.loads(_f.read_text())
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2710",
+            exc=_aurora_boundary_exc,
+            context={"function": "_sample_ambient_perception", "handler_line": 2710, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     if _audio_source:
@@ -2743,7 +3108,14 @@ def _sample_ambient_perception(systems: dict) -> None:
                         "spectral_flux", "chroma"):
                 if _fk in _audio_source:
                     _raw_audio["features"][_fk] = _audio_source[_fk]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2746",
+                exc=_aurora_boundary_exc,
+                context={"function": "_sample_ambient_perception", "handler_line": 2746, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     # ── Feed sensory crystal with actual vectors ──────────────────────────────
@@ -2827,7 +3199,14 @@ def _sample_ambient_perception(systems: dict) -> None:
                 obs_parts.append(f"perceiving: {', '.join(_recs)}")
                 # Make recognitions available for curiosity engine to reason about
                 systems["_last_crystal_recognitions"] = list(_recs)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2830",
+            exc=_aurora_boundary_exc,
+            context={"function": "_sample_ambient_perception", "handler_line": 2830, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     # ── Sensory attention focus note ──────────────────────────────────────────
@@ -2842,7 +3221,14 @@ def _sample_ambient_perception(systems: dict) -> None:
                 # Prepend — synthesis reads left-to-right; the attended sense
                 # should dominate the perceptual field this turn.
                 obs_parts = [_focus_note] + obs_parts
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2845",
+                exc=_aurora_boundary_exc,
+                context={"function": "_sample_ambient_perception", "handler_line": 2845, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
         # Boost the attended sense in the identity field so the language field
@@ -2858,7 +3244,14 @@ def _sample_ambient_perception(systems: dict) -> None:
                     novelty=0.65,
                     valence=0.0,
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2861",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_sample_ambient_perception", "handler_line": 2861, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
     observation = "; ".join(obs_parts)
@@ -2878,7 +3271,14 @@ def _sample_ambient_perception(systems: dict) -> None:
             with _axis_state_lock:
                 _obs_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
             _concept_registry.observe_lsa(_obs_ax, f"ambient:{observation[:60]}")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2881",
+                exc=_aurora_boundary_exc,
+                context={"function": "_sample_ambient_perception", "handler_line": 2881, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     # Pump identity-field axes — raises N (energy from environment) and
@@ -2903,7 +3303,14 @@ def _sample_ambient_perception(systems: dict) -> None:
                     novelty=0.08   if _scr_fg else 0.42,
                     valence=0.0,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:2906",
+                exc=_aurora_boundary_exc,
+                context={"function": "_sample_ambient_perception", "handler_line": 2906, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
 
@@ -3383,7 +3790,14 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                                 "Trajectory emergence: T=%.2f N=%.2f B=%.2f",
                                 _em["T"], _em["N"], _em["B"],
                             )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3386",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "handle_message", "handler_line": 3386, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         # Trajectory momentum: gentle forward push at low intensity.
@@ -3398,7 +3812,14 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                         _ifield_m.ingest_external_input(
                             _predicted, intensity=0.20, source="trajectory_momentum"
                         )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3401",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "handle_message", "handler_line": 3401, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         # ── Composite waveform priming ────────────────────────────────────────
@@ -3473,7 +3894,14 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         if _cpm_inst is not None:
             try:
                 _cpm_inst.apply_istate(_istate, intensity=_syn_intensity)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3476",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "handle_message", "handler_line": 3476, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # Post-synthesis pressure disturbance — propagates turn outcome
@@ -3496,7 +3924,14 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                 )
                 _qao_post = (_systems.get('quasiarch_observer') if _systems else None)
                 _pump_post.inject(_syn_dist, _ifield_post, qao=_qao_post)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3499",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "handle_message", "handler_line": 3499, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── Step 3: Re-entry loop (mandatory §13) ────────────────────────────
@@ -3515,7 +3950,14 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                                 lf._last_proto.comparison_type,
                                 lf._last_proto.dominant_axes,
                             )
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3518",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "handle_message", "handler_line": 3518, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                            )
                             pass
                     lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
 
@@ -3531,9 +3973,23 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                                     _frag.tick_rate = max(0.30, _frag.tick_rate * 0.72)
                                 elif fidelity < 0.35:
                                     _frag.tick_rate = min(2.00, _frag.tick_rate * 1.38)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3534",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "handle_message", "handler_line": 3534, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                            )
                             pass
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3536",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "handle_message", "handler_line": 3536, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── Step 4: Gap resolution — silent internet-first, trust own knowledge ─
@@ -3595,7 +4051,14 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                 with _axis_state_lock:
                     _ccr_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
                 _concept_registry.observe_lsa(_ccr_ax, path_key)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3598",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "handle_message", "handler_line": 3598, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # Refresh overlay axis cache after every turn
@@ -3636,7 +4099,14 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                             else dict(zip("XTNBA", (float(v) for v in _traj_aa)))
                         )
                         _waveform_trajectory.record(_traj_state)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3639",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "handle_message", "handler_line": 3639, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         # Periodically re-derive and re-pump self-knowledge from actual system
@@ -3684,9 +4154,23 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                                 _evolve_chain(systems_ref, ticks=10,
                                               truth_geom=_LiveGeometry(), verbose=False)
                             break
-                        except (ImportError, AttributeError):
+                        except (ImportError, AttributeError) as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3687",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_run_live_evo", "handler_line": 3687, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                            )
                             continue
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3689",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_live_evo", "handler_line": 3689, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
             threading.Thread(
                 target=_run_live_evo, args=(_systems,),
@@ -3724,7 +4208,14 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                 with _axis_state_lock:
                     _ax_snap = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
                 _update_entity_model("user", _ax_snap)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3727",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_update_user_entity", "handler_line": 3727, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
         threading.Thread(target=_update_user_entity, daemon=True, name="entity_user").start()
 
@@ -3866,7 +4357,14 @@ def _lookup_existing_understanding(concept: str, systems: dict) -> str:
                         summary = val[:220]
                         break
             return summary
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3869",
+            exc=_aurora_boundary_exc,
+            context={"function": "_lookup_existing_understanding", "handler_line": 3869, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
     return None
 
@@ -3888,10 +4386,24 @@ def _ingest_disambiguation(user_text: str, concept: str, existing_def: str) -> N
         if sm is not None and hasattr(sm, "ingest_event"):
             try:
                 from aurora_sedimemory import ConstraintVector  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3891",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_ingest_disambiguation", "handler_line": 3891, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
-                except ImportError:
+                except ImportError as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3894",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_ingest_disambiguation", "handler_line": 3894, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     ConstraintVector = None
             if ConstraintVector is not None:
                 # B-axis very high: this IS about definition boundaries.
@@ -3968,7 +4480,14 @@ def _inject_self_state_context(systems: dict) -> None:
                 from aurora_waveform_pressure import get_pump  # type: ignore
                 _pump_inst = get_pump()
                 systems["pressure_pump"] = _pump_inst
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3971",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_inject_self_state_context", "handler_line": 3971, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         if _pump_inst is not None and ifield is not None:
@@ -3984,7 +4503,14 @@ def _inject_self_state_context(systems: dict) -> None:
                 )
                 _qao = systems.get("quasiarch_observer")
                 _pump_inst.inject(_dist, ifield, qao=_qao)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3987",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_inject_self_state_context", "handler_line": 3987, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # Vacuum reconciliation → B-axis pressure spike in the manifold
@@ -3995,7 +4521,14 @@ def _inject_self_state_context(systems: dict) -> None:
                     intensity=0.60,
                     source="vacuum_reconciliation",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3998",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_inject_self_state_context", "handler_line": 3998, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # Body state → N-axis (energy/cost) pressure in the manifold
@@ -4011,7 +4544,14 @@ def _inject_self_state_context(systems: dict) -> None:
                         intensity=0.55,
                         source="body_power",
                     )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4014",
+                exc=_aurora_boundary_exc,
+                context={"function": "_inject_self_state_context", "handler_line": 4014, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
         # Geological ground → N-axis and A-axis pressure modulation
@@ -4032,7 +4572,14 @@ def _inject_self_state_context(systems: dict) -> None:
                         intensity=0.45,
                         source="geological_ground",
                     )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4035",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_inject_self_state_context", "handler_line": 4035, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # CPM territory → pressure disturbance from crystal stage
@@ -4060,7 +4607,14 @@ def _inject_self_state_context(systems: dict) -> None:
                     intensity=min(1.0, 0.40 * _depth_factor),
                     source=f"cpm_{_stage}",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4063",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_inject_self_state_context", "handler_line": 4063, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── 2. Re-entry epistemic signal → T-axis + B-axis pressure ──────────
@@ -4081,7 +4635,14 @@ def _inject_self_state_context(systems: dict) -> None:
                         intensity=max(0.40, _isolation_intensity),
                         source="reentry_epistemic",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4084",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_inject_self_state_context", "handler_line": 4084, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         # ── 3. Geological ground hold → B-axis + T-axis pressure ─────────────
@@ -4101,7 +4662,14 @@ def _inject_self_state_context(systems: dict) -> None:
                         intensity=0.65,
                         source="geo_ground_hold",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4104",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_inject_self_state_context", "handler_line": 4104, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         # ── 4. Confusion signal → clarification drive pressure ────────────────
@@ -4124,7 +4692,14 @@ def _inject_self_state_context(systems: dict) -> None:
                         intensity=0.80,
                         source="confusion_signal",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4127",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_inject_self_state_context", "handler_line": 4127, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
             if _cs.get("vacuum_debt", 0.0) > 0.15 and ifield is not None:
                 try:
@@ -4133,7 +4708,14 @@ def _inject_self_state_context(systems: dict) -> None:
                         intensity=0.45,
                         source="vacuum_friction",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4136",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_inject_self_state_context", "handler_line": 4136, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         # ── 5. Compressed axis label → _ambient_perceptual ───────────────────
@@ -4166,7 +4748,14 @@ def _inject_self_state_context(systems: dict) -> None:
                 "observation": full_note,
                 "source":      "self_state",
             }
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4169",
+            exc=_aurora_boundary_exc,
+            context={"function": "_inject_self_state_context", "handler_line": 4169, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     # Room awareness — inject recent room notes and any pending self-directives
@@ -4190,7 +4779,14 @@ def _read_room_notes(state_dir: str, max_items: int = 3) -> list:
             return []
         # Most recent first
         return list(reversed(notes[-max_items * 2:]))[:max_items]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4193",
+            exc=_aurora_boundary_exc,
+            context={"function": "_read_room_notes", "handler_line": 4193, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         return []
 
 
@@ -4250,7 +4846,14 @@ def _inject_room_context(systems: dict) -> None:
                 body = str(latest.get("body", "") or latest.get("content", "")).strip()[:100]
                 if body:
                     msg_obs = f"room-message: {body}"
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4253",
+            exc=_aurora_boundary_exc,
+            context={"function": "_inject_room_context", "handler_line": 4253, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     # ── Combine and inject ────────────────────────────────────────────────────
@@ -4284,7 +4887,14 @@ def _inject_room_context(systems: dict) -> None:
                 novelty=0.30,
                 valence=0.0,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4287",
+                exc=_aurora_boundary_exc,
+                context={"function": "_inject_room_context", "handler_line": 4287, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
 
@@ -4353,9 +4963,23 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                         if _concept_registry is not None:
                             try:
                                 _concept_registry.observe_sedi(axes_vec, delta=0.04)
-                            except Exception:
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4356",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "_prime_waveform_composite", "handler_line": 4356, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                                )
                                 pass
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4358",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_prime_waveform_composite", "handler_line": 4358, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         # ── Sensory crystal maturity ───────────────────────────────────────────
@@ -4372,7 +4996,14 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                         min(0.82, 0.48 + maturity * 0.42),
                         "sensory_maturity",
                     ))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4375",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_prime_waveform_composite", "handler_line": 4375, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── Live axis state — self-recursive reference ────────────────────────
@@ -4403,7 +5034,14 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                         intensity=base_intensity * scale,
                         source=f"composite_p{pass_n + 1}:{source}",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4406",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_prime_waveform_composite", "handler_line": 4406, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
             if pass_n < len(_PASSES) - 1:
@@ -4421,7 +5059,14 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                                 intensity=0.50 * scale,
                                 source=f"field_recursion_p{pass_n + 1}",
                             )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4424",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_prime_waveform_composite", "handler_line": 4424, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
         # ── OBSERVATION STRING PATH: composite peak note ──────────────────────
@@ -4468,9 +5113,23 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                         if _skill_memory is not None:
                             try:
                                 _skill_memory.reinforce_match(text, axis_context=_sk_ax)
-                            except Exception:
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4471",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "_prime_waveform_composite", "handler_line": 4471, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                                )
                                 pass
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4473",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_prime_waveform_composite", "handler_line": 4473, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
                 existing = systems.get("_ambient_perceptual") or {}
@@ -4481,7 +5140,14 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                         f"{_obs}; {composite_note}" if _obs else composite_note
                     ),
                 }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4484",
+                exc=_aurora_boundary_exc,
+                context={"function": "_prime_waveform_composite", "handler_line": 4484, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
         log.debug(
@@ -4489,6 +5155,13 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
             len(contributions), len(_PASSES),
         )
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4491",
+            exc=exc,
+            context={"function": "_prime_waveform_composite", "handler_line": 4491, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_prime_waveform_composite: %s", exc)
 
 
@@ -4519,6 +5192,13 @@ def _anchor_expressed_crest(systems: dict) -> None:
                 "language", intensity=0.68, novelty=0.20, valence=0.50
             )
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4521",
+            exc=exc,
+            context={"function": "_anchor_expressed_crest", "handler_line": 4521, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_anchor_expressed_crest: %s", exc)
 
 
@@ -4545,10 +5225,24 @@ def _ingest_example(example_text: str, concept: str) -> None:
         if sm is not None and hasattr(sm, "ingest_event"):
             try:
                 from aurora_sedimemory import ConstraintVector  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4548",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_ingest_example", "handler_line": 4548, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
-                except ImportError:
+                except ImportError as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4551",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_ingest_example", "handler_line": 4551, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     ConstraintVector = None
             if ConstraintVector is not None:
                 cv = ConstraintVector(X=0.4, T=0.3, N=0.5, B=0.85, A=0.75)
@@ -4729,11 +5423,25 @@ def _emergent_category_hint(comparison_type: str, dominant_axis: str) -> str:
                         cat = e.get("error_type", "unknown")
                         if cat and cat != "unknown":
                             counts[cat] = counts.get(cat, 0) + 1
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4732",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_emergent_category_hint", "handler_line": 4732, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     continue
         if counts:
             return max(counts, key=counts.__getitem__)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4736",
+            exc=_aurora_boundary_exc,
+            context={"function": "_emergent_category_hint", "handler_line": 4736, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
     return ""
 
@@ -4760,7 +5468,14 @@ def _build_correction_explanation() -> str:
         if proto:
             comparison_type = proto.comparison_type
             dominant_axis   = (proto.dominant_axes or [dominant_axis])[0]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4763",
+            exc=_aurora_boundary_exc,
+            context={"function": "_build_correction_explanation", "handler_line": 4763, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     # Check emergent history — if we've seen this geometry corrected before,
@@ -4851,10 +5566,24 @@ def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
         if sm and hasattr(sm, "ingest_event"):
             try:
                 from aurora_sedimemory import ConstraintVector  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4854",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_ingest_correction_teaching", "handler_line": 4854, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
-                except ImportError:
+                except ImportError as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4857",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_ingest_correction_teaching", "handler_line": 4857, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     ConstraintVector = None
             if ConstraintVector is not None:
                 cv = ConstraintVector(X=0.30, T=0.50, N=0.65, B=0.85, A=0.75)
@@ -4994,7 +5723,14 @@ def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) ->
                     intensity=0.88,
                     source="capability_gap",
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:4997",
+                exc=_aurora_boundary_exc,
+                context={"function": "_register_capability_gap", "handler_line": 4997, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     # Also note the gap in the ambient observation so the proactive loop
@@ -5009,7 +5745,14 @@ def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) ->
                     **_amb,
                     "observation": f"{_obs} {_tag}".strip(),
                 }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5012",
+                exc=_aurora_boundary_exc,
+                context={"function": "_register_capability_gap", "handler_line": 5012, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     # Arm sensory attention based on the gap domain — if the task is device-
@@ -5086,7 +5829,14 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
             },
             "attention_modality": _current_attention_modality() or "",
         }
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5089",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ingest_skill_procedure", "handler_line": 5089, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     # Detect explicit sensory directive in the instruction text and re-arm.
@@ -5118,10 +5868,24 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
         if sm is not None and hasattr(sm, "ingest_event"):
             try:
                 from aurora_sedimemory import ConstraintVector  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5121",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_ingest_skill_procedure", "handler_line": 5121, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
-                except ImportError:
+                except ImportError as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5124",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_ingest_skill_procedure", "handler_line": 5124, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     ConstraintVector = None
             if ConstraintVector is not None:
                 cv = ConstraintVector(X=0.45, T=0.50, N=0.55, B=0.88, A=0.82)
@@ -5219,10 +5983,24 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
             if sm is not None and hasattr(sm, "ingest_event"):
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
-                except ImportError:
+                except ImportError as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5222",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_ingest_skill_procedure", "handler_line": 5222, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     try:
                         from aurora_sedimemory import ConstraintVector  # type: ignore
-                    except ImportError:
+                    except ImportError as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5225",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_ingest_skill_procedure", "handler_line": 5225, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                        )
                         ConstraintVector = None
                 if ConstraintVector is not None:
                     _mod = _live_sensory.get("instruction_modality") or _live_sensory.get("attention_modality")
@@ -5239,7 +6017,14 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
                         constraint_vector=cv,
                         source="skill_teaching_sensory",
                     )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5242",
+                exc=_aurora_boundary_exc,
+                context={"function": "_ingest_skill_procedure", "handler_line": 5242, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     # Signal to the curiosity engine that a new capability was acquired.
@@ -5253,7 +6038,14 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
                 "gap_domain": gap_domain,
                 "ts":         _st.time(),
             }
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5256",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ingest_skill_procedure", "handler_line": 5256, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
 
@@ -5263,7 +6055,14 @@ def _get_skill_hints_for_turn(text: str, axis_context: Optional[dict] = None) ->
         return []
     try:
         return _skill_memory.get_skill_hints(text, axis_context=axis_context, limit=2)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5266",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_skill_hints_for_turn", "handler_line": 5266, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         return []
 
 
@@ -5317,7 +6116,14 @@ def _check_internal_health(systems: dict) -> None:
                        if p.get("ts", 0.0) > _ht.time() - 90]
             if _recent:
                 _last_crystal_promotion_turn = _health_turn_counter
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5320",
+                exc=_aurora_boundary_exc,
+                context={"function": "_check_internal_health", "handler_line": 5320, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     # Update sedi timestamp if a deposit happened this turn
@@ -5327,7 +6133,14 @@ def _check_internal_health(systems: dict) -> None:
             import time as _ht2
             if getattr(_sedi, "_last_deposit_ts", 0.0) > _ht2.time() - 90:
                 _last_sedi_deposit_turn = _health_turn_counter
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5330",
+                exc=_aurora_boundary_exc,
+                context={"function": "_check_internal_health", "handler_line": 5330, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     concerns: list = []
@@ -5387,7 +6200,14 @@ def _collect_os_device_state() -> dict:
         _total, _, _free = _shutil.disk_usage("/")
         if _total > 0:
             state["storage_free_pct"] = round(_free / _total * 100.0, 1)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5390",
+            exc=_aurora_boundary_exc,
+            context={"function": "_collect_os_device_state", "handler_line": 5390, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
     # Assume screen on and app foreground while the bridge is active
     state["screen_on"] = True
@@ -5450,6 +6270,13 @@ def _init_file_watch() -> None:
         _file_watch_ready = True
         log.debug("_init_file_watch: watching %d files", len(snap))
     except Exception as _e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5452",
+            exc=_e,
+            context={"function": "_init_file_watch", "handler_line": 5452, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_init_file_watch failed: %s", _e)
 
 
@@ -5477,13 +6304,27 @@ def _check_file_access(systems: dict) -> None:
         for p, old_mtime in _file_watch_snapshot.items():
             try:
                 cur = _os.stat(p).st_mtime
-            except OSError:
+            except OSError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5480",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_check_file_access", "handler_line": 5480, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 continue
             if cur > old_mtime + 1.0:  # >1s gap avoids float jitter
                 rel = _os.path.basename(p)
                 changed.append(rel)
                 _file_watch_snapshot[p] = cur
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5486",
+            exc=_aurora_boundary_exc,
+            context={"function": "_check_file_access", "handler_line": 5486, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         return
 
     if not changed:
@@ -5511,7 +6352,14 @@ def _check_file_access(systems: dict) -> None:
                 intensity=0.70,
                 source=f"creator_file_access:{changed_str[:40]}",
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5514",
+                exc=_aurora_boundary_exc,
+                context={"function": "_check_file_access", "handler_line": 5514, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     # Inject into observation string — becomes part of synthesis field
@@ -5544,10 +6392,24 @@ def _broadcast_crystal_promotions(systems: dict) -> None:
         _CV = None
         try:
             from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5547",
+                exc=_aurora_boundary_exc,
+                context={"function": "_broadcast_crystal_promotions", "handler_line": 5547, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             try:
                 from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5550",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_broadcast_crystal_promotions", "handler_line": 5550, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         promoted_ids: list = []
@@ -5576,7 +6438,14 @@ def _broadcast_crystal_promotions(systems: dict) -> None:
                         intensity=_intensity,
                         source=f"crystal_growth:{stage}",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5579",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_broadcast_crystal_promotions", "handler_line": 5579, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
             # SediMemory: concept growth is a T+B event — temporal (new layer of
@@ -5597,7 +6466,14 @@ def _broadcast_crystal_promotions(systems: dict) -> None:
                         constraint_vector=cv,
                         source="crystal_growth",
                     )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5600",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_broadcast_crystal_promotions", "handler_line": 5600, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
             promoted_ids.append(node_id)
@@ -5608,6 +6484,13 @@ def _broadcast_crystal_promotions(systems: dict) -> None:
             systems["_promoted_concepts"] = (existing + promoted_ids)[-8:]
 
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5610",
+            exc=exc,
+            context={"function": "_broadcast_crystal_promotions", "handler_line": 5610, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_broadcast_crystal_promotions: %s", exc)
 
 
@@ -5632,10 +6515,24 @@ def _deposit_gap_resolution_retrospective(
         _CV = None
         try:
             from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5635",
+                exc=_aurora_boundary_exc,
+                context={"function": "_deposit_gap_resolution_retrospective", "handler_line": 5635, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             try:
                 from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5638",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_deposit_gap_resolution_retrospective", "handler_line": 5638, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         sm = systems.get("sedimemory")
@@ -5670,6 +6567,13 @@ def _deposit_gap_resolution_retrospective(
             )
 
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5672",
+            exc=exc,
+            context={"function": "_deposit_gap_resolution_retrospective", "handler_line": 5672, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_deposit_gap_resolution_retrospective: %s", exc)
 
 
@@ -5700,10 +6604,24 @@ def _on_attention_window_close(modality: str) -> None:
         _CV = None
         try:
             from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5703",
+                exc=_aurora_boundary_exc,
+                context={"function": "_on_attention_window_close", "handler_line": 5703, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             try:
                 from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
-            except ImportError:
+            except ImportError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5706",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_on_attention_window_close", "handler_line": 5706, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         sm = _systems.get("sedimemory")
@@ -5738,6 +6656,13 @@ def _on_attention_window_close(modality: str) -> None:
 
         log.debug("Attention window closed for modality=%r — deposited to SediMemory + crystal", modality)
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5740",
+            exc=exc,
+            context={"function": "_on_attention_window_close", "handler_line": 5740, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_on_attention_window_close: %s", exc)
 
 
@@ -5859,7 +6784,14 @@ def _build_sensory_focus_note(modality: str, systems: dict) -> str:
                 _f = _p(_sd) / "ambient_audio_latest.json"
                 if _f.exists():
                     _aud = _j.loads(_f.read_text())
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:5862",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_build_sensory_focus_note", "handler_line": 5862, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
         if _aud:
             _act = str(_aud.get("activity", _aud.get("category", "sound")))
@@ -6008,7 +6940,14 @@ def _store_relational_claim(text: str, entity_type: str, entity_label: str) -> N
         with open(os.path.join(state_dir, "relational_claims.jsonl"),
                   "a", encoding="utf-8") as f:
             f.write(_json.dumps(entry) + "\n")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6011",
+            exc=_aurora_boundary_exc,
+            context={"function": "_store_relational_claim", "handler_line": 6011, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
 
@@ -6045,7 +6984,14 @@ def _detect_relational_shift(text: str, entity: tuple) -> dict | None:
             for line in f:
                 try:
                     entries.append(_json.loads(line))
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6048",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_detect_relational_shift", "handler_line": 6048, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     continue
         # Most recent first; skip the very last entry (just written)
         for entry in reversed(entries[:-1]):
@@ -6071,7 +7017,14 @@ def _detect_relational_shift(text: str, entity: tuple) -> dict | None:
                     "current_entity_label": entity[1],
                     "overlap":            list(overlap)[:4],
                 }
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6074",
+            exc=_aurora_boundary_exc,
+            context={"function": "_detect_relational_shift", "handler_line": 6074, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
     return None
 
@@ -6165,7 +7118,14 @@ def _correction_constraint_score(
             # required.  High wave visibility without weight = no built substance.
             weight_factor  = min(1.0, geo_weight / 5.0)   # saturates at weight=5
             geo_resistance = round(wave_vis * weight_factor, 3)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6168",
+                exc=_aurora_boundary_exc,
+                context={"function": "_correction_constraint_score", "handler_line": 6168, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             geo_resistance = 0.0
 
     # ── Step 2: correction resonance via language field physics ───────────────
@@ -6174,7 +7134,14 @@ def _correction_constraint_score(
     if lf is not None and hasattr(lf, "measure_resonance") and prev_response:
         try:
             resonance = lf.measure_resonance(prev_response, user_text)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6177",
+                exc=_aurora_boundary_exc,
+                context={"function": "_correction_constraint_score", "handler_line": 6177, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             resonance = 0.0
     else:
         # Language field not available — fall back to a length-based proxy so
@@ -6403,7 +7370,14 @@ def provide_hardware_sensors(json_str: str) -> None:
                 _concept_registry.observe_sensory(
                     _hw_ax, "proprioceptive", _hw_ref, _hw_overlay
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6406",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "provide_hardware_sensors", "handler_line": 6406, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # Wire battery and motion directly into the identity-field constraint axes.
@@ -6433,9 +7407,23 @@ def provide_hardware_sensors(json_str: str) -> None:
                         intensity=0.48,
                         source="hardware_body",
                     )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6436",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "provide_hardware_sensors", "handler_line": 6436, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6438",
+            exc=exc,
+            context={"function": "provide_hardware_sensors", "handler_line": 6438, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("provide_hardware_sensors error: %s", exc)
 
 
@@ -6472,13 +7460,27 @@ def get_self_model() -> str:
             model["avg_n_cost"] = round(
                 sum(e.n_cost for e in lf._lsa.values()) / len(lf._lsa), 3
             )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6475",
+            exc=_aurora_boundary_exc,
+            context={"function": "get_self_model", "handler_line": 6475, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
     try:
         sm = (_systems or {}).get("sedimemory")
         if sm and hasattr(sm, "_events"):
             model["sedi_depth"] = len(getattr(sm, "_events", []))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6481",
+            exc=_aurora_boundary_exc,
+            context={"function": "get_self_model", "handler_line": 6481, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
     return _json.dumps(model)
@@ -6534,7 +7536,14 @@ def _refresh_axis_state_from_systems() -> None:
             with _axis_state_lock:
                 for k in ("X", "T", "N", "B", "A"):
                     _last_axis_state[k] = float(axes.get(k, 0.5))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6537",
+            exc=_aurora_boundary_exc,
+            context={"function": "_refresh_axis_state_from_systems", "handler_line": 6537, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
 
 
@@ -6613,10 +7622,24 @@ def _deposit_curiosity_conclusion(conclusion: dict, identity_delta: str) -> None
     ConstraintVector = None
     try:
         from aurora_sedimemory import ConstraintVector  # type: ignore
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6616",
+            exc=_aurora_boundary_exc,
+            context={"function": "_deposit_curiosity_conclusion", "handler_line": 6616, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         try:
             from aurora_sedimemory import ConstraintVector  # type: ignore
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6619",
+                exc=_aurora_boundary_exc,
+                context={"function": "_deposit_curiosity_conclusion", "handler_line": 6619, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
     sm = _systems.get("sedimemory")
     if sm is None or not hasattr(sm, "ingest_event") or ConstraintVector is None:
@@ -6641,6 +7664,13 @@ def _deposit_curiosity_conclusion(conclusion: dict, identity_delta: str) -> None
         )
         log.info("Curiosity conclusion deposited to SediMemory: %.80s", statement)
     except Exception as _e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6643",
+            exc=_e,
+            context={"function": "_deposit_curiosity_conclusion", "handler_line": 6643, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("Conclusion deposit error: %s", _e)
 
 
@@ -6711,7 +7741,14 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                             return len(v)
                         try:
                             return int(v) if v else 0
-                        except (TypeError, ValueError):
+                        except (TypeError, ValueError) as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6714",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_as_int", "handler_line": 6714, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                            )
                             return 0
 
                     stats["concepts_explored"] += _as_int(
@@ -6775,7 +7812,14 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                             fromlist=["corpus_study_cycle"],
                         )
                         _cr.corpus_study_cycle(_sys, verbose=False)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6778",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_pursue_study", "handler_line": 6778, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                        )
                         pass
 
                 # Trigger evolve_identity for self-curiosity failures so she
@@ -6795,7 +7839,14 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                             b_activation = _ax.get("B", 0.5)
                             a_activation = _ax.get("A", 0.5)
                         _cr.evolve_identity(_sys, quality=0.55, geom=_GP())
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6798",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_pursue_self", "handler_line": 6798, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                        )
                         pass
 
                 _has_semantic = any(
@@ -6908,6 +7959,13 @@ def _init_self_entity(systems: dict) -> None:
         else:
             log.debug("_init_self_entity: spawn_entity returned None (mode gate?)")
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6910",
+            exc=exc,
+            context={"function": "_init_self_entity", "handler_line": 6910, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_init_self_entity error: %s", exc)
 
 
@@ -6949,11 +8007,25 @@ def _feed_self_entity(cur_ax: dict) -> dict:
                 _concept_registry.observe_sensory(
                     cur_ax, "self_obs", _self_ref, _self_overlay
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6952",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_feed_self_entity", "handler_line": 6952, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         return result or {}
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6956",
+            exc=exc,
+            context={"function": "_feed_self_entity", "handler_line": 6956, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_feed_self_entity error: %s", exc)
         return {}
 
@@ -6975,10 +8047,24 @@ def _deposit_self_state_snapshot() -> None:
     ConstraintVector = None
     try:
         from aurora_sedimemory import ConstraintVector  # type: ignore
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6978",
+            exc=_aurora_boundary_exc,
+            context={"function": "_deposit_self_state_snapshot", "handler_line": 6978, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         try:
             from aurora_sedimemory import ConstraintVector  # type: ignore
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:6981",
+                exc=_aurora_boundary_exc,
+                context={"function": "_deposit_self_state_snapshot", "handler_line": 6981, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             return
 
     with _axis_state_lock:
@@ -7017,9 +8103,23 @@ def _deposit_self_state_snapshot() -> None:
         if _concept_registry is not None:
             try:
                 _concept_registry.observe_sedi(cur_ax, delta=0.05)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7020",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_deposit_self_state_snapshot", "handler_line": 7020, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7022",
+            exc=exc,
+            context={"function": "_deposit_self_state_snapshot", "handler_line": 7022, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_deposit_self_state_snapshot error: %s", exc)
 
 
@@ -7052,6 +8152,13 @@ def _ensure_entity(label: str, i_state: str = "i_other") -> None:
             _entity_models[label] = entity
             log.info("Entity model spawned for %r", label)
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7054",
+            exc=exc,
+            context={"function": "_ensure_entity", "handler_line": 7054, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_ensure_entity %r error: %s", label, exc)
 
 
@@ -7080,6 +8187,13 @@ def _update_entity_model(label: str, channels: dict) -> dict:
         result = entity.process_experience(experience, ExistenceMode.BOUNDED)
         return result or {}
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7082",
+            exc=exc,
+            context={"function": "_update_entity_model", "handler_line": 7082, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_update_entity_model %r error: %s", label, exc)
         return {}
 
@@ -7143,7 +8257,14 @@ def _predict_self_impact(scenario_channels: dict) -> dict:
             tid = getattr(temp, "entity_id", None)
             if tid and hasattr(engine, "_entities"):
                 engine._entities.pop(tid, None)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7146",
+                exc=_aurora_boundary_exc,
+                context={"function": "_predict_self_impact", "handler_line": 7146, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
         return {
@@ -7152,6 +8273,13 @@ def _predict_self_impact(scenario_channels: dict) -> dict:
             "predicted": result,
         }
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7154",
+            exc=exc,
+            context={"function": "_predict_self_impact", "handler_line": 7154, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         log.debug("_predict_self_impact error: %s", exc)
         return {}
 
@@ -7208,6 +8336,13 @@ def _self_monitor_loop() -> None:
                             identity_field   = (_systems or {}).get("identity_field"),
                         )
                     except Exception as _evo_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7210",
+                            exc=_evo_exc,
+                            context={"function": "_self_monitor_loop", "handler_line": 7210, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                        )
                         log.debug("evo_sim tick: %s", _evo_exc)
                     finally:
                         _lock.release()
@@ -7216,6 +8351,13 @@ def _self_monitor_loop() -> None:
                 _concept_registry.save(_state_dir)
                 log.debug("Concept crystal registry saved: %s", _concept_registry.stats())
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7218",
+                exc=exc,
+                context={"function": "_self_monitor_loop", "handler_line": 7218, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             log.debug("self_monitor_loop: %s", exc)
 
 
@@ -7269,13 +8411,27 @@ def _compute_expression_salience(systems: dict) -> float:
             if factor < 0.95:
                 raw = raw * factor
             return min(1.0, raw)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7272",
+            exc=_aurora_boundary_exc,
+            context={"function": "_compute_expression_salience", "handler_line": 7272, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
     # Fallback — derive from hardware sensors if field unavailable
     try:
         bat = float(_hardware_sensors.get("battery_pct", 50.0)) / 100.0
         return max(0.0, min(1.0, (0.25 - bat) * 4.0)) if bat < 0.25 else 0.0
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7278",
+            exc=_aurora_boundary_exc,
+            context={"function": "_compute_expression_salience", "handler_line": 7278, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         return 0.0
 
 
@@ -7350,7 +8506,14 @@ def _autonomous_relief(systems: dict) -> None:
         try:
             _run_curiosity_session(n_cycles=3, duration_s=45.0)
             _entropy_debt_secs = max(0.0, _entropy_debt_secs - 20.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7353",
+                exc=_aurora_boundary_exc,
+                context={"function": "_do_relief", "handler_line": 7353, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
         # Evo chain — processes constraint tension into structural identity change.
         try:
@@ -7373,9 +8536,23 @@ def _autonomous_relief(systems: dict) -> None:
                         _ec(systems, ticks=15, truth_geom=_G(), verbose=False)
                         _entropy_debt_secs = max(0.0, _entropy_debt_secs - 10.0)
                     break
-                except (ImportError, AttributeError):
+                except (ImportError, AttributeError) as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7376",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_do_relief", "handler_line": 7376, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     continue
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7378",
+                exc=_aurora_boundary_exc,
+                context={"function": "_do_relief", "handler_line": 7378, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     threading.Thread(target=_do_relief, daemon=True, name="autonomous_relief").start()
@@ -7506,7 +8683,14 @@ def _entropy_field(systems: dict, obs: str) -> str:
                     ws = str(f).split()
                     if ws:
                         tokens.extend(_r.sample(ws, min(3, len(ws))))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7509",
+                exc=_aurora_boundary_exc,
+                context={"function": "_entropy_field", "handler_line": 7509, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     lsa = systems.get("lsa")
@@ -7515,7 +8699,14 @@ def _entropy_field(systems: dict, obs: str) -> str:
             paths = list((getattr(lsa, "path_registry", None) or {}).keys())
             if paths:
                 tokens.extend(_r.sample(paths, min(3, len(paths))))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7518",
+                exc=_aurora_boundary_exc,
+                context={"function": "_entropy_field", "handler_line": 7518, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             pass
 
     if len(tokens) < 4:
@@ -7639,7 +8830,14 @@ def _proactive_loop() -> None:
                         _sal_parts.append("my presence feels faint")
                     if _sal_parts:
                         obs = "; ".join(_sal_parts) + (f"; {obs}" if obs else "")
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7642",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_proactive_loop", "handler_line": 7642, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
 
             # Write the fully-enriched observation string back into the ambient
@@ -7962,7 +9160,14 @@ def provide_screen_observation(payload_json: str) -> None:
             from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
                 read_surface_snapshot, write_surface_snapshot,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:7965",
+                exc=_aurora_boundary_exc,
+                context={"function": "provide_screen_observation", "handler_line": 7965, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
                 read_surface_snapshot, write_surface_snapshot,
             )
@@ -8038,7 +9243,14 @@ def provide_room_command(json_str: str) -> None:
         # Parse to get a human-readable directive
         try:
             cmd = _json.loads(raw)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8041",
+                exc=_aurora_boundary_exc,
+                context={"function": "provide_room_command", "handler_line": 8041, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
             cmd = {"message": raw}
 
         if "navigate" in cmd:
@@ -8064,7 +9276,14 @@ def provide_room_command(json_str: str) -> None:
                     cmd_path = _os.path.join(state_dir, "room_operator_cmd.json")
                     with open(cmd_path, "w", encoding="utf-8") as _f:
                         _f.write(raw)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8067",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "provide_room_command", "handler_line": 8067, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     pass
     except Exception as exc:
         log.warning("provide_room_command: %s", exc)
@@ -8145,7 +9364,14 @@ def get_room_state() -> str:
         if ifield and hasattr(ifield, "status"):
             try:
                 out["axis_pressures"] = ifield.status().get("axis_pressures", {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8148",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_room_state", "handler_line": 8148, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # Daemon status
@@ -8160,10 +9386,24 @@ def get_room_state() -> str:
                     "uptime":  str(ds.get("uptime", "")),
                     "running": bool(ds.get("running", False)),
                 }
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8163",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_room_state", "handler_line": 8163, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8166",
+            exc=exc,
+            context={"function": "get_room_state", "handler_line": 8166, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         out["error"] = str(exc)
 
     return _json.dumps(out, default=str)
@@ -8231,7 +9471,14 @@ def get_cognitive_stats() -> str:
                     stats["avg_n_cost"] = round(
                         sum(e.n_cost for e in lf._lsa.values()) / len(lf._lsa), 3
                     )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8234",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats", "handler_line": 8234, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── Evolution cycles (LSV) ────────────────────────────────────────────
@@ -8243,7 +9490,14 @@ def get_cognitive_stats() -> str:
                 stats["evo_cycles"]      = int(lsv.get("evolution_cycles", 0) or 0)
                 stats["sentence_target"] = int(lsv.get("sentence_length_target", 10) or 10)
                 stats["evo_available"]   = True
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8246",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats", "handler_line": 8246, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── Axis pressures (identity field) ──────────────────────────────────
@@ -8254,7 +9508,14 @@ def get_cognitive_stats() -> str:
                 stats["axis_pressures"]   = ifield_status.get("axis_pressures", {})
                 stats["noncomp_loaded"]   = int(ifield_status.get("loaded_count", 0))
                 stats["noncomp_diagonal_live"] = int(ifield_status.get("diagonal_live", 0))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8257",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats", "handler_line": 8257, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── Understanding / OETS ──────────────────────────────────────────────
@@ -8266,7 +9527,14 @@ def get_cognitive_stats() -> str:
                 stats["coherence_index"]     = round(float(u.get("coherence_index", 0.0)), 3)
                 stats["grounding_index"]     = round(float(u.get("grounding_index", 0.0)), 3)
                 stats["topic_tracking"]      = round(float(u.get("topic_tracking", 0.0)), 3)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8269",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats", "handler_line": 8269, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── SediMemory depth ──────────────────────────────────────────────────
@@ -8277,7 +9545,14 @@ def get_cognitive_stats() -> str:
                     stats["sedimemory_depth"] = int(sm.fragment_count())
                 elif hasattr(sm, "_fragments"):
                     stats["sedimemory_depth"] = len(sm._fragments)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8280",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats", "handler_line": 8280, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── Sensory crystal ───────────────────────────────────────────────────
@@ -8290,7 +9565,14 @@ def get_cognitive_stats() -> str:
                 sc_state = sc.get_state() if hasattr(sc, "get_state") else {}
                 stats["crystal_maturity"] = round(float(sc_state.get("maturity", 0.0)), 3)
                 stats["crystal_nodes"]    = int(sc_state.get("active_nodes", 0))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8293",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats", "handler_line": 8293, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── EvolutionaryChamber ───────────────────────────────────────────────
@@ -8299,7 +9581,14 @@ def get_cognitive_stats() -> str:
             try:
                 cr = chamber._genealogy.chain_report()
                 stats["chamber_fossils"] = int(cr.get("total_links", 0))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8302",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats", "handler_line": 8302, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
 
         # ── Training status (if active) ───────────────────────────────────────
@@ -8315,6 +9604,13 @@ def get_cognitive_stats() -> str:
             stats["training_active"] = False
 
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8317",
+            exc=exc,
+            context={"function": "get_cognitive_stats", "handler_line": 8317, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         stats["error"] = str(exc)
 
     return _json.dumps(stats, default=str)
@@ -8339,7 +9635,14 @@ def post_room_note(content: str, note_type: str = "observation") -> None:
                 notes = _json.loads(p.read_text(encoding="utf-8"))
                 if not isinstance(notes, list):
                     notes = []
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8342",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "post_room_note", "handler_line": 8342, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 pass
         notes.append({
             "ts":      _t.time(),
@@ -8390,13 +9693,27 @@ def _gauntlet_emit(event_type: str, stage: str, stage_num: int,
     import json as _j
     try:
         from aurora_bridge import _systems as _sys_ref  # noqa — self ref, safe
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8393",
+            exc=_aurora_boundary_exc,
+            context={"function": "_gauntlet_emit", "handler_line": 8393, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         _sys_ref = None
     # Import AuroraService event sink via Kotlin bridge — try Chaquopy interop
     try:
         from com.chaquo.python import Python  # type: ignore
         pass
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8399",
+            exc=_aurora_boundary_exc,
+            context={"function": "_gauntlet_emit", "handler_line": 8399, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         pass
     # Write to systems as a signal — the bridge polling loop will pick it up
     if _systems is not None:
@@ -8435,7 +9752,14 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     cr = __import__(_try, fromlist=["corpus_study_cycle"])
                     cr.corpus_study_cycle(_systems, verbose=False)
                     return "OETS study cycle run"
-                except (ImportError, AttributeError):
+                except (ImportError, AttributeError) as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8438",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_gauntlet_stage", "handler_line": 8438, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     continue
             return "study cycle skipped (corpus_runner unavailable)"
 
@@ -8463,7 +9787,14 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                             name = "COMPOSITE"
                     cr.evolve_chain(_systems, ticks=30, truth_geom=_G(), verbose=False)
                     return "30 chamber ticks"
-                except (ImportError, AttributeError):
+                except (ImportError, AttributeError) as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8466",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_gauntlet_stage", "handler_line": 8466, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     continue
             log.warning("Gauntlet: evo_chain skipped — corpus_runner.evolve_chain unavailable")
             return "skipped (corpus_runner.evolve_chain unavailable)"
@@ -8482,7 +9813,14 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                         a_activation = _la2.get("A", 0.5)
                     cr.evolve_identity(_systems, quality=0.72, geom=_G2())
                     return "identity episode processed"
-                except (ImportError, AttributeError):
+                except (ImportError, AttributeError) as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8485",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_gauntlet_stage", "handler_line": 8485, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     continue
             log.warning("Gauntlet: identity skipped — corpus_runner.evolve_identity unavailable")
             return "skipped (corpus_runner.evolve_identity unavailable)"
@@ -8493,7 +9831,14 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     cr = __import__(_try, fromlist=["evolve_voice"])
                     cr.evolve_voice(_systems, quality=0.72, matched=True)
                     return "voice feedback applied"
-                except (ImportError, AttributeError):
+                except (ImportError, AttributeError) as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8496",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_gauntlet_stage", "handler_line": 8496, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     continue
             log.warning("Gauntlet: voice skipped — corpus_runner.evolve_voice unavailable")
             return "skipped (corpus_runner.evolve_voice unavailable)"
@@ -8513,7 +9858,14 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     cr = __import__(_try, fromlist=["consolidate"])
                     cr.consolidate(_systems)
                     return "L5 + OETS consolidated"
-                except (ImportError, AttributeError):
+                except (ImportError, AttributeError) as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8516",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_gauntlet_stage", "handler_line": 8516, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     continue
             log.warning("Gauntlet: consolidate skipped — corpus_runner.consolidate unavailable")
             return "skipped (corpus_runner.consolidate unavailable)"
@@ -8525,13 +9877,27 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     res = cr.simulation_burst(_systems, episodes=2, verbose=False)
                     fitness = round(float((res or {}).get("avg_fitness", 0.0)), 3)
                     return f"2 episodes, fitness={fitness}"
-                except (ImportError, AttributeError):
+                except (ImportError, AttributeError) as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8528",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_gauntlet_stage", "handler_line": 8528, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
                     continue
             log.warning("Gauntlet: simulation skipped — corpus_runner.simulation_burst unavailable")
             return "skipped (corpus_runner.simulation_burst unavailable)"
 
         return "unknown stage"
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8534",
+            exc=exc,
+            context={"function": "_run_gauntlet_stage", "handler_line": 8534, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
         return f"error: {exc}"
 
 
@@ -8643,7 +10009,14 @@ def trigger_evo_cycle(ticks: int = 20) -> str:
                 cr.evolve_chain(_systems, ticks=max(1, int(ticks)),
                                 truth_geom=_G(), verbose=False)
                 break
-            except (ImportError, AttributeError):
+            except (ImportError, AttributeError) as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8646",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_go", "handler_line": 8646, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
                 continue
     threading.Thread(target=_go, daemon=True, name="manual_evo").start()
     return _j.dumps({"status": "started", "ticks": ticks})

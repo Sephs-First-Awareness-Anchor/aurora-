@@ -13,6 +13,7 @@ replace this module without changing aurora.py.
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -29,7 +30,14 @@ def _log(record: Dict[str, Any]) -> None:
         _STATE_DIR.mkdir(parents=True, exist_ok=True)
         with _LOG.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, sort_keys=True, ensure_ascii=True) + "\n")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/surface_channel.py:32",
+            exc=_aurora_boundary_exc,
+            context={"function": "_log", "handler_line": 32, "source_file": "aurora_internal/surface_channel.py"},
+        )
         pass
 
 
@@ -77,6 +85,13 @@ def request_surface_turn(
             llm_hint = dict(interpret_input(user_text) or {})
             systems["_llm_input_hint"] = llm_hint
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/surface_channel.py:79",
+                exc=exc,
+                context={"function": "request_surface_turn", "handler_line": 79, "source_file": "aurora_internal/surface_channel.py"},
+            )
             llm_hint = {"error": str(exc), "confidence": 0.0}
 
     reply = ""
@@ -96,10 +111,24 @@ def request_surface_turn(
                     mode=ExistenceMode.BOUNDED,
                 )
                 reply = _text_from_response(resp)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/surface_channel.py:99",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "request_surface_turn", "handler_line": 99, "source_file": "aurora_internal/surface_channel.py"},
+                )
                 resp = gw.receive(user_text)
                 reply = _text_from_response(resp)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/surface_channel.py:102",
+            exc=_aurora_boundary_exc,
+            context={"function": "request_surface_turn", "handler_line": 102, "source_file": "aurora_internal/surface_channel.py"},
+        )
         reply = ""
 
     # Secondary: callable response hooks if present.
@@ -111,7 +140,14 @@ def request_surface_turn(
                     reply = _text_from_response(fn(user_text))
                     if reply:
                         break
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/surface_channel.py:114",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "request_surface_turn", "handler_line": 114, "source_file": "aurora_internal/surface_channel.py"},
+                    )
                     continue
 
     if not reply:
@@ -125,7 +161,14 @@ def request_surface_turn(
             candidate = str(formatted.get("message", "") or "").strip()
             if candidate and float(formatted.get("confidence", 0.0) or 0.0) >= 0.5:
                 reply = candidate
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/surface_channel.py:128",
+                exc=_aurora_boundary_exc,
+                context={"function": "request_surface_turn", "handler_line": 128, "source_file": "aurora_internal/surface_channel.py"},
+            )
             pass
 
     _log({

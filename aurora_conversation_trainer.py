@@ -20,6 +20,7 @@ Usage:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import argparse
 import os
@@ -147,7 +148,14 @@ def _boot_aurora(state_dir: str) -> dict:
 
     try:
         systems = _aurora.boot_aurora(**kwargs)
-    except TypeError:
+    except TypeError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_conversation_trainer.py:150",
+            exc=_aurora_boundary_exc,
+            context={"function": "_boot_aurora", "handler_line": 150, "source_file": "aurora_conversation_trainer.py"},
+        )
         systems = _aurora.boot_aurora(state_dir=state_dir) if state_dir else _aurora.boot_aurora()
 
     if systems is None:
@@ -223,7 +231,14 @@ def _aurora_turn(systems: dict, user_text: str) -> str:
                             lf._last_proto.comparison_type,
                             lf._last_proto.dominant_axes,
                         )
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_conversation_trainer.py:226",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_aurora_turn", "handler_line": 226, "source_file": "aurora_conversation_trainer.py"},
+                        )
                         pass
                 lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
 
@@ -234,7 +249,14 @@ def _aurora_turn(systems: dict, user_text: str) -> str:
                             frag.tick_rate = max(0.30, frag.tick_rate * 0.72)
                         elif fidelity < 0.35:
                             frag.tick_rate = min(2.00, frag.tick_rate * 1.38)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_conversation_trainer.py:237",
+                exc=_aurora_boundary_exc,
+                context={"function": "_aurora_turn", "handler_line": 237, "source_file": "aurora_conversation_trainer.py"},
+            )
             pass
 
     return response or "[no response]"
@@ -273,7 +295,14 @@ def _persist_training_state(systems: dict) -> None:
         if cm and hasattr(cm, "record_session_end"):
             cm.record_session_end()
             print("  [SAVE] Conversation session closed.")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_conversation_trainer.py:276",
+            exc=_aurora_boundary_exc,
+            context={"function": "_persist_training_state", "handler_line": 276, "source_file": "aurora_conversation_trainer.py"},
+        )
         pass
 
 
@@ -339,7 +368,14 @@ def run_training(
                     if lf._lsa else 1.0
                 )
                 lsa_samples.append(avg_cost)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_conversation_trainer.py:342",
+                exc=_aurora_boundary_exc,
+                context={"function": "run_training", "handler_line": 342, "source_file": "aurora_conversation_trainer.py"},
+            )
             pass
 
         # Progress report every 25 turns
@@ -386,7 +422,14 @@ def run_training(
         if lf and hasattr(lf, "_save_lsa"):
             lf._save_lsa()
             print("LSA saved.")
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_conversation_trainer.py:389",
+            exc=_aurora_boundary_exc,
+            context={"function": "run_training", "handler_line": 389, "source_file": "aurora_conversation_trainer.py"},
+        )
         pass
 
     # Persist full stack — same write-paths as _full_save / /quit.

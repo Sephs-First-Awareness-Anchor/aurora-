@@ -8,6 +8,7 @@ and rolls back rejected mutations.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import ast
 import importlib
@@ -65,7 +66,14 @@ class CodeAutoEvolver:
         try:
             st = os.stat(path)
             return int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000))), int(st.st_size)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:68",
+                exc=_aurora_boundary_exc,
+                context={"function": "_file_stamp", "handler_line": 68, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+            )
             return 0, 0
 
     def _descriptor_cache_stamp(self, operations: Optional[List[Dict[str, Any]]] = None) -> Tuple[int, int, int]:
@@ -93,7 +101,14 @@ class CodeAutoEvolver:
                 try:
                     with open(path, "r", encoding="utf-8") as fh:
                         original = fh.read()
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:96",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "apply_operator", "handler_line": 96, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                    )
                     continue
             if updated == original:
                 continue
@@ -104,6 +119,13 @@ class CodeAutoEvolver:
                 try:
                     ast.parse(updated)
                 except SyntaxError as exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:106",
+                        exc=exc,
+                        context={"function": "apply_operator", "handler_line": 106, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                    )
                     rejected.append({
                         "file": path,
                         "reason": "syntax_error",
@@ -187,7 +209,14 @@ class CodeAutoEvolver:
                     continue
                 with open(path, "w", encoding="utf-8") as fh:
                     fh.write(content)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:190",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "rollback", "handler_line": 190, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                )
                 continue
 
     def _build_update_plan(self, operator_key: str, target_files: Iterable[str]) -> Dict[str, Any]:
@@ -219,7 +248,14 @@ class CodeAutoEvolver:
                 try:
                     with open(path, "r", encoding="utf-8") as fh:
                         original = fh.read()
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:222",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_build_update_plan", "handler_line": 222, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                    )
                     continue
             updated = original
             change_note = ""
@@ -273,7 +309,14 @@ class CodeAutoEvolver:
             with open(path, "r", encoding="utf-8") as fh:
                 data = json.load(fh)
             return data if isinstance(data, dict) else None
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:276",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_descriptor_state", "handler_line": 276, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+            )
             return None
 
     def _operation_chain(self, op_id: str, module_name: str) -> List[str]:
@@ -352,10 +395,24 @@ class CodeAutoEvolver:
             try:
                 from aurora_internal.aurora_axis_emergence import empty_virtual_channels  # type: ignore
                 channels.update(empty_virtual_channels(self.repo_root))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:355",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_empty_slot_channels", "handler_line": 355, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                )
                 pass
             return frozenset(channels)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:358",
+                exc=_aurora_boundary_exc,
+                context={"function": "_empty_slot_channels", "handler_line": 358, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+            )
             return frozenset()
 
     def _empty_slot_pressure(self, row: Dict[str, Any], empty_channels: "frozenset[str]") -> float:
@@ -506,7 +563,14 @@ class CodeAutoEvolver:
                 with open(path, "r", encoding="utf-8") as fh:
                     raw = json.load(fh)
                 out[key] = raw if isinstance(raw, dict) else {}
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:509",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_load_genealogy_artifacts", "handler_line": 509, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                )
                 out[key] = {}
         self._genealogy_artifact_cache = {"key": tuple(cache_key), "value": out}
         return out
@@ -558,7 +622,14 @@ class CodeAutoEvolver:
             ax = str(ax).strip().upper()
             try:
                 num = int(float(str(val).strip()))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:561",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_signature_to_counts", "handler_line": 561, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                )
                 num = 0
             if ax in counts and num > 0:
                 counts[ax] += num
@@ -759,12 +830,26 @@ class CodeAutoEvolver:
                 elif tag.startswith("agency_time_credit:"):
                     try:
                         agency_credit = max(agency_credit, float(tag.split(":", 1)[1]))
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:762",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_feedback_pressure", "handler_line": 762, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                        )
                         pass
                 elif tag.startswith("temporal_overhead_penalty:"):
                     try:
                         temporal_penalty = max(temporal_penalty, float(tag.split(":", 1)[1]))
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:767",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_feedback_pressure", "handler_line": 767, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                        )
                         pass
             notes = str(rec.get("notes", "") or "")
             if rewrite_bias and rewrite_bias in notes:
@@ -863,17 +948,38 @@ class CodeAutoEvolver:
                 elif tag.startswith("mutation_score:"):
                     try:
                         mutation_score = float(tag.split(":", 1)[1])
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:866",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_rewrite_family_feedback", "handler_line": 866, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                        )
                         mutation_score = 0.0
                 elif tag.startswith("agency_time_credit:"):
                     try:
                         agency_credit = max(agency_credit, float(tag.split(":", 1)[1]))
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:871",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_rewrite_family_feedback", "handler_line": 871, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                        )
                         agency_credit = 0.0
                 elif tag.startswith("temporal_overhead_penalty:"):
                     try:
                         temporal_overhead = max(temporal_overhead, float(tag.split(":", 1)[1]))
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:876",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_rewrite_family_feedback", "handler_line": 876, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                        )
                         temporal_overhead = 0.0
             if not module_hit and module_name and module_name in notes:
                 module_hit = True
@@ -1000,7 +1106,14 @@ class CodeAutoEvolver:
             if _routed_bias and _routed_bias in _bias_order:
                 _bias_order.remove(_routed_bias)
                 _bias_order.insert(0, _routed_bias)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:1003",
+                exc=_aurora_boundary_exc,
+                context={"function": "_select_reflection_candidates", "handler_line": 1003, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+            )
             pass
         for bias in _bias_order:
             ranked = module_bias_ranked.get(bias, [])
@@ -1188,7 +1301,14 @@ class CodeAutoEvolver:
     def _resolve_module_target(self, module_name: str, chain: List[str]) -> Any:
         try:
             module = importlib.import_module(str(module_name or "").strip())
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:1191",
+                exc=_aurora_boundary_exc,
+                context={"function": "_resolve_module_target", "handler_line": 1191, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+            )
             return None
         current: Any = module
         for attr in (chain or []):
@@ -1196,7 +1316,14 @@ class CodeAutoEvolver:
                 return None
             try:
                 current = getattr(current, attr)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:1199",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_resolve_module_target", "handler_line": 1199, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                )
                 return None
         return current
 
@@ -1267,13 +1394,27 @@ class CodeAutoEvolver:
                 ann = getattr(sig, "return_annotation", inspect._empty)
                 if ann is not inspect._empty:
                     profile["return_hint"] = getattr(ann, "__name__", str(ann))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:1270",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_infer_contract_profile", "handler_line": 1270, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                )
                 pass
             try:
                 doc = inspect.getdoc(target) or ""
                 if doc:
                     profile["doc_hint"] = str(doc.splitlines()[0]).strip()[:160]
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:1276",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_infer_contract_profile", "handler_line": 1276, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                )
                 pass
         if not profile["return_hint"]:
             effect_set = set(str(x).strip().lower() for x in (effect_modes or []) if str(x).strip())
@@ -1999,7 +2140,14 @@ class CodeAutoEvolver:
             try:
                 with open(abs_path, "r", encoding="utf-8") as fh:
                     original = fh.read()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_autoevolver.py:2002",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_build_native_projection_updates", "handler_line": 2002, "source_file": "aurora_internal/aurora_code_autoevolver.py"},
+                )
                 continue
             base_text = self._strip_generated_block(original)
             used_names: set[str] = set()

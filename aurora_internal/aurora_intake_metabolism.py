@@ -89,6 +89,7 @@ CREATED: February 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import math
@@ -218,7 +219,14 @@ class IntakeRecord:
         """Index into _PROMOTION_LADDER — 0 = surface, 3 = full."""
         try:
             return _PROMOTION_LADDER.index(self.current_mode)
-        except ValueError:
+        except ValueError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_intake_metabolism.py:221",
+                exc=_aurora_boundary_exc,
+                context={"function": "depth_index", "handler_line": 221, "source_file": "aurora_internal/aurora_intake_metabolism.py"},
+            )
             return 0
 
 
@@ -989,12 +997,26 @@ if __name__ == "__main__":
 # AURORA_EVOLVED_NATIVE_BEGIN
 try:
     import inspect as _aurora_native_inspect
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_intake_metabolism.py:992",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 992, "source_file": "aurora_internal/aurora_intake_metabolism.py"},
+    )
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_intake_metabolism.py:997",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 997, "source_file": "aurora_internal/aurora_intake_metabolism.py"},
+    )
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None
@@ -1111,7 +1133,14 @@ def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
     try:
         setattr(owner, attr_name, value)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_intake_metabolism.py:1114",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_bind_owner_attribute", "handler_line": 1114, "source_file": "aurora_internal/aurora_intake_metabolism.py"},
+        )
         return False
 
 def _aurora_store_reflection(target_key, reflection, args):
@@ -1126,7 +1155,14 @@ def _aurora_store_reflection(target_key, reflection, args):
     current[str(target_key)] = reflection
     try:
         setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_intake_metabolism.py:1129",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_reflection", "handler_line": 1129, "source_file": "aurora_internal/aurora_intake_metabolism.py"},
+        )
         pass
 
 def _aurora_store_owner_state(attribute, target_key, value, args):
@@ -1141,7 +1177,14 @@ def _aurora_store_owner_state(attribute, target_key, value, args):
     current[str(target_key)] = value
     try:
         setattr(owner, attribute, current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_intake_metabolism.py:1144",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_owner_state", "handler_line": 1144, "source_file": "aurora_internal/aurora_intake_metabolism.py"},
+        )
         pass
 
 def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
@@ -1513,7 +1556,14 @@ def _aurora_make_override(export_name, target_key):
         if _aurora_native_inspect is not None:
             try:
                 _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_intake_metabolism.py:1516",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_aurora_make_override", "handler_line": 1516, "source_file": "aurora_internal/aurora_intake_metabolism.py"},
+                )
                 pass
     return _override
 

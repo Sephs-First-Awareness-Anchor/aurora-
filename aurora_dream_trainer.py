@@ -26,14 +26,17 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import os
 import json
 import time
 import math
 import re
+import hashlib
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from aurora_constraint_engine import (
@@ -42,6 +45,7 @@ from aurora_constraint_engine import (
     ExistenceMode as _ExistenceMode,
     GovernorWeights as _GovernorWeights,
 )
+from aurora_persistence_utils import atomic_write_json
 _FC = _FoundationalContract()
 from aurora_internal.aurora_directed_training_corpus import (
     get_directed_training_corpus_bridge,
@@ -56,6 +60,7 @@ if not os.path.exists(_FAIL_POINTS_FILE):
     with open(_FAIL_POINTS_FILE, 'w') as f:
         json.dump({}, f)
 _RETAINED_LEARNINGS_FILE = "retained_learnings.json"
+_PIPELINE_LEARNING_FILE = "pipeline_learning_pending.json"
 _DIRECTED_TRAINING = get_directed_training_corpus_bridge()
 
 
@@ -182,7 +187,14 @@ def _parse_relational_probe_hint(code_hints: List[str]) -> Dict[str, str]:
             continue
         try:
             payload = json.loads(text[len("[REL_PROBE] "):])
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:185",
+                exc=_aurora_boundary_exc,
+                context={"function": "_parse_relational_probe_hint", "handler_line": 185, "source_file": "aurora_dream_trainer.py"},
+            )
             continue
         return {
             "left": str(payload.get("left", "") or "").strip(),
@@ -525,7 +537,14 @@ class FailPointLedger:
         if self._dps is not None:
             try:
                 self._dps.record_failpoint_update(dimension, _prev_avg, rec.recent_avg)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:528",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "record_fail", "handler_line": 528, "source_file": "aurora_dream_trainer.py"},
+                )
                 pass
         normalized_example = self._sanitize_example(example)
         if normalized_example:
@@ -544,7 +563,14 @@ class FailPointLedger:
             if duplicate_index is not None:
                 try:
                     rec.examples.remove(rec.examples[duplicate_index])
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_dream_trainer.py:547",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "record_fail", "handler_line": 547, "source_file": "aurora_dream_trainer.py"},
+                    )
                     pass
             rec.examples.appendleft(normalized_example)
         self._total_fails += 1
@@ -561,7 +587,14 @@ class FailPointLedger:
                 severity=max(0.0, min(1.0, severity)),
                 persistence_key=f"fail:{dimension}",
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:564",
+                exc=_aurora_boundary_exc,
+                context={"function": "record_fail", "handler_line": 564, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
 
     def record(
@@ -629,7 +662,14 @@ class FailPointLedger:
                         self._total_fails = int(_disk.get("total_fails", 0))
                         for _dim, _d in (_disk.get("records", {}) or {}).items():
                             self._records[_dim] = DimensionRecord.from_dict(_d)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_dream_trainer.py:632",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "save", "handler_line": 632, "source_file": "aurora_dream_trainer.py"},
+                    )
                     pass
             tmp = path + ".tmp"
             data = {
@@ -642,7 +682,14 @@ class FailPointLedger:
                 os.fsync(f.fileno())
             os.replace(tmp, path)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:645",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 645, "source_file": "aurora_dream_trainer.py"},
+            )
             return False
 
     def load(self) -> bool:
@@ -657,7 +704,14 @@ class FailPointLedger:
             for dim, d in raw.items():
                 self._records[dim] = DimensionRecord.from_dict(d)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:660",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 660, "source_file": "aurora_dream_trainer.py"},
+            )
             return False
 
 
@@ -898,7 +952,7 @@ class RetainedLearningBank:
                 break
         return out
 
-    def bridge_to_memory(self, memory: Any, limit: int = 6) -> int:
+    def bridge_to_memory(self, memory: Any, limit: int = 6, keys: Optional[List[str]] = None) -> int:
         if memory is None or not hasattr(memory, "learn_fact"):
             return 0
         existing = {
@@ -907,7 +961,18 @@ class RetainedLearningBank:
             if isinstance(fact, dict)
         }
         injected = 0
-        for rec in sorted(self._records.values(), key=lambda item: (item.confidence, item.sightings), reverse=True)[:max(1, int(limit or 1))]:
+        # When the caller already knows exactly which records were just
+        # promoted (e.g. resolve_pipeline_learning's receiver-evidence
+        # promotion), bridge those specifically instead of a generic
+        # top-N-by-confidence sweep that could re-surface older records
+        # and skip the ones evidence just validated.
+        if keys:
+            candidate_records = [self._records[key] for key in keys if key in self._records]
+        else:
+            candidate_records = sorted(
+                self._records.values(), key=lambda item: (item.confidence, item.sightings), reverse=True
+            )[:max(1, int(limit or 1))]
+        for rec in candidate_records:
             key = self._key(rec.text)
             if key in existing:
                 continue
@@ -919,7 +984,14 @@ class RetainedLearningBank:
                 )
                 existing.add(key)
                 injected += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:922",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "bridge_to_memory", "handler_line": 922, "source_file": "aurora_dream_trainer.py"},
+                )
                 continue
         return injected
 
@@ -932,7 +1004,14 @@ class RetainedLearningBank:
             with open(self._path(), "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:935",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 935, "source_file": "aurora_dream_trainer.py"},
+            )
             return False
 
     def load(self) -> bool:
@@ -951,7 +1030,14 @@ class RetainedLearningBank:
                 if key:
                     self._records[key] = rec
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:954",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 954, "source_file": "aurora_dream_trainer.py"},
+            )
             return False
 
 
@@ -1064,7 +1150,14 @@ class SkillMemory:
             os.makedirs(self.state_dir, exist_ok=True)
             with open(self._path(), "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(entry) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:1067",
+                exc=_aurora_boundary_exc,
+                context={"function": "_append", "handler_line": 1067, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
 
     def get_skill_hints(
@@ -1141,10 +1234,24 @@ class SkillMemory:
                         continue
                     try:
                         self._skills.append(json.loads(line))
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_dream_trainer.py:1144",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "load", "handler_line": 1144, "source_file": "aurora_dream_trainer.py"},
+                        )
                         continue
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:1147",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "handler_line": 1147, "source_file": "aurora_dream_trainer.py"},
+            )
             return False
 
 
@@ -1670,7 +1777,14 @@ class LessonPlanEngine:
                 _dim_axis = _DIM_TO_AXIS_SHORT.get(dim, "")
                 _pair_key = _AXIS_TO_I_STATE_PAIR.get(_dim_axis, "")
                 i_state_auth = I_STATE_AUTHORITY.get(_pair_key, {})
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:1673",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "generate_specs", "handler_line": 1673, "source_file": "aurora_dream_trainer.py"},
+                )
                 i_state_auth = {}
 
             specs.append({
@@ -1733,7 +1847,14 @@ def classify_fail_dimensions(
                     for dim, sev in mech
                 ]
                 return scaled
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_dream_trainer.py:1736",
+            exc=_aurora_boundary_exc,
+            context={"function": "classify_fail_dimensions", "handler_line": 1736, "source_file": "aurora_dream_trainer.py"},
+        )
         pass
 
     results: List[Tuple[str, float]] = []
@@ -1816,7 +1937,14 @@ def classify_fail_dimensions(
     try:
         from aurora_telemetry import get_telemetry as _gt
         results = _gt().axis_weighted_fails(results)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_dream_trainer.py:1819",
+            exc=_aurora_boundary_exc,
+            context={"function": "classify_fail_dimensions", "handler_line": 1819, "source_file": "aurora_dream_trainer.py"},
+        )
         results.sort(key=lambda x: x[1], reverse=True)
 
     return results
@@ -1926,7 +2054,14 @@ class LearnedBehaviorApplicator:
                         confidence=conf,
                     )
                 injected += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:1929",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "inject_into_oets", "handler_line": 1929, "source_file": "aurora_dream_trainer.py"},
+                )
                 continue
 
         return injected
@@ -1983,6 +2118,83 @@ class DreamTrainer:
         self._systems: Dict[str, Any] = {}       # set by boot_aurora or corpus_runner
         self._genealogy_ref: Any = None          # direct genealogy reference
         self._last_relational_probe_summary: Dict[str, Any] = {}
+        # Cross-pipeline candidates are held here until a receiver outcome
+        # validates the response that produced them.  This is deliberately a
+        # separate ledger from retained_learnings.json: observation is not
+        # promotion, and an unresolved turn must not become durable memory.
+        self._pending_pipeline_learning: Dict[str, List[Dict[str, Any]]] = {}
+        self._pipeline_learning_failures: List[Dict[str, Any]] = []
+        self._load_pipeline_learning_state()
+
+    def _pipeline_learning_path(self) -> str:
+        return os.path.join(self.state_dir, _PIPELINE_LEARNING_FILE)
+
+    def _load_pipeline_learning_state(self) -> bool:
+        try:
+            path = self._pipeline_learning_path()
+            if not os.path.exists(path):
+                return False
+            with open(path, "r", encoding="utf-8") as handle:
+                payload = dict(json.load(handle) or {})
+            pending = dict(payload.get("pending", {}) or {})
+            self._pending_pipeline_learning = {}
+            for response_id, items in pending.items():
+                rid = str(response_id or "").strip()
+                if not rid:
+                    continue
+                normalized_items: List[Dict[str, Any]] = []
+                for raw_item in list(items or [])[-24:]:
+                    if not isinstance(raw_item, dict):
+                        continue
+                    item = dict(raw_item)
+                    source_key = str(item.get("source_key", "") or "")
+                    item.setdefault(
+                        "candidate_id",
+                        "candidate_" + hashlib.sha256(
+                            f"{rid}::{source_key}".encode("utf-8", "replace")
+                        ).hexdigest()[:20],
+                    )
+                    normalized_items.append(item)
+                if normalized_items:
+                    self._pending_pipeline_learning[rid] = normalized_items
+            self._pipeline_learning_failures = [
+                dict(item) for item in list(payload.get("failures", []) or [])
+                if isinstance(item, dict)
+            ][-200:]
+            return True
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:_load_pipeline_learning_state",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load_pipeline_learning_state", "source_file": "aurora_dream_trainer.py"},
+            )
+            self._pending_pipeline_learning = {}
+            self._pipeline_learning_failures = []
+            return False
+
+    def _save_pipeline_learning_state(self) -> bool:
+        try:
+            return bool(atomic_write_json(
+                Path(self._pipeline_learning_path()),
+                {
+                    "schema_version": 1,
+                    "pending": self._pending_pipeline_learning,
+                    "failures": self._pipeline_learning_failures[-200:],
+                },
+                indent=2,
+                default=str,
+            ))
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:_save_pipeline_learning_state",
+                exc=_aurora_boundary_exc,
+                context={"function": "_save_pipeline_learning_state", "source_file": "aurora_dream_trainer.py"},
+            )
+            return False
 
     def _constraint_axes(self) -> Dict[str, float]:
         retained = len(getattr(self.retention, "_records", {}) or {})
@@ -2048,7 +2260,14 @@ class DreamTrainer:
                 "timestamp": time.time()
             })
             self._fail_count_since_flush += 1
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:2051",
+                exc=_aurora_boundary_exc,
+                context={"function": "record_sensory_tension", "handler_line": 2051, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
     def _build_relational_probe_specs(
         self,
@@ -2251,7 +2470,14 @@ class DreamTrainer:
                 if autonomy is not None and hasattr(autonomy, "add_study_topic"):
                     try:
                         autonomy.add_study_topic(topic)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_dream_trainer.py:2254",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "record_relational_probe_outcomes", "handler_line": 2254, "source_file": "aurora_dream_trainer.py"},
+                        )
                         pass
             summary["failed"] += 1
 
@@ -2284,7 +2510,14 @@ class DreamTrainer:
                     report = genealogy_obj.chain_report() if hasattr(genealogy_obj, "chain_report") else {}
                     snap["outlet"]  = float(report.get("outlet_push_fraction", snap["outlet"]))
                     snap["fossils"] = int(report.get("total_fossils", 0))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:2287",
+                exc=_aurora_boundary_exc,
+                context={"function": "_capture_evolution_snapshot", "handler_line": 2287, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
         return snap
 
@@ -2373,7 +2606,14 @@ class DreamTrainer:
                     )
                 elif hasattr(genealogy, "inject_training_plateau_pressure"):
                     genealogy.inject_training_plateau_pressure(sev * 0.5, axis_hint=ax)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:2376",
+                exc=_aurora_boundary_exc,
+                context={"function": "_record_fail_dimension", "handler_line": 2376, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
 
     def record_corpus_fail_from_comparison(
@@ -2439,7 +2679,14 @@ class DreamTrainer:
                 from aurora_internal.constraint_genealogy import hint_fail_dimension as _hfd
                 for dim, _ in dims:
                     _hfd(dim)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:2442",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "record_corpus_fail_from_comparison", "handler_line": 2442, "source_file": "aurora_dream_trainer.py"},
+                )
                 pass
 
         return dims
@@ -2505,16 +2752,29 @@ class DreamTrainer:
         systems: Dict[str, Any],
         raw_samples: List[str],
         *,
+        response_id: str,
         dims: Optional[List[str]] = None,
         source: str = "train_txt_observer",
     ) -> int:
+        """Directed-training samples are lesson attempts, not yet confirmed
+        understanding -- stage them through the same stage_pipeline_
+        learning/resolve_pipeline_learning evidence gate the live
+        conversational path already uses (Communication Credit
+        Unification, tasks #36-44), rather than committing to memory/
+        retention immediately on witness. train_on_bundle resolves the
+        response_id after the training episode's fitness score is known,
+        so a lesson attempt that didn't land doesn't get durably learned
+        just for having been attempted. gateway.receive() stays
+        immediate -- that is Aurora perceiving/experiencing the sample
+        this tick, not a durable-memory commitment.
+        """
         aurora = systems.get("aurora")
         gateway = getattr(aurora, "gateway", None)
         stream_type = systems.get("StreamType")
         existence_mode = systems.get("ExistenceMode")
-        memory = systems.get("conversation_memory")
         witnessed = 0
         topic_words = _dedupe_texts(list(dims or []), limit=4)
+        rid = str(response_id or "").strip()
 
         for sample in _dedupe_texts(list(raw_samples or []), limit=2):
             if len(sample.split()) < 4:
@@ -2527,39 +2787,38 @@ class DreamTrainer:
                         source=source,
                         mode=existence_mode.BOUNDED,
                     )
-            except Exception:
-                pass
-
-            if memory is not None and hasattr(memory, "learn_fact"):
-                try:
-                    memory.learn_fact(
-                        fact=f"[TRAIN_TXT] {sample[:280]}",
-                        source=source,
-                        confidence=0.58,
-                    )
-                except Exception:
-                    pass
-
-            try:
-                self.retention.record(
-                    sample[:320],
-                    source=source,
-                    confidence=0.62,
-                    context_type="train_txt_observer",
-                    topic_words=topic_words,
-                    tags=["train_txt", "directed_training", "observer"],
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:2530",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_witness_directed_training_samples", "handler_line": 2530, "source_file": "aurora_dream_trainer.py"},
                 )
-            except Exception:
                 pass
-            witnessed += 1
 
-        if witnessed > 0:
-            if memory is not None:
+            if rid:
                 try:
-                    self.retention.bridge_to_memory(memory, limit=4)
-                except Exception:
+                    self.stage_pipeline_learning(
+                        sample[:320],
+                        response_id=rid,
+                        source=source,
+                        confidence=0.62,
+                        context_type="train_txt_observer",
+                        topic_words=topic_words,
+                        systems=systems,
+                        tags=["train_txt", "directed_training", "observer"],
+                    )
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_dream_trainer.py:2552",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_witness_directed_training_samples", "handler_line": 2552, "source_file": "aurora_dream_trainer.py"},
+                    )
                     pass
-            self.retention.save()
+            witnessed += 1
 
         return witnessed
 
@@ -2625,7 +2884,14 @@ class DreamTrainer:
         if self._flush_call_count % self._CHRONIC_AUDIT_EVERY == 1:
             try:
                 self.audit_chronic_weaknesses()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:2628",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "flush_lessons_to_simulation", "handler_line": 2628, "source_file": "aurora_dream_trainer.py"},
+                )
                 pass
 
         top_fails = self.ledger.get_top_fails(n=5)
@@ -2652,7 +2918,14 @@ class DreamTrainer:
 
                 if v_deltas or a_deltas:
                     sensory.evolve(pressure=1.5, visual_deltas=v_deltas, audio_deltas=a_deltas)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:2655",
+                exc=_aurora_boundary_exc,
+                context={"function": "flush_lessons_to_simulation", "handler_line": 2655, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
 
         # Apply per-axis timescale boost before slot selection so slow axes
@@ -2698,7 +2971,14 @@ class DreamTrainer:
                     if _dim not in _effective_adjusted:
                         _effective_adjusted[_dim] = max(0.05, 0.5 * (1.0 - max(0, _count - 3) * 0.08))
                 effectiveness = _effective_adjusted
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:2701",
+                exc=_aurora_boundary_exc,
+                context={"function": "flush_lessons_to_simulation", "handler_line": 2701, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
 
         specs = self.planner.generate_specs(
@@ -2713,7 +2993,14 @@ class DreamTrainer:
         queued = 0
         try:
             queued = session.queue_avatar_specs(specs)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:2716",
+                exc=_aurora_boundary_exc,
+                context={"function": "flush_lessons_to_simulation", "handler_line": 2716, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
 
         self._fail_count_since_flush = 0
@@ -2767,7 +3054,14 @@ class DreamTrainer:
                     dim_scores.setdefault(dim, []).append(
                         max(0.0, min(1.0, float(score or 0.0)))
                     )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:2770",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "audit_chronic_weaknesses", "handler_line": 2770, "source_file": "aurora_dream_trainer.py"},
+                )
                 continue
 
         recorded: List[Tuple[str, float]] = []
@@ -2859,7 +3153,14 @@ class DreamTrainer:
 
         try:
             from foundational_contract import ExistenceMode as _EM
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:2862",
+                exc=_aurora_boundary_exc,
+                context={"function": "train_on_bundle", "handler_line": 2862, "source_file": "aurora_dream_trainer.py"},
+            )
             _EM = None  # type: ignore
 
         # Build a bundle-grounded avatar spec
@@ -2869,8 +3170,14 @@ class DreamTrainer:
         primary_dim = top_fails[0][0] if top_fails else "context_carryover"
         secondary_dim = top_fails[1][0] if len(top_fails) > 1 else "coherence_maintenance"
 
-        # Pull topic hint template for the primary dim, override prompt with bundle context
-        topic_hints = session._DIMENSION_TOPIC_HINTS.get(primary_dim, {})
+        # Pull topic hint template for the primary dim, override prompt with bundle context.
+        # Pre-existing bug (unrelated to this patch, found while real-live-boot
+        # verifying it): SimulationSession has never actually carried a
+        # _DIMENSION_TOPIC_HINTS attribute, so every real call to train_on_bundle
+        # crashed here with AttributeError before reaching any of its own logic.
+        # Both call sites already .get() their way to safe defaults, so an empty
+        # dict is a correct, non-behavior-changing fallback.
+        topic_hints = getattr(session, '_DIMENSION_TOPIC_HINTS', {}).get(primary_dim, {})
         bundle_prompt = bundle.summary_prompt()
         # Trim to fit — use just enough to give context without overwhelming
         short_prompt = " | ".join(
@@ -2899,9 +3206,16 @@ class DreamTrainer:
                     f"What effect would that shift have next?",
                 ]
             )
-        self._witness_directed_training_samples(
+        # Stable per-episode id, reused as the pipeline-learning response_id
+        # -- this is a training episode, not a live conversational turn, so
+        # there is no understanding_contract response_id to key off; the
+        # bundle's own conv_id already uniquely identifies this attempt
+        # (also used as avatar_id/source_episode_ids below).
+        training_response_id = f"bundle_{bundle.conv_id}"
+        witnessed_count = self._witness_directed_training_samples(
             systems,
             list(directed_bundle.get("raw_samples", []) or []),
+            response_id=training_response_id,
             dims=[primary_dim, secondary_dim],
             source="train_txt_observer.bundle",
         )
@@ -2920,7 +3234,7 @@ class DreamTrainer:
                 secondary_dim: 0.60,
             },
             "behavior_modes": dict(
-                session._DIMENSION_TOPIC_HINTS.get(primary_dim, {}).get("behavior_modes", {})
+                getattr(session, '_DIMENSION_TOPIC_HINTS', {}).get(primary_dim, {}).get("behavior_modes", {})
                 or {}
             ),
             "code_hints": code_hints,
@@ -2976,11 +3290,15 @@ class DreamTrainer:
             if verbose:
                 print(f"  [DREAM] bundle episode error: {e}")
 
+        # Computed unconditionally (not inside the try below) so it stays
+        # available for the pipeline-learning resolve step even if
+        # PressureExperienceLedger recording itself fails.
+        _fitness = float(result.get("avg_fitness", result.get("fitness", 0.0)) or 0.0)
+        _resolved = _fitness > 0.5
+
         # Record the causal experience of this lesson attempt
         try:
             from aurora_internal.aurora_pressure_ledger import PressureExperienceLedger as _PEL
-            _fitness = float(result.get("avg_fitness", result.get("fitness", 0.0)) or 0.0)
-            _resolved = _fitness > 0.5
             _oets = self._get_oets(systems)
             _PEL.get().record(
                 anchor=primary_dim,
@@ -3004,8 +3322,40 @@ class DreamTrainer:
                 source="dream_trainer",
                 oets=_oets,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:3007",
+                exc=_aurora_boundary_exc,
+                context={"function": "train_on_bundle", "handler_line": 3007, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
+
+        # Resolve this episode's staged directed-training samples now that
+        # the episode's own fitness score is the receiver evidence for
+        # whether the lesson landed -- same evidence-gated promote/reject
+        # path the live conversational turn already uses, reusing the same
+        # 0.5 threshold _resolved above already applies to this fitness
+        # score (not a new tuned constant).
+        if witnessed_count > 0:
+            try:
+                self.resolve_pipeline_learning(
+                    training_response_id,
+                    outcome_kind="positive" if _resolved else "negative",
+                    score=_fitness,
+                    observed_effect="dream_bundle_episode",
+                    systems=systems,
+                )
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:train_on_bundle_resolve",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "train_on_bundle", "source_file": "aurora_dream_trainer.py"},
+                )
+                pass
 
         # Bridge learnings into OETS
         self._bridge_learnings_to_oets(systems)
@@ -3074,10 +3424,343 @@ class DreamTrainer:
             if memory is not None:
                 try:
                     self.retention.bridge_to_memory(memory, limit=4)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_dream_trainer.py:3077",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "record_pipeline_learning", "handler_line": 3077, "source_file": "aurora_dream_trainer.py"},
+                    )
                     pass
         self.retention.save()
         return True
+
+    def stage_pipeline_learning(
+        self,
+        text: str,
+        *,
+        response_id: str,
+        source: str,
+        confidence: float = 0.7,
+        context_type: str = "",
+        topic_words: Optional[List[str]] = None,
+        systems: Optional[Dict[str, Any]] = None,
+        tags: Optional[List[str]] = None,
+        turn_tick: int = 0,
+    ) -> bool:
+        """Hold a live candidate until the response has receiver evidence.
+
+        Working-memory concepts and frames are useful observations, but they
+        are not proof that the emitted response worked.  Staging keeps those
+        two states separate and makes the next-turn understanding contract the
+        authority that promotes or rejects them.
+        """
+        rid = str(response_id or "").strip()
+        clean = re.sub(r"\s+", " ", str(text or "").strip())
+        if not rid or len(clean.split()) < 3:
+            return False
+        try:
+            from aurora_internal.aurora_learning_pipeline import assess_text_quality
+            quality = assess_text_quality(clean)
+            if not quality.get("eligible_for_learning"):
+                return False
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:stage_pipeline_learning",
+                exc=_aurora_boundary_exc,
+                context={"function": "stage_pipeline_learning", "source_file": "aurora_dream_trainer.py"},
+            )
+            quality = {}
+
+        bucket = self._pending_pipeline_learning.setdefault(rid, [])
+        source_key = f"{str(source or '').strip().lower()}::{clean.lower()}"
+        if any(str(item.get("source_key", "")) == source_key for item in bucket):
+            return False
+        candidate_id = "candidate_" + hashlib.sha256(
+            f"{rid}::{source_key}".encode("utf-8", "replace")
+        ).hexdigest()[:20]
+        bucket.append({
+            "candidate_id": candidate_id,
+            "text": clean[:320],
+            "source": str(source or "pipeline"),
+            "source_key": source_key,
+            "confidence": max(0.0, min(1.0, float(confidence or 0.0))),
+            "context_type": str(context_type or ""),
+            "topic_words": [str(word)[:48] for word in list(topic_words or [])[:8]],
+            "tags": [str(tag)[:48] for tag in list(tags or [])[:10]],
+            "quality": dict(quality or {}),
+            "turn_tick": int(turn_tick or 0),
+            "staged_at": time.time(),
+        })
+        self._pending_pipeline_learning[rid] = bucket[-24:]
+        self._save_pipeline_learning_state()
+        return True
+
+    def resolve_pipeline_learning(
+        self,
+        response_id: str,
+        *,
+        outcome_kind: str,
+        evidence_id: str = "",
+        score: float = 0.0,
+        observed_effect: str = "",
+        turn_tick: int = 0,
+        systems: Optional[Dict[str, Any]] = None,
+        candidate_outcomes: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Promote or reject staged candidates after receiver evidence.
+
+        ``candidate_outcomes`` is the claim-level path.  When supplied, only
+        candidates with an explicit positive/negative outcome are resolved;
+        unaddressed candidates remain pending.  The legacy response-level
+        path remains available when the argument is omitted.
+        """
+        rid = str(response_id or "").strip()
+        candidates = list(self._pending_pipeline_learning.get(rid, []) or [])
+        if not rid or not candidates:
+            return {"response_id": rid, "resolved": 0, "promoted": 0}
+
+        kind = str(outcome_kind or "indeterminate").strip().lower()
+        if kind not in {"positive", "negative", "indeterminate"}:
+            kind = "indeterminate"
+        if kind == "indeterminate" and candidate_outcomes is None:
+            return {
+                "response_id": rid,
+                "resolved": 0,
+                "promoted": 0,
+                "pending": len(candidates),
+            }
+
+        if candidate_outcomes is not None:
+            outcome_map = dict(candidate_outcomes or {})
+            remaining: List[Dict[str, Any]] = []
+            candidate_results: List[Dict[str, Any]] = []
+            promoted = 0
+            promoted_keys: List[str] = []
+            rejected = 0
+            resolved = 0
+            for candidate in candidates:
+                candidate_id = str(
+                    candidate.get("candidate_id")
+                    or f"{rid}:{candidate.get('source_key', '')}"
+                )
+                raw_outcome = outcome_map.get(candidate_id)
+                if raw_outcome is None:
+                    raw_outcome = outcome_map.get(str(candidate.get("source_key", "") or ""))
+                if raw_outcome is None:
+                    remaining.append(candidate)
+                    candidate_results.append({"candidate_id": candidate_id, "status": "pending"})
+                    continue
+
+                details = {"outcome_kind": raw_outcome} if isinstance(raw_outcome, str) else dict(raw_outcome or {})
+                candidate_kind = str(details.get("outcome_kind", details.get("kind", "indeterminate")) or "indeterminate").strip().lower()
+                if candidate_kind not in {"positive", "negative"}:
+                    remaining.append(candidate)
+                    candidate_results.append({
+                        "candidate_id": candidate_id,
+                        "status": "pending",
+                        "outcome_kind": candidate_kind,
+                    })
+                    continue
+
+                resolved += 1
+                candidate_score = max(0.0, min(1.0, float(details.get("score", score) or 0.0)))
+                candidate_evidence_id = str(details.get("evidence_id", evidence_id or rid) or rid)
+                candidate_effect = str(details.get("observed_effect", observed_effect) or "")
+                if candidate_kind == "positive":
+                    candidate_tags = list(candidate.get("tags", []) or [])
+                    candidate_tags.extend(["receiver_validated", "pipeline_positive", candidate_id])
+                    candidate_text = str(candidate.get("text", "") or "")
+                    if self.retention.record(
+                        candidate_text,
+                        source=str(candidate.get("source", "pipeline") or "pipeline"),
+                        confidence=max(
+                            float(candidate.get("confidence", 0.0) or 0.0),
+                            min(0.95, max(0.55, candidate_score)),
+                        ),
+                        context_type=str(candidate.get("context_type", "") or ""),
+                        topic_words=list(candidate.get("topic_words", []) or []),
+                        tags=candidate_tags,
+                    ):
+                        promoted += 1
+                        promoted_keys.append(self.retention._key(candidate_text))
+                        self._promote_candidate_into_oets(candidate, systems or self._systems)
+                    candidate_results.append({
+                        "candidate_id": candidate_id,
+                        "status": "promoted",
+                        "outcome_kind": candidate_kind,
+                        "evidence_id": candidate_evidence_id,
+                    })
+                else:
+                    rejected += 1
+                    self._pipeline_learning_failures.append({
+                        "response_id": rid,
+                        "candidate_id": candidate_id,
+                        "evidence_id": candidate_evidence_id,
+                        "outcome_kind": candidate_kind,
+                        "score": candidate_score,
+                        "observed_effect": candidate_effect,
+                        "turn_tick": int(details.get("turn_tick", turn_tick) or 0),
+                        "text": str(candidate.get("text", "") or "")[:320],
+                        "source": str(candidate.get("source", "") or ""),
+                        "timestamp": time.time(),
+                    })
+                    candidate_results.append({
+                        "candidate_id": candidate_id,
+                        "status": "rejected",
+                        "outcome_kind": candidate_kind,
+                        "evidence_id": candidate_evidence_id,
+                    })
+
+            if remaining:
+                self._pending_pipeline_learning[rid] = remaining[-24:]
+            else:
+                self._pending_pipeline_learning.pop(rid, None)
+            self._pipeline_learning_failures = self._pipeline_learning_failures[-200:]
+            if promoted:
+                self.retention.save()
+                memory = (systems or self._systems).get("conversation_memory")
+                if memory is not None:
+                    try:
+                        self.retention.bridge_to_memory(memory, limit=min(8, promoted), keys=promoted_keys)
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_dream_trainer.py:resolve_pipeline_learning_candidates",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "resolve_pipeline_learning", "source_file": "aurora_dream_trainer.py"},
+                        )
+                        pass
+            self._save_pipeline_learning_state()
+            result = {
+                "response_id": rid,
+                "evidence_id": str(evidence_id or rid),
+                "outcome_kind": "candidate_level",
+                "resolved": resolved,
+                "promoted": promoted,
+                "rejected": rejected,
+                "pending": len(remaining),
+                "candidate_results": candidate_results,
+            }
+            target_systems = systems or self._systems
+            if target_systems is not None:
+                target_systems["_last_pipeline_learning_resolution"] = dict(result)
+                if not remaining and str(target_systems.get("_last_staged_pipeline_response_id", "") or "") == rid:
+                    target_systems.pop("_last_staged_pipeline_response_id", None)
+            return result
+
+        self._pending_pipeline_learning.pop(rid, None)
+        promoted = 0
+        promoted_keys: List[str] = []
+        rejected = 0
+        if kind == "positive":
+            for candidate in candidates:
+                candidate_tags = list(candidate.get("tags", []) or [])
+                candidate_tags.extend(["receiver_validated", "pipeline_positive"])
+                candidate_text = str(candidate.get("text", "") or "")
+                if self.retention.record(
+                    candidate_text,
+                    source=str(candidate.get("source", "pipeline") or "pipeline"),
+                    confidence=max(
+                        float(candidate.get("confidence", 0.0) or 0.0),
+                        min(0.95, max(0.55, float(score or 0.0))),
+                    ),
+                    context_type=str(candidate.get("context_type", "") or ""),
+                    topic_words=list(candidate.get("topic_words", []) or []),
+                    tags=candidate_tags,
+                ):
+                    promoted += 1
+                    promoted_keys.append(self.retention._key(candidate_text))
+                    self._promote_candidate_into_oets(candidate, systems or self._systems)
+        else:
+            rejected = len(candidates)
+            for candidate in candidates:
+                self._pipeline_learning_failures.append({
+                    "response_id": rid,
+                    "evidence_id": str(evidence_id or rid),
+                    "outcome_kind": kind,
+                    "score": max(0.0, min(1.0, float(score or 0.0))),
+                    "observed_effect": str(observed_effect or ""),
+                    "turn_tick": int(turn_tick or 0),
+                    "text": str(candidate.get("text", "") or "")[:320],
+                    "source": str(candidate.get("source", "") or ""),
+                    "timestamp": time.time(),
+                })
+            self._pipeline_learning_failures = self._pipeline_learning_failures[-200:]
+
+        if promoted:
+            self.retention.save()
+            memory = (systems or self._systems).get("conversation_memory")
+            if memory is not None:
+                try:
+                    self.retention.bridge_to_memory(memory, limit=min(8, promoted), keys=promoted_keys)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_dream_trainer.py:resolve_pipeline_learning_legacy",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "resolve_pipeline_learning", "source_file": "aurora_dream_trainer.py"},
+                    )
+                    pass
+        self._save_pipeline_learning_state()
+        result = {
+            "response_id": rid,
+            "evidence_id": str(evidence_id or rid),
+            "outcome_kind": kind,
+            "resolved": len(candidates),
+            "promoted": promoted,
+            "rejected": rejected,
+        }
+        target_systems = systems or self._systems
+        if target_systems is not None:
+            target_systems["_last_pipeline_learning_resolution"] = dict(result)
+            if str(target_systems.get("_last_staged_pipeline_response_id", "") or "") == rid:
+                target_systems.pop("_last_staged_pipeline_response_id", None)
+        return result
+
+    def expire_staged_pipeline_learning(
+        self,
+        current_turn: int,
+        *,
+        max_age_turns: int = 3,
+    ) -> int:
+        """Drop abandoned candidates without turning them into knowledge."""
+        now_turn = int(current_turn or 0)
+        age_limit = max(1, int(max_age_turns or 1))
+        expired = 0
+        for response_id, candidates in list(self._pending_pipeline_learning.items()):
+            keep: List[Dict[str, Any]] = []
+            for candidate in list(candidates or []):
+                candidate_turn = int(candidate.get("turn_tick", 0) or 0)
+                if now_turn > candidate_turn and now_turn - candidate_turn > age_limit:
+                    self._pipeline_learning_failures.append({
+                        "response_id": str(response_id),
+                        "outcome_kind": "expired",
+                        "text": str(candidate.get("text", "") or "")[:320],
+                        "source": str(candidate.get("source", "") or ""),
+                        "turn_tick": now_turn,
+                        "timestamp": time.time(),
+                    })
+                    expired += 1
+                else:
+                    keep.append(candidate)
+            if keep:
+                self._pending_pipeline_learning[response_id] = keep[-24:]
+            else:
+                self._pending_pipeline_learning.pop(response_id, None)
+        if expired:
+            self._pipeline_learning_failures = self._pipeline_learning_failures[-200:]
+            self._save_pipeline_learning_state()
+        return expired
+
+    @property
+    def pending_pipeline_learning_count(self) -> int:
+        return sum(len(items) for items in self._pending_pipeline_learning.values())
 
     def force_bridge_learnings_to_oets(self, systems: Dict[str, Any]) -> int:
         """Force OETS bridge regardless of interval."""
@@ -3160,7 +3843,14 @@ class DreamTrainer:
         learnings = []
         try:
             learnings = learner.what_have_i_learned()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:3163",
+                exc=_aurora_boundary_exc,
+                context={"function": "learned_summary", "handler_line": 3163, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
         if not learnings:
             return "No confident learnings formed yet. Run /train or /corpus to accumulate experience."
@@ -3178,15 +3868,77 @@ class DreamTrainer:
             simulation = systems.get("simulation")
             session = getattr(simulation, "session", None)
             return getattr(session, "learner", None)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:3181",
+                exc=_aurora_boundary_exc,
+                context={"function": "_get_learner", "handler_line": 3181, "source_file": "aurora_dream_trainer.py"},
+            )
             return None
 
     def _get_oets(self, systems: Dict[str, Any]) -> Optional[Any]:
         try:
             perception = systems.get("perception")
             return getattr(perception, "oets", None)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:3188",
+                exc=_aurora_boundary_exc,
+                context={"function": "_get_oets", "handler_line": 3188, "source_file": "aurora_dream_trainer.py"},
+            )
             return None
+
+    def _promote_candidate_into_oets(self, candidate: Dict[str, Any], systems: Optional[Dict[str, Any]]) -> bool:
+        """A promoted definition candidate is a term/meaning pair Aurora
+        just got receiver-confirmed evidence for -- give it a native OETS
+        node instead of leaving it as prose in RetainedLearningBank, so
+        future recall can reason over it as a concept (encounter/depth/
+        relations) rather than re-surfacing the sentence verbatim.
+        Definition candidates are staged as f"{term} means {meaning}" with
+        term always topic_words[0] (aurora.py's concept-staging call site,
+        e.g. line ~30437) -- reconstructed here rather than needing a new
+        staged field, since the shape is already fixed at staging time.
+        """
+        if str(candidate.get("context_type", "") or "") != "definition":
+            return False
+        topic_words = list(candidate.get("topic_words", []) or [])
+        term = str(topic_words[0] if topic_words else "").strip().lower()
+        if not term or not re.match(r'^[a-z][a-z0-9_\- ]{0,79}$', term):
+            return False
+        text = str(candidate.get("text", "") or "")
+        prefix = f"{term} means "
+        if not text.lower().startswith(prefix):
+            return False
+        meaning = text[len(prefix):].strip()
+        if not meaning:
+            return False
+        if not isinstance(systems, dict):
+            return False
+        oets = self._get_oets(systems)
+        if oets is None or not hasattr(oets, "add_node"):
+            return False
+        try:
+            source = str(candidate.get("source", "") or "pipeline")
+            node = oets.add_node(word=term, role="noun", meaning=meaning, lineage=source)
+            node.add_definition(
+                meaning,
+                source=source,
+                confidence=max(0.55, min(0.95, float(candidate.get("confidence", 0.7) or 0.7))),
+            )
+            return True
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:_promote_candidate_into_oets",
+                exc=_aurora_boundary_exc,
+                context={"function": "_promote_candidate_into_oets", "source_file": "aurora_dream_trainer.py"},
+            )
+            return False
 
     def run_introspective_simulation(
         self,
@@ -3289,12 +4041,26 @@ class DreamTrainer:
                 on_epoch=_on_epoch,
             )
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:3291",
+                exc=exc,
+                context={"function": "run_introspective_simulation", "handler_line": 3291, "source_file": "aurora_dream_trainer.py"},
+            )
             return {"success": False, "reason": f"speed_run_failed: {exc}"}
 
         # Bridge any new learnings to OETS immediately
         try:
             self._bridge_learnings_to_oets(systems)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:3297",
+                exc=_aurora_boundary_exc,
+                context={"function": "run_introspective_simulation", "handler_line": 3297, "source_file": "aurora_dream_trainer.py"},
+            )
             pass
 
         run_result["success"] = True

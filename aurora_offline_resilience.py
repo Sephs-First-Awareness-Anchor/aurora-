@@ -22,6 +22,7 @@ Key pieces
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -52,7 +53,14 @@ def _write_json(path: Path, data: Any) -> None:
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
         os.replace(tmp, str(path))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_offline_resilience.py:55",
+            exc=_aurora_boundary_exc,
+            context={"function": "_write_json", "handler_line": 55, "source_file": "aurora_offline_resilience.py"},
+        )
         pass
 
 
@@ -60,7 +68,14 @@ def _read_json(path: Path, default: Any) -> Any:
     try:
         if path.exists():
             return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_offline_resilience.py:63",
+            exc=_aurora_boundary_exc,
+            context={"function": "_read_json", "handler_line": 63, "source_file": "aurora_offline_resilience.py"},
+        )
         pass
     return default
 
@@ -83,7 +98,14 @@ def check_connectivity(timeout: float = 3.0) -> bool:
         s.connect(("8.8.8.8", 53))
         s.close()
         ok = True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_offline_resilience.py:86",
+            exc=_aurora_boundary_exc,
+            context={"function": "check_connectivity", "handler_line": 86, "source_file": "aurora_offline_resilience.py"},
+        )
         ok = False
     _conn_cache.update(ok=ok, ts=time.time())
     return ok
@@ -126,7 +148,14 @@ class SourceTrustRegistry:
                 known = set(SourceTrust.__dataclass_fields__)
                 for sid, vals in raw.items():
                     self._data[sid] = SourceTrust(**{k: v for k, v in vals.items() if k in known})
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_offline_resilience.py:129",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load", "handler_line": 129, "source_file": "aurora_offline_resilience.py"},
+            )
             pass
 
     def _save(self) -> None:
@@ -209,7 +238,14 @@ class ProvisionalStore:
                     self._entries[uid] = ProvisionalEntry(
                         **{k: v for k, v in vals.items() if k in known}
                     )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_offline_resilience.py:212",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load", "handler_line": 212, "source_file": "aurora_offline_resilience.py"},
+            )
             pass
 
     def _save(self) -> None:
@@ -314,7 +350,14 @@ def write_pending_question(
             "created_at": time.time(),
         })
         _write_json(msgs_path, msgs)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_offline_resilience.py:317",
+            exc=_aurora_boundary_exc,
+            context={"function": "write_pending_question", "handler_line": 317, "source_file": "aurora_offline_resilience.py"},
+        )
         pass
 
     return uid
@@ -327,7 +370,14 @@ def read_pending_question() -> Optional[Dict[str, Any]]:
             data = json.loads(_PENDING_QUESTION_FILE.read_text("utf-8"))
             if not data.get("answered"):
                 return data
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_offline_resilience.py:330",
+            exc=_aurora_boundary_exc,
+            context={"function": "read_pending_question", "handler_line": 330, "source_file": "aurora_offline_resilience.py"},
+        )
         pass
     return None
 
@@ -347,7 +397,14 @@ def answer_pending_question(answer: str) -> Optional[Dict[str, Any]]:
         data.update(answered=True, answer=answer, answered_at=time.time())
         _write_json(_PENDING_QUESTION_FILE, data)
         return data
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_offline_resilience.py:350",
+            exc=_aurora_boundary_exc,
+            context={"function": "answer_pending_question", "handler_line": 350, "source_file": "aurora_offline_resilience.py"},
+        )
         return None
 
 
@@ -388,7 +445,14 @@ def run_verification_sweep(
                 else:
                     store.mark_unverifiable(entry.uid)
                 processed += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_offline_resilience.py:391",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "run_verification_sweep", "handler_line": 391, "source_file": "aurora_offline_resilience.py"},
+                )
                 store.mark_unverifiable(entry.uid)
         else:
             store.mark_unverifiable(entry.uid)
@@ -440,7 +504,14 @@ class ConnectivityMonitor:
                 if cb:
                     try:
                         cb()
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_offline_resilience.py:443",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_loop", "handler_line": 443, "source_file": "aurora_offline_resilience.py"},
+                        )
                         pass
             self._last = now
             self._stop.wait(self._interval)

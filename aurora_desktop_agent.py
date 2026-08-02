@@ -15,6 +15,7 @@ Falls back to subprocess for app launching and URL opening without interaction.
 System operations require confirm=True to prevent accidental execution.
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -93,6 +94,13 @@ def _xdg_open(target: str) -> Dict[str, Any]:
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return {"ok": True, "url": target, "title": "", "method": "xdg-open"}
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:95",
+            exc=exc,
+            context={"function": "_xdg_open", "handler_line": 95, "source_file": "aurora_desktop_agent.py"},
+        )
         pass
     # Last resort: python webbrowser module
     try:
@@ -100,6 +108,13 @@ def _xdg_open(target: str) -> Dict[str, Any]:
         webbrowser.open(target)
         return {"ok": True, "url": target, "title": "", "method": "webbrowser"}
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:102",
+            exc=exc,
+            context={"function": "_xdg_open", "handler_line": 102, "source_file": "aurora_desktop_agent.py"},
+        )
         return {"ok": False, "error": f"xdg-open and webbrowser both failed: {exc}"}
 
 
@@ -170,7 +185,14 @@ class DesktopAgent:
                 launch_kwargs["executable_path"] = chrome_path
             try:
                 self._browser = self._pw.chromium.launch(**launch_kwargs)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_desktop_agent.py:173",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_start_browser", "handler_line": 173, "source_file": "aurora_desktop_agent.py"},
+                )
                 # Headed failed — try headless (works without a display)
                 launch_kwargs.pop("executable_path", None)
                 launch_kwargs["headless"] = True
@@ -178,7 +200,14 @@ class DesktopAgent:
             self._page = self._browser.new_page()
             self._started = True
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_desktop_agent.py:181",
+                exc=_aurora_boundary_exc,
+                context={"function": "_start_browser", "handler_line": 181, "source_file": "aurora_desktop_agent.py"},
+            )
             return False
 
     def _ensure(self, headed: bool = True) -> bool:
@@ -199,10 +228,24 @@ class DesktopAgent:
                     self._page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
                     title = self._page.title()
                     return {"ok": True, "url": self._page.url, "title": title}
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_desktop_agent.py:202",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "open_url", "handler_line": 202, "source_file": "aurora_desktop_agent.py"},
+                    )
                     try:
                         self._browser.close()
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_desktop_agent.py:205",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "open_url", "handler_line": 205, "source_file": "aurora_desktop_agent.py"},
+                        )
                         pass
                     self._page = None
                     self._browser = None
@@ -229,10 +272,24 @@ class DesktopAgent:
                 # Try CSS selector first, then visible text
                 try:
                     self._page.click(selector_or_text, timeout=timeout_ms)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_desktop_agent.py:232",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "click", "handler_line": 232, "source_file": "aurora_desktop_agent.py"},
+                    )
                     self._page.get_by_text(selector_or_text, exact=False).first.click(timeout=timeout_ms)
                 return {"ok": True, "clicked": selector_or_text}
             except Exception as exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_desktop_agent.py:235",
+                    exc=exc,
+                    context={"function": "click", "handler_line": 235, "source_file": "aurora_desktop_agent.py"},
+                )
                 return {"ok": False, "error": str(exc)}
 
     def type_text(self, text: str, selector: str = "", clear_first: bool = False) -> Dict[str, Any]:
@@ -249,6 +306,13 @@ class DesktopAgent:
                     self._page.keyboard.type(text)
                 return {"ok": True, "typed": text[:60]}
             except Exception as exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_desktop_agent.py:251",
+                    exc=exc,
+                    context={"function": "type_text", "handler_line": 251, "source_file": "aurora_desktop_agent.py"},
+                )
                 return {"ok": False, "error": str(exc)}
 
     def press_key(self, key: str) -> Dict[str, Any]:
@@ -259,6 +323,13 @@ class DesktopAgent:
                 self._page.keyboard.press(key)
                 return {"ok": True, "pressed": key}
             except Exception as exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_desktop_agent.py:261",
+                    exc=exc,
+                    context={"function": "press_key", "handler_line": 261, "source_file": "aurora_desktop_agent.py"},
+                )
                 return {"ok": False, "error": str(exc)}
 
     def read_page(self, selector: str = "", max_chars: int = 3000) -> Dict[str, Any]:
@@ -271,6 +342,13 @@ class DesktopAgent:
                 text = " ".join(text.split())[:max_chars]
                 return {"ok": True, "url": self._page.url, "title": self._page.title(), "text": text}
             except Exception as exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_desktop_agent.py:273",
+                    exc=exc,
+                    context={"function": "read_page", "handler_line": 273, "source_file": "aurora_desktop_agent.py"},
+                )
                 return {"ok": False, "error": str(exc), "text": ""}
 
     def screenshot(self) -> Optional[str]:
@@ -285,19 +363,40 @@ class DesktopAgent:
                 import shutil as _sh
                 _sh.copy2(path, latest)
                 return path
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_desktop_agent.py:288",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "screenshot", "handler_line": 288, "source_file": "aurora_desktop_agent.py"},
+                )
                 return None
 
     def current_url(self) -> str:
         try:
             return self._page.url if self._page and not self._page.is_closed() else ""
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_desktop_agent.py:294",
+                exc=_aurora_boundary_exc,
+                context={"function": "current_url", "handler_line": 294, "source_file": "aurora_desktop_agent.py"},
+            )
             return ""
 
     def current_title(self) -> str:
         try:
             return self._page.title() if self._page and not self._page.is_closed() else ""
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_desktop_agent.py:300",
+                exc=_aurora_boundary_exc,
+                context={"function": "current_title", "handler_line": 300, "source_file": "aurora_desktop_agent.py"},
+            )
             return ""
 
     def close(self) -> None:
@@ -307,7 +406,14 @@ class DesktopAgent:
                     self._browser.close()
                 if self._pw:
                     self._pw.stop()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_desktop_agent.py:310",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "close", "handler_line": 310, "source_file": "aurora_desktop_agent.py"},
+                )
                 pass
             self._page = None
             self._browser = None
@@ -368,6 +474,13 @@ def launch_application(app_name: str) -> Dict[str, Any]:
                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return {"ok": True, "launched": cmd}
             except Exception as exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_desktop_agent.py:370",
+                    exc=exc,
+                    context={"function": "launch_application", "handler_line": 370, "source_file": "aurora_desktop_agent.py"},
+                )
                 return {"ok": False, "error": str(exc)}
     return {"ok": False, "error": f"no launcher found for '{app_name}'"}
 
@@ -415,6 +528,13 @@ def system_operation(op: str, confirm: bool = False) -> Dict[str, Any]:
             subprocess.Popen(cmd)
             return {"ok": True, "op": op, "executing": True}
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_desktop_agent.py:417",
+                exc=exc,
+                context={"function": "system_operation", "handler_line": 417, "source_file": "aurora_desktop_agent.py"},
+            )
             return {"ok": False, "error": str(exc)}
 
     if op in _SAFE_SYSTEM_OPS:
@@ -426,6 +546,13 @@ def system_operation(op: str, confirm: bool = False) -> Dict[str, Any]:
             subprocess.run([exe] + cmd[1:], timeout=5)
             return {"ok": True, "op": op}
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_desktop_agent.py:428",
+                exc=exc,
+                context={"function": "system_operation", "handler_line": 428, "source_file": "aurora_desktop_agent.py"},
+            )
             return {"ok": False, "error": str(exc)}
 
     return {"ok": False, "error": f"unknown operation: '{op}'. Known: {list(_SAFE_SYSTEM_OPS) + list(_DESTRUCTIVE_OPS)}"}
@@ -457,7 +584,14 @@ def capture_system_audio(duration_s: float = 1.5) -> Dict[str, Any]:
         )
         sink = result.stdout.strip()
         monitor_source = f"{sink}.monitor" if sink else None
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:460",
+            exc=_aurora_boundary_exc,
+            context={"function": "capture_system_audio", "handler_line": 460, "source_file": "aurora_desktop_agent.py"},
+        )
         monitor_source = None
 
     if not monitor_source:
@@ -489,7 +623,14 @@ def capture_system_audio(duration_s: float = 1.5) -> Dict[str, Any]:
         proc.kill()
         try:
             proc.wait(timeout=1)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_desktop_agent.py:492",
+                exc=_aurora_boundary_exc,
+                context={"function": "capture_system_audio", "handler_line": 492, "source_file": "aurora_desktop_agent.py"},
+            )
             pass
 
         if len(raw) < 200:
@@ -522,6 +663,13 @@ def capture_system_audio(duration_s: float = 1.5) -> Dict[str, Any]:
         }
 
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:524",
+            exc=exc,
+            context={"function": "capture_system_audio", "handler_line": 524, "source_file": "aurora_desktop_agent.py"},
+        )
         return {"source": "system", "available": False, "error": str(exc)}
 
 # ---------------------------------------------------------------------------
@@ -555,6 +703,13 @@ def file_manager_op(op: str, path: str, dest: str = "", content: str = "") -> Di
         else:
             return {"ok": False, "error": f"Unknown operation: {op}"}
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:557",
+            exc=e,
+            context={"function": "file_manager_op", "handler_line": 557, "source_file": "aurora_desktop_agent.py"},
+        )
         return {"ok": False, "error": str(e)}
 
 def shell_command(cmd: str, cwd: str = None, bg: bool = False) -> Dict[str, Any]:
@@ -568,13 +723,27 @@ def shell_command(cmd: str, cwd: str = None, bg: bool = False) -> Dict[str, Any]
             proc = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True, timeout=60)
             return {"ok": True, "stdout": proc.stdout, "stderr": proc.stderr, "returncode": proc.returncode}
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:570",
+            exc=e,
+            context={"function": "shell_command", "handler_line": 570, "source_file": "aurora_desktop_agent.py"},
+        )
         return {"ok": False, "error": str(e)}
 
 def process_control(op: str, target: str = "") -> Dict[str, Any]:
     """List top processes or kill a process by name/PID."""
     try:
         import psutil
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:577",
+            exc=_aurora_boundary_exc,
+            context={"function": "process_control", "handler_line": 577, "source_file": "aurora_desktop_agent.py"},
+        )
         return {"ok": False, "error": "psutil not installed. Cannot manage processes."}
     
     try:
@@ -583,7 +752,14 @@ def process_control(op: str, target: str = "") -> Dict[str, Any]:
             for p in psutil.process_iter(['pid', 'name', 'memory_percent']):
                 try:
                     procs.append((p.info['pid'], p.info['name'], p.info['memory_percent']))
-                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_desktop_agent.py:586",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "process_control", "handler_line": 586, "source_file": "aurora_desktop_agent.py"},
+                    )
                     pass
             procs.sort(key=lambda x: x[2] or 0, reverse=True)
             top = [{"pid": p[0], "name": p[1], "mem_pct": round(p[2] or 0, 2)} for p in procs[:15]]
@@ -602,6 +778,13 @@ def process_control(op: str, target: str = "") -> Dict[str, Any]:
         else:
             return {"ok": False, "error": f"Unknown op: {op}"}
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:604",
+            exc=e,
+            context={"function": "process_control", "handler_line": 604, "source_file": "aurora_desktop_agent.py"},
+        )
         return {"ok": False, "error": str(e)}
 
 def macro_automation(op: str, x: int = None, y: int = None, text: str = "", key: str = "") -> Dict[str, Any]:
@@ -609,7 +792,14 @@ def macro_automation(op: str, x: int = None, y: int = None, text: str = "", key:
     try:
         import pyautogui
         pyautogui.FAILSAFE = False # Prevent aborts if mouse is in corner
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:612",
+            exc=_aurora_boundary_exc,
+            context={"function": "macro_automation", "handler_line": 612, "source_file": "aurora_desktop_agent.py"},
+        )
         return {"ok": False, "error": "pyautogui not installed. Cannot automate mouse/keyboard."}
         
     try:
@@ -633,6 +823,13 @@ def macro_automation(op: str, x: int = None, y: int = None, text: str = "", key:
         else:
             return {"ok": False, "error": f"Unknown op: {op}"}
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:635",
+            exc=e,
+            context={"function": "macro_automation", "handler_line": 635, "source_file": "aurora_desktop_agent.py"},
+        )
         return {"ok": False, "error": str(e)}
 
 def clipboard_op(op: str, text: str = "") -> Dict[str, Any]:
@@ -646,7 +843,14 @@ def clipboard_op(op: str, text: str = "") -> Dict[str, Any]:
             return {"ok": True, "action": "write_clipboard"}
         else:
             return {"ok": False, "error": f"Unknown op: {op}"}
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_desktop_agent.py:649",
+            exc=_aurora_boundary_exc,
+            context={"function": "clipboard_op", "handler_line": 649, "source_file": "aurora_desktop_agent.py"},
+        )
         # Fallback to xclip on Linux if pyperclip is missing
         try:
             import subprocess
@@ -660,4 +864,11 @@ def clipboard_op(op: str, text: str = "") -> Dict[str, Any]:
             else:
                 return {"ok": False, "error": f"Unknown op: {op}"}
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_desktop_agent.py:662",
+                exc=e,
+                context={"function": "clipboard_op", "handler_line": 662, "source_file": "aurora_desktop_agent.py"},
+            )
             return {"ok": False, "error": f"pyperclip missing, fallback failed: {str(e)}"}

@@ -17,6 +17,7 @@ The same five constraints are applied at code level:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import ast
 import hashlib
@@ -29,7 +30,14 @@ from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Sequence, Tup
 
 try:
     from aurora_internal.lineage_canonical import operator_action_for_axis as _operator_action_for_axis
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:32",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 32, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+    )
     def _operator_action_for_axis(axis: str) -> str:
         mapping = {
             "X": "admissibility_gating",
@@ -78,7 +86,14 @@ def _mean(values: Sequence[float]) -> float:
 def _rounded(value: Any, digits: int = 6) -> float:
     try:
         return round(float(value), int(digits))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:81",
+            exc=_aurora_boundary_exc,
+            context={"function": "_rounded", "handler_line": 81, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+        )
         return 0.0
 
 
@@ -423,7 +438,14 @@ class CodeConstraintEvaluator:
         try:
             with open(path, "r", encoding="utf-8") as fh:
                 src = fh.read()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:426",
+                exc=_aurora_boundary_exc,
+                context={"function": "_compute_file_metrics", "handler_line": 426, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+            )
             return out
 
         lines = [ln for ln in src.splitlines() if ln.strip()]
@@ -434,7 +456,14 @@ class CodeConstraintEvaluator:
 
         try:
             tree = ast.parse(src, filename=path)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:437",
+                exc=_aurora_boundary_exc,
+                context={"function": "_compute_file_metrics", "handler_line": 437, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+            )
             out["syntax_failures"] = 1
             return out
 
@@ -917,7 +946,14 @@ class CodeEvolutionChamber:
             after_val = after_metrics.get(key, 0.0)
             try:
                 change = float(after_val) - float(before_val)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:920",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_metric_deltas", "handler_line": 920, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+                )
                 continue
             if abs(change) <= 1e-9:
                 continue
@@ -1366,12 +1402,26 @@ class CodeEvolutionChamber:
 # AURORA_EVOLVED_NATIVE_BEGIN
 try:
     import inspect as _aurora_native_inspect
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:1369",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 1369, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+    )
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:1374",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 1374, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+    )
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None
@@ -1491,7 +1541,14 @@ def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
     try:
         setattr(owner, attr_name, value)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:1494",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_bind_owner_attribute", "handler_line": 1494, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+        )
         return False
 
 def _aurora_store_reflection(target_key, reflection, args):
@@ -1506,7 +1563,14 @@ def _aurora_store_reflection(target_key, reflection, args):
     current[str(target_key)] = reflection
     try:
         setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:1509",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_reflection", "handler_line": 1509, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+        )
         pass
 
 def _aurora_store_owner_state(attribute, target_key, value, args):
@@ -1521,7 +1585,14 @@ def _aurora_store_owner_state(attribute, target_key, value, args):
     current[str(target_key)] = value
     try:
         setattr(owner, attribute, current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:1524",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_owner_state", "handler_line": 1524, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+        )
         pass
 
 def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
@@ -1893,7 +1964,14 @@ def _aurora_make_override(export_name, target_key):
         if _aurora_native_inspect is not None:
             try:
                 _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:1896",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_aurora_make_override", "handler_line": 1896, "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+                )
                 pass
     return _override
 

@@ -1,3 +1,4 @@
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 #!/usr/bin/env python3
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
@@ -56,7 +57,14 @@ def extract_messages_from_html(html: str):
                         walk(i)
 
             walk(data)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_doc.py:59",
+                exc=_aurora_boundary_exc,
+                context={"function": "extract_messages_from_html", "handler_line": 59, "source_file": "aurora_internal/aurora_doc.py"},
+            )
             pass
 
     # Fallback scrape if JSON path fails

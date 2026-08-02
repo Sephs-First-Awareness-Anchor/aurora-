@@ -8,6 +8,7 @@ capabilities tied to genealogy artifacts instead of ad hoc flags.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -56,7 +57,14 @@ def _deep_merge(left: Any, right: Any) -> Any:
             try:
                 existing = getattr(left, key, None)
                 setattr(left, key, _deep_merge(existing, value) if existing is not None else value)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_lineage_runtime_activation.py:59",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_deep_merge", "handler_line": 59, "source_file": "aurora_internal/aurora_lineage_runtime_activation.py"},
+                )
                 continue
         return left
     return right if right not in (None, "", [], {}) else left
@@ -144,7 +152,14 @@ def load_selected_activation_manifests(storage_dir: str = os.path.join(_STATE_RO
             payload = _read_json(path)
             payload["_manifest_path"] = path
             out.append(payload)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_lineage_runtime_activation.py:147",
+                exc=_aurora_boundary_exc,
+                context={"function": "load_selected_activation_manifests", "handler_line": 147, "source_file": "aurora_internal/aurora_lineage_runtime_activation.py"},
+            )
             continue
     out.sort(key=lambda rec: (str(rec.get("target_ability", "")), float(rec.get("created_at", 0.0) or 0.0)))
     return out
@@ -194,7 +209,14 @@ def apply_selected_lineage_runtime_activation(
                 if hasattr(target_obj, "apply_lineage_activation"):
                     try:
                         applied_payload = dict(target_obj.apply_lineage_activation(manifest, payload=payload) or {})
-                    except TypeError:
+                    except TypeError as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_lineage_runtime_activation.py:197",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "apply_selected_lineage_runtime_activation", "handler_line": 197, "source_file": "aurora_internal/aurora_lineage_runtime_activation.py"},
+                        )
                         applied_payload = dict(target_obj.apply_lineage_activation(manifest) or {})
                 else:
                     applied_payload = _merge_state_into_target(target_obj, payload)

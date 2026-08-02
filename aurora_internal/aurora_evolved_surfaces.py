@@ -8,6 +8,7 @@ Do not hand-edit generated methods; regenerate through the code autoevolver.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import importlib
 import inspect
@@ -8533,7 +8534,14 @@ class AuroraEvolvedSurfaceEngine:
                     ax: float(v)
                     for ax, v in (st.get("intent_pressure", {}) or {}).items()
                 }
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_evolved_surfaces.py:8536",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_system_summary", "handler_line": 8536, "source_file": "aurora_internal/aurora_evolved_surfaces.py"},
+                )
                 pass
         return {"available": True, "active_components": active, "axis_pressure": axis_pressure}
 
@@ -8544,7 +8552,14 @@ class AuroraEvolvedSurfaceEngine:
             return None
         try:
             module = importlib.import_module(module_name)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_evolved_surfaces.py:8547",
+                exc=_aurora_boundary_exc,
+                context={"function": "_resolve_origin", "handler_line": 8547, "source_file": "aurora_internal/aurora_evolved_surfaces.py"},
+            )
             return None
         target: Any = module
         for attr in chain:
@@ -8558,7 +8573,14 @@ class AuroraEvolvedSurfaceEngine:
             return {"called": False, "reason": "origin_not_callable"}
         try:
             sig = inspect.signature(origin)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_evolved_surfaces.py:8561",
+                exc=_aurora_boundary_exc,
+                context={"function": "_invoke_origin", "handler_line": 8561, "source_file": "aurora_internal/aurora_evolved_surfaces.py"},
+            )
             sig = None
         try:
             if sig is None:
@@ -8576,6 +8598,13 @@ class AuroraEvolvedSurfaceEngine:
             if not required:
                 return {"called": True, "result": origin(**kwargs)}
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_evolved_surfaces.py:8578",
+                exc=exc,
+                context={"function": "_invoke_origin", "handler_line": 8578, "source_file": "aurora_internal/aurora_evolved_surfaces.py"},
+            )
             return {"called": False, "reason": f"origin_error: {exc}"}
         return {"called": False, "reason": "origin_signature_not_satisfied"}
 
@@ -8612,9 +8641,23 @@ class AuroraEvolvedSurfaceEngine:
                         _tail = _src.read()
                     with open(log_path, "wb") as _dst:
                         _dst.write(_tail)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_evolved_surfaces.py:8615",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_log_pressure_event", "handler_line": 8615, "source_file": "aurora_internal/aurora_evolved_surfaces.py"},
+                )
                 pass
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_evolved_surfaces.py:8617",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_pressure_event", "handler_line": 8617, "source_file": "aurora_internal/aurora_evolved_surfaces.py"},
+            )
             pass
 
     def _activation_record(self, method_name: str, meta: Dict[str, Any], payload: Any, kwargs: Dict[str, Any]) -> Dict[str, Any]:

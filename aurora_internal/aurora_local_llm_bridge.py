@@ -9,6 +9,7 @@ child process so native crashes cannot terminate Aurora.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -31,7 +32,14 @@ def _enabled() -> bool:
 def _timeout() -> float:
     try:
         return max(3.0, float(os.environ.get("AURORA_LOCAL_LLM_TIMEOUT", "45") or 45))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_local_llm_bridge.py:34",
+            exc=_aurora_boundary_exc,
+            context={"function": "_timeout", "handler_line": 34, "source_file": "aurora_internal/aurora_local_llm_bridge.py"},
+        )
         return 45.0
 
 
@@ -66,7 +74,14 @@ def _chat_server(messages: list, max_tokens: int, temperature: float = 0.0) -> s
         data = json.loads(resp.read().decode() or "{}")
     try:
         return str(data["choices"][0]["message"]["content"] or "").strip()
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_local_llm_bridge.py:69",
+            exc=_aurora_boundary_exc,
+            context={"function": "_chat_server", "handler_line": 69, "source_file": "aurora_internal/aurora_local_llm_bridge.py"},
+        )
         return ""
 
 
@@ -74,7 +89,14 @@ def _parse_json(text: str) -> Dict[str, Any]:
     try:
         data = json.loads(str(text or "").strip())
         return data if isinstance(data, dict) else {}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_local_llm_bridge.py:77",
+            exc=_aurora_boundary_exc,
+            context={"function": "_parse_json", "handler_line": 77, "source_file": "aurora_internal/aurora_local_llm_bridge.py"},
+        )
         return {}
 
 
@@ -123,9 +145,23 @@ def _call_worker(payload: Dict[str, Any]) -> Dict[str, Any]:
             timeout=_timeout(),
             cwd=str(ROOT),
         )
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_local_llm_bridge.py:126",
+            exc=_aurora_boundary_exc,
+            context={"function": "_call_worker", "handler_line": 126, "source_file": "aurora_internal/aurora_local_llm_bridge.py"},
+        )
         return {"ok": False, "error": "timeout"}
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_local_llm_bridge.py:128",
+            exc=exc,
+            context={"function": "_call_worker", "handler_line": 128, "source_file": "aurora_internal/aurora_local_llm_bridge.py"},
+        )
         return {"ok": False, "error": f"exception:{type(exc).__name__}"}
     if proc.returncode != 0:
         return {
@@ -136,7 +172,14 @@ def _call_worker(payload: Dict[str, Any]) -> Dict[str, Any]:
     try:
         data = json.loads((proc.stdout or "").strip())
         return data if isinstance(data, dict) else {"ok": False, "error": "invalid_json"}
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_local_llm_bridge.py:139",
+            exc=_aurora_boundary_exc,
+            context={"function": "_call_worker", "handler_line": 139, "source_file": "aurora_internal/aurora_local_llm_bridge.py"},
+        )
         return {"ok": False, "error": "invalid_json", "raw": str(proc.stdout or "")[:240]}
 
 
@@ -188,6 +231,13 @@ def interpret_input(text: str) -> Dict[str, Any]:
                     "source": "llama_server",
                 }
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_local_llm_bridge.py:190",
+                exc=exc,
+                context={"function": "interpret_input", "handler_line": 190, "source_file": "aurora_internal/aurora_local_llm_bridge.py"},
+            )
             return _fallback_interpret(raw, f"server:{type(exc).__name__}")
     data = _call_worker({"task": "interpret", "text": raw})
     if not data.get("ok"):
@@ -255,6 +305,13 @@ def format_output(message: str, payload: Optional[Dict[str, Any]] = None) -> Dic
                     "source": "llama_server",
                 }
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_local_llm_bridge.py:257",
+                exc=exc,
+                context={"function": "format_output", "handler_line": 257, "source_file": "aurora_internal/aurora_local_llm_bridge.py"},
+            )
             return _fallback_format(original, f"server:{type(exc).__name__}")
     data = _call_worker({"task": "format", "message": original, "payload": dict(payload or {})})
     if not data.get("ok"):

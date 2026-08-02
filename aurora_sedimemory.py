@@ -77,6 +77,7 @@ Created: March 2026
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import math
@@ -112,7 +113,14 @@ try:
         ConstraintField,
         EnergyDistribution,
     )
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_sedimemory.py:115",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 115, "source_file": "aurora_sedimemory.py"},
+    )
     from aurora_constraint_manifold_patched import (  # type: ignore
         Constraint,
         ConstraintVector,
@@ -314,7 +322,14 @@ class MemoryEvent:
                 B=float(getattr(envelope, 'boundary_weight',  0.5)),
                 A=float(getattr(envelope, 'agency_weight',    0.5)),
             )
-        except (ManifoldViolation, AttributeError):
+        except (ManifoldViolation, AttributeError) as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_sedimemory.py:317",
+                exc=_aurora_boundary_exc,
+                context={"function": "from_envelope", "handler_line": 317, "source_file": "aurora_sedimemory.py"},
+            )
             cv = ConstraintVector(X=1.0, T=0.5, N=0.5, B=0.5, A=0.5)
 
         content: Dict[str, Any] = {}
@@ -1577,7 +1592,14 @@ class SediMemory:
         if self._dilation is not None:
             try:
                 delta_t = delta_t * getattr(self._dilation, 'current_factor', 1.0)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_sedimemory.py:1580",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "tick", "handler_line": 1580, "source_file": "aurora_sedimemory.py"},
+                )
                 pass
         report = self._column.tick(delta_t)
         self._tick_log.append(delta_t)
@@ -1952,7 +1974,14 @@ class SediMemory:
                 # Rebuild dominant index
                 reg._dominant_index[ch.dominant_slot_id].add(sig)
                 restored += 1
-            except (KeyError, TypeError):
+            except (KeyError, TypeError) as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_sedimemory.py:1955",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "load_channels", "handler_line": 1955, "source_file": "aurora_sedimemory.py"},
+                )
                 continue
         return restored
 

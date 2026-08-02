@@ -9,6 +9,7 @@ Verifies the constraint reasoning track works correctly:
   4. ProcessContext bridge produces a valid constraint context
   5. Alignment check (integrate) measures structural vs semantic
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import sys
 import os
@@ -136,6 +137,13 @@ if __name__ == "__main__":
             # aurora_thought_formation unavailable — soft skip
             check("ProcessContext: aurora_thought_formation unavailable (expected in isolation)", True)
     except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:test_constraint_reasoner.py:138",
+            exc=e,
+            context={"function": "<module>", "handler_line": 138, "source_file": "test_constraint_reasoner.py"},
+        )
         check("ProcessContext: aurora_thought_formation unavailable (expected in isolation)", True,
               f"(skipped: {e})")
 

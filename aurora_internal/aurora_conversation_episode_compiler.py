@@ -15,6 +15,7 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -145,7 +146,14 @@ def _reconstruct_linear_thread(mapping: Dict[str, Any]) -> List[Dict[str, Any]]:
     if not roots:
         try:
             roots = [next(iter(mapping.keys()))]
-        except StopIteration:
+        except StopIteration as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_conversation_episode_compiler.py:148",
+                exc=_aurora_boundary_exc,
+                context={"function": "_reconstruct_linear_thread", "handler_line": 148, "source_file": "aurora_internal/aurora_conversation_episode_compiler.py"},
+            )
             return []
 
     def has_message(n: Dict[str, Any]) -> bool:
@@ -515,7 +523,14 @@ class ConversationEpisodeCompiler:
             try:
                 with open(manifest_path, "r", encoding="utf-8") as f:
                     manifest = json.load(f)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_conversation_episode_compiler.py:518",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_save_packs", "handler_line": 518, "source_file": "aurora_internal/aurora_conversation_episode_compiler.py"},
+                )
                 manifest = []
 
         for pack in packs:
@@ -552,7 +567,14 @@ class ConversationEpisodeCompiler:
                 with open(payload_path, "r", encoding="utf-8") as f:
                     pack.payloads = json.load(f)
             return pack
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_conversation_episode_compiler.py:555",
+                exc=_aurora_boundary_exc,
+                context={"function": "load_pack", "handler_line": 555, "source_file": "aurora_internal/aurora_conversation_episode_compiler.py"},
+            )
             return None
 
     def list_available_packs(self) -> List[Dict[str, Any]]:
@@ -563,7 +585,14 @@ class ConversationEpisodeCompiler:
         try:
             with open(manifest_path, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_conversation_episode_compiler.py:566",
+                exc=_aurora_boundary_exc,
+                context={"function": "list_available_packs", "handler_line": 566, "source_file": "aurora_internal/aurora_conversation_episode_compiler.py"},
+            )
             return []
 
     @property

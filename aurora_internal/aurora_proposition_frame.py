@@ -28,6 +28,7 @@ produced nothing):
 
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -44,11 +45,60 @@ class PropositionFrame:
     unresolved: List[str] = field(default_factory=list)
     topic: str = ""
     source: str = ""  # "thought" | "claim" | "anchor"
+    # Directive P2: raw regional-density reading, kept separate from
+    # `stance` so downstream consumers can tell "low because untested"
+    # (corroboration-only) from "low because unfamiliar territory"
+    # (density-driven). None when sedimemory was absent/empty/not
+    # consulted -- never a fabricated number.
+    density: Optional[float] = None
 
 
 # Same noise/length gate SemanticIntentionBridge already uses for
 # thought-text token extraction -- reused, not reinvented.
 _MIN_TOKEN_LEN = 3
+
+
+def density_confidence(systems: Dict[str, Any], topic: str, axis: str) -> Optional[float]:
+    """Directive P2 -- regional density confidence, the missing stance
+    signal. Not a classifier over the proposition's words: a lookup
+    into how populated the region of her own constraint-space is that
+    the proposition's configuration falls into, via SediMemory's
+    existing `recall_semantic` (axis-filtered query over deposited
+    fragments already organized onto the 25-slot NC lattice). Two
+    propositions with identical phrasing but different topics get
+    different readings only because one lands somewhere she's lived
+    and the other doesn't.
+
+    Fail-quiet: no sedimemory, no topic, or an empty result set all
+    return None -- never a fabricated number. Normalized via the
+    simplest honest function available (count share of max_results,
+    scaled by mean resonance) -- no tuned constants.
+    """
+    topic = str(topic or "").strip()
+    if not topic:
+        return None
+    sedimemory = systems.get("sedimemory") if isinstance(systems, dict) else None
+    if sedimemory is None or not hasattr(sedimemory, "recall_semantic"):
+        return None
+    try:
+        results = sedimemory.recall_semantic(
+            query_text=topic, axis_filter=str(axis or "").strip() or None, max_results=8,
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:density_confidence",
+            exc=_aurora_boundary_exc,
+            context={"function": "density_confidence", "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
+        return None
+    if not results:
+        return None
+    resonances = [float(r.get("resonance", 0.0) or 0.0) for r in results]
+    mean_resonance = sum(resonances) / len(resonances)
+    count_share = min(1.0, len(results) / 8.0)
+    return max(0.0, min(1.0, count_share * mean_resonance))
 
 
 # PF1.4's own real-world verification (60-probe live-boot run) caught
@@ -96,7 +146,14 @@ def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
     try:
         from aurora_internal.aurora_utterance_parser import parse_utterance
         parsed = parse_utterance(text)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:99",
+            exc=_aurora_boundary_exc,
+            context={"function": "_extract_triple_from_thought_text", "handler_line": 99, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         parsed = {}
 
     topic = str(parsed.get("topic", "") or "").strip()
@@ -213,7 +270,14 @@ def _frame_from_claims(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
         if not candidates:
             return None
         best = max(candidates, key=lambda n: substrate.score_claim(n))
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:216",
+            exc=_aurora_boundary_exc,
+            context={"function": "_frame_from_claims", "handler_line": 216, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         return None
 
     subject = str(best.get("subject", "") or "").strip()
@@ -257,7 +321,14 @@ def _frame_from_turn_local_claims(systems: Dict[str, Any]) -> Optional[Propositi
         if not candidates:
             return None
         best = candidates[-1]
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:260",
+            exc=_aurora_boundary_exc,
+            context={"function": "_frame_from_turn_local_claims", "handler_line": 260, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         return None
 
     subject = str(best.get("subject", "") or "").strip()
@@ -287,7 +358,7 @@ def _frame_from_anchor(systems: Dict[str, Any], state: Any) -> Optional[Proposit
     )
 
 
-def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFrame]:
+def _derive_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFrame]:
     """Fail-quiet derivation ladder. Returns None (never raises) if no
     rung produces a usable frame -- callers must treat None exactly like
     "no PropositionFrame available," preserving today's behavior."""
@@ -295,24 +366,83 @@ def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFram
         frame = _frame_from_thought_state(systems)
         if frame is not None:
             return frame
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:298",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "handler_line": 298, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         pass
     try:
         frame = _frame_from_claims(systems)
         if frame is not None:
             return frame
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:304",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "handler_line": 304, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         pass
     try:
         frame = _frame_from_turn_local_claims(systems)
         if frame is not None:
             return frame
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:310",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "handler_line": 310, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         pass
     try:
         frame = _frame_from_anchor(systems, state)
         if frame is not None:
             return frame
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:316",
+            exc=_aurora_boundary_exc,
+            context={"function": "_derive_frame", "handler_line": 316, "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
         pass
     return None
+
+
+def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFrame]:
+    """Directive PF1.1's fail-quiet derivation ladder (_derive_frame),
+    plus Directive P2's regional-density blend: whichever rung fires,
+    the resulting frame's stance can never exceed what her own
+    experiential density in that region supports -- a proposition
+    can't claim more confidence than she has standing to back it with,
+    but a low corroboration-confidence claim in well-known territory
+    isn't artificially dragged down further. Never raises; density
+    blending is itself fail-quiet (a lookup failure just leaves
+    stance/density as the ladder produced them)."""
+    frame = _derive_frame(systems, state)
+    if frame is None:
+        return frame
+    try:
+        axis = str(dict(systems.get("_last_noncomp_input") or {}).get("constraint", "") or "").strip()
+        topic = frame.topic or f"{frame.subject} {frame.obj}".strip()
+        density = density_confidence(systems, topic, axis)
+        frame.density = density
+        if density is not None:
+            frame.stance = min(frame.stance, density)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:build_frame:density_blend",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
+    return frame

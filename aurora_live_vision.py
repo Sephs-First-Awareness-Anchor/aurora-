@@ -17,6 +17,7 @@ Integration (from aurora.py boot):
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -50,13 +51,27 @@ _SCENE_LOG_PATH = _STATE_DIR / "screen_observer_log.json"
 try:
     from PIL import ImageGrab as _PILGrab
     _PIL_GRAB_AVAILABLE = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_live_vision.py:53",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 53, "source_file": "aurora_live_vision.py"},
+    )
     _PIL_GRAB_AVAILABLE = False
 
 try:
     import cv2 as _cv2
     _CV2_AVAILABLE = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_live_vision.py:59",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 59, "source_file": "aurora_live_vision.py"},
+    )
     _CV2_AVAILABLE = False
 
 # Aurora pipeline imports -- attempted lazily so this file loads even when
@@ -67,7 +82,14 @@ def _try_import_pipeline():
         from aurora_expression_perception import FeatureExtractor
         from aurora_constraint_engine import ExistenceMode
         return FeatureExtractor, ExistenceMode
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_live_vision.py:70",
+            exc=_aurora_boundary_exc,
+            context={"function": "_try_import_pipeline", "handler_line": 70, "source_file": "aurora_live_vision.py"},
+        )
         return None, None
 
 
@@ -322,9 +344,23 @@ class ScreenObserver:
             for path in screen_dir.glob("frame_*.png"):
                 try:
                     path.unlink()
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_live_vision.py:325",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_cleanup_legacy_frames", "handler_line": 325, "source_file": "aurora_live_vision.py"},
+                    )
                     pass
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_live_vision.py:327",
+                exc=_aurora_boundary_exc,
+                context={"function": "_cleanup_legacy_frames", "handler_line": 327, "source_file": "aurora_live_vision.py"},
+            )
             pass
 
     def _frame_path(self) -> str:
@@ -349,7 +385,14 @@ class ScreenObserver:
                     with open(path, "rb") as f:
                         img = _PILImage.open(f).copy()
                     return img, path
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_live_vision.py:352",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_capture_frame", "handler_line": 352, "source_file": "aurora_live_vision.py"},
+                    )
                     pass
             return None, None
 
@@ -372,7 +415,14 @@ class ScreenObserver:
                     img = _PILImage.open(path).copy()
                     self._capture_fail_streak = 0
                     return img, path
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_live_vision.py:375",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_capture_frame", "handler_line": 375, "source_file": "aurora_live_vision.py"},
+                )
                 pass  # fall through to ImageMagick
 
         # --- attempt 2: ImageMagick (Wayland-compatible) ---
@@ -388,7 +438,14 @@ class ScreenObserver:
                     img = _PILImage2.open(path).copy()
                     self._capture_fail_streak = 0
                     return img, path
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_live_vision.py:391",
+                exc=_aurora_boundary_exc,
+                context={"function": "_capture_frame", "handler_line": 391, "source_file": "aurora_live_vision.py"},
+            )
             pass
 
         # Both methods failed — update circuit breaker
@@ -410,7 +467,14 @@ class ScreenObserver:
             return None
         try:
             return self._extractor._extract_from_pil(path, img)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_live_vision.py:413",
+                exc=_aurora_boundary_exc,
+                context={"function": "_extract_features", "handler_line": 413, "source_file": "aurora_live_vision.py"},
+            )
             return None
 
     def _make_visual_data(self, fv, path: str, motion: float,
@@ -461,7 +525,14 @@ class ScreenObserver:
                 self._ExistenceMode.BOUNDED,
             )
             return result or {}
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_live_vision.py:464",
+                exc=_aurora_boundary_exc,
+                context={"function": "_feed_sensory", "handler_line": 464, "source_file": "aurora_live_vision.py"},
+            )
             return {}
 
     def _maybe_ingest_vision_bootstrap(self, path: str, edge_density: float) -> List[str]:
@@ -482,7 +553,14 @@ class ScreenObserver:
             # Bulk ingest every 20 frames to avoid hammering the whole folder
             if self._frame_count % 20 == 0:
                 vb.ingest_folder(self.SCREEN_DIR)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_live_vision.py:485",
+                exc=_aurora_boundary_exc,
+                context={"function": "_maybe_ingest_vision_bootstrap", "handler_line": 485, "source_file": "aurora_live_vision.py"},
+            )
             pass
         return []
 
@@ -587,7 +665,14 @@ class ScreenObserver:
                 try:
                     with open(_SCENE_LOG_PATH, "w") as _f:
                         json.dump(_snap, _f)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_live_vision.py:590",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_loop", "handler_line": 590, "source_file": "aurora_live_vision.py"},
+                    )
                     pass
 
                 # 11. SediMemory ingest — visual observation as constraint event
@@ -610,13 +695,27 @@ class ScreenObserver:
 
                         try:
                             from aurora_constraint_engine import ExistenceMode as _EM
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_live_vision.py:613",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_loop", "handler_line": 613, "source_file": "aurora_live_vision.py"},
+                            )
                             _EM = None
 
                         try:
                             from aurora_sedimemory import ConstraintVector as _CV
                             _sedi_cv = _CV(X=_cv_x, T=_cv_t, N=_cv_n, B=_cv_b, A=_cv_a)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:aurora_live_vision.py:619",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_loop", "handler_line": 619, "source_file": "aurora_live_vision.py"},
+                            )
                             _sedi_cv = None
 
                         if _sedi_cv is not None:
@@ -637,10 +736,24 @@ class ScreenObserver:
                                 source="screen_observer",
                                 **({"existence_mode": _em} if _em is not None else {}),
                             )
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_live_vision.py:640",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_loop", "handler_line": 640, "source_file": "aurora_live_vision.py"},
+                    )
                     pass
 
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_live_vision.py:643",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_loop", "handler_line": 643, "source_file": "aurora_live_vision.py"},
+                )
                 pass   # never crash the daemon thread
 
             # Sleep remainder of interval

@@ -20,6 +20,7 @@ Trigger (voice/text):
   "I'm thinking of something X"                    → 20Q directly
   "Aurora go play for an hour"                     → self-training
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import re
@@ -45,7 +46,14 @@ def _feed(systems: Dict[str, Any], text: str, source: str) -> None:
                 source=source,
                 mode=EM.BOUNDED,
             )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_reasoning_games.py:48",
+            exc=_aurora_boundary_exc,
+            context={"function": "_feed", "handler_line": 48, "source_file": "aurora_reasoning_games.py"},
+        )
         pass
 
 
@@ -75,7 +83,14 @@ def _pressure(
                 ifield,
                 qao=systems.get("quasiarch_observer"),
             )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_reasoning_games.py:78",
+            exc=_aurora_boundary_exc,
+            context={"function": "_pressure", "handler_line": 78, "source_file": "aurora_reasoning_games.py"},
+        )
         pass
 
 
@@ -83,11 +98,25 @@ def _get_rel_type():
     try:
         from aurora_internal.aurora_ontological_scaffolding import RelationType
         return RelationType
-    except ImportError:
+    except ImportError as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_reasoning_games.py:86",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_rel_type", "handler_line": 86, "source_file": "aurora_reasoning_games.py"},
+        )
         try:
             from aurora_internal.aurora_ontological_scaffolding import RelationType
             return RelationType
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:90",
+                exc=_aurora_boundary_exc,
+                context={"function": "_get_rel_type", "handler_line": 90, "source_file": "aurora_reasoning_games.py"},
+            )
             return None
 
 
@@ -135,7 +164,14 @@ def internalize_correction(
                         strength=0.68, confidence=0.75,
                         knowledge_source="game_correction",
                     )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:138",
+                exc=_aurora_boundary_exc,
+                context={"function": "internalize_correction", "handler_line": 138, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
 
     if oets and correct_answer:
@@ -147,7 +183,14 @@ def internalize_correction(
                     definition=f"Related to: {', '.join(clue_words[:3])}.",
                     related=clue_words[:3],
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:150",
+                exc=_aurora_boundary_exc,
+                context={"function": "internalize_correction", "handler_line": 150, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
 
     _pressure(
@@ -166,7 +209,14 @@ def internalize_correction(
                 context_type="semantic_correction",
                 topic_words=clue_words + [correct_answer, wrong_guess],
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:169",
+                exc=_aurora_boundary_exc,
+                context={"function": "internalize_correction", "handler_line": 169, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
 
 
@@ -183,7 +233,14 @@ def internalize_confirmation(
         perception = systems.get("perception")
         oets = getattr(perception, "oets", None) if perception else None
         web  = getattr(oets, "web", None) if oets else None
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_reasoning_games.py:186",
+            exc=_aurora_boundary_exc,
+            context={"function": "internalize_confirmation", "handler_line": 186, "source_file": "aurora_reasoning_games.py"},
+        )
         pass
 
     if web and RT and correct_answer and clue_words:
@@ -195,7 +252,14 @@ def internalize_confirmation(
                         strength=0.80, confidence=0.85,
                         knowledge_source="game_confirmed",
                     )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:198",
+                exc=_aurora_boundary_exc,
+                context={"function": "internalize_confirmation", "handler_line": 198, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
 
     _pressure(
@@ -214,7 +278,14 @@ def _oets_web(systems: Dict[str, Any]):
         perception = systems.get("perception")
         oets = getattr(perception, "oets", None) if perception else None
         return getattr(oets, "web", None) if oets else None
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_reasoning_games.py:217",
+            exc=_aurora_boundary_exc,
+            context={"function": "_oets_web", "handler_line": 217, "source_file": "aurora_reasoning_games.py"},
+        )
         return None
 
 
@@ -246,7 +317,14 @@ def guess_analogy(
             if scored:
                 scored.sort(key=lambda x: x[1], reverse=True)
                 return scored[0][0], min(scored[0][1], 1.0) * 0.65
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:249",
+                exc=_aurora_boundary_exc,
+                context={"function": "guess_analogy", "handler_line": 249, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
     return "?", 0.0
 
@@ -266,7 +344,14 @@ def guess_twenty_q(systems: Dict[str, Any], clue_words: List[str]) -> Optional[s
             ]
             scored.sort(key=lambda x: x[1], reverse=True)
             return scored[0][0] if scored else None
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:269",
+                exc=_aurora_boundary_exc,
+                context={"function": "guess_twenty_q", "handler_line": 269, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
     return None
 
@@ -286,7 +371,14 @@ def word_associate(systems: Dict[str, Any], word: str, seen: List[str]) -> str:
             for n in web.get_neighbors(word, max_depth=1):
                 if n not in seen and len(n) > 2:
                     return n
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:289",
+                exc=_aurora_boundary_exc,
+                context={"function": "word_associate", "handler_line": 289, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
     return random.choice(["light", "wave", "time", "space", "form", "pattern"])
 
@@ -305,7 +397,14 @@ def pick_start_word(systems: Dict[str, Any]) -> str:
             if scored:
                 scored.sort(key=lambda x: x[1], reverse=True)
                 return random.choice(scored[:25])[0]
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:308",
+                exc=_aurora_boundary_exc,
+                context={"function": "pick_start_word", "handler_line": 308, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
     return random.choice(["light", "sound", "water", "time", "space", "pattern"])
 
@@ -321,7 +420,14 @@ def find_odd_one_out(systems: Dict[str, Any], words: List[str]) -> str:
                 for w in words
             }
             return min(scores, key=lambda w: scores[w])
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:324",
+                exc=_aurora_boundary_exc,
+                context={"function": "find_odd_one_out", "handler_line": 324, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
     return random.choice(words)
 
@@ -348,7 +454,14 @@ def build_aurora_analogy(
                 for w, t, rt in pairs[1:]:
                     if rt == rel_type and w not in (A, B) and t not in (A, B):
                         return A, B, w, t
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:351",
+                exc=_aurora_boundary_exc,
+                context={"function": "build_aurora_analogy", "handler_line": 351, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
     return None, None, None, None
 
@@ -361,7 +474,14 @@ def _add_oets_relation(systems, source_word, target_word, knowledge_source="game
             web.add_relation(source_word, target_word, RT.RELATED_TO,
                              strength=0.68, confidence=0.75,
                              knowledge_source=knowledge_source)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_reasoning_games.py:364",
+                exc=_aurora_boundary_exc,
+                context={"function": "_add_oets_relation", "handler_line": 364, "source_file": "aurora_reasoning_games.py"},
+            )
             pass
 
 
@@ -441,7 +561,14 @@ class GameStateMachine:
         if self.generate_fn:
             try:
                 return self.generate_fn(prompt) or ""
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_reasoning_games.py:444",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_cognitive", "handler_line": 444, "source_file": "aurora_reasoning_games.py"},
+                )
                 pass
         return ""
 
@@ -745,7 +872,14 @@ class GameStateMachine:
                 oets = getattr(perception, "oets", None) if perception else None
                 if oets and others:
                     oets.web.infer_relations_from_context(others, context_tone="neutral")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_reasoning_games.py:748",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_state_odd_verdict", "handler_line": 748, "source_file": "aurora_reasoning_games.py"},
+                )
                 pass
             return f"I see — '{correct}' is the outlier. I've learned from this. {self._next_prompt()}"
         return f"Which one was it? {self._next_prompt()}"
@@ -836,7 +970,14 @@ def aurora_go_play(
                     w = str(t.get("word", "") or "").strip()
                     if w and len(w) > 2:
                         pool.append(w)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_reasoning_games.py:839",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_gather_topics", "handler_line": 839, "source_file": "aurora_reasoning_games.py"},
+                )
                 pass
         if dream_trainer:
             try:
@@ -844,7 +985,14 @@ def aurora_go_play(
                     term = dim.replace("_", " ")
                     if term not in pool:
                         pool.append(term)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_reasoning_games.py:847",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_gather_topics", "handler_line": 847, "source_file": "aurora_reasoning_games.py"},
+                )
                 pass
         sample = list(_DISCOVERY_DOMAINS)
         random.shuffle(sample)
@@ -884,7 +1032,14 @@ def aurora_go_play(
                     h = str(r.get("title",   "") or "").strip()
                     if s:
                         text_parts.append(f"{h}: {s}")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_reasoning_games.py:887",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "aurora_go_play", "handler_line": 887, "source_file": "aurora_reasoning_games.py"},
+                )
                 pass
             try:
                 for r in perception.wikipedia_search(topic, max_results=2):
@@ -892,7 +1047,14 @@ def aurora_go_play(
                     h = str(r.get("title",   "") or "").strip()
                     if s:
                         text_parts.append(f"[Wikipedia] {h}: {s}")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_reasoning_games.py:895",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "aurora_go_play", "handler_line": 895, "source_file": "aurora_reasoning_games.py"},
+                )
                 pass
 
         if not text_parts:
@@ -933,7 +1095,14 @@ def aurora_go_play(
         if dream_trainer is not None:
             try:
                 dream_trainer.force_bridge_learnings_to_oets(systems)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_reasoning_games.py:936",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "aurora_go_play", "handler_line": 936, "source_file": "aurora_reasoning_games.py"},
+                )
                 pass
 
         # Waveform pressure

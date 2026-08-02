@@ -65,6 +65,7 @@ silently absorbed:
     stored state is left for a future phase.
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -116,7 +117,14 @@ def _get_tcl_class():
             sys.path.insert(0, _core)
         from aurora_toroidal_circulation import ToroidalCirculationLayer
         return ToroidalCirculationLayer
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:119",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_tcl_class", "handler_line": 119, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+        )
         return None
 
 
@@ -129,7 +137,14 @@ def _get_warp_types():
             sys.path.insert(0, _core)
         from aurora_warp_protocol import axes_to_istates
         return axes_to_istates
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:132",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_warp_types", "handler_line": 132, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+        )
         return None
 
 
@@ -137,7 +152,14 @@ def _get_meaning_evolution():
     try:
         from ..aurora_meaning_evolution import canonical_signature, rank_meaning_profiles
         return canonical_signature, rank_meaning_profiles
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:140",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_meaning_evolution", "handler_line": 140, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+        )
         return None, None
 
 
@@ -250,7 +272,14 @@ class TopologicalSemanticCoordinator:
                 self._tcl = _TCL(state_dir=self._state_dir)
                 if self._tcl.stats().get("observations", 0) == 0:
                     self._tcl.seed_from_surface_log()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:253",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "__init__", "handler_line": 253, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+                )
                 self._tcl = None
         self._tcl_class = _TCL
 
@@ -315,7 +344,14 @@ class TopologicalSemanticCoordinator:
         coord = None
         try:
             coord = resolve_pressure_coordinate(adjusted_axes, tuple(sub_crests or ()))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:318",
+                exc=_aurora_boundary_exc,
+                context={"function": "observe_turn", "handler_line": 318, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+            )
             coord = None
         manifold_slot_id = coord.slot_id if coord is not None else None
         base_meaning_form = _derive_base_meaning_form(adjusted_axes, canonical_signature)
@@ -334,7 +370,14 @@ class TopologicalSemanticCoordinator:
         self._frame_history.append(frame)
         try:
             self._tracker.save()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:337",
+                exc=_aurora_boundary_exc,
+                context={"function": "observe_turn", "handler_line": 337, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+            )
             pass
 
         toroidal_signature: Dict[str, Any] = {}
@@ -344,7 +387,14 @@ class TopologicalSemanticCoordinator:
                 self._tcl.observe(intensity)
                 self._tcl.save()
                 toroidal_signature = self._tcl.current_signature().to_dict()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:347",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe_turn", "handler_line": 347, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+                )
                 toroidal_signature = {}
 
         signatures = self._tracker.signatures()
@@ -360,19 +410,40 @@ class TopologicalSemanticCoordinator:
                     context_family=context_family,
                     dps=dps,
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:363",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe_turn", "handler_line": 363, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+                )
                 variant_match = None
         if variant_match is not None:
             try:
                 self._registry.save_index()
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:368",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe_turn", "handler_line": 368, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+                )
                 pass
 
         base_forms = []
         if rank_meaning_profiles is not None:
             try:
                 base_forms = rank_meaning_profiles(adjusted_axes)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:375",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe_turn", "handler_line": 375, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+                )
                 base_forms = []
 
         understanding = _classify_understanding(
@@ -416,7 +487,14 @@ class TopologicalSemanticCoordinator:
         if dps is not None and self._warp_gap_check_counter % WARP_GAP_CHECK_INTERVAL == 0:
             try:
                 self.propose_topology_gap(dps)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:419",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "observe_turn", "handler_line": 419, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+                )
                 pass
 
         return snapshot
@@ -446,7 +524,14 @@ class TopologicalSemanticCoordinator:
             os.makedirs(self._state_dir, exist_ok=True)
             with open(self._shadow_log_path, "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(entry, sort_keys=True) + "\n")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:449",
+                exc=_aurora_boundary_exc,
+                context={"function": "_log_shadow_comparison", "handler_line": 449, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+            )
             pass
 
     # ── post-turn outcome plumbing (no authority: nothing calls this yet) ──
@@ -471,7 +556,7 @@ class TopologicalSemanticCoordinator:
         """Route an outcome judgment to the last-matched semantic
         variant. Exposed plumbing only -- deciding what counts as a
         positive/negative outcome is Phase 4/5's job, not this
-        coordinator's. Nothing in Phase 3's wiring calls this."""
+        coordinator's."""
         snap = self.latest_snapshot
         if snap is None or dps is None:
             return None
@@ -479,7 +564,47 @@ class TopologicalSemanticCoordinator:
         if split is None:
             return None
         manifold_slot_id, topology_id = split
-        return self._registry.record_outcome(dps, manifold_slot_id, topology_id, positive=positive)
+        return self.record_variant_outcome(
+            manifold_slot_id=manifold_slot_id,
+            topology_id=topology_id,
+            positive=positive,
+            dps=dps,
+        )
+
+    def record_variant_outcome(
+        self,
+        *,
+        manifold_slot_id: str,
+        topology_id: str,
+        positive: bool,
+        dps: Any = None,
+    ) -> Optional[Any]:
+        """Apply an explicitly judged outcome to an addressed variant.
+
+        The live response loop supplies the IDs captured at emission time;
+        this avoids applying a later turn's outcome to whichever snapshot is
+        latest when the callback runs.
+        """
+        if dps is None or not manifold_slot_id or not topology_id:
+            return None
+        result = self._registry.record_outcome(
+            dps,
+            str(manifold_slot_id),
+            str(topology_id),
+            positive=bool(positive),
+        )
+        try:
+            self._registry.save_index()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:record_variant_outcome",
+                exc=_aurora_boundary_exc,
+                context={"function": "record_variant_outcome", "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+            )
+            pass
+        return result
 
     # ── perturbation probing (live-wired 2026-07-14: dreams/classroom) ──
 
@@ -552,7 +677,14 @@ class TopologicalSemanticCoordinator:
                 self._registry, dps, result,
                 manifold_slot_id=manifold_slot_id, topology_id=topology_id, source=source,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:555",
+                exc=_aurora_boundary_exc,
+                context={"function": "run_perturbation_probe", "handler_line": 555, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+            )
             pass
         return result
 
@@ -607,14 +739,35 @@ class TopologicalSemanticCoordinator:
                 istate_profile, source="mtsl_topology", tick=0,
                 topology_gap_ref=fingerprint_id,
             )
-        except TypeError:
+        except TypeError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:610",
+                exc=_aurora_boundary_exc,
+                context={"function": "propose_topology_gap", "handler_line": 610, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+            )
             # host's check_and_extend predates the topology_gap_ref
             # parameter (shouldn't happen for the real WarpCapable mixin,
             # but a test double or older host might not have it) --
             # degrade to the call without it rather than crash.
             try:
                 return dps.check_and_extend(istate_profile, source="mtsl_topology", tick=0)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:617",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "propose_topology_gap", "handler_line": 617, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+                )
                 return None
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:619",
+                exc=_aurora_boundary_exc,
+                context={"function": "propose_topology_gap", "handler_line": 619, "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+            )
             return None

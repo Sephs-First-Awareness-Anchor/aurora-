@@ -27,6 +27,7 @@ DEPENDENCIES (all optional -- degrades gracefully):
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import os
 import json
@@ -56,14 +57,28 @@ logger = logging.getLogger(__name__)
 try:
     from PIL import Image as PILImage
     _PIL_AVAILABLE = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_image_ingestion.py:59",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 59, "source_file": "aurora_image_ingestion.py"},
+    )
     _PIL_AVAILABLE = False
     logger.info("[Vision] Pillow not installed. Install with: pip install Pillow")
 
 try:
     import numpy as np
     _NP_AVAILABLE = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_image_ingestion.py:66",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 66, "source_file": "aurora_image_ingestion.py"},
+    )
     import array
     _NP_AVAILABLE = False
 
@@ -147,6 +162,13 @@ class WebImageDownloader:
                     self._downloaded.add(url)
                     self._downloads_today += 1
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_image_ingestion.py:149",
+                exc=e,
+                context={"function": "download_for_concept", "handler_line": 149, "source_file": "aurora_image_ingestion.py"},
+            )
             logger.debug(f"[Vision] Download failed for concept '{concept}': {e}")
 
         self.save_state()
@@ -171,7 +193,14 @@ class WebImageDownloader:
                 original = data.get("originalimage", {}).get("source", img_url)
                 return [original]
             return []
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_image_ingestion.py:174",
+                exc=_aurora_boundary_exc,
+                context={"function": "_find_wikimedia_images", "handler_line": 174, "source_file": "aurora_image_ingestion.py"},
+            )
             return []
 
     def _download_image(self, url: str, concept: str) -> Optional[str]:
@@ -211,6 +240,13 @@ class WebImageDownloader:
             return save_path
 
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_image_ingestion.py:213",
+                exc=e,
+                context={"function": "_download_image", "handler_line": 213, "source_file": "aurora_image_ingestion.py"},
+            )
             logger.debug(f"[Vision] Image download error: {e}")
             return None
 
@@ -234,7 +270,14 @@ class WebImageDownloader:
             os.makedirs(os.path.dirname(self.STATE_PATH), exist_ok=True)
             with PERSISTENCE_LOCK:
                 atomic_write_json(Path(self.STATE_PATH), data, indent=2)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_image_ingestion.py:237",
+                exc=_aurora_boundary_exc,
+                context={"function": "save_state", "handler_line": 237, "source_file": "aurora_image_ingestion.py"},
+            )
             pass
 
     def load_state(self):
@@ -247,7 +290,14 @@ class WebImageDownloader:
             self._downloads_today = data.get("downloads_today", 0)
             self._downloaded = set(data.get("downloaded", []))
             self._reset_if_new_day()
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_image_ingestion.py:250",
+                exc=_aurora_boundary_exc,
+                context={"function": "load_state", "handler_line": 250, "source_file": "aurora_image_ingestion.py"},
+            )
             pass
 
 
@@ -528,7 +578,14 @@ class ImageIngestionProtocol:
                 if cl_to_bind:
                     self.binder._bind_to_oets(cl_to_bind, label)
                     _oets_bound = True
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_image_ingestion.py:531",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "teach_label", "handler_line": 531, "source_file": "aurora_image_ingestion.py"},
+                )
                 pass
 
         self.save_index()
@@ -556,6 +613,13 @@ class ImageIngestionProtocol:
                 os.fsync(f.fileno())
             os.replace(tmp, self.INDEX_PATH)
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_image_ingestion.py:558",
+                exc=e,
+                context={"function": "save_index", "handler_line": 558, "source_file": "aurora_image_ingestion.py"},
+            )
             logger.debug(f"[Vision] Index save failed: {e}")
 
     def load_index(self):
@@ -570,7 +634,14 @@ class ImageIngestionProtocol:
                 self._clusters[cid] = VisualCluster.from_dict(cd)
             logger.info(f"[Vision] Loaded {len(self._vectors)} vectors, "
                         f"{len(self._clusters)} clusters")
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_image_ingestion.py:573",
+                exc=_aurora_boundary_exc,
+                context={"function": "load_index", "handler_line": 573, "source_file": "aurora_image_ingestion.py"},
+            )
             pass
 
     def status(self) -> Dict:

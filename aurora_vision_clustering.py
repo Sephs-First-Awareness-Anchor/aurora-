@@ -27,6 +27,7 @@ DEPENDENCIES (all optional -- degrades gracefully):
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import os
 import json
@@ -49,14 +50,28 @@ logger = logging.getLogger(__name__)
 try:
     from PIL import Image as PILImage
     _PIL_AVAILABLE = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_vision_clustering.py:52",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 52, "source_file": "aurora_vision_clustering.py"},
+    )
     _PIL_AVAILABLE = False
     logger.info("[Vision] Pillow not installed. Install with: pip install Pillow")
 
 try:
     import numpy as np
     _NP_AVAILABLE = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_vision_clustering.py:59",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 59, "source_file": "aurora_vision_clustering.py"},
+    )
     import array
     _NP_AVAILABLE = False
 
@@ -122,6 +137,13 @@ class FeatureExtractor:
             img = PILImage.open(image_path).convert("RGB")
             return self._extract_from_pil(image_path, img)
         except Exception as e:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_vision_clustering.py:124",
+                exc=e,
+                context={"function": "extract", "handler_line": 124, "source_file": "aurora_vision_clustering.py"},
+            )
             logger.debug(f"[Vision] Feature extraction failed for {image_path}: {e}")
             return None
 
@@ -185,7 +207,14 @@ class FeatureExtractor:
                     if (dx + dy) / 2 > 20:
                         edges += 1
             return edges / max(1, (sample_size - 1) ** 2)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_vision_clustering.py:188",
+                exc=_aurora_boundary_exc,
+                context={"function": "_estimate_edge_density", "handler_line": 188, "source_file": "aurora_vision_clustering.py"},
+            )
             return 0.0
 
     def _stub_extract(self, path: str) -> VisualFeatureVector:
@@ -433,7 +462,14 @@ class OETSVisionBinder:
                     source="vision_bootstrap",
                     confidence=cluster.confidence,
                 )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_vision_clustering.py:436",
+                exc=_aurora_boundary_exc,
+                context={"function": "_bind_to_oets", "handler_line": 436, "source_file": "aurora_vision_clustering.py"},
+            )
             pass
 
 

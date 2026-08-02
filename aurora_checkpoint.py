@@ -14,6 +14,7 @@ FEATURES:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import os
 import json
@@ -169,7 +170,14 @@ class WriteValidator:
                 if heat > self.heat_limit:
                     logger.debug(f"[Checkpoint] IVM heat {heat:.2f} > limit — quarantining {write_type}")
                     return WriteResult.QUARANTINED
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_checkpoint.py:172",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "validate", "handler_line": 172, "source_file": "aurora_checkpoint.py"},
+                )
                 pass
 
         return WriteResult.COMMITTED
@@ -198,7 +206,14 @@ class AtomicWriter:
             except Exception:
                 try:
                     os.unlink(tmp_path)
-                except OSError:
+                except OSError as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_checkpoint.py:201",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "write", "handler_line": 201, "source_file": "aurora_checkpoint.py"},
+                    )
                     pass
                 raise
         except Exception as e:
@@ -262,7 +277,14 @@ class CheckpointManager:
         try:
             signal.signal(signal.SIGTERM, self._signal_handler)
             signal.signal(signal.SIGINT,  self._signal_handler)
-        except (OSError, ValueError):
+        except (OSError, ValueError) as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_checkpoint.py:265",
+                exc=_aurora_boundary_exc,
+                context={"function": "__init__", "handler_line": 265, "source_file": "aurora_checkpoint.py"},
+            )
             pass  # Not in main thread — skip
 
     # ----------------------------------------------------------------
@@ -388,7 +410,14 @@ class CheckpointManager:
                 for cb in self._on_save_callbacks:
                     try:
                         cb(record)
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_checkpoint.py:391",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "save", "handler_line": 391, "source_file": "aurora_checkpoint.py"},
+                        )
                         pass
             return ok
 

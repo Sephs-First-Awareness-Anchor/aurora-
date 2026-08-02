@@ -19,6 +19,7 @@ static-exam gate epistemology, not the scorer):
 
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 import json
 import os
 import time
@@ -114,9 +115,23 @@ def log_envelope_shadow(user_text, systems, turn_id):
                         continue
                     try:
                         pairs.append(json.loads(line))
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_boundary_envelope.py:117",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "log_envelope_shadow", "handler_line": 117, "source_file": "aurora_internal/aurora_boundary_envelope.py"},
+                        )
                         continue
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_boundary_envelope.py:119",
+                exc=_aurora_boundary_exc,
+                context={"function": "log_envelope_shadow", "handler_line": 119, "source_file": "aurora_internal/aurora_boundary_envelope.py"},
+            )
             pairs = []
 
     direct_pairs, region_keys = build_pair_index(pairs)
@@ -139,7 +154,14 @@ def log_envelope_shadow(user_text, systems, turn_id):
             verdict, reason, evidence = score_joint(
                 [operator], argument, lexicon_entries, direct_pairs, region_keys,
             )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_boundary_envelope.py:142",
+                exc=_aurora_boundary_exc,
+                context={"function": "log_envelope_shadow", "handler_line": 142, "source_file": "aurora_internal/aurora_boundary_envelope.py"},
+            )
             continue
         lines.append(json.dumps({
             "operator_relation": operator,

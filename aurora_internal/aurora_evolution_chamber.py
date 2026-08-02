@@ -45,6 +45,7 @@ OUTPUTS:
 """
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -74,7 +75,14 @@ from aurora_internal.aurora_polarity_gradient import (
 from aurora_internal.aurora_constraint_manifold_patched import Constraint
 try:
     from aurora_internal.aurora_noncomp_registry import REGISTRY as _NC_REGISTRY  # cost-grounded pressure weighting
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:77",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 77, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+    )
     _NC_REGISTRY = None
 from aurora_constraint_stack import make_difference_buffer, DifferenceHistoryBuffer
 
@@ -90,7 +98,14 @@ try:
         EnvironmentVector,
     )
     _GENEALOGY_AVAILABLE = True
-except ImportError:
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:93",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 93, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+    )
     _GENEALOGY_AVAILABLE = False
 
     # ----- minimal stubs -----
@@ -287,7 +302,14 @@ def _build_axis_cost_weights() -> Dict[str, float]:
                 ("A", Constraint.A),
             ):
                 coeffs[ax] = float(_NC_REGISTRY.cost(c).shift_cost_coeff)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:290",
+                exc=_aurora_boundary_exc,
+                context={"function": "_build_axis_cost_weights", "handler_line": 290, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+            )
             coeffs = dict(fallback_coeff)
 
     max_coeff = max(coeffs.values()) if coeffs else 1.0
@@ -624,7 +646,14 @@ _CONSTRAINT_TOKEN_ALIASES: Dict[str, str] = {
 def _clamp01(v: Any) -> float:
     try:
         x = float(v)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:627",
+            exc=_aurora_boundary_exc,
+            context={"function": "_clamp01", "handler_line": 627, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+        )
         x = 0.0
     return max(0.0, min(1.0, x))
 
@@ -1383,7 +1412,14 @@ class EvolutionaryChamber:
             if trace_items and hasattr(self._genealogy, "rewrite_trace"):
                 try:
                     trace_for_genealogy = self._genealogy.rewrite_trace(trace_items)
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:1386",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "tick", "handler_line": 1386, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+                    )
                     trace_for_genealogy = trace_items
 
             result = None
@@ -1579,7 +1615,14 @@ class EvolutionaryChamber:
 
         try:
             confidence = float(notes.get("confidence", 0.0) or 0.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:1582",
+                exc=_aurora_boundary_exc,
+                context={"function": "observe_external_evidence", "handler_line": 1582, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+            )
             confidence = 0.0
         confidence = max(0.0, min(1.0, confidence))
 
@@ -1590,7 +1633,14 @@ class EvolutionaryChamber:
             profile = dict(notes.get("pressure_profile", {}) or {})
         try:
             steering_confidence = _clamp01(profile.get("total_confidence", 0.0))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:1593",
+                exc=_aurora_boundary_exc,
+                context={"function": "observe_external_evidence", "handler_line": 1593, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+            )
             steering_confidence = 0.0
 
         pulses = 1
@@ -1655,7 +1705,14 @@ class EvolutionaryChamber:
 
         try:
             avg_fitness = float(notes.get("avg_fitness", rec.get("avg_fitness", 0.0)) or 0.0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:1658",
+                exc=_aurora_boundary_exc,
+                context={"function": "observe_external_evidence", "handler_line": 1658, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+            )
             avg_fitness = 0.0
         avg_fitness = max(0.0, avg_fitness)
 
@@ -1712,6 +1769,13 @@ class EvolutionaryChamber:
                     self._genealogy.register_code_evolution_outcome(payload) or {}
                 )
             except Exception as e:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:1714",
+                    exc=e,
+                    context={"function": "observe_external_evidence", "handler_line": 1714, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+                )
                 registration = {
                     "registered": False,
                     "reason": f"register_code_evolution_outcome_error:{e}",
@@ -1896,12 +1960,26 @@ if __name__ == "__main__":
 # AURORA_EVOLVED_NATIVE_BEGIN
 try:
     import inspect as _aurora_native_inspect
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:1899",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 1899, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+    )
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:1904",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 1904, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+    )
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None
@@ -3705,7 +3783,14 @@ def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
     try:
         setattr(owner, attr_name, value)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:3708",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_bind_owner_attribute", "handler_line": 3708, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+        )
         return False
 
 def _aurora_store_reflection(target_key, reflection, args):
@@ -3720,7 +3805,14 @@ def _aurora_store_reflection(target_key, reflection, args):
     current[str(target_key)] = reflection
     try:
         setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:3723",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_reflection", "handler_line": 3723, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+        )
         pass
 
 def _aurora_store_owner_state(attribute, target_key, value, args):
@@ -3735,7 +3827,14 @@ def _aurora_store_owner_state(attribute, target_key, value, args):
     current[str(target_key)] = value
     try:
         setattr(owner, attribute, current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:3738",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_owner_state", "handler_line": 3738, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+        )
         pass
 
 def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
@@ -4107,7 +4206,14 @@ def _aurora_make_override(export_name, target_key):
         if _aurora_native_inspect is not None:
             try:
                 _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_evolution_chamber.py:4110",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_aurora_make_override", "handler_line": 4110, "source_file": "aurora_internal/aurora_evolution_chamber.py"},
+                )
                 pass
     return _override
 

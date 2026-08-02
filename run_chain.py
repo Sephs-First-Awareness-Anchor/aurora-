@@ -23,6 +23,7 @@ Chain report is printed at the end of every run.
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import argparse
@@ -65,7 +66,14 @@ import datetime
 
 try:
     from aurora_internal.aurora_recommendation_hub import enqueue_recommendation as _enqueue_recommendation
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:run_chain.py:68",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 68, "source_file": "run_chain.py"},
+    )
     _enqueue_recommendation = None
 
 
@@ -227,7 +235,14 @@ def _boot(out_dir: str, run_id: str, cfg_overrides: Optional[Dict[str, Any]] = N
                     scale=_i % 5,
                 )
                 _n_seeded += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:run_chain.py:230",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_boot", "handler_line": 230, "source_file": "run_chain.py"},
+                )
                 pass
     print(f"  [BOOT] Lattice seeded with {_n_seeded} nodes across all 5 modes")
 
@@ -297,15 +312,36 @@ def _boot(out_dir: str, run_id: str, cfg_overrides: Optional[Dict[str, Any]] = N
                     for lnk in links_loaded.values():
                         try:
                             reg_link_ability(lnk)
-                        except Exception:
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:run_chain.py:300",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_boot", "handler_line": 300, "source_file": "run_chain.py"},
+                            )
                             continue
                 restored_links = len(links_loaded)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_chain.py:303",
+            exc=_aurora_boundary_exc,
+            context={"function": "_boot", "handler_line": 303, "source_file": "run_chain.py"},
+        )
         restored_links = 0
     if hasattr(genealogy, "restore_pair_stats"):
         try:
             restored_pairs = int(genealogy.restore_pair_stats() or 0)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:run_chain.py:308",
+                exc=_aurora_boundary_exc,
+                context={"function": "_boot", "handler_line": 308, "source_file": "run_chain.py"},
+            )
             restored_pairs = 0
     chamber = EvolutionaryChamber(
         lattice=lattice,
@@ -524,7 +560,14 @@ def _print_final(
                     'run_output_dir': os.path.abspath(out_dir or getattr(genealogy, 'output_dir', '')),
                 },
             )
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_chain.py:527",
+            exc=_aurora_boundary_exc,
+            context={"function": "_print_final", "handler_line": 527, "source_file": "run_chain.py"},
+        )
         pass
 
     print()
@@ -608,12 +651,26 @@ if __name__ == "__main__":
 # AURORA_EVOLVED_NATIVE_BEGIN
 try:
     import inspect as _aurora_native_inspect
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:run_chain.py:611",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 611, "source_file": "run_chain.py"},
+    )
     _aurora_native_inspect = None
 
 try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
-except Exception:
+except Exception as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:run_chain.py:616",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "handler_line": 616, "source_file": "run_chain.py"},
+    )
     _AuroraEvolvedSurfaceEngine = None
 
 _AURORA_NATIVE_EVOLVED_ENGINE = None
@@ -1055,7 +1112,14 @@ def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
     try:
         setattr(owner, attr_name, value)
         return True
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_chain.py:1058",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_bind_owner_attribute", "handler_line": 1058, "source_file": "run_chain.py"},
+        )
         return False
 
 def _aurora_store_reflection(target_key, reflection, args):
@@ -1070,7 +1134,14 @@ def _aurora_store_reflection(target_key, reflection, args):
     current[str(target_key)] = reflection
     try:
         setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_chain.py:1073",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_reflection", "handler_line": 1073, "source_file": "run_chain.py"},
+        )
         pass
 
 def _aurora_store_owner_state(attribute, target_key, value, args):
@@ -1085,7 +1156,14 @@ def _aurora_store_owner_state(attribute, target_key, value, args):
     current[str(target_key)] = value
     try:
         setattr(owner, attribute, current)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_chain.py:1088",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aurora_store_owner_state", "handler_line": 1088, "source_file": "run_chain.py"},
+        )
         pass
 
 def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
@@ -1457,7 +1535,14 @@ def _aurora_make_override(export_name, target_key):
         if _aurora_native_inspect is not None:
             try:
                 _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:run_chain.py:1460",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_aurora_make_override", "handler_line": 1460, "source_file": "run_chain.py"},
+                )
                 pass
     return _override
 

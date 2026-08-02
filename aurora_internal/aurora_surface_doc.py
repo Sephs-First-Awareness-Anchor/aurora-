@@ -21,6 +21,7 @@ Public API
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -73,7 +74,14 @@ def _load_registry() -> Dict[str, Dict[str, Any]]:
     try:
         from aurora_internal.aurora_evolved_surfaces import _SURFACE_REGISTRY  # type: ignore
         return dict(_SURFACE_REGISTRY)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_surface_doc.py:76",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_registry", "handler_line": 76, "source_file": "aurora_internal/aurora_surface_doc.py"},
+        )
         return {}
 
 
@@ -91,9 +99,23 @@ def _load_pressure_log(max_entries: int = 2000) -> List[Dict[str, Any]]:
                 if line:
                     try:
                         entries.append(json.loads(line))
-                    except Exception:
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_surface_doc.py:94",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_load_pressure_log", "handler_line": 94, "source_file": "aurora_internal/aurora_surface_doc.py"},
+                        )
                         pass
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/aurora_surface_doc.py:96",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_pressure_log", "handler_line": 96, "source_file": "aurora_internal/aurora_surface_doc.py"},
+        )
         pass
     return entries[-max_entries:]
 
@@ -109,7 +131,14 @@ def _parse_signature(sig: str) -> Dict[str, int]:
             ax, n = part.split("^", 1)
             try:
                 counts[ax.strip()] = int(float(n.strip()))
-            except ValueError:
+            except ValueError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_surface_doc.py:112",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_parse_signature", "handler_line": 112, "source_file": "aurora_internal/aurora_surface_doc.py"},
+                )
                 pass
         elif part and part in _AXIS_NAMES:
             counts[part] = 1

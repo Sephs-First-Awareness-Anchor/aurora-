@@ -30,6 +30,7 @@ Lineage structure:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -112,7 +113,14 @@ class PressureOntology:
                 if text:
                     oets.observe(text)
                     count += 1
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_pressure_ontology.py:115",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "seed_to_oets", "handler_line": 115, "source_file": "aurora_pressure_ontology.py"},
+                )
                 pass
         return count
 
@@ -883,13 +891,27 @@ def get_ontology() -> PressureOntology:
             _cached_ontology = PressureOntology.load(_ONTOLOGY_PATH)
             if _cached_ontology.nodes:
                 return _cached_ontology
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_pressure_ontology.py:886",
+                exc=_aurora_boundary_exc,
+                context={"function": "get_ontology", "handler_line": 886, "source_file": "aurora_pressure_ontology.py"},
+            )
             pass
 
     _cached_ontology = build_seed_ontology()
     try:
         _cached_ontology.save(_ONTOLOGY_PATH)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_pressure_ontology.py:892",
+            exc=_aurora_boundary_exc,
+            context={"function": "get_ontology", "handler_line": 892, "source_file": "aurora_pressure_ontology.py"},
+        )
         pass
     return _cached_ontology
 

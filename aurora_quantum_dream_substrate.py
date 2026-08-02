@@ -39,6 +39,7 @@ Wire-up:
 """
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import logging
 import math
@@ -110,6 +111,13 @@ class CrystalEntanglementRegistry:
                             self._seen.add(key)
                             added += 1
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:112",
+                exc=exc,
+                context={"function": "auto_entangle_from_genealogy", "handler_line": 112, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             log.debug("auto_entangle_from_genealogy: %s", exc)
         return added
 
@@ -133,6 +141,13 @@ class CrystalEntanglementRegistry:
                 genealogy.tick_crystal_promotion(b, delta=delta, source=f"entangle:{a}")
                 genealogy.tick_crystal_promotion(a, delta=delta, source=f"entangle:{b}")
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:135",
+                exc=exc,
+                context={"function": "propagate", "handler_line": 135, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             log.debug("entanglement.propagate: %s", exc)
 
 
@@ -178,7 +193,14 @@ def _temporal_feedback_pass(systems: Dict[str, Any]) -> None:
                 # (definitional clarity improves with understanding)
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
-                except ImportError:
+                except ImportError as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_quantum_dream_substrate.py:181",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_temporal_feedback_pass", "handler_line": 181, "source_file": "aurora_quantum_dream_substrate.py"},
+                    )
                     from aurora_sedimemory import ConstraintVector  # type: ignore
                 cv = ConstraintVector(X=0.2, T=0.4, N=0.3, B=0.30 + signal * 0.3, A=0.3)
                 sm.ingest_event(
@@ -191,13 +213,27 @@ def _temporal_feedback_pass(systems: Dict[str, Any]) -> None:
                     constraint_vector=cv,
                     source="quantum_dream:temporal_feedback",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_quantum_dream_substrate.py:194",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_temporal_feedback_pass", "handler_line": 194, "source_file": "aurora_quantum_dream_substrate.py"},
+                )
                 pass
             signal *= _FIDELITY_BACKPROP_DECAY
 
         log.debug("temporal_feedback_pass: %d strata updated (signal %.2f→%.2f)",
                   len(strata), 1.0, signal)
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_quantum_dream_substrate.py:200",
+            exc=exc,
+            context={"function": "_temporal_feedback_pass", "handler_line": 200, "source_file": "aurora_quantum_dream_substrate.py"},
+        )
         log.debug("_temporal_feedback_pass: %s", exc)
 
 
@@ -226,7 +262,14 @@ def _consciousness_fusion_cycle(systems: Dict[str, Any]) -> None:
             n_axis = float((topo or {}).get("N", 0.0))
             if n_axis < _FUSION_PRESSURE_THRESHOLD:
                 return
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:229",
+                exc=_aurora_boundary_exc,
+                context={"function": "_consciousness_fusion_cycle", "handler_line": 229, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             return
 
         sc = systems.get("sensory_crystal")
@@ -244,14 +287,28 @@ def _consciousness_fusion_cycle(systems: Dict[str, Any]) -> None:
                 candidates = getattr(sc, f"concepts_at_stage", None)
                 if callable(candidates):
                     fused.extend(list(candidates(stage) or [])[:5])
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_quantum_dream_substrate.py:247",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_consciousness_fusion_cycle", "handler_line": 247, "source_file": "aurora_quantum_dream_substrate.py"},
+                )
                 pass
 
         # Fallback: grab whatever the crystal exposes
         if not fused:
             try:
                 fused = list(getattr(sc, "top_concepts", lambda n: [])(10) or [])
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_quantum_dream_substrate.py:254",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_consciousness_fusion_cycle", "handler_line": 254, "source_file": "aurora_quantum_dream_substrate.py"},
+                )
                 pass
 
         if len(fused) < 2:
@@ -275,12 +332,26 @@ def _consciousness_fusion_cycle(systems: Dict[str, Any]) -> None:
                     delta=0.12,
                     source="quantum_dream:consciousness_fusion",
                 )
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_quantum_dream_substrate.py:278",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_consciousness_fusion_cycle", "handler_line": 278, "source_file": "aurora_quantum_dream_substrate.py"},
+                )
                 pass
 
         if fusion_links:
             log.debug("consciousness_fusion: %d cross-domain links found", len(fusion_links))
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_quantum_dream_substrate.py:283",
+            exc=exc,
+            context={"function": "_consciousness_fusion_cycle", "handler_line": 283, "source_file": "aurora_quantum_dream_substrate.py"},
+        )
         log.debug("_consciousness_fusion_cycle: %s", exc)
 
 
@@ -322,7 +393,14 @@ def _dimensional_collapse(systems: Dict[str, Any]) -> None:
             consciousness = systems.get("consciousness")
             if consciousness and hasattr(consciousness, "entropy"):
                 coherence = float(getattr(consciousness.entropy.state, "coherence", 0.5))
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:325",
+                exc=_aurora_boundary_exc,
+                context={"function": "_dimensional_collapse", "handler_line": 325, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             return
 
         if coherence > _COLLAPSE_COHERENCE_FLOOR:
@@ -336,7 +414,14 @@ def _dimensional_collapse(systems: Dict[str, Any]) -> None:
             try:
                 lf._recent_paths.clear()
                 log.debug("quantum_dream: LSA worn-path state cleared")
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_quantum_dream_substrate.py:339",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_dimensional_collapse", "handler_line": 339, "source_file": "aurora_quantum_dream_substrate.py"},
+                )
                 pass
 
         # Replay top strata as synthetic re-entry events
@@ -366,10 +451,24 @@ def _dimensional_collapse(systems: Dict[str, Any]) -> None:
                         if lf and hasattr(lf, "reentry"):
                             lf.reentry(content_str, fidelity=0.45, path_key="", proto=None)
                             replayed += 1
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_quantum_dream_substrate.py:369",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_dimensional_collapse", "handler_line": 369, "source_file": "aurora_quantum_dream_substrate.py"},
+                    )
                     pass
             log.debug("quantum_dream: re-expanded from %d strata (%d replayed)", len(strata), replayed)
     except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_quantum_dream_substrate.py:372",
+            exc=exc,
+            context={"function": "_dimensional_collapse", "handler_line": 372, "source_file": "aurora_quantum_dream_substrate.py"},
+        )
         log.debug("_dimensional_collapse: %s", exc)
 
 
@@ -434,6 +533,13 @@ class QuantumDreamSubstrate:
         try:
             self._run_mtsl_perturbation_probe(systems)
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:436",
+                exc=exc,
+                context={"function": "run_dream_cycle", "handler_line": 436, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             log.debug("quantum_dream: MTSL perturbation probe skipped: %s", exc)
 
         log.info("quantum_dream: cycle %d complete", self._cycle_count)
@@ -461,6 +567,13 @@ class QuantumDreamSubstrate:
         try:
             import aurora_possibility_selves as _aps
         except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:463",
+                exc=exc,
+                context={"function": "_dream_encounter_with_selves", "handler_line": 463, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             log.debug("quantum_dream: possibility-selves unavailable: %s", exc)
             return
 
@@ -487,7 +600,14 @@ class QuantumDreamSubstrate:
         _wg = None
         try:
             from aurora_warp_protocol import warp_guard as _wg
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:490",
+                exc=_aurora_boundary_exc,
+                context={"function": "_dream_encounter_with_selves", "handler_line": 490, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             _wg = None
 
         try:
@@ -522,7 +642,14 @@ class QuantumDreamSubstrate:
         for _ps in self._selves:
             try:
                 _aps.save_self_arc(_ps, _sd)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_quantum_dream_substrate.py:525",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_dream_encounter_with_selves", "handler_line": 525, "source_file": "aurora_quantum_dream_substrate.py"},
+                )
                 pass
         try:
             _aps.log_selves_development(self._selves, _sd)
@@ -530,7 +657,14 @@ class QuantumDreamSubstrate:
             _sr = sum(int(getattr(_ps, "self_resolved_from_held", 0)) for _ps in self._selves)
             log.info("quantum_dream: selves developed — growth_events=%d self_resolved_from_held=%d",
                      _grew, _sr)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:533",
+                exc=_aurora_boundary_exc,
+                context={"function": "_dream_encounter_with_selves", "handler_line": 533, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             pass
 
         # Stagnation-triggered birth: if her development has STUNTED or her PRESSURES
@@ -545,13 +679,27 @@ class QuantumDreamSubstrate:
                     snapshot_developmental_state as _sds, _developmental_index as _dix,
                 )
                 _di = _dix(_sds(systems))
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_quantum_dream_substrate.py:548",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_dream_encounter_with_selves", "handler_line": 548, "source_file": "aurora_quantum_dream_substrate.py"},
+                )
                 _di = None
             _ap = {}
             try:
                 _if = systems.get("identity_field")
                 _ap = (_if.status().get("axis_pressures") or {}) if _if is not None else {}
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_quantum_dream_substrate.py:554",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_dream_encounter_with_selves", "handler_line": 554, "source_file": "aurora_quantum_dream_substrate.py"},
+                )
                 _ap = {}
             self._stagnation.observe(_di, _ap)
             _birth, _reason, _stuck = self._stagnation.assess()
@@ -564,6 +712,13 @@ class QuantumDreamSubstrate:
                     log.info("quantum_dream: STAGNATION BIRTH — %s born from %s (stuck axis %s); "
                              "council now %d selves", _new.self_id, _reason, _stuck, len(self._selves))
         except Exception as _sexc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:566",
+                exc=_sexc,
+                context={"function": "_dream_encounter_with_selves", "handler_line": 566, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             log.debug("quantum_dream: stagnation check failed: %s", _sexc)
 
         # Council homeostasis by BEHAVIOUR: if the living council has stopped holding
@@ -578,6 +733,13 @@ class QuantumDreamSubstrate:
                          _rb.get("held_ratio"), _rb.get("retired"), _rb.get("born"),
                          len(self._selves))
         except Exception as _rexc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_quantum_dream_substrate.py:580",
+                exc=_rexc,
+                context={"function": "_dream_encounter_with_selves", "handler_line": 580, "source_file": "aurora_quantum_dream_substrate.py"},
+            )
             log.debug("quantum_dream: rebalance failed: %s", _rexc)
 
 

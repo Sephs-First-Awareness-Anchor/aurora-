@@ -24,6 +24,7 @@ threading positive/negative back in -- is deferred, same posture as
 this session's other Phase 4-6 deferrals).
 """
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import os
@@ -105,6 +106,7 @@ class VariantTransitionPredictor:
         self._path = os.path.join(self._state_dir, STATE_FILENAME) if self._state_dir else None
         self._transitions: Dict[Tuple[str, str], TransitionRecord] = {}
         self.last_variant_id: Optional[str] = None
+        self._last_transition_key: Optional[Tuple[str, str]] = None
         self._dirty = False
         if self._path:
             self._load()
@@ -122,7 +124,14 @@ class VariantTransitionPredictor:
                 rec = TransitionRecord.from_dict(entry)
                 if rec.from_variant_id and rec.to_variant_id:
                     self._transitions[(rec.from_variant_id, rec.to_variant_id)] = rec
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/variant_transition_predictor.py:125",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load", "handler_line": 125, "source_file": "aurora_internal/dual_strata/variant_transition_predictor.py"},
+            )
             pass
 
     def save(self) -> bool:
@@ -144,7 +153,14 @@ class VariantTransitionPredictor:
             os.replace(tmp, self._path)
             self._dirty = False
             return True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/variant_transition_predictor.py:147",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "handler_line": 147, "source_file": "aurora_internal/dual_strata/variant_transition_predictor.py"},
+            )
             return False
 
     def observe(self, variant_id: Optional[str], *, positive: Optional[bool] = None) -> Optional[TransitionRecord]:
@@ -158,8 +174,10 @@ class VariantTransitionPredictor:
         prev = self.last_variant_id
         self.last_variant_id = variant_id
         if not prev or not variant_id:
+            self._last_transition_key = None
             return None
         key = (prev, variant_id)
+        self._last_transition_key = key
         now = time.time()
         rec = self._transitions.get(key)
         if rec is None:
@@ -173,6 +191,24 @@ class VariantTransitionPredictor:
             rec.outcome_negative += 1
         self._dirty = True
         return rec
+
+    def record_turn_outcome(self, *, positive: bool) -> bool:
+        """Attach delayed receiver evidence to the latest transition."""
+        key = self._last_transition_key
+        if key is None:
+            return False
+        record = self._transitions.get(key)
+        if record is None:
+            self._last_transition_key = None
+            return False
+        if positive:
+            record.outcome_positive += 1
+        else:
+            record.outcome_negative += 1
+        self._last_transition_key = None
+        self._dirty = True
+        self.save()
+        return True
 
     def predict_next(self, current_variant_id: str, *, limit: int = DEFAULT_PREDICTION_LIMIT) -> List[TransitionPrediction]:
         """Rank the variants historically observed to follow

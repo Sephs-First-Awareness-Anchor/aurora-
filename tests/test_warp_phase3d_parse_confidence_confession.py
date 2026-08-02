@@ -127,5 +127,9 @@ def test_chain_up1_information_wires_the_confession():
     with open(os.path.join(REPO_ROOT, "aurora.py"), "r", encoding="utf-8") as f:
         source = f.read()
     idx = source.index("def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:")
-    block = source[idx:idx + 600]
+    # Widened from 600 (zip integration phase D, 2026-07-29): exception
+    # instrumentation added lines to the preceding handler in this
+    # function, pushing the anchor further out without changing the
+    # actual wiring relationship being checked.
+    block = source[idx:idx + 900]
     assert "_confess_low_confidence_parse" in block

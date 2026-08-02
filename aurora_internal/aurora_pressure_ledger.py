@@ -22,6 +22,7 @@ Integration points:
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import hashlib
 import json
@@ -117,7 +118,14 @@ class PressureExperienceLedger:
         self._buffer: List[PressureExperience] = []
         try:
             os.makedirs("aurora_state", exist_ok=True)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:120",
+                exc=_aurora_boundary_exc,
+                context={"function": "__init__", "handler_line": 120, "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+            )
             pass
 
     @classmethod
@@ -171,9 +179,23 @@ class PressureExperienceLedger:
                 if len(_lines) > _MAX_ENTRIES:
                     with open(self._LOG_PATH, "w") as _wf:
                         _wf.writelines(_lines[-_MAX_ENTRIES:])
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:174",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "record", "handler_line": 174, "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+                )
                 pass
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:176",
+                exc=_aurora_boundary_exc,
+                context={"function": "record", "handler_line": 176, "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+            )
             pass
 
         # Bridge into OETS if available
@@ -185,7 +207,14 @@ class PressureExperienceLedger:
         if hook is not None:
             try:
                 hook(exp)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:188",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "record", "handler_line": 188, "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+                )
                 pass
 
         return exp
@@ -371,7 +400,14 @@ class PressureExperienceLedger:
                 StudyEvent,
                 UsageExample,
             )
-        except ImportError:
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:374",
+                exc=_aurora_boundary_exc,
+                context={"function": "_bridge_to_oets", "handler_line": 374, "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+            )
             return
 
         # Check outcome variance BEFORE adding this experience, then after.
@@ -414,7 +450,14 @@ class PressureExperienceLedger:
                 # mark it as uncertain so the reasoning chain knows to seek context.
                 if variance_after["is_conditional"]:
                     node.uncertain_token = True
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:417",
+                exc=_aurora_boundary_exc,
+                context={"function": "_bridge_to_oets", "handler_line": 417, "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+            )
             pass
 
         # 3 -- StudyEvent in the persistent study log, includes variance snapshot
@@ -433,5 +476,12 @@ class PressureExperienceLedger:
             )
             if hasattr(oets, "log_study_event"):
                 oets.log_study_event(ev)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:436",
+                exc=_aurora_boundary_exc,
+                context={"function": "_bridge_to_oets", "handler_line": 436, "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+            )
             pass

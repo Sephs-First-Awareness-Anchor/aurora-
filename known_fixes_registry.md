@@ -6634,3 +6634,1824 @@ counting starts.
 **First Seen:** Autonomous-activity check-in, 2026-07-28, following up
 on the Semantic Plateau Remediation Directive's R1.1/R1.2/R1.4
 (2026-07-15) and the flat-divergence watchdog, FIX-A019 (2026-07-15).
+
+## RW3 — QuasiArch consult loop (closes F4), 2026-07-28
+
+Architecture Wiring Audit (Sunni & Cael, 2026-07-20), finding F4:
+`AuroraQuasiArchObserver` is a real, fed diagnostic lattice -- writes
+flow in from 11+ call sites -- but the live system never actually
+*asked it anything*. Four read/consult surfaces were the audit's own
+repo-wide zero-caller census: `record_warp_emergence`,
+`get_pressure_trace`, `waveform_turn_summary`, `get_doctrine_
+candidates`.
+
+**Already wired, no change needed:** `record_warp_emergence` --
+confirmed live via `aurora.py`'s `_h_surface_emergence` pathway
+handler, registered on the real `WarpField` for
+`WarpPathway.SURFACE_EMERGENCE`. Landed at some point between the
+audit's 2026-07-20 snapshot and now; verified by reading the actual
+current handler registration, not assumed.
+
+**Added:**
+1. `scripts/aurora_ci_segment.py::_run_quasiarch_maintenance_consult(systems)`,
+   called every autonomous segment (the closest real equivalent to the
+   audit's "existing 60s/idle cadence" for a scheduled-segment runner
+   -- `aurora_daemon.py` has no literal 60s loop; this script IS the
+   actual recurring autonomous maintenance window, confirmed via
+   today's GitHub Actions investigation). Per-run: `waveform_turn_
+   summary()` recorded as a passive `record_observation()` -- non-zero
+   consult counts, zero behavioral effect. Weekly (gated by a
+   persisted `aurora_state/quasiarch_doctrine_consult_last_run.json`
+   timestamp, same before/after pattern this script already uses for
+   `dev_index`): `get_doctrine_candidates()` queried for the
+   observer's own most-frequently-recorded REAL issue category
+   (`quasiarch.issue_counts` -- never a fabricated placeholder, skips
+   silently if nothing real has been recorded yet) and appended to
+   `aurora_state/quasiarch_doctrine_ratification_queue.jsonl`, an
+   append-only audit trail for later human review. Never auto-applied
+   -- matches the audit's own acceptance bar ("zero behavioral change
+   without ratification").
+2. `aurora.py::_emit_honest_abstain_and_seek()` now also calls
+   `quasiarch.reason_about_event(issue_category="honest_abstain", ...)`
+   directly and synchronously, right alongside the existing
+   `warp_guard()` confession call -- the honest-abstain chokepoint is
+   the system's clearest, most concentrated failure signal (literally
+   nothing else resolved), and it's the real call site the audit's own
+   "failure/abstain events route through reason_about_event" language
+   was pointing at. Direct call, not the `resp`-based `_queue_/_flush_
+   quasiarch_runtime_events()` machinery elsewhere in the file (which
+   already has substantial real usage, contrary to what a literal
+   grep for the single `reason_about_event(` call site inside
+   `_flush_quasiarch_runtime_events` might suggest) -- `state`, not
+   `resp`, is what's actually available at this point in the pipeline.
+   Read-only: surfaces doctrine hypotheses, never mutates state or
+   forces any behavior. Isolated in its own try/except, same
+   swallow-on-failure posture as every other confession call site in
+   this campaign.
+
+**Tests:** `tests/test_rw3_quasiarch_consult_loop.py` (11) -- a fake
+`QuasiArchObserver` double covering: no-observer no-op; waveform
+summary recorded every call with the correct target/source; waveform
+failures swallowed; doctrine consult correctly skipped (not run, but
+the marker still written) when `issue_counts` is empty; doctrine
+consult runs on first call, picks the MOST frequent real issue
+category (not first/arbitrary), and writes a correctly-shaped
+ratification-queue entry; the weekly gate correctly suppresses a
+repeat consult within 7 days and correctly re-fires after 7 days;
+doctrine failures swallowed; and `_emit_honest_abstain_and_seek()`'s
+new `reason_about_event()` call fires with the right
+issue_category/phase/charge_cost, degrades gracefully with no
+observer, and swallows exceptions without breaking the abstain path.
+Also re-ran `tests/test_ci_segment_dev_index_rolling_cap.py`,
+`tests/test_concept_imager_cycle.py`, `tests/test_daemon_classroom_
+cycle.py`, `tests/test_genealogy_atomic_writes.py`, `tests/test_
+governance_liveness.py`, `tests/test_warp_phase3d_parse_confidence_
+confession.py` (this session's own recent `_chain_up1_information`
+work, adjacent to `_emit_honest_abstain_and_seek` in the same file),
+and `tests/test_waveform_pressure.py` -- the full set of files
+touching `quasiarch`, the abstain chokepoint, or `aurora_ci_segment.py`
+-- all 77 pass, zero regression.
+
+## FIX-A055 (RUNTIME BUG, multi-instance) — dead comprehension-gap wiring, Communication Credit Unification Phase 0, 2026-07-28
+
+**Category:** RUNTIME BUG.
+
+Sunni supplied an external audit document ("Aurora Communication
+Credit Unification Specification") proposing a "Validated
+Communicative Re-entry Circuit" -- routing delayed next-turn outcome
+evidence back to the interaction crystal, grammar motifs, semantic
+variants, and concept crystals that produced a response, instead of
+crediting responses on Aurora's own pre-reaction confidence. Before
+any implementation, every one of its 13 numbered "Break" claims was
+checked against the actual current code (not trusted on faith) --
+11/13 confirmed accurate, citations nearly exact. Break 1's central
+claim ("the comprehension-gap system is unreachable on ordinary
+turns") was **found false**: a separate, correctly-wired call path
+already exists via `dual_question_pipeline()` calling
+`ComprehensionGapSystem.process()` with the right key and signature on
+essentially every normal turn. Phase 0 was re-scoped accordingly: only
+the genuinely dead legacy hooks the audit found (plus two more found
+while writing this fix's own tests) needed repair, not a rebuild.
+
+**Bug 1 -- `_cgs` NameError, silently escaping instead of being
+absorbed.** `aurora.py`'s `_run_live_response_turn()`, inside the
+parser's own `except Exception:` block, called `hasattr(_cgs, ...)`
+where `_cgs` was never locally bound in this function's scope (only
+inside the boot function, a different scope) -- guaranteed
+`NameError` on every real parser failure. The sibling
+`except Exception: pass` two lines below does **not** catch it (a
+sibling of the same try, not a wrapper around this except's own body,
+confirmed by direct Python reproduction) -- so on a genuine parse
+failure, the NameError propagated out of the whole fallback path
+instead of being silently absorbed the way it looked on inspection.
+**Fix:** bind `_cgs = systems.get("comprehension_gap_system")` at the
+top of the except block, the real canonical key (matches how it's
+mounted at boot).
+
+**Bug 2 -- `perception.ingest_interaction()` called with the wrong
+signature.** Same function, `_perc_a6.ingest_interaction(user_text,
+_resp_text_p)` -- two positional strings. The real signature,
+`ingest_interaction(self, interaction: Dict[str, Any], mode: str =
+"sim")`, immediately does `interaction.get('input', '')` --
+`AttributeError` on literally every turn, silently swallowed by the
+surrounding `except Exception: pass`. Confirmed every OTHER call site
+of `ingest_interaction(` in the codebase already passes a dict; this
+was the one caller written against a signature that never existed.
+Confirmed the real method never reads a `'response'` key at all
+(only `input`/`tone`/`features`/`i_state`), so `_resp_text_p` was
+never usable here regardless. **Fix:**
+`_perc_a6.ingest_interaction({"input": user_text}, mode="persistent")`
+-- `mode="persistent"` (not the default `"sim"`/`BOUNDED`) because
+this is genuine live dialogue, not a simulation episode.
+
+**Bug 3 -- dead `_cgs3`/`track_resolution()` block, removed.** A third
+hook read `systems.get("_comprehension_gap")` (a key never assigned
+anywhere in the codebase) and called `.track_resolution()` (a method
+that does not exist anywhere in `ComprehensionGapSystem`) -- an
+unconditional no-op. Removed outright per the audit's own recommended
+fix; there was no real intent left to recover.
+
+**Bugs 4 & 5 -- found while writing this fix's own tests, not in the
+original audit.** A repo-wide grep for the same dead
+`"_comprehension_gap"` key (once flagged as suspicious by Bug 3) found
+two more instances:
+- `aurora.py`'s two gap-resolution helper functions (inline-lookup
+  resolution and unknown-vocabulary repair) each read
+  `systems.get("_comprehension_gap") or systems.get(
+  "comprehension_gap_system")` -- harmless (the `or` always falls
+  through to the real key) but pointlessly dead-key-checking.
+  Simplified to the one real key.
+- The "FIX 1: ClarificationMemory → fail ledger" block (recurring
+  comprehension-gap types feeding the dream-training fail ledger every
+  5 turns) read `_cgs_fl = systems.get("_comprehension_gap")` with **no
+  fallback at all** -- unlike bugs 1-3, this wasn't even a no-op
+  documented anywhere as suspect; it's a genuinely useful-sounding
+  feature that has been permanently dead since it was written, for the
+  exact same wrong-key reason. Fixed to the real key -- this feature
+  should now actually run for the first time.
+
+**Tests:** `tests/test_comm_credit_phase0_dead_wiring.py` (8) --
+direct source-level structural verification (this campaign's
+established pattern for call sites deeply embedded in
+`_run_live_response_turn()`, a ~1300-line function requiring a full
+live boot to exercise end-to-end -- see
+`test_m1_1a_relation_pairs.py`'s `test_chain_down5_understanding_
+calls_tier2_logger` for precedent) confirming `_cgs` is bound before
+use, the dead `"_comprehension_gap"` key and `.track_resolution(` call
+are both fully gone, the `ingest_interaction` call site passes a dict
+in the right place gated by the same unchanged outer condition, and
+the fail-ledger routing now reads the real key. Plus a real behavioral
+test (not just source-text matching) confirming the FIXED call shape
+works cleanly against the actual, unmodified
+`ExpressionPerceptionEngine.ingest_interaction()`, and a companion test
+confirming the OLD broken shape genuinely does raise `AttributeError`
+against that same real method -- proving the bug was real, not
+theoretical.
+
+**First Seen:** Communication Credit Unification spec verification and
+Phase 0 implementation, 2026-07-28.
+
+## FIX-A056 (NEW MODULES, ported) — operational fault ledger + explicit runtime readiness, zip integration phase A, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, not a bug fix.
+
+Sunni supplied a zip snapshot (`auroramainoperationalhardenedv5warp.zip`)
+-- a plain-file fork of this repo taken immediately after WARP Phase 3d,
+then run through an undocumented external process that added a
+codebase-wide exception-instrumentation pass (3336 call sites across
+198 files) backed by 3 new self-contained support modules, plus a
+substantial Communication Credit Unification implementation. Verified
+via a dedicated background agent before porting anything. Instructed
+to "use everything in the zip." This is phase A of that integration:
+porting the 3 new support modules and their test file verbatim, since
+none of the 4 files previously existed in the current repo (confirmed
+by `ls` before copying) and none of them import from or are imported
+by anything else in the codebase (confirmed by repo-wide grep after
+copying) -- zero drift risk, zero coupling to port.
+
+**`aurora_internal/aurora_runtime_faults.py`** -- a bounded, structured
+fault ledger for best-effort exception boundaries. `record_runtime_fault()`
+normalizes any severity label or bare exception into one of three
+operational classes (`info`/`warning`, `subsystem_degradation`,
+`invariant_violation`) via `_severity_from_exception()`, using explicit
+labels when given and inferring from exception type / message content
+otherwise (e.g. `FileNotFoundError`/`ModuleNotFoundError`/network errors
+default to an expected-fallback `warning`; `AttributeError`/`TypeError`/
+`KeyError`/etc. and "cannot import name"/"has no attribute" text default
+to `invariant_violation`). Persists to `<state_dir>/runtime_faults.jsonl`
+(append-only) and mirrors a capped in-memory tail (`_runtime_faults`,
+last 100) onto the `systems` dict. `record_exception_from_locals()` is
+the instrumented-call-site convenience wrapper: given a handler's local
+`scope` (its `locals()`), it locates the active `systems` dict and state
+dir by walking known key names on `scope` and on `scope['self']`, so
+call sites don't need to thread `systems`/`state_dir` through explicitly.
+`fault_summary()` merges the persisted and in-memory ledgers, dedupes by
+`(timestamp, operation, traceback_hash)` keeping the higher-severity copy
+when both exist, and re-runs schema-v1 `"degraded"` records through
+inference (`_legacy_degraded_should_be_inferred`) so old archives don't
+stay permanently mislabeled. Every public function is wrapped in its own
+`except Exception: return {}` -- a diagnostics boundary is explicitly
+never allowed to become a new fault itself.
+
+**`aurora_internal/aurora_runtime_health.py`** -- explicit readiness law
+on top of the fault ledger. `compute_runtime_health()`: any of
+`_runtime_unready`/`_boot_failed`/`_self_check_failed` on `systems`, or
+any recorded `invariant_violation`, forces `overall="unready"` --
+non-negotiable, `allow_degraded` cannot override it. Any recorded
+`subsystem_degradation` (with no invariant violation) yields
+`overall="degraded"`, ready only if the caller explicitly passed
+`allow_degraded=True`. Otherwise `overall="healthy"`. The `ready`
+computation is written as an explicit disjunction
+(`healthy or (degraded and allow_degraded)) and not unready`) rather than
+the shorter `overall != "unready"`, specifically so a future third
+overall-value addition can't silently become ready-by-default.
+`publish_runtime_health()` stores the computed health onto
+`systems["_runtime_health"/"_runtime_status"/"_runtime_ready"]` and
+persists it atomically (`.json.tmp` + `os.replace`) to
+`<state_dir>/runtime_health.json`; if the persistence write itself fails,
+that failure is not swallowed -- it forces the runtime unready with the
+write error as the reason, since a health report that can't be recorded
+is itself a readiness failure. `mark_runtime_unready()` is the one-way
+door: sets `_runtime_unready` and republishes with `allow_degraded=False`,
+unconditionally.
+
+**`aurora_internal/aurora_fault_audit.py`** -- a read-only AST scanner
+(`ast.NodeVisitor`), not a code-rewriting tool (the actual injector that
+produced the zip's 3336 instrumented call sites was not included in the
+zip -- confirmed by the verification agent; building an equivalent
+injector is tracked separately as zip integration phase C).
+`audit_source_tree()` walks every `except` handler in the production
+file set (`production_files()`: root-level `*.py`, `aurora_internal/**`,
+`flutter_app/.../python/**`, excluding `tests`/`__pycache__`/state dirs
+and the audit's own support files) and classifies each one as
+`silent_pass` (body is only `pass`/`continue`), `silent_fallback` (body
+assigns/returns/augments a fallback value), or `other`. A handler is
+"visible" if its body raises, asserts, or calls anything matching a
+logging/telemetry/fault-recording name pattern (including the new
+`record_runtime_fault`/`record_exception_from_locals` names, so
+instrumented sites self-exempt from being flagged as silent). A handler
+is "intentional" if its source line carries the literal marker comment
+`aurora-fault-boundary: intentional`. `critical_unreported` handlers --
+silent, invisible, unintentional, AND inside a function named in
+`deploy/fault-boundary-policy.json`'s `critical_functions` list (the
+repo has no such policy file yet, so this list is currently empty and no
+handler is flagged critical) -- are the audit's headline number.
+
+**Tests:** `tests/test_runtime_hardening.py` (7, ported verbatim) --
+degraded-without-permission is not ready, unready can never be made
+ready even with `allow_degraded=True`, faults persist to the active
+state tree, a persisted `invariant_violation` marks the runtime unready
+on load, persisted and in-memory copies of the same event dedupe to one,
+an expected-fallback `FileNotFoundError` stays healthy/ready as a
+warning, and `audit_source_tree()` parses this actual current repo
+(444+ files) with zero parse errors. All 7 pass unmodified against
+current `HEAD` with no adaptation needed -- confirming the zip's fork
+point (immediately post-WARP-3d) left these files' dependencies
+(stdlib only, plus each other) untouched by anything since.
+
+**Full regression:** 1126/1129 passed. 2 failures
+(`test_concept_image_ingestion_import.py::test_ingest_concept_image_
+succeeds_against_real_fixture`,
+`test_waveform_pressure.py::TestCuriosityManifoldSelfSelection::
+test_flat_manifold_no_boost`) reproduce only under the full-suite run
+and pass cleanly in isolation -- pre-existing order-dependent flakiness,
+confirmed unrelated by construction: none of this fix's 4 new files are
+imported by anything else in the repo yet (repo-wide grep), so they
+cannot have influenced any other test's behavior. The third failure,
+`test_m1_2_provenance_hygiene.py::test_blind_origin_entries_are_tagged_
+legacy_unverified`, reproduces in isolation too but is a live-data
+finding, not a code defect: the real `aurora_state/lexicon.json` now
+has 2 blind-origin words ("lang", "connectio") learned since the M1.2
+tagging directive last ran, missing the `legacy-unverified:` lineage
+tag. Same zero-coupling argument applies (this fix touches no lexicon
+code), and it predates this fix in the persisted state. Reported to
+Sunni separately as a standalone finding, not folded into this fix.
+
+**First Seen:** Zip integration phase A ("use everything in the zip"),
+2026-07-29.
+
+## FIX-A057 (RUNTIME BUG x2) — property/descriptor clobbering in native self-rewrite, eager genealogy import risk, zip integration phase B, 2026-07-29
+
+**Category:** RUNTIME BUG.
+
+Phase B of "use everything in the zip": the 2 standalone bug fixes
+found in the uploaded zip that are independent of both the fault-ledger
+modules (phase A) and the Communication Credit work (phases E-H) --
+isolated from the zip's much larger, separately-tracked exception-
+instrumentation pass (phases C-D) by diffing only the non-instrumentation
+lines.
+
+**Bug 1 -- native self-rewrite plumbing clobbered property/staticmethod/
+classmethod descriptors.** `aurora_simulation_engine.py`'s
+`_aurora_assign_target()` (used by the "evolved surface" self-rewrite
+system to install replacement implementations for functions like
+`verify_layer7`) did a bare `setattr(current, chain[-1], value)` with no
+regard for what kind of descriptor already lived at that attribute. If
+the existing attribute was a `property` and the new `value` was a plain
+callable, this silently replaced the property descriptor on the class
+with an unbound function -- every future read of that attribute through
+an instance returned a bound-method object instead of invoking a getter
+and returning its value. Reproduced directly: the old bare-`setattr`
+shape leaves `instance.attr` holding `<bound method ...>` rather than
+the getter's return value, with no exception raised anywhere -- a
+silent correctness bug, not a crash. The companion function,
+`_aurora_make_override()`, had the mirror bug: its wrapper only checked
+`callable(original)` before invoking it, and a `property` object is not
+callable, so when `original` was itself a property the branch was
+skipped entirely and the wrapper's `result` stayed `None` forever --
+the real property value was never read. **Fix:** `_aurora_assign_target`
+now inspects the existing descriptor via `inspect.getattr_static()`
+before assigning, and if it's a `property`/`staticmethod`/`classmethod`,
+re-wraps the incoming value to match (preserving `fset`/`fdel`/`__doc__`
+for properties) before calling `setattr`. `_aurora_make_override`'s
+`_override` wrapper now has an explicit `isinstance(original, property)`
+branch that calls `original.__get__(args[0], type(args[0]))` to read the
+real value, and preserves `__doc__` from the property's own docstring
+rather than trying to treat it as a wrapped callable.
+
+**Bug 2 -- eager genealogy-bridge import on a real circular-import boot
+path.** `aurora_dimensional_systems.py` eagerly imported
+`aurora_evolution_stack` and `aurora_internal.lineage_canonical` at
+module load time to populate `ConstraintGenealogyLogger`/
+`AbilityProfile`/etc. This module sits on the real boot chain
+`aurora_simulation_engine -> aurora_consciousness_engine ->
+aurora_dimensional_systems` -- importing `aurora_evolution_stack` here
+risks recursing back through `aurora_simulation_engine` before its
+public types exist. A lazy loader,
+`DimensionalSystems._ensure_genealogy_symbols()` (a `@staticmethod`
+using `global` to backfill the same names), already existed specifically
+to survive this exact import-order cycle, and every real use site
+already calls it before touching a genealogy symbol -- the eager
+top-level import was fully redundant with the lazy path and carried
+the recursion risk the lazy path exists to avoid. **Fix:** deleted the
+eager `try:`/`import` block; the bridge symbols now start `None` and
+`GENEALOGY_AVAILABLE = False` unconditionally at import time, populated
+only when `_ensure_genealogy_symbols()` actually runs.
+
+Note: in this environment, `aurora_evolution_stack` currently does not
+export a name called `EnvironmentVector` at all, so the lazy loader's
+own import also fails and `GENEALOGY_AVAILABLE` stays `False` either
+way -- confirmed this is a pre-existing condition unrelated to this fix
+(the eager import path being removed hit the exact same `ImportError`
+and was already silently swallowing it before this fix). Not chased
+further here since it's outside this fix's scope; noting it for
+awareness.
+
+**Tests:** `tests/test_zip_integration_b_standalone_fixes.py` (6) --
+real behavioral tests (not just source-text checks) confirming a plain
+callable assigned over a `property` leaves the attribute as a `property`
+afterward and an instance read invokes the new getter; the same for a
+`staticmethod`; an override wrapper built from a `property` original
+correctly reads its real value via `__get__`; plus structural checks
+that the eager import block is gone, the lazy loader is still present
+and still called from >=3 real use sites, and a fresh module reload
+starts with the genealogy bridge fully inert.
+
+**First Seen:** Zip integration phase B ("use everything in the zip"),
+2026-07-29.
+
+## FIX-A058 (NEW TOOL, built) — exception-instrumentation injector, zip integration phase C, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, not a bug fix.
+
+Phase C of "use everything in the zip": Sunni's uploaded zip
+demonstrated a codebase-wide pass that inserted
+`_aurora_record_exception_from_locals(...)` calls into 3336 silent
+exception handlers across 198 files, but the actual tool that produced
+that pass was not included in the zip -- only its output, plus the
+already-ported read-only `aurora_fault_audit.py` scanner. Built a fresh
+injector, `scripts/aurora_fault_instrumentation_injector.py`, that
+reproduces the zip's exact demonstrated call shape using
+`aurora_fault_audit`'s own classification helpers (`_category`,
+`_contains_visibility`, `production_files`) imported directly rather
+than re-implemented, so the audit and the injector cannot drift apart.
+
+**Design:** uses `tokenize` (not regex/naive text splicing) to find the
+exact `:` that ends an `except` clause's header, so the header/body
+split works correctly regardless of whether the clause is single-line
+or spans multiple lines (e.g. a parenthesized exception tuple). Every
+qualifying handler in a file is processed bottom-up by line number so
+earlier edits never invalidate line indices still needed for handlers
+above them. Every rewritten file is re-parsed with `ast.parse` before
+being kept; a file that fails to re-parse is left completely untouched
+and reported as a skip rather than partially written.
+
+**2 real bugs caught during development, before any repo file was
+touched for real** (both found by testing against a disposable git
+worktree copy of the whole repo, not the live tree):
+
+1. **Single-line handler bodies.** `except Exception: pass` has its
+   body on the *same physical line* as the `except` clause. The first
+   working version located the body's first statement by AST line
+   number and inserted new lines immediately before it -- for a
+   single-line handler this landed the instrumentation block *above*
+   the `except` line itself, breaking the try/except structure
+   entirely (`SyntaxError: expected 'except' or 'finally' block`).
+   Reproduced against a full worktree dry run: 4 real files
+   (`aurora.py`, `aurora_acm_bridge.py`,
+   `aurora_internal/aurora_room_operator.py`,
+   `aurora_reflexive_interpreter.py`) hit this and were skipped.
+   **Fix:** rewrote the per-handler loop to always split at the header
+   colon (found via `tokenize`) and move any trailing same-line body
+   content onto its own new line after the injected block, unifying
+   the single-line and multi-line cases through one code path instead
+   of two.
+2. **`from __future__ import annotations`.** Several modules
+   (`aurora_support_stack.py`'s import chain touches many of them) have
+   a module docstring followed immediately by
+   `from __future__ import annotations`, which Python requires to be
+   the first real statement in the file. The import-insertion helper
+   only skipped past the docstring, not past a following
+   `__future__` import, so the injected
+   `from aurora_internal.aurora_runtime_faults import ...` line landed
+   between them -- a hard `SyntaxError` at import time in every one of
+   those modules, which only surfaced when running the actual test
+   suite against a fully-instrumented worktree (every test that
+   transitively imports `aurora.py` failed to collect, ~104 collection
+   errors) since per-file syntax checking alone doesn't catch a
+   statement-ordering rule that spans two originally-separate
+   docstring/import statements landing adjacent to each other.
+   **Fix:** `_insert_import` now walks the real module AST and skips
+   past both the docstring *and* any leading `__future__` import
+   before choosing where to insert.
+
+**Verification, in order:** (1) dry run against the live repo -- 3295
+handlers across 196 files, 0 skips (first run: 4 skips, bug 1 above);
+(2) `git worktree add` a disposable copy of the repo and run the
+injector for real there, never touching the live tree; (3) confirm
+every modified file re-parses; (4) `import aurora` directly against the
+instrumented worktree to catch import-order failures a per-file parse
+check can't see (this is what caught bug 2 -- first attempt: 104 pytest
+collection errors, all the same `from __future__ import annotations
+... SyntaxError`); (5) full regression suite run against the
+instrumented worktree.
+
+**Tests:** `tests/test_fault_instrumentation_injector.py` (10) --
+synthetic single-line and multi-line handler shapes, an existing `as`
+clause being reused rather than duplicated, a synthetic multi-line
+tuple exception header (no real example exists anywhere in the current
+codebase, confirmed by scanning `production_files()`, so this path is
+otherwise unverified against real content), the
+`aurora-fault-boundary: intentional` marker being respected, an
+already-visible (logged) handler being left alone, the import line
+landing after a docstring and after a `__future__` import and never
+duplicating, nested except-in-except handling, and the same
+zero-skips dry-run check against the real live repo as a standing
+acceptance bar for this tool.
+
+**First Seen:** Zip integration phase C ("use everything in the zip"),
+2026-07-29.
+
+## FIX-A059 (INSTRUMENTATION, repo-wide) — exception-instrumentation applied across the codebase, zip integration phase D, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, not a bug fix.
+
+Phase D of "use everything in the zip" -- the actual repo-wide
+application of the injector built in phase C (FIX-A058). Sunni was
+given an explicit checkpoint before this ran: the change touches ~196
+of ~200 production files (~3295 call sites, dominated by a ~5,500-line
+diff in `aurora.py` alone) and a trial run against a disposable git
+worktree copy had already found it breaks 3 existing tests that assert
+fixed-size source-text windows around specific call sites. Sunni chose
+to proceed.
+
+**What ran:** `python3 scripts/aurora_fault_instrumentation_injector.py`
+against the live repo. 3295 handlers instrumented across 196 files, 0
+skips -- identical counts to the disposable-worktree dry run, confirming
+the tool is deterministic and the earlier verification transfers
+directly. Every modified file re-parses; `import aurora` (the deepest
+transitive import chain in the codebase, touching `aurora_support_
+stack` -> `aurora_internal.aurora_identity_persistence` -> ... ->
+`aurora_internal.constraint_genealogy`, the exact chain that surfaced
+FIX-A058's `__future__`-import bug) succeeds cleanly.
+
+**3 existing tests fixed** (the same 3 the phase-C worktree trial
+predicted, confirmed identical against the real live application --
+no new failures beyond what was already characterized):
+- `test_b1_1_envelope_shadow.py::test_chain_down5_understanding_wires_
+  b1_1_shadow_logger` -- fixed-size window (3000 chars from the
+  function's `def` line) no longer reached `log_envelope_shadow`
+  (now 3258 chars away) because instrumentation added lines to
+  handlers earlier in the same function. Widened to 4000.
+- `test_warp_phase3d_parse_confidence_confession.py::test_chain_up1_
+  information_wires_the_confession` -- same pattern, 600-char window
+  vs. 635-char real distance. Widened to 900.
+- `test_flow_audit_and_tcl_wiring.py::test_aurora_py_reads_toroidal_
+  signature_from_coordinator_not_layer_directly` -- this one needed
+  more than a wider window: it hardcoded the literal
+  `"except Exception:\n        pass"`, which no longer exists anywhere
+  in the file now that every handler binds its exception via
+  `as _aurora_boundary_exc`. Relaxed to check for
+  `"except Exception as _aurora_boundary_exc:"` plus a trailing `pass`
+  within a widened window -- the actual property under test (the
+  toroidal-signature read stays inside a read-only, fail-quiet
+  try/except that never raises) is unchanged; only the literal source
+  text describing it changed shape.
+
+None of these were behavioral regressions -- in each case the
+underlying wiring relationship the test checks is intact; only the
+exact byte offsets and, in the third case, the literal exception-clause
+text (now uniformly including `as _aurora_boundary_exc`) had shifted.
+A repo-wide grep for the same bare `"except Exception:"` (no `as`)
+literal pattern across `tests/*.py` found only that one file using it
+in an assertion; the other 19 matches were either already using
+`as <name>` in their own asserted text or were unrelated string
+occurrences.
+
+**Full regression:** 1141/1145 passed. 4 failures: the same 3
+pre-existing/unrelated ones from FIX-A056/A057/A058 (2 order-dependent
+flaky tests, 1 already-reported live lexicon-tagging drift finding),
+plus one new one this run --
+`test_pf1_3_motif_selection.py::test_shape_fit_favors_the_skeleton_
+with_room_for_the_full_triple`, which passed cleanly in isolation and
+has no relationship to exception handling (motif shape-fit selection
+logic) -- the same order-dependent-flakiness signature as the other
+two, not a regression from this change. Not re-run a second full pass
+to force a repeat given the ~40-minute cost and the strength of the
+existing signature match; noting it honestly rather than omitting it.
+
+**What this does NOT include:** the Communication Credit Unification
+porting (zip integration phases E-H) -- unrelated content in the same
+zip, tracked separately, still pending.
+
+**First Seen:** Zip integration phase D ("use everything in the zip"),
+2026-07-29.
+
+## FIX-A060 (NEW METHODS, ported + 1 RUNTIME BUG) — Communication Credit Unification foundational methods, zip integration phase E, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, plus one independent RUNTIME BUG fix.
+
+Phase E of the Communication Credit Unification port ("use everything
+in the zip"). A background research agent mapped the full feature
+first (9 callee subsystems, their systems-dict producer keys, all 5
+`aurora.py` call sites, and the `aurora_language_field.py` diff) before
+any code was touched, since the feature turned out to be one tightly
+interconnected system rather than the 5 cleanly-separable phases
+originally assumed. This phase ports every piece that is purely
+additive -- a new method or field with nothing existing to remove or
+conflict with -- deferring the `aurora.py` wiring itself (phase F/G)
+and the non-additive immediate-credit replacements each subsystem
+needs (also phase G) to later commits.
+
+**Ported, by file:**
+- `aurora_internal/aurora_understanding_contract.py`: atomic-write
+  persistence (`atomic_write_json` instead of a bare `open()`+
+  `json.dump()`), a new `deferred_validations`/`expired_validations`
+  audit window (a continuation/follow-up turn is retained for up to 3
+  turns rather than either closing the pending response as validated
+  or discarding it outright), a rewritten clarification-vs-expression-
+  confusion classifier (word-boundary phrase matching via `_has_marker()`
+  replacing substring matching that let "I am not sure" and "not clear"
+  both false-positive-match a bare `"not "` marker; `is_expression_
+  confusion` now checked with the highest priority, ahead of correction
+  and clarification), `commit_application(..., contributors=...)`, and
+  `attach_pending_contributors()` for late-forming contributor IDs
+  (notably the concept crystal, formed after the response commits).
+- `aurora_language_field.py`: 5 new `LSAEntry` fields (`validated_
+  success_count`, `validated_failure_count`, `receiver_outcome_mean`,
+  `last_receiver_label`, `last_evidence_confidence`) deliberately kept
+  separate from internal re-entry fidelity; `_receiver_reliability()`
+  (neutral 0.5 prior below 2 samples, else a blended success-rate/
+  outcome-mean score); `apply_receiver_outcome()`; a receiver-reliability
+  veto added to both `select_crossing_path`'s direct-unlock branch and
+  `_find_metaphor_proxy` (a path with >=2 samples and reliability <0.35
+  is excluded from reselection even if its internal fidelity still
+  looks fine); atomic `_save_lsa`.
+- `aurora_dimensional_systems.py`: `Crystal.record_failpoint_sample()`.
+- `concept_crystal.py`: `ConceptCrystalRegistry.record_receiver_outcome()`
+  (depends on the above).
+- `aurora_interaction_processing.py` + `aurora_interaction_memory.py`:
+  `finalize_base_interaction()` (applies receiver evidence to a
+  previously-pending base interaction crystal, rewriting its effect and
+  point scores before the normal promotion ladder may run),
+  `_rehydrate_from_memory()` (restores persisted crystals into the live
+  `_bases`/`_composites`/`_higher_orders`/`_quasicrystals` maps on
+  construction -- previously a processing object with a real persisted
+  base ID still couldn't finalize or promote it after a restart, since
+  the in-memory maps always started empty), `InteractionNode.to_crystal()`
+  (the missing inverse of the existing `from_crystal()`, needed by
+  rehydration), and `_base_family()` gated to only
+  `{"resolved_fully", "resolved_partially"}` outcomes (a pending,
+  failed, or follow-up-gap base is evidence about what *not* to
+  promote, not a stable pattern to teach from).
+- `aurora_internal/dual_strata/topological_semantic_coordinator.py`:
+  `record_variant_outcome()` split out of the existing `record_turn_
+  outcome()` (which now delegates to it), adding `registry.save_index()`
+  persistence.
+- `aurora_internal/dual_strata/variant_transition_predictor.py`:
+  `_last_transition_key` tracking in `observe()` + `record_turn_
+  outcome()` to attach delayed receiver evidence to the most recent
+  transition.
+- `aurora_grammar_engine.py`: `MotifLineage.record_trace()` (remember
+  an unvalidated observation without changing fitness),
+  `record_internal_quality()` (self-evaluated composition quality,
+  explicitly kept off the receiver counters), `record_outcome()`
+  (routes a receiver-validated outcome to `record_success`/
+  `record_fail`); `GrammarEngine.prepare_response_trace()`,
+  `observe_exemplar()`, `record_motif_outcome()`. Also fixed
+  `suggest_structure()`'s no-promoted-motif branch, which called
+  `record_success` (immediate credit) purely because a same-turn
+  response had a plausible length -- changed to `record_trace` (no
+  credit) to match the zip; no existing test covered the old behavior.
+- `aurora_expression_perception.py`: a new representation-communication
+  ledger (`_repr_communication_ledger`, persisted separately from
+  `representations.json`) tracking `sample_count`/`meaning_failures`/
+  `high_quality_failures`/`contexts`/`insufficiency_evidence` per
+  representation; `active_representation_id()`, `representation_
+  diagnostics()`, `record_communication_outcome()`; `commit_
+  representation()` and `_load_representations()` now stamp `_repr_
+  active_id` so the ledger can be keyed to the representation actually
+  in use; `_save_representations`/`_load_representations` generalized
+  to an overridable `self._repr_state_path` instead of the hardcoded
+  class constant.
+- `aurora_dream_trainer.py`: a new `_PIPELINE_LEARNING_FILE`-backed
+  ledger (`_pending_pipeline_learning`, `_pipeline_learning_failures`,
+  atomically persisted, deliberately separate from `retained_
+  learnings.json`); `stage_pipeline_learning()` (holds a candidate
+  until receiver evidence exists -- gracefully degrades to `quality={}`
+  if the optional `aurora_internal.aurora_learning_pipeline` quality
+  gate isn't present, which it currently isn't, tracked for a later
+  phase), `resolve_pipeline_learning()` (response-level and claim-level
+  `candidate_outcomes` promotion/rejection paths), `expire_staged_
+  pipeline_learning()` (drops candidates unresolved for >3 turns into
+  the failure log rather than promoting or silently losing them).
+
+**Independent bug found and fixed along the way (not part of the
+zip's Communication Credit diff, but blocking phase E's own
+verification):** `aurora_interaction_engine.py`'s `_derive_intended_
+effect(self, input_signature, issue, response_action)` read `event.
+get("tone")` where `event` was never a parameter of that method --
+guaranteed `NameError` on every call, meaning `InteractionEngine.
+score_base_point()` (and therefore `InteractionProcessing.
+form_base_interaction()`/`observe_interaction()`) had been completely
+broken for any call reaching this code path. Confirmed pre-existing
+(no diff from earlier commits touches this file) and confirmed the
+zip independently already carries the fix: `tone` became an explicit
+keyword-only parameter with a `"neutral"` default, threaded through by
+its one real call site (`event.get("tone")` moved to the caller).
+Fixed identically.
+
+**Tests:** `tests/test_comm_credit_phase_e_foundations.py` (17) -- one
+behavioral test per ported piece, matching the assertions in the zip's
+own `tests/test_communication_credit_unification.py` wherever that
+file exercises phase E content directly (the full zip test file itself
+depends on phase F/G pieces that don't exist yet, so it's ported
+separately once those land). Also ran the 2 existing boot-heavy tests
+covering live-turn reentrancy and corpus-fragment nesting (9 tests,
+full live boot) to confirm phase E's changes don't affect ordinary
+live-turn behavior -- both passed. Per Sunni's direction, the full
+`tests/` regression sweep is deferred until all Communication Credit
+phases (E-I) are complete, to avoid repeating a ~40-minute run after
+every phase; each phase is still verified with its own real, targeted
+tests before moving on.
+
+**First Seen:** Zip integration phase E ("use everything in the zip"),
+2026-07-29.
+
+## FIX-A061 (NEW FUNCTIONS, ported) — Communication Credit Unification core aurora.py functions, zip integration phase F, 2026-07-29
+
+**Category:** FILE_STRUCTURE / new capability, not a bug fix.
+
+Phase F of the Communication Credit Unification port. Adds the 5
+top-level `aurora.py` functions that form the actual credit-routing
+logic, ported into the same relative position the zip has them
+(confirmed by the identical surrounding function -- `_observe_
+interaction_runtime_turn` immediately before, `_describe_pending_
+code_proposals` immediately after -- and the same `_turn_has_no_
+known_anchor` neighbor position between `_response_is_grounded` and
+`_discourse_anchor_context`):
+
+- `_build_communication_contributors(systems, interaction_runtime=None)`
+  -- reads the systems-dict producer keys phase E's ported subsystems
+  already populate at runtime (`_last_pipeline_state`, `_last_
+  interaction_route`, `_last_grammar_trace`, `_last_lf_fidelity`,
+  `_last_lf_reentry`, `_last_concept_crystal_trace`, `_last_rubric_
+  evidence`, `_last_gap_result`) and assembles the exact contributor
+  IDs (interaction base/quasi, grammar motif, representation,
+  semantic variant, language-field path, concept crystal,
+  interaction route, comprehension gap) touched by one emitted
+  response.
+- `_classify_validated_communication(systems, understanding_
+  observation, user_text)` -- translates the understanding contract's
+  accuracy label (phase E's `expression_unclear`/`corrected`/
+  `confirmed`/etc.) plus explicit user-text clarification-request
+  phrases into a conservative `(observed_effect, outcome_kind)` pair;
+  conservative by design -- anything short of an explicit positive or
+  negative signal stays `"pending_verification"`/`"indeterminate"`,
+  never guessed.
+- `_finalize_validated_communication(systems, understanding_
+  observation, user_text, *, session_id="", turn_tick=0)` -- the
+  actual fan-out: routes the classified outcome to every phase-E
+  subsystem method (`interaction_processing.finalize_base_
+  interaction`, `grammar_engine.record_motif_outcome`, `coordinator.
+  record_variant_outcome`, `_variant_transition_predictor.record_
+  turn_outcome`, `language_field.apply_receiver_outcome`,
+  `perception.record_communication_outcome`, `_concept_crystal_
+  registry.record_receiver_outcome`+`observe_sedi`, `dream_trainer.
+  resolve_pipeline_learning`, `dream_trainer.ledger.record_fail`),
+  each gated on `hasattr(...)` plus the relevant positive/meaning-
+  issue/expression-issue condition, and persists the outcome to
+  `communication_outcomes.json`.
+- `_record_learning_delta(systems, *, current_response, current_
+  reaction, validated_outcome=None, turn_tick=0)` -- persists a
+  before/after response+reaction delta once both halves of a pair
+  exist, via the newly-ported `aurora_internal/aurora_learning_
+  pipeline.py` (see below).
+- `_turn_has_no_known_anchor(user_text, systems, state=None)` --
+  question-shaped-turn guard comparing substantive input tokens
+  against Aurora's actual lexicon/OETS/composer vocabulary, so a
+  parser assigning a plausible frame to invented tokens can't be
+  mistaken for real understanding. Limited to question turns with no
+  authoritative answer already selected.
+
+**New module:** `aurora_internal/aurora_learning_pipeline.py`, ported
+verbatim (self-contained, stdlib + `aurora_persistence_utils` only).
+`assess_text_quality()`/`LearningQualityGate` (a cheap thin/duplicate/
+stagnant-text quality gate, distinct from outcome classification --
+short confirmations can be excellent receiver evidence, so this is for
+learning-candidate material, not for judging whether a response
+succeeded) and `build_learning_delta()`/`LearningDeltaLedger` (bounded,
+atomically-persisted before/after response+reaction records,
+deduplicated by `response_id`, with an `unreplayed()`/`mark_replayed()`
+consumption tracking pair for a downstream training bridge). Used by
+`_record_learning_delta` now; `assess_text_quality`/`LearningQualityGate`
+are also what phase E's `DreamTrainer.stage_pipeline_learning()`
+already reaches for (gracefully degrading to `quality={}` before this
+phase landed) and what phase H's corpus-ingestion quality gate will use.
+
+**Not yet wired:** none of these 5 functions are called from
+`_run_live_response_turn` or anywhere else yet (confirmed by grep --
+the only reference to any of them in `aurora.py` is `_finalize_
+validated_communication`'s own internal call to `_classify_validated_
+communication`). That wiring, plus the 4 non-additive immediate-credit
+replacements it requires, is phase G.
+
+**Tests:** `tests/test_comm_credit_phase_f_core_functions.py` (8) --
+`test_finalizer_routes_exact_interaction_id` and `test_negative_
+credit_is_diagnosis_scoped` are the zip's own two most consequential
+acceptance tests for `_finalize_validated_communication` (positive
+outcome finalizes the exact addressed interaction base; a `"corrected"`
+negative outcome routes to the coordinator and concept crystal for
+meaning-repair but explicitly does NOT address grammar or language
+field, which are scoped to positive/expression-issue outcomes only),
+run directly against the real ported function. Plus direct coverage of
+`_classify_validated_communication`, `_build_communication_
+contributors`, `_turn_has_no_known_anchor`, `_record_learning_delta`,
+and the learning-pipeline quality gate.
+
+**First Seen:** Zip integration phase F ("use everything in the zip"),
+2026-07-29.
+
+## FIX-A062 (RUNTIME WIRING, multi-site) — Communication Credit Unification wired into the live turn, zip integration phase G, 2026-07-29
+
+**Category:** RUNTIME WIRING -- the highest-risk phase of this campaign's largest single feature port.
+
+Phase G wires phases E and F's ported-but-unreferenced methods and
+functions into `_run_live_response_turn`'s actual call path, and swaps
+4 previously-immediate credit paths for the delayed, receiver-evidence
+pattern the rest of the feature depends on. All changes verified by
+direct diff against the zip at the exact insertion points (confirmed
+identical surrounding code before editing, matching this campaign's
+established practice for changes inside this ~1300+-line function).
+
+**Wiring added:**
+1. **Resonance measurement moved to turn entry.** The old post-response
+   `"LANGUAGE FIELD — inter-field resonance"` block (ran after the
+   current response was already committed, so it measured the wrong
+   response/turn pair) is deleted. A new block at the top of
+   `_run_live_response_turn`, right after per-turn guard-clearing
+   (`_live_contract_observation_done`, `_last_grammar_trace`,
+   `_last_concept_crystal_trace`, `_last_gap_result`,
+   `_last_rubric_evidence` all popped fresh each turn), measures the
+   *previous* emitted response against the *current* receiver turn
+   into `systems["_pending_receiver_resonance"]` (aliased to the old
+   `_last_field_resonance` key for compatibility) before observation
+   validation clears the pending contract record.
+2. **`_finalize_early_validation()` / `_commit_early_response()`
+   closures**, defined once near the top of the function, wired into
+   all 3 high-priority early-exit paths (`check_trigger` "check
+   yourself" memory-sweep, `teaching_engine.process_teaching_input`
+   reply, `teaching_engine.check_teaching_offer` reply) so receiver
+   evidence and grammar/interaction contributor traces are not
+   silently discarded just because a turn took a fast exit.
+3. **Main-path finalize call**: `_finalize_validated_communication(...)`
+   now runs once per ordinary turn, right after `src` classification
+   and before the response is persisted, storing its result on
+   `systems["_last_validated_communication_outcome"]`.
+4. **`_build_communication_contributors(systems, interaction_runtime)`**
+   wired into both the main-path `understanding_contract.
+   commit_application(..., contributors=...)` call and a new
+   `understanding_contract.attach_pending_contributors(...)` call
+   placed right after the concept-crystal LSA observation (since that
+   contributor forms *after* the response commit -- it needs a way to
+   attach itself to the already-pending record).
+
+**Non-additive replacements (the actual behavior swaps, each one a
+real credit-routing change, not just an addition):**
+1. **Grammar**: deleted the `"GRAMMAR ENGINE — post-turn exchange
+   observation (FIX-A008)"` block, which called `observe_exchange(...,
+   success=len(resp_text.split())>=3, ...)` immediately every turn --
+   crediting or penalizing a motif based on response *length* as a
+   proxy, never on whether the receiver actually understood. Replaced
+   with `"GRAMMAR ENGINE — delayed receiver attribution"`: stages a
+   trace only (`prepare_response_trace` → `systems["_last_grammar_
+   trace"]`), deferring the real success/fail write to
+   `record_motif_outcome` inside `_finalize_validated_communication`
+   on the *next* turn.
+2. **Concept crystal**: the `"CONCEPT CRYSTAL — observe LSA crossing"`
+   block's immediate `_ccr_lsa.observe_sedi(_ax_dict_lsa, delta=...)`
+   call (fired whenever internal language-field fidelity exceeded
+   0.5, regardless of receiver evidence) is removed. Replaced with
+   capturing `systems["_last_concept_crystal_trace"]` (crystal ID,
+   LSA facet role, path key, axis bucket) so the sedi credit is
+   applied later, receiver-gated, via `record_receiver_outcome`+
+   `observe_sedi` inside the finalizer.
+3. **Cross-pipeline learning**: `_retain_cross_pipeline_learning`
+   rewritten wholesale -- all 4 `dream_trainer.record_pipeline_
+   learning(...)` call sites (concept, semantic-frame, lineage-event,
+   claim candidates) became `dream_trainer.stage_pipeline_learning(...,
+   response_id=response_id, turn_tick=current_turn, ...)`. The
+   function now hard-gates on a real `response_id` pulled from
+   `understanding_contract.state['pending_validation']['response_id']`
+   -- returns `0` immediately if none exists yet ("the response must
+   be committed before these candidates can be tied to receiver
+   evidence; never fall back to immediate durable memory"), calls
+   `dream_trainer.expire_staged_pipeline_learning(current_turn)` first
+   to drop abandoned candidates, and sets `conversation_memory = None`
+   locally so the old "bridge to memory immediately" branches become
+   permanently unreachable dead code rather than being deleted (kept
+   exactly as the zip has it, so a future accidental re-wire can't
+   silently reintroduce immediate crediting).
+
+**Deliberately deferred, not part of this phase:** the zip also adds a
+"Final response boundary" abstain/composer-unified resolution block
+immediately after `dual_question_pipeline()` in
+`_run_live_response_turn`, built on the phase-F-ported
+`_turn_has_no_known_anchor()`. Investigated directly: this exact block
+(`_boundary_abstain`, `_boundary_unanchored`, `_a_src_boundary`) does
+not exist anywhere in the current repo -- confirmed by grep, zero
+hits. A structurally similar, pre-existing block already lives inside
+`_run_reasoning_pipeline` (referenced by the zip's own comment: "can
+bypass the D2.1 block inside `_run_reasoning_pipeline`"), so the zip's
+new block is a *separate* safety-net duplicate for callers that invoke
+`_run_live_response_turn` directly. This is a distinct
+hallucination/abstain-suppression feature, not part of Communication
+Credit's receiver-evidence routing, that happens to sit adjacent in
+the diff purely from insertion proximity. Left out of this phase
+deliberately rather than folded in without its own dedicated
+verification; noted here so it isn't silently lost.
+
+**Tests:** `tests/test_comm_credit_phase_g_live_wiring.py` (8) -- 7
+structural tests confirming each wiring point and each non-additive
+replacement by direct source inspection (matching this campaign's
+established pattern for `_run_live_response_turn` changes), plus one
+real live-boot test (`test_live_two_turn_conversation_wires_receiver_
+credit`, following `test_b1_1_envelope_shadow.py`'s established
+`boot_aurora` + `process_external_user_turn` pattern against a scratch
+copy of `aurora_state`) running an actual 2-turn conversation and
+confirming the wiring fires for real, not just structurally.
+
+**First Seen:** Zip integration phase G ("use everything in the zip"),
+2026-07-29.
+
+## FIX-A063 (RUNTIME WIRING, one function) — Communication Credit Unification corpus-ingestion bridge, zip integration phase H, 2026-07-29
+
+**Category:** RUNTIME WIRING -- `run_corpus_ingestion`'s equivalent of phase G's live-turn wiring.
+
+Corpus ingestion (`run_corpus_ingestion`) has its own live-turn-shaped
+surface -- `generate_reply()` calls `process_external_user_turn()` and
+`witness()` feeds truth continuations back in, the same
+response/receiver-evidence shape phases E-G give the interactive live
+turn. Phase H gives it the same delayed, gated treatment instead of
+letting it default to immediate, ungated ingestion.
+
+**Wiring added:**
+1. **`LearningQualityGate` gating `witness()`.** `witness()` now runs
+   every observation through a per-ingestion-run `_corpus_quality_gate
+   .observe(content, role=role)` (phase-F-ported
+   `aurora_internal/aurora_learning_pipeline.py`) before anything else.
+   The observation (and any `missing_context` markers) is always
+   recorded via the new `_record_corpus_observation()` into a bounded
+   `systems["_corpus_observation_ledger"]` (last 500) /
+   `systems["_corpus_context_gaps"]` (last 100), but the function now
+   returns `None` early -- skipping the `aurora.gateway.receive(...,
+   stream_type=StreamType.KNOWLEDGE_FEED, ...)` call and the
+   `conversation_memory.learn_fact(...)` call entirely -- whenever
+   `quality.get('eligible_for_learning')` is false. Thin/duplicate/
+   stagnant corpus material is now kept as an observation, never
+   promoted to knowledge, matching the same gate phase F ported for
+   the interactive path.
+2. **`_persist_corpus_observations()`**, a new nested function, atomically
+   writes `<state_dir>/corpus_observations.json` (schema_version 1:
+   `observations`, `context_gaps`, `quality_status` from the gate's own
+   `.status()`). Called exactly once, at the very end of
+   `run_corpus_ingestion`, immediately before the final `_full_save(...)`
+   -- matching the zip's own placement.
+3. **`_resolve_corpus_response_learning(pressure, phase)`**, a new nested
+   function, treats each responder/reverse pass's corpus truth
+   continuation as receiver evidence: pulls the pending
+   `systems['_last_staged_pipeline_response_id']` (staged by phase G's
+   rewritten `_retain_cross_pipeline_learning`), classifies
+   positive/negative purely from `pressure['signal'] >=
+   pressure['threshold']`, and calls `dream_trainer.
+   resolve_pipeline_learning(response_id, outcome_kind=..., evidence_id=
+   f'corpus:{phase}:{response_id}', score=signal, observed_effect=
+   'corpus_truth_alignment', turn_tick=..., systems=systems)`. No-ops
+   (returns immediately) if no pressure signal or no staged response_id
+   exists yet -- same "never fall back to immediate crediting" gate as
+   phase G.
+4. **`pass_responder()`/`pass_reverse()`** both now capture
+   `_record_corpus_response_pressure(...)`'s return value as `_pressure`,
+   bump a new `systems['_corpus_learning_tick']` counter, and call
+   `_resolve_corpus_response_learning(_pressure, 'responder' | 'reverse')`
+   right after -- before the truth continuation is witnessed.
+
+**Non-additive fix (the actual behavior change, not just an addition):**
+`_record_corpus_response_pressure()` computed a real pressure signal
+(`kind`, `signal`, `threshold`, `truth_alignment`, `prompt_grounding`,
+`length_fit`, `counter_pressure`) every call, fed it to the response
+pressure tuner and the QuasiArch observer, and then fell through the end
+of the function with **no return statement at all** -- every caller got
+`None` unconditionally, silently discarding the computed signal. Return
+type annotation corrected from `-> None` to `-> Dict[str, Any]`, the
+early no-`aurora_text` guard changed from bare `return` to `return {}`,
+and a final `return {...}` (all 8 computed fields) added at the end of
+the function -- this is what makes items 3-4 above possible; without a
+real return value there's nothing for `_resolve_corpus_response_learning`
+to act on.
+
+**Tests:** `tests/test_comm_credit_phase_h_corpus_bridge.py` (6) -- 5
+structural/unit tests (quality-gate ordering inside `witness()`, the
+`_persist_corpus_observations()` call site relative to `_full_save`,
+`_record_corpus_response_pressure`'s new return value on both the
+populated and empty-`aurora_text` paths, both pass functions wired to
+`_resolve_corpus_response_learning`), plus one real functional test
+(`test_observer_pass_persists_corpus_observations_for_real`) booting
+Aurora against a scratch `aurora_state` copy and running an actual
+observer-pass ingestion over a tiny synthetic OpenAI export, confirming
+`_corpus_observation_ledger` populates and `corpus_observations.json` is
+actually written to disk.
+
+**First Seen:** Zip integration phase H ("use everything in the zip"),
+2026-07-29.
+
+## FIX-A064 (RUNTIME BUG, 1 function) — Communication Credit Unification acceptance suite + double-observation fix, zip integration phase I, 2026-07-29
+
+**Category:** RUNTIME BUG + TEST PORT -- final phase of the Communication Credit Unification port.
+
+Ported the zip's own `tests/test_communication_credit_unification.py`
+verbatim (14 tests, not 13 as originally scoped -- an earlier count
+missed one) as this feature's authoritative acceptance suite, run
+against the real ported functions rather than the campaign's own
+structural/unit tests (phases E-H). Running it surfaced one real,
+verified gap in phase G's wiring:
+
+**Bug:** `_chain_up5_understanding` (the reasoning pipeline's own call
+into `understanding_contract.ingest_observation`) had no guard against
+double-observing the same receiver turn. Phase G added
+`systems["_live_contract_observation_done"]` /
+`systems["_last_understanding_observation"]` bookkeeping to
+`_run_live_response_turn` specifically so its own early-exit paths
+wouldn't re-observe, but never propagated the same guard into
+`_chain_up5_understanding`, which the main reasoning pipeline calls
+unconditionally on every turn (`aurora.py` around line 19514 in the
+zip). Left as-is, a normal (non-early-exit) live turn would have called
+`ingest_observation` twice per receiver turn -- once from
+`_run_live_response_turn`'s own pre-pipeline observation, once again
+from `_chain_up5_understanding` inside the reasoning pipeline it calls
+-- silently double-advancing the understanding contract's state
+(clearing `pending_validation` and consuming deferred-validation
+windows twice) on every ordinary turn.
+
+**Fix:** ported the zip's exact guard: `_chain_up5_understanding` now
+checks `systems.get("_live_contract_observation_done")` first and, if
+set, copies `state.understanding_observation` from
+`systems.get("_last_understanding_observation")` instead of calling
+`contract.ingest_observation(...)` again; the original unconditional
+call remains as the `elif` fallback for callers that never took the
+live-turn's canonical observation (matching this campaign's established
+"copy the zip's own guard exactly" practice for `_run_live_response_turn`-
+adjacent functions).
+
+Confirmed as a real, not stale-test, gap: reverted the fix locally and
+re-ran `test_live_pipeline_reuses_canonical_contract_observation` alone
+-- failed with `contract.calls == 1`, not the expected `0`, i.e. the
+dedup guard was genuinely missing, not a pre-existing test assumption
+this repo had already diverged from.
+
+**Tests:** `tests/test_communication_credit_unification.py` (14, ported
+verbatim from the zip, unmodified) -- all pass. Combined with phases
+E-H's own test files (phase E: 17, phase F: 8, phase G: 8, phase H: 6),
+Communication Credit Unification now has 53 dedicated tests.
+
+**Full regression sweep** (deferred across phases E-H at Sunni's
+explicit request, run once at the end of phase I per that same
+instruction): `pytest tests/`, 1198 collected, 1194 passed, 4 failed,
+1:10:25 total. All 4 failures investigated and confirmed pre-existing,
+not caused by this campaign -- verified by running each in isolation
+(all pass alone, on both this branch and the pre-campaign commit
+`7bd85a3ed` via a throwaway `git worktree`) and by tracing each
+failure's actual cause:
+- `test_blind_origin_entries_are_tagged_legacy_unverified` (M1.2) --
+  fails identically on `7bd85a3ed`, before any Comm Credit code
+  existed. Genuinely pre-existing lexicon-tagging gap, unrelated.
+- `test_ingest_concept_image_succeeds_against_real_fixture` -- passes
+  alone on both commits; only fails inside the full suite (`cv2` module
+  state/fixture contention across tests). `aurora_concept_imager.py`
+  was never touched by this campaign.
+- `test_retries_away_from_a_strictly_thinner_draw_when_a_richer_one_exists`
+  (PF3.4a) -- passes alone on both commits. Its 30-draw retry check
+  depends on `SentenceComposer._motif_for_proposition_avoiding_thinning`'s
+  unseeded fitness-proportional sampling (`aurora_expression_
+  perception.py`); global `random` state carried over from earlier
+  tests in the full-suite run shifts which draws land. Phase E's own
+  additions to that file (communication-outcome ledger) are a separate
+  code path from the sampling logic under test.
+- `test_flat_manifold_no_boost` (curiosity manifold) -- passes alone on
+  both commits. Traced to `aurora_curiosity_engine.py`'s `_step1_
+  emergence` reading `aurora_warp_protocol.get_warp_field()`, a
+  process-wide global singleton, not scoped per-test; by the time this
+  test runs inside the full suite, `dream_trainer.record_fail()` (a
+  pre-existing WARP-campaign function, unmodified by phases E-I) had
+  already pushed 3 recurring `failed_prediction` demands into the
+  shared anomaly ledger, crossing the urgency threshold this test
+  checks. Not this campaign's code, and not scoped to a fresh instance
+  per test -- a pre-existing test-isolation gap in the WARP anomaly
+  ledger's global-singleton design.
+
+**KNOWN-GAP: test-isolation for `aurora_warp_protocol.get_warp_field()`
+and unseeded RNG sampling in `SentenceComposer`.** Both are pre-existing
+weaknesses this regression sweep surfaced but did not cause: the WARP
+anomaly ledger is a process-wide singleton with no reset-between-tests
+hook, and `_motif_for_proposition_avoiding_thinning`'s retry sampling
+has no seedable/injectable RNG. Either can make otherwise-correct tests
+order-dependent when run as part of the full suite. Out of scope for
+this campaign; noted here so it isn't mistaken for a Comm Credit
+regression on a future full-suite run.
+
+**First Seen:** Zip integration phase I ("use everything in the zip"),
+2026-07-29.
+
+## FIX-A065 (RUNTIME WIRING, new functions) — RW4: relation-to-self into comprehension (closes F5), Architecture Wiring Audit 2026-07-20
+
+**Category:** RUNTIME WIRING -- Architecture Wiring Audit (Sunni & Cael, 2026-07-20), finding F5.
+
+F5: `RelationalComparisonEngine` (`aurora_internal/aurora_relational_
+comparison.py`) is mounted at every boot (`systems['relational_
+comparison']`, `aurora.py`) but the audit's repo-wide census found zero
+readers -- the organ implementing the design doctrine's "comparison-to-
+self as the origin of meaning" was built and consulted by nothing.
+
+**Wiring added** (`aurora.py`, both new top-level functions just before
+`_apply_noncomp_input_guidance`):
+1. `_self_state_axis_pressures(systems)` -- blends `identity_field.
+   axis_pressure(i)` (the same per-axis pressure reading `aurora_
+   curiosity_engine.py`'s `_step1_emergence` already uses) with the
+   I-State collective's most recent polarity tensions
+   (`systems['collective'].history[-1].axis_tensions`, the signed net
+   between each of the 5 I-State polarity pairs -- IS/ISNT, CAN/CANT,
+   DO/DONT, SAW/SAUNT, DID/DIDNT) into one X/T/N/B/A pressure dict --
+   RW4's own "self-state (I-State polarities + identity field)" phrase,
+   taken literally rather than picking just one source.
+2. `_compute_self_relation(systems, anchor)` -- calls `relational_
+   comparison.ground_to_self(anchor, pressures)` (the engine's own
+   "Concept-Self Comparison (Grounding)" method, previously unreferenced
+   anywhere) and returns a JSON-safe dict (similarity, pressure_delta,
+   salience_gap, relational_type, description).
+3. Wired into `_apply_noncomp_input_guidance` exactly where RW4
+   specifies: `self_relation = _compute_self_relation(systems, anchor)`
+   right after `anchor = _select_noncomp_anchor(...)`, then `summary
+   ["self_relation"] = self_relation` deposited into the same input
+   summary dict that already flows to `state.noncomp_input_state`,
+   `pipeline_state["noncomp_input"]`, and `systems["_last_noncomp_
+   input"]` -- RW4's "smallest honest wiring" instruction, verbatim.
+
+**Tests:** `tests/test_rw4_relation_to_self.py` (9) -- structural wiring
+check, unit tests for both new helpers against a real `Relational
+ComparisonEngine` + `OntologicalWeb` (not mocks), and one real live-boot
+test confirming `self_relation` actually appears in `systems["_last_
+noncomp_input"]` after a real turn.
+
+**First Seen:** Architecture Wiring Audit RW4 ("use your judgment" on
+implementation while the audit's own scope was authoritative),
+2026-08-01.
+
+## FIX-A066 (RUNTIME WIRING + tracking deliverable) — RW5: boot-spine unification (closes F9), Architecture Wiring Audit 2026-07-20
+
+**Category:** RUNTIME WIRING + regression guard -- Architecture Wiring Audit, finding F9.
+
+F9: two independent boot paths (`aurora.py:boot_aurora`, the live
+daemon spine, vs `aurora_runtime.py:boot_stack`, the offline/batch CLI
+stack behind `AuroraRuntime`) silently mount divergent organ sets.
+Confirmed case: `PrimitiveExtractor` (genealogy lens) mounted only in
+`boot_stack` -- the live device path never had primitive-extraction at
+all.
+
+**Fixed:** `boot_aurora` now mounts `systems['primitive_extractor'] =
+PrimitiveExtractor(_genealogy)` right after genealogy state restore,
+mirroring `boot_stack`'s own pattern exactly (same class, same
+single-genealogy-argument construction).
+
+**Deliverable:** `aurora_internal/aurora_boot_parity.py` -- a `BOOT_
+PARITY` tracking module, not a one-time diff. `extract_boot_aurora_
+organs()`/`extract_boot_stack_organs()` statically scan both boot
+functions' `systems[...] =` assignments (same method the audit itself
+used); `boot_parity_report()` aliases known naming-drift pairs
+(`_attention_engine`/`attention_engine`, etc.) and reports `stack_only`/
+`aurora_only`/`unexpected_stack_only`. `KNOWN_BOOT_STACK_ONLY` records
+5 organs (`_boot_metrics`, `emergence_monitor`, `entropy_detector` --
+now RECONCILED as of RW6c, see FIX-A067 --, `language_orchestra`,
+`printer`) the audit did not byte-verify for a live-mount decision,
+left stack-only deliberately rather than blindly force-mounted;
+`RECONCILED` records `primitive_extractor`. This is a tracking
+deliverable, not a mandate to mirror every organ in both spines --
+`boot_stack` is a smaller, purpose-built batch stack, not a second
+live-serving path.
+
+**Tests:** `tests/test_rw5_boot_parity.py` (7) -- confirms the
+PrimitiveExtractor mount survives in both spines and reuses boot_
+aurora's own genealogy object (not a second instance), asserts the
+tracked divergence stays exactly the documented set (a *new*
+one-spine-only organ not already in `KNOWN_BOOT_STACK_ONLY`/
+`RECONCILED` fails the test -- the actual regression guard F9 exists to
+add), and one real boot confirming `systems['primitive_extractor']` is
+a working instance wired to the real genealogy logger.
+
+**First Seen:** Architecture Wiring Audit RW5, 2026-08-01.
+
+## FIX-A067 (STATUS + RUNTIME WIRING, partial) — RW6: land the pending (CP branch fate, P1 stance, Track-1), Architecture Wiring Audit 2026-07-20
+
+**Category:** STATUS REPORT (a) + DEFERRED, no ratified spec (b) + RUNTIME WIRING, scoped (c).
+
+**(a) CP branch fate (F11):** already fully determined and reported --
+see this file's own "Architecture Wiring Audit — F11 determination +
+RW7 attribution run" entry. `aurora_contradiction_perception.py` and
+the whole D2/S1/M1/B1/P1/PS1 campaign are committed on this branch but
+absent from `origin/main` (never merged) -- a branch-state gap, not a
+missing-file bug. No further action.
+
+**(b) P1 stance channel:** the audit's own F11 note says this directive
+was "awaiting ratification" as of 2026-07-20 -- not yet ratified even
+at audit time. No ratified P1 directive text exists anywhere in this
+repo, the uploaded campaign documents, or session history. Asked
+Sunni/Cael directly whether to locate the real directive, defer, or
+scope it independently; instructed to scope independently for Track-1
+(c) but P1 remains a genuinely different case -- "stance slots" +
+"uncertainty-pressure channel" describes a wholly new subsystem with
+zero existing code to reconnect (unlike every other RW item, which
+reconnects something already built). Inventing a new constraint-bearing
+channel from an 11-word fragment is a rebuild, not a reconnection, and
+risks producing something that contradicts whatever Sunni/Cael actually
+ratify later. Left undone, flagged here rather than guessed.
+
+**(c) Track-1 (ICC ledger / Strategic Horizon / Operator Composer,
+F7):** all three modules existed with zero repo-wide imports, but
+turned out to be large, directive-specific (a real "2026-07-14 ICC
+Landing / Strategic Horizon / Operator Composition directive" this repo
+has no copy of), and self-documenting -- including explicit `TODO: wire
+from X call site` comments already left by whoever built them,
+following the exact "if ambiguous, stub the hook with a TODO and flag
+rather than guessing" discipline this campaign already uses. Landed
+what is mechanically safe to wire; left currency-bearing hooks stubbed
+per that same existing discipline:
+
+*Wired:*
+- All four modules mounted at boot: `icc_ledger`, `strategic_horizon`,
+  `operator_composer`, and `entropy_detector` (the last previously
+  existed only in `boot_stack` per RW5's boot-parity table -- now
+  RECONCILED there too, since `boot_aurora` mounts it as well).
+- `EntropySaturationDetector.measure(accountant, tick)` runs once per
+  tick inside `_advance_intake_pipeline`, immediately after `accountant.
+  tick()` per the module's own documented INTEGRATION contract,
+  depositing a real `SaturationSignal` into `systems['_last_saturation_
+  signal']` -- the live spine had never had a saturation detector at
+  all before this.
+- `OperatorComposer.compose_tick()` runs on RW3's already-established
+  maintenance cadence (`scripts/aurora_ci_segment.py`, the closest real
+  equivalent to a recurring "60s/idle" window), via the new `_run_
+  operator_composer_maintenance_tick(systems)`. Fully self-contained
+  (loads its own descriptor state and coupling shapes when not
+  supplied); every containment gate (both-parents-promoted, non-
+  declining trajectory, per-tick cap, latent-pool ceiling) lives inside
+  the module itself. Gated purely on trajectory *direction* (already
+  publicly exposed by `WorthHistory`) and promotion status -- no
+  currency value needed or fabricated.
+
+*Deliberately NOT wired:* `ICCLedger.mint_if_eligible`, `ICCLedger.
+mint_from_contradiction_resolution` (already a documented stub in the
+module itself), `StrategicHorizonLayer.assess`/`grant_bias`. All four
+need a `worth_score`/`immediate_worth`/`minted` currency magnitude.
+`WorthReport`'s own docstring is explicit: "WHAT IS NOT EXPOSED: raw
+worth score -- never." Even these modules' own test suites (`tests/
+test_icc_ledger.py`, `tests/test_strategic_horizon.py`) use a
+placeholder `0.0`/`0.1` rather than a real derivation -- confirming no
+production-value source exists anywhere accessible. `ICCLedger` is
+explicitly "hash-chained, tamper-evident, append-only... the only way
+credit is created" -- fabricating an amount here is not a wiring guess
+to make silently, it is inventing a permanent financial record. Also
+not wired: `record_guard_sweep` -- `FailureGuardSuite` (`aurora_
+constraint_engine.py`) has zero live call sites anywhere in `aurora.py`
+(not just this module's consumer -- the guard suite itself was never
+stood up live), a separate, unscoped prerequisite gap.
+
+**Two real, pre-existing bugs in `aurora_internal/aurora_entropy_
+detector.py` found and fixed** -- surfaced only because `Entropy
+SaturationDetector.measure()` had never been called on a real live
+accountant before (boot_stack-only per RW5's boot-parity table; nothing
+confirms boot_stack was ever actually exercised against this shape of
+accountant either):
+
+1. `measure()` did `for c in magnitudes: self._mag_windows[c].append(...)`
+   assuming `accountant.magnitudes()` returns exactly the 5 canonical
+   `Constraint` keys `_mag_windows` was constructed with. In practice it
+   also carries unrelated self-healing telemetry keys (`_aurora_rewrite_
+   profile`, `_aurora_genealogy_strategy`, `_aurora_rewrite_feedback`,
+   `_aurora_contract_profile`, `_aurora_evolved_reflection`, `generic_
+   adaptation` -- confirmed by direct inspection of a real booted
+   accountant's `magnitudes()` output; `_slots` itself only ever holds
+   the 5 canonical keys, so this is `magnitudes()`'s own contract
+   drifting from what callers expect). First live call raised a raw
+   `KeyError`. Fixed by skipping any key `measure()` wasn't constructed
+   with a window for -- the 5 constraints are still tracked correctly.
+2. `_has_shallow_headroom()` read `accountant.pool` as a plain
+   `@property` access. `aurora_energy_layer_costs.py`'s "evolved
+   surfaces" self-healing mechanism replaces `LayerEnergyAccountant.
+   pool` at import time with a plain override function
+   (`_aurora_make_override('pool_evolved', 'LayerEnergyAccountant.pool')`,
+   assigned directly onto the class) -- so `accountant.pool` returns a
+   *bound method*, not a float, and the subsequent `available >=
+   min(...)` comparison raised `TypeError: '>=' not supported between
+   instances of 'method' and 'float'`. Fixed defensively in `_has_
+   shallow_headroom` (call it if callable, fall back to the private
+   `_pool` attribute if the result still isn't numeric) rather than
+   touching the evolved-surfaces override system itself, which is
+   unrelated, pre-existing, cross-cutting infrastructure well outside
+   this landing's scope.
+
+Both confirmed as real bugs, not test artifacts, by direct inspection of
+a real booted accountant (`_slots` keys vs `magnitudes()` keys; `accountant.
+pool`'s actual runtime type) before writing either fix.
+
+**Tests:** `tests/test_rw6c_track1_wiring.py` (9) -- mount + wiring
+structural checks, confirms the un-wired hooks stay un-wired (the scope
+decision didn't silently expand), unit tests for the new maintenance-
+tick function against a fake composer, two regression tests reproducing
+each `aurora_entropy_detector.py` bug in isolation (extra non-Constraint
+magnitude keys; a callable `pool`), and one real boot confirming all
+four organs are working instances and that a real live turn populates
+`_last_saturation_signal`.
+
+**First Seen:** Architecture Wiring Audit RW6, 2026-08-01.
+
+## FIX-A068 (NEW MODULE, additive) — Directive P1 Track ST: stance lexicon (uncertainty_signaling)
+
+**Category:** NEW MODULE, additive -- first sub-piece of Directive P1's Track ST.
+
+Sunni supplied the actual ratified P1 directive (`AURORA_DIRECTIVE_P1_
+STANCE_AND_CONTRADICTION_20260718.md`), unblocking work RW6(b) had
+correctly flagged as impossible without a real spec. Investigation
+before implementing found Track CP (contradiction perception) was
+**already fully built and live-wired** in an earlier, unsummarized
+segment of this campaign (`aurora_internal/aurora_contradiction_
+perception.py`, called from `aurora.py:17855`) -- only Track ST (the
+stance channel) remained genuinely unbuilt. Tracked as its own
+sub-campaign (tasks #45-49, mirroring how PF1 was broken into 6
+sub-phases).
+
+**This entry (ST.2's lexicon sub-piece):** `aurora_internal/aurora_
+stance_lexicon.py` -- a dedicated stance lexicon, NOT sourced from the
+general `lexicon.json` (confirmed by direct inspection: `lexicon.json`
+tags "maybe"/"think" as `role: noun`, the same legacy-unverified
+mistagging already found as a separate pre-existing gap during the
+Comm Credit campaign's full regression sweep -- `lexicon.find_by_role
+("context")` would inherit that mistagging and return nothing usable).
+Instead sourced directly from `aurora_grammar_engine.py`'s `RoleTagger.
+_CONTEXT_UNIGRAMS`/`_CONTEXT_BIGRAMS` -- the real vocabulary already
+used to TAG epistemic framing during parsing (S1.2's seeded "hedge"/
+"uncertain"/"guarantee" OETS concepts give it semantic grounding), so
+generation and perception draw from one real word list, not two
+independently invented ones. Three signal-strength bands (mild/
+moderate/strong hedges) plus an affirmative-marker pool for the
+directive's "confident -> slot empty or affirmative" branch;
+`hedge_for_strength(strength, exclude)` scales word choice to how far
+below threshold the confidence signal is, with cross-sentence
+diversity (`exclude`) and fail-quiet band fallback, matching this
+campaign's established slot-filling discipline throughout
+`aurora_expression_perception.py`.
+
+**Tests:** `tests/test_p1_st2_stance_lexicon.py` (10) -- confirms every
+stance word is drawn from `RoleTagger`'s real tagged vocabulary (not
+independently invented), strength-to-band scaling at low/mid/high
+signal, exclude-list diversity with band fallback, fail-quiet
+exhaustion, out-of-range clamping, and no duplicate words across bands.
+
+**Status:** additive only -- not yet wired into the composer (that is
+ST.2's remaining piece, gated on ST.1's threshold derivation, still in
+progress: the directive's first candidate signal, `understanding_
+observation.accuracy`, was tested against a real 32-turn live-boot
+batch (12 uncertainty_signaling probes + 20 confident-control turns)
+and found NOT to discriminate -- it measures whether Aurora's own
+PRIOR response was validated by receiver evidence, not whether the
+CURRENT claim is inherently knowable, so it returned an identical
+0.56/"engaged_followup" on 30 of 32 single-shot turns regardless of
+content. A second signal source (`understanding_observation.M.
+active_frame.confidence`/`resolution_confidence`, `M.active_meaning.
+confidence` -- genuine per-turn semantic-frame-resolution confidence)
+is being tested next before any threshold is committed to code -- see
+the follow-up entry once landed.
+
+**First Seen:** Directive P1 ("The Last Two Wounds: Stance Channel &
+Contradiction Perception"), Sunni & Cael, 2026-07-18; ratified and
+supplied 2026-08-01.
+
+## ST.1 STATUS — signal-availability investigation, PAUSED pending Sunni/Cael's own call
+
+**Category:** STATUS REPORT, not a fix -- an honest negative result.
+
+Directive P1 Track ST requires the stance-eligibility threshold to be
+"derived from live signal distributions (not invented constants)," and
+names three candidate signals to map before wiring: "the uncertainty
+pressure channel, entropy trend, understanding_observation accuracy."
+All three -- plus one independently identified candidate -- were
+investigated against real data, not assumed. None discriminate between
+genuinely-unknowable-content turns and simple-factual-content turns.
+
+**Candidate 1 -- "the uncertainty pressure channel":** NOT live.
+`aurora_pressure_ontology.py`'s `X.uncertainty_signaling.hedge_gate`
+node is a documentation/teaching tree ("Aurora can study these nodes
+via OETS... the written seed becomes unnecessary over time" -- the
+module's own stated purpose), not live computational machinery. Its own
+`mathematical_form` field claims `ExpressionEcology` carries a
+confidence score; direct inspection of `aurora_expression_perception.py`
+found no such field on that class. Aspirational, not real.
+
+**Candidate 2 -- `understanding_observation.accuracy.score`:** live and
+always-populated every turn, but measures the wrong thing -- whether
+Aurora's own PRIOR response was validated by receiver evidence
+(`_evaluate_previous_accuracy`'s own contract), not whether the CURRENT
+claim being discussed is inherently knowable. Tested against a real
+32-turn live-boot batch (12 `uncertainty_signaling` probes from the real
+probe battery + 20 constructed confident-control turns, e.g. "What is
+the boiling point of water?"): returned an identical 0.56/
+"engaged_followup" on 30 of 32 turns regardless of content, confirming
+the theoretical concern with real data.
+
+**Candidate 3 -- "entropy trend" (`EntropySaturationDetector`'s
+`SaturationSignal`, wired live for the first time this session via RW6c/
+FIX-A067):** flat across the same 32-turn batch -- `level` uniformly
+`nominal`, `pressure_rising` uniformly `False`, `shallow_headroom_
+available` uniformly `True`. Unsurprising in hindsight: this measures
+internal constraint-budget/resource pressure, not epistemic uncertainty
+about claim content, and 32 short single-shot turns don't generate
+meaningful internal pressure variance either way.
+
+**Candidate 4 -- `working_memory`-derived frame/meaning confidence**
+(`understanding_observation.M.active_frame.confidence`/`resolution_
+confidence`, `M.active_meaning.confidence`): investigated as a
+plausible content-level signal after candidate 2's evidence discredited
+"accuracy." Re-ran the same 32-turn batch capturing these fields:
+universally `None`/empty. Root cause read directly in `aurora_working_
+memory.py`'s `resolve_semantic_frame`/`resolve_concept_meaning`: both
+return an empty default when `self.semantic_frames`/analogous state is
+still empty, which it is on a fresh scratch boot with isolated
+single-shot turns -- these fields require semantic frames accumulated
+over a REAL, sustained conversation, not available turn-one. Real and
+live in a warmed session (confirmed via `aurora_state/understanding_
+contract_state.json`'s live snapshot showing real non-empty values), but
+not usable as an always-available per-turn gate the way the directive's
+phrasing implies, and not cheaply testable without either a much longer
+warm-up sequence or accepting a different test methodology than every
+other test in this campaign (scratch-isolated, not the real live state).
+
+**Candidate 5 -- `ReflexiveInterpreter.interpret(text).match_confidence`/
+`worth_score`/`field_region`** (found independently, not in the
+directive's own list; computed fresh per-turn directly from the current
+text, not dependent on conversation history -- the property that made it
+worth testing cheaply): tested via 32 direct `interpret()` calls in one
+boot (no full turn generation needed). Also flat: `match_confidence`
+0.86 on 29/32 turns, 0.9 on the other 3 (2 confident-control, 1
+uncertain-probe -- no clean group separation), `worth_score`/
+`field_region` identically uniform. This measures how well the text
+matched known NonComp constraint/parse patterns -- comprehension quality,
+not content-level epistemic uncertainty. A structurally different axis
+from what Track ST needs, same conclusion as candidates 2 and 3.
+
+**Conclusion:** Aurora's live signal architecture, as it currently
+exists, does not appear to have any per-turn signal that measures
+whether the CONTENT of a claim is epistemically uncertain (future
+events, others' internal states, counterfactuals) as opposed to whether
+Aurora comprehended/parsed/previously-validated a response. Building a
+live epistemic-uncertainty signal from scratch (e.g. a linguistic
+pattern classifier: future tense, other-minds verbs, counterfactual
+markers) would be new machinery, not a reconnection -- a materially
+different kind of decision than every other item in this Track ST/
+RW4-RW6 arc, all of which wired something that already existed. Reported
+directly to Sunni/Cael rather than guessed at or fabricated from noise;
+their call: **pause ST here** pending their own reconsideration of the
+threshold-signal source, rather than build new classification logic or
+force a threshold onto data that doesn't support one.
+
+**Status:** `tests/test_p1_st2_stance_lexicon.py`'s 10 tests and the
+`aurora_stance_lexicon.py` module (FIX-A068) stand on their own --
+complete, tested, real. `aurora_braid_wiring.py`'s `composer.set_
+stance_signal()` wiring, the `_role_chars`/`_role_lexroles` composer
+extension, and ST.3/ST.4/ST.5 remain unbuilt, blocked on a real signal
+source. Tasks #45-49 (P1 Track ST) left as pending, not completed or
+abandoned -- ready to resume once Sunni/Cael supply direction.
+
+**First Seen:** Directive P1 Track ST signal investigation, 2026-08-01.
+
+---
+
+## Directive P2 -- Regional Density Confidence (resolves Track ST's blocker)
+
+Sunni & Cael's direct answer to the Track ST signal-availability dead end
+above: not a text/word classifier, a density LOOKUP into `SediMemory.
+recall_semantic()` -- how populated the relevant region of Aurora's own
+constraint-space/memory is, independent of whether the exact claim was
+asserted before. Explicitly distinct from `PropositionSubstrate.
+_refresh_confidence`'s corroboration/track-record signal, which the
+directive itself names as "the wrong axis" for epistemic uncertainty.
+Four phases, full regression run between each, halt on failure.
+
+**P2.1 -- `density_confidence(systems, topic, axis)`**
+(`aurora_internal/aurora_proposition_frame.py`): new, additive query
+function. Axis-filtered `recall_semantic()` call against SediMemory,
+`count_share * mean_resonance` clamped to [0, 1]. Empty topic, absent
+sedimemory, empty results, or any exception all fail-quiet to `None`
+(never a fabricated zero). 8 new tests (`tests/
+test_p2_1_density_confidence.py`). Commit `fccca5dfd`.
+
+**P2.2 -- blend into `build_frame`**: `PropositionFrame` gets a new
+`density: Optional[float]` field. `build_frame`'s prior derivation
+ladder (thought -> claim -> turn-local-claims -> anchor -> None) is
+preserved unchanged as `_derive_frame`; the new `build_frame` wrapper
+calls it, then queries `density_confidence` and applies "combine, never
+replace": `frame.stance = min(frame.stance, density) if density is not
+None else frame.stance`. A claim can't out-claim her own experiential
+density, but sparse corroboration in a well-populated region isn't
+dragged down further. 6 new tests (`tests/
+test_p2_2_density_stance_blend.py`). Commit `14c896141`.
+
+**P2.3 -- wire into the stance lexicon consult point**: STANCE added
+as a third closed structural motif slot family (content, function-word,
+STANCE) in `aurora_expression_perception.py`'s `_select_constraint_word`
+and `_compose_from_motif`'s `_role_chars`/`_role_lexroles`, mirroring
+the existing `role=="agent"` early-return pattern. `composer.
+set_stance_signal()` transports `frame.stance` per turn via new
+`reset_stance_signal_for_turn`/`ensure_stance_signal_for_turn`
+(`aurora_braid_wiring.py`), same reset/ensure pattern and same call
+sites (`aurora.py`'s `_run_reasoning_pipeline`, `aurora_braid_wiring.py`'s
+`begin_expression`) already used for `set_proposition_frame`. `stance >=
+0.5` (PropositionFrame's own pre-existing default, not a new tuned
+constant) skips the slot; below it, the slot fills from `aurora_
+stance_lexicon.hedge_for_strength`, scaled by distance below baseline.
+No signal means no slot -- never a default hedge. 9 new tests (`tests/
+test_p2_3_stance_composer_wiring.py`), including the directive's own
+gate (hedge selection differs between matched-corroboration high- and
+low-density claims) and one real live-boot verification. Commit
+`59809e3a7`.
+
+**Full regression (run across P2.2 + P2.3's combined working-tree
+state, since P2.3 was already written when this run started):** 1245
+passed, 2 failed -- both pre-existing and already documented above in
+this registry: `test_concept_image_ingestion_import.py::test_ingest_
+concept_image_succeeds_against_real_fixture` (`cv2.imdecode`
+AttributeError, the long-standing test-order-dependent fixture flake)
+and `test_m1_2_provenance_hygiene.py::test_blind_origin_entries_are_
+tagged_legacy_unverified` (`lang`/`connectio` provenance-tag drift).
+Neither introduced by P2. Halt-on-failure gate: clear to proceed.
+
+**P2.4 -- this entry, plus the directive's own required FIX-A014 text
+below (copied verbatim per the directive's explicit instruction; the
+non-sequential ID -- after FIX-A068 -- is the directive's own choice,
+not a renumbering).**
+
+### FIX-A014: Corroboration Confidence Mistaken for Epistemic Confidence.
+
+**Category** ARCHITECTURAL. **Pattern:** a claim/proposition confidence
+field built from assertion-history (evidence count, support/contradiction
+edges) gets treated as if it measured whether the proposition's content
+is inherently knowable -- the two are orthogonal; a first-time claim in
+familiar territory and a well-corroborated claim in an unfamiliar one
+are conflated by a track-record-only signal. **Correct form:**
+knowability/uncertainty signals should be sourced from experiential
+density (how populated the relevant region of her own memory/
+constraint-space is), kept as a distinct field from corroboration
+confidence, and combined explicitly rather than substituted. **First
+seen:** P2 investigation, 2026-07-22.
+
+---
+
+## FIX-A069: SemanticIntentionBridge Content Extraction Had No Live-Parse Path
+
+**Category** ARCHITECTURAL / DEAD-DEPENDENCY. **Pattern:**
+`aurora_semantic_intention_bridge.py`'s content-keyword extraction only
+ever read from `ThoughtState`'s diagnostic prose fields
+(`unified_interpretation`, `self_application`, `dominant_thread`'s
+`what_it_is_operating_on`) -- internal status narration, not a curated
+meaning representation. Two consequences: (1) braid bookkeeping
+vocabulary ('sedi', 'ambient', 'recalled', 'constraint', 'unresolved',
+'tension', 'session', ...) could surface as if it were spoken-content
+topic material, and (2) `dominant_thread` entries that echoed the raw
+user utterance verbatim let direct-address words ("hello", "aurora")
+back in as topic keywords even though the parser had already stripped
+them. Found while investigating `auroragenerativecommunicationpatched.
+zip` (uploaded 2026-08-01) -- the zip's patched version of this file
+already had the fix (a live-parse-first extraction path reading
+`TurnUnderstandingState.parsed`/`.salient_concepts`/`.raw_text`), but
+that patch depended on `systems['_active_turn_state']`, a key that did
+not exist anywhere in this repo -- porting the file content alone
+would have been a silent no-op (same shape as every other "wired but
+the key it reads was never set" finding in this campaign, e.g. RW5's
+boot-parity gap).
+
+**Correct form:** `aurora.py`'s `_run_reasoning_pipeline` now stores
+its `TurnUnderstandingState` under `systems['_active_turn_state']`
+right alongside the existing `systems["_last_pipeline_state"]`
+assignment -- same object reference, so the later `_chain_up*`/
+`_chain_down*` stage calls' mutations to `.parsed`/`.salient_concepts`
+are visible when `SemanticIntentionBridge.extract()` reads it
+downstream. When a live parse exists, its `topic_words`/`entities`/
+`salient_concepts`/`topic` become the sole content-keyword source for
+that turn (the diagnostic-prose path is skipped entirely, not merged);
+the old path remains the fallback, unchanged, for turns with no live
+parse. `EXTRACTION_NOISE` gained the newly-identified bookkeeping
+terms; a new axis-telemetry filter (`x050`, `t012`-style tokens) and a
+minimum-keyword-length reduction (4 -> 3 chars) came with the same
+patch.
+
+**Verified:** 8 new tests (`tests/test_semantic_bridge_live_state.py`):
+wiring presence, extraction-noise coverage, live-parse precedence over
+diagnostic prose, raw-address filtering, bookkeeping-word filtering in
+the fallback path, axis-telemetry filtering, no-active-state fallback
+safety, one real live-boot verification. Existing `tests/
+test_semantic_intention_bridge.py` (58 tests, unrelated -- covers
+`aurora_internal/dual_strata/semantic_intention_bridge.py`, a
+same-named but different class) and `tests/test_mtsl_live_wiring.py`/
+`test_mtsl_acceptance_report.py` re-run clean; no other test file
+imports the root-level module directly.
+
+**First Seen:** `auroragenerativecommunicationpatched.zip`
+investigation, 2026-08-01.
+
+---
+
+## FIX-A070: Directed Training Learned Immediately, Skipping the Evidence Gate Its Own Conversational Path Already Has
+
+**Category** ARCHITECTURAL. Continuation of the
+`auroragenerativecommunicationpatched.zip` investigation. A subagent
+categorization of the zip's `aurora_dream_trainer.py` diff found it is
+mostly an earlier, incompatible iteration of Communication Credit
+Unification (already shipped live under a different design, tasks
+#36-44 / FIX-A060..A064) -- its `StagedLearningCandidate`/
+`RetainedLearningBank.stage()`/`resolve_staged_delivery()` family was
+**not** ported: it would silently collide with and break the 4 live
+call sites that depend on `DreamTrainer.stage_pipeline_learning`'s real
+`response_id=`-keyed signature. Three genuinely still-missing pieces
+were identified and re-implemented against the real live API instead
+of copied from the zip:
+
+1. **`RetainedLearningBank.bridge_to_memory(keys=...)`** -- an optional
+   parameter so `resolve_pipeline_learning`'s two promotion branches
+   bridge the *specific* records they just promoted (via the same
+   `self.retention._key()` already used internally) instead of a
+   generic top-N-by-confidence sweep that could skip the ones evidence
+   just validated.
+
+2. **`_promote_candidate_into_oets()`** -- promoted candidates with
+   `context_type='definition'` (already staged live at
+   `aurora.py:~30437` from `working_memory.concept_meanings`, format
+   `"{term} means {meaning}"`, `term` always `topic_words[0]`) now get
+   a native OETS node (`add_node` + `add_definition`) instead of
+   staying prose-only in `RetainedLearningBank` -- a receiver-confirmed
+   understanding becomes something future reasoning can recall as a
+   concept (encounter/depth/relations), not just re-surface as a
+   sentence. Wired into both of `resolve_pipeline_learning`'s promotion
+   branches.
+
+3. **Fitness-gated deferral for directed training** (the significant
+   one -- this is the "gain and retain understanding so reasoning can
+   cascade from it" mechanism, per the author's framing): `_witness_
+   directed_training_samples` previously committed every sample to
+   `conversation_memory.learn_fact` and `RetainedLearningBank.record`
+   **unconditionally on witness** -- a lesson attempt got durably
+   learned just for having been attempted, no matter whether the
+   training episode that followed actually landed. This was a
+   materially weaker standard than the live conversational-turn path,
+   which already gates promotion on receiver evidence. Fixed by staging
+   through `stage_pipeline_learning`, keyed on a stable per-episode
+   `response_id` (`f"bundle_{bundle.conv_id}"`, reusing the id already
+   used for `avatar_id`/`source_episode_ids`), then resolving positive/
+   negative in `train_on_bundle` once the episode's own `avg_fitness`
+   is known -- reusing the *existing* `0.5` threshold `train_on_bundle`
+   already applies to that same fitness score for its
+   `PressureExperienceLedger` recording (not a new tuned constant).
+   `gateway.receive()` stays immediate: that's Aurora perceiving the
+   sample this tick, not a durable-memory commitment, so it was
+   deliberately left undeferred.
+
+**Independent bug found by this patch's own real live-boot test:**
+`train_on_bundle` referenced `session._DIMENSION_TOPIC_HINTS`
+unconditionally at two call sites, but `SimulationSession` has never
+actually carried that attribute anywhere in this codebase -- every
+real invocation of `train_on_bundle` crashed with `AttributeError`
+before reaching any of its own logic, entirely independent of this
+patch (it had apparently never been exercised end-to-end before).
+Fixed with `getattr(session, '_DIMENSION_TOPIC_HINTS', {})` at both
+sites; both already `.get()` their way to safe defaults downstream, so
+the fallback is behavior-preserving, not a new default.
+
+**Explicitly NOT ported:** the zip's own `resolve_staged_delivery`
+rejection path also had a real bug (`self._record_fail_dimension(...,
+severity=...)` when the method's actual parameter is named `sev`) --
+moot, since that whole function is superseded and was never ported.
+
+**Verified:** 6 fast tests + 1 real live-boot verification per piece
+(`tests/test_zip_pipeline_learning_oets_promotion.py`, `tests/
+test_zip_directed_training_fitness_gate.py` -- the fake `SimulationSession`
+fixture deliberately omits `_DIMENSION_TOPIC_HINTS` to match the real
+one). Existing `tests/test_comm_credit_phase_e/g/h*.py` (23 tests) and
+`tests/test_d2_2_live_turn_reentrancy_guard.py` (3 tests, references
+`train_on_bundle`) re-run clean.
+
+**First Seen:** `auroragenerativecommunicationpatched.zip`
+investigation, 2026-08-01/02.
+
+---
+
+## FIX-A071: `_current_semantic_intention` Staleness + Investigation Close-Out (`auroragenerativecommunicationpatched.zip`)
+
+**Category** ARCHITECTURAL (small fix) + investigation summary.
+`systems['_current_semantic_intention']` is only ever set inside
+`aurora_braid_wiring.py`'s `begin_expression`, gated behind `thought_
+state`/`composer` both being present, and was never cleared -- unlike
+`_proposition_frame` and `_stance_signal`, which both already carry an
+unconditional per-turn reset for exactly this reason (a turn where the
+wiring is skipped or fails must not silently reuse a previous turn's
+value). A stale value would feed `LanguageStructureFitness.score()`
+(`aurora.py`, ~line 19880) the WRONG comparison target -- scoring this
+turn's expressed text against a previous turn's intention instead of
+`None`. Fixed with the same reset, wired alongside the other two.
+Verified: 1 structural test + 1 real live-boot verification (`tests/
+test_zip_semantic_intention_reset.py`).
+
+**Closing this out:** `aurora.py` was the last unexamined file in
+`auroragenerativecommunicationpatched.zip`. A subagent diffed it
+against the closest matching historical commit (~2400 diff lines) and
+found the same pattern as every other file in this zip: mostly stale/
+superseded, with a handful of real findings.
+
+- **One substantial candidate identified but deliberately NOT built
+  this pass:** a "public-fact vs. private-context gap research" router
+  (~900 of the 2400 diff lines, ~13 new functions -- `_explicit_
+  public_question_target`, `_research_public_gap`, `_detect_
+  researchable_gap`, `_render_user_context_clarification`, etc.).
+  Today, `gap_action == "ask"` always returns a clarification question
+  immediately; this feature would classify whether the missing
+  information is publicly researchable (e.g. "Who was Marie Curie?")
+  vs. only the user can supply it, auto-research the former via the
+  already-live `_poedex_lookup_evidence`, and re-apply the result as a
+  turn-local, non-durably-promoted semantic bridge (durable promotion
+  still deferred to receiver feedback, consistent with Communication
+  Credit Unification, not duplicative of it). Every function it calls
+  already exists live; no collision found. Not built because it
+  reorders/branches the core `dual_question_pipeline` "ask" path and
+  the downward reasoning pass -- shared, heavily-exercised control
+  flow that changes user-visible behavior (auto-research instead of
+  always asking) -- and deserves its own directive-level design pass
+  and acceptance testing, not a wrap-up-pass port. Left here as a
+  scoped, ready-to-pick-up option.
+- **Confirmed NOT portable:** a 977-line `aurora_internal/aurora_
+  cascade_understanding.py` module (`ConstraintCascadeReasoner`,
+  `AutonomousConclusionEngine`, etc.) and a delivery-outcome tracker
+  (`_infer_explicit_delivery_outcome`, `_apply_delivery_outcome`,
+  etc.) -- both built entirely against the zip's own superseded
+  `DreamTrainer.attest_staged_candidates`/`resolve_staged_delivery`
+  API (same collision shape as FIX-A070's `StagedLearningCandidate`
+  finding), which does not exist on live `DreamTrainer`. Live already
+  has this covered, more maturely, via `aurora_internal/aurora_
+  understanding_contract.py` plus the shipped `stage_pipeline_
+  learning`/`resolve_pipeline_learning` flow. Porting either as-is
+  would compile (calls are try/except-wrapped) but silently never
+  retain anything.
+- **Noise (~25-30% of the diff):** reverts of fixes already applied
+  live (comprehension-gap dead-key repoints, `ingest_interaction()`
+  call-signature fix, FIX-A008's grammar post-turn wiring, a QuasiArch
+  honest-abstain hook) and a `_retain_cross_pipeline_learning`
+  rewrite that turns out to already be independently implemented,
+  more completely, in live `aurora.py` (~line 30366) -- zip is stale
+  here, nothing to port, nothing to revert.
+
+**Investigation summary across all 6 patched files in this zip**
+(`aurora_semantic_intention_bridge.py`/FIX-A069, `aurora_braid_
+wiring.py`, `aurora_dream_trainer.py`/FIX-A070, `aurora_expression_
+perception.py` -- import-path "fix" correctly NOT applied, see the
+Directive-P1-era `perception.evo`/"post-Language-Reset" entry above --
+`aurora_working_memory.py` -- claim-fidelity guard built then reverted
+per the same evo-dead-path finding, see conversation record -- and
+`aurora.py`): the zip predates this repo's Communication Credit
+Unification work by roughly a month and largely represents an earlier,
+independent iteration of the same underlying idea (deferred,
+evidence-gated learning). Almost everything worth keeping from it was
+a small number of genuinely novel, isolated pieces re-implemented
+against the live API rather than ported verbatim -- never a wholesale
+merge. Six real, tested, committed fixes came out of it (FIX-A069
+through this entry); the one deferred candidate (the gap-research
+router) is documented above for a future directive rather than left
+as an unlabeled loose end.
+
+**First Seen:** `auroragenerativecommunicationpatched.zip`
+investigation, 2026-08-02.
+
+---
+
+## FIX-A072: Gap Research Router Built (Per Explicit Direction) + Two Real Bugs It Surfaced
+
+**Category** ARCHITECTURAL / RUNTIME BUG. The "public fact vs. private
+context" gap research router documented above (FIX-A071) as a deferred
+candidate was, per the author's explicit follow-up direction ("that
+should be in there as it was designed"), built faithfully in full.
+14 new functions + 2 module constants (`_explicit_public_question_
+target`, `_gap_information_source`, `_user_context_anchor_needed`,
+`_research_target_for_gap`, `_public_question_needs_research`,
+`_research_summary_is_usable`, `_build_research_reapplication`,
+`_research_public_gap`, `_detect_researchable_gap`, `_render_user_
+context_clarification`, `_render_research_unresolved_response`,
+`_apply_research_reapplication_to_state`, `_render_reapplied_research_
+claim`, `_gap_type_value`), wired into `_chain_down3_purpose`, `_run_
+reasoning_pipeline` (new `research_reapplication` param), and `dual_
+question_pipeline` (private-anchor early return, full `gap_action==
+"ask"` routing, implicit-gap/automatic-factual-question fallback
+blocks, evidence-fetch widening).
+
+Rigorous real live-boot testing (this campaign's own established
+standard) surfaced two real, serious bugs before this was safe to
+ship -- exactly the kind of thing that standard exists to catch:
+
+**Bug 1 -- missing `provisional` kwarg.** The zip's `_poedex_lookup_
+evidence`/`_broadcast_poedex_result` both take a `provisional: bool =
+False` parameter that live's versions did not have at all.
+`provisional=True` is the entire mechanism that makes `_broadcast_
+poedex_result` short-circuit BEFORE any `conversation_memory.
+learn_fact`/`understanding_contract.ingest_observation` call -- i.e.
+what keeps automatic research turn-local instead of immediately
+durable (consistent with Communication Credit Unification's deferred-
+promotion model, not a duplicate of it). Without this, every call in
+the new router would have raised an unhandled `TypeError` on any real
+"ask" turn. Extended both functions to match the zip.
+
+**Bug 2 -- a genuine multi-hour test hang, root-caused precisely.**
+`_try_poedex_lookup(use_researcher=True)` polls a daemon queue for up
+to 35 SECONDS regardless of the `timeout=` argument passed in, gated
+on a `_room_likely_up` heuristic (`aurora.py`, ~line 11122) that reads
+"the `poedex_results` directory's own mtime is under 300s old" as "a
+daemon is listening". `shutil.copytree` -- used by literally every
+real-boot test's scratch-state setup across this entire campaign --
+touches the destination directory's mtime on every write into it, so
+a freshly-copied `aurora_state/` always looks like a live room for 5
+minutes after copy, even against a real repo where the daemon has
+been dormant for 12+ days (confirmed: against the real, uncopied
+`aurora_state/`, the call returns in ~0.0001s). `use_researcher=True`
+was previously reachable only via an explicit MANUAL lookup (a human
+asked Aurora to search, consenting to the wait); this router's
+automatic paths were the first code to reach it on every ordinary
+"ask"-shaped turn, including pure gibberish with nothing real to
+research -- confirmed to hang `tests/test_d2_condition2_abstain_
+sanity.py`'s live gibberish-turn test for a very long time (initially
+observed at 2h49m before being killed and diagnosed). Fixed by
+reserving `use_researcher=True` (and its 35s ceiling) for explicit
+manual lookups only; the automatic/implicit paths added here use
+`use_researcher=False` with a short 2.0s timeout, bounding the worst
+case even when `_room_likely_up` false-positives.
+
+**Bug 2b -- found while fixing Bug 2.** Once the hang stopped masking
+it, the same live gibberish-turn test revealed the router's three
+`route == "unresolved"` branches were returning an early canned
+"couldn't research this" response (`src="research_unresolved"`) --
+silently overriding this codebase's own existing, specifically-tested
+`constraint_abstain` honest-failure path (D2 Condition 2, a carefully
+root-caused prior fix for genuinely ungroundable input like pure
+gibberish). A failed automatic research attempt must never preclude
+an existing, more specific honesty mechanism -- fixed by having
+`"unresolved"` fall through to whatever the pipeline would already do
+without it, at all three call sites, rather than returning early.
+
+**Verified:** 26 fast tests + 3 independent real live-boot
+verifications (`tests/test_zip_gap_research_router.py`, including
+direct regression guards for both bugs -- the fake-room-mtime
+scenario tested against the real dormant `aurora_state/`, and a
+source-level guard that no `route == "unresolved"` branch may return
+early). `tests/test_d2_condition2_abstain_sanity.py` (broken by both
+bugs above during development) now passes clean in its normal ~22min
+real-boot runtime.
+
+**Process note:** the caution in FIX-A071 about this router touching
+"shared, heavily-exercised control flow" was not misplaced -- both
+bugs found here are exactly the class of problem that caution
+anticipated. The fix was to build it properly with full real live-boot
+rigor rather than to avoid building it.
+
+**First Seen:** `auroragenerativecommunicationpatched.zip`
+investigation, 2026-08-02, per explicit author direction to build the
+previously-deferred candidate.

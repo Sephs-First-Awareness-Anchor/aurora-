@@ -49,6 +49,7 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import math
@@ -139,7 +140,14 @@ class UnderstandingSedimentOverlay:
                         for fk, fv in entries.items()
                         if isinstance(fv, dict)
                     }
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_understanding_sediment.py:142",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load", "handler_line": 142, "source_file": "aurora_understanding_sediment.py"},
+            )
             # Corrupt overlay never blocks interpretation; start clean.
             self._entries = {}
 
@@ -155,7 +163,14 @@ class UnderstandingSedimentOverlay:
                 os.replace(tmp, self._path)
                 self._dirty = False
                 return True
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_understanding_sediment.py:158",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "save", "handler_line": 158, "source_file": "aurora_understanding_sediment.py"},
+                )
                 return False
 
     # ── decay physics ──
@@ -164,7 +179,14 @@ class UnderstandingSedimentOverlay:
         try:
             delta = float(rec.get("delta", 0.0) or 0.0)
             last = float(rec.get("last_touch", now) or now)
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_understanding_sediment.py:167",
+                exc=_aurora_boundary_exc,
+                context={"function": "_decayed", "handler_line": 167, "source_file": "aurora_understanding_sediment.py"},
+            )
             return 0.0
         age = max(0.0, now - last)
         return delta * math.exp(-_LN2 * age / self._half_life_s)
@@ -189,7 +211,14 @@ class UnderstandingSedimentOverlay:
                     if not self._entries[field_key]:
                         del self._entries[field_key]
                     self._dirty = True
-                except Exception:
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_understanding_sediment.py:192",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "delta", "handler_line": 192, "source_file": "aurora_understanding_sediment.py"},
+                    )
                     pass
                 return 0.0
             return live
@@ -288,7 +317,14 @@ class PersistentWorthLedger:
                             (float(s) for s in scores[-self._window:]),
                             maxlen=self._window,
                         )
-        except Exception:
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_understanding_sediment.py:291",
+                exc=_aurora_boundary_exc,
+                context={"function": "_load", "handler_line": 291, "source_file": "aurora_understanding_sediment.py"},
+            )
             self._windows = {}
 
     def scores_for(self, key: str) -> List[float]:
@@ -318,7 +354,14 @@ class PersistentWorthLedger:
                 os.replace(tmp, self._path)
                 self._dirty = False
                 return True
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_understanding_sediment.py:321",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "save", "handler_line": 321, "source_file": "aurora_understanding_sediment.py"},
+                )
                 return False
 
     def stats(self) -> Dict[str, Any]:
@@ -357,13 +400,27 @@ def recall_confidence_boost(sedimemory: Any, expression: str,
             axis_filter=(constraint,) if constraint else None,
             min_score=RECALL_MIN_SCORE,
         ) or [])
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_understanding_sediment.py:360",
+            exc=_aurora_boundary_exc,
+            context={"function": "recall_confidence_boost", "handler_line": 360, "source_file": "aurora_understanding_sediment.py"},
+        )
         return 0.0
     if not results:
         return 0.0
     try:
         top = max(float(r.get("score", 0.0) or 0.0) for r in results)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_understanding_sediment.py:366",
+            exc=_aurora_boundary_exc,
+            context={"function": "recall_confidence_boost", "handler_line": 366, "source_file": "aurora_understanding_sediment.py"},
+        )
         return 0.0
     if top <= RECALL_MIN_SCORE:
         return 0.0

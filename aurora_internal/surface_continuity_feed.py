@@ -2,6 +2,7 @@
 """Surface -> subsurface continuity packet queue."""
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
+from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
 import time
@@ -40,9 +41,23 @@ def read_and_clear_continuity_packets(state_dir: Any = None, max_packets: int = 
                 item = json.loads(line)
                 if isinstance(item, dict):
                     packets.append(item)
-            except Exception:
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/surface_continuity_feed.py:43",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "read_and_clear_continuity_packets", "handler_line": 43, "source_file": "aurora_internal/surface_continuity_feed.py"},
+                )
                 pass
         p.unlink(missing_ok=True)
-    except Exception:
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/surface_continuity_feed.py:46",
+            exc=_aurora_boundary_exc,
+            context={"function": "read_and_clear_continuity_packets", "handler_line": 46, "source_file": "aurora_internal/surface_continuity_feed.py"},
+        )
         return packets
     return packets
