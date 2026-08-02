@@ -15920,6 +15920,51 @@ def _derive_thought_intent(systems: Dict[str, Any], state: Any) -> Optional[Dict
     }
 
 
+# External structural/safety audit (2026-08-02): resp_A's own formation
+# (_chain_down3_purpose -> _chain_down2_belief -> _chain_down1_information)
+# is a sequential cascade of ~14 sites that can each overwrite
+# state.response_content -- sedimemory recall, grounded fallback,
+# evolutionary refinement, discourse-coherence repair, meaning alignment,
+# pipeline modulation, understanding self-audit, echo repair, unanswered-
+# question repair, internal-leakage scrubbing. Each stage legitimately
+# refines whatever the previous stage produced (echo repair fixes the
+# discourse-repaired text, not an independent draft) -- this is a
+# refinement pipeline, not competing candidates, so the fix here is NOT to
+# replace it with a candidate-selection model (that would risk changing
+# response quality/behavior in ways this campaign's testing discipline
+# can't fully characterize). It's to make who-touched-what-and-when
+# actually visible, where today only a few sites even tracked their own
+# "changed" boolean and nothing recorded the sequence across stages.
+def _record_response_revision(state: Any, stage: str, before_content: str, before_confidence: float) -> None:
+    """Appends a revision record to state.pipeline_state['_response_revision_trace']
+    when a chain_down stage actually changed state.response_content. Purely
+    observational -- never raises, never itself changes response_content.
+    Read the trace via state.pipeline_state.get('_response_revision_trace', [])."""
+    try:
+        after_content = str(getattr(state, "response_content", "") or "")
+        if after_content == str(before_content or ""):
+            return
+        if not isinstance(getattr(state, "pipeline_state", None), dict):
+            return
+        trace = state.pipeline_state.setdefault("_response_revision_trace", [])
+        trace.append({
+            "stage": stage,
+            "before": str(before_content or "")[:160],
+            "after": after_content[:160],
+            "confidence_before": round(float(before_confidence or 0.0), 3),
+            "confidence_after": round(float(getattr(state, "response_confidence", 0.0) or 0.0), 3),
+            "src": str(getattr(state, "response_src", "") or ""),
+        })
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_record_response_revision",
+            exc=_aurora_boundary_exc,
+            context={"function": "_record_response_revision", "source_file": "aurora.py"},
+        )
+
+
 def _build_established_strata_evidence(
     systems: Dict[str, Any],
     state: Any,
@@ -19579,6 +19624,7 @@ def _chain_down3_purpose(user_text: str, systems: dict, state: Any, *, auto_sear
                 systems["_skip_belief_refinement_once"] = True
                 if isinstance(getattr(state, "pipeline_state", None), dict):
                     state.pipeline_state["research_reapplication_applied"] = True
+                _record_response_revision(state, "chain_down3_research_reapplication", "", 0.0)
                 return
         # Narrow factual extraction using salient concepts from upward Meaning stage
         focus_text = user_text
@@ -19592,6 +19638,7 @@ def _chain_down3_purpose(user_text: str, systems: dict, state: Any, *, auto_sear
             state.response_tone = "engaged" if _energy > 0.5 else "informative"
             state.response_confidence = 0.85
             state.response_src = "search"
+            _record_response_revision(state, "chain_down3_factual_extraction", "", 0.0)
             return
         # Reasoning over evidence, guided by goal_stack (what purpose to serve)
         try:
@@ -19621,6 +19668,7 @@ def _chain_down3_purpose(user_text: str, systems: dict, state: Any, *, auto_sear
                 state.response_tone = "informative"
                 state.response_confidence = 0.84
                 state.response_src = "search"
+                _record_response_revision(state, "chain_down3_reasoning_engine", "", 0.0)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19668,6 +19716,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     state.response_tone = "attentive"
                     state.response_confidence = 0.62
                     state.response_src = "pressure_experience"
+                    _record_response_revision(state, "chain_down2_pressure_experience", "", 0.0)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19707,6 +19756,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                         state.response_tone = 'reflective'
                         state.response_confidence = 0.68
                         state.response_src = 'sedimemory_recall'
+                        _record_response_revision(state, "chain_down2_sedimemory_recall", "", 0.0)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19737,6 +19787,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                 state.response_src = "generative"
                 if fb_event:
                     state.quasiarch_events.append(dict(fb_event))
+                _record_response_revision(state, "chain_down2_grounded_fallback", "", 0.0)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19758,10 +19809,12 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
     # not mid-chain pre-emption. See the deferred call at the D2.1 voice-
     # transplant unification point.
     # Evolutionary refinement (learning hints woven in)
+    _before_evo, _before_evo_conf = state.response_content, state.response_confidence
     try:
         state.response_content = _evolutionary_response_refinement(
             systems, user_text, state.response_content, tone=state.response_tone
         )
+        _record_response_revision(state, "chain_down2_evolutionary_refinement", _before_evo, _before_evo_conf)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19772,6 +19825,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         )
         pass
     # Coherence repair
+    _before_coh, _before_coh_conf = state.response_content, state.response_confidence
     try:
         repaired, tone2, conf2, coh_event = _repair_discourse_coherence(
             state.response_content, state.response_tone, state.response_confidence,
@@ -19782,6 +19836,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         state.response_confidence = conf2
         if coh_event:
             state.quasiarch_events.append(dict(coh_event))
+        _record_response_revision(state, "chain_down2_coherence_repair", _before_coh, _before_coh_conf)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19794,6 +19849,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
     # Meaning alignment
     working_memory = systems.get("working_memory")
     if working_memory:
+        _before_ma, _before_ma_conf = state.response_content, state.response_confidence
         try:
             ma = working_memory.align_response_to_active_meaning(
                 user_text, state.response_content, understood=state.parsed or {}, systems=systems
@@ -19811,6 +19867,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     state.skip_cross_learning = True
                 if ma.get("defer_save"):
                     state.defer_save = True
+                _record_response_revision(state, "chain_down2_meaning_alignment", _before_ma, _before_ma_conf)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19831,6 +19888,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
         return
     _orig = state.response_content
     _orig_tone = state.response_tone
+    _orig_conf = state.response_confidence
     # Pipeline modulation — skip for comprehension gap responses (they're
     # already the correct complete utterance; appending paradox/modulation
     # phrases would corrupt a clarifying question meant for the user)
@@ -19845,6 +19903,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                 text_changed=(state.response_content != _orig),
                 tone_changed=(state.response_tone != _orig_tone),
             )
+            _record_response_revision(state, "chain_down1_pipeline_modulation", _orig, _orig_conf)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19869,6 +19928,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
         )
         pass
     # Self-audit
+    _before_audit, _before_audit_conf = state.response_content, state.response_confidence
     try:
         audit = _run_understanding_self_audit(
             systems, user_text, state.response_content,
@@ -19888,6 +19948,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                 state.defer_save = True
             for ev in list(audit.get("events", []) or []):
                 state.quasiarch_events.append(dict(ev))
+            _record_response_revision(state, "chain_down1_self_audit", _before_audit, _before_audit_conf)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19898,6 +19959,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
         )
         pass
     # Echo repair
+    _before_echo, _before_echo_conf = state.response_content, state.response_confidence
     try:
         er = _repair_unproductive_echo(
             systems, user_text, state.response_content, understood=state.parsed or {}
@@ -19917,6 +19979,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                     reason_about=True,
                 )
             )
+            _record_response_revision(state, "chain_down1_echo_repair", _before_echo, _before_echo_conf)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19927,6 +19990,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
         )
         pass
     # Question-attunement repair
+    _before_qr, _before_qr_conf = state.response_content, state.response_confidence
     try:
         qr = _repair_unanswered_question(
             systems, user_text, state.response_content, understood=state.parsed or {}
@@ -19962,6 +20026,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                     reason_about=True,
                 )
             )
+            _record_response_revision(state, "chain_down1_unanswered_question_repair", _before_qr, _before_qr_conf)
         if isinstance(getattr(state, "pipeline_state", None), dict):
             state.pipeline_state["question_alignment"] = dict(
                 systems.get("_last_question_alignment_audit") or {}
@@ -19994,6 +20059,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
             or any(p in _cur_resp_low for p in _INTERNAL_INSTRUCTION_PHRASES)
             or _has_json):
         state.response_content = ""
+        _record_response_revision(state, "chain_down1_internal_leakage_scrub", _cur_resp, state.response_confidence)
     # N4 (decision memo, ratified 2026-07-16, Decision 2): the ConstraintEmitter
     # call formerly here retired. Its "seeking" branch overrode real response
     # content unconditionally (not a crash net); its fallback branch duplicated
@@ -20116,6 +20182,87 @@ def _record_pressure_experience(state: Any, systems: dict) -> None:
             context={"function": "_record_pressure_experience", "handler_line": 16295, "source_file": "aurora.py"},
         )
         pass
+
+
+def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, user_text: str) -> None:
+    """The one final articulation authority: the single point that decides
+    what Aurora's turn actually says, given her own chain-formed candidate
+    (resp_A) and the composer/consciousness-stack candidate (resp_B).
+
+    External structural/safety audit (2026-08-02): this logic already
+    existed, but as unnamed inline code buried mid-way through a ~2000-line
+    function -- functionally a final authority, but not one anyone could
+    point to or reason about as such. Extracted verbatim (no behavior
+    change) so it is what it always effectively was: one named, callable
+    decision point, not scattered.
+
+    D2.1 (Directive D2, ratified 2026-07-17): voice transplant. The spine
+    (comprehension -> search -> teaching -> generation -> honest-abstain ->
+    crash-net) stays exactly as ratified; only the GENERATIVE stage's words
+    are replaced, and honest-abstain is now genuinely downstream of BOTH
+    generation attempts (resp_A's own chain -- mid_chain and emission_
+    chokepoint no longer fire abstain inline, see those two sites) and the
+    campaign-verified composer (gw._express() -> SentenceComposer, the same
+    call resp_B already makes) computed just before this is called. Three
+    cases:
+      1. Composer produced grounded content -> resp_A's words become the
+         SAME string resp_B carries (the actual generation swap: resp_A no
+         longer speaks through its own mock-assembly rendering --
+         _render_runtime_intent's mock AssemblyResult path in
+         aurora_working_memory.py -- when the real, evidence-grounded
+         composer voice is available).
+      2. Composer produced nothing AND resp_A's own chain also produced
+         nothing -> true last resort: the single honest-abstain crash net
+         fires here, once, now that both generation attempts have had
+         their turn.
+      3. Composer produced nothing but resp_A's own chain DID find
+         something (e.g. a direct fact/identity lookup) -> keep resp_A's
+         own content untouched (graceful degradation, not a case for
+         abstain -- there IS a genuine answer, just not from the composer).
+    """
+    try:
+        _d2_have_chain_content = bool(str(getattr(resp_A, "content", "") or "").strip())
+        _d2_unified_text = str(getattr(resp_B, "content", "") or "").strip() if resp_B is not None else ""
+        # D2 Acceptance Condition 2 fix (2026-07-17): the composer's OWN
+        # internal abstain gate (SentenceComposer.compose()'s R1.9.2 G2
+        # check) can fire and return a real, non-empty string --
+        # one of _ABSTAIN_TEMPLATES ("I'm not sure.", etc.) -- which is NOT
+        # grounded content, just honestly phrased differently than
+        # _emit_honest_abstain_and_seek's own templates. Treating it as
+        # case 1 mislabeled a genuine composer-level abstain as
+        # "composer_unified" (confirmed live: a synthetic-unanswerable
+        # trace produced this exact string with src=composer_unified,
+        # masking that the composer had actually abstained). Recognize it
+        # here so it falls through to case 2/3 like true composer silence.
+        _d2_composer_abstain_templates = tuple(
+            getattr(getattr(systems.get("perception"), "composer", None), "_ABSTAIN_TEMPLATES", ()) or ()
+        )
+        if _d2_unified_text in _d2_composer_abstain_templates:
+            _d2_unified_text = ""
+        if _d2_unified_text:
+            resp_A.content = _d2_unified_text
+            resp_A.emotional_tone = getattr(resp_B, "emotional_tone", resp_A.emotional_tone)
+            resp_A.confidence = max(
+                float(getattr(resp_A, "confidence", 0.0) or 0.0),
+                float(getattr(resp_B, "confidence", 0.0) or 0.0),
+            )
+            resp_A.src = "composer_unified"
+            state.response_content = _d2_unified_text
+            state.response_src = "composer_unified"
+        elif not _d2_have_chain_content:
+            _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
+            resp_A.content = state.response_content
+            resp_A.emotional_tone = state.response_tone
+            resp_A.confidence = state.response_confidence
+            resp_A.src = state.response_src
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_finalize_articulation",
+            exc=_aurora_boundary_exc,
+            context={"function": "_finalize_articulation", "source_file": "aurora.py"},
+        )
 
 
 def _run_reasoning_pipeline(
@@ -21687,72 +21834,9 @@ def _run_reasoning_pipeline(
             context={"function": "_run_reasoning_pipeline", "handler_line": 17403, "source_file": "aurora.py"},
         )
         pass
-    # D2.1 (Directive D2, ratified 2026-07-17): voice transplant. The spine
-    # (comprehension -> search -> teaching -> generation -> honest-abstain ->
-    # crash-net) stays exactly as ratified; only the GENERATIVE stage's words
-    # are replaced, and honest-abstain is now genuinely downstream of BOTH
-    # generation attempts (resp_A's own chain -- mid_chain and emission_
-    # chokepoint no longer fire abstain inline, see those two sites) and the
-    # campaign-verified composer (gw._express() -> SentenceComposer, the same
-    # call resp_B already makes) computed just above. Three cases:
-    #   1. Composer produced grounded content -> resp_A's words become the
-    #      SAME string resp_B carries (the actual generation swap: resp_A no
-    #      longer speaks through its own mock-assembly rendering --
-    #      _render_runtime_intent's mock AssemblyResult path in
-    #      aurora_working_memory.py -- when the real, evidence-grounded
-    #      composer voice is available).
-    #   2. Composer produced nothing AND resp_A's own chain also produced
-    #      nothing -> true last resort: the single honest-abstain crash net
-    #      fires here, once, now that both generation attempts have had
-    #      their turn.
-    #   3. Composer produced nothing but resp_A's own chain DID find
-    #      something (e.g. a direct fact/identity lookup) -> keep resp_A's
-    #      own content untouched (graceful degradation, not a case for
-    #      abstain -- there IS a genuine answer, just not from the composer).
-    try:
-        _d2_have_chain_content = bool(str(getattr(resp_A, "content", "") or "").strip())
-        _d2_unified_text = str(getattr(resp_B, "content", "") or "").strip() if resp_B is not None else ""
-        # D2 Acceptance Condition 2 fix (2026-07-17): the composer's OWN
-        # internal abstain gate (SentenceComposer.compose()'s R1.9.2 G2
-        # check) can fire and return a real, non-empty string --
-        # one of _ABSTAIN_TEMPLATES ("I'm not sure.", etc.) -- which is NOT
-        # grounded content, just honestly phrased differently than
-        # _emit_honest_abstain_and_seek's own templates. Treating it as
-        # case 1 mislabeled a genuine composer-level abstain as
-        # "composer_unified" (confirmed live: a synthetic-unanswerable
-        # trace produced this exact string with src=composer_unified,
-        # masking that the composer had actually abstained). Recognize it
-        # here so it falls through to case 2/3 like true composer silence.
-        _d2_composer_abstain_templates = tuple(
-            getattr(getattr(systems.get("perception"), "composer", None), "_ABSTAIN_TEMPLATES", ()) or ()
-        )
-        if _d2_unified_text in _d2_composer_abstain_templates:
-            _d2_unified_text = ""
-        if _d2_unified_text:
-            resp_A.content = _d2_unified_text
-            resp_A.emotional_tone = getattr(resp_B, "emotional_tone", resp_A.emotional_tone)
-            resp_A.confidence = max(
-                float(getattr(resp_A, "confidence", 0.0) or 0.0),
-                float(getattr(resp_B, "confidence", 0.0) or 0.0),
-            )
-            resp_A.src = "composer_unified"
-            state.response_content = _d2_unified_text
-            state.response_src = "composer_unified"
-        elif not _d2_have_chain_content:
-            _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
-            resp_A.content = state.response_content
-            resp_A.emotional_tone = state.response_tone
-            resp_A.confidence = state.response_confidence
-            resp_A.src = state.response_src
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17462",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17462, "source_file": "aurora.py"},
-        )
-        pass
+    # One final articulation authority for this turn -- see
+    # _finalize_articulation's own docstring (D2.1 voice transplant).
+    _finalize_articulation(resp_A, resp_B, state, systems, user_text)
     if is_question and not bool(systems.get("_disable_afterthought_sim", False)):
         try:
             if hasattr(aurora, "gateway") and hasattr(aurora.gateway, "queue_response_pressure_plan"):

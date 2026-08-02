@@ -8744,6 +8744,79 @@ timing for changes touching this pipeline depth.
 
 ---
 
+## FIX-A080: Response-Formation Visibility + a Named Final Articulation Authority
+
+**Category** ARCHITECTURAL. The audit's diagnosis: "too many systems are
+permitted to rewrite the final expression," describing a gauntlet of
+comprehension repair, grounding repair, echo repair, unanswered-question
+repair, emission discipline, question alignment audits, evolutionary
+refinement, fallback construction, and articulation smoothing, and
+proposing a redesign into: internal contributors -> shared response
+pressure field -> several native candidates -> one constraint-governed
+selection -> one final articulation authority.
+
+Investigation found the real shape is split in two, not one undifferentiated
+gauntlet:
+
+1. **resp_A's own formation** (`_chain_down3_purpose` ->
+   `_chain_down2_belief` -> `_chain_down1_information`) genuinely is a
+   ~14-site cascade -- sedimemory recall, pressure-experience recall,
+   grounded fallback, evolutionary refinement, discourse-coherence repair,
+   meaning alignment, pipeline modulation, understanding self-audit, echo
+   repair, unanswered-question repair, internal-format-leakage scrubbing
+   -- each able to overwrite `state.response_content` with no trace of
+   what changed or why. But each stage legitimately refines whatever the
+   PREVIOUS stage produced (echo repair operates on the discourse-repaired
+   text, not an independent draft) -- a sequential refinement pipeline,
+   not competing candidates. Per explicit author decision (this session,
+   via AskUserQuestion, choosing the safe/behavior-preserving option over
+   a full candidate/pressure-field rebuild): converting this into a
+   parallel-candidates-plus-selection model was NOT done -- that would be
+   a real bet on response-generation behavior this campaign's testing
+   discipline cannot fully characterize without extensive live
+   conversation coverage this session doesn't have. Instead, added
+   `_record_response_revision()` and wired it into all 14 sites: every
+   stage that actually changes the text now appends a record (stage name,
+   before/after text truncated to 160 chars, confidence before/after,
+   current src) to `state.pipeline_state['_response_revision_trace']` --
+   purely observational, never itself changes `response_content`, silently
+   no-ops if the text didn't actually change. What was invisible (only a
+   few sites even tracked their own local "changed" boolean, and nothing
+   recorded the sequence across stages) is now a readable trace.
+
+2. **resp_A-vs-resp_B reconciliation** ("D2.1 voice transplant", Directive
+   D2, ratified 2026-07-17) was, on inspection, already exactly what the
+   audit asked for: a single, well-reasoned decision point comparing
+   Aurora's own chain output (`resp_A`) against the composer/consciousness-
+   stack output (`resp_B`), with three explicit, documented cases (composer
+   grounded -> adopt its words; both empty -> honest-abstain crash net;
+   composer empty but chain has real content -> keep chain's words,
+   graceful degradation). It just had no name -- unnamed inline code
+   buried mid-way through `_run_reasoning_pipeline`, a ~2000-line function.
+   Extracted verbatim (byte-identical logic, zero behavior change) into
+   `_finalize_articulation(resp_A, resp_B, state, systems, user_text)`,
+   called from one line in `_run_reasoning_pipeline`. The authority this
+   pipeline already had is now something a reader (or a future change)
+   can actually point to and reason about, instead of having to
+   rediscover it by reading 2000 lines.
+
+**Verified:** 14 tests (`tests/test_response_articulation_authority.py`)
+-- structural wiring checks (all 14 sites call `_record_response_revision`,
+`_run_reasoning_pipeline` calls the extracted function rather than
+carrying the logic inline), `_record_response_revision`'s own behavior
+(records on change, no-ops on no-change, never raises on malformed
+state), and `_finalize_articulation`'s three documented cases plus the
+D2 Acceptance Condition 2 composer-abstain-template edge case, tested
+directly against the extracted function so the extraction is proven
+behavior-preserving, not just visually similar to the original inline
+code.
+
+**First Seen:** External structural/safety audit, 2026-08-02, scoped per
+explicit author decision (trace + name the authority, not a full
+candidate/pressure-field redesign).
+
+---
+
 ## FIX-A079: One Canonical Evolution-Hook Engine, Not 25 Copies
 
 **Category** ARCHITECTURAL / RUNTIME BUG. Verified precisely: 25 files
