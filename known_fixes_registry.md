@@ -8642,3 +8642,39 @@ collection error stopping the whole run on the first no-workaround
 file pytest happened to reach).
 
 **First Seen:** External structural/safety audit, 2026-08-02.
+
+---
+
+## FIX-A077: Classified the Dead aurora_gpt_learning_session References
+
+**Category** ARCHITECTURAL / HYGIENE. The audit asked whether an
+"optional GPT socialization or learning pathway" muddies the claim
+that Aurora's ordinary responses are external-model-free. Investigated
+directly: `aurora_gpt_learning_session.py` does not exist anywhere in
+this repo. All 4 references to it (`aurora.py` x2 -- the `/socialize`
+and a second learn-session CLI command; `aurora_daemon.py`'s
+`_run_socialize`; `run_gauntlet.py`'s `_run_socialize`, which only
+constructs it as a subprocess script template) already fail honestly
+today -- caught by an `except`/non-zero-exit path in every case,
+never silently swallowed into confident wrong behavior, and never
+reachable from ordinary conversation. So the answer to the audit's
+question is: no, it does not currently muddy the native-only claim,
+because the pathway cannot execute at all in this build.
+
+Rather than fabricate a working replacement module (no source for it
+exists anywhere in this repo to restore from) or silently delete
+user-facing CLI commands that may be intended to work again once the
+module is deliberately reintroduced, added an explicit code-level
+classification comment at all 4 sites: OPTIONAL external teacher for
+these specific opt-in commands only, never part of Aurora's ordinary
+response generation (every one of these call sites' own `_gen`/
+`_generate` callback already routes actual replies through her native
+`process_external_user_turn` regardless of whether the learning-
+session wrapper itself is present). Future readers/audits no longer
+have to re-derive this from scratch.
+
+**Verified:** `python3 -c "import ast; ast.parse(...)"` on all 3
+touched files (`aurora.py`, `aurora_daemon.py`, `run_gauntlet.py`) --
+comment-only changes at 3 of the 4 sites, no behavior change anywhere.
+
+**First Seen:** External structural/safety audit, 2026-08-02.

@@ -7063,7 +7063,17 @@ def _document_session_learnings(systems: Dict[str, Any], exchanges: list, topic:
 
 
 def _run_socialize(systems: Dict[str, Any], turns: int = 8, topic: Optional[str] = None) -> None:
-    """Run a GPT learning session on demand."""
+    """Run a GPT learning session on demand.
+
+    External structural/safety audit (2026-08-02): aurora_gpt_learning_
+    session does not exist in this build. Classification: an OPTIONAL
+    external teacher for this on-demand daemon hook only -- _gen below
+    routes every actual reply through Aurora's own native
+    process_external_user_turn regardless, so this is never part of her
+    ordinary response generation. Not restored/fabricated here (no source
+    for it exists in this repo); fails honestly via the except below
+    until/unless that module is deliberately reintroduced.
+    """
     _log(f"  [SOCIAL] socialize — {turns} turns" + (f", topic={topic}" if topic else ""))
     try:
         from aurora_gpt_learning_session import run_learning_session

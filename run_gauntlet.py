@@ -346,6 +346,16 @@ print(json.dumps({{
 
 
 def _run_socialize(turns: int, topic: str | None = None) -> bool:
+    # External structural/safety audit (2026-08-02): aurora_gpt_learning_
+    # session does not exist in this build. Classification: an OPTIONAL
+    # external teacher for this manual gauntlet harness only -- _gen in
+    # the generated script below routes every actual reply through
+    # Aurora's own native process_external_user_turn regardless, so this
+    # is never part of her ordinary response generation. Not restored/
+    # fabricated here (no source for it exists in this repo); the
+    # subprocess fails honestly with a non-zero exit, already handled
+    # below as an ordinary gauntlet-step failure, until/unless that
+    # module is deliberately reintroduced.
     _log(f"  Running socialization session ({turns} turns" + (f", topic={topic}" if topic else "") + ")")
     t0 = time.time()
     script = f"""
