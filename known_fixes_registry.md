@@ -8194,3 +8194,86 @@ imports the root-level module directly.
 
 **First Seen:** `auroragenerativecommunicationpatched.zip`
 investigation, 2026-08-01.
+
+---
+
+## FIX-A070: Directed Training Learned Immediately, Skipping the Evidence Gate Its Own Conversational Path Already Has
+
+**Category** ARCHITECTURAL. Continuation of the
+`auroragenerativecommunicationpatched.zip` investigation. A subagent
+categorization of the zip's `aurora_dream_trainer.py` diff found it is
+mostly an earlier, incompatible iteration of Communication Credit
+Unification (already shipped live under a different design, tasks
+#36-44 / FIX-A060..A064) -- its `StagedLearningCandidate`/
+`RetainedLearningBank.stage()`/`resolve_staged_delivery()` family was
+**not** ported: it would silently collide with and break the 4 live
+call sites that depend on `DreamTrainer.stage_pipeline_learning`'s real
+`response_id=`-keyed signature. Three genuinely still-missing pieces
+were identified and re-implemented against the real live API instead
+of copied from the zip:
+
+1. **`RetainedLearningBank.bridge_to_memory(keys=...)`** -- an optional
+   parameter so `resolve_pipeline_learning`'s two promotion branches
+   bridge the *specific* records they just promoted (via the same
+   `self.retention._key()` already used internally) instead of a
+   generic top-N-by-confidence sweep that could skip the ones evidence
+   just validated.
+
+2. **`_promote_candidate_into_oets()`** -- promoted candidates with
+   `context_type='definition'` (already staged live at
+   `aurora.py:~30437` from `working_memory.concept_meanings`, format
+   `"{term} means {meaning}"`, `term` always `topic_words[0]`) now get
+   a native OETS node (`add_node` + `add_definition`) instead of
+   staying prose-only in `RetainedLearningBank` -- a receiver-confirmed
+   understanding becomes something future reasoning can recall as a
+   concept (encounter/depth/relations), not just re-surface as a
+   sentence. Wired into both of `resolve_pipeline_learning`'s promotion
+   branches.
+
+3. **Fitness-gated deferral for directed training** (the significant
+   one -- this is the "gain and retain understanding so reasoning can
+   cascade from it" mechanism, per the author's framing): `_witness_
+   directed_training_samples` previously committed every sample to
+   `conversation_memory.learn_fact` and `RetainedLearningBank.record`
+   **unconditionally on witness** -- a lesson attempt got durably
+   learned just for having been attempted, no matter whether the
+   training episode that followed actually landed. This was a
+   materially weaker standard than the live conversational-turn path,
+   which already gates promotion on receiver evidence. Fixed by staging
+   through `stage_pipeline_learning`, keyed on a stable per-episode
+   `response_id` (`f"bundle_{bundle.conv_id}"`, reusing the id already
+   used for `avatar_id`/`source_episode_ids`), then resolving positive/
+   negative in `train_on_bundle` once the episode's own `avg_fitness`
+   is known -- reusing the *existing* `0.5` threshold `train_on_bundle`
+   already applies to that same fitness score for its
+   `PressureExperienceLedger` recording (not a new tuned constant).
+   `gateway.receive()` stays immediate: that's Aurora perceiving the
+   sample this tick, not a durable-memory commitment, so it was
+   deliberately left undeferred.
+
+**Independent bug found by this patch's own real live-boot test:**
+`train_on_bundle` referenced `session._DIMENSION_TOPIC_HINTS`
+unconditionally at two call sites, but `SimulationSession` has never
+actually carried that attribute anywhere in this codebase -- every
+real invocation of `train_on_bundle` crashed with `AttributeError`
+before reaching any of its own logic, entirely independent of this
+patch (it had apparently never been exercised end-to-end before).
+Fixed with `getattr(session, '_DIMENSION_TOPIC_HINTS', {})` at both
+sites; both already `.get()` their way to safe defaults downstream, so
+the fallback is behavior-preserving, not a new default.
+
+**Explicitly NOT ported:** the zip's own `resolve_staged_delivery`
+rejection path also had a real bug (`self._record_fail_dimension(...,
+severity=...)` when the method's actual parameter is named `sev`) --
+moot, since that whole function is superseded and was never ported.
+
+**Verified:** 6 fast tests + 1 real live-boot verification per piece
+(`tests/test_zip_pipeline_learning_oets_promotion.py`, `tests/
+test_zip_directed_training_fitness_gate.py` -- the fake `SimulationSession`
+fixture deliberately omits `_DIMENSION_TOPIC_HINTS` to match the real
+one). Existing `tests/test_comm_credit_phase_e/g/h*.py` (23 tests) and
+`tests/test_d2_2_live_turn_reentrancy_guard.py` (3 tests, references
+`train_on_bundle`) re-run clean.
+
+**First Seen:** `auroragenerativecommunicationpatched.zip`
+investigation, 2026-08-01/02.
