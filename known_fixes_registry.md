@@ -8605,3 +8605,40 @@ average genuinely was >= 0.8 first, so the floor -- not the average
 (the only test file referencing this module) still passes.
 
 **First Seen:** External structural/safety audit, 2026-08-02.
+
+---
+
+## FIX-A076: Root conftest.py/pytest.ini -- pytest Now Works From a Clean Checkout
+
+**Category** FILE_STRUCTURE / TEST INFRASTRUCTURE. Confirmed: without
+`PYTHONPATH` manually set, 50 of 144 test files failed to collect
+(`ModuleNotFoundError: No module named 'aurora_internal'`, etc.); the
+other 94 only worked because each one carries its own
+`sys.path.insert(0, REPO_ROOT)` boilerplate at the top. No
+`pytest.ini`, `conftest.py`, `setup.py`, or `pyproject.toml` existed
+anywhere in the repo.
+
+Added a root `conftest.py` that inserts the repo root onto `sys.path`
+once, unconditionally, before pytest collects any test module --
+pytest always imports the nearest conftest.py before collection
+regardless of cwd or invocation style (`pytest`, `python -m pytest`,
+an IDE runner), so this covers every test file including the 50 that
+had no workaround, without needing to touch any of them. Added a
+minimal `pytest.ini` (`testpaths = tests`) to pin rootdir explicitly
+and scope bare `pytest` invocations to `tests/` rather than sweeping
+in ad-hoc scripts elsewhere in the repo.
+
+Deliberately did NOT remove the 94 files' existing individual
+`sys.path.insert` calls -- redundant now but harmless (idempotent),
+and de-duplicating 94 files for a cosmetic win was out of scope for
+"make a clean checkout runnable."
+
+**Verified:** with `PYTHONPATH` unset, both `python3 -m pytest` and
+the separately-installed `/root/.local/bin/pytest` binary now collect
+the previously-failing `tests/test_battery_relevance_metric.py`
+cleanly. Full-suite `python3 -m pytest --collect-only -q` from a
+clean shell: 1325 tests collected, 0 collection errors (was: 1
+collection error stopping the whole run on the first no-workaround
+file pytest happened to reach).
+
+**First Seen:** External structural/safety audit, 2026-08-02.
