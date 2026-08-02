@@ -11400,6 +11400,7 @@ def _broadcast_poedex_result(
     result_text: str,
     source: str = "poedex_lookup",
     pipeline_state: Optional[Dict[str, Any]] = None,
+    provisional: bool = False,
 ) -> Dict[str, Any]:
     concept_clean = str(concept or "").strip()
     request_clean = str(request_text or "").strip()
@@ -11421,6 +11422,20 @@ def _broadcast_poedex_result(
         pipeline_state["poedex_lookup_request"] = request_clean
         pipeline_state["poedex_lookup_result"] = result_clean
         pipeline_state["poedex_lookup_status"] = "ready"
+
+    # Zip patch (generative-communication, 2026-08-02): a live research
+    # result is evidence for the current turn, not automatically a durable
+    # belief. Automatic gap repair uses the provisional path so the result
+    # can be re-applied to the source utterance, reflected on, and then
+    # promoted only after receiver evidence (Communication Credit
+    # Unification). Explicit/manual lookup keeps the established
+    # immediate-integration behavior below.
+    if provisional:
+        systems["_last_research_observation"] = {
+            **packet,
+            "provisional": True,
+        }
+        return packet
 
     conversation_memory = systems.get("conversation_memory")
     if conversation_memory is not None:
@@ -11520,6 +11535,7 @@ def _poedex_lookup_evidence(
     timeout: float = 2.0,
     use_researcher: bool = True,
     pipeline_state: Optional[Dict[str, Any]] = None,
+    provisional: bool = False,
 ) -> List[Dict[str, Any]]:
     query_clean = str(query or "").strip()
     if not query_clean or not isinstance(systems, dict):
@@ -11536,6 +11552,7 @@ def _poedex_lookup_evidence(
         result_text=result,
         source="poedex_lookup",
         pipeline_state=pipeline_state,
+        provisional=provisional,
     )
     return [{
         "title": f"Poedex: {query_clean}",
@@ -13585,6 +13602,657 @@ def _build_lookup_query(
     if cleaned and cleaned.lower() not in WorkingMemory._VAGUE_REFERENTS:
         return cleaned[:160]
     return ""
+
+
+# Zip patch (generative-communication, 2026-08-02): "public fact vs. private
+# context" gap research router. Today gap_action == "ask" always returns a
+# clarification question immediately, even when the missing information is
+# something Aurora could honestly research herself (e.g. "Who was Marie
+# Curie?"). This block classifies whether a comprehension gap's missing
+# information is publicly researchable vs. only the user can supply it,
+# auto-researches the former via the existing _poedex_lookup_evidence, and
+# re-applies the result as a turn-local, non-durable semantic bridge --
+# durable promotion is still deferred to receiver feedback via
+# stage_pipeline_learning/resolve_pipeline_learning (Communication Credit
+# Unification), never duplicated here.
+_PUBLIC_FACT_QUESTION_PREFIXES = (
+    "who is ", "who was ", "what is ", "what are ", "what was ",
+    "when did ", "when was ", "where is ", "where was ",
+    "which ", "how many ", "how much ", "define ", "definition of ",
+)
+
+_USER_CONTEXT_MARKERS = (
+    "my ", "mine", "about me", "for me", "i said", "i told you",
+    "what did i", "when did i", "where did i", "last time", "earlier",
+    "our ", "ours", "we said", "we discussed", "you remember",
+    "my favorite", "my family", "my friend", "my project", "my work",
+    "my account", "my address", "my birthday", "my name",
+)
+
+
+def _explicit_public_question_target(user_text: str) -> str:
+    """Keep a named or multi-word public subject intact for research.
+
+    The compact utterance parser quite reasonably chooses a single topical
+    head word in many questions.  That is useful for internal association, but
+    it is too lossy for a lookup: ``Who was Marie Curie?`` must seek *Marie
+    Curie*, not merely *Marie*.  This helper only extracts the explicit tail
+    of a public-fact question; broader sentence interpretation remains with
+    the native parser.
+    """
+    raw = re.sub(r"\s+", " ", str(user_text or "")).strip()
+    if not raw:
+        return ""
+    low = raw.lower()
+    for prefix in _PUBLIC_FACT_QUESTION_PREFIXES:
+        if not low.startswith(prefix):
+            continue
+        tail = raw[len(prefix):].strip().strip("?!. ")
+        # A leading article is grammatical framing, not part of the concept.
+        tail = re.sub(r"^(?:a|an|the)\s+", "", tail, flags=re.IGNORECASE)
+        # Do not turn a broad interrogative clause into a misleading lookup
+        # target.  In those cases the ordinary parser/query builder below can
+        # still select the appropriate concept.
+        if not tail or len(tail.split()) > 12:
+            return ""
+        return _normalize_poedex_concept(tail)[:160]
+    return ""
+
+
+def _gap_type_value(gap: Any) -> str:
+    return str(
+        getattr(getattr(gap, "gap_type", None), "value", "") or ""
+    ).strip().lower()
+
+
+def _gap_information_source(
+    user_text: str,
+    *,
+    gap: Any = None,
+) -> str:
+    """Classify where the missing information can honestly come from.
+
+    Public concepts can be researched.  A referent, an omitted part of the
+    user's thought, or a fact about the user's life cannot be recovered from
+    public material without guessing, so those remain clarification requests.
+    """
+    text_low = " ".join(str(user_text or "").lower().split())
+    gap_type = _gap_type_value(gap)
+
+    if _is_aurora_self_question(user_text):
+        return "aurora_internal"
+
+    # A word can normally be researched even when it occurs in a personal
+    # sentence.  Treat it as user-specific only when the user explicitly
+    # signals a private/local meaning ("in my project", "we call it", etc.).
+    if gap_type in {"vocabulary", "slang"}:
+        has_personal_anchor = any(marker in text_low for marker in _USER_CONTEXT_MARKERS)
+        has_vague_personal_referent = bool(
+            re.search(r"\b(?:this|that|it|they|he|she|there|then)\b", text_low)
+        ) and bool(
+            re.search(r"\b(?:i|me|we|us|my|our)\b", text_low)
+        )
+        private_usage = (
+            "in my " in text_low or "for my " in text_low or
+            "we call " in text_low or "our term" in text_low or
+            "my own " in text_low
+        )
+        # If the apparent vocabulary gap sits inside a vague personal
+        # reference ("why did *that* matter to me?"), the word is merely a
+        # detector by-product.  The unavailable information is the user's
+        # referent, so ask for it.  Keep clearly marked slang researchable:
+        # a public lexical relation can still be learned inside a personal
+        # sentence unless the user explicitly says it is their own term.
+        if gap_type == "vocabulary" and (has_personal_anchor or has_vague_personal_referent):
+            private_usage = True
+        return "user_context" if private_usage else "public"
+
+    if gap_type in {"referent", "ellipsis", "intent", "structural", "metaphor"}:
+        return "user_context"
+
+    if any(marker in text_low for marker in _USER_CONTEXT_MARKERS):
+        return "user_context"
+    if re.search(r"\b(?:i|me|we|us)\b", text_low):
+        return "user_context"
+    return "public"
+
+
+def _user_context_anchor_needed(user_text: str) -> str:
+    """Return a private anchor that must be supplied by the user, if any.
+
+    This runs independently of the gap detector because a detector can miss a
+    referent altogether, or attach its uncertainty to an adjacent ordinary
+    word.  It deliberately requires a question plus a personal or shared
+    context signal, so ordinary first-person statements keep flowing through
+    Aurora's generative meaning path.
+    """
+    if not _looks_like_question(user_text):
+        return ""
+    text_low = " ".join(str(user_text or "").lower().split())
+    if not text_low:
+        return ""
+    referent = re.search(r"\b(this|that|it|they|he|she|there|then)\b", text_low)
+    personal_signal = bool(
+        any(marker in text_low for marker in _USER_CONTEXT_MARKERS)
+        or re.search(r"\b(?:i|me|we|us|my|our)\b", text_low)
+    )
+    shared_history = bool(re.search(
+        r"\b(?:did|do|have|has|was|were)\s+(?:i|we)\b|\b(?:happened|matter|meant)\s+to\s+(?:me|us)\b",
+        text_low,
+    ))
+    if personal_signal and (referent or shared_history):
+        return str(referent.group(1) if referent else "the personal detail behind this")
+    return ""
+
+
+def _research_target_for_gap(
+    user_text: str,
+    systems: Dict[str, Any],
+    *,
+    gap: Any = None,
+    understood: Optional[Dict[str, Any]] = None,
+) -> str:
+    """Return the narrowest public concept Aurora needs to resolve."""
+    gap_type = _gap_type_value(gap)
+    direct = str(getattr(gap, "unclear_element", "") or "").strip()
+    if gap_type in {"vocabulary", "slang"} and direct:
+        return _normalize_poedex_concept(direct)[:120]
+
+    # Preserve the user-provided subject of a public factual question before
+    # the general parser reduces it to a one-word topical head.
+    if not gap_type or gap_type in {"factual", "unknown"}:
+        explicit_subject = _explicit_public_question_target(user_text)
+        if explicit_subject:
+            return explicit_subject
+
+    parsed = dict(understood or {})
+    if not parsed:
+        try:
+            parsed = dict(UtteranceParser().parse(user_text) or {})
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_research_target_for_gap",
+                exc=_aurora_boundary_exc,
+                context={"function": "_research_target_for_gap", "source_file": "aurora.py"},
+            )
+            parsed = {}
+
+    fallback = str(parsed.get("topic", "") or direct or "").strip()
+    definition_target = _definition_lookup_target(
+        user_text,
+        understood=parsed,
+        fallback=fallback,
+    )
+    if definition_target:
+        return _normalize_poedex_concept(definition_target)[:160]
+
+    query = _build_lookup_query(user_text, systems, understood=parsed)
+    query = _normalize_poedex_concept(query)
+    if query and query not in _GROUNDING_FALLBACK_SKIP:
+        return query[:160]
+    return ""
+
+
+def _public_question_needs_research(
+    user_text: str,
+    systems: Dict[str, Any],
+    *,
+    understood: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Detect an ungrounded factual question before Aurora emits an abstention."""
+    if not _looks_like_question(user_text):
+        return {}
+    if _gap_information_source(user_text) != "public":
+        return {}
+
+    low = str(user_text or "").strip().lower()
+    if not any(low.startswith(prefix) for prefix in _PUBLIC_FACT_QUESTION_PREFIXES):
+        return {}
+
+    target = _research_target_for_gap(user_text, systems, understood=understood)
+    if not target:
+        return {}
+    local = _lookup_local_grounded_definition(target, systems)
+    if _research_summary_is_usable(local, target=target):
+        return {
+            "route": "local_grounded",
+            "target": target,
+            "summary": local,
+            "gap_type": "factual",
+        }
+    return {
+        "route": "research",
+        "target": target,
+        "gap_type": "factual",
+    }
+
+
+def _research_summary_is_usable(summary: str, *, target: str = "") -> bool:
+    """Reject local parser artefacts before treating them as researched meaning."""
+    clean = re.sub(r"\s+", " ", str(summary or "")).strip()
+    if not _meaning_text_is_grounded(clean, term=target):
+        return False
+    low = clean.lower()
+    if low.startswith((
+        "from_definition:", "from meaning:", "internal:", "learned:",
+        "pending:", "research:", "context:",
+    )):
+        return False
+    words = re.findall(r"[a-z0-9][a-z0-9_'-]*", low)
+    content_words = [word for word in words if word not in {target.lower(), "is", "are", "a", "an", "the"}]
+    return len(content_words) >= 3
+
+
+def _build_research_reapplication(
+    *,
+    user_text: str,
+    target: str,
+    evidence: List[Dict[str, Any]],
+    gap: Any = None,
+    source: str = "poedex",
+) -> Dict[str, Any]:
+    """Build an ephemeral semantic bridge from research back to this utterance.
+
+    The bridge is deliberately turn-local.  It lets the normal parser,
+    understanding contract, and expression path work with the new evidence,
+    while durable OETS/memory promotion still waits for a successful delivery.
+    """
+    clean_target = _normalize_poedex_concept(target)
+    summary = _extract_factual_answer(
+        f"{user_text} {clean_target}", list(evidence or [])
+    )
+    if not summary:
+        for item in list(evidence or [])[:2]:
+            summary = str(item.get("snippet", "") or "").strip()
+            if summary:
+                break
+    if not clean_target or not _research_summary_is_usable(summary, target=clean_target):
+        return {}
+
+    recontextualized = f"{str(user_text or '').strip()} {clean_target} means {summary}".strip()
+    return {
+        "target": clean_target,
+        "summary": summary[:600],
+        "evidence": [dict(item) for item in list(evidence or [])[:3]],
+        "source_text": str(user_text or "")[:1200],
+        "recontextualized_text": recontextualized[:1800],
+        "gap_type": _gap_type_value(gap) or "factual",
+        "source": str(source or "poedex"),
+        "provisional": True,
+    }
+
+
+def _research_public_gap(
+    user_text: str,
+    systems: Dict[str, Any],
+    *,
+    gap: Any = None,
+    understood: Optional[Dict[str, Any]] = None,
+    pipeline_state: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Research one public gap and return a turn-local reapplication plan."""
+    source_kind = _gap_information_source(user_text, gap=gap)
+    target = _research_target_for_gap(user_text, systems, gap=gap, understood=understood)
+    if source_kind != "public":
+        return {
+            "route": source_kind,
+            "target": target,
+            "gap_type": _gap_type_value(gap),
+        }
+    if not target:
+        return {"route": "unresolved", "gap_type": _gap_type_value(gap)}
+
+    local = _lookup_local_grounded_definition(target, systems)
+    if not _research_summary_is_usable(local, target=target):
+        local = ""
+    if local:
+        evidence = [{
+            "title": f"Aurora grounding: {target}",
+            "url": "",
+            "snippet": local,
+            "source": "local_grounding",
+        }]
+        context = _build_research_reapplication(
+            user_text=user_text,
+            target=target,
+            evidence=evidence,
+            gap=gap,
+            source="local_grounding",
+        )
+        return {"route": "reapplied", "target": target, "evidence": evidence, "context": context}
+
+    # Deviation from the zip's literal use_researcher=True here: real
+    # live-boot testing of this port found _try_poedex_lookup's researcher
+    # mode polls a daemon queue for up to 35s regardless of the timeout=
+    # passed in, and does so whenever a "room" directory merely LOOKS
+    # recently touched (e.g. a freshly-copied aurora_state in a test/
+    # sandboxed boot) -- not only when a daemon is actually listening.
+    # That 35s block was previously reachable only via explicit manual
+    # lookup (a human asked Aurora to search, so waiting was consented
+    # to); this automatic gap-research path now reaches it on ANY
+    # unresolved "ask" gap or factual-looking question, including
+    # gibberish with nothing real to research. Automatic/implicit
+    # behavior must stay fast -- reserve the expensive researcher
+    # escalation for explicit lookups (see dual_question_pipeline's
+    # manual_lookup-gated use_researcher below).
+    # 2.0s, not 12.0s: this call can fire up to twice in one turn (the
+    # gap_action=="ask" path and, if that route wasn't taken, the implicit-
+    # gap/automatic-factual-question fallbacks in dual_question_pipeline),
+    # and _room_likely_up (see the note above) can false-positive after any
+    # bulk file copy -- so this is not always the instant no-op it is
+    # against a genuinely dormant room. Keep the worst-case stacked
+    # latency for an automatic, non-user-requested lookup small.
+    evidence = _poedex_lookup_evidence(
+        target,
+        systems,
+        request_text=user_text,
+        timeout=2.0,
+        use_researcher=False,
+        pipeline_state=pipeline_state,
+        provisional=True,
+    )
+    if evidence:
+        context = _build_research_reapplication(
+            user_text=user_text,
+            target=target,
+            evidence=evidence,
+            gap=gap,
+            source="poedex",
+        )
+        if context:
+            return {"route": "reapplied", "target": target, "evidence": evidence, "context": context}
+
+    # The attempt itself becomes an active study demand rather than a passive
+    # "I don't know" response.  It is still not a reason to ask the user to
+    # supply public information that Aurora should be able to seek herself.
+    _queue_warp_poedex_study_target(
+        systems,
+        target,
+        reason="live_public_gap_research_unresolved",
+        priority=0.92,
+    )
+    return {"route": "unresolved", "target": target, "gap_type": _gap_type_value(gap)}
+
+
+def _detect_researchable_gap(
+    user_text: str,
+    systems: Dict[str, Any],
+) -> Any:
+    """Find a public lexical gap even when CGS's question cadence is closed.
+
+    Clarification cadence should limit how often Aurora asks *the user*, not
+    stop her from independently researching a public word she has already
+    identified precisely.  This detector is observation-only; it does not add
+    a pending clarification or mutate durable meaning.
+    """
+    gap_system = systems.get("comprehension_gap_system") if isinstance(systems, dict) else None
+    if gap_system is None:
+        return None
+    try:
+        perception = systems.get("perception")
+        report = gap_system.detector.detect(
+            user_text,
+            lexicon=getattr(perception, "lexicon", None) if perception is not None else None,
+            oets=getattr(perception, "oets", None) if perception is not None else None,
+        )
+        gaps = list(
+            gap_system.gap_detector.detect_gaps(
+                user_text,
+                report,
+                systems.get("working_memory"),
+            ) or []
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_detect_researchable_gap",
+            exc=_aurora_boundary_exc,
+            context={"function": "_detect_researchable_gap", "source_file": "aurora.py"},
+        )
+        return None
+
+    # The stock detector stores only the first slang term as a gap to avoid
+    # over-questioning.  Research has a different cost profile: it can resolve
+    # the most specific public term without bothering the user, so prefer a
+    # substantive slang term present in the same volatility report.
+    for term in sorted(
+        [str(item or "").strip() for item in list(report.get("slang_terms", []) or [])],
+        key=len,
+        reverse=True,
+    ):
+        if len(term) < 4:
+            continue
+        synthetic_gap = SimpleNamespace(
+            gap_type=SimpleNamespace(value="slang"),
+            unclear_element=term,
+            source_text=str(user_text or ""),
+        )
+        if _gap_information_source(user_text, gap=synthetic_gap) == "public":
+            return synthetic_gap
+
+    # Slang is a highly specific lexical relation and wins over a generic word
+    # that happens not to be seeded in a tiny starter lexicon (e.g. "meal").
+    # Keep short ubiquitous forms out of the first targeted lookup.
+    ranked = sorted(
+        gaps,
+        key=lambda item: (
+            0 if _gap_type_value(item) == "slang" and len(str(getattr(item, "unclear_element", "") or "")) >= 4 else
+            1 if _gap_type_value(item) == "vocabulary" else
+            2,
+            -len(str(getattr(item, "unclear_element", "") or "")),
+        ),
+    )
+    for gap in ranked:
+        if _gap_type_value(gap) not in {"vocabulary", "slang"}:
+            continue
+        if _gap_information_source(user_text, gap=gap) != "public":
+            continue
+        if _research_target_for_gap(user_text, systems, gap=gap):
+            return gap
+    return None
+
+
+def _render_user_context_clarification(
+    systems: Dict[str, Any],
+    *,
+    user_text: str,
+    gap: Any = None,
+) -> str:
+    """Ask for the private anchor without pretending public research can supply it."""
+    target = str(getattr(gap, "unclear_element", "") or "").strip()
+    if not target:
+        target = "the personal detail behind this"
+    claim = (
+        f"the missing anchor is {target}; it belongs to your own context rather than public evidence; "
+        "what should I use as the right reference"
+    )
+    working_memory = systems.get("working_memory") if isinstance(systems, dict) else None
+    rendered = ""
+    if working_memory is not None and hasattr(working_memory, "_render_from_comprehension_intent"):
+        try:
+            rendered = str(working_memory._render_from_comprehension_intent(
+                systems,
+                core_claim=claim,
+                intent_type="question",
+                emotion_tone="curious",
+                relationship_signal="inquiry",
+                certainty=0.82,
+                supporting_concepts=[target],
+                constraints=["user_context", "clarification"],
+            ) or "").strip()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_render_user_context_clarification",
+                exc=_aurora_boundary_exc,
+                context={"function": "_render_user_context_clarification", "source_file": "aurora.py"},
+            )
+            rendered = ""
+    # The field may give the clarification a conversational style, but it
+    # must retain the actual private anchor.  Otherwise it sounds like a
+    # generic uncertainty rather than a question the user can answer.
+    if rendered and target.lower() in rendered.lower():
+        return rendered
+    # Fallback remains derived from the detected missing anchor, rather than a
+    # stock conversational reply.
+    return f"What should I use as the right reference for {target}?"
+
+
+def _render_research_unresolved_response(
+    systems: Dict[str, Any],
+    *,
+    target: str,
+) -> str:
+    """Express an exhausted public research attempt without fabricating closure."""
+    clean_target = _normalize_poedex_concept(target) or "that concept"
+    return _render_runtime_intent(
+        systems,
+        f"public evidence for {clean_target} remains too thin to apply it honestly",
+        emotion_tone="careful",
+        relationship_signal="inquiry",
+        certainty=0.38,
+        supporting_concepts=[clean_target],
+        constraints=["research", "unresolved_evidence"],
+    ) or f"I could not ground {clean_target} well enough to apply it honestly."
+
+
+def _apply_research_reapplication_to_state(
+    user_text: str,
+    systems: Dict[str, Any],
+    state: Any,
+    research_reapplication: Optional[Dict[str, Any]],
+) -> None:
+    """Re-parse the user's utterance with newly retrieved evidence in scope.
+
+    This is intentionally a state-only operation.  It does not teach the
+    lexicon, OETS, or conversation memory; it gives the current meaning and
+    reasoning passes a grounded interpretation to work from.  Promotion is
+    handled later by the feedback-gated live learning path.
+    """
+    context = dict(research_reapplication or {})
+    target = _normalize_poedex_concept(str(context.get("target", "") or ""))
+    summary = str(context.get("summary", "") or "").strip()
+    if not target or not _research_summary_is_usable(summary, target=target):
+        return
+
+    original = dict(getattr(state, "parsed", {}) or {})
+    reapplied = {}
+    try:
+        reapplied = dict(
+            UtteranceParser().parse(
+                str(context.get("recontextualized_text", "") or f"{user_text} {target} means {summary}")
+            ) or {}
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_apply_research_reapplication_to_state",
+            exc=_aurora_boundary_exc,
+            context={"function": "_apply_research_reapplication_to_state", "source_file": "aurora.py"},
+        )
+        reapplied = {}
+
+    def _merge_labels(*groups: Any, limit: int = 8) -> List[str]:
+        labels: List[str] = []
+        for group in groups:
+            for raw in list(group or []):
+                label = str(raw or "").strip().lower()
+                if not label or label in _GROUNDING_FALLBACK_SKIP:
+                    continue
+                if label not in labels:
+                    labels.append(label)
+                if len(labels) >= limit:
+                    return labels
+        return labels
+
+    topic_words = _merge_labels(
+        list(original.get("topic_words", []) or []),
+        [target],
+        list(reapplied.get("topic_words", []) or []),
+    )
+    entities = _merge_labels(
+        list(original.get("entities", []) or []),
+        [target],
+        list(reapplied.get("entities", []) or []),
+        limit=6,
+    )
+    if topic_words:
+        state.parsed["topic_words"] = topic_words
+        state.parsed["topic"] = str(original.get("topic", "") or target or topic_words[0])
+    if entities:
+        state.parsed["entities"] = entities
+    state.parsed["research_grounding"] = {
+        "target": target,
+        "summary": summary[:600],
+        "source": str(context.get("source", "poedex") or "poedex"),
+        "gap_type": str(context.get("gap_type", "factual") or "factual"),
+    }
+    state.parsed["research_reapplied"] = True
+
+    if isinstance(getattr(state, "pipeline_state", None), dict):
+        state.pipeline_state["research_reapplication"] = dict(state.parsed["research_grounding"])
+        state.pipeline_state["research_evidence_count"] = len(list(context.get("evidence", []) or []))
+        state.pipeline_state["research_reapplied_to_source"] = True
+
+    # Keep a small, auditable observation for the feedback-gated retention
+    # stage.  It is overwritten at the start of the next live turn.
+    systems["_last_research_reapplication"] = {
+        **dict(state.parsed["research_grounding"]),
+        "source_text": str(user_text or "")[:1200],
+        "evidence": [dict(item) for item in list(context.get("evidence", []) or [])[:3]],
+        "provisional": True,
+    }
+
+
+def _render_reapplied_research_claim(
+    user_text: str,
+    systems: Dict[str, Any],
+    state: Any,
+) -> str:
+    """Turn a research-grounded semantic bridge into a claim for native expression."""
+    context = dict((getattr(state, "pipeline_state", {}) or {}).get("research_reapplication", {}) or {})
+    target = _normalize_poedex_concept(str(context.get("target", "") or ""))
+    summary = str(context.get("summary", "") or "").strip()
+    if not target or not _research_summary_is_usable(summary, target=target):
+        return ""
+
+    # A factual question needs the retrieved relation directly.  For a
+    # statement or informal phrase, state the relation *inside the user's
+    # utterance* so Aurora shows the re-interpretation rather than parroting a
+    # definition in isolation.
+    if _looks_like_question(user_text):
+        core_claim = summary
+    else:
+        core_claim = f"in what you said, {target} means {summary}"
+
+    supporting = [target] + list((getattr(state, "parsed", {}) or {}).get("topic_words", []) or [])[:4]
+    rendered = _render_runtime_intent(
+        systems,
+        core_claim,
+        emotion_tone="attentive",
+        relationship_signal="understanding",
+        certainty=0.86,
+        supporting_concepts=supporting,
+        constraints=["research_evidence", "semantic_reapplication"],
+    )
+    # A stylistic candidate may not erase the relation Aurora just researched.
+    # Preserve the evidence-derived claim if the field cannot carry both the
+    # target and a substantive part of the retrieved meaning.
+    rendered_low = str(rendered or "").lower()
+    summary_words = {
+        word for word in re.findall(r"[a-z]{4,}", summary.lower())
+        if word not in {"that", "this", "with", "from", "were", "have", "been"}
+    }
+    preserves_target = target in rendered_low
+    preserves_relation = bool(summary_words & set(re.findall(r"[a-z]{4,}", rendered_low)))
+    if rendered and preserves_target and preserves_relation:
+        return str(rendered).strip()
+    return core_claim
 
 
 def _store_pending_lookup_offer(
@@ -18817,6 +19485,29 @@ def _chain_down3_purpose(user_text: str, systems: dict, state: Any, *, auto_sear
     """Stage 3 down -- Purpose (N axis): External retrieval at cost of energy.
     Uses upward-populated goal_stack and emotional_state to frame evidence reasoning."""
     if raw_evidence and not state.response_content:
+        # Zip patch (generative-communication, 2026-08-02): a turn-local
+        # research reapplication (see _apply_research_reapplication_to_state)
+        # already grounded this evidence into state.parsed earlier in the
+        # upward pass. Render the reapplied claim directly rather than
+        # re-deriving a generic factual extraction below.
+        research_context = dict(
+            (getattr(state, "pipeline_state", {}) or {}).get("research_reapplication", {}) or {}
+        )
+        if research_context:
+            reapplied = _render_reapplied_research_claim(user_text, systems, state)
+            if reapplied:
+                state.response_content = reapplied
+                state.response_tone = "attentive"
+                state.response_confidence = 0.86
+                state.response_src = "researched_reapplication"
+                # This claim has already been composed from the re-applied
+                # evidence. A later unconstrained style pass must not erase
+                # the researched relation before it reaches the user.
+                systems["_preserve_literal_response_once"] = True
+                systems["_skip_belief_refinement_once"] = True
+                if isinstance(getattr(state, "pipeline_state", None), dict):
+                    state.pipeline_state["research_reapplication_applied"] = True
+                return
         # Narrow factual extraction using salient concepts from upward Meaning stage
         focus_text = user_text
         if state.salient_concepts:
@@ -19367,6 +20058,7 @@ def _run_reasoning_pipeline(
     raw_evidence: list = None,
     manual_lookup: bool = False,
     lookup_request: dict = None,
+    research_reapplication: Optional[Dict[str, Any]] = None,
 ) -> tuple:
     """
     Unified bidirectional developmental chain pipeline.
@@ -19540,6 +20232,19 @@ def _run_reasoning_pipeline(
 
     # ---- UPWARD PASS ----
     _chain_up1_information(user_text, systems, state)
+    try:
+        _apply_research_reapplication_to_state(
+            user_text, systems, state, research_reapplication,
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_apply_research_reapplication_to_state_call",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
+        )
+        pass
     _capture_waveform_deposit(state, "information", systems)
     _inject_surface_recent_context(systems, state, user_text)
     _chain_up2_belief(user_text, systems, state)
@@ -28021,6 +28726,75 @@ def dual_question_pipeline(
     if manual_lookup:
         use_search = True
 
+    # Zip patch (generative-communication, 2026-08-02): "public fact vs.
+    # private context" gap research router (see the function block above
+    # _store_pending_lookup_offer). Research is held as an ephemeral
+    # semantic bridge for this turn; it is not written into durable memory
+    # here -- the live-learning gate promotes it only after reflection and
+    # a receiver outcome (Communication Credit Unification).
+    raw_evidence: List[Dict[str, Any]] = []
+    research_reapplication: Dict[str, Any] = {}
+
+    # A question about the user's or the pair's own history cannot be
+    # settled by public research. Route it directly to a context request
+    # before a nearby unfamiliar word can distract the comprehension
+    # detector.
+    private_anchor = _user_context_anchor_needed(user_text)
+    known_private_answer = ""
+    if private_anchor and working_memory is not None and hasattr(working_memory, "answer_from_speaker_owned_facts"):
+        try:
+            # Ask the existing native memory before asking the user to
+            # repeat a fact Aurora already earned through a prior exchange.
+            # The full reasoning path renders this recall below; this is
+            # only a non-mutating availability check for the clarification
+            # boundary.
+            known_private_answer = str(
+                working_memory.answer_from_speaker_owned_facts(
+                    user_text,
+                    understood=_pre_parsed or {},
+                    systems=systems,
+                ) or ""
+            ).strip()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:dual_question_pipeline_private_anchor",
+                exc=_aurora_boundary_exc,
+                context={"function": "dual_question_pipeline", "source_file": "aurora.py"},
+            )
+            known_private_answer = ""
+    if private_anchor and not manual_lookup and not known_private_answer:
+        private_gap = SimpleNamespace(
+            gap_type=SimpleNamespace(value="referent"),
+            unclear_element=private_anchor,
+            source_text=str(user_text or ""),
+        )
+        clarification = _render_user_context_clarification(
+            systems,
+            user_text=user_text,
+            gap=private_gap,
+        )
+        resp_private = _MiniResp(clarification, "curious", 0.84)
+        resp_private.src = "user_context_clarification"
+        systems["_last_gap_research"] = {
+            "route": "user_context",
+            "target": private_anchor,
+            "gap_type": "referent",
+        }
+        try:
+            systems["_last_turn_state"] = resp_private
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:dual_question_pipeline_private_anchor_return",
+                exc=_aurora_boundary_exc,
+                context={"function": "dual_question_pipeline", "source_file": "aurora.py"},
+            )
+            pass
+        return resp_private, None, False
+
     pipeline_state = _extract_pipeline_signals(systems)
     if isinstance(systems, dict):
         systems["_last_pipeline_state"] = pipeline_state if isinstance(pipeline_state, dict) else {}
@@ -28124,24 +28898,148 @@ def dual_question_pipeline(
                     # For resolutions (applied/reasoning), let the pipeline continue
                     # so she can 'talk out' the new learning using the main engine.
                     if gap_action == "ask":
-                        resp_gap = _MiniResp(str(gap_result["content"]), gap_tone, gap_conf)
-                        resp_gap.src = "comprehension_gap"
-                        try:
-                            systems["_last_turn_state"] = resp_gap
-                        except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:23371",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "dual_question_pipeline", "handler_line": 23371, "source_file": "aurora.py"},
+                        # Zip patch (generative-communication, 2026-08-02):
+                        # the clarification system intentionally keeps a
+                        # single compact gap so it does not overwhelm the
+                        # user. That is the right choice for a user-facing
+                        # question, but not necessarily for autonomous
+                        # research: another term in the same utterance can
+                        # be the precise public unknown (for example,
+                        # "bussin" rather than the ordinary word "meal").
+                        # Select that more informative target before
+                        # looking anything up, while retaining gap_obj as
+                        # the pending conversational record to resolve
+                        # below. A factual question can produce an
+                        # incidental lexical gap ("Marie" in "Who was
+                        # Marie Curie?"). The explicit question subject is
+                        # the better research object, so do not let that
+                        # incidental gap collapse a multi-word fact query
+                        # to one token.
+                        factual_plan = _public_question_needs_research(
+                            user_text,
+                            systems,
+                            understood=_pre_parsed,
+                        )
+                        research_gap = (
+                            None
+                            if factual_plan
+                            else (_detect_researchable_gap(user_text, systems) or gap_obj)
+                        )
+                        gap_research = _research_public_gap(
+                            user_text,
+                            systems,
+                            gap=research_gap,
+                            understood=_pre_parsed,
+                            pipeline_state=pipeline_state if isinstance(pipeline_state, dict) else None,
+                        )
+                        systems["_last_gap_research"] = {
+                            "route": str(gap_research.get("route", "") or ""),
+                            "target": str(gap_research.get("target", "") or ""),
+                            "gap_type": gap_type,
+                        }
+                        route = str(gap_research.get("route", "") or "")
+                        if route == "reapplied":
+                            research_reapplication = dict(gap_research.get("context", {}) or {})
+                            raw_evidence = list(gap_research.get("evidence", []) or [])
+                            use_search = True
+                            search_query_text = str(gap_research.get("target", "") or user_text)
+                            search_prompt_text = user_text
+                            # CGS has already recorded this as pending.
+                            # Close the *question* with the external
+                            # evidence while keeping the resulting
+                            # knowledge provisional until delivery
+                            # feedback validates it.
+                            try:
+                                gap_memory = getattr(gap_system, "memory", None)
+                                if gap_memory is not None and getattr(gap_memory, "get_pending", lambda: None)() is gap_obj:
+                                    resolved_gap = gap_memory.receive_answer(
+                                        str(research_reapplication.get("summary", "") or "")
+                                    )
+                                    if resolved_gap is not None:
+                                        from aurora_internal.aurora_comprehension_gap import ResolvedGap
+                                        gap_memory.store_resolved(ResolvedGap(
+                                            gap=resolved_gap,
+                                            answer_text=str(research_reapplication.get("summary", "") or ""),
+                                            systems_updated=["turn_research_context"],
+                                            application_notes="External evidence bound to the current turn; durable promotion pending feedback.",
+                                        ))
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:aurora.py:dual_question_pipeline_gap_memory_resolve",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "dual_question_pipeline", "source_file": "aurora.py"},
+                                )
+                                pass
+                        elif route == "user_context":
+                            clarification = _render_user_context_clarification(
+                                systems,
+                                user_text=user_text,
+                                gap=gap_obj,
                             )
-                            pass
-                        return resp_gap, None, False
-                    
+                            resp_gap = _MiniResp(clarification, "curious", 0.84)
+                            resp_gap.src = "user_context_clarification"
+                            try:
+                                systems["_last_turn_state"] = resp_gap
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:aurora.py:dual_question_pipeline_gap_user_context",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "dual_question_pipeline", "source_file": "aurora.py"},
+                                )
+                                pass
+                            return resp_gap, None, False
+                        # route == "unresolved" deliberately does NOT return
+                        # a canned "couldn't research this" response here --
+                        # real live-boot testing found this was overriding
+                        # this codebase's own existing, specifically-tested
+                        # honest-abstain path (D2 Condition 2's
+                        # constraint_abstain guarantee for genuinely
+                        # ungroundable input, e.g. pure gibberish) with a
+                        # weaker, more generic message. An unresolved
+                        # research attempt means "no additional grounding
+                        # was found" -- it must fall through to whatever
+                        # the pipeline would already do without it, not
+                        # replace a more specific existing honesty
+                        # mechanism.
+                        elif route != "aurora_internal" and route != "unresolved":
+                            # The detected gap could not be narrowed enough
+                            # to research. Ask from the native gap
+                            # semantics rather than surface the detector's
+                            # stock wording.
+                            clarification = _render_user_context_clarification(
+                                systems,
+                                user_text=user_text,
+                                gap=gap_obj,
+                            )
+                            resp_gap = _MiniResp(clarification, gap_tone, gap_conf)
+                            resp_gap.src = "comprehension_gap"
+                            try:
+                                systems["_last_turn_state"] = resp_gap
+                            except Exception as _aurora_boundary_exc:
+                                _aurora_record_exception_from_locals(
+                                    locals(),
+                                    module=__name__,
+                                    operation="exception_handler:aurora.py:dual_question_pipeline_gap_clarify",
+                                    exc=_aurora_boundary_exc,
+                                    context={"function": "dual_question_pipeline", "source_file": "aurora.py"},
+                                )
+                                pass
+                            return resp_gap, None, False
+                        # route == "aurora_internal" (or "reapplied", handled
+                        # above) falls through and continues into the normal
+                        # pipeline below.
+
                     # If it was an application/correction, the content is an internal
                     # 'thought' that should be used as context for the main response.
-                    user_text = f"{user_text} [Internal: {gap_result['content']}]"
+                    # (A gap_action == "ask" that reached here already routed via
+                    # reapplied/aurora_internal above, and must not also get this
+                    # internal-thought tag appended -- it is not an application.)
+                    if gap_action != "ask":
+                        user_text = f"{user_text} [Internal: {gap_result['content']}]"
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
@@ -28153,23 +29051,121 @@ def dual_question_pipeline(
                 pass
 
 
-    # ---- FETCH EVIDENCE (when search already requested) ----
-    raw_evidence = []
-    if use_search and manual_lookup:
+    # Zip patch (generative-communication, 2026-08-02): CGS may deliberately
+    # suppress a *question* when its clarification cadence is full. That
+    # must not suppress independent research for a concrete public word
+    # Aurora has already isolated.
+    if (
+        auto_search_enabled
+        and not manual_lookup
+        and not research_reapplication
+        and not raw_evidence
+    ):
+        # Let the dedicated factual-question path retain its full explicit
+        # subject. Otherwise an incidental lexical gap can preempt it and
+        # reduce a proper name to its first word.
+        factual_plan = _public_question_needs_research(
+            user_text,
+            systems,
+            understood=_pre_parsed,
+        )
+        implicit_gap = None if factual_plan else _detect_researchable_gap(user_text, systems)
+        if implicit_gap is not None:
+            implicit_research = _research_public_gap(
+                user_text,
+                systems,
+                gap=implicit_gap,
+                understood=_pre_parsed,
+                pipeline_state=pipeline_state if isinstance(pipeline_state, dict) else None,
+            )
+            systems["_last_gap_research"] = {
+                "route": str(implicit_research.get("route", "") or ""),
+                "target": str(implicit_research.get("target", "") or ""),
+                "gap_type": _gap_type_value(implicit_gap),
+                "implicit": True,
+            }
+            route = str(implicit_research.get("route", "") or "")
+            if route == "reapplied":
+                research_reapplication = dict(implicit_research.get("context", {}) or {})
+                raw_evidence = list(implicit_research.get("evidence", []) or [])
+                use_search = True
+                search_query_text = str(implicit_research.get("target", "") or user_text)
+                search_prompt_text = user_text
+            # route == "unresolved" deliberately falls through without a
+            # canned response -- see the note on the gap_action=="ask"
+            # branch above (real live-boot testing found this overriding
+            # the existing, specifically-tested constraint_abstain path
+            # for genuinely ungroundable input).
+
+    # Direct factual questions may not create a volatility gap at all.
+    # Before emitting an ungrounded reply, research the specific public
+    # target and send its evidence through the same reapplication path as
+    # vocabulary gaps.
+    if (
+        auto_search_enabled
+        and not manual_lookup
+        and not research_reapplication
+        and not raw_evidence
+    ):
+        automatic_plan = _public_question_needs_research(
+            user_text,
+            systems,
+            understood=_pre_parsed,
+        )
+        if automatic_plan:
+            automatic_research = _research_public_gap(
+                user_text,
+                systems,
+                understood=_pre_parsed,
+                pipeline_state=pipeline_state if isinstance(pipeline_state, dict) else None,
+            )
+            systems["_last_gap_research"] = {
+                "route": str(automatic_research.get("route", "") or ""),
+                "target": str(automatic_research.get("target", "") or automatic_plan.get("target", "")),
+                "gap_type": "factual",
+            }
+            route = str(automatic_research.get("route", "") or "")
+            if route == "reapplied":
+                research_reapplication = dict(automatic_research.get("context", {}) or {})
+                raw_evidence = list(automatic_research.get("evidence", []) or [])
+                use_search = True
+                search_query_text = str(automatic_research.get("target", "") or user_text)
+                search_prompt_text = user_text
+            # route == "unresolved" deliberately falls through without a
+            # canned response -- see the note on the gap_action=="ask"
+            # branch above (real live-boot testing found this overriding
+            # the existing, specifically-tested constraint_abstain path
+            # for genuinely ungroundable input).
+
+    # ---- FETCH EVIDENCE (manual lookup or an automatic public question) ----
+    if use_search and not raw_evidence:
         try:
             _srq = search_query_text if manual_lookup else user_text
+            # use_researcher=True's up-to-35s daemon poll, and the full
+            # 12s define-mode ceiling, stay reserved for an explicit manual
+            # lookup (the human asked to search, so waiting is consented
+            # to) -- see _research_public_gap's own note on why the
+            # automatic/provisional path must stay short instead.
             raw_evidence = _poedex_lookup_evidence(
                 _srq,
                 systems,
                 request_text=search_prompt_text,
-                timeout=12.0,
-                use_researcher=True,
+                timeout=(12.0 if manual_lookup else 2.0),
+                use_researcher=manual_lookup,
                 pipeline_state=pipeline_state if isinstance(pipeline_state, dict) else None,
+                provisional=not manual_lookup,
             )
             _wm = systems.get("working_memory")
             if _wm and raw_evidence:
                 _wm.last_search_results = raw_evidence
                 _wm.last_search_query = _srq
+            if raw_evidence and not manual_lookup:
+                research_reapplication = _build_research_reapplication(
+                    user_text=user_text,
+                    target=_srq,
+                    evidence=raw_evidence,
+                    source="poedex",
+                )
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -28191,6 +29187,7 @@ def dual_question_pipeline(
         raw_evidence=raw_evidence,
         manual_lookup=manual_lookup,
         lookup_request=lookup_request,
+        research_reapplication=research_reapplication or None,
     )
 
 
