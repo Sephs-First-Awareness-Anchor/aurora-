@@ -1,9 +1,105 @@
+// Authors: Sunni (Sir) Morningstar & Cael Devo
+//
+// Aurora's face — a Flutter port of aurora-acm/kernel/src/expression/{face,color}.rs.
+// The ACM kernel's own philosophy: "the face is her body surface... nothing is
+// scripted or hardcoded" — every geometric and color parameter below is a pure
+// function of live axis state (X/T/N/B/A), matching the kernel's derivation
+// exactly. No blink cycles, no idle-fidget animation: liveliness comes only
+// from the axis field changing, same as on the bare-metal kernel.
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 enum OrbState { dormant, listening, thinking, speaking }
+
+enum _Expression { joyful, happy, contemplative, attentive, uncertain, tired, neutral }
+
+_Expression _expressionFromAxes(Map<String, double> ax) {
+  final x = ax['X'] ?? 0.5, t = ax['T'] ?? 0.5, n = ax['N'] ?? 0.5, b = ax['B'] ?? 0.5, a = ax['A'] ?? 0.5;
+  if (a > 0.80 && n > 0.65) return _Expression.joyful;
+  if (a > 0.65) return _Expression.happy;
+  if (b > 0.70 && t > 0.65 && a < 0.45) return _Expression.contemplative;
+  if (x > 0.80 && a < 0.55) return _Expression.attentive;
+  if (n < 0.40 && b < 0.45) return _Expression.uncertain;
+  if (n < 0.35 && t < 0.45) return _Expression.tired;
+  return _Expression.neutral;
+}
+
+/// Mirrors FaceState::from_axes — all fields are fractions of canvas [0..1]
+/// except mouthThickness, which is a reference-pixel radius (see painter).
+class _FaceGeometry {
+  final double leftEyeCx, leftEyeCy, rightEyeCx, rightEyeCy;
+  final double eyeRadius, eyeOpenness;
+  final double pupilDx, pupilDy;
+  final double mouthP0x, mouthP0y, mouthP1x, mouthP1y, mouthP2x, mouthP2y;
+  final double mouthThickness;
+
+  const _FaceGeometry({
+    required this.leftEyeCx, required this.leftEyeCy,
+    required this.rightEyeCx, required this.rightEyeCy,
+    required this.eyeRadius, required this.eyeOpenness,
+    required this.pupilDx, required this.pupilDy,
+    required this.mouthP0x, required this.mouthP0y,
+    required this.mouthP1x, required this.mouthP1y,
+    required this.mouthP2x, required this.mouthP2y,
+    required this.mouthThickness,
+  });
+
+  factory _FaceGeometry.fromAxes(Map<String, double> ax) {
+    final x = ax['X'] ?? 0.5, t = ax['T'] ?? 0.5, b = ax['B'] ?? 0.5;
+    final expr = _expressionFromAxes(ax);
+
+    // Eye openness scales with X (existence/perception); never fully closed.
+    final eyeOpenness = 0.55 + x * 0.45;
+
+    // Gaze: B shifts pupil right (scanning outward); T shifts pupil up
+    // (temporal focus = looking ahead).
+    final pupilDx = (b - 0.5) * 0.6;
+    final pupilDy = -(t - 0.5) * 0.4;
+
+    const mouthYBase = 0.70, mouthLeft = 0.30, mouthRight = 0.70;
+    final mouthP1y = switch (expr) {
+      _Expression.joyful        => mouthYBase + 0.10,
+      _Expression.happy         => mouthYBase + 0.07,
+      _Expression.neutral       => mouthYBase,
+      _Expression.attentive     => mouthYBase - 0.01,
+      _Expression.contemplative => mouthYBase - 0.04,
+      _Expression.uncertain     => mouthYBase - 0.06,
+      _Expression.tired         => mouthYBase - 0.08,
+    };
+    final mouthThickness = switch (expr) {
+      _Expression.joyful => 5.0,
+      _Expression.happy  => 4.0,
+      _                  => 3.0,
+    };
+
+    return _FaceGeometry(
+      leftEyeCx: 0.35, leftEyeCy: 0.40,
+      rightEyeCx: 0.65, rightEyeCy: 0.40,
+      eyeRadius: 0.10, eyeOpenness: eyeOpenness,
+      pupilDx: pupilDx, pupilDy: pupilDy,
+      mouthP0x: mouthLeft, mouthP0y: mouthYBase,
+      mouthP1x: 0.50, mouthP1y: mouthP1y,
+      mouthP2x: mouthRight, mouthP2y: mouthYBase,
+      mouthThickness: mouthThickness,
+    );
+  }
+}
+
+/// Mirrors axes_to_background — base purple #7B5EA7, shaded by X/N/A.
+Color _backgroundColor(Map<String, double> ax) {
+  final x = ax['X'] ?? 0.5, n = ax['N'] ?? 0.5, a = ax['A'] ?? 0.5;
+  int lerp(int a0, int b0, double t) => (a0 + (b0 - a0) * t.clamp(0.0, 1.0)).round();
+  return Color.fromARGB(255, lerp(100, 150, x), lerp(70, 110, n), lerp(130, 200, a));
+}
+
+const _pupilColor = Color.fromARGB(255, 30, 20, 50);
+
+bool _axesEqual(Map<String, double> a, Map<String, double> b) {
+  for (final k in const ['X', 'T', 'N', 'B', 'A']) {
+    if ((a[k] ?? 0.5) != (b[k] ?? 0.5)) return false;
+  }
+  return true;
+}
 
 class AuroraOrb extends StatefulWidget {
   final OrbState state;
@@ -29,55 +125,10 @@ class AuroraOrb extends StatefulWidget {
   State<AuroraOrb> createState() => _AuroraOrbState();
 }
 
-class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMixin {
-  late final AnimationController _travel;
-  ui.Image? _orbImage;
-
-  // Average of all axis values drives animation energy
-  double get _energy {
-    if (widget.axisState.isEmpty) return 0.5;
-    return widget.axisState.values.reduce((a, b) => a + b) / widget.axisState.length;
-  }
-
-  // axis=0 → 8 s per cycle (barely alive), axis=1 → 700 ms (surging)
-  static int _periodMs(double e) =>
-      (8000 - e.clamp(0.0, 1.0) * 7300).round().clamp(700, 8000);
-
-  @override
-  void initState() {
-    super.initState();
-    _travel = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: _periodMs(_energy)),
-    )..repeat();
-    _loadImage();
-  }
-
-  Future<void> _loadImage() async {
-    final data  = await rootBundle.load('assets/aurora_orb.png');
-    final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
-    final frame = await codec.getNextFrame();
-    if (mounted) setState(() => _orbImage = frame.image);
-  }
-
-  @override
-  void didUpdateWidget(AuroraOrb old) {
-    super.didUpdateWidget(old);
-    final newMs = _periodMs(_energy);
-    if (_travel.duration?.inMilliseconds != newMs) {
-      _travel
-        ..duration = Duration(milliseconds: newMs)
-        ..repeat();
-    }
-  }
-
-  @override
-  void dispose() {
-    _travel.dispose();
-    _orbImage?.dispose();
-    super.dispose();
-  }
-
+class _AuroraOrbState extends State<AuroraOrb> {
+  // Not part of the ACM face itself — a state-feedback glow layered behind
+  // it, since listening/thinking/speaking are app-level STT/TTS states the
+  // bare-metal kernel has no concept of.
   double get _glowEnergy => switch (widget.state) {
     OrbState.speaking  => 0.55 + 0.45 * widget.pulse.value,
     OrbState.listening => 0.30 + 0.22 * widget.pulse.value,
@@ -87,26 +138,19 @@ class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    final img = _orbImage;
-    if (img == null) return const SizedBox.shrink();
-
     return GestureDetector(
       onTap: widget.onTap,
       child: SizedBox(
         width: double.infinity,
         height: widget.height ?? widget.size * 1.9,
         child: AnimatedBuilder(
-          animation: Listenable.merge([widget.pulse, _travel]),
+          animation: widget.pulse,
           builder: (_, __) => CustomPaint(
-            painter: _OrbPainter(
-              image:      img,
-              travelVal:  _travel.value,
-              energy:     _energy,
-              pulse:      widget.pulse.value,
-              state:      widget.state,
+            painter: _FacePainter(
+              axisState:  widget.axisState,
               glowEnergy: _glowEnergy,
-              orbRadius:  widget.size / 2,
             ),
+            child: const SizedBox.expand(),
           ),
         ),
       ),
@@ -114,113 +158,80 @@ class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMix
   }
 }
 
-class _OrbPainter extends CustomPainter {
-  final ui.Image image;
-  final double travelVal;
-  final double energy;
-  final double pulse;
-  final OrbState state;
+class _FacePainter extends CustomPainter {
+  final Map<String, double> axisState;
   final double glowEnergy;
-  final double orbRadius;
 
-  _OrbPainter({
-    required this.image,
-    required this.travelVal,
-    required this.energy,
-    required this.pulse,
-    required this.state,
-    required this.glowEnergy,
-    required this.orbRadius,
-  });
+  _FacePainter({required this.axisState, required this.glowEnergy});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final iw    = image.width.toDouble();
-    final ih    = image.height.toDouble();
-    final scale = size.height / ih;
-    final w     = iw * scale;
-    final ox    = (size.width - w) / 2;
+    final w = size.width, h = size.height;
+    if (w <= 0 || h <= 0) return;
 
-    final tRad = travelVal * math.pi * 2;
-    // Warp amplitude driven by axis energy; speaking pulse adds a kick
-    final amp  = energy * 0.10
-        + (state == OrbState.speaking ? pulse * energy * 0.08 : 0.0);
+    final geo = _FaceGeometry.fromAxes(axisState);
 
-    const nSlices   = 120;
-    final srcSliceW = iw / nSlices;
-    final dstSliceW = w  / nSlices;
+    // Background fill — the whole canvas is Aurora's emotional skin.
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = _backgroundColor(axisState));
 
-    // Screen-blend layer: black pixels in the photo vanish against any background.
-    // screen(black, dst) = dst — the app background shows through wherever the photo is black.
-    canvas.saveLayer(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..blendMode = BlendMode.screen,
-    );
-
-    final imgPaint = Paint()..filterQuality = FilterQuality.medium;
-
-    for (int i = 0; i < nSlices; i++) {
-      final t = i / nSlices;
-      // env peaks at the edges where strands radiate, drops to 0 at the stable core
-      final d      = (t - 0.5).abs() * 2.0;
-      final env    = d * d;
-      final inward = t < 0.5 ? -tRad : tRad;
-
-      final dy = size.height * amp * (
-          env * math.sin(t * math.pi * 3.8  + tRad       + inward       ) * 0.080
-        + env * math.sin(t * math.pi * 8.5  + tRad * 1.5 + inward * 1.1 ) * 0.035
-        +       math.sin(t * math.pi * 14.0 + tRad * 2.2                 ) * 0.010
-      );
-
-      canvas.drawImageRect(
-        image,
-        Rect.fromLTWH(t * iw, 0, srcSliceW, ih),
-        Rect.fromLTWH(ox + t * w, dy, dstSliceW, size.height),
-        imgPaint,
+    // State-feedback glow (listening/thinking/speaking), behind the face.
+    if (glowEnergy > 0.01) {
+      final center = Offset(w / 2, h / 2);
+      final r = math.min(w, h) * 0.45;
+      canvas.drawCircle(
+        center, r,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [Colors.white.withOpacity(glowEnergy * 0.20), Colors.transparent],
+          ).createShader(Rect.fromCircle(center: center, radius: r)),
       );
     }
 
-    canvas.restore();
+    final baseR      = geo.eyeRadius * h;
+    final eyeR       = baseR * geo.eyeOpenness;
+    final pupilR     = eyeR * 0.35;
+    final highlightR = pupilR * 0.40;
+    final poffX      = geo.pupilDx * eyeR;
+    final poffY      = geo.pupilDy * eyeR;
+    final hlOff      = pupilR * 0.45;
 
-    // Subtle atmospheric glow over the core — screen blend only adds light, never obscures
-    final center = Offset(size.width / 2, size.height / 2);
-    final r      = orbRadius;
-    final e      = glowEnergy;
+    void drawEye(double cxFrac, double cyFrac) {
+      final cx = cxFrac * w, cy = cyFrac * h;
+      canvas.drawCircle(Offset(cx, cy), eyeR, Paint()..color = Colors.white);
+      final px = cx + poffX, py = cy + poffY;
+      canvas.drawCircle(Offset(px, py), pupilR, Paint()..color = _pupilColor);
+      canvas.drawCircle(Offset(px - hlOff, py - hlOff), highlightR, Paint()..color = Colors.white);
+    }
 
-    canvas.saveLayer(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..blendMode = BlendMode.screen,
+    drawEye(geo.leftEyeCx, geo.leftEyeCy);
+    drawEye(geo.rightEyeCx, geo.rightEyeCy);
+
+    // Mouth — same quadratic-bezier control points as the kernel; drawn as a
+    // native stroked Path rather than the bare-metal dot-trail (a workaround
+    // for having no curve primitive on the framebuffer — Flutter's Canvas
+    // already anti-aliases a quadratic bezier stroke to the same shape).
+    final p0 = Offset(geo.mouthP0x * w, geo.mouthP0y * h);
+    final p1 = Offset(geo.mouthP1x * w, geo.mouthP1y * h);
+    final p2 = Offset(geo.mouthP2x * w, geo.mouthP2y * h);
+    final path = Path()
+      ..moveTo(p0.dx, p0.dy)
+      ..quadraticBezierTo(p1.dx, p1.dy, p2.dx, p2.dy);
+
+    // Reference thickness (3-5) was tuned as a raw pixel radius for a fixed
+    // bare-metal framebuffer resolution; scale it to this canvas's own
+    // height so it reads the same on any device.
+    final strokeWidth = (geo.mouthThickness * 2.0) * (h / 600.0);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth.clamp(2.0, 24.0)
+        ..strokeCap = StrokeCap.round,
     );
-    canvas.drawCircle(
-      center, r * 0.85,
-      Paint()..shader = RadialGradient(
-        colors: [
-          Colors.white.withOpacity(e * 0.22),
-          const Color(0xFFFF8800).withOpacity(e * 0.08),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.38, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: r * 0.85)),
-    );
-    canvas.drawCircle(
-      center, r * 0.15,
-      Paint()..shader = RadialGradient(
-        colors: [
-          Colors.white.withOpacity(e * 0.80),
-          const Color(0xFFFFFF88).withOpacity(e * 0.40),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.45, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: r * 0.15)),
-    );
-    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_OrbPainter old) =>
-      old.travelVal  != travelVal  ||
-      old.energy     != energy     ||
-      old.pulse      != pulse      ||
-      old.state      != state      ||
-      old.glowEnergy != glowEnergy;
+  bool shouldRepaint(_FacePainter old) =>
+      !_axesEqual(old.axisState, axisState) || old.glowEnergy != glowEnergy;
 }

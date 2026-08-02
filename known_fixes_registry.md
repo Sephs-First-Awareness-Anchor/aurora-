@@ -8455,3 +8455,68 @@ rigor rather than to avoid building it.
 **First Seen:** `auroragenerativecommunicationpatched.zip`
 investigation, 2026-08-02, per explicit author direction to build the
 previously-deferred candidate.
+
+---
+
+## FIX-A073: Flutter Face Now Mirrors the ACM Kernel's Axis-Driven Face (Not a Static Image)
+
+**Category** ARCHITECTURAL. Per direction ("the ui isnt set to operate
+like the Aurora Computational Model") the `flutter_app` UI's face
+widget (`flutter_app/lib/widgets/aurora_orb.dart`) was rewritten from
+a static PNG (`assets/aurora_orb.png`) sliced/warped by an animation
+controller into a `CustomPainter` that ports `aurora-acm/kernel/src/
+expression/face.rs` and `.../color.rs` line-for-line: `Expression`
+classification (7-way threshold cascade on X/T/N/B/A), eye openness
+from X, pupil gaze offset from B (horizontal) / T (vertical), mouth
+as a quadratic bezier whose control-point Y and thickness are keyed
+off the derived `Expression`, and background color as an X/N/A-lerped
+shade of Aurora's base purple (#7B5EA7). Public API of `AuroraOrb`
+(`state`, `pulse`, `axisState`, `size`, `height`, `onTap`) is
+unchanged, so `home_screen.dart`'s two call sites needed no edits.
+
+Two deliberate, documented deviations from a literal port:
+
+1. The mouth is drawn as a native `Canvas` stroked `Path`
+   (`quadraticBezierTo`) rather than the kernel's 80-sample
+   filled-circle dot-trail (`renderer.rs::bezier_curve`) -- that
+   dot-trail exists only because the bare-metal framebuffer has no
+   curve primitive; Flutter's Canvas already anti-aliases the
+   identical bezier shape natively, so replicating the workaround
+   would add nothing but ported-not-reimplemented risk.
+2. `mouth_thickness` (3-5) is a raw pixel radius in the kernel, tuned
+   for a fixed bare-metal framebuffer resolution; ported literally it
+   would be a hairline on a high-DPI phone. Scaled proportionally to
+   the canvas's own height (reference 600px) instead, preserving the
+   Joyful > Happy > everything-else thickness ordering.
+
+A pre-existing, non-ACM addition (`_glowEnergy`, mapping STT/TTS
+`OrbState` -- dormant/listening/thinking/speaking -- to a soft glow
+behind the face) was kept, since the bare-metal kernel has no concept
+of those app-level states and the app still needs to surface them
+somehow; it is layered strictly behind the axis-driven face, not
+mixed into its geometry.
+
+**Known limitation, not fixed here:** `_last_axis_state` is currently
+pushed from the Python bridge to Flutter only as part of the
+`sendMessage` response (`AuroraService.kt` `sendMessage()` ->
+`"axis_state"` event), i.e. once per conversational turn -- there is
+no periodic/idle push. The face is therefore fully live during
+conversation but will not visibly breathe between turns the way the
+kernel's continuous 60Hz tick does. Flagged for the author to decide
+whether a periodic axis-state push (e.g. piggybacking the existing
+`_proactive_loop`) is wanted; not built without that direction, to
+avoid scope creep on top of the requested face-rendering port.
+
+**Verified:** manual structural/syntax review only -- no Flutter/Dart
+SDK is available in this remote execution environment (checked; not
+installed), so `flutter analyze`/`flutter build`/on-device testing
+could not be run here. Reviewed for: balanced braces/parens, correct
+Dart 3 switch-expression syntax (matches the pre-existing file's own
+usage), no unused/undeclared variables, and that `home_screen.dart`
+and no other file references anything removed (`_OrbPainter`, image
+loading) -- confirmed via repo-wide grep, only `home_screen.dart`
+references `AuroraOrb`/`OrbState` and neither call site needed
+changes. Real build/run verification is still owed and explicitly
+flagged as unverified, not claimed.
+
+**First Seen:** Flutter/ACM UI-parity request, 2026-08-02.
