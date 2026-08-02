@@ -8741,3 +8741,100 @@ disclosure prompt) both produced real responses with no crash,
 timing for changes touching this pipeline depth.
 
 **First Seen:** External structural/safety audit, 2026-08-02.
+
+---
+
+## FIX-A079: One Canonical Evolution-Hook Engine, Not 25 Copies
+
+**Category** ARCHITECTURAL / RUNTIME BUG. Verified precisely: 25 files
+each carried an identical ~440-line "auto-evolution surface adapter"
+block (14 functions: `_aurora_native_evolved_engine`, `_aurora_assign_
+target`, `_aurora_get_target`, `_aurora_bind_owner_attribute`,
+`_aurora_target_strategy`, `_aurora_target_feedback`, `_aurora_store_
+reflection`, `_aurora_store_owner_state`, `_aurora_make_override`,
+`_aurora_make_latent_binding`, and 4 module-specific `_aurora_apply_
+*_rewrite` functions of which only ONE is ever reachable in any given
+file, selected by that file's own `_AURORA_NATIVE_MODULE` constant --
+the other 3 are dead weight, just carried along by the paste). Traced
+the root cause: `aurora_internal/aurora_code_autoevolver.py`'s own
+`CodeAutoEvolver._native_wrapper_block()` is the generator that pastes
+this block into target files as part of Aurora's own code-evolution
+pipeline -- "one evolutionary mechanism wearing 25 identical coats,"
+and critically, a mechanism that would keep re-creating the
+duplication on every future evolution cycle if only the 25 existing
+files were fixed.
+
+The risk this framing warns about had already manifested, not just
+theoretically: `aurora_simulation_engine.py`'s copy of `_aurora_assign_
+target` and `_aurora_make_override` had picked up a real, previously
+undocumented fix -- preserving `@property`/`@staticmethod`/
+`@classmethod` descriptors when a target gets reassigned/overridden --
+that was never propagated to the other 24 files, which would silently
+strip such a descriptor (replacing a property with a bare value, etc.)
+if code evolution ever reassigned one of their targets. Traced this
+back to this campaign's own earlier "Zip integration B" pass (task
+#42/FIX from that session), which fixed one file and never propagated
+it -- a live example of the audit's own "one copy evolves while others
+go stale" concern, caught by this consolidation rather than by luck.
+
+**Fix, in two parts, both necessary:**
+
+1. New `aurora_internal/aurora_evolution_hook.py` -- the one canonical
+   implementation, with the property/staticmethod/classmethod fix now
+   the shared behavior everywhere. Deliberately NOT placed in
+   `aurora_evolved_surfaces.py`, which is itself generated output
+   ("Do not hand-edit generated methods; regenerate through the code
+   autoevolver," per its own docstring) produced by `CodeAutoEvolver.
+   _module_template()` -- hand-added functions there would be silently
+   discarded on the next regeneration. Functions take the caller's
+   `globals()` and per-module data (`_AURORA_NATIVE_STRATEGIES`,
+   `_AURORA_NATIVE_EVOLVED_ORIGINALS/_LAST`) as explicit parameters
+   rather than closing over module globals, so target resolution/
+   assignment still happens in the CALLING module's own namespace --
+   the mechanism stays behavior-preserving, only the code is shared.
+   `_aurora_native_evolved_engine()` (5-line lazy singleton getter) and
+   `_AURORA_NATIVE_STRATEGIES` (per-module target metadata -- exactly
+   the "each subsystem contributing target metadata... and its
+   specialized rewrite strategy" the audit asked for) were deliberately
+   left per-file: genuinely not shareable, or too small to be worth the
+   indirection.
+
+2. All 25 files migrated (mechanically, via an AST-span-replacement
+   script -- not hand-edited) to ~53-line thin wrappers delegating to
+   the shared module, with the true per-module state (`_AURORA_NATIVE_
+   MODULE`, `_AURORA_NATIVE_STRATEGIES`, `_AURORA_NATIVE_EVOLVED_
+   ORIGINALS/_LAST`, and everything after the migrated span -- the
+   per-target `*_evolved` functions and activation statements) left
+   completely untouched. Net: ~10,000 duplicated lines removed.
+   `aurora_internal/aurora_code_autoevolver.py`'s `_native_wrapper_
+   block()` generator itself was ALSO updated to emit the new thin-
+   wrapper pattern -- without this, the next auto-evolution cycle would
+   silently recreate the exact duplication this pass just removed.
+
+`concepts/aurora_code_evolution_stack.py` (confirmed unreachable --
+nothing imports it) had 3 functions with a genuinely different,
+smaller variant; migrated to the canonical behavior for consistency
+rather than preserved, since nothing depends on its prior behavior.
+
+**Verified:** all 25 migrated files + the generator parse and import
+cleanly; the migration script verified byte-identical "before" and
+"after" content outside the migrated span for every file (data
+literals and per-target activation code untouched). 25 equivalence
+tests (`tests/test_aurora_evolution_hook_equivalence.py`) compare the
+new shared functions against aurora.py's own pre-migration behavior
+(captured before any file was touched), plus the descriptor-
+preservation fix and per-module dispatch. The existing property/
+staticmethod descriptor regression tests (`tests/test_zip_integration_
+b_standalone_fixes.py`, 6 tests, originally written for aurora_
+simulation_engine.py's one-off fix) still pass now that the same fix
+is shared everywhere. A direct smoke test on `aurora_consciousness_
+engine.py` confirmed the module-level override activation
+(`ConsciousnessEngine.tick`) still runs end-to-end at import time
+through the new delegation chain. The generator change was verified
+by actually invoking `_native_wrapper_block()` and both parsing AND
+executing its generated output in a fresh namespace, confirming
+override activation still works. Full-suite regression
+(`pytest -k "not real_boot"`, ~1300+ tests) run as a final gate;
+see follow-up entry for its result.
+
+**First Seen:** External structural/safety audit, 2026-08-02.
