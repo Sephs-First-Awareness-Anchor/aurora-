@@ -1626,6 +1626,62 @@ def _mobile_image_search(
     return ToolResult("mobile_image_search", "\n".join(lines), True)
 
 
+def _mobile_search(
+    query: str = "",
+    max_results: int = 5,
+    deep: bool = True,
+    systems: Optional[Dict[str, Any]] = None,
+    **_,
+) -> ToolResult:
+    """
+    General web search (not just images) -- the mobile counterpart to
+    desktop_search + desktop_browser_action(action="read") combined into
+    one call. Uses Aurora's own cross-platform SearchAdapter (Dictionary
+    API, DuckDuckGo, Wikipedia -- plain HTTP via urllib, no browser, no
+    external LLM), the same adapter world_knowledge_search already uses
+    for brief snippets. deep=True (default) also fetches the real page
+    text for the top results instead of a short snippet, same idea as
+    reading a page in a desktop browser, just without a visible window.
+    """
+    if not query:
+        return ToolResult("mobile_search", "", False, "query required")
+    systems = systems or {}
+    adapter = systems.get("search_adapter")
+    if adapter is None:
+        try:
+            from aurora import SearchAdapter
+            adapter = SearchAdapter()
+        except Exception as exc:
+            return ToolResult("mobile_search", "", False, f"search adapter unavailable: {exc}")
+    try:
+        results = (adapter.deep_search(query, max_chars=2000, num_results=max_results)
+                   if deep else
+                   adapter.quick_search(query, max_chars=2000, num_results=max_results))
+    except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/tool_registry.py:mobile_search",
+            exc=exc,
+            context={"function": "_mobile_search", "source_file": "aurora_internal/tool_registry.py"},
+        )
+        return ToolResult("mobile_search", "", False, str(exc))
+
+    if not results:
+        return ToolResult("mobile_search", "", False, "no results")
+
+    lines = [f"Search: {query}"]
+    for i, r in enumerate(results, 1):
+        lines.append(f"{i}. {r.get('title', '?')} ({r.get('source', '?')})")
+        if r.get("url"):
+            lines.append(f"   {r['url']}")
+        snippet = str(r.get("snippet", "")).strip()
+        if snippet:
+            lines.append(f"   {snippet[:500]}")
+
+    return ToolResult("mobile_search", "\n".join(lines), True)
+
+
 def _mobile_reverse_image_search(
     image_source: str = "",
     systems: Optional[Dict[str, Any]] = None,
@@ -1922,6 +1978,7 @@ _reg("mobile_vibrate",                "Vibrate the phone for a given duration in
 _reg("mobile_wifi_info",              "Get current WiFi connection details (SSID, signal, IP)",                              "TRANSIENT",  _mobile_wifi_info,              disables_search=True)
 _reg("mobile_call_log",               "Read recent call history (incoming, outgoing, missed)",                               "BOUNDED",    _mobile_call_log,               disables_search=True)
 _reg("mobile_image_search",           "Search for images by text description via DuckDuckGo; returns URLs + metadata",      "BOUNDED",    _mobile_image_search,           disables_search=False)
+_reg("mobile_search",                 "General web search + real page text back, via her own SearchAdapter (no browser)",   "BOUNDED",    _mobile_search,                 disables_search=False)
 _reg("mobile_reverse_image_search",   "Find what an image is / where it appears online via Google Lens",                    "BOUNDED",    _mobile_reverse_image_search,   disables_search=False)
 _reg("mobile_music_identify",         "Identify a song playing nearby by recording audio and querying AudD",                "BOUNDED",    _mobile_music_identify,         disables_search=False)
 

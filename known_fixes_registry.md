@@ -9121,3 +9121,43 @@ don't know" is correct when she genuinely has no way to know, but it is
 not a substitute for giving her a real way to know when one exists and
 involves no external language model.
 **First Seen:** User directive, 2026-08-03, following up on FIX-A081-A084.
+
+### FIX-A086: mobile_search -- desktop/mobile capability parity, general web search
+**Category:** ARCHITECTURAL
+**Pattern:** User directive: "every function she has on the desktop should
+be the same on the app. different hardware same capabilities." Audit of
+`aurora_internal/tool_registry.py`'s `desktop_*` vs `mobile_*` tools found
+most already at parity via different platform-native mechanisms
+(`desktop_open_url`/`mobile_open_url`, `desktop_launch_app`/
+`mobile_launch_app`, `desktop_clipboard`/`mobile_clipboard`) -- correct,
+since "same capability, different hardware" means equivalent function,
+not identical code. The real gap: `desktop_search` (general Google/
+YouTube/GitHub/Reddit search) plus `desktop_browser_action(action="read")`
+(read a result page's real text back) had no mobile counterpart --
+`mobile_image_search` only covered images. Some desktop tools
+(`desktop_shell_command`, `desktop_process_control`, `desktop_macro`)
+were confirmed to have no possible 1:1 mobile equivalent -- arbitrary
+shell access, killing other processes, and raw synthetic input aren't
+things a sandboxed Android app can do without root/Accessibility-Service
+plumbing not yet built, reported to the user as an architectural
+limitation rather than silently skipped or fabricated.
+**Correct Form:** Added `mobile_search` to `aurora_internal/tool_registry.py`
+using the SearchAdapter already sitting in `aurora.py` (Dictionary API,
+DuckDuckGo instant-answer + web search, Wikipedia -- plain `urllib`, no
+browser, no external LLM) -- the same adapter `world_knowledge_search`
+already uses for brief 300-char snippets, here exposed as an explicit,
+directly-callable, general-purpose tool with `deep=True` (default) also
+fetching real page text for the top results via the adapter's existing
+`deep_search()`/`_fetch_url_text()`. Requires zero new networking code
+and zero Kotlin/Flutter changes -- `SearchAdapter` was already reachable
+identically from both `aurora.py` (desktop CLI) and `aurora_bridge.py`
+(Android/Chaquopy) since both boot through the same `systems['search_
+adapter']`; the only gap was that nothing exposed it as a standalone,
+deliberately-invokable tool the way `desktop_search` is. Verified live
+against real queries in both shallow and `deep=True` modes.
+**Why:** "Different hardware, same capabilities" doesn't mean porting
+Playwright/Xlib line-for-line to Android (architecturally impossible) --
+it means auditing for functional gaps and closing them with whatever
+mechanism fits the platform. Here the cross-platform mechanism already
+existed and only needed a name.
+**First Seen:** User directive, 2026-08-03, following up on FIX-A085.
