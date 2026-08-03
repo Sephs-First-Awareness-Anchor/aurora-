@@ -1,16 +1,11 @@
 // Authors: Sunni (Sir) Morningstar & Cael Devo
 //
-// Aurora's face — a Flutter port of aurora-acm/kernel/src/expression/{face,color}.rs.
-// The ACM kernel's own philosophy: "the face is her body surface... nothing is
-// scripted or hardcoded" — every geometric and color parameter below is a pure
-// function of live axis state (X/T/N/B/A), matching the kernel's derivation
-// exactly. No blink cycles, no idle-fidget animation — the only motion this
-// widget adds on top of the kernel's own math is an ease between successive
-// axis snapshots (see _axisAnim below), so the face reads as continuously
-// alive rather than snapping once per snapshot; the kernel doesn't need this
-// because it redraws from fresh axis state at 60 Hz, but the bridge can only
-// push snapshots to Flutter roughly once a second.
-import 'dart:math' as math;
+// Aurora's face — minimal, Nick Jr "Face"-style: one solid black shape,
+// no separate detailed eyes. The shape's form (round dot, elongated
+// smile, colon-style double-dot, slanted cut) is a pure function of live
+// axis state (X/T/N/B/A), and its openness pulses in sync with speech
+// (the same word-boundary pulse home_screen.dart already drives TTS
+// with) so it visibly moves while she talks instead of sitting static.
 import 'package:flutter/material.dart';
 
 enum OrbState { dormant, listening, thinking, speaking }
@@ -28,64 +23,35 @@ _Expression _expressionFromAxes(Map<String, double> ax) {
   return _Expression.neutral;
 }
 
-/// Mirrors FaceState::from_axes — all fields are fractions of canvas [0..1]
-/// except mouthThickness, which is a reference-pixel radius (see painter).
-class _FaceGeometry {
-  final double leftEyeCx, leftEyeCy, rightEyeCx, rightEyeCy;
-  final double eyeRadius, eyeOpenness;
-  final double pupilDx, pupilDy;
-  final double mouthP0x, mouthP0y, mouthP1x, mouthP1y, mouthP2x, mouthP2y;
-  final double mouthThickness;
+enum _ShapeKind { dot, colon }
 
-  const _FaceGeometry({
-    required this.leftEyeCx, required this.leftEyeCy,
-    required this.rightEyeCx, required this.rightEyeCy,
-    required this.eyeRadius, required this.eyeOpenness,
-    required this.pupilDx, required this.pupilDy,
-    required this.mouthP0x, required this.mouthP0y,
-    required this.mouthP1x, required this.mouthP1y,
-    required this.mouthP2x, required this.mouthP2y,
-    required this.mouthThickness,
-  });
+/// One shape config per expression: how wide/tall the base dot is (as a
+/// fraction of the reference size) and how far it's rotated. `colon`
+/// overrides width/height/rotation with two small stacked dots instead.
+class _MouthShape {
+  final _ShapeKind kind;
+  final double widthScale;
+  final double heightScale;
+  final double rotation; // radians
+  const _MouthShape(this.kind, this.widthScale, this.heightScale, this.rotation);
 
-  factory _FaceGeometry.fromAxes(Map<String, double> ax) {
-    final x = ax['X'] ?? 0.5, t = ax['T'] ?? 0.5, b = ax['B'] ?? 0.5;
-    final expr = _expressionFromAxes(ax);
-
-    // Eye openness scales with X (existence/perception); never fully closed.
-    final eyeOpenness = 0.55 + x * 0.45;
-
-    // Gaze: B shifts pupil right (scanning outward); T shifts pupil up
-    // (temporal focus = looking ahead).
-    final pupilDx = (b - 0.5) * 0.6;
-    final pupilDy = -(t - 0.5) * 0.4;
-
-    const mouthYBase = 0.70, mouthLeft = 0.30, mouthRight = 0.70;
-    final mouthP1y = switch (expr) {
-      _Expression.joyful        => mouthYBase + 0.10,
-      _Expression.happy         => mouthYBase + 0.07,
-      _Expression.neutral       => mouthYBase,
-      _Expression.attentive     => mouthYBase - 0.01,
-      _Expression.contemplative => mouthYBase - 0.04,
-      _Expression.uncertain     => mouthYBase - 0.06,
-      _Expression.tired         => mouthYBase - 0.08,
-    };
-    final mouthThickness = switch (expr) {
-      _Expression.joyful => 5.0,
-      _Expression.happy  => 4.0,
-      _                  => 3.0,
-    };
-
-    return _FaceGeometry(
-      leftEyeCx: 0.35, leftEyeCy: 0.40,
-      rightEyeCx: 0.65, rightEyeCy: 0.40,
-      eyeRadius: 0.10, eyeOpenness: eyeOpenness,
-      pupilDx: pupilDx, pupilDy: pupilDy,
-      mouthP0x: mouthLeft, mouthP0y: mouthYBase,
-      mouthP1x: 0.50, mouthP1y: mouthP1y,
-      mouthP2x: mouthRight, mouthP2y: mouthYBase,
-      mouthThickness: mouthThickness,
-    );
+  factory _MouthShape.fromExpression(_Expression expr) {
+    switch (expr) {
+      case _Expression.joyful:
+        return const _MouthShape(_ShapeKind.dot, 3.2, 1.0, 0.0); // wide open smile
+      case _Expression.happy:
+        return const _MouthShape(_ShapeKind.dot, 2.4, 1.0, 0.0); // elongated dot
+      case _Expression.contemplative:
+        return const _MouthShape(_ShapeKind.dot, 2.0, 0.85, -0.45); // slant cut
+      case _Expression.attentive:
+        return const _MouthShape(_ShapeKind.dot, 1.1, 1.1, 0.0); // slightly alert dot
+      case _Expression.uncertain:
+        return const _MouthShape(_ShapeKind.colon, 1.0, 1.0, 0.0); // colon-shaped
+      case _Expression.tired:
+        return const _MouthShape(_ShapeKind.dot, 3.0, 0.35, 0.0); // thin horizontal slit
+      case _Expression.neutral:
+        return const _MouthShape(_ShapeKind.dot, 1.0, 1.0, 0.0); // plain dot
+    }
   }
 }
 
@@ -95,8 +61,6 @@ Color _backgroundColor(Map<String, double> ax) {
   int lerp(int a0, int b0, double t) => (a0 + (b0 - a0) * t.clamp(0.0, 1.0)).round();
   return Color.fromARGB(255, lerp(100, 150, x), lerp(70, 110, n), lerp(130, 200, a));
 }
-
-const _pupilColor = Color.fromARGB(255, 30, 20, 50);
 
 bool _axesEqual(Map<String, double> a, Map<String, double> b) {
   for (final k in const ['X', 'T', 'N', 'B', 'A']) {
@@ -203,6 +167,8 @@ class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMix
             painter: _FacePainter(
               axisState:  _liveAxis,
               glowEnergy: _glowEnergy,
+              speaking:   widget.state == OrbState.speaking,
+              pulse:      widget.pulse.value,
             ),
             child: const SizedBox.expand(),
           ),
@@ -215,23 +181,31 @@ class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMix
 class _FacePainter extends CustomPainter {
   final Map<String, double> axisState;
   final double glowEnergy;
+  final bool speaking;
+  final double pulse;
 
-  _FacePainter({required this.axisState, required this.glowEnergy});
+  _FacePainter({
+    required this.axisState,
+    required this.glowEnergy,
+    required this.speaking,
+    required this.pulse,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
     if (w <= 0 || h <= 0) return;
 
-    final geo = _FaceGeometry.fromAxes(axisState);
+    final expr = _expressionFromAxes(axisState);
+    final shape = _MouthShape.fromExpression(expr);
 
     // Background fill — the whole canvas is Aurora's emotional skin.
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = _backgroundColor(axisState));
 
-    // State-feedback glow (listening/thinking/speaking), behind the face.
+    // State-feedback glow (listening/thinking/speaking), behind the shape.
     if (glowEnergy > 0.01) {
       final center = Offset(w / 2, h / 2);
-      final r = math.min(w, h) * 0.45;
+      final r = (w < h ? w : h) * 0.45;
       canvas.drawCircle(
         center, r,
         Paint()
@@ -241,51 +215,40 @@ class _FacePainter extends CustomPainter {
       );
     }
 
-    final baseR      = geo.eyeRadius * h;
-    final eyeR       = baseR * geo.eyeOpenness;
-    final pupilR     = eyeR * 0.35;
-    final highlightR = pupilR * 0.40;
-    final poffX      = geo.pupilDx * eyeR;
-    final poffY      = geo.pupilDy * eyeR;
-    final hlOff      = pupilR * 0.45;
+    // While speaking, the pulse (already kicked to 1.0 on each TTS word
+    // boundary, see home_screen.dart's _kickPulse) opens the shape taller
+    // in sync with speech instead of it sitting static.
+    final speakOpen = speaking ? (1.0 + pulse * 0.9) : 1.0;
 
-    void drawEye(double cxFrac, double cyFrac) {
-      final cx = cxFrac * w, cy = cyFrac * h;
-      canvas.drawCircle(Offset(cx, cy), eyeR, Paint()..color = Colors.white);
-      final px = cx + poffX, py = cy + poffY;
-      canvas.drawCircle(Offset(px, py), pupilR, Paint()..color = _pupilColor);
-      canvas.drawCircle(Offset(px - hlOff, py - hlOff), highlightR, Paint()..color = Colors.white);
+    final refSize = (w < h ? w : h) * 0.16;
+    final paint = Paint()..color = Colors.black;
+
+    if (shape.kind == _ShapeKind.colon) {
+      final dotR = refSize * 0.32;
+      final gap = refSize * 0.9 * speakOpen;
+      final cx = w / 2, cy = h / 2;
+      canvas.drawCircle(Offset(cx, cy - gap / 2), dotR, paint);
+      canvas.drawCircle(Offset(cx, cy + gap / 2), dotR, paint);
+      return;
     }
 
-    drawEye(geo.leftEyeCx, geo.leftEyeCy);
-    drawEye(geo.rightEyeCx, geo.rightEyeCy);
-
-    // Mouth — same quadratic-bezier control points as the kernel; drawn as a
-    // native stroked Path rather than the bare-metal dot-trail (a workaround
-    // for having no curve primitive on the framebuffer — Flutter's Canvas
-    // already anti-aliases a quadratic bezier stroke to the same shape).
-    final p0 = Offset(geo.mouthP0x * w, geo.mouthP0y * h);
-    final p1 = Offset(geo.mouthP1x * w, geo.mouthP1y * h);
-    final p2 = Offset(geo.mouthP2x * w, geo.mouthP2y * h);
-    final path = Path()
-      ..moveTo(p0.dx, p0.dy)
-      ..quadraticBezierTo(p1.dx, p1.dy, p2.dx, p2.dy);
-
-    // Reference thickness (3-5) was tuned as a raw pixel radius for a fixed
-    // bare-metal framebuffer resolution; scale it to this canvas's own
-    // height so it reads the same on any device.
-    final strokeWidth = (geo.mouthThickness * 2.0) * (h / 600.0);
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth.clamp(2.0, 24.0)
-        ..strokeCap = StrokeCap.round,
+    final rw = refSize * shape.widthScale;
+    final rh = refSize * shape.heightScale * speakOpen;
+    canvas.save();
+    canvas.translate(w / 2, h / 2);
+    canvas.rotate(shape.rotation);
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset.zero, width: rw, height: rh),
+      Radius.circular((rw < rh ? rw : rh) / 2), // fully rounded ends -> stadium/dot shape
     );
+    canvas.drawRRect(rrect, paint);
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(_FacePainter old) =>
-      !_axesEqual(old.axisState, axisState) || old.glowEnergy != glowEnergy;
+      !_axesEqual(old.axisState, axisState) ||
+      old.glowEnergy != glowEnergy ||
+      old.speaking != speaking ||
+      old.pulse != pulse;
 }

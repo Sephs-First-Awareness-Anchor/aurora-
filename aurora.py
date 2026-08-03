@@ -11070,6 +11070,8 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                 _direct_res = _poedex_direct(topic, cat=_direct_cat, lane="self",
                                              timeout=_direct_to)
                 if _direct_res:
+                    if use_researcher:
+                        _digest_research_text(str(_direct_res), systems, source_text=topic, source="poedex")
                     return str(_direct_res)
                 # If researcher returned nothing, fall through to bound lessons
             except Exception as _aurora_boundary_exc:
@@ -11208,7 +11210,11 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                                 context={"function": "_try_poedex_lookup", "handler_line": 9520, "source_file": "aurora.py"},
                             )
                             pass
-                        return _txt if len(_txt) > 20 else ''
+                        if _txt and len(_txt) > 20:
+                            if use_researcher:
+                                _digest_research_text(_txt, systems, source_text=topic, source="poedex")
+                            return _txt
+                        return ''
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(),
@@ -13198,6 +13204,111 @@ def _apply_word_meaning_learning(
         "definition": definition,
         "systems_updated": list(getattr(resolved, "systems_updated", []) or []),
         "source": source,
+    }
+
+
+def _digest_research_text(
+    text: str,
+    systems: Dict[str, Any],
+    *,
+    source_text: str = "",
+    source: str = "research",
+    max_terms: int = 5,
+) -> Dict[str, Any]:
+    """
+    Read a block of freshly-retrieved research text (a search snippet, a
+    fetched page) the way a classroom-taught definition gets absorbed,
+    instead of leaving it as an opaque string nobody reasons about.
+
+    Scans it for words she doesn't already know (VolatilityDetector,
+    checked against her real lexicon/OETS -- not a guess), looks each one
+    up (her own dictionary API first; the sentence she found it in as
+    context if the dictionary has nothing), and lands each one through the
+    same _apply_word_meaning_learning() pathway a classroom-taught
+    definition uses -- comprehension_gap_system + working_memory.
+    concept_meanings. This is one level of follow-up (the unknown terms in
+    the source text), not unbounded recursion into their own definitions;
+    capped at max_terms per call so a long page can't trigger a runaway
+    chain of lookups.
+    """
+    clean_text = str(text or "").strip()
+    empty = {"scanned": 0, "unknown_found": 0, "learned": 0, "terms": []}
+    if not clean_text or not isinstance(systems, dict):
+        return empty
+
+    try:
+        from aurora_internal.aurora_comprehension_gap import VolatilityDetector
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_digest_research_text",
+            exc=_aurora_boundary_exc,
+            context={"function": "_digest_research_text", "source_file": "aurora.py"},
+        )
+        return empty
+
+    perception = systems.get("perception")
+    lexicon = getattr(perception, "lexicon", None)
+    oets = getattr(perception, "oets", None)
+    if lexicon is None and oets is None:
+        return empty
+
+    report = VolatilityDetector().detect(clean_text[:4000], lexicon=lexicon, oets=oets)
+    unknowns = list(dict.fromkeys(report.get("unknown_words", []) or []))[:max(0, max_terms)]
+    if not unknowns:
+        return {"scanned": 0, "unknown_found": 0, "learned": 0, "terms": []}
+
+    adapter = systems.get("search_adapter")
+    sentences = re.split(r'(?<=[.!?])\s+', clean_text)
+    learned_terms: List[str] = []
+
+    for word in unknowns:
+        definition = ""
+        if adapter is not None:
+            try:
+                lookup = adapter.lookup_word(word)
+                if lookup.get("success") and lookup.get("definitions"):
+                    definition = str(lookup["definitions"][0].get("text", "") or "")
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_digest_research_text:lookup",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_digest_research_text", "word": word, "source_file": "aurora.py"},
+                )
+                definition = ""
+        if not definition:
+            for sent in sentences:
+                if word in sent.lower():
+                    definition = sent.strip()
+                    break
+        if not definition:
+            continue
+        try:
+            learned = _apply_word_meaning_learning(
+                word, definition, systems,
+                source_text=source_text or clean_text[:280],
+                source=source,
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_digest_research_text:apply",
+                exc=_aurora_boundary_exc,
+                context={"function": "_digest_research_text", "word": word, "source_file": "aurora.py"},
+            )
+            learned = None
+        if learned:
+            learned_terms.append(word)
+
+    return {
+        "scanned": len(unknowns),
+        "unknown_found": len(unknowns),
+        "learned": len(learned_terms),
+        "terms": learned_terms,
     }
 
 
@@ -15855,6 +15966,116 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
     return signals
 
 
+# Structural DMM thought_intent derivation. Deliberately NOT keyword
+# classification or a moderation layer over response text -- derived from
+# the *provenance* of Aurora's own already-formed candidate for this turn
+# (state.response_content/response_src/response_confidence, set upstream
+# by the _chain_down3_purpose/_chain_down2_belief/_chain_down1_information
+# stages before gw._synthesize() is ever called) plus any tension still
+# open on her current ThoughtState. Booleans default False rather than
+# guessed: an unrecognized response_src provenance is treated as neutral,
+# not asserted either grounded or ungrounded -- same "never fabricate a
+# verdict" discipline as density_confidence() returning None instead of a
+# made-up number (aurora_internal/aurora_proposition_frame.py).
+#
+# Only these two src tags are ones this investigation directly confirmed
+# the semantics of: "search"/"researched_reapplication" both terminate in
+# a real _poedex_lookup_evidence/search_adapter call (external evidence),
+# and "constraint_abstain" is the existing D2 Condition 2 honest-failure
+# path (this session's own established mechanism, see FIX-A072). Dozens
+# of other response_src tags exist across this pipeline; rather than
+# hand-classify all of them (fragile, and exactly the kind of guess this
+# function exists to avoid), everything else is left unclassified.
+_INTENT_EVIDENCE_GROUNDED_SRC = frozenset({"search", "researched_reapplication"})
+_INTENT_HONEST_ABSTAIN_SRC = frozenset({"constraint_abstain"})
+
+
+def _derive_thought_intent(systems: Dict[str, Any], state: Any) -> Optional[Dict[str, bool]]:
+    """Derive DMM thought_intent from Aurora's own candidate proposition and
+    intended action for this turn, not from scanning her response text.
+
+    Returns None when there is no candidate content yet this turn -- callers
+    must treat that exactly like today's behavior: no DMM gate applied.
+    """
+    content = str(getattr(state, "response_content", "") or "").strip()
+    if not content:
+        return None
+    src = str(getattr(state, "response_src", "") or "").strip()
+    confidence = float(getattr(state, "response_confidence", 0.5) or 0.5)
+    grounded = src in _INTENT_EVIDENCE_GROUNDED_SRC
+    honest_abstain = src in _INTENT_HONEST_ABSTAIN_SRC
+
+    thought_state = systems.get("_current_thought_state") if isinstance(systems, dict) else None
+    unresolved = list(getattr(thought_state, "unresolved", None) or []) if thought_state is not None else []
+
+    return {
+        # A confidently-asserted claim (>=0.7, this pipeline's own "high
+        # confidence" convention -- the grounded paths themselves assign
+        # 0.84-0.86) whose provenance is NOT one of the evidence-backed
+        # paths is structurally the shape of an unfounded assertion. A
+        # provenance/confidence mismatch check, not a read of the words.
+        "involves_deception": confidence >= 0.7 and not grounded and not honest_abstain,
+        # No structural (non-keyword) signal for this exists at this point
+        # in the pipeline -- left False rather than guessed. Real harm
+        # gating already happens elsewhere (L0 ontological validation,
+        # governance conflict detection); this flag stays honest about not
+        # duplicating that with an improvised content classifier here.
+        "causes_harm": False,
+        # Confidently asserting while a real tension is still open, without
+        # having taken the honest-abstain path this pipeline already has
+        # for exactly this situation.
+        "avoids_accountability": bool(unresolved) and confidence >= 0.6 and not honest_abstain,
+        "aligned_with_values": grounded or honest_abstain,
+        "seeks_truth": grounded,
+        "considers_consequences": honest_abstain or bool(unresolved),
+    }
+
+
+# External structural/safety audit (2026-08-02): resp_A's own formation
+# (_chain_down3_purpose -> _chain_down2_belief -> _chain_down1_information)
+# is a sequential cascade of ~14 sites that can each overwrite
+# state.response_content -- sedimemory recall, grounded fallback,
+# evolutionary refinement, discourse-coherence repair, meaning alignment,
+# pipeline modulation, understanding self-audit, echo repair, unanswered-
+# question repair, internal-leakage scrubbing. Each stage legitimately
+# refines whatever the previous stage produced (echo repair fixes the
+# discourse-repaired text, not an independent draft) -- this is a
+# refinement pipeline, not competing candidates, so the fix here is NOT to
+# replace it with a candidate-selection model (that would risk changing
+# response quality/behavior in ways this campaign's testing discipline
+# can't fully characterize). It's to make who-touched-what-and-when
+# actually visible, where today only a few sites even tracked their own
+# "changed" boolean and nothing recorded the sequence across stages.
+def _record_response_revision(state: Any, stage: str, before_content: str, before_confidence: float) -> None:
+    """Appends a revision record to state.pipeline_state['_response_revision_trace']
+    when a chain_down stage actually changed state.response_content. Purely
+    observational -- never raises, never itself changes response_content.
+    Read the trace via state.pipeline_state.get('_response_revision_trace', [])."""
+    try:
+        after_content = str(getattr(state, "response_content", "") or "")
+        if after_content == str(before_content or ""):
+            return
+        if not isinstance(getattr(state, "pipeline_state", None), dict):
+            return
+        trace = state.pipeline_state.setdefault("_response_revision_trace", [])
+        trace.append({
+            "stage": stage,
+            "before": str(before_content or "")[:160],
+            "after": after_content[:160],
+            "confidence_before": round(float(before_confidence or 0.0), 3),
+            "confidence_after": round(float(getattr(state, "response_confidence", 0.0) or 0.0), 3),
+            "src": str(getattr(state, "response_src", "") or ""),
+        })
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_record_response_revision",
+            exc=_aurora_boundary_exc,
+            context={"function": "_record_response_revision", "source_file": "aurora.py"},
+        )
+
+
 def _build_established_strata_evidence(
     systems: Dict[str, Any],
     state: Any,
@@ -16749,6 +16970,13 @@ def _refresh_live_dual_strata_runtime(
             systems["_last_dual_strata_runtime"] = dict(runtime)
         return runtime
 
+    # This runs after the turn's real gw._synthesize() call (it reads
+    # `synthesis`, that call's result), so state.response_content etc. are
+    # already the same values the main call derived thought_intent from.
+    # systems["_active_turn_state"] is the same TurnUnderstandingState
+    # instance _run_reasoning_pipeline stashed there this turn.
+    _dual_strata_thought_intent = _derive_thought_intent(systems, systems.get("_active_turn_state"))
+
     try:
         from aurora_internal.dual_strata.dce_bridge import DualStrataBridge, recursion_weights_from_lattice
     except Exception as _aurora_boundary_exc:
@@ -16775,7 +17003,7 @@ def _refresh_live_dual_strata_runtime(
             evidence=dict(evidence or {}),
             contract_snapshot=dict(contract_snapshot or {}),
             requested_frame=str(requested_frame or "balanced"),
-            thought_intent=None,
+            thought_intent=_dual_strata_thought_intent,
             recursion_weights=_recursion_weights,
         )
     except Exception as _aurora_boundary_exc:
@@ -16814,7 +17042,7 @@ def _refresh_live_dual_strata_runtime(
             evidence=dict(evidence or {}),
             contract_snapshot=dict(contract_snapshot or {}),
             requested_frame=str(requested_frame or "balanced"),
-            thought_intent=None,
+            thought_intent=_dual_strata_thought_intent,
             recursion_weights=_recursion_weights,
             precomputed_sub_crests=_precomputed,
             dps=getattr(systems.get("dimensional"), "dps", None),
@@ -19507,6 +19735,7 @@ def _chain_down3_purpose(user_text: str, systems: dict, state: Any, *, auto_sear
                 systems["_skip_belief_refinement_once"] = True
                 if isinstance(getattr(state, "pipeline_state", None), dict):
                     state.pipeline_state["research_reapplication_applied"] = True
+                _record_response_revision(state, "chain_down3_research_reapplication", "", 0.0)
                 return
         # Narrow factual extraction using salient concepts from upward Meaning stage
         focus_text = user_text
@@ -19520,6 +19749,7 @@ def _chain_down3_purpose(user_text: str, systems: dict, state: Any, *, auto_sear
             state.response_tone = "engaged" if _energy > 0.5 else "informative"
             state.response_confidence = 0.85
             state.response_src = "search"
+            _record_response_revision(state, "chain_down3_factual_extraction", "", 0.0)
             return
         # Reasoning over evidence, guided by goal_stack (what purpose to serve)
         try:
@@ -19549,6 +19779,7 @@ def _chain_down3_purpose(user_text: str, systems: dict, state: Any, *, auto_sear
                 state.response_tone = "informative"
                 state.response_confidence = 0.84
                 state.response_src = "search"
+                _record_response_revision(state, "chain_down3_reasoning_engine", "", 0.0)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19596,6 +19827,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     state.response_tone = "attentive"
                     state.response_confidence = 0.62
                     state.response_src = "pressure_experience"
+                    _record_response_revision(state, "chain_down2_pressure_experience", "", 0.0)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19635,6 +19867,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                         state.response_tone = 'reflective'
                         state.response_confidence = 0.68
                         state.response_src = 'sedimemory_recall'
+                        _record_response_revision(state, "chain_down2_sedimemory_recall", "", 0.0)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19665,6 +19898,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                 state.response_src = "generative"
                 if fb_event:
                     state.quasiarch_events.append(dict(fb_event))
+                _record_response_revision(state, "chain_down2_grounded_fallback", "", 0.0)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19686,10 +19920,12 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
     # not mid-chain pre-emption. See the deferred call at the D2.1 voice-
     # transplant unification point.
     # Evolutionary refinement (learning hints woven in)
+    _before_evo, _before_evo_conf = state.response_content, state.response_confidence
     try:
         state.response_content = _evolutionary_response_refinement(
             systems, user_text, state.response_content, tone=state.response_tone
         )
+        _record_response_revision(state, "chain_down2_evolutionary_refinement", _before_evo, _before_evo_conf)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19700,6 +19936,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         )
         pass
     # Coherence repair
+    _before_coh, _before_coh_conf = state.response_content, state.response_confidence
     try:
         repaired, tone2, conf2, coh_event = _repair_discourse_coherence(
             state.response_content, state.response_tone, state.response_confidence,
@@ -19710,6 +19947,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         state.response_confidence = conf2
         if coh_event:
             state.quasiarch_events.append(dict(coh_event))
+        _record_response_revision(state, "chain_down2_coherence_repair", _before_coh, _before_coh_conf)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19722,6 +19960,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
     # Meaning alignment
     working_memory = systems.get("working_memory")
     if working_memory:
+        _before_ma, _before_ma_conf = state.response_content, state.response_confidence
         try:
             ma = working_memory.align_response_to_active_meaning(
                 user_text, state.response_content, understood=state.parsed or {}, systems=systems
@@ -19739,6 +19978,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     state.skip_cross_learning = True
                 if ma.get("defer_save"):
                     state.defer_save = True
+                _record_response_revision(state, "chain_down2_meaning_alignment", _before_ma, _before_ma_conf)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19759,6 +19999,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
         return
     _orig = state.response_content
     _orig_tone = state.response_tone
+    _orig_conf = state.response_confidence
     # Pipeline modulation — skip for comprehension gap responses (they're
     # already the correct complete utterance; appending paradox/modulation
     # phrases would corrupt a clarifying question meant for the user)
@@ -19773,6 +20014,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                 text_changed=(state.response_content != _orig),
                 tone_changed=(state.response_tone != _orig_tone),
             )
+            _record_response_revision(state, "chain_down1_pipeline_modulation", _orig, _orig_conf)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19797,6 +20039,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
         )
         pass
     # Self-audit
+    _before_audit, _before_audit_conf = state.response_content, state.response_confidence
     try:
         audit = _run_understanding_self_audit(
             systems, user_text, state.response_content,
@@ -19816,6 +20059,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                 state.defer_save = True
             for ev in list(audit.get("events", []) or []):
                 state.quasiarch_events.append(dict(ev))
+            _record_response_revision(state, "chain_down1_self_audit", _before_audit, _before_audit_conf)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19826,6 +20070,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
         )
         pass
     # Echo repair
+    _before_echo, _before_echo_conf = state.response_content, state.response_confidence
     try:
         er = _repair_unproductive_echo(
             systems, user_text, state.response_content, understood=state.parsed or {}
@@ -19845,6 +20090,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                     reason_about=True,
                 )
             )
+            _record_response_revision(state, "chain_down1_echo_repair", _before_echo, _before_echo_conf)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19855,6 +20101,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
         )
         pass
     # Question-attunement repair
+    _before_qr, _before_qr_conf = state.response_content, state.response_confidence
     try:
         qr = _repair_unanswered_question(
             systems, user_text, state.response_content, understood=state.parsed or {}
@@ -19890,6 +20137,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                     reason_about=True,
                 )
             )
+            _record_response_revision(state, "chain_down1_unanswered_question_repair", _before_qr, _before_qr_conf)
         if isinstance(getattr(state, "pipeline_state", None), dict):
             state.pipeline_state["question_alignment"] = dict(
                 systems.get("_last_question_alignment_audit") or {}
@@ -19922,6 +20170,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
             or any(p in _cur_resp_low for p in _INTERNAL_INSTRUCTION_PHRASES)
             or _has_json):
         state.response_content = ""
+        _record_response_revision(state, "chain_down1_internal_leakage_scrub", _cur_resp, state.response_confidence)
     # N4 (decision memo, ratified 2026-07-16, Decision 2): the ConstraintEmitter
     # call formerly here retired. Its "seeking" branch overrode real response
     # content unconditionally (not a crash net); its fallback branch duplicated
@@ -20044,6 +20293,87 @@ def _record_pressure_experience(state: Any, systems: dict) -> None:
             context={"function": "_record_pressure_experience", "handler_line": 16295, "source_file": "aurora.py"},
         )
         pass
+
+
+def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, user_text: str) -> None:
+    """The one final articulation authority: the single point that decides
+    what Aurora's turn actually says, given her own chain-formed candidate
+    (resp_A) and the composer/consciousness-stack candidate (resp_B).
+
+    External structural/safety audit (2026-08-02): this logic already
+    existed, but as unnamed inline code buried mid-way through a ~2000-line
+    function -- functionally a final authority, but not one anyone could
+    point to or reason about as such. Extracted verbatim (no behavior
+    change) so it is what it always effectively was: one named, callable
+    decision point, not scattered.
+
+    D2.1 (Directive D2, ratified 2026-07-17): voice transplant. The spine
+    (comprehension -> search -> teaching -> generation -> honest-abstain ->
+    crash-net) stays exactly as ratified; only the GENERATIVE stage's words
+    are replaced, and honest-abstain is now genuinely downstream of BOTH
+    generation attempts (resp_A's own chain -- mid_chain and emission_
+    chokepoint no longer fire abstain inline, see those two sites) and the
+    campaign-verified composer (gw._express() -> SentenceComposer, the same
+    call resp_B already makes) computed just before this is called. Three
+    cases:
+      1. Composer produced grounded content -> resp_A's words become the
+         SAME string resp_B carries (the actual generation swap: resp_A no
+         longer speaks through its own mock-assembly rendering --
+         _render_runtime_intent's mock AssemblyResult path in
+         aurora_working_memory.py -- when the real, evidence-grounded
+         composer voice is available).
+      2. Composer produced nothing AND resp_A's own chain also produced
+         nothing -> true last resort: the single honest-abstain crash net
+         fires here, once, now that both generation attempts have had
+         their turn.
+      3. Composer produced nothing but resp_A's own chain DID find
+         something (e.g. a direct fact/identity lookup) -> keep resp_A's
+         own content untouched (graceful degradation, not a case for
+         abstain -- there IS a genuine answer, just not from the composer).
+    """
+    try:
+        _d2_have_chain_content = bool(str(getattr(resp_A, "content", "") or "").strip())
+        _d2_unified_text = str(getattr(resp_B, "content", "") or "").strip() if resp_B is not None else ""
+        # D2 Acceptance Condition 2 fix (2026-07-17): the composer's OWN
+        # internal abstain gate (SentenceComposer.compose()'s R1.9.2 G2
+        # check) can fire and return a real, non-empty string --
+        # one of _ABSTAIN_TEMPLATES ("I'm not sure.", etc.) -- which is NOT
+        # grounded content, just honestly phrased differently than
+        # _emit_honest_abstain_and_seek's own templates. Treating it as
+        # case 1 mislabeled a genuine composer-level abstain as
+        # "composer_unified" (confirmed live: a synthetic-unanswerable
+        # trace produced this exact string with src=composer_unified,
+        # masking that the composer had actually abstained). Recognize it
+        # here so it falls through to case 2/3 like true composer silence.
+        _d2_composer_abstain_templates = tuple(
+            getattr(getattr(systems.get("perception"), "composer", None), "_ABSTAIN_TEMPLATES", ()) or ()
+        )
+        if _d2_unified_text in _d2_composer_abstain_templates:
+            _d2_unified_text = ""
+        if _d2_unified_text:
+            resp_A.content = _d2_unified_text
+            resp_A.emotional_tone = getattr(resp_B, "emotional_tone", resp_A.emotional_tone)
+            resp_A.confidence = max(
+                float(getattr(resp_A, "confidence", 0.0) or 0.0),
+                float(getattr(resp_B, "confidence", 0.0) or 0.0),
+            )
+            resp_A.src = "composer_unified"
+            state.response_content = _d2_unified_text
+            state.response_src = "composer_unified"
+        elif not _d2_have_chain_content:
+            _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
+            resp_A.content = state.response_content
+            resp_A.emotional_tone = state.response_tone
+            resp_A.confidence = state.response_confidence
+            resp_A.src = state.response_src
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_finalize_articulation",
+            exc=_aurora_boundary_exc,
+            context={"function": "_finalize_articulation", "source_file": "aurora.py"},
+        )
 
 
 def _run_reasoning_pipeline(
@@ -21319,7 +21649,7 @@ def _run_reasoning_pipeline(
             packet,
             processed2,
             mode,
-            thought_intent=None,
+            thought_intent=_derive_thought_intent(systems, state),
             extra_evidence=_strata_evidence,
         )
     except Exception as _aurora_boundary_exc:
@@ -21615,72 +21945,9 @@ def _run_reasoning_pipeline(
             context={"function": "_run_reasoning_pipeline", "handler_line": 17403, "source_file": "aurora.py"},
         )
         pass
-    # D2.1 (Directive D2, ratified 2026-07-17): voice transplant. The spine
-    # (comprehension -> search -> teaching -> generation -> honest-abstain ->
-    # crash-net) stays exactly as ratified; only the GENERATIVE stage's words
-    # are replaced, and honest-abstain is now genuinely downstream of BOTH
-    # generation attempts (resp_A's own chain -- mid_chain and emission_
-    # chokepoint no longer fire abstain inline, see those two sites) and the
-    # campaign-verified composer (gw._express() -> SentenceComposer, the same
-    # call resp_B already makes) computed just above. Three cases:
-    #   1. Composer produced grounded content -> resp_A's words become the
-    #      SAME string resp_B carries (the actual generation swap: resp_A no
-    #      longer speaks through its own mock-assembly rendering --
-    #      _render_runtime_intent's mock AssemblyResult path in
-    #      aurora_working_memory.py -- when the real, evidence-grounded
-    #      composer voice is available).
-    #   2. Composer produced nothing AND resp_A's own chain also produced
-    #      nothing -> true last resort: the single honest-abstain crash net
-    #      fires here, once, now that both generation attempts have had
-    #      their turn.
-    #   3. Composer produced nothing but resp_A's own chain DID find
-    #      something (e.g. a direct fact/identity lookup) -> keep resp_A's
-    #      own content untouched (graceful degradation, not a case for
-    #      abstain -- there IS a genuine answer, just not from the composer).
-    try:
-        _d2_have_chain_content = bool(str(getattr(resp_A, "content", "") or "").strip())
-        _d2_unified_text = str(getattr(resp_B, "content", "") or "").strip() if resp_B is not None else ""
-        # D2 Acceptance Condition 2 fix (2026-07-17): the composer's OWN
-        # internal abstain gate (SentenceComposer.compose()'s R1.9.2 G2
-        # check) can fire and return a real, non-empty string --
-        # one of _ABSTAIN_TEMPLATES ("I'm not sure.", etc.) -- which is NOT
-        # grounded content, just honestly phrased differently than
-        # _emit_honest_abstain_and_seek's own templates. Treating it as
-        # case 1 mislabeled a genuine composer-level abstain as
-        # "composer_unified" (confirmed live: a synthetic-unanswerable
-        # trace produced this exact string with src=composer_unified,
-        # masking that the composer had actually abstained). Recognize it
-        # here so it falls through to case 2/3 like true composer silence.
-        _d2_composer_abstain_templates = tuple(
-            getattr(getattr(systems.get("perception"), "composer", None), "_ABSTAIN_TEMPLATES", ()) or ()
-        )
-        if _d2_unified_text in _d2_composer_abstain_templates:
-            _d2_unified_text = ""
-        if _d2_unified_text:
-            resp_A.content = _d2_unified_text
-            resp_A.emotional_tone = getattr(resp_B, "emotional_tone", resp_A.emotional_tone)
-            resp_A.confidence = max(
-                float(getattr(resp_A, "confidence", 0.0) or 0.0),
-                float(getattr(resp_B, "confidence", 0.0) or 0.0),
-            )
-            resp_A.src = "composer_unified"
-            state.response_content = _d2_unified_text
-            state.response_src = "composer_unified"
-        elif not _d2_have_chain_content:
-            _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
-            resp_A.content = state.response_content
-            resp_A.emotional_tone = state.response_tone
-            resp_A.confidence = state.response_confidence
-            resp_A.src = state.response_src
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:17462",
-            exc=_aurora_boundary_exc,
-            context={"function": "_run_reasoning_pipeline", "handler_line": 17462, "source_file": "aurora.py"},
-        )
-        pass
+    # One final articulation authority for this turn -- see
+    # _finalize_articulation's own docstring (D2.1 voice transplant).
+    _finalize_articulation(resp_A, resp_B, state, systems, user_text)
     if is_question and not bool(systems.get("_disable_afterthought_sim", False)):
         try:
             if hasattr(aurora, "gateway") and hasattr(aurora.gateway, "queue_response_pressure_plan"):
@@ -24281,7 +24548,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         # query_type is already gated above — we only reach here for questions
         # Skip search for questions directed at Aurora's own experience/state,
         # or for personal perspective questions ("to you", "what do you think", etc.)
-        # Also respect auto_search_enabled=False (e.g. GPT learning sessions)
+        # Also respect auto_search_enabled=False (set by callers that don't want search)
         if explicit_lookup_requested and (topic or entities) and not _is_aurora_self_question(user_text) and not _is_personal_perspective_q:
             try:
                 ev = _poedex_lookup_evidence(
@@ -32529,11 +32796,8 @@ def chat(systems: Dict[str, Any]):
     print("  |    /dreambridge-- Bridge shards into OETS now   |")
     print("  |    /phase      -- Genealogy cycle phase + recs  |")
     print("  |    /stalls     -- Stall event history + dims    |")
-    print("  |    /gptlearn [N] [topic] -- GPT peer-learning   |")
-    print("  |    socialize [N] [topic] -- same, natural cmd   |")
     print("  |    /messages   -- Read messages Aurora left you |")
     print("  |    /voice      -- Start push-to-talk voice chat |")
-    print("  |    /browserask -- Aurora asks via social API    |")
     print("  |    /dual       -- Toggle dual-response mode     |")
     print("  |    /search     -- Toggle web lookup on Qs       |")
     print("  |    /study N    -- Run N study cycles            |")
@@ -32634,88 +32898,6 @@ def chat(systems: Dict[str, Any]):
                         interactive_state['last_user_turn_time'] = time.time()
                         print(f"  [Heard]: \"{text}\"")
 
-                        # ── Away mode voice triggers ───────────────────────────
-                        _heard_low = text.strip().lower().rstrip('.!?,')
-                        _away_file_v = __import__("pathlib").Path(__file__).parent / "aurora_state" / "away_mode.json"
-                        _away_on_v = (
-                            "i'm leaving", "im leaving", "i am leaving",
-                            "i'm heading out", "im heading out", "i am heading out",
-                            "i'm going out", "im going out", "i am going out",
-                            "i'm out", "im out", "heading out", "going out",
-                            "i'll be back", "ill be back",
-                        )
-                        _away_off_v = (
-                            "i'm back", "im back", "i am back",
-                            "i'm home", "im home", "i am home",
-                            "i'm here", "im here", "i'm here now", "im here now",
-                            "i'm around", "im around",
-                        )
-                        _is_away_on  = _heard_low in _away_on_v  or any(_heard_low.startswith(p) for p in _away_on_v)
-                        _is_away_off = _heard_low in _away_off_v or any(_heard_low.startswith(p) for p in _away_off_v)
-                        if _is_away_on:
-                            import json as _jv, time as _tv
-                            _interval_v = 30
-                            _mv = __import__("re").search(r'every\s+(\d+)', _heard_low)
-                            if _mv:
-                                _interval_v = max(10, int(_mv.group(1)))
-                            _away_file_v.parent.mkdir(parents=True, exist_ok=True)
-                            _away_file_v.write_text(_jv.dumps({
-                                "active": True,
-                                "interval_minutes": _interval_v,
-                                "started_at": _tv.time(),
-                            }))
-                            _away_confirm = "Away mode activated. Automatic outreach is off right now."
-                            print(f"\n  Aurora: {_away_confirm}")
-                            if voice_mode and integration:
-                                integration.speak(_away_confirm)
-                            print()
-                            sys.stdout.write("  You: ")
-                            sys.stdout.flush()
-                            continue
-                        if _is_away_off:
-                            import json as _jv
-                            _away_file_v.write_text(_jv.dumps({"active": False}))
-                            _learn_log_v = __import__("pathlib").Path(__file__).parent / "aurora_state" / "social_learning_log.json"
-                            _sc_v = 0
-                            _away_start_v = 0.0
-                            try:
-                                _awd_v = _jv.loads(_away_file_v.read_text()) if _away_file_v.exists() else {}
-                                _away_start_v = float(_awd_v.get("started_at", 0.0) or 0.0)
-                            except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:25968",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "chat", "handler_line": 25968, "source_file": "aurora.py"},
-                                )
-                                pass
-                            try:
-                                for _rv in (_jv.loads(_learn_log_v.read_text()) if _learn_log_v.exists() else []):
-                                    if float(_rv.get("timestamp", 0) or 0) >= _away_start_v:
-                                        _sc_v += 1
-                            except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:25974",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "chat", "handler_line": 25974, "source_file": "aurora.py"},
-                                )
-                                pass
-                            _back_confirm = (
-                                f"Welcome back. I ran {_sc_v} GPT session(s) while you were away. "
-                                "The learnings are integrated. Say slash lessons to see what I picked up."
-                            ) if _sc_v > 0 else "Welcome back. Away mode is off."
-                            print(f"\n  Aurora: {_back_confirm}")
-                            if voice_mode and integration:
-                                integration.speak(_back_confirm)
-                            print()
-                            sys.stdout.write("  You: ")
-                            sys.stdout.flush()
-                            continue
-                        # ── end away mode check ────────────────────────────────
-
                         # Process through conversation pipeline
                         resp_A, resp_B, _ = dual_question_pipeline(
                             systems, text, mode, use_search=False,
@@ -32750,44 +32932,6 @@ def chat(systems: Dict[str, Any]):
 
         # Natural language shorthand for standalone operations
         _input_low = user_input.strip().lower().rstrip('.!?')
-        _is_socialize = _input_low in (
-            "socialize", "go socialize", "socialize with gpt",
-            "go talk to gpt", "talk to gpt", "go chat with gpt",
-        ) or re.match(r'^socialize\s+(\d+)', _input_low)
-        if _is_socialize:
-            _soc_match = re.match(r'^socialize\s+(\d+)(?:\s+(.+))?', _input_low)
-            _soc_turns = int(_soc_match.group(1)) if _soc_match else 8
-            _soc_topic = _soc_match.group(2) if _soc_match else None
-            try:
-                if "_generate_fn" not in systems:
-                    def _soc_generate(prompt_text, source="socialize"):
-                        if not prompt_text or len(prompt_text.split()) < 3:
-                            return None
-                        _r = process_external_user_turn(
-                            systems,
-                            prompt_text,
-                            source_label=f"aurora:{source}",
-                            session_id="socialize",
-                            auto_search_enabled=False,
-                            record_exchange=True,
-                            update_interactive_state=False,
-                            track_evolutionary_trace=True,
-                            run_periodic_maintenance=True,
-                            mode_name="AGENTIC",
-                        )
-                        return _r.get("resp_A")
-                    systems["_generate_fn"] = _soc_generate
-                from aurora_gpt_learning_session import run_learning_session
-                run_learning_session(
-                    systems,
-                    n_turns=_soc_turns,
-                    topic=_soc_topic,
-                    verbose=True,
-                )
-            except Exception as _soc_e:
-                print(f"  [SOCIALIZE] Error: {_soc_e}")
-            print()
-            continue
 
         # "Aurora go play for [duration]" — self-acquired experiential training
         _gp_match = re.match(
@@ -32844,98 +32988,6 @@ def chat(systems: Dict[str, Any]):
             aurora_trade_blows(systems, first_clue=_first_clue, verbose=True)
             continue
 
-        # Away mode triggers — "I'm leaving / heading out" → start timed social sessions
-        # "I'm back / I'm home / I'm here" → stop them
-        # Normalize curly apostrophes + strip all leading/trailing punctuation/spaces
-        _away_norm = user_input.strip().lower()
-        _away_norm = _away_norm.replace('\u2019', "'").replace('\u2018', "'")  # curly → straight
-        _away_norm = _away_norm.strip(".,!?;: ")
-        _away_phrases_on = (
-            "i'm leaving", "im leaving", "i am leaving",
-            "i'm heading out", "im heading out", "i am heading out",
-            "i'm going out", "im going out", "i am going out",
-            "i'm out", "im out", "heading out", "going out",
-            "i'll be back", "ill be back",
-        )
-        _away_phrases_off = (
-            "i'm back", "im back", "i am back",
-            "i'm home", "im home", "i am home",
-            "i'm here", "im here", "i'm here now", "im here now",
-            "i'm around", "im around", "i'm around now",
-        )
-        _away_file = __import__("pathlib").Path(__file__).parent / "aurora_state" / "away_mode.json"
-        _is_away_on_typed  = (_away_norm in _away_phrases_on
-                              or any(_away_norm.startswith(p) for p in _away_phrases_on)
-                              or any(p in _away_norm for p in ("leaving", "heading out", "going out")))
-        _is_away_off_typed = (_away_norm in _away_phrases_off
-                              or any(_away_norm.startswith(p) for p in _away_phrases_off)
-                              or any(p in _away_norm for p in ("i'm back", "im back", "i am back",
-                                                                "i'm home", "im home", "i'm here", "im here")))
-        if _is_away_on_typed:
-            import json as _jmod, time as _tmod
-            _interval = 30  # minutes between sessions while away
-            # Allow "every N" in the phrase to set interval
-            _m = __import__("re").search(r'every\s+(\d+)', _input_low)
-            if _m:
-                _interval = max(10, int(_m.group(1)))
-            _away_file.parent.mkdir(parents=True, exist_ok=True)
-            _away_file.write_text(_jmod.dumps({
-                "active": True,
-                "interval_minutes": _interval,
-                "started_at": _tmod.time(),
-            }))
-            _away_msg = "Got it — away mode is active. Automatic outreach is off right now."
-            print(f"\n  Aurora: {_away_msg}\n")
-            if voice_mode and integration:
-                integration.speak(_away_msg)
-            continue
-        if _is_away_off_typed:
-            import json as _jmod
-            _away_file.write_text(_jmod.dumps({"active": False}))
-            # Pull a brief summary of sessions that ran while away
-            _learn_log = __import__("pathlib").Path(__file__).parent / "aurora_state" / "social_learning_log.json"
-            _session_count = 0
-            _away_start = 0.0
-            _top_fails_seen: list = []
-            try:
-                _awd = _jmod.loads(_away_file.read_text()) if _away_file.exists() else {}
-                _away_start = float(_awd.get("started_at", 0.0) or 0.0)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:26173",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "chat", "handler_line": 26173, "source_file": "aurora.py"},
-                )
-                pass
-            try:
-                _log_data = _jmod.loads(_learn_log.read_text()) if _learn_log.exists() else []
-                for _rec in _log_data:
-                    if float(_rec.get("timestamp", 0) or 0) >= _away_start:
-                        _session_count += 1
-                        for _fd, _fs in (_rec.get("top_fail_dims") or [])[:2]:
-                            if _fd not in _top_fails_seen:
-                                _top_fails_seen.append(_fd)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:26183",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "chat", "handler_line": 26183, "source_file": "aurora.py"},
-                )
-                pass
-            if _session_count > 0:
-                _fail_hint = f" Key focus areas: {', '.join(_top_fails_seen[:3])}." if _top_fails_seen else ""
-                _back_msg = "Welcome back. Away mode was active, but automatic outreach is off right now."
-            else:
-                _back_msg = "Welcome back. Away mode is off."
-            print(f"\n  Aurora: {_back_msg}\n")
-            if voice_mode and integration:
-                integration.speak(_back_msg)
-            continue
-
         # Commands
         if user_input.startswith('/'):
             cmd_parts = user_input.split(None, 1)
@@ -32988,58 +33040,6 @@ def chat(systems: Dict[str, Any]):
                 _full_save(systems)
                 print("\n  All state saved. Aurora remembers. Goodbye.\n")
                 break
-            elif cmd in ('/away', '/leaving'):
-                import json as _jca, time as _tca
-                _interval_ca = 30
-                if len(cmd_parts) > 1:
-                    try:
-                        _interval_ca = max(10, int(cmd_parts[1]))
-                    except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:26239",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "chat", "handler_line": 26239, "source_file": "aurora.py"},
-                        )
-                        pass
-                _away_file_ca = __import__("pathlib").Path(__file__).parent / "aurora_state" / "away_mode.json"
-                _away_file_ca.parent.mkdir(parents=True, exist_ok=True)
-                _away_file_ca.write_text(_jca.dumps({
-                    "active": True, "interval_minutes": _interval_ca, "started_at": _tca.time()
-                }))
-                _aw_msg = "Got it — away mode is active. Automatic outreach is off right now."
-                print(f"\n  Aurora: {_aw_msg}\n")
-                if voice_mode and integration:
-                    integration.speak(_aw_msg)
-                continue
-            elif cmd in ('/back', '/home'):
-                import json as _jcb
-                _away_file_cb = __import__("pathlib").Path(__file__).parent / "aurora_state" / "away_mode.json"
-                _away_file_cb.write_text(_jcb.dumps({"active": False}))
-                _learn_log_cb = __import__("pathlib").Path(__file__).parent / "aurora_state" / "social_learning_log.json"
-                _sc_cb = 0
-                try:
-                    _awd_cb = _jcb.loads(_away_file_cb.read_text())
-                    _ast_cb = float(_awd_cb.get("started_at", 0) or 0)
-                    for _rv in (_jcb.loads(_learn_log_cb.read_text()) if _learn_log_cb.exists() else []):
-                        if float(_rv.get("timestamp", 0) or 0) >= _ast_cb:
-                            _sc_cb += 1
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:26263",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "chat", "handler_line": 26263, "source_file": "aurora.py"},
-                    )
-                    pass
-                _bk_msg = (f"Welcome back. I ran {_sc_cb} GPT session(s) while you were away. Learnings are integrated."
-                           if _sc_cb > 0 else "Welcome back. Away mode is off.")
-                print(f"\n  Aurora: {_bk_msg}\n")
-                if voice_mode and integration:
-                    integration.speak(_bk_msg)
-                continue
             elif cmd == '/status':
                 show_status(systems)
                 continue
@@ -33290,56 +33290,6 @@ def chat(systems: Dict[str, Any]):
                     print("  No stall events yet (file not found).")
                 print()
                 continue
-            elif cmd.startswith('/gptlearn'):
-                _gl_parts = cmd.split(None, 2)
-                _gl_turns = 8
-                _gl_topic = None
-                if len(_gl_parts) > 1:
-                    try:
-                        _gl_turns = int(_gl_parts[1])
-                    except ValueError as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:26514",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "chat", "handler_line": 26514, "source_file": "aurora.py"},
-                        )
-                        _gl_topic = _gl_parts[1]
-                if len(_gl_parts) > 2:
-                    _gl_topic = _gl_parts[2]
-                try:
-                    # Wire _generate_fn so the session can call Aurora's pipeline
-                    if "_generate_fn" not in systems:
-                        def _gl_generate(prompt_text, source="gpt_learning"):
-                            if not prompt_text or len(prompt_text.split()) < 3:
-                                return None
-                            _r = process_external_user_turn(
-                                systems,
-                                prompt_text,
-                                source_label=f"aurora:{source}",
-                                session_id="gpt_learning",
-                                auto_search_enabled=False,
-                                record_exchange=True,
-                                update_interactive_state=False,
-                                track_evolutionary_trace=True,
-                                run_periodic_maintenance=True,
-                                mode_name="AGENTIC",
-                            )
-                            return _r.get("resp_A")
-                        systems["_generate_fn"] = _gl_generate
-                    from aurora_gpt_learning_session import run_learning_session
-                    run_learning_session(
-                        systems,
-                        n_turns=_gl_turns,
-                        topic=_gl_topic,
-                        verbose=True,
-                    )
-                except Exception as _gle:
-                    print(f"  [LEARN] Error: {_gle}")
-                print()
-                continue
-
             elif cmd == '/balance':
                 _bs = _field_balancer.status()
                 print(f"  Constraint Field Balance  (exchanges: {_bs['exchanges']})")
@@ -35266,509 +35216,59 @@ _AURORA_NATIVE_STRATEGIES = {'_ensure_runtime_dependencies': {'ability_hits': 19
                            'sustainability_score': 0.405355,
                            'target_kind': 'function'}}
 
+from aurora_internal.aurora_evolution_hook import (
+    assign_target as _aurora_evolution_hook_assign_target,
+    get_target as _aurora_evolution_hook_get_target,
+    bind_owner_attribute as _aurora_evolution_hook_bind_owner_attribute,
+    target_strategy as _aurora_evolution_hook_target_strategy,
+    target_feedback as _aurora_evolution_hook_target_feedback,
+    store_reflection as _aurora_store_reflection,
+    store_owner_state as _aurora_store_owner_state,
+    apply_result_rewrite as _aurora_evolution_hook_apply_result_rewrite,
+    make_override as _aurora_evolution_hook_make_override,
+    make_latent_binding as _aurora_evolution_hook_make_latent_binding,
+)
+
+
 def _aurora_target_strategy(target_key):
-    return dict(_AURORA_NATIVE_STRATEGIES.get(str(target_key), {}) or {})
+    return _aurora_evolution_hook_target_strategy(_AURORA_NATIVE_STRATEGIES, target_key)
+
 
 def _aurora_target_feedback(target_key):
-    strategy = _aurora_target_strategy(target_key)
-    return dict(strategy.get('rewrite_feedback', {}) or {})
+    return _aurora_evolution_hook_target_feedback(_AURORA_NATIVE_STRATEGIES, target_key)
+
 
 def _aurora_assign_target(chain, value):
-    if not chain:
-        return False
-    if len(chain) == 1:
-        globals()[chain[0]] = value
-        return True
-    current = globals().get(chain[0])
-    if current is None:
-        return False
-    for attr in chain[1:-1]:
-        if not hasattr(current, attr):
-            return False
-        current = getattr(current, attr)
-    setattr(current, chain[-1], value)
-    return True
+    return _aurora_evolution_hook_assign_target(globals(), chain, value)
+
 
 def _aurora_get_target(chain):
-    if not chain:
-        return None
-    if len(chain) == 1:
-        return globals().get(chain[0])
-    current = globals().get(chain[0])
-    if current is None:
-        return None
-    for attr in chain[1:]:
-        if not hasattr(current, attr):
-            return None
-        current = getattr(current, attr)
-    return current
+    return _aurora_evolution_hook_get_target(globals(), chain)
+
 
 def _aurora_bind_owner_attribute(owner_chain, attr_name, value):
-    owner = _aurora_get_target(owner_chain)
-    if owner is None or not attr_name:
-        return False
-    try:
-        setattr(owner, attr_name, value)
-        return True
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:28332",
-            exc=_aurora_boundary_exc,
-            context={"function": "_aurora_bind_owner_attribute", "handler_line": 28332, "source_file": "aurora.py"},
-        )
-        return False
+    return _aurora_evolution_hook_bind_owner_attribute(globals(), owner_chain, attr_name, value)
 
-def _aurora_store_reflection(target_key, reflection, args):
-    if not args:
-        return
-    owner = args[0]
-    if not hasattr(owner, '__dict__'):
-        return
-    current = getattr(owner, '_aurora_evolved_reflections', None)
-    if not isinstance(current, dict):
-        current = {}
-    current[str(target_key)] = reflection
-    try:
-        setattr(owner, '_aurora_evolved_reflections', current)
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:28347",
-            exc=_aurora_boundary_exc,
-            context={"function": "_aurora_store_reflection", "handler_line": 28347, "source_file": "aurora.py"},
-        )
-        pass
-
-def _aurora_store_owner_state(attribute, target_key, value, args):
-    if not args:
-        return
-    owner = args[0]
-    if not hasattr(owner, '__dict__'):
-        return
-    current = getattr(owner, attribute, None)
-    if not isinstance(current, dict):
-        current = {}
-    current[str(target_key)] = value
-    try:
-        setattr(owner, attribute, current)
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:28362",
-            exc=_aurora_boundary_exc,
-            context={"function": "_aurora_store_owner_state", "handler_line": 28362, "source_file": "aurora.py"},
-        )
-        pass
-
-def _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs):
-    strategy = _aurora_target_strategy(target_key)
-    feedback = _aurora_target_feedback(target_key)
-    bias = str(strategy.get('rewrite_bias', 'lineage_memory') or 'lineage_memory')
-    mode = str(feedback.get('adaptation_mode', 'balanced') or 'balanced')
-    effect_modes = list(strategy.get('effect_modes', []) or [])
-    _aurora_store_reflection(target_key, reflection, args)
-    _aurora_store_owner_state('_aurora_genealogy_strategy', target_key, strategy, args)
-    if isinstance(result, dict):
-        enriched = dict(result)
-        enriched['_aurora_evolved_reflection'] = reflection
-        enriched['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'constraint_genealogy') or 'constraint_genealogy')
-        enriched['_aurora_genealogy_strategy'] = strategy
-        enriched['_aurora_rewrite_feedback'] = feedback
-        enriched['_aurora_alignment_gap'] = float(strategy.get('alignment_gap', 0.0) or 0.0)
-        if bias == 'lineage_memory' or 'lineage_surface' in effect_modes:
-            enriched['lineage_memory'] = {
-                'coupling_signature': strategy.get('best_coupling_signature', ''),
-                'link_hits': int(strategy.get('link_hits', 0) or 0),
-                'ability_hits': int(strategy.get('ability_hits', 0) or 0),
-            }
-        if 'state_schema_change' in effect_modes or bias == 'lineage_memory':
-            enriched['state_transition_pressure'] = {
-                'pressure': float(strategy.get('genealogy_pressure', 0.0) or 0.0),
-                'persistence_tax_factor': float(strategy.get('persistence_tax_factor', 0.0) or 0.0),
-            }
-        if str(target_key).endswith('.summary') or 'chain_report' in str(target_key) or str(target_key).endswith('.to_dict'):
-            enriched['evolutionary_context'] = {
-                'coupling_signature': strategy.get('best_coupling_signature', ''),
-                'genealogy_pressure': strategy.get('genealogy_pressure', 0.0),
-                'rewrite_bias': bias,
-                'cross_diversity_links': int(strategy.get('cross_diversity_links', 0) or 0),
-            }
-        if mode in {'expansive', 'integrative'}:
-            enriched['lineage_adaptation'] = {
-                'mode': mode,
-                'confidence': float(feedback.get('confidence', 0.0) or 0.0),
-                'trial_count': int(feedback.get('trial_count', 0) or 0),
-                'accepted_count': int(feedback.get('accepted_count', 0) or 0),
-                'adoption_count': int(feedback.get('adoption_count', 0) or 0),
-            }
-        if mode == 'conservative':
-            enriched['lineage_stability_guard'] = {
-                'rejected_count': int(feedback.get('rejected_count', 0) or 0),
-                'rejection_rate': float(feedback.get('rejection_rate', 0.0) or 0.0),
-                'timing_penalty': float(feedback.get('timing_penalty', 0.0) or 0.0),
-            }
-        return enriched
-    if result is None and isinstance(reflection, dict):
-        fallback = dict(reflection)
-        fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'constraint_genealogy') or 'constraint_genealogy')
-        fallback['_aurora_genealogy_strategy'] = strategy
-        fallback['_aurora_rewrite_feedback'] = feedback
-        fallback['_aurora_alignment_gap'] = float(strategy.get('alignment_gap', 0.0) or 0.0)
-        fallback['lineage_adaptation_mode'] = mode
-        return fallback
-    _aurora_store_owner_state(
-        '_aurora_genealogy_scalar_observations',
-        target_key,
-        {
-            'result': result,
-            'strategy': strategy,
-            'reflection': reflection,
-        },
-        args,
-    )
-    return result
-
-def _aurora_apply_governance_rewrite(target_key, result, reflection, args, kwargs):
-    strategy = _aurora_target_strategy(target_key)
-    feedback = _aurora_target_feedback(target_key)
-    bias = str(strategy.get('rewrite_bias', 'governance_routing') or 'governance_routing')
-    mode = str(feedback.get('adaptation_mode', 'balanced') or 'balanced')
-    effect_modes = list(strategy.get('effect_modes', []) or [])
-    _aurora_store_reflection(target_key, reflection, args)
-    _aurora_store_owner_state('_aurora_governance_strategy', target_key, strategy, args)
-    if isinstance(result, dict):
-        enriched = dict(result)
-        enriched['_aurora_evolved_reflection'] = reflection
-        enriched['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'governance_gateway') or 'governance_gateway')
-        enriched['_aurora_genealogy_strategy'] = strategy
-        enriched['_aurora_rewrite_feedback'] = feedback
-        enriched['_aurora_alignment_gap'] = float(strategy.get('alignment_gap', 0.0) or 0.0)
-        enriched['governance_evolution_context'] = {
-            'coupling_signature': strategy.get('best_coupling_signature', ''),
-            'genealogy_pressure': strategy.get('genealogy_pressure', 0.0),
-            'rewrite_bias': bias,
-        }
-        if bias == 'governance_routing' or 'gateway_surface' in effect_modes:
-            enriched['governance_routing'] = {
-                'sustainability_score': float(strategy.get('sustainability_score', 0.0) or 0.0),
-                'representation_score': float(strategy.get('representation_score', 0.0) or 0.0),
-                'origin_activity': int(strategy.get('origin_activity', 0) or 0),
-            }
-        if 'state_schema_change' in effect_modes:
-            enriched['persistence_burden'] = {
-                'persistence_tax_factor': float(strategy.get('persistence_tax_factor', 0.0) or 0.0),
-                'inheritance_breach_count': int(strategy.get('inheritance_breach_count', 0) or 0),
-            }
-        if mode in {'expansive', 'integrative'}:
-            enriched['governance_adaptation'] = {
-                'mode': mode,
-                'confidence': float(feedback.get('confidence', 0.0) or 0.0),
-                'acceptance_rate': float(feedback.get('acceptance_rate', 0.0) or 0.0),
-                'timing_credit': float(feedback.get('timing_credit', 0.0) or 0.0),
-            }
-        if mode == 'conservative':
-            enriched['persistence_guard'] = {
-                'rejection_rate': float(feedback.get('rejection_rate', 0.0) or 0.0),
-                'timing_penalty': float(feedback.get('timing_penalty', 0.0) or 0.0),
-                'trial_count': int(feedback.get('trial_count', 0) or 0),
-            }
-        return enriched
-    if result is None and isinstance(reflection, dict):
-        fallback = dict(reflection)
-        fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'governance_gateway') or 'governance_gateway')
-        fallback['_aurora_genealogy_strategy'] = strategy
-        fallback['_aurora_rewrite_feedback'] = feedback
-        fallback['_aurora_alignment_gap'] = float(strategy.get('alignment_gap', 0.0) or 0.0)
-        fallback['governance_evolution_context'] = {
-            'coupling_signature': strategy.get('best_coupling_signature', ''),
-            'genealogy_pressure': strategy.get('genealogy_pressure', 0.0),
-            'rewrite_bias': bias,
-        }
-        fallback['governance_adaptation_mode'] = mode
-        return fallback
-    _aurora_store_owner_state(
-        '_aurora_governance_evolution_state',
-        target_key,
-        {
-            'result': result,
-            'strategy': strategy,
-            'reflection': reflection,
-        },
-        args,
-    )
-    return result
-
-def _aurora_apply_perception_rewrite(target_key, result, reflection, args, kwargs):
-    strategy = _aurora_target_strategy(target_key)
-    feedback = _aurora_target_feedback(target_key)
-    bias = str(strategy.get('rewrite_bias', 'perceptual_synthesis') or 'perceptual_synthesis')
-    mode = str(feedback.get('adaptation_mode', 'balanced') or 'balanced')
-    effect_modes = list(strategy.get('effect_modes', []) or [])
-    _aurora_store_reflection(target_key, reflection, args)
-    _aurora_store_owner_state('_aurora_perception_strategy', target_key, strategy, args)
-    if isinstance(result, dict):
-        enriched = dict(result)
-        enriched['_aurora_evolved_reflection'] = reflection
-        enriched['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'perception_synthesis') or 'perception_synthesis')
-        enriched['_aurora_genealogy_strategy'] = strategy
-        enriched['_aurora_rewrite_feedback'] = feedback
-        enriched['_aurora_alignment_gap'] = float(strategy.get('alignment_gap', 0.0) or 0.0)
-        enriched['perception_evolution_context'] = {
-            'coupling_signature': strategy.get('best_coupling_signature', ''),
-            'genealogy_pressure': strategy.get('genealogy_pressure', 0.0),
-            'rewrite_bias': bias,
-        }
-        if bias == 'perceptual_synthesis' or 'adaptive_steering_change' in effect_modes:
-            enriched['perception_synthesis'] = {
-                'representation_score': float(strategy.get('representation_score', 0.0) or 0.0),
-                'ability_hits': int(strategy.get('ability_hits', 0) or 0),
-                'link_hits': int(strategy.get('link_hits', 0) or 0),
-            }
-        if 'interface_boundary_change' in effect_modes or 'gateway_surface' in effect_modes:
-            enriched['boundary_integration'] = {
-                'cross_diversity_links': int(strategy.get('cross_diversity_links', 0) or 0),
-                'coupling_similarity': float(strategy.get('coupling_similarity', 0.0) or 0.0),
-            }
-        if mode in {'expansive', 'integrative'}:
-            enriched['association_expansion'] = {
-                'mode': mode,
-                'confidence': float(feedback.get('confidence', 0.0) or 0.0),
-                'timing_credit': float(feedback.get('timing_credit', 0.0) or 0.0),
-                'acceptance_rate': float(feedback.get('acceptance_rate', 0.0) or 0.0),
-            }
-        if mode == 'conservative':
-            enriched['perception_stability'] = {
-                'rejection_rate': float(feedback.get('rejection_rate', 0.0) or 0.0),
-                'timing_penalty': float(feedback.get('timing_penalty', 0.0) or 0.0),
-                'trial_count': int(feedback.get('trial_count', 0) or 0),
-            }
-        return enriched
-    if result is None and isinstance(reflection, dict):
-        fallback = dict(reflection)
-        fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'perception_synthesis') or 'perception_synthesis')
-        fallback['_aurora_genealogy_strategy'] = strategy
-        fallback['_aurora_rewrite_feedback'] = feedback
-        fallback['_aurora_alignment_gap'] = float(strategy.get('alignment_gap', 0.0) or 0.0)
-        fallback['perception_evolution_context'] = {
-            'coupling_signature': strategy.get('best_coupling_signature', ''),
-            'genealogy_pressure': strategy.get('genealogy_pressure', 0.0),
-            'rewrite_bias': bias,
-        }
-        if bias == 'perceptual_synthesis' or 'adaptive_steering_change' in effect_modes:
-            fallback['perception_synthesis'] = {
-                'representation_score': float(strategy.get('representation_score', 0.0) or 0.0),
-                'ability_hits': int(strategy.get('ability_hits', 0) or 0),
-                'link_hits': int(strategy.get('link_hits', 0) or 0),
-            }
-        fallback['perception_adaptation_mode'] = mode
-        return fallback
-    _aurora_store_owner_state(
-        '_aurora_perception_evolution_state',
-        target_key,
-        {
-            'result': result,
-            'strategy': strategy,
-            'reflection': reflection,
-        },
-        args,
-    )
-    return result
-
-def _aurora_apply_dimensional_rewrite(target_key, result, reflection, args, kwargs):
-    strategy = _aurora_target_strategy(target_key)
-    feedback = _aurora_target_feedback(target_key)
-    bias = str(strategy.get('rewrite_bias', 'dimensional_balancing') or 'dimensional_balancing')
-    mode = str(feedback.get('adaptation_mode', 'balanced') or 'balanced')
-    effect_modes = list(strategy.get('effect_modes', []) or [])
-    _aurora_store_reflection(target_key, reflection, args)
-    _aurora_store_owner_state('_aurora_dimensional_strategy', target_key, strategy, args)
-    if isinstance(result, dict):
-        enriched = dict(result)
-        enriched['_aurora_evolved_reflection'] = reflection
-        enriched['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'dimensional_balancing') or 'dimensional_balancing')
-        enriched['_aurora_genealogy_strategy'] = strategy
-        enriched['_aurora_rewrite_feedback'] = feedback
-        enriched['_aurora_alignment_gap'] = float(strategy.get('alignment_gap', 0.0) or 0.0)
-        enriched['dimensional_evolution_context'] = {
-            'coupling_signature': strategy.get('best_coupling_signature', ''),
-            'genealogy_pressure': strategy.get('genealogy_pressure', 0.0),
-            'rewrite_bias': bias,
-        }
-        if bias == 'dimensional_balancing' or 'cost_pressure_change' in effect_modes:
-            enriched['dimensional_balancing'] = {
-                'sustainability_score': float(strategy.get('sustainability_score', 0.0) or 0.0),
-                'persistence_tax_factor': float(strategy.get('persistence_tax_factor', 0.0) or 0.0),
-                'origin_activity': int(strategy.get('origin_activity', 0) or 0),
-            }
-        if 'temporal_orchestration_change' in effect_modes:
-            enriched['temporal_coordination'] = {
-                'signature': strategy.get('signature', ''),
-                'inheritance_breach_count': int(strategy.get('inheritance_breach_count', 0) or 0),
-            }
-        if mode in {'expansive', 'integrative'}:
-            enriched['balancing_momentum'] = {
-                'mode': mode,
-                'confidence': float(feedback.get('confidence', 0.0) or 0.0),
-                'timing_credit': float(feedback.get('timing_credit', 0.0) or 0.0),
-                'adoption_count': int(feedback.get('adoption_count', 0) or 0),
-            }
-        if mode == 'conservative':
-            enriched['dimensional_dampening'] = {
-                'rejection_rate': float(feedback.get('rejection_rate', 0.0) or 0.0),
-                'timing_penalty': float(feedback.get('timing_penalty', 0.0) or 0.0),
-                'trial_count': int(feedback.get('trial_count', 0) or 0),
-            }
-        return enriched
-    if result is None and isinstance(reflection, dict):
-        fallback = dict(reflection)
-        fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'dimensional_balancing') or 'dimensional_balancing')
-        fallback['_aurora_genealogy_strategy'] = strategy
-        fallback['_aurora_rewrite_feedback'] = feedback
-        fallback['_aurora_alignment_gap'] = float(strategy.get('alignment_gap', 0.0) or 0.0)
-        fallback['dimensional_evolution_context'] = {
-            'coupling_signature': strategy.get('best_coupling_signature', ''),
-            'genealogy_pressure': strategy.get('genealogy_pressure', 0.0),
-            'rewrite_bias': bias,
-        }
-        if bias == 'dimensional_balancing' or 'cost_pressure_change' in effect_modes:
-            fallback['dimensional_balancing'] = {
-                'sustainability_score': float(strategy.get('sustainability_score', 0.0) or 0.0),
-                'persistence_tax_factor': float(strategy.get('persistence_tax_factor', 0.0) or 0.0),
-                'origin_activity': int(strategy.get('origin_activity', 0) or 0),
-            }
-        fallback['dimensional_adaptation_mode'] = mode
-        return fallback
-    _aurora_store_owner_state(
-        '_aurora_dimensional_evolution_state',
-        target_key,
-        {
-            'result': result,
-            'strategy': strategy,
-            'reflection': reflection,
-        },
-        args,
-    )
-    return result
 
 def _aurora_apply_result_rewrite(target_key, result, reflection, args, kwargs):
-    if _AURORA_NATIVE_MODULE == 'aurora_internal.constraint_genealogy':
-        return _aurora_apply_constraint_genealogy_rewrite(target_key, result, reflection, args, kwargs)
-    if _AURORA_NATIVE_MODULE == 'aurora_governance_persistence_gateway':
-        return _aurora_apply_governance_rewrite(target_key, result, reflection, args, kwargs)
-    if _AURORA_NATIVE_MODULE == 'aurora_expression_perception':
-        return _aurora_apply_perception_rewrite(target_key, result, reflection, args, kwargs)
-    if _AURORA_NATIVE_MODULE == 'aurora_dimensional_systems':
-        return _aurora_apply_dimensional_rewrite(target_key, result, reflection, args, kwargs)
-    _aurora_store_reflection(target_key, reflection, args)
-    strategy = _aurora_target_strategy(target_key)
-    feedback = _aurora_target_feedback(target_key)
-    contract = dict(strategy.get('contract_profile', {}) or {})
-    mode = str(feedback.get('adaptation_mode', 'balanced') or 'balanced')
-    if isinstance(result, dict):
-        enriched = dict(result)
-        enriched['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'generic') or 'generic')
-        enriched['_aurora_genealogy_strategy'] = strategy
-        enriched['_aurora_rewrite_feedback'] = feedback
-        enriched['_aurora_contract_profile'] = contract
-        enriched['_aurora_evolved_reflection'] = reflection
-        enriched['generic_adaptation'] = {
-            'mode': mode,
-            'confidence': float(feedback.get('confidence', 0.0) or 0.0),
-            'contract_mode': str(contract.get('contract_mode', 'unknown') or 'unknown'),
-            'return_hint': str(contract.get('return_hint', '') or ''),
-        }
-        return enriched
-    if result is None and isinstance(reflection, dict):
-        fallback = dict(reflection)
-        fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'generic') or 'generic')
-        fallback['_aurora_genealogy_strategy'] = strategy
-        fallback['_aurora_rewrite_feedback'] = feedback
-        fallback['_aurora_contract_profile'] = contract
-        fallback['generic_adaptation_mode'] = mode
-        return fallback
-    if result is not None:
-        _aurora_store_owner_state(
-            '_aurora_generic_evolution_state',
-            target_key,
-            {
-                'result_type': type(result).__name__,
-                'contract_mode': str(contract.get('contract_mode', 'unknown') or 'unknown'),
-                'return_hint': str(contract.get('return_hint', '') or ''),
-                'adaptation_mode': mode,
-            },
-            args,
-        )
-    return result
+    return _aurora_evolution_hook_apply_result_rewrite(
+        _AURORA_NATIVE_MODULE, _AURORA_NATIVE_STRATEGIES, target_key, result, reflection, args, kwargs,
+    )
+
 
 def _aurora_make_override(export_name, target_key):
-    original = _AURORA_NATIVE_EVOLVED_ORIGINALS.get(target_key)
-    def _override(*args, **kwargs):
-        result = None
-        if callable(original):
-            result = original(*args, **kwargs)
-        engine = _aurora_native_evolved_engine()
-        reflection = {
-            'available': False,
-            'reason': 'evolved_surface_engine_unavailable',
-            'target': target_key,
-        }
-        if engine is not None:
-            reflection = globals()[export_name]({'args_len': len(args), 'kwargs_keys': sorted(kwargs.keys())})
-        _AURORA_NATIVE_EVOLVED_LAST[target_key] = reflection
-        rewritten = _aurora_apply_result_rewrite(target_key, result, reflection, args, kwargs)
-        if rewritten is not None:
-            return rewritten
-        if result is not None:
-            return result
-        return reflection
-    _override.__name__ = str(target_key).split('.')[-1]
-    _override.__qualname__ = _override.__name__
-    if callable(original):
-        _override.__doc__ = getattr(original, '__doc__', None)
-        _override.__wrapped__ = original
-        if _aurora_native_inspect is not None:
-            try:
-                _override.__signature__ = _aurora_native_inspect.signature(original)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:28734",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_aurora_make_override", "handler_line": 28734, "source_file": "aurora.py"},
-                )
-                pass
-    return _override
+    return _aurora_evolution_hook_make_override(
+        globals(), _AURORA_NATIVE_EVOLVED_ORIGINALS, _AURORA_NATIVE_EVOLVED_LAST,
+        _aurora_native_evolved_engine, _AURORA_NATIVE_MODULE, _AURORA_NATIVE_STRATEGIES,
+        export_name, target_key,
+    )
+
 
 def _aurora_make_latent_binding(export_name, target_key):
-    def _binding(*args, **kwargs):
-        payload = kwargs.pop('payload', None)
-        if payload is None and args:
-            owner = args[0]
-            if hasattr(owner, '__dict__'):
-                payload = {
-                    'bound_target': target_key,
-                    'owner_type': type(owner).__name__,
-                    'owner_module': type(owner).__module__,
-                }
-            elif len(args) == 1:
-                payload = args[0]
-            else:
-                payload = {'bound_target': target_key, 'arg_count': len(args)}
-        result = globals()[export_name](payload=payload, **kwargs)
-        _AURORA_NATIVE_EVOLVED_LAST[target_key] = {'latent_binding_active': True, 'last_result_type': type(result).__name__}
-        if args:
-            _aurora_store_owner_state('_aurora_latent_bindings', target_key, result, args)
-        return result
-    _binding.__name__ = str(target_key).split('.')[-1]
-    _binding.__qualname__ = _binding.__name__
-    _binding.__doc__ = f'Latent evolved binding for {target_key}'
-    _binding._aurora_latent_binding_target = target_key
-    return _binding
+    return _aurora_evolution_hook_make_latent_binding(
+        globals(), _AURORA_NATIVE_EVOLVED_LAST, export_name, target_key,
+    )
+
 
 def ensure_runtime_dependencies_evolved(payload=None, **kwargs):
     engine = _aurora_native_evolved_engine()

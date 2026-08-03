@@ -1165,10 +1165,7 @@ _VOICE_COMMAND_PATTERNS = [
       "look around", "what do you see"],                                "sight"),
     (["reactivate voice", "change voice", "switch voice",
       "different voice", "new voice"],                                  "switchvoice"),
-    (["activate socialize", "start socialize", "go socialize",
-      "socialize with gpt", "run learning session", "talk to gpt",
-      "gpt session", "learning session"],                               "socialize"),
-      
+
     # Cognitive Tools
     ([r"what time is it", r"check time", r"current time"],              "time"),
     ([r"weather in (.*)", r"weather for (.*)", r"check weather in (.*)", r"what's the weather in (.*)"], "weather"),
@@ -1825,11 +1822,6 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
                 context={"function": "_execute_voice_command", "handler_line": 1475, "source_file": "aurora_voice.py"},
             )
             result = f"Vision failed: {e}"
-        _log_voice_command_to_hub(command_key, result)
-        return result
-
-    if command_key == "socialize":
-        result = "Socialize disabled — language smoother not wired in."
         _log_voice_command_to_hub(command_key, result)
         return result
 

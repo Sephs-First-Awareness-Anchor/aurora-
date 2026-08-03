@@ -109,13 +109,6 @@ _TASK_PROFILES: Dict[str, Dict[str, Any]] = {
         "retry": 1200, # Faster retry
         "lock_sensitive": True,
     },
-    "away_social": {
-        "axes": {"X": 0.15, "T": 0.15, "N": 0.25, "B": 0.15, "A": 0.30},
-        "floor": 0.70,
-        "cost": 0.90,
-        "retry": 1800,
-        "quiet_sensitive": True,
-    },
     "save": {
         "axes": {"X": 0.35, "T": 0.20, "N": 0.20, "B": 0.20, "A": 0.05},
         "floor": 0.35,

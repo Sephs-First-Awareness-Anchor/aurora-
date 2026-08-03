@@ -57,12 +57,18 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def test_composer_abstain_template_output_not_mislabeled_composer_unified():
     """Structural confirmation of bug 2's fix: the D2.1 unification block
-    in aurora.py checks resp_B's content against the composer's own
-    _ABSTAIN_TEMPLATES before treating it as grounded content."""
+    checks resp_B's content against the composer's own _ABSTAIN_TEMPLATES
+    before treating it as grounded content.
+
+    External structural/safety audit (2026-08-02): this D2.1 logic was
+    extracted, byte-identical, out of _run_reasoning_pipeline's inline
+    code into its own named function, _finalize_articulation() (see
+    FIX-A080) -- the anchor here follows that move rather than searching
+    for a comment string that used to live inline in aurora.py."""
     with open(os.path.join(REPO_ROOT, "aurora.py"), "r", encoding="utf-8") as f:
         source = f.read()
-    idx = source.index('# D2.1 (Directive D2, ratified 2026-07-17): voice transplant.')
-    block = source[idx:idx + 3000]
+    idx = source.index('def _finalize_articulation(')
+    block = source[idx:idx + 4000]
     assert "_ABSTAIN_TEMPLATES" in block
     assert '_d2_unified_text = ""' in block
 

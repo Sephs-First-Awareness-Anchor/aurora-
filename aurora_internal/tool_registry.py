@@ -1626,6 +1626,80 @@ def _mobile_image_search(
     return ToolResult("mobile_image_search", "\n".join(lines), True)
 
 
+def _mobile_search(
+    query: str = "",
+    max_results: int = 5,
+    deep: bool = True,
+    systems: Optional[Dict[str, Any]] = None,
+    **_,
+) -> ToolResult:
+    """
+    General web search (not just images) -- the mobile counterpart to
+    desktop_search + desktop_browser_action(action="read") combined into
+    one call. Uses Aurora's own cross-platform SearchAdapter (Dictionary
+    API, DuckDuckGo, Wikipedia -- plain HTTP via urllib, no browser, no
+    external LLM), the same adapter world_knowledge_search already uses
+    for brief snippets. deep=True (default) also fetches the real page
+    text for the top results instead of a short snippet, same idea as
+    reading a page in a desktop browser, just without a visible window.
+    """
+    if not query:
+        return ToolResult("mobile_search", "", False, "query required")
+    systems = systems or {}
+    adapter = systems.get("search_adapter")
+    if adapter is None:
+        try:
+            from aurora import SearchAdapter
+            adapter = SearchAdapter()
+        except Exception as exc:
+            return ToolResult("mobile_search", "", False, f"search adapter unavailable: {exc}")
+    try:
+        results = (adapter.deep_search(query, max_chars=2000, num_results=max_results)
+                   if deep else
+                   adapter.quick_search(query, max_chars=2000, num_results=max_results))
+    except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/tool_registry.py:mobile_search",
+            exc=exc,
+            context={"function": "_mobile_search", "source_file": "aurora_internal/tool_registry.py"},
+        )
+        return ToolResult("mobile_search", "", False, str(exc))
+
+    if not results:
+        return ToolResult("mobile_search", "", False, "no results")
+
+    lines = [f"Search: {query}"]
+    for i, r in enumerate(results, 1):
+        lines.append(f"{i}. {r.get('title', '?')} ({r.get('source', '?')})")
+        if r.get("url"):
+            lines.append(f"   {r['url']}")
+        snippet = str(r.get("snippet", "")).strip()
+        if snippet:
+            lines.append(f"   {snippet[:500]}")
+
+    # Read it, not just retrieve it -- scan what came back for words she
+    # doesn't already know and land them the same way a classroom-taught
+    # definition lands, instead of leaving the text as an opaque string.
+    try:
+        from aurora import _digest_research_text
+        for r in results:
+            snippet = str(r.get("snippet", "") or "")
+            if snippet:
+                _digest_research_text(snippet, systems, source_text=query, source="mobile_search")
+    except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/tool_registry.py:mobile_search_digest",
+            exc=exc,
+            context={"function": "_mobile_search", "source_file": "aurora_internal/tool_registry.py"},
+        )
+
+    return ToolResult("mobile_search", "\n".join(lines), True)
+
+
 def _mobile_reverse_image_search(
     image_source: str = "",
     systems: Optional[Dict[str, Any]] = None,
@@ -1922,6 +1996,7 @@ _reg("mobile_vibrate",                "Vibrate the phone for a given duration in
 _reg("mobile_wifi_info",              "Get current WiFi connection details (SSID, signal, IP)",                              "TRANSIENT",  _mobile_wifi_info,              disables_search=True)
 _reg("mobile_call_log",               "Read recent call history (incoming, outgoing, missed)",                               "BOUNDED",    _mobile_call_log,               disables_search=True)
 _reg("mobile_image_search",           "Search for images by text description via DuckDuckGo; returns URLs + metadata",      "BOUNDED",    _mobile_image_search,           disables_search=False)
+_reg("mobile_search",                 "General web search + real page text back, via her own SearchAdapter (no browser)",   "BOUNDED",    _mobile_search,                 disables_search=False)
 _reg("mobile_reverse_image_search",   "Find what an image is / where it appears online via Google Lens",                    "BOUNDED",    _mobile_reverse_image_search,   disables_search=False)
 _reg("mobile_music_identify",         "Identify a song playing nearby by recording audio and querying AudD",                "BOUNDED",    _mobile_music_identify,         disables_search=False)
 
@@ -1989,6 +2064,25 @@ def _desktop_browser_action(action: str = "", target: str = "", text: str = "", 
         data = " | ".join(f"{k}={v}" for k, v in r.items() if v is not None and k != "text")
         if "text" in r:
             data += f" | text={str(r['text'])[:200]}"
+        if action == "read" and r.get("ok") and r.get("text"):
+            # Read it, not just retrieve it -- scan the page text for words
+            # she doesn't already know and land them the same way a
+            # classroom-taught definition lands.
+            try:
+                from aurora import _digest_research_text
+                _digest_research_text(
+                    str(r["text"]), systems,
+                    source_text=str(r.get("url", "") or r.get("title", "")),
+                    source="desktop_browser",
+                )
+            except Exception as exc2:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/tool_registry.py:desktop_browser_action_digest",
+                    exc=exc2,
+                    context={"function": "_desktop_browser_action", "source_file": "aurora_internal/tool_registry.py"},
+                )
         return ToolResult("desktop_browser_action", data, bool(r.get("ok")), r.get("error",""))
     except Exception as exc:
         _aurora_record_exception_from_locals(

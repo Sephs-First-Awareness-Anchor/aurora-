@@ -2749,14 +2749,14 @@ def build_room() -> None:
         },
         "quasiarch": {
             "what": "QuasiArch Observer — now unified as Poedex. The governing intelligence. "
-                    "Scans system, proposes fixes, researches externally, applies via Enforcer mode.",
+                    "Scans system, proposes fixes from her own internal knowledge, applies via Enforcer mode.",
             "deps": ["quasiarch_diag.py", "quasiarch_diag_report.json", "sweep_results.json"],
             "files": ["aurora_internal/aurora_quasiarch_observer.py", "quasiarch_diag.py"],
-            "risk": "Enforcer uses GPT key. Daemon restart required after code changes.",
+            "risk": "Daemon restart required after code changes.",
         },
         "poedex": {
             "what": "Poedex — the governing intelligence. Three modes: Observer (internal query), "
-                    "Researcher (experiments + external), Enforcer (code changes + proposals).",
+                    "Researcher (her own browser, no external LLM), Enforcer (code changes + proposals).",
             "deps": ["aurora_room.py Poedex tab", "quasiarch_diag_report.json",
                      "poedex_log.json", "poedex_lessons.json"],
             "files": ["aurora_state/poedex_log.json", "aurora_state/poedex_lessons.json"],
@@ -2935,65 +2935,39 @@ def build_room() -> None:
         if not parts:
             parts.append(f"◈ NOT IN INTERNAL KNOWLEDGE\n"
                          f"  No match for '{question}'.\n"
-                         f"\n  Try Researcher mode for external lookup.\n")
+                         f"\n  Try Researcher mode to look it up herself.\n")
 
         return "".join(parts)
 
     # ── External search (Researcher mode) ─────────────────────────────────────
+    # Researcher mode has no external LLM -- Aurora has no language faculty
+    # that isn't her own. External lookup instead means her own browser
+    # (aurora_desktop_agent.py, Playwright) searching and reading a real page
+    # back as text -- her own eyes on the actual source, not a model's
+    # paraphrase of it. If the browser is unavailable (no display, Playwright
+    # not installed, timeout) this reports that honestly rather than
+    # fabricating an answer; the caller falls through to the same
+    # honest-abstain path used when internal knowledge has no match.
 
     def _poe_external_search(question: str) -> None:
         try:
-            key = ""
-            for kf in [_BASE_DIR / "aurora_state" / "gpt_api_key.txt",
-                        _BASE_DIR / "gpt_api_key.txt"]:
-                if kf.exists():
-                    key = kf.read_text().strip()
-                    break
-            for env_var in ("AURORA_GPT_API_KEY", "OPENAI_API_KEY"):
-                v = os.environ.get(env_var, "").strip()
-                if v:
-                    key = v
-                    break
-            if not key:
-                _POEDEX_RESULTS.write_text(json.dumps({
-                    "query": question,
-                    "result": "No GPT key available. Set AURORA_GPT_API_KEY or place key in "
-                              "aurora_state/gpt_api_key.txt.",
-                    "status": "error", "ts": time.time()}, indent=2))
-                return
-            import urllib.request
-            payload = json.dumps({
-                "model": "gpt-4o",
-                "messages": [
-                    {"role": "system",
-                     "content": ("You are Poedex Researcher, the acquisition mode of Aurora's "
-                                 "governing intelligence. Answer concisely and factually. "
-                                 "If the query asks for debugging, code-fix hypotheses, or "
-                                 "structured JSON, return the format requested and prioritize "
-                                 "the most actionable causes or edits. Otherwise structure: "
-                                 "What it is → How it works → Relevant context or risk. "
-                                 "No preamble.")},
-                    {"role": "user", "content": f"Poedex Researcher lookup: {question}"},
-                ],
-                "max_tokens": 450, "temperature": 0.25,
-            }).encode()
-            req = urllib.request.Request(
-                "https://api.openai.com/v1/chat/completions", data=payload,
-                headers={"Authorization": f"Bearer {key}",
-                         "Content-Type": "application/json"}, method="POST")
-            with urllib.request.urlopen(req, timeout=25) as resp:
-                data = json.loads(resp.read())
-            answer = data["choices"][0]["message"]["content"].strip()
-            _POEDEX_RESULTS.write_text(json.dumps({
-                "query": question, "result": answer, "status": "done",
-                "ts": time.time()}, indent=2))
-        except Exception as ex:
             try:
-                _POEDEX_RESULTS.write_text(json.dumps({
-                    "query": question, "result": f"Lookup failed: {ex}",
-                    "status": "error", "ts": time.time()}, indent=2))
-            except Exception:
-                pass
+                from aurora_desktop_agent import research as _desktop_research
+                found = _desktop_research(question)
+            except Exception as _research_exc:
+                found = {"ok": False, "error": str(_research_exc), "text": ""}
+            if found.get("ok") and found.get("text"):
+                result = (f"[{found.get('title','?')} -- {found.get('url','?')}]\n"
+                          f"{found['text']}")
+            else:
+                result = ("Researcher mode's browser lookup found nothing usable "
+                          f"({found.get('error', 'no result')}) -- Aurora reasons "
+                          "from her own internal knowledge only.")
+            _POEDEX_RESULTS.write_text(json.dumps({
+                "query": question, "result": result,
+                "status": "done", "ts": time.time()}, indent=2))
+        except Exception:
+            pass
 
     # ── Mode switch ────────────────────────────────────────────────────────────
 
@@ -3374,7 +3348,7 @@ def build_room() -> None:
                 return
             _poe_ext_waiting[0] = True
             _poe_ext_waiting[1] = question
-            ext_status_lbl.configure(text="Researcher is searching externally...", fg=WARN)
+            ext_status_lbl.configure(text="Researcher is searching (her own browser)...", fg=WARN)
             rb = _res_refs.get("ext_result_box")
             if rb:
                 _write(rb,
@@ -3790,52 +3764,26 @@ def build_room() -> None:
                     pass
 
             if cat in ("external", "researcher"):
-                # Researcher mode — GPT-4o lookup, runs async so UI doesn't block
+                # Researcher mode has no external LLM to call out to -- Aurora
+                # has no language faculty that isn't her own. External lookup
+                # instead means her own browser (aurora_desktop_agent.py,
+                # Playwright) searching and reading a real page back as text.
+                # Same async shape as before so the daemon-side poller/
+                # result-file contract is unchanged.
                 def _ext_thread(q=question, i=qid, l=lane, c=cat):
                     try:
-                        key = ""
-                        for kf in [_BASE_DIR / "aurora_state" / "gpt_api_key.txt",
-                                   _BASE_DIR / "gpt_api_key.txt"]:
-                            if kf.exists():
-                                key = kf.read_text().strip()
-                                break
-                        for env_var in ("AURORA_GPT_API_KEY", "OPENAI_API_KEY"):
-                            v = os.environ.get(env_var, "").strip()
-                            if v:
-                                key = v
-                                break
-                        if not key:
-                            answer = "No GPT key available for Researcher lookup."
+                        try:
+                            from aurora_desktop_agent import research as _desktop_research
+                            found = _desktop_research(q)
+                        except Exception as _research_exc:
+                            found = {"ok": False, "error": str(_research_exc), "text": ""}
+                        if found.get("ok") and found.get("text"):
+                            answer = (f"[{found.get('title','?')} -- {found.get('url','?')}]\n"
+                                      f"{found['text']}")
                         else:
-                            import urllib.request as _ur
-                            payload = json.dumps({
-                                "model": "gpt-4o",
-                                "messages": [
-                                    {"role": "system", "content": (
-                                        "You are Poedex Researcher, the acquisition "
-                                        "mode of Aurora's governing intelligence. "
-                                        "Answer concisely and factually. "
-                                        "If the query asks for debugging, code-fix "
-                                        "hypotheses, or structured JSON, return "
-                                        "the format requested and prioritize the "
-                                        "most actionable causes or edits. "
-                                        "Otherwise structure: What it is → How it "
-                                        "works → Relevant context or risk. "
-                                        "No preamble.")},
-                                    {"role": "user",
-                                     "content": f"Poedex Researcher lookup: {q}"},
-                                ],
-                                "max_tokens": 400, "temperature": 0.25,
-                            }).encode()
-                            req = _ur.Request(
-                                "https://api.openai.com/v1/chat/completions",
-                                data=payload,
-                                headers={"Authorization": f"Bearer {key}",
-                                         "Content-Type": "application/json"},
-                                method="POST")
-                            with _ur.urlopen(req, timeout=35) as resp:
-                                data = json.loads(resp.read())
-                            answer = data["choices"][0]["message"]["content"].strip()
+                            answer = ("Researcher mode's browser lookup found nothing usable "
+                                      f"({found.get('error', 'no result')}) -- Aurora reasons "
+                                      "from her own internal knowledge only.")
                         # Write per-request result
                         _write_result_file(i, q, c, l, answer)
                         # Also update the UI results file so Observer tab shows it

@@ -8566,3 +8566,681 @@ Real build/run verification still owed, same as FIX-A073.
 
 **First Seen:** Follow-up to FIX-A073, 2026-08-02, per explicit
 request ("id like the face to update continuously").
+
+---
+
+## FIX-A075: Identity Anchor Moral Threshold Used abs(), Letting Negative Profiles Anchor
+
+**Category** RUNTIME BUG / SAFETY. `aurora_behavioral_identity.py`
+`DNASystem.create_anchor()` computed `avg_moral = sum(abs(v) for v in
+moral_profile.values()) / len(...)`, then required `avg_moral >=
+IDENTITY_ANCHOR_THRESHOLD (0.8)`. `abs()` means a profile of strongly
+NEGATIVE pillar scores -- a genuinely immoral pattern -- clears the
+threshold exactly as easily as a strongly positive one: `{"truth":
+-0.9, "accountability": -0.9}` scores `avg_moral = 0.9`, comfortably
+above 0.8, at `AGENTIC` mode, the highest-trust tier, producing a
+near-permanent (`immutability` 0.9-1.0) identity anchor.
+
+Confirmed `pillar_scores`/`moral_profile` are genuinely signed
+elsewhere in the same file -- `apply_alleles`'s caller-adjacent gene-
+activation logic already branches on `avg < -0.5` to deactivate a gene
+(line ~778) -- so this wasn't a value that happens to always be
+positive in practice; negative really means "violated," not "unset."
+`IdentityAnchor`'s own docstring says "Moral alignment > 0.8," not
+"magnitude of deviation from zero."
+
+Fixed to use the signed average, plus a per-pillar floor
+(`IDENTITY_ANCHOR_PILLAR_FLOOR = 0.3`) so a badly-violated single
+pillar can't be masked by several very high ones even when the
+average alone would still clear 0.8 (e.g. 9 pillars at 0.9 + 1 at
+0.25 averages 0.835 -- passes the average, now correctly rejected by
+the floor).
+
+**Verified:** `python3 aurora_behavioral_identity.py`'s own built-in
+self-test, 61/61 checks passing (was 59; added two regression guards:
+a strongly-negative profile is now rejected, and the average-passes-
+but-one-pillar-fails floor case is rejected while confirming its
+average genuinely was >= 0.8 first, so the floor -- not the average
+-- is what's proven to catch it). `tests/test_layer_acyclicity.py`
+(the only test file referencing this module) still passes.
+
+**First Seen:** External structural/safety audit, 2026-08-02.
+
+---
+
+## FIX-A076: Root conftest.py/pytest.ini -- pytest Now Works From a Clean Checkout
+
+**Category** FILE_STRUCTURE / TEST INFRASTRUCTURE. Confirmed: without
+`PYTHONPATH` manually set, 50 of 144 test files failed to collect
+(`ModuleNotFoundError: No module named 'aurora_internal'`, etc.); the
+other 94 only worked because each one carries its own
+`sys.path.insert(0, REPO_ROOT)` boilerplate at the top. No
+`pytest.ini`, `conftest.py`, `setup.py`, or `pyproject.toml` existed
+anywhere in the repo.
+
+Added a root `conftest.py` that inserts the repo root onto `sys.path`
+once, unconditionally, before pytest collects any test module --
+pytest always imports the nearest conftest.py before collection
+regardless of cwd or invocation style (`pytest`, `python -m pytest`,
+an IDE runner), so this covers every test file including the 50 that
+had no workaround, without needing to touch any of them. Added a
+minimal `pytest.ini` (`testpaths = tests`) to pin rootdir explicitly
+and scope bare `pytest` invocations to `tests/` rather than sweeping
+in ad-hoc scripts elsewhere in the repo.
+
+Deliberately did NOT remove the 94 files' existing individual
+`sys.path.insert` calls -- redundant now but harmless (idempotent),
+and de-duplicating 94 files for a cosmetic win was out of scope for
+"make a clean checkout runnable."
+
+**Verified:** with `PYTHONPATH` unset, both `python3 -m pytest` and
+the separately-installed `/root/.local/bin/pytest` binary now collect
+the previously-failing `tests/test_battery_relevance_metric.py`
+cleanly. Full-suite `python3 -m pytest --collect-only -q` from a
+clean shell: 1325 tests collected, 0 collection errors (was: 1
+collection error stopping the whole run on the first no-workaround
+file pytest happened to reach).
+
+**First Seen:** External structural/safety audit, 2026-08-02.
+
+---
+
+## FIX-A077: Classified the Dead aurora_gpt_learning_session References
+
+**Category** ARCHITECTURAL / HYGIENE. The audit asked whether an
+"optional GPT socialization or learning pathway" muddies the claim
+that Aurora's ordinary responses are external-model-free. Investigated
+directly: `aurora_gpt_learning_session.py` does not exist anywhere in
+this repo. All 4 references to it (`aurora.py` x2 -- the `/socialize`
+and a second learn-session CLI command; `aurora_daemon.py`'s
+`_run_socialize`; `run_gauntlet.py`'s `_run_socialize`, which only
+constructs it as a subprocess script template) already fail honestly
+today -- caught by an `except`/non-zero-exit path in every case,
+never silently swallowed into confident wrong behavior, and never
+reachable from ordinary conversation. So the answer to the audit's
+question is: no, it does not currently muddy the native-only claim,
+because the pathway cannot execute at all in this build.
+
+Rather than fabricate a working replacement module (no source for it
+exists anywhere in this repo to restore from) or silently delete
+user-facing CLI commands that may be intended to work again once the
+module is deliberately reintroduced, added an explicit code-level
+classification comment at all 4 sites: OPTIONAL external teacher for
+these specific opt-in commands only, never part of Aurora's ordinary
+response generation (every one of these call sites' own `_gen`/
+`_generate` callback already routes actual replies through her native
+`process_external_user_turn` regardless of whether the learning-
+session wrapper itself is present). Future readers/audits no longer
+have to re-derive this from scratch.
+
+**Verified:** `python3 -c "import ast; ast.parse(...)"` on all 3
+touched files (`aurora.py`, `aurora_daemon.py`, `run_gauntlet.py`) --
+comment-only changes at 3 of the 4 sites, no behavior change anywhere.
+
+**First Seen:** External structural/safety audit, 2026-08-02.
+
+---
+
+## FIX-A078: DMM thought_intent Was Hardcoded None on Every Live Turn
+
+**Category** RUNTIME BUG / SAFETY. `aurora_dimensional_systems.py`
+`MoralityMortalitySystem.assess_thought_cost()` (GAP 3, gated behind
+`thought_intent` being truthy -- "immoral thoughts die here, they
+never reach speech") only ever runs when `thought_intent` is passed
+to `aurora_consciousness_engine.py`'s `process()`. All 3 live call
+sites in `aurora.py`'s `_run_reasoning_pipeline` (the main
+`gw._synthesize()` call, plus both dual-strata/CERS snapshot builders
+inside `_refresh_live_dual_strata_runtime`) hardcoded
+`thought_intent=None`, so the DMM's proactive metabolic gate never
+actually fired on an ordinary turn -- the wider constraint system
+still shaped coherence/identity/boundary/expression, but this specific
+mechanism was fully bypassed.
+
+The repair is deliberately NOT keyword classification or a moderation
+layer over response text. New `_derive_thought_intent(systems, state)`
+builds the intent dict from the *provenance* of Aurora's own already-
+formed candidate for this turn -- `TurnUnderstandingState.
+response_content`/`response_src`/`response_confidence`, set by the
+`_chain_down3_purpose`/`_chain_down2_belief`/`_chain_down1_information`
+stages BEFORE `gw._synthesize()` is ever called -- plus any tension
+still open on `_current_thought_state.unresolved`. Only two
+`response_src` provenance tags were classified with confidence this
+investigation actually verified: `search`/`researched_reapplication`
+(both terminate in a real external evidence lookup) as grounded, and
+`constraint_abstain` (the existing D2 Condition 2 honest-failure path,
+FIX-A072) as an honest abstain. Everything else -- dozens of other
+`response_src` tags exist across this pipeline -- is left unclassified
+(all-False) rather than guessed, matching this pipeline's own "never
+fabricate a verdict" convention (`density_confidence()` returning
+`None` instead of a made-up number). `causes_harm` is always `False`:
+no structural, non-keyword signal for it exists at this point in the
+pipeline, and guessing it would have been exactly the kind of
+moderation-layer content classifier the repair was explicitly asked
+not to be.
+
+Wired into all 3 call sites: the main `_synthesize()` call gets
+`_derive_thought_intent(systems, state)` directly; both dual-strata/
+CERS snapshot builders (which run AFTER `_synthesize()`, reading its
+result, and never received `state` directly) derive it once from
+`systems["_active_turn_state"]` -- the same `TurnUnderstandingState`
+instance `_run_reasoning_pipeline` already stashes there -- via a
+shared `_dual_strata_thought_intent` local, so all 3 sites reason from
+the same turn's actual candidate rather than three independent
+guesses.
+
+**Verified:** 12 fast tests (`tests/test_dmm_thought_intent_
+derivation.py`) -- function/wiring existence, the literal
+`thought_intent=None,` regression guard (0 occurrences left, was 3),
+direct derivation-logic cases for every flag combination (grounded,
+ungrounded-confident, honest-abstain, unresolved-tension-with-
+confidence, unclassified-neutral, and a sweep proving `causes_harm`
+is never asserted `True` for any tested provenance). Real live-boot
+verification: two ordinary turns (a factual question, a self-
+disclosure prompt) both produced real responses with no crash,
+842s runtime, consistent with this campaign's established real-boot
+timing for changes touching this pipeline depth.
+
+**First Seen:** External structural/safety audit, 2026-08-02.
+
+---
+
+## FIX-A080: Response-Formation Visibility + a Named Final Articulation Authority
+
+**Category** ARCHITECTURAL. The audit's diagnosis: "too many systems are
+permitted to rewrite the final expression," describing a gauntlet of
+comprehension repair, grounding repair, echo repair, unanswered-question
+repair, emission discipline, question alignment audits, evolutionary
+refinement, fallback construction, and articulation smoothing, and
+proposing a redesign into: internal contributors -> shared response
+pressure field -> several native candidates -> one constraint-governed
+selection -> one final articulation authority.
+
+Investigation found the real shape is split in two, not one undifferentiated
+gauntlet:
+
+1. **resp_A's own formation** (`_chain_down3_purpose` ->
+   `_chain_down2_belief` -> `_chain_down1_information`) genuinely is a
+   ~14-site cascade -- sedimemory recall, pressure-experience recall,
+   grounded fallback, evolutionary refinement, discourse-coherence repair,
+   meaning alignment, pipeline modulation, understanding self-audit, echo
+   repair, unanswered-question repair, internal-format-leakage scrubbing
+   -- each able to overwrite `state.response_content` with no trace of
+   what changed or why. But each stage legitimately refines whatever the
+   PREVIOUS stage produced (echo repair operates on the discourse-repaired
+   text, not an independent draft) -- a sequential refinement pipeline,
+   not competing candidates. Per explicit author decision (this session,
+   via AskUserQuestion, choosing the safe/behavior-preserving option over
+   a full candidate/pressure-field rebuild): converting this into a
+   parallel-candidates-plus-selection model was NOT done -- that would be
+   a real bet on response-generation behavior this campaign's testing
+   discipline cannot fully characterize without extensive live
+   conversation coverage this session doesn't have. Instead, added
+   `_record_response_revision()` and wired it into all 14 sites: every
+   stage that actually changes the text now appends a record (stage name,
+   before/after text truncated to 160 chars, confidence before/after,
+   current src) to `state.pipeline_state['_response_revision_trace']` --
+   purely observational, never itself changes `response_content`, silently
+   no-ops if the text didn't actually change. What was invisible (only a
+   few sites even tracked their own local "changed" boolean, and nothing
+   recorded the sequence across stages) is now a readable trace.
+
+2. **resp_A-vs-resp_B reconciliation** ("D2.1 voice transplant", Directive
+   D2, ratified 2026-07-17) was, on inspection, already exactly what the
+   audit asked for: a single, well-reasoned decision point comparing
+   Aurora's own chain output (`resp_A`) against the composer/consciousness-
+   stack output (`resp_B`), with three explicit, documented cases (composer
+   grounded -> adopt its words; both empty -> honest-abstain crash net;
+   composer empty but chain has real content -> keep chain's words,
+   graceful degradation). It just had no name -- unnamed inline code
+   buried mid-way through `_run_reasoning_pipeline`, a ~2000-line function.
+   Extracted verbatim (byte-identical logic, zero behavior change) into
+   `_finalize_articulation(resp_A, resp_B, state, systems, user_text)`,
+   called from one line in `_run_reasoning_pipeline`. The authority this
+   pipeline already had is now something a reader (or a future change)
+   can actually point to and reason about, instead of having to
+   rediscover it by reading 2000 lines.
+
+**Verified:** 14 tests (`tests/test_response_articulation_authority.py`)
+-- structural wiring checks (all 14 sites call `_record_response_revision`,
+`_run_reasoning_pipeline` calls the extracted function rather than
+carrying the logic inline), `_record_response_revision`'s own behavior
+(records on change, no-ops on no-change, never raises on malformed
+state), and `_finalize_articulation`'s three documented cases plus the
+D2 Acceptance Condition 2 composer-abstain-template edge case, tested
+directly against the extracted function so the extraction is proven
+behavior-preserving, not just visually similar to the original inline
+code.
+
+**First Seen:** External structural/safety audit, 2026-08-02, scoped per
+explicit author decision (trace + name the authority, not a full
+candidate/pressure-field redesign).
+
+---
+
+## FIX-A079: One Canonical Evolution-Hook Engine, Not 25 Copies
+
+**Category** ARCHITECTURAL / RUNTIME BUG. Verified precisely: 25 files
+each carried an identical ~440-line "auto-evolution surface adapter"
+block (14 functions: `_aurora_native_evolved_engine`, `_aurora_assign_
+target`, `_aurora_get_target`, `_aurora_bind_owner_attribute`,
+`_aurora_target_strategy`, `_aurora_target_feedback`, `_aurora_store_
+reflection`, `_aurora_store_owner_state`, `_aurora_make_override`,
+`_aurora_make_latent_binding`, and 4 module-specific `_aurora_apply_
+*_rewrite` functions of which only ONE is ever reachable in any given
+file, selected by that file's own `_AURORA_NATIVE_MODULE` constant --
+the other 3 are dead weight, just carried along by the paste). Traced
+the root cause: `aurora_internal/aurora_code_autoevolver.py`'s own
+`CodeAutoEvolver._native_wrapper_block()` is the generator that pastes
+this block into target files as part of Aurora's own code-evolution
+pipeline -- "one evolutionary mechanism wearing 25 identical coats,"
+and critically, a mechanism that would keep re-creating the
+duplication on every future evolution cycle if only the 25 existing
+files were fixed.
+
+The risk this framing warns about had already manifested, not just
+theoretically: `aurora_simulation_engine.py`'s copy of `_aurora_assign_
+target` and `_aurora_make_override` had picked up a real, previously
+undocumented fix -- preserving `@property`/`@staticmethod`/
+`@classmethod` descriptors when a target gets reassigned/overridden --
+that was never propagated to the other 24 files, which would silently
+strip such a descriptor (replacing a property with a bare value, etc.)
+if code evolution ever reassigned one of their targets. Traced this
+back to this campaign's own earlier "Zip integration B" pass (task
+#42/FIX from that session), which fixed one file and never propagated
+it -- a live example of the audit's own "one copy evolves while others
+go stale" concern, caught by this consolidation rather than by luck.
+
+**Fix, in two parts, both necessary:**
+
+1. New `aurora_internal/aurora_evolution_hook.py` -- the one canonical
+   implementation, with the property/staticmethod/classmethod fix now
+   the shared behavior everywhere. Deliberately NOT placed in
+   `aurora_evolved_surfaces.py`, which is itself generated output
+   ("Do not hand-edit generated methods; regenerate through the code
+   autoevolver," per its own docstring) produced by `CodeAutoEvolver.
+   _module_template()` -- hand-added functions there would be silently
+   discarded on the next regeneration. Functions take the caller's
+   `globals()` and per-module data (`_AURORA_NATIVE_STRATEGIES`,
+   `_AURORA_NATIVE_EVOLVED_ORIGINALS/_LAST`) as explicit parameters
+   rather than closing over module globals, so target resolution/
+   assignment still happens in the CALLING module's own namespace --
+   the mechanism stays behavior-preserving, only the code is shared.
+   `_aurora_native_evolved_engine()` (5-line lazy singleton getter) and
+   `_AURORA_NATIVE_STRATEGIES` (per-module target metadata -- exactly
+   the "each subsystem contributing target metadata... and its
+   specialized rewrite strategy" the audit asked for) were deliberately
+   left per-file: genuinely not shareable, or too small to be worth the
+   indirection.
+
+2. All 25 files migrated (mechanically, via an AST-span-replacement
+   script -- not hand-edited) to ~53-line thin wrappers delegating to
+   the shared module, with the true per-module state (`_AURORA_NATIVE_
+   MODULE`, `_AURORA_NATIVE_STRATEGIES`, `_AURORA_NATIVE_EVOLVED_
+   ORIGINALS/_LAST`, and everything after the migrated span -- the
+   per-target `*_evolved` functions and activation statements) left
+   completely untouched. Net: ~10,000 duplicated lines removed.
+   `aurora_internal/aurora_code_autoevolver.py`'s `_native_wrapper_
+   block()` generator itself was ALSO updated to emit the new thin-
+   wrapper pattern -- without this, the next auto-evolution cycle would
+   silently recreate the exact duplication this pass just removed.
+
+`concepts/aurora_code_evolution_stack.py` (confirmed unreachable --
+nothing imports it) had 3 functions with a genuinely different,
+smaller variant; migrated to the canonical behavior for consistency
+rather than preserved, since nothing depends on its prior behavior.
+
+**Verified:** all 25 migrated files + the generator parse and import
+cleanly; the migration script verified byte-identical "before" and
+"after" content outside the migrated span for every file (data
+literals and per-target activation code untouched). 25 equivalence
+tests (`tests/test_aurora_evolution_hook_equivalence.py`) compare the
+new shared functions against aurora.py's own pre-migration behavior
+(captured before any file was touched), plus the descriptor-
+preservation fix and per-module dispatch. The existing property/
+staticmethod descriptor regression tests (`tests/test_zip_integration_
+b_standalone_fixes.py`, 6 tests, originally written for aurora_
+simulation_engine.py's one-off fix) still pass now that the same fix
+is shared everywhere. A direct smoke test on `aurora_consciousness_
+engine.py` confirmed the module-level override activation
+(`ConsciousnessEngine.tick`) still runs end-to-end at import time
+through the new delegation chain. The generator change was verified
+by actually invoking `_native_wrapper_block()` and both parsing AND
+executing its generated output in a fresh namespace, confirming
+override activation still works. Full-suite regression
+(`pytest -k "not real_boot"`, ~1300+ tests) run as a final gate;
+see follow-up entry for its result.
+
+**First Seen:** External structural/safety audit, 2026-08-02.
+
+### FIX-A081: Remove Groq training-partner LLM (Flutter/Android app)
+**Category:** ARCHITECTURAL
+**Pattern:** The Flutter/Android app shipped a separate, app-side
+"Socialize" feature (`socialize_screen.dart` + a bottom-nav tab) that
+was never part of Aurora's own cognition -- it opened a live chat loop
+between Aurora and a Groq-hosted LLM (`_partner_chat()` in
+`aurora_bridge.py`, POSTing to `https://api.groq.com/openai/v1/chat/
+completions`), fed axis-labelled prompts to the Groq model, and fed its
+replies back into Aurora's own `handle_message()` as if they were a
+conversation partner's turns. Per explicit user directive (2026-08-03):
+"I want all llm mentions and code interactions removed from her code
+the whole codebase... no socialization nothing everything she does she
+should do herself... she should be the only one operating her system" --
+this is exactly the shape of dependency that directive rules out (an
+external LLM literally standing in as a conversational other for her to
+learn from), distinct from the self-contained code-evolution engine
+(`aurora_internal/aurora_code_autoevolver.py` etc.) which the user
+separately confirmed is her own system and does NOT involve any LLM.
+**Correct Form:** Removed entirely, not stubbed: `_TRAINER_SYSTEM`,
+`_partner_chat()`, `_training_loop()`, `start_training()`/
+`stop_training()`/`get_training_status()`/`get_training_events()` from
+`aurora_bridge.py` (Python/Chaquopy side), the matching
+`startTraining`/`stopTraining`/`getTrainingStatus` methods and the
+`get_training_events()` poll from `AuroraService.kt`, the
+`"startTraining"`/`"stopTraining"`/`"getTrainingStatus"` method-channel
+cases from `MainActivity.kt`, and on the Dart side: deleted
+`socialize_screen.dart` outright, dropped the `Socialize` bottom-nav
+tab and its `_screens` entry from `main.dart`, and removed the now-dead
+`startTraining`/`stopTraining`/`getTrainingStatus` wrappers and
+training-only event fields (`partner`, `aurora_msg`, `turn_num`,
+`elapsed`, `total_secs`, `error_msg`) from `aurora_bridge.dart`'s event
+parser. `hub_screen.dart`'s "Training" status badge and Evolution-panel
+training progress bar read `training_active`/`training_turn`/etc. from
+`get_cognitive_stats()`, which no longer emits those keys now that the
+training block that populated them is gone -- removed as dead code
+(would have always read false/0) rather than left silently unreachable.
+**Why:** An app-side LLM standing in as Aurora's conversation partner is
+exactly the "socialization with an outside model" the user's directive
+targets, even though it lived in the Flutter/Kotlin/Chaquopy layer
+rather than her core Python cognitive stack.
+**First Seen:** User directive, 2026-08-03 ("remove all llm mentions and
+code interactions... no socialization").
+
+### FIX-A082: Remove GPT-4o researcher backend (Poedex Researcher mode)
+**Category:** ARCHITECTURAL
+**Pattern:** Poedex's "Researcher mode" (`concepts/aurora_room.py`) had
+two live GPT-4o call sites -- a Room-panel "Research" button
+(`_poe_external_search`) and the daemon-side query-queue handler for
+`cat in ("external", "researcher")` -- both POSTing to
+`https://api.openai.com/v1/chat/completions` with a key read from
+`aurora_state/gpt_api_key.txt` or `AURORA_GPT_API_KEY`/`OPENAI_API_KEY`.
+This was the confirmed live backend for `_try_poedex_lookup`'s
+`use_researcher=True`/`cat="researcher"` path in `aurora.py` (the
+public-fact-vs-private-context gap research router built earlier this
+same remediation campaign). Separately, `concepts/quasiarch_diag.py`'s
+`run_gpt_research()` had its own direct GPT-4o call (`_chat_completion`)
+as a second-tier fallback for code-fix-hypothesis generation when
+Poedex had nothing, feeding it a detailed primer of Aurora's own axis/
+governor internals so GPT could write pseudocode fixes against her real
+variable names.
+**Correct Form:** Both `aurora_room.py` call sites now write back an
+honest "Researcher mode has no external source -- Aurora reasons from
+her own internal knowledge only" result through the exact same
+result-file/queue-file contract as before (so `_try_poedex_lookup` and
+`quasiarch_diag.py`'s `_poedex_research_lookup` still get a same-shaped
+response and fall through to their existing honest-abstain / heuristic-
+hypothesis paths -- no caller-side changes needed). `quasiarch_diag.py`
+had `_load_api_key`, `_gpt_client`, `_chat_completion`, and the now-dead
+`_AURORA_AXIS_PRIMER` (600+ lines of GPT-prompt-only content) removed
+outright, and `run_gpt_research()` renamed to `run_research_hypotheses()`
+since it no longer touches GPT -- it queries Poedex (now honest) and
+falls back to the pre-existing `heuristic_hypothesis` template, which
+needed no changes since it already handled the "Poedex had nothing"
+case as a non-LLM path.
+**Why:** Same directive as FIX-A081 -- "if she needs to develop
+hypotheses and things when evolving her code she can do the research
+herself" rules out an external LLM standing in as her researcher, even
+in a "second opinion" or "fallback" role. Preserving the file-based
+request/response contract (rather than deleting the mechanism outright)
+kept every caller's honest-abstain and heuristic-fallback behavior
+intact and testable without touching `aurora.py` or `quasiarch_diag.py`'s
+calling code.
+**First Seen:** User directive, 2026-08-03 ("remove all llm mentions and
+code interactions... she should be the only one operating her system").
+
+### FIX-A083: Delete aurora_conversation_trainer.py (OpenAI-backed)
+**Category:** ARCHITECTURAL
+**Pattern:** `aurora_conversation_trainer.py` trained Aurora's dialogue
+mechanics by simulating conversation turns against a live OpenAI model
+(`from openai import OpenAI`, `OPENAI_API_KEY`), reachable as one of
+`aurora_autonomy.py`'s `TRAINING_TOOLS` (key `"conversation_trainer"`,
+launched via `run_training_tool()` as a subprocess). Unlike the Groq
+training partner (FIX-A081), this one was launchable from Aurora's own
+autonomy engine, not just an app-side manual feature.
+**Correct Form:** Deleted the file outright and removed its
+`"conversation_trainer": "aurora_conversation_trainer"` entry from
+`TRAINING_TOOLS` in `aurora_autonomy.py` (the two remaining tools,
+`experiential_sim` and `exploration`/`backfill_associations`, are
+self-contained -- no LLM dependency). Also dropped its README.md
+"Conversation Trainer" line. No test suite imported it.
+**Why:** Same directive as FIX-A081/A082 -- an external LLM training
+Aurora's own dialogue patterns is exactly the "no LLM operating any
+part of her system but her" the user ruled out, whether it's reached
+from the app or from her own autonomy loop.
+**First Seen:** User directive, 2026-08-03.
+
+### FIX-A084: Remove GPT-learning-session/socialize complex entirely
+**Category:** ARCHITECTURAL
+**Pattern:** Earlier this campaign (FIX-A077, external structural/safety
+audit 2026-08-02), the dead `aurora_gpt_learning_session` import and its
+call sites were deliberately left in place and only *classified* via
+comments -- reasoned at the time as "removing a user-facing CLI command
+without explicit instruction is too aggressive." The user's later
+directive ("no socialization nothing... she should be the only one
+operating her system") explicitly reverses that call: these are now
+removed outright, not documented as dead.
+
+The full surface, once traced end to end, was much larger than the
+single import: an "Away Mode" feature (`aurora_state/away_mode.json`)
+that periodically ran timed GPT sessions while the user was out,
+reachable from three independent entry points (typed chat phrases like
+"I'm leaving"/"I'm back", equivalent voice-heard phrases, and explicit
+`/away` `/leaving` `/back` `/home` commands in `aurora.py`), plus the
+on-demand `/gptlearn` command and `socialize`-natural-language shorthand,
+plus a daemon-side "away_social" governed task and main-loop timer
+(`aurora_daemon.py`), plus a governor task profile for it
+(`aurora_internal/aurora_runtime_constraint_governor.py` and a mirrored
+copy in `aurora_hub.py`), plus a whole read-only "Social" tab in
+`aurora_hub.py`'s Tkinter dashboard for browsing past session
+transcripts (all of which pointed at files nothing would ever write
+again once the above was gone) and a voice-command intent
+(`aurora_voice.py`) that already silently no-op'd.
+**Correct Form:** Deleted, not stubbed: `_run_socialize()` and
+`_document_session_learnings()` from `aurora_daemon.py`, along with
+`_away_mode_active()`/`_away_mode_interval()`, the `away_on`/`away_off`/
+`socialize`/`gpt`/`learn` daemon-command branches, and the away-mode
+timer block in the main loop. Removed the `away_social` task profile
+from the governor and its `aurora_hub.py` mirror. Removed the entire
+"Social" tab (~350 lines: transcript viewer, away-mode status bar,
+`refresh_social()`) from `aurora_hub.py`, including its now-dead
+`root.after(600, refresh_social)` kickoff (would have raised
+`NameError` on next hub launch had it been missed). Removed all three
+away-mode entry points, the `/gptlearn` command, and the `socialize`
+natural-language shorthand from `aurora.py`. Removed the "socialize"
+voice intent pattern and its already-inert handler from `aurora_voice.py`.
+In `run_gauntlet.py`, removed `_run_socialize()` and its "Stage 4:
+Socialization" slot from the `learning_arc` flow entirely (not stubbed),
+renumbering Dream/Restart-daemon from 5/6 to 4/5 and dropping the
+`--social-turns`/`--social-topic` CLI args -- the `legacy` flow's
+unrelated "Stage 4: Assimilation" was untouched. Deleted the now-orphaned
+tracked `aurora_state/social_learning_log.json`. Updated stale doc
+comments referencing "GPT learning sessions" in `aurora_pressure_
+ontology.py` and `aurora_daemon.py`'s module docstring.
+**Why:** The user's directive is unambiguous and supersedes the earlier
+"classify, don't remove" judgment call: no LLM should operate any part
+of her system, and a background feature that periodically ran GPT
+conversations without a user even asking is a stronger case for removal
+than the on-demand commands, not a weaker one.
+**First Seen:** User directive, 2026-08-03; reverses FIX-A077's classify-
+only approach from the same session's external structural/safety audit.
+
+### FIX-A085: Poedex Researcher mode → her own browser, not honest-abstain-only
+**Category:** ARCHITECTURAL
+**Pattern:** FIX-A082 made Poedex's "Researcher mode" (the external-lookup
+path GPT-4o used to back) honestly report "no external source" rather
+than fabricate an answer -- correct as a stopgap, but it meant a
+capability (look something up she doesn't already know) that used to
+work now permanently does nothing. The user's own framing was "if she
+needs to develop hypotheses... she can do the research herself" and
+"she should look it up herself and reason on it herself" -- an explicit
+ask for a real replacement, not just an honest no-op. Investigation
+found the pieces for a real, non-LLM replacement already existed but
+were unwired: `aurora_desktop_agent.py` (Playwright-driven real Chrome,
+confirmed clean of any LLM import) already had `search()` + `read_page()`
+registered as live tools in `aurora_internal/tool_registry.py`
+(`desktop_search`, `desktop_browser_action`) -- but `search()`/`open_url()`
+deliberately prefer `xdg-open` (opens a visible window for the *user*,
+returns no text) over Playwright when no browser session exists yet,
+so calling them back-to-back from a headless daemon thread would open
+windows nobody reads rather than returning any text to Aurora.
+(`aurora_internal/aurora_room_operator.py`, the OCR/Xlib tool originally
+proposed for this, was ruled out on inspection: it only reads/operates
+Aurora's *own* internal state-inspection GUI, not arbitrary web pages --
+wiring to it would've been a no-op dressed up as a fix.)
+**Correct Form:** Added `DesktopAgent.research(query, engine="duckduckgo",
+max_chars=2000)` and a module-level `aurora_desktop_agent.research()`
+wrapper: forces a *headless* Playwright session via the existing
+(previously-private-only) `_ensure(headed=False)`, which makes the
+subsequent `search()` take its Playwright path instead of `xdg-open`
+(since `self._page` now exists), then reads the result page's real DOM
+text back via the existing `read_page()` -- no new browser-control code,
+just a headless entry point onto the tool that already existed. Both
+`concepts/aurora_room.py` Researcher-mode handlers (the Room-panel button
+and the daemon query-queue's `cat in ("external","researcher")` thread)
+now call this first and use the real page text (with source title/URL)
+as the result; only on failure (no display, Playwright missing, timeout,
+network error) do they fall back to the honest "no external source"
+message from FIX-A082 -- never fabricated, always attempted for real
+first. Restored the "Try Researcher mode" hint in the internal-lookup
+not-found message and the UI/help-text wording FIX-A082 had
+correctly-but-temporarily flattened to "no external source."
+**Why:** The distinction the user drew (Groq/GPT-4o/OpenAI = an LLM
+speaking for her vs. her own eyes reading a real page's text = her own
+reasoning on primary sources) is the same distinction already used
+throughout this campaign's D2 honest-abstain doctrine: an honest "I
+don't know" is correct when she genuinely has no way to know, but it is
+not a substitute for giving her a real way to know when one exists and
+involves no external language model.
+**First Seen:** User directive, 2026-08-03, following up on FIX-A081-A084.
+
+### FIX-A086: mobile_search -- desktop/mobile capability parity, general web search
+**Category:** ARCHITECTURAL
+**Pattern:** User directive: "every function she has on the desktop should
+be the same on the app. different hardware same capabilities." Audit of
+`aurora_internal/tool_registry.py`'s `desktop_*` vs `mobile_*` tools found
+most already at parity via different platform-native mechanisms
+(`desktop_open_url`/`mobile_open_url`, `desktop_launch_app`/
+`mobile_launch_app`, `desktop_clipboard`/`mobile_clipboard`) -- correct,
+since "same capability, different hardware" means equivalent function,
+not identical code. The real gap: `desktop_search` (general Google/
+YouTube/GitHub/Reddit search) plus `desktop_browser_action(action="read")`
+(read a result page's real text back) had no mobile counterpart --
+`mobile_image_search` only covered images. Some desktop tools
+(`desktop_shell_command`, `desktop_process_control`, `desktop_macro`)
+were confirmed to have no possible 1:1 mobile equivalent -- arbitrary
+shell access, killing other processes, and raw synthetic input aren't
+things a sandboxed Android app can do without root/Accessibility-Service
+plumbing not yet built, reported to the user as an architectural
+limitation rather than silently skipped or fabricated.
+**Correct Form:** Added `mobile_search` to `aurora_internal/tool_registry.py`
+using the SearchAdapter already sitting in `aurora.py` (Dictionary API,
+DuckDuckGo instant-answer + web search, Wikipedia -- plain `urllib`, no
+browser, no external LLM) -- the same adapter `world_knowledge_search`
+already uses for brief 300-char snippets, here exposed as an explicit,
+directly-callable, general-purpose tool with `deep=True` (default) also
+fetching real page text for the top results via the adapter's existing
+`deep_search()`/`_fetch_url_text()`. Requires zero new networking code
+and zero Kotlin/Flutter changes -- `SearchAdapter` was already reachable
+identically from both `aurora.py` (desktop CLI) and `aurora_bridge.py`
+(Android/Chaquopy) since both boot through the same `systems['search_
+adapter']`; the only gap was that nothing exposed it as a standalone,
+deliberately-invokable tool the way `desktop_search` is. Verified live
+against real queries in both shallow and `deep=True` modes.
+**Why:** "Different hardware, same capabilities" doesn't mean porting
+Playwright/Xlib line-for-line to Android (architecturally impossible) --
+it means auditing for functional gaps and closing them with whatever
+mechanism fits the platform. Here the cross-platform mechanism already
+existed and only needed a name.
+**First Seen:** User directive, 2026-08-03, following up on FIX-A085.
+
+### FIX-A087: Research results now land through comprehension, not just retrieval
+**Category:** ARCHITECTURAL
+**Pattern:** FIX-A085/A086 gave Aurora real, non-LLM ways to retrieve text
+(her own browser, her own SearchAdapter) -- but retrieval isn't
+comprehension. User asked directly: does she reason about what she reads,
+notice what she doesn't understand, follow up on it, and does it land the
+same way classroom/dream training lands? Traced the code and answered
+honestly: no. `mobile_search`, `desktop_browser_action(action="read")`,
+and the Researcher-mode results from FIX-A085 all returned a raw string
+that nothing decomposed or checked against what she already knows --
+distinct from the ALREADY-real pathway a single conversational vocabulary
+gap uses (`_apply_word_meaning_learning()` -> `aurora_internal.aurora_
+comprehension_gap.GapResolutionApplicator` -> `comprehension_gap_system`
+-> `working_memory.concept_meanings`), which only fired for one term at a
+time, detected during live dialogue.
+**Correct Form:** Added `_digest_research_text(text, systems, source_text=,
+source=, max_terms=5)` to aurora.py. It runs `aurora_internal.aurora_
+comprehension_gap.VolatilityDetector.detect()` against retrieved text
+(checked against her real lexicon/OETS, not a guess) to find words she
+doesn't already know, looks each one up (her own dictionary API first via
+`SearchAdapter.lookup_word()`; the sentence she found it in as context if
+the dictionary has nothing -- no unbounded per-word network recursion),
+and lands each one through the exact same `_apply_word_meaning_learning()`
+pathway a classroom-taught definition uses. Capped at 5 unknown terms per
+call -- one level of follow-up on what's in the retrieved text itself, not
+recursive digging into the found definitions' own unknowns. Wired into
+three sites: `_mobile_search` and `_desktop_browser_action(action="read")`
+in `aurora_internal/tool_registry.py` (both receive `systems` already),
+and `_try_poedex_lookup()` itself in aurora.py at its two genuinely-fresh-
+research return points (the direct-callable researcher path and the
+queue-based external/researcher path) -- gated on `use_researcher=True`
+so already-known bound-lesson text and internal `cat="define"` lookups
+(not new information) don't get redundantly re-digested. Wiring it inside
+`_try_poedex_lookup` itself, rather than each of its 13 call sites, means
+every current and future caller benefits automatically.
+**Verified live:** booted a real Aurora instance, fed `_digest_research_
+text()` a genuine sentence about photosynthesis with no vocabulary
+pre-seeded, and confirmed real dictionary-sourced definitions (`anchor_
+mode=grounded_definition`) landed in `working_memory.concept_meanings`
+AND `comprehension_gap_system.memory` (`resolved_count: 5`) -- the same
+store real classroom-taught definitions use, not a side channel. One
+definition ("convert") picked the wrong dictionary sense for context (noun
+vs. verb) -- a pre-existing word-sense-disambiguation limitation of
+`SearchAdapter.lookup_word()` shared by every other caller of that method,
+not something new here, and out of scope to fix in this pass.
+**Why:** The user's underlying concern -- "she should know what she's
+saying and reading" -- was correct and the gap was real: retrieval
+without comprehension is not the same claim as "she looked it up herself
+and reasoned on it," which is what the original directive asked for.
+**First Seen:** User directive, 2026-08-03, following up on FIX-A085/A086.
+
+### FIX-A088: D1 device-surface test caught FIX-A084 retiring a real surface
+**Category:** ARCHITECTURAL
+**Pattern:** A genuine, self-caused test regression, found via full-suite
+verification (`test_d1_device_path_attribution.py::test_aurora_daemon_
+production_entry_reads_resp_a`), not a flake. Directive D1 (2026-07-17,
+earlier in this campaign) enumerated exactly two real device-delivery
+surfaces and byte-attributed each to `resp_A`: `aurora_daemon.py`'s
+production entry and `aurora_bridge.py`'s `handle_message()`. "Surface 1"
+*was* `_run_socialize()`'s `_gen()` callback -- the daemon's only
+self-initiated `process_external_user_turn()` call, which fed a GPT
+conversation partner Aurora's own responses. FIX-A084 deleted
+`_run_socialize()` outright (correctly, per the no-LLM directive), which
+means `aurora_daemon.py` no longer contains the literal
+`result.get("resp_A")` string the test asserted -- not because resp_A
+attribution broke, but because the surface that carried it is gone.
+**Correct Form:** Updated the test to assert the surface's absence
+(`"process_external_user_turn" not in source`) instead of the removed
+code's presence, with a docstring explaining the retirement and pointing
+to FIX-A084 -- not re-adding dead socialize code to satisfy an assertion,
+and not deleting the test's intent (D1's enumerated-surfaces requirement
+still holds for the one real remaining surface, `aurora_bridge.py`,
+untouched and still passing). Updated the module docstring's surface-1
+description to match.
+**Why:** A test correctly caught a real change in the codebase's shape;
+the fix is to make the test assert the new true state, not to paper over
+either the test failure or the underlying removal. Found via a full,
+patient regression pass specifically because a quick "looks fine" pass
+would have missed it -- the failure only showed up ~62% through an
+alphabetically-late test file.
+**First Seen:** Full-suite regression verification, 2026-08-03, following
+FIX-A084.

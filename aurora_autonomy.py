@@ -934,11 +934,10 @@ class AutonomyEngine:
         except Exception as e:
             logger.error(f"[AUTONOMY] Study error: {e}")
 
-    # ── Training tools: experiential sim, conversation trainer, exploration ──
+    # ── Training tools: experiential sim, exploration ─────────────────────────
 
     TRAINING_TOOLS = {
         "experiential_sim": "aurora_experiential_sim",
-        "conversation_trainer": "aurora_conversation_trainer",
         "exploration": "aurora_explore",
         "backfill_associations": "backfill_concept_associations",
     }

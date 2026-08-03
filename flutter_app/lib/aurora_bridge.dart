@@ -25,13 +25,6 @@ class AuroraBridge {
     final textMatch     = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
     final errorMatch    = RegExp(r'"error"\s*:\s*(\d+)').firstMatch(json);
     final summaryMatch  = RegExp(r'"summary"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
-    final partnerMatch  = RegExp(r'"partner"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
-    final auroraMatch   = RegExp(r'"aurora"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
-    final lsaMatch      = RegExp(r'"lsa_paths"\s*:\s*(\d+)').firstMatch(json);
-    final turnMatch     = RegExp(r'"turn"\s*:\s*(\d+)').firstMatch(json);
-    final elapsedMatch  = RegExp(r'"elapsed"\s*:\s*(\d+)').firstMatch(json);
-    final totalMatch    = RegExp(r'"total_secs"\s*:\s*(\d+)').firstMatch(json);
-    final errMsgMatch   = RegExp(r'"error_msg"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
     return {
       'source':    sourceMatch?.group(1) ?? 'aurora',
       'type':      typeMatch?.group(1)   ?? 'unknown',
@@ -46,15 +39,6 @@ class AuroraBridge {
       'N': _parseDouble(json, 'N'),
       'B': _parseDouble(json, 'B'),
       'A': _parseDouble(json, 'A'),
-      // Training turn fields — present on type=="training_turn"/"training_done" events
-      'partner':    partnerMatch?.group(1)?.replaceAll(r'\"', '"').replaceAll(r'\n', '\n') ?? '',
-      'aurora_msg': auroraMatch?.group(1)?.replaceAll(r'\"', '"').replaceAll(r'\n', '\n') ?? '',
-      'lsa_paths':  lsaMatch  != null ? int.tryParse(lsaMatch.group(1)!)    : null,
-      'turn_num':   turnMatch  != null ? int.tryParse(turnMatch.group(1)!)   : null,
-      'elapsed':    elapsedMatch != null ? int.tryParse(elapsedMatch.group(1)!) : null,
-      'total_secs': totalMatch   != null ? int.tryParse(totalMatch.group(1)!)  : null,
-      'avg_n_cost': _parseDouble(json, 'avg_n_cost'),
-      'error_msg':  errMsgMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
     };
   }
 
@@ -120,28 +104,6 @@ class AuroraBridge {
   static Future<bool> consumeOverlayTap() async =>
       await _channel.invokeMethod<bool>('consumeOverlayTap') ?? false;
 
-  // ── Conversation training ─────────────────────────────────────────────────
-
-  static Future<String> startTraining({
-    required String apiKey,
-    String model = 'gemini-2.5-flash',
-    double durationMinutes = 10.0,
-  }) async {
-    final result = await _channel.invokeMethod<String>(
-      'startTraining',
-      {'apiKey': apiKey, 'model': model, 'durationMinutes': durationMinutes},
-    );
-    return result ?? 'error';
-  }
-
-  static Future<void> stopTraining() =>
-      _channel.invokeMethod('stopTraining');
-
-  static Future<Map<String, dynamic>> getTrainingStatus() async {
-    final json = await _channel.invokeMethod<String>('getTrainingStatus') ?? '{}';
-    return _parseEvent(json);
-  }
-
   // ── Self-model (simulated self + hardware body) ───────────────────────────
 
   /// Aurora's live self-model: axis state, hardware body (battery/motion/light),
@@ -185,7 +147,7 @@ class AuroraBridge {
 
   /// Live cognitive metrics: LSA paths, N-cost, evo cycles, axis pressures,
   /// understanding/coherence/grounding, SediMemory depth, crystal maturity,
-  /// chamber fossils, and training status if a session is running.
+  /// and chamber fossils.
   static Future<Map<String, dynamic>> getCognitiveStats() async {
     final json = await _channel.invokeMethod<String>('getCognitiveStats') ?? '{}';
     return _parseCognitiveStats(json);
@@ -212,10 +174,6 @@ class AuroraBridge {
       'noncomp_loaded':     _i('noncomp_loaded'),
       'noncomp_diagonal_live': _i('noncomp_diagonal_live'),
       'turn_count':         _i('turn_count'),
-      'training_active':    _b('training_active'),
-      'training_turn':      _i('training_turn'),
-      'training_total_secs':_i('training_total_secs'),
-      'training_elapsed':   _i('training_elapsed'),
       // Axis pressures nested
       'X': _d('X'), 'T': _d('T'), 'N': _d('N'), 'B': _d('B'), 'A': _d('A'),
     };

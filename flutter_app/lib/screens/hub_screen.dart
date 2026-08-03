@@ -269,7 +269,6 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   Widget _buildHeader() {
-    final training = _stats['training_active'] == true;
     final turnCount = _stats['turn_count'] as int? ?? 0;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -277,22 +276,22 @@ class _HubScreenState extends State<HubScreen> {
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Aurora Hub', style: TextStyle(
             color: _text, fontSize: 20, fontWeight: FontWeight.w700)),
-          Text('Turn $turnCount  •  ${training ? "Training active" : "Live"}',
+          Text('Turn $turnCount  •  Live',
             style: const TextStyle(color: _textDim, fontSize: 12)),
         ]),
         const Spacer(),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: training ? _amber.withOpacity(0.15) : _green.withOpacity(0.12),
+            color: _green.withOpacity(0.12),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: training ? _amber : _green, width: 0.8),
+            border: Border.all(color: _green, width: 0.8),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.circle, size: 7, color: training ? _amber : _green),
+            Icon(Icons.circle, size: 7, color: _green),
             const SizedBox(width: 5),
-            Text(training ? 'Training' : 'Live',
-              style: TextStyle(color: training ? _amber : _green, fontSize: 11,
+            Text('Live',
+              style: TextStyle(color: _green, fontSize: 11,
                 fontWeight: FontWeight.w600)),
           ]),
         ),
@@ -359,10 +358,6 @@ class _HubScreenState extends State<HubScreen> {
     final evoS  = _stats['sentence_target'] as int?  ?? 10;
     final fossi = _stats['chamber_fossils'] as int?  ?? 0;
     final avail = _stats['evo_available'] == true;
-    final train = _stats['training_active'] == true;
-    final tTurn = _stats['training_turn']   as int?  ?? 0;
-    final tTot  = _stats['training_total_secs'] as int? ?? 0;
-    final tElap = _stats['training_elapsed']    as int? ?? 0;
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _sectionTitle('EMERGENCE & EVOLUTION', color: _green),
@@ -379,28 +374,6 @@ class _HubScreenState extends State<HubScreen> {
           const SizedBox(width: 10),
           Expanded(child: _miniStat('Live Evo', 'every 15 turns', _cyan)),
         ]),
-        if (train) ...[
-          const Divider(color: _border, height: 20),
-          Row(children: [
-            const Icon(Icons.play_circle_outline, color: _amber, size: 14),
-            const SizedBox(width: 6),
-            Text('Training  turn $tTurn',
-              style: const TextStyle(color: _amber, fontSize: 12, fontWeight: FontWeight.w600)),
-            const Spacer(),
-            Text('${_fmt(tElap)} / ${_fmt(tTot)}',
-              style: const TextStyle(color: _textDim, fontSize: 11)),
-          ]),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(
-              value: tTot > 0 ? (tElap / tTot).clamp(0.0, 1.0) : 0,
-              minHeight: 5,
-              backgroundColor: _border,
-              valueColor: const AlwaysStoppedAnimation(_amber),
-            ),
-          ),
-        ],
         const Divider(color: _border, height: 20),
         // Quick-fire training cycle buttons
         Row(children: [
@@ -735,11 +708,6 @@ class _HubScreenState extends State<HubScreen> {
         : _green;
     return Container(width: 8, height: 8,
       decoration: BoxDecoration(color: color, shape: BoxShape.circle));
-  }
-
-  String _fmt(int secs) {
-    final m = secs ~/ 60; final s = secs % 60;
-    return '${m}m ${s.toString().padLeft(2, '0')}s';
   }
 
   void _navRoom(String tab) {

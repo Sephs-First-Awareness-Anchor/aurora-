@@ -161,20 +161,6 @@ class MainActivity : FlutterActivity() {
                         )
                         result.success(null)
                     }
-                    "startTraining" -> {
-                        val apiKey  = call.argument<String>("apiKey")           ?: ""
-                        val model   = call.argument<String>("model")            ?: "gemini-2.5-flash"
-                        val minutes = call.argument<Double>("durationMinutes")  ?: 10.0
-                        AuroraService.startTraining(apiKey, model, minutes) { reply ->
-                            runOnUiThread { result.success(reply) }
-                        }
-                    }
-                    "stopTraining"      -> { AuroraService.stopTraining(); result.success(null) }
-                    "getTrainingStatus" -> {
-                        AuroraService.getTrainingStatus { json ->
-                            runOnUiThread { result.success(json) }
-                        }
-                    }
                     "getSelfModel" -> {
                         AuroraService.getSelfModel { json ->
                             runOnUiThread { result.success(json) }
