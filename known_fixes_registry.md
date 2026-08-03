@@ -8954,3 +8954,45 @@ targets, even though it lived in the Flutter/Kotlin/Chaquopy layer
 rather than her core Python cognitive stack.
 **First Seen:** User directive, 2026-08-03 ("remove all llm mentions and
 code interactions... no socialization").
+
+### FIX-A082: Remove GPT-4o researcher backend (Poedex Researcher mode)
+**Category:** ARCHITECTURAL
+**Pattern:** Poedex's "Researcher mode" (`concepts/aurora_room.py`) had
+two live GPT-4o call sites -- a Room-panel "Research" button
+(`_poe_external_search`) and the daemon-side query-queue handler for
+`cat in ("external", "researcher")` -- both POSTing to
+`https://api.openai.com/v1/chat/completions` with a key read from
+`aurora_state/gpt_api_key.txt` or `AURORA_GPT_API_KEY`/`OPENAI_API_KEY`.
+This was the confirmed live backend for `_try_poedex_lookup`'s
+`use_researcher=True`/`cat="researcher"` path in `aurora.py` (the
+public-fact-vs-private-context gap research router built earlier this
+same remediation campaign). Separately, `concepts/quasiarch_diag.py`'s
+`run_gpt_research()` had its own direct GPT-4o call (`_chat_completion`)
+as a second-tier fallback for code-fix-hypothesis generation when
+Poedex had nothing, feeding it a detailed primer of Aurora's own axis/
+governor internals so GPT could write pseudocode fixes against her real
+variable names.
+**Correct Form:** Both `aurora_room.py` call sites now write back an
+honest "Researcher mode has no external source -- Aurora reasons from
+her own internal knowledge only" result through the exact same
+result-file/queue-file contract as before (so `_try_poedex_lookup` and
+`quasiarch_diag.py`'s `_poedex_research_lookup` still get a same-shaped
+response and fall through to their existing honest-abstain / heuristic-
+hypothesis paths -- no caller-side changes needed). `quasiarch_diag.py`
+had `_load_api_key`, `_gpt_client`, `_chat_completion`, and the now-dead
+`_AURORA_AXIS_PRIMER` (600+ lines of GPT-prompt-only content) removed
+outright, and `run_gpt_research()` renamed to `run_research_hypotheses()`
+since it no longer touches GPT -- it queries Poedex (now honest) and
+falls back to the pre-existing `heuristic_hypothesis` template, which
+needed no changes since it already handled the "Poedex had nothing"
+case as a non-LLM path.
+**Why:** Same directive as FIX-A081 -- "if she needs to develop
+hypotheses and things when evolving her code she can do the research
+herself" rules out an external LLM standing in as her researcher, even
+in a "second opinion" or "fallback" role. Preserving the file-based
+request/response contract (rather than deleting the mechanism outright)
+kept every caller's honest-abstain and heuristic-fallback behavior
+intact and testable without touching `aurora.py` or `quasiarch_diag.py`'s
+calling code.
+**First Seen:** User directive, 2026-08-03 ("remove all llm mentions and
+code interactions... she should be the only one operating her system").

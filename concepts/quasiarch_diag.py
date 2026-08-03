@@ -512,14 +512,15 @@ def run_learn(quiet: bool) -> None:
         pass
 
 
-# ── GPT/Poedex research for unknown anomalies ───────────────────────────────
+# ── Poedex research for unknown anomalies ────────────────────────────────────
+# Aurora has no external LLM to fall back on -- hypothesis generation is
+# Poedex's own internal lookup (aurora_room.py), then a heuristic template
+# when Poedex has nothing. No code path here reaches an outside model.
 
-_GPT_KEY_FILE   = AURORA_ROOT / "aurora_state" / "gpt_api_key.txt"
 _DAEMON_STATUS  = AURORA_ROOT / "aurora_state" / "daemon_status.json"
 
-# Anomaly types/dims that are semantic (behavioral/pressure) rather than static code bugs.
-# These get the pseudocode path: Aurora's variable names are sent as context so GPT
-# can write changes that map directly to her codebase.
+# Anomaly types/dims that are semantic (behavioral/pressure) rather than static code
+# bugs -- these point the Poedex question at the runtime governor instead of the daemon.
 _SEMANTIC_ANOMALY_TYPES = frozenset({
     "axis_depleted", "axis_imbalance", "coherence_drift",
     "pressure_imbalance", "behavioral", "governor_block",
@@ -534,67 +535,8 @@ _SEMANTIC_DIMS = frozenset({
     "grounding_lookup_instability",
 })
 
-# Context primer injected BEFORE the anomaly question for semantic queries.
-# Describes Aurora's actual variable names so GPT writes pseudocode that fits.
-_AURORA_AXIS_PRIMER = """\
-AURORA SYSTEM CONTEXT — read this before answering.
-
-Aurora is an AI with a 5-axis constraint field:
-  X axis = existence    (what information is present/real, the gate)
-  T axis = belief/time  (temporal patterns and recurrence)
-  N axis = energy/cost  (resource pressure — what is worth doing)
-  B axis = meaning      (boundary — what falls within significance)
-  A axis = agency       (cross-domain integration and direction)
-
-Her runtime governor controls which tasks execute based on per-axis budget.
-The key data structure is _TASK_PROFILES in aurora_runtime_constraint_governor.py:
-
-_TASK_PROFILES = {
-    "response_turn": {"axes": {"X": 0.30, "T": 0.20, "N": 0.20, "B": 0.15, "A": 0.20},
-                      "floor": 0.18, "cost": 0.30, "retry": 60,  "critical": True},
-    "study":         {"axes": {"X": 0.15, "T": 0.25, "N": 0.30, "B": 0.10, "A": 0.25},
-                      "floor": 0.42, "cost": 0.35, "retry": 300},
-    "dream":         {"axes": {"X": 0.10, "T": 0.10, "N": 0.15, "B": 0.35, "A": 0.35},
-                      "floor": 0.50, "cost": 0.95, "retry": 1800},
-    "browser_ritual":{"axes": {"X": 0.20, "T": 0.10, "N": 0.25, "B": 0.15, "A": 0.30},
-                      "floor": 0.60, "cost": 0.82, "retry": 1800},
-    "assimilation":  {"axes": {"X": 0.15, "T": 0.15, "N": 0.25, "B": 0.25, "A": 0.20},
-                      "floor": 0.56, "cost": 0.78, "retry": 900},
-    "mutation":      {"axes": {"X": 0.15, "T": 0.10, "N": 0.20, "B": 0.25, "A": 0.30},
-                      "floor": 0.68, "cost": 0.98, "retry": 2400},
-    "pressure_routing":{"axes": {"X": 0.10, "T": 0.20, "N": 0.25, "B": 0.25, "A": 0.20},
-                        "floor": 0.50, "cost": 0.60, "retry": 600},
-    "distill":       {"axes": {"X": 0.20, "T": 0.20, "N": 0.20, "B": 0.20, "A": 0.20},
-                      "floor": 0.55, "cost": 0.70, "retry": 1800},
-}
-
-Each task runs when its budget score >= profile["floor"].
-Budget score = weighted average of per-axis runtime budgets × profile["axes"] weights.
-
-Runtime budgets are computed by _runtime_budgets() using host metrics:
-  budgets["N"] = _clamp(max(0.10, 1.0 - load_ratio*0.40 - mem_pressure*0.38 - disk_penalty))
-  budgets["T"] = _clamp(1.0 - heat*0.35 - load_ratio*0.25 + pressure_axes.get("T",0.2)*0.10)
-  budgets["B"] = _clamp(1.0 - max(0,load_ratio-0.80)*0.60 + pressure_axes.get("B",0.2)*0.10)
-  budgets["A"] = _clamp(0.55 + pressure_axes.get(dominant_axis,0.2)*0.35 - heat*0.20)
-  budgets["X"] = _clamp(1.0 - load_penalty - mem_penalty - disk_penalty)
-
-Governor overlay file (aurora_state/governor_sweep_overlay.json) can override at runtime
-without editing source — useful for temporary pressure adjustments:
-  {"axis_weights": {"N": 0.85}, "task_overrides": {"study": {"axes": {"N": 0.25}}}}
-
-The energy income system (governor.record_income) adds budget credits per event:
-  "study_complete": {"axes": ["N","T"], "amount": 0.20, "half_life": 3600}
-  "response_turn":  {"axes": ["X","A"], "amount": 0.08, "half_life": 600}
-
-Variable naming conventions in pseudocode:
-  _TASK_PROFILES['<task>']['axes']['<axis>']  — per-task axis weight (0.0–1.0, sum ≈ 1.0)
-  _TASK_PROFILES['<task>']['floor']           — minimum score to run (0.0–1.0)
-  _TASK_PROFILES['<task>']['cost']            — resource cost (0.0–1.0)
-  budgets['<axis>']                           — live runtime budget for that axis
-  governor_sweep_overlay["task_overrides"]    — runtime patch without source edit
-"""
-
-# Map known anomaly dimensions → most relevant active script(s) to show GPT
+# Map known anomaly dimensions → most relevant active script(s) for the
+# Poedex question's code-context window.
 _DIM_TO_FILES: Dict[str, List[str]] = {
     "emotional_calibration":    ["aurora_consciousness_engine.py", "aurora_dream_trainer.py"],
     "coherence_maintenance":    ["aurora_consciousness_engine.py", "aurora_dimensional_systems.py"],
@@ -611,24 +553,7 @@ _DIM_TO_FILES: Dict[str, List[str]] = {
                                  "aurora_internal/aurora_runtime_constraint_governor.py"],
 }
 
-_CONTEXT_LINES_GPT = 60   # lines of code to include per file in the GPT prompt
-
-
-def _load_api_key() -> str:
-    env_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("AURORA_GPT_API_KEY")
-    if env_key:
-        return env_key.strip()
-    if _GPT_KEY_FILE.exists():
-        try:
-            return _GPT_KEY_FILE.read_text().strip()
-        except Exception:
-            return ""
-    return ""
-
-
-def _gpt_client():
-    """External API client — disabled, no client connected."""
-    return None
+_CONTEXT_LINES = 60   # lines of code to include per file in the Poedex prompt
 
 
 def _strip_fences(raw: str) -> str:
@@ -653,7 +578,7 @@ def _issue_keywords(dim: str, atype: str = "") -> List[str]:
 
 
 def _read_code_context(rel_path: str, keywords: Optional[List[str]] = None,
-                       max_lines: int = _CONTEXT_LINES_GPT) -> str:
+                       max_lines: int = _CONTEXT_LINES) -> str:
     """Read a focused code window, preferring the first keyword match."""
     fpath = AURORA_ROOT / rel_path
     if not fpath.exists():
@@ -699,46 +624,6 @@ def _normalize_file_path(file_val: str, candidates: List[str]) -> str:
         if wanted_name and Path(cand).name == wanted_name:
             return cand
     return candidates[0] if candidates else file_val
-
-
-def _chat_completion(system_msg: str, user_msg: str, max_tokens: int = 1200) -> str:
-    payload = {
-        "model": "gpt-4o",
-        "messages": [
-            {"role": "system", "content": system_msg},
-            {"role": "user", "content": user_msg},
-        ],
-        "max_tokens": max_tokens,
-        "temperature": 0.25,
-    }
-
-    client = _gpt_client()
-    if client is not None:
-        try:
-            response = client.chat.completions.create(**payload)
-            return str(response.choices[0].message.content or "").strip()
-        except Exception:
-            pass
-
-    key = _load_api_key()
-    if not key:
-        return ""
-    try:
-        import urllib.request as _ur
-        req = _ur.Request(
-            "https://api.openai.com/v1/chat/completions",
-            data=json.dumps(payload).encode(),
-            headers={
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
-        with _ur.urlopen(req, timeout=30) as resp:
-            data = json.loads(resp.read())
-        return str(data["choices"][0]["message"]["content"] or "").strip()
-    except Exception:
-        return ""
 
 
 def _poedex_research_lookup(question: str, timeout: float = 18.0) -> str:
@@ -842,25 +727,27 @@ def _collect_research_anomalies(status: Dict[str, Any], existing_proposals: List
     return filtered[:4]
 
 
-def run_gpt_research(quiet: bool, existing_proposals: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def run_research_hypotheses(quiet: bool, existing_proposals: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Query Poedex first, then GPT fallback, for fix hypotheses on anomalies not covered
-    by doctrine proposals. Uses fail_summary and recurring QAO signals in addition to
-    telemetry_fails so the researcher reacts to the same issues Aurora already knows.
+    Query Poedex (Aurora's own internal lookup, no external LLM) for fix hypotheses
+    on anomalies not covered by doctrine proposals, falling back to a heuristic
+    template when Poedex has nothing. Uses fail_summary and recurring QAO signals
+    in addition to telemetry_fails so the researcher reacts to the same issues
+    Aurora already knows.
     """
     import uuid as _uuid
 
     status = _load_daemon_status()
     if not status:
-        _log("[gpt_research] Cannot read daemon_status — skipping", quiet)
+        _log("[research] Cannot read daemon_status — skipping", quiet)
         return []
 
     anomalies = _collect_research_anomalies(status, existing_proposals)
     if not anomalies:
-        _log("[gpt_research] No unresolved anomalies above threshold — skipping", quiet)
+        _log("[research] No unresolved anomalies above threshold — skipping", quiet)
         return []
 
-    _log(f"[gpt_research] Querying Poedex/GPT for {len(anomalies)} anomaly(s)", quiet)
+    _log(f"[research] Querying Poedex for {len(anomalies)} anomaly(s)", quiet)
     new_proposals: List[Dict[str, Any]] = []
 
     for anomaly in anomalies:
@@ -917,56 +804,6 @@ def run_gpt_research(quiet: bool, existing_proposals: List[Dict[str, Any]]) -> L
                 fixes = []
 
         if not fixes:
-            if not _load_api_key():
-                gpt_raw = ""
-            else:
-                if is_semantic:
-                    system_msg = (
-                        "You are a constraint-system advisor for an AI called Aurora. "
-                        "When asked about a pressure imbalance or behavioral anomaly, you write "
-                        "small targeted pseudocode fixes using her exact variable names. "
-                        "If a Poedex clue is provided, incorporate it but keep the fix minimal."
-                    )
-                    user_msg = (
-                        f"{_AURORA_AXIS_PRIMER}\n---\n"
-                        f"CURRENT RUNTIME STATE:\n"
-                        f"  anomaly_type     : {atype}\n"
-                        f"  affected_dim     : {dim}\n"
-                        f"  severity         : {sev:.2f}\n"
-                        f"  governor_mode    : {status.get('runtime_governor_mode', '?')}\n"
-                        f"  live_axis_budgets: {status.get('runtime_governor_axes', {})}\n"
-                        f"  fail_summary     : {status.get('fail_summary', [])[:4]}\n"
-                        f"  qao_recent_events: {status.get('qao_recent_events', 0)}\n"
-                        + (f"\nPoedex clue:\n{poedex_raw}\n" if poedex_raw else "")
-                        + (f"\nRelevant source code:\n{code_block}\n" if code_block else "")
-                        + "\nReturn ONLY a valid JSON array. Each entry must have file, line, proposed_action, code_hint, confidence."
-                    )
-                else:
-                    system_msg = (
-                        "You are a senior Python debugging assistant. Propose concrete, minimal "
-                        "code fixes for Aurora's runtime anomaly. If a Poedex clue is provided, "
-                        "use it to target the smallest useful change."
-                    )
-                    user_msg = (
-                        f"Aurora has a persistent runtime anomaly:\n"
-                        f"  type     : {atype}\n"
-                        f"  dimension: {dim}\n"
-                        f"  severity : {sev:.2f}\n"
-                        f"  governor_mode: {status.get('runtime_governor_mode', '?')}\n"
-                        + (f"\nPoedex clue:\n{poedex_raw}\n" if poedex_raw else "")
-                        + (f"\nRelevant source code:\n{code_block}\n" if code_block else "")
-                        + "\nReturn ONLY a valid JSON array. Each fix must have file, line, proposed_action, code_hint, confidence."
-                    )
-                gpt_raw = _chat_completion(system_msg, user_msg, max_tokens=1200)
-            if gpt_raw:
-                try:
-                    fixes = _coerce_fix_list(gpt_raw)
-                    if fixes:
-                        source_strategy = "gpt_hypothesis"
-                except Exception:
-                    fixes = []
-
-        if not fixes:
             file_val = rel_files[0]
             line_val = _guess_target_line(file_val, keywords)
             hint = poedex_raw.strip() if poedex_raw else (
@@ -1007,9 +844,9 @@ def run_gpt_research(quiet: bool, existing_proposals: List[Dict[str, Any]]) -> L
                 "test_command": "",
             })
 
-        _log(f"[gpt_research] {dim}: {len(fixes)} fix(es) proposed via {source_strategy}", quiet)
+        _log(f"[research] {dim}: {len(fixes)} fix(es) proposed via {source_strategy}", quiet)
 
-    _log(f"[gpt_research] Total new proposals: {len(new_proposals)}", quiet)
+    _log(f"[research] Total new proposals: {len(new_proposals)}", quiet)
     return new_proposals
 
 
@@ -1095,11 +932,12 @@ def main() -> None:
     export_counts  = run_export(args.quiet)
     proposals      = run_scan(args.quiet)
 
-    # GPT research: fills gaps for anomalies doctrine doesn't cover
-    gpt_proposals  = run_gpt_research(args.quiet, proposals)
-    if gpt_proposals:
-        proposals = proposals + gpt_proposals
-        _log(f"GPT research added {len(gpt_proposals)} additional proposal(s)", args.quiet)
+    # Research pass: fills gaps for anomalies doctrine doesn't cover, via
+    # Poedex's own internal lookup (no external LLM) then a heuristic fallback.
+    research_proposals = run_research_hypotheses(args.quiet, proposals)
+    if research_proposals:
+        proposals = proposals + research_proposals
+        _log(f"Research added {len(research_proposals)} additional proposal(s)", args.quiet)
 
     write_report(proposals, export_counts)
     print_summary(proposals, args.quiet)
