@@ -33,6 +33,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from aurora_expression_perception import infer_word_role
+from aurora_internal.aurora_semantic_probe_battery import _STRONG_FUNCTION_WORDS
 
 
 @dataclass
@@ -189,6 +190,23 @@ def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
         # extraction's purposes -- excluded outright, same as the "="
         # guard above.
         if "'" in tok:
+            continue
+        # Bug Report 2 (2026-08-03): infer_word_role has no wh-word entry
+        # in its _ROLE_HINTS table (nor a matching suffix rule), so an
+        # interrogative like "what"/"how"/"why" falls through to its
+        # generic "unknown word -> noun" default -- confirmed live,
+        # "What is a guitar chord?" produced a thought text where "what"
+        # (appearing before any real content noun) got bound as `obj`,
+        # and nothing ever overwrote it (obj is first-match-wins below),
+        # so the delivered proposition frame carried relation="",
+        # obj="what" even though the topic itself (guitar/chord) was
+        # correctly identified upstream. A wh-word is a structural
+        # question marker, never itself the content of a declarative
+        # proposition -- excluded here the same way "=" tokens and
+        # contractions already are, using the SAME strong-function-word
+        # set (aurora_semantic_probe_battery._STRONG_FUNCTION_WORDS)
+        # this codebase already treats as structural glue, not content.
+        if tok in _STRONG_FUNCTION_WORDS:
             continue
         if tok == topic_lower:
             continue

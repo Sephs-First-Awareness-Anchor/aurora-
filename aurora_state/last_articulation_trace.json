@@ -1,31 +1,29 @@
 {
-  "original": "I change what clear. I change what real.",
+  "original": "I become color. I learned color.",
   "candidate": "",
-  "selected": "I change what clear. I change what real.",
+  "selected": "I become color. I learned color.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.62,
   "candidate_score": 0.0,
-  "original_pressure": 0.256,
+  "original_pressure": 0.276,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.744,
+  "pressure_relief": -0.724,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What would likely cause that relation to change?",
+    "prompt_excerpt": "What is your favorite color?",
     "input_interpretation": {
-      "raw_prompt": "What would likely cause that relation to change?",
+      "raw_prompt": "What is your favorite color?",
       "intent_hint": "question",
       "topic_terms": [
-        "likely",
-        "cause",
-        "relation",
-        "change"
+        "favorite",
+        "color"
       ],
       "entities": []
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785302129.189702,
+    "timestamp": 1785739315.936139,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {

@@ -1,49 +1,53 @@
 {
   "conscious_frame": {
-    "coherence": 0.45,
+    "coherence": 0.744,
     "conscious_crest": {
-      "axis": "N",
-      "intensity": 0.545,
-      "label": "explain"
+      "axis": "T",
+      "intensity": 0.5732,
+      "label": "contextualize"
     },
-    "dominant_axis": "N",
+    "dominant_axis": "T",
     "overlay": {
-      "active_crystals": [],
+      "active_crystals": [
+        "mitochondria"
+      ],
       "interaction_state": "present",
-      "present_anchor": "Use this corpus fr\n[recalled:use] Use this corpus fr [recalled:corpus] Use this corpus fr [recalled:perspectives] The 2013 Carbon Managem...",
+      "present_anchor": "What is your favorite color?\n[recalled:mitochondria] Tell me about mitochondria. [recalled:favorite] What is your favorite color? [recall...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
-    "readiness": 0.45,
-    "selected_action": "explain",
+    "readiness": 0.744,
+    "selected_action": "contextualize",
     "should_speak": true,
-    "stance": "interpretive_explanation",
+    "stance": "contextual_continuity",
     "subsurface_crest": {
-      "axis": "N",
-      "intensity": 0.5857,
-      "label": "steady"
+      "axis": "T",
+      "intensity": 0.5,
+      "label": "continuity_stable"
     },
-    "timestamp": 1785302141.981712
+    "timestamp": 1785739315.8906336
   },
-  "saved_at": 1785302141.9819157,
+  "saved_at": 1785739315.890835,
   "subsurface_state": {
-    "dominant_axis": "N",
+    "dominant_axis": "T",
     "frame_request": "observation",
     "overlay": {
-      "active_crystals": [],
+      "active_crystals": [
+        "mitochondria"
+      ],
       "interaction_state": "present",
-      "present_anchor": "Use this corpus fr\n[recalled:use] Use this corpus fr [recalled:corpus] Use this corpus fr [recalled:perspectives] The 2013 Carbon Managem...",
+      "present_anchor": "What is your favorite color?\n[recalled:mitochondria] Tell me about mitochondria. [recalled:favorite] What is your favorite color? [recall...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "reinforcement_hint": 0.6514
     },
     "sub_crests": [
       {
@@ -53,8 +57,8 @@
       },
       {
         "axis": "T",
-        "intensity": 0.65,
-        "label": "unfamiliar"
+        "intensity": 1.0,
+        "label": "resonant_recall"
       },
       {
         "axis": "A",
@@ -74,7 +78,7 @@
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_slipping"
+        "label": "thread_holds"
       },
       {
         "axis": "N",
@@ -85,22 +89,12 @@
         "axis": "X",
         "intensity": 1.0,
         "label": "calm"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.8029,
-        "label": "surface"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.8234,
-        "label": "surface"
       }
     ],
     "subsurface_crest": {
-      "axis": "N",
-      "intensity": 0.5857,
-      "label": "steady"
+      "axis": "T",
+      "intensity": 0.5,
+      "label": "continuity_stable"
     }
   }
 }

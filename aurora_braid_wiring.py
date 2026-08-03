@@ -642,6 +642,82 @@ def ensure_stance_signal_for_turn(systems: Dict[str, Any]) -> None:
         pass
 
 
+def reset_semantic_intention_for_turn(systems: Dict[str, Any]) -> None:
+    """Bug Report 2 (2026-08-03): composer._semantic_intention, like
+    composer._proposition_frame before ensure_proposition_frame_for_turn
+    existed, is only ever REFRESHED inside begin_expression() -- which
+    aurora.py's caller gates behind `_perc_a5 and _resp_draft` and skips
+    on question-shaped turns where state.response_content is still empty
+    at that point. aurora.py already unconditionally reset the systems
+    dict key (systems['_current_semantic_intention'] = None) every turn,
+    but never touched the composer's OWN attribute -- so a turn where
+    begin_expression was skipped could still compose through a composer
+    carrying a PREVIOUS turn's stale _semantic_intention, invisibly, even
+    though systems['_current_semantic_intention'] correctly reported None.
+    Call this unconditionally at the start of every turn, alongside
+    reset_proposition_frame_for_turn and reset_stance_signal_for_turn."""
+    try:
+        systems['_current_semantic_intention'] = None
+        composer = getattr(systems.get("perception"), "composer", None)
+        if composer is not None:
+            composer._semantic_intention = None
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_braid_wiring.py:reset_semantic_intention_for_turn",
+            exc=_aurora_boundary_exc,
+            context={"function": "reset_semantic_intention_for_turn", "source_file": "aurora_braid_wiring.py"},
+        )
+        pass
+
+
+def ensure_semantic_intention_for_turn(systems: Dict[str, Any]) -> None:
+    """Bug Report 2 (2026-08-03): the SemanticIntentionBridge-application
+    portion of begin_expression(), extracted so it can also run on the
+    code path that actually reaches gw._express() on turns where
+    begin_expression() itself was skipped -- the exact same staleness gap
+    ensure_proposition_frame_for_turn/ensure_stance_signal_for_turn were
+    built to close for the frame and the stance signal, left open for the
+    Semantic Intention Bridge specifically (ensure_proposition_frame_for_
+    turn's own docstring names this gap and defers it). Confirmed live:
+    a malformed-but-accepted turn ("What is a guitar chord?") had correct
+    upstream understanding (topic: guitar, topic words: guitar/chord) but
+    reached compose() through a composer whose _semantic_intention/
+    expression guidance were never populated for that turn, because
+    begin_expression() had bailed out early on `_current_thought_state`
+    being None at that point in the pipeline. Safe to call more than once
+    per turn (idempotent, same pattern as its two siblings) -- a turn
+    with no thought_state still means no intention, not a reused stale
+    one, since reset_semantic_intention_for_turn already cleared both the
+    systems key and the composer attribute unconditionally earlier this
+    turn."""
+    try:
+        from aurora_semantic_intention_bridge import SemanticIntentionBridge
+        thought_state = systems.get('_current_thought_state')
+        expression_guidance = systems.get('_expression_guidance')
+        perception = systems.get('perception')
+        composer = getattr(perception, 'composer', None) if perception else None
+        if thought_state is not None and composer is not None:
+            sib = SemanticIntentionBridge()
+            intention = sib.extract(
+                thought_state,
+                expression_guidance=expression_guidance,
+                systems=systems,
+            )
+            sib.apply(intention, composer)
+            systems['_current_semantic_intention'] = intention
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_braid_wiring.py:ensure_semantic_intention_for_turn",
+            exc=_aurora_boundary_exc,
+            context={"function": "ensure_semantic_intention_for_turn", "source_file": "aurora_braid_wiring.py"},
+        )
+        pass
+
+
 def begin_expression(systems: Dict[str, Any]) -> None:
     """
     CALL SITE 3 — Just BEFORE perception.express() is called.
@@ -686,31 +762,12 @@ def begin_expression(systems: Dict[str, Any]) -> None:
             )
             pass
 
-        # Wire SemanticIntentionBridge — drive composer from ThoughtState
-        try:
-            from aurora_semantic_intention_bridge import SemanticIntentionBridge
-            thought_state = systems.get('_current_thought_state')
-            expression_guidance = systems.get('_expression_guidance')
-            perception = systems.get('perception')
-            composer = getattr(perception, 'composer', None) if perception else None
-            if thought_state is not None and composer is not None:
-                sib = SemanticIntentionBridge()
-                intention = sib.extract(
-                    thought_state,
-                    expression_guidance=expression_guidance,
-                    systems=systems,
-                )
-                sib.apply(intention, composer)
-                systems['_current_semantic_intention'] = intention
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_braid_wiring.py:500",
-                exc=_aurora_boundary_exc,
-                context={"function": "begin_expression", "handler_line": 500, "source_file": "aurora_braid_wiring.py"},
-            )
-            pass
+        # Wire SemanticIntentionBridge — drive composer from ThoughtState.
+        # Delegates to ensure_semantic_intention_for_turn (Bug Report 2)
+        # rather than duplicating the extract/apply call inline, so there
+        # is exactly one place that logic lives -- the same "reuse existing
+        # wire" pattern PF1.2 established for the proposition frame.
+        ensure_semantic_intention_for_turn(systems)
 
         # PF1.2: transport PropositionFrame + ExpressionGuidance onto the
         # composer. Fail-quiet, additive -- compose() does not read either

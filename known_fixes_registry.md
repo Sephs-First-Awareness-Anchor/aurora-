@@ -9285,3 +9285,181 @@ step and flushing once brings it back to O(1) writes per pass.
 **First Seen:** User bug report with precise diagnostics (434 stored
 manifest entries vs 468 present files, 433 falsely "modified," 35
 "added"), 2026-08-03.
+
+### FIX-A090: wh-word leaked into PropositionFrame's relation/obj slots
+**Category:** ARCHITECTURAL
+**Pattern:** `aurora_internal/aurora_proposition_frame.py`'s
+`_extract_triple_from_thought_text()` scans a thought text's tokens for
+the first verb-role word (-> relation) and first noun-role word (->
+obj), via `aurora_expression_perception.infer_word_role()`. That
+function has no `_ROLE_HINTS` entry (nor a matching suffix rule) for
+interrogatives ("what", "how", "why", "where", "who", "which", "whom"),
+so they fall through to its generic "unknown word -> noun" default.
+Confirmed live and reproduced in isolation: for a turn built around
+"What is a guitar chord?", the extraction's first-noun-wins `obj` slot
+locked onto "what" (present in the thought text before "guitar"/
+"chord") and was never overwritten once set -- delivering a
+PropositionFrame with `relation=""`, `obj="what"` even though the
+turn's topic (guitar/chord) was correctly identified everywhere
+upstream. Downstream, the composer filled a content slot with this
+garbage frame, contributing to malformed delivered text.
+**Correct Form:** `_extract_triple_from_thought_text()` now skips any
+token in `aurora_internal.aurora_semantic_probe_battery.
+_STRONG_FUNCTION_WORDS` (the same structural-glue-word set --
+articles/prepositions/conjunctions/wh-words -- already used elsewhere
+in this codebase, including PF1.5's own instruments, to separate real
+content from structural filler) before role-tagging it, the same way
+"=" tokens and contractions were already excluded. A wh-word is a
+question marker, never itself the content of a declarative
+proposition. Verified: reproduced the exact old failure
+(`relation='' obj='what'`) against the pre-fix loop logic, confirmed
+the fixed function no longer produces it, and confirmed real content
+nouns (e.g. "chord") are found instead when present.
+**Why:** A generic "unknown word defaults to noun" fallback, reasonable
+for ordinary vocabulary, is wrong for a closed class of structural
+words that should never occupy a content slot -- the same failure
+shape the codebase already recognized and fixed for "="-tokens and
+contractions in the same function, just not yet for wh-words.
+**First Seen:** User bug report ("relation: empty, object: what" traced
+live against a real guitar-chord turn), 2026-08-03.
+
+### FIX-A091: Semantic Intention Bridge silently inactive on turns where begin_expression() was skipped
+**Category:** ARCHITECTURAL
+**Pattern:** `aurora_braid_wiring.py`'s `begin_expression()` applies the
+SemanticIntentionBridge (content keywords, axis/tone map, template bias
+tags -> `composer._semantic_intention`) but is gated behind
+`_perc_a5 and _resp_draft` in `aurora.py` and returns immediately if
+`systems['_current_thought_state']` is None -- confirmed (via PF3.3's
+own prior investigation, referenced in `ensure_proposition_frame_for_
+turn`'s docstring) to be SKIPPED on a large share of turns, heavily
+correlated with question-shaped input. PF3.1-PF3.3 already built
+`ensure_proposition_frame_for_turn`/`ensure_stance_signal_for_turn` as
+fallback re-applications on the actual code path that reaches
+`gw._express()` regardless of whether `begin_expression()` ran, closing
+this exact staleness gap for the proposition frame and the stance
+signal -- but explicitly deferred doing the same for the Semantic
+Intention Bridge (`ensure_proposition_frame_for_turn`'s own docstring:
+"deliberately does NOT redo... SemanticIntentionBridge re-application").
+The gap sat open: a turn could compose through a composer whose
+`_semantic_intention` was never populated for that turn (or worse,
+still held a PREVIOUS turn's value, since aurora.py only ever reset the
+systems-dict key `_current_semantic_intention`, never the composer's
+own attribute).
+**Correct Form:** Two new functions in `aurora_braid_wiring.py`,
+mirroring the existing frame/stance pair exactly:
+`reset_semantic_intention_for_turn()` (clears both
+`systems['_current_semantic_intention']` and `composer._semantic_
+intention` unconditionally at the start of every turn) and `ensure_
+semantic_intention_for_turn()` (the SemanticIntentionBridge extract/
+apply logic, extracted so it can run a second time on the actual
+compose() call site). `aurora.py` now calls the reset at the same point
+it already reset the frame/stance, and calls the ensure-fallback right
+before `gw._express()`, alongside the frame/stance ensure-calls already
+there. `begin_expression()` itself was simplified to call `ensure_
+semantic_intention_for_turn()` instead of duplicating the extract/apply
+inline, so there is exactly one place that logic lives.
+**Why:** The same staleness risk PF3.1/PF3.3 already diagnosed and
+fixed for the proposition frame and stance signal applies identically
+to the Semantic Intention Bridge -- a side effect that only ever
+refreshes inside a conditionally-skipped function must have an
+unconditional reset (skipped means absent, not stale) and a fallback
+re-application on whichever code path actually composes the turn.
+**First Seen:** User bug report ("the Semantic Intention Bridge... was
+inactive for the delivered turn despite the composer running. That
+should become impossible."), 2026-08-03.
+
+### FIX-A092: _response_is_grounded() accepted any non-empty text; DMM post-finalize re-gate attempted and reverted
+**Category:** ARCHITECTURAL
+**Pattern:** `_response_is_grounded()` (aurora.py) is the check that
+runs on the composer's candidate (resp_B.content) right before
+`_finalize_articulation()` promotes it to the delivered response. It
+only checked for non-empty text without a known hallucination-marker
+prefix -- real PF1.5/PF1.6 wellformedness machinery
+(`aurora_internal.aurora_pf1_5_instruments.wellformed_and_coherent`:
+clause-structure parseability plus a bare-participle-as-finite-verb
+check) existed, tested, and calibrated for exactly this kind of
+text-quality measurement, but was only ever wired into offline
+probe-battery scoring, never into this live gate -- so a structurally
+garbled composer response could reach the device marked
+`composer_unified` at confidence 1.0 with nothing to stop it.
+**Correct Form:** `_response_is_grounded()` now also requires
+`wellformed_and_coherent(candidate)` to pass, fail-quiet (an import/
+exception falls through to the existing checks rather than blocking a
+turn on machinery failure). A second, larger fix was attempted and
+DELIBERATELY REVERTED: re-deriving DMM's `thought_intent` (deception/
+harm/accountability) against the true final candidate inside
+`_finalize_articulation()`, so the moral gate would judge the actual
+delivered text regardless of source, not just resp_A's pre-composer
+draft. Reverted because `_INTENT_EVIDENCE_GROUNDED_SRC` (~aurora.py:
+16021) only recognizes `"search"`/`"researched_reapplication"` as
+evidence-grounded provenance and excludes `"composer_unified"` --
+the single most common delivered-content path in the whole pipeline,
+routinely at confidence 1.0. Applying `_derive_thought_intent`'s
+existing `involves_deception` heuristic (confidence>=0.7 and not
+evidence-grounded) to that combination post-finalize would have
+force-abstained nearly every ordinary composer response, not just
+malformed ones -- caught before shipping via review of the actual
+confidence/src values in the user's own bug report, not via a test
+failure.
+**Why:** A text-quality check (grammatical wellformedness) and an
+evidentiary-provenance check (was this asserted from a fetched source)
+measure different things; the second cannot be safely reused
+post-composer without first defining what "evidence-grounded" means
+for freely-generated prose, which is a real design question needing
+its own calibration work, not a same-session patch. Wellformedness
+wiring is safe because it was already built and tested for exactly
+this purpose; the DMM extension is not yet, and shipping a miscalibrated
+version would trade a rare malformed-output bug for a constant
+false-abstain regression -- a worse failure, and dishonest to present
+as a fix.
+**First Seen:** User bug report (malformed composer_unified responses
+at confidence 1.0 delivered unchanged), 2026-08-03; DMM extension
+self-caught during implementation before being shipped.
+
+### FIX-A093: FIX-A089's own migration gap -- old-format manifest re-triggered the false-change storm it fixed
+**Category:** ARCHITECTURAL
+**Pattern:** FIX-A089 switched `aurora_internal/aurora_manual_code_
+lineage.py`'s change detection from mtime/size comparison to content-hash
+(sha1) comparison, verified against an isolated fake-genealogy harness
+that always started from an EMPTY scratch manifest. It missed the real-
+world transition case: every manifest entry already persisted on disk
+(`aurora_state/manual_code_lineage_state.json`, `initialized: true`, 434
+entries in the live repo) was written by the PRE-fix code and has only
+`{mtime_ns, size}` -- no `sha1` key at all. `_detect_changes()` compared
+`prev.get("sha1", "")` (unconditionally `""` for every one of those
+entries) against a real, non-empty freshly-computed `cur` sha1 -- `"" !=
+<real hash>` for literally every file, regardless of whether its content
+had actually changed. Caught live via a Bug Report 2 regression test
+(`test_real_boot_active_turn_state_frame_source_does_not_crash_live_
+turn`) that unexpectedly failed and took 394.89s (vs. a normal few-
+second boot) after FIX-A089 was already committed -- its boot log read
+"[LINEAGE] Manual code lineage assimilated 468 change(s)", the exact
+failure shape FIX-A089 was supposed to have eliminated, reappearing on
+the very first real boot after the fix because the fix never ran against
+a manifest with real pre-existing history in the old format.
+**Correct Form:** `_detect_changes()` now only trusts a sha1-vs-sha1
+comparison when BOTH the previous and current entries actually have a
+sha1 recorded. When the previous entry predates content-hash tracking
+(no sha1, the migration case), it falls back to the OLD mtime_ns/size
+comparison for that one entry only -- exactly matching pre-FIX-A089
+behavior for files whose timestamps and size didn't change, so the
+one-time format upgrade cannot itself masquerade as a code change. Once
+a file has been scanned once under the new code, its manifest entry
+carries a real sha1 and every subsequent boot uses the correct content-
+hash comparison FIX-A089 intended. Verified with a dedicated
+reproduction: seeded an old-format manifest (mtime/size only) exactly
+like the real repo's persisted file, confirmed the pre-fix code reported
+0 changes was actually impossible to get right (it always reported all
+5 as modified, matching the live failure), confirmed the fix reports 0
+changes when nothing real changed and correctly detects a genuine
+single-file content change both during and after the migration boot.
+**Why:** A format migration for persisted state needs an explicit
+compatibility path for records written by the old format; comparing a
+new field against its absent-therefore-empty-string default and calling
+that a legitimate "changed" signal silently reintroduces the exact bug
+the migration was meant to fix, for every previously-persisted record,
+on exactly one boot -- which is one boot too many when that boot is the
+first real one after deploying the fix.
+**First Seen:** Bug Report 2 regression testing surfaced an unexpected
+394.89s test runtime and an `_active_turn_state is None` failure on the
+first live-repo boot after FIX-A089 landed, 2026-08-03.

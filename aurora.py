@@ -14496,11 +14496,43 @@ def _response_is_grounded(text: str, user_text: str, systems: Dict[str, Any]) ->
         if not known_name or known_name.lower() != 'alex':
             return False
 
-    # A non-empty response that passes the marker checks is grounded.
-    # We intentionally do NOT require word-overlap with the prompt — Aurora's
-    # FGAE output engages conceptually and often replies without echoing the
-    # user's exact vocabulary. Enforcing overlap was silencing valid abstract,
-    # introspective, and semantically-displaced replies.
+    # Bug Report 2 (2026-08-03): a non-empty response with no known
+    # failure-marker prefix was previously treated as grounded outright --
+    # confirmed live to let structurally garbled text through unchanged
+    # ("I am how clear. I am how real." reached the device marked
+    # composer_unified, confidence 1.0). PF1.5/PF1.6 already built real,
+    # tested wellformedness machinery (aurora_internal.aurora_pf1_5_
+    # instruments.wellformed_and_coherent: word-shape/clause-structure
+    # parseability plus the bare-participle-as-finite-verb check) for
+    # exactly this measurement, but it was only ever wired into offline
+    # probe-battery scoring, never into this live delivery gate. Wired in
+    # here as real defense in depth -- it does not catch every malformed
+    # shape (word-salad and bare-participle defects are its actual
+    # coverage; the wh-word-leaked-into-a-content-slot class of defect
+    # that produced the specific examples above is fixed at its root in
+    # aurora_internal/aurora_proposition_frame.py and aurora_braid_wiring.
+    # py's ensure_semantic_intention_for_turn instead), but a response
+    # that fails an EXISTING, already-tested structural-coherence check
+    # must not still be accepted as grounded just because it is non-empty.
+    try:
+        from aurora_internal.aurora_pf1_5_instruments import wellformed_and_coherent
+        if not wellformed_and_coherent(candidate):
+            return False
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_response_is_grounded:wellformedness",
+            exc=_aurora_boundary_exc,
+            context={"function": "_response_is_grounded", "source_file": "aurora.py"},
+        )
+
+    # A non-empty, structurally coherent response that passes the marker
+    # checks is grounded. We intentionally do NOT require word-overlap
+    # with the prompt — Aurora's FGAE output engages conceptually and
+    # often replies without echoing the user's exact vocabulary. Enforcing
+    # overlap was silencing valid abstract, introspective, and
+    # semantically-displaced replies.
     return True
 
 
@@ -20330,6 +20362,32 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
          something (e.g. a direct fact/identity lookup) -> keep resp_A's
          own content untouched (graceful degradation, not a case for
          abstain -- there IS a genuine answer, just not from the composer).
+
+    Bug Report 2 (2026-08-03) investigation note: a post-finalize re-
+    application of DMM's thought_intent (deception/harm/accountability)
+    to whatever cases 1-3 above settled on was attempted and REVERTED
+    here, not shipped -- _INTENT_EVIDENCE_GROUNDED_SRC (~line 16021)
+    only recognizes "search"/"researched_reapplication" as evidence-
+    grounded provenance, and does not include "composer_unified", which
+    is case 1's src for the single most common delivered-content path in
+    the whole pipeline (D2.1's entire point) and routinely carries
+    confidence 1.0 (confirmed in the user's own bug report). Reusing
+    _derive_thought_intent's involves_deception check
+    (confidence>=0.7 and not grounded) against that combination as a
+    post-finalize gate would have force-abstained nearly every ordinary
+    composer response, not just the malformed ones -- a severe usability
+    regression, not a fix. The real defect this bug report identified
+    (malformed composer text delivered as if trustworthy) is instead
+    addressed at its actual sources: the wh-word-into-content-slot leak
+    in aurora_internal/aurora_proposition_frame.py, the Semantic
+    Intention Bridge staleness gap closed by aurora_braid_wiring.py's
+    ensure_semantic_intention_for_turn, and a real structural-coherence
+    check now wired into _response_is_grounded() (which already runs on
+    resp_B, the actual final candidate's content, before this function is
+    even called). A correctly-calibrated post-composer "is this
+    generative text evidentially trustworthy" signal is a real remaining
+    gap, distinct from grammatical wellformedness -- left for a
+    dedicated follow-up rather than shipped half-calibrated.
     """
     try:
         _d2_have_chain_content = bool(str(getattr(resp_A, "content", "") or "").strip())
@@ -20491,14 +20549,29 @@ def _run_reasoning_pipeline(
         )
         pass
 
-    # Zip patch (generative-communication, 2026-08-02): same unconditional
-    # per-turn reset as the two above -- systems['_current_semantic_intention']
-    # is only ever set inside aurora_braid_wiring.py's begin_expression, gated
-    # behind thought_state/composer both being present, and never cleared.
-    # A turn where that wiring is skipped or fails must not silently let
-    # LanguageStructureFitness.score() (aurora.py, ~line 19880) compare this
-    # turn's expressed text against a PREVIOUS turn's intention.
-    systems['_current_semantic_intention'] = None
+    # Zip patch (generative-communication, 2026-08-02); widened under Bug
+    # Report 2 (2026-08-03): same unconditional per-turn reset as the two
+    # above -- systems['_current_semantic_intention'] AND the composer's
+    # own _semantic_intention attribute are only ever set inside aurora_
+    # braid_wiring.py's begin_expression/ensure_semantic_intention_for_turn,
+    # gated behind thought_state/composer both being present, and never
+    # cleared on their own. A turn where that wiring is skipped or fails
+    # must not silently let LanguageStructureFitness.score() (aurora.py,
+    # ~line 19880) compare this turn's expressed text against a PREVIOUS
+    # turn's intention, nor let compose() itself read a stale composer._
+    # semantic_intention left over from the last turn that populated it.
+    try:
+        from aurora_braid_wiring import reset_semantic_intention_for_turn
+        reset_semantic_intention_for_turn(systems)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:reset_semantic_intention_for_turn",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
+        )
+        systems['_current_semantic_intention'] = None
 
     # ---- GAP 3 FIX: SEDI SURFACE FRAGS — inject temporal continuity fragments ----
     # SediMemory surface recall is loaded by the surface daemon before calling
@@ -21891,6 +21964,26 @@ def _run_reasoning_pipeline(
             locals(),
             module=__name__,
             operation="exception_handler:aurora.py:ensure_stance_signal_for_turn",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
+        )
+        pass
+    # Bug Report 2 (2026-08-03): same "call it here too, this compose()
+    # site is reached even when begin_expression() was skipped earlier"
+    # reasoning as ensure_proposition_frame_for_turn/ensure_stance_signal_
+    # for_turn immediately above -- closes the gap where gw._express()
+    # below could compose through a composer whose _semantic_intention
+    # was never populated (or was stale) for this turn. See ensure_
+    # semantic_intention_for_turn's own docstring for the live-traced
+    # failure this fixes.
+    try:
+        from aurora_braid_wiring import ensure_semantic_intention_for_turn
+        ensure_semantic_intention_for_turn(systems)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:ensure_semantic_intention_for_turn",
             exc=_aurora_boundary_exc,
             context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
         )

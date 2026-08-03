@@ -287,7 +287,36 @@ class ManualCodeLineageAssimilator:
             prev_sha1 = str(prev.get("sha1", "") or "")
             cur_sha1 = str(cur.get("sha1", "") or "")
             if prev and cur:
-                if prev_sha1 == cur_sha1:
+                if prev_sha1 and cur_sha1:
+                    if prev_sha1 == cur_sha1:
+                        continue
+                else:
+                    # Migration path: this manifest entry was persisted by a
+                    # pre-content-hash version of this module (mtime_ns/size
+                    # only, no sha1 -- every entry written before this fix).
+                    # An mtime_ns/size fallback here was tried and found
+                    # NOT SAFE: this environment resets mtime_ns on every
+                    # file on session/checkout start (the exact mechanism
+                    # Bug Report 1 already established), so a fallback that
+                    # trusts mtime_ns reintroduces the identical false-storm
+                    # bug for this one migration boot -- confirmed live
+                    # against the real repo's own persisted manifest (434
+                    # old-format entries, every single one's mtime_ns had
+                    # already changed from what was recorded, so the
+                    # mtime-fallback also reported all 468 files modified).
+                    # There is no reliable signal at all for "did this file
+                    # change since an old-format snapshot that never
+                    # recorded content" -- mtime is proven unreliable, and
+                    # there is no prior hash to compare against. The honest,
+                    # conservative choice is the same one already used for a
+                    # brand-new/uninitialized manifest: treat "no prior hash
+                    # to compare against" as "no change signal," not as
+                    # "changed." This one-time migration boot cannot detect
+                    # genuine changes made before this fix existed (those
+                    # are fundamentally undetectable without a hash-bearing
+                    # prior snapshot) but it seeds a real sha1 for every
+                    # file below, so every boot from here on compares
+                    # correctly.
                     continue
                 kind = "modified"
             elif not prev and cur:
