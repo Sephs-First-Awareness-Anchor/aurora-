@@ -9550,3 +9550,52 @@ the separate `LexicalEntry.noncomp_id` path, the M1 relation-pairs
 campaign, or PF3's own unresolved motif-shape-mixing measurements.
 **First Seen:** Directive NC1, ratified 2026-08-03 following direct
 inspection of the live OETS web state.
+
+## Dead-code removal (2026-08-03)
+
+**What was done:** Built a full AST-based import graph over all 467
+`.py` files (~345K lines) to answer "how much of this repo is actually
+used." First pass mishandled relative imports (`from .conscious_frame
+import ConsciousFrame`) -- recorded the bare name instead of the
+resolved dotted path, so every submodule imported via a package
+`__init__.py` (9 files across `aurora_internal/dual_strata/` and
+`aurora_internal/quasiarch_observer/`) showed as a false-positive
+orphan. Caught before deleting anything by reading both packages'
+`__init__.py` directly and cross-checking; the script was corrected to
+resolve `ast.ImportFrom.level` against the importing file's own package
+path before re-running.
+
+**Removed** (26 files, confirmed never imported anywhere -- statically
+or dynamically; zero `importlib`/`__import__` references found to any
+of them):
+- `aurora_internal/`: `aurora_625_pressure_map.py`, `aurora_code_evolution_stack.py`, `aurora_code_mutation_operators.py`, `aurora_constraint_manifold.py`, `aurora_dna_strand_schema-2.py`, `aurora_doc.py`, `aurora_energy_layer_costs_decay.py`, `aurora_noncomp_registry-2.py`, `aurora_room_operator.py`, `sleep_cycle.py`, `surface_channel.py`, `surface_continuity_feed.py`
+- `concepts/` (entire experimental/scratch directory, 14 files, none ever wired into the live system): `arena_compare.py`, `aurora_code_evolution_stack.py`, `aurora_room.py`, `crystalzip_batch.py`, `dce_10state.py`, `dce_obligation_gate.py`, `force_evolve.py`, `generate_phase_b.py`, `poedex_intro.py`, `quasiarch_bridge.py`, `quasiarch_diag.py`, `quasiarch_observer.py`, `sentinel.py`, `sentinel_gui.py`
+
+`aurora_dna_strand_schema-2.py` and `aurora_noncomp_registry-2.py` were
+confirmed via diff to be superseded earlier drafts of the still-live,
+actively-imported `aurora_dna_strand_schema.py`/`aurora_noncomp_
+registry.py` (older import paths to modules that no longer exist,
+missing later documentation/constant updates). `aurora_internal/
+surface_continuity_feed.py` was confirmed a duplicate shadowing the
+real, actively-used `aurora_internal/dual_strata/surface_continuity_
+feed.py`.
+
+**Kept, not dead code:** `tests/` (147 files) and `scripts/` (44 files)
+are naturally unimported by design -- pytest and direct CLI invocation
+run them, not `import`. 21 root-level files (`run_gauntlet.py`,
+`aurora_diag.py`, etc.) were left untouched pending individual
+verification of which are still-used CLI entry points vs. genuinely
+stale -- not confidently classifiable in one pass, so left alone per
+"halt on failure, report honestly" rather than guessed at.
+
+**Verification:** full repo-wide `py_compile`, the three-module import
+smoke test, a real `boot_aurora()` + live turn, and `tests/test_layer_
+acyclicity.py` (L0-L8 acyclic layering guard) all pass clean after
+removal.
+**Why:** ~5.7% of the codebase (35 files, ~19.6K lines) was confirmed
+reachable by nothing in the live system before this pass; deleting it
+reduces surface area for future confusion (e.g., a manual-code-lineage
+assimilation pass registering "changes" to files nothing runs) without
+touching anything the boot sequence or test suite depends on.
+**First Seen:** User question "how much of this repo is actually being
+used and how much is just dead code," 2026-08-03.
