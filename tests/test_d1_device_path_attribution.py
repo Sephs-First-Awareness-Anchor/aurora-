@@ -18,7 +18,12 @@ surfaces and byte-attribute each -- verifying one surface says nothing
 about its siblings. Two real device surfaces were traced:
 
   1. aurora_daemon.py's production entry (`return result.get("resp_A")`,
-     ~line 5575) -- the embedded/hardware daemon path.
+     ~line 5575) -- the embedded/hardware daemon path. RETIRED 2026-08-03
+     (FIX-A084): this was _run_socialize()'s _gen() callback, the
+     daemon's only self-initiated process_external_user_turn() call,
+     feeding a GPT conversation partner. Deleted outright per explicit
+     user directive against any LLM operating any part of her system --
+     the daemon no longer has a device-delivery surface of this kind.
   2. flutter_app/android/app/src/main/python/aurora_bridge.py's
      handle_message() -- called by AuroraService.kt via Chaquopy for the
      Flutter mobile app. Traced further into the Dart layer
@@ -29,10 +34,11 @@ about its siblings. Two real device surfaces were traced:
      byte-identical on the Flutter side, no separate divergence there.
 
 This file proves surface 2 (the one directly testable from this Python
-test suite) byte-for-byte. Surface 1 (aurora_daemon.py) shares the
-identical `result.get("resp_A")` extraction pattern -- confirmed by
-direct source read, not separately live-traced here (out of this file's
-scope; the daemon requires its own long-running process harness).
+test suite) byte-for-byte. Surface 1 (aurora_daemon.py) shared the
+identical `result.get("resp_A")` extraction pattern until its retirement
+above -- confirmed by direct source read, not separately live-traced here
+(out of this file's scope; the daemon requires its own long-running
+process harness).
 """
 import os
 import shutil
@@ -54,11 +60,18 @@ def _aurora_bridge_source():
 
 
 def test_aurora_daemon_production_entry_reads_resp_a():
-    """Structural confirmation of surface 1 (embedded/hardware daemon).
-    Unchanged since N4's pre-flight trace (2026-07-16); re-asserted here
-    as part of D1's enumerated-surfaces requirement."""
+    """Surface 1 (embedded/hardware daemon) as this test knew it was
+    retired on 2026-08-03 (FIX-A084): its only self-initiated call into
+    process_external_user_turn() was _run_socialize()'s _gen() callback,
+    which fed a GPT conversation partner Aurora's own responses. Per
+    explicit user directive ("no socialization... she should be the only
+    one operating her system"), _run_socialize() and everything that fed
+    it were deleted outright, not stubbed -- so aurora_daemon.py no longer
+    has a device-delivery surface calling process_external_user_turn() at
+    all. Confirms that retirement rather than silently going red: this is
+    a real, intentional removal, not a regression to chase."""
     source = _aurora_daemon_source()
-    assert 'return result.get("resp_A") if isinstance(result, dict) else None' in source
+    assert "process_external_user_turn" not in source
 
 
 def test_aurora_bridge_extract_response_reads_resp_a():

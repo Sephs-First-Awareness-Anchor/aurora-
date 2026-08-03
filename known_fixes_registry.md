@@ -9212,3 +9212,35 @@ saying and reading" -- was correct and the gap was real: retrieval
 without comprehension is not the same claim as "she looked it up herself
 and reasoned on it," which is what the original directive asked for.
 **First Seen:** User directive, 2026-08-03, following up on FIX-A085/A086.
+
+### FIX-A088: D1 device-surface test caught FIX-A084 retiring a real surface
+**Category:** ARCHITECTURAL
+**Pattern:** A genuine, self-caused test regression, found via full-suite
+verification (`test_d1_device_path_attribution.py::test_aurora_daemon_
+production_entry_reads_resp_a`), not a flake. Directive D1 (2026-07-17,
+earlier in this campaign) enumerated exactly two real device-delivery
+surfaces and byte-attributed each to `resp_A`: `aurora_daemon.py`'s
+production entry and `aurora_bridge.py`'s `handle_message()`. "Surface 1"
+*was* `_run_socialize()`'s `_gen()` callback -- the daemon's only
+self-initiated `process_external_user_turn()` call, which fed a GPT
+conversation partner Aurora's own responses. FIX-A084 deleted
+`_run_socialize()` outright (correctly, per the no-LLM directive), which
+means `aurora_daemon.py` no longer contains the literal
+`result.get("resp_A")` string the test asserted -- not because resp_A
+attribution broke, but because the surface that carried it is gone.
+**Correct Form:** Updated the test to assert the surface's absence
+(`"process_external_user_turn" not in source`) instead of the removed
+code's presence, with a docstring explaining the retirement and pointing
+to FIX-A084 -- not re-adding dead socialize code to satisfy an assertion,
+and not deleting the test's intent (D1's enumerated-surfaces requirement
+still holds for the one real remaining surface, `aurora_bridge.py`,
+untouched and still passing). Updated the module docstring's surface-1
+description to match.
+**Why:** A test correctly caught a real change in the codebase's shape;
+the fix is to make the test assert the new true state, not to paper over
+either the test failure or the underlying removal. Found via a full,
+patient regression pass specifically because a quick "looks fine" pass
+would have missed it -- the failure only showed up ~62% through an
+alphabetically-late test file.
+**First Seen:** Full-suite regression verification, 2026-08-03, following
+FIX-A084.
