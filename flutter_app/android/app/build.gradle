@@ -33,6 +33,12 @@ task preparePythonSources {
         exclude "build/**"
         exclude ".gradle/**"
         exclude ".idea/**"
+        // APK size: tests/ and scripts/ are never imported by Aurora's boot
+        // sequence (pytest and direct CLI invocation run them, nothing in
+        // the app does) -- 191 files / ~37K lines that were being bundled
+        // into every release for no runtime reason.
+        exclude "tests/**"
+        exclude "scripts/**"
     }
     outputs.dir destDir
 
@@ -51,7 +57,13 @@ task preparePythonSources {
             // filesystem's max filename length ("File name too long").
             // inputs.files above already excludes flutter_app/** for the
             // same reason; this copy action needs the identical exclusion.
-            from(repoRoot) { include "**/*.py"; exclude "**/__pycache__/**"; exclude "flutter_app/**" }
+            from(repoRoot) {
+                include "**/*.py"
+                exclude "**/__pycache__/**"
+                exclude "flutter_app/**"
+                exclude "tests/**"
+                exclude "scripts/**"
+            }
             into destDir
         }
         // Expose aurora_internal at top level so bridge imports work unchanged:
@@ -130,7 +142,13 @@ android {
         versionCode 1
         versionName "1.0"
 
-        ndk { abiFilters "arm64-v8a", "x86_64" }
+        // APK size: x86_64 exists for emulator/rare x86 device compatibility,
+        // not real phone hardware (which this app targets). Chaquopy bundles
+        // a full native Python interpreter + numpy/Pillow's compiled .so
+        // libraries PER ABI, so this was roughly doubling that entire
+        // payload for a target this app doesn't ship to. arm64-v8a alone
+        // covers essentially all real Android phones since ~2018.
+        ndk { abiFilters "arm64-v8a" }
 
         python {
             version "3.12"
@@ -139,9 +157,18 @@ android {
                 install "requests==2.25.1"
                 install "python-dateutil==2.9.0.post0"
                 install "pytz==2022.1"
-                install "psutil==7.1.3"
+                // psutil was installed but never imported anywhere in the
+                // live codebase (confirmed via repo-wide grep) -- pure
+                // dead weight, including its own compiled C extension.
                 install "numpy==1.26.2"
                 install "Pillow"
+            }
+            // APK size: ship only compiled .pyc, not the .py source --
+            // Aurora's Python tree is ~450 files after tests/scripts were
+            // already excluded above; no runtime reason to also carry the
+            // source text once it's compiled.
+            pyc {
+                src false
             }
         }
     }

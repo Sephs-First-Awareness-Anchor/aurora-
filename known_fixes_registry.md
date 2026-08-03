@@ -9693,3 +9693,82 @@ passing tests alone -- the exact "halt on failure, report honestly"
 discipline this campaign runs on.
 **First Seen:** Live user report against build 582 of the shipped APK,
 2026-08-03.
+
+### FIX-A095: APK size reduction (112.7MB build-583 -> target under 30MB)
+
+**Category:** RUNTIME BUG (packaging bloat, not code)
+
+**Pattern:** `aurora-release.apk` measured 112,708,111 bytes (~107.5MB)
+at build-583, confirmed via the actual GitHub Release asset size. Five
+independent, stacked contributors, none of them the app's real
+functionality:
+1. `flutter_app/android/app/build.gradle` targeted 2 ABIs
+   (`arm64-v8a` + `x86_64`). Chaquopy bundles a complete native Python
+   3.12 interpreter plus numpy's and Pillow's compiled `.so` libraries
+   PER ABI -- x86_64 exists for emulator/rare-hardware compatibility,
+   not the real phones this app ships to, so this was roughly doubling
+   the single largest weight class in the APK for a target with
+   essentially no real users.
+2. The `preparePythonSources` Gradle task's first (recursive) copy step
+   used `include "**/*.py"` with no exclusion for `tests/` or
+   `scripts/` -- 191 files / ~37K lines that are never imported by
+   Aurora's boot sequence (pytest and direct CLI invocation run them,
+   nothing in the shipped app does) were being copied into the Chaquopy
+   Python source tree and bundled into every release. A second copy
+   step in the same task already excluded similar patterns, but only
+   for root-level files (`include "*.py"`, non-recursive) -- the
+   recursive first step had no equivalent guard.
+3. `python { pyc { ... } }` was never configured, so Chaquopy shipped
+   both the compiled `.pyc` bytecode AND the original `.py` source text
+   for the whole tree -- redundant once compiled.
+4. `psutil==7.1.3` was pip-installed but never imported anywhere in the
+   live codebase (confirmed via repo-wide grep) -- a complete unused
+   dependency, including its own compiled C extension.
+5. `flutter_app/assets/` carried 8 PNGs (`aurora_orb.png`,
+   `aurora_bg.png`, `aurora_waves.png`, and 5 `strand_*.png` files,
+   ~8.4MB total) from earlier avatar-design iterations (see git history:
+   scanline-warp photo avatar -> two-layer strand overlay -> full-size
+   orb -> the current `da09da26d` CustomPaint-drawn minimal face). The
+   current face (`lib/widgets/aurora_orb.dart`) draws entirely via
+   `CustomPaint`, needs no image assets, and confirmed zero references
+   to any of the 8 files anywhere in `lib/`.
+
+**Correct Form:**
+1. `ndk { abiFilters "arm64-v8a" }` -- single ABI, covering essentially
+   all real Android phones since ~2018.
+2. Added `exclude "tests/**"` / `exclude "scripts/**"` to both the
+   `inputs.files` declaration and the first recursive copy step of
+   `preparePythonSources`.
+3. Added `python { pyc { src false } }` -- ship compiled bytecode only.
+4. Removed the `psutil` pip install line.
+5. Removed the 8 unused PNGs from disk and their entries from
+   `pubspec.yaml`'s `flutter.assets` list.
+
+Numpy and Pillow were investigated and kept -- both are genuinely used
+across the core cognitive stack (18 and 9 files respectively, including
+`aurora_expression_perception.py`, `aurora_dimensional_systems.py`,
+`aurora_daemon.py`), not bloat, and removing/replacing them would be a
+large, separate refactor with real behavior risk, not a packaging fix.
+Flutter/Kotlin-side code shrinking (`minifyEnabled`/`shrinkResources`,
+currently both `false`, and `flutter build apk --no-shrink` in the CI
+workflow) was deliberately NOT touched in this pass -- Chaquopy's
+Python payload (the dominant weight class) isn't affected by R8 at all,
+and enabling it carries real risk of silently breaking Chaquopy/Flutter
+plugin reflection paths that can't be verified without a real device/
+emulator run, which this sandboxed session doesn't have. Left as a
+flagged follow-up if the measured post-fix size is still over target.
+
+**Verification:** each change is individually justified by a repo-wide
+grep or git-history check (see above); could not run a full local
+Gradle build in this sandbox (`dev.flutter.flutter-plugin-loader`
+requires the actual Flutter SDK installation, only present in the CI
+runner) -- verification is the real CI-built release asset's measured
+size, checked after this commit.
+**Why:** None of these five contributors reflect the app's real
+functionality -- they're accumulated packaging debt from build
+configuration defaults, a partially-applied test/script exclusion
+pattern, and leftover assets from superseded design iterations. Fixing
+the packaging is safe, mechanical, and independently verifiable per
+item; it does not touch application behavior.
+**First Seen:** User request "we need to get the mb down below 30,"
+2026-08-03.
