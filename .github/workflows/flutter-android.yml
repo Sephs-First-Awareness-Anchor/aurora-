@@ -80,7 +80,7 @@ jobs:
           RELEASE_KEY_ALIAS:  ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASS:   ${{ secrets.RELEASE_KEY_PASS }}
         run: |
-          flutter build apk --release --no-shrink -v
+          flutter build apk --release -v
           cp build/app/outputs/flutter-apk/app-release.apk ../aurora-release.apk
 
       - name: List output for verification

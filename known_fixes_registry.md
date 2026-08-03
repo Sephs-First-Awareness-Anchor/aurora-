@@ -9773,6 +9773,50 @@ item; it does not touch application behavior.
 **First Seen:** User request "we need to get the mb down below 30,"
 2026-08-03.
 
+**Follow-up (same day, build-585 measured):** the five packaging fixes
+above landed a real 48.8% cut -- 112,708,111 bytes (build-583) down to
+57,665,219 bytes (build-585, commit `020e60b35`), ~57.7MB -- but that
+is still above the 30MB target. Per user direction after seeing the
+honest build-585 number, took the next lever this entry had explicitly
+deferred: re-enabled Android code/resource shrinking.
+`flutter_app/android/app/build.gradle`'s release `buildTypes` block:
+`minifyEnabled true`, `shrinkResources true`, and added `proguardFiles
+getDefaultProguardFile("proguard-android-optimize.txt"),
+"proguard-rules.pro"` (no `proguardFiles` line existed before this).
+New `flutter_app/android/app/proguard-rules.pro` adds explicit
+`-keep class com.chaquo.python.** { *; }` / `-dontwarn
+com.chaquo.python.**` for the Java-side Chaquopy bridge
+(`Python.getInstance().getModule(...).callAttr(...)`, called by
+string method/module name from `AuroraService.kt`) as defense in depth
+-- Chaquopy's own AAR already bundles consumer ProGuard rules designed
+to survive minification, so this is redundant-but-safe, not a
+requirement discovered by trial and error. Removed `--no-shrink` from
+`flutter build apk --release` in `.github/workflows/flutter-android.yml`.
+
+**Risk reassessment vs. the original deferral:** confirmed via
+`pubspec.yaml` that this app uses zero third-party Flutter plugin
+packages (`flutter: sdk: flutter` is the only runtime dependency) --
+camera capture, TTS, and STT are all hand-written Kotlin calling
+Android platform APIs directly in `MainActivity.kt`/`AuroraService.kt`,
+not plugin packages, so there is no `GeneratedPluginRegistrant`
+reflection surface to break. The app's own `Activity`/`Service`/
+`BroadcastReceiver` subclasses are referenced from
+`AndroidManifest.xml`, which AGP's default `proguard-android-optimize.txt`
+already keeps; `MethodChannel`/`EventChannel` dispatch is plain
+`when(call.method)` string matching in Kotlin, not reflection, so no
+additional keep rule was needed for `org.aurora.app.**`. This narrows
+the original blanket risk statement to its one real target (Chaquopy),
+which is explicitly covered.
+
+**Verification:** brace-balanced (`build.gradle`: 40/40); could not run
+a full local Gradle build in this sandbox (no Flutter SDK) --
+verification is, as before, the real CI-built release's measured size
+and the app actually starting/running on-device, checked after this
+commit. This is a real, not-yet-device-verified change -- reported as
+such, not claimed complete until confirmed.
+**First Seen:** Follow-up to the above, same user directive thread,
+2026-08-03, after user chose "enable shrinking now" when asked.
+
 ## Directive NC2 — Relation-Strengthen Cascade Fix (Priority Starvation)
 
 **Ratified:** 2026-08-03, per Sunni's explicit direction to proceed.

@@ -200,8 +200,16 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
-            minifyEnabled false
-            shrinkResources false
+            // APK size: R8 code shrinking + resource shrinking. Chaquopy
+            // ships its own consumer ProGuard rules (its AAR is designed
+            // to survive minification) and no third-party Flutter plugins
+            // are used (camera/TTS/STT here are hand-written Kotlin, not
+            // plugin packages, so no GeneratedPluginRegistrant reflection
+            // risk) -- proguard-rules.pro below adds explicit keep rules
+            // for the Chaquopy bridge and app package as defense in depth.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
 }
