@@ -696,6 +696,15 @@ class OntologicalWeb:
             # sourced relation stays "correction", it doesn't revert.
             if knowledge_source == "correction":
                 rel.source_of_knowledge = "correction"
+            # Directive NC2, ratified 2026-08-03 (Sunni & Cael): a
+            # strengthen-only pass must still cascade through both
+            # endpoints' depth/priority recalculation, or
+            # research_priority's study_decay never applies and an
+            # already-well-studied word can never fall out of rotation.
+            # Do NOT re-append the relation to node.relations here (it's
+            # already there) -- call the recalculation directly.
+            self.nodes[source]._recalculate_depth()
+            self.nodes[target]._recalculate_depth()
             return rel
 
         rel_id = _generate_id("rel")

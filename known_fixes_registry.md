@@ -9772,3 +9772,101 @@ the packaging is safe, mechanical, and independently verifiable per
 item; it does not touch application behavior.
 **First Seen:** User request "we need to get the mb down below 30,"
 2026-08-03.
+
+## Directive NC2 — Relation-Strengthen Cascade Fix (Priority Starvation)
+
+**Ratified:** 2026-08-03, per Sunni's explicit direction to proceed.
+**Category:** RUNTIME BUG (silent early-return, dead decay mechanism)
+**Depends on:** Directive NC1 (already landed) -- distinct bug in a
+different function of the same file, not conflated with it here.
+
+**Root cause:** `research_priority` has a built-in decay specifically
+designed to stop Aurora re-studying the same words forever
+(`study_decay = max(0.05, 0.5 ** times_researched)` in `SemanticNode.
+_recalculate_priority()`). That decay only takes effect when
+`_recalculate_depth()` runs, which only happens via `SemanticNode.
+add_relation()` / `add_definition()` / `add_example()` / `encounter()`.
+`OntologicalWeb.add_relation()`'s "relation already exists, strengthen
+it" branch updated `strength`/`confidence` directly on the
+`SemanticRelation` object and returned early WITHOUT calling
+`self.nodes[source].add_relation(relation)` / `self.nodes[target].
+add_relation(relation)` -- the only path that reaches
+`_recalculate_depth()`. Every research pass that re-discovered an
+already-known relation (near-certain the more a word has already been
+researched) silently skipped the entire recalculation cascade for both
+endpoint nodes.
+
+**Verified against the live state** (`aurora_state/aurora_oets_web.json`,
+1,104 nodes / 18,571 relations, build-584, before this fix): 63.0% of
+nodes (696/1,104) had never been researched once; 98.6% of
+research-sourced relations (1,451/1,471) showed `strength` above their
+own creation value (re-discovered via the broken early-return path, not
+newly found); only 95 new definitions across 2,504 successful research
+passes (3.8% yield); average `comprehension_confidence` 0.35, average
+`ontological_depth` 0.21 -- both artificially low because most nodes
+never got recalculated past `add_node()` defaults.
+
+**Correct Form:** in `OntologicalWeb.add_relation()`'s existing-relation
+branch, after updating `strength`/`confidence`/`source_of_knowledge`,
+added:
+```python
+self.nodes[source]._recalculate_depth()
+self.nodes[target]._recalculate_depth()
+```
+before the `return rel`. The relation is NOT re-appended to
+`node.relations` (it's already there from its original creation) --
+only the recalculation cascade itself was missing. The "brand new
+relation" branch below was untouched; it already calls `self.nodes[
+source].add_relation(relation)` / `self.nodes[target].add_relation(
+relation)`, which already cascades correctly.
+
+**Tests:** new `tests/test_nc2_strengthen_cascade.py` (5 tests: double
+`add_relation()` call cascades on both the first (new) and second
+(strengthen) call, verified via spy on `_recalculate_depth`; a node
+with `times_researched` incremented externally then strengthened shows
+`research_priority` at or below its pre-strengthen value, with an
+explicit sanity check that incrementing `times_researched` alone does
+NOT silently recompute priority; regression guard confirming the
+brand-new-relation branch still cascades exactly once per endpoint,
+no double-cascade, no missed cascade; regression guard confirming the
+brand-new-relation branch's own return value/relation bookkeeping is
+unaffected by this change). Full required battery (`test_m1_1a_
+relation_pairs.py`, `test_pf3_3_descriptor_neighborhood.py`, `test_nc1_
+noncomp_population.py`, `test_nc2_strengthen_cascade.py`): 36 passed,
+0 failed, 0 new regressions.
+
+**One-time repair of the currently-frozen live state**
+(`scripts/repair_stale_priority_depth.py`, backed up to
+`.pre-nc2-backup` before the swap): imports the real `SemanticNode`
+class and calls the real `_recalculate_depth()` on every node -- does
+not reimplement the math, changes derived fields only (`ontological_
+depth`, `comprehension_confidence`, `scaffolding_level`, `research_
+priority`), never touches a relation or definition itself. Confirmed
+post-swap: node count (1,104) and relation count (18,571) unchanged,
+relations byte-identical to the pre-repair file, `noncomp_id` intact
+on every node.
+
+| Metric | Delta observed (real live file) | Expected (directive estimate) |
+|---|---|---|
+| avg `ontological_depth` | +0.1876 | ≈ +0.19 |
+| avg `comprehension_confidence` | +0.2360 | ≈ +0.24 |
+| avg `research_priority` | -0.0587 | ≈ -0.06 |
+
+Matches the directive's pre-verified estimate closely. Never-researched
+nodes still at/above `MIN_PRIORITY_THRESHOLD` (0.3): 692 -- consistent
+with the directive's own prediction that the 696 never-researched words
+would be largely unaffected by this pass (their `times_researched` is
+still 0) and remain correctly eligible for study now that the code fix
+stops the incumbents from crowding them out going forward.
+
+**What this directive does NOT claim** (per its own scope, unchanged
+from the ratified text): it does not guarantee any specific word gets
+researched next -- it restores the mechanism that lets priority-based
+selection actually rotate through her full vocabulary, per its original
+design. It does not change `MIN_PRIORITY_THRESHOLD`, `BATCH_SIZE`, or
+`MAX_QUEUE_SIZE`. It does not address the 3.8% definition-yield rate --
+flagged as a plausible next thread, not opened here.
+**First Seen:** Directive NC2, ratified 2026-08-03 following direct
+inspection of the live OETS web state, as a continuation of Directive
+NC1.
+2026-08-03.
