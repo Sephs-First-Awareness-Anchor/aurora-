@@ -1,53 +1,53 @@
 {
   "conscious_frame": {
-    "coherence": 0.744,
+    "coherence": 0.872,
     "conscious_crest": {
-      "axis": "T",
-      "intensity": 0.5732,
-      "label": "contextualize"
+      "axis": "N",
+      "intensity": 0.5749,
+      "label": "explain"
     },
-    "dominant_axis": "T",
+    "dominant_axis": "N",
     "overlay": {
       "active_crystals": [
-        "mitochondria"
+        "boiling"
       ],
       "interaction_state": "present",
-      "present_anchor": "What is your favorite color?\n[recalled:mitochondria] Tell me about mitochondria. [recalled:favorite] What is your favorite color? [recall...",
+      "present_anchor": "What is the boiling point of water?\n[recalled:boiling] What is the boiling point of water? [recalled:water] What is the boiling point of...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
-    "readiness": 0.7025,
-    "selected_action": "contextualize",
+    "readiness": 0.7665,
+    "selected_action": "explain",
     "should_speak": true,
-    "stance": "contextual_continuity",
+    "stance": "interpretive_explanation",
     "subsurface_crest": {
-      "axis": "T",
-      "intensity": 0.5,
-      "label": "continuity_stable"
+      "axis": "N",
+      "intensity": 0.4476,
+      "label": "steady"
     },
-    "timestamp": 1785739315.8891327
+    "timestamp": 1785789511.619628
   },
-  "saved_at": 1785739315.8893137,
+  "saved_at": 1785789511.6198494,
   "subsurface_state": {
-    "dominant_axis": "T",
+    "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "mitochondria"
+        "boiling"
       ],
       "interaction_state": "present",
-      "present_anchor": "What is your favorite color?\n[recalled:mitochondria] Tell me about mitochondria. [recalled:favorite] What is your favorite color? [recall...",
+      "present_anchor": "What is the boiling point of water?\n[recalled:boiling] What is the boiling point of water? [recalled:water] What is the boiling point of...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "sub_crests": [
       {
@@ -57,8 +57,8 @@
       },
       {
         "axis": "T",
-        "intensity": 1.0,
-        "label": "resonant_recall"
+        "intensity": 0.55,
+        "label": "continuity_stable"
       },
       {
         "axis": "A",
@@ -78,7 +78,7 @@
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_holds"
+        "label": "thread_slipping"
       },
       {
         "axis": "N",
@@ -92,9 +92,9 @@
       }
     ],
     "subsurface_crest": {
-      "axis": "T",
-      "intensity": 0.5,
-      "label": "continuity_stable"
+      "axis": "N",
+      "intensity": 0.4476,
+      "label": "steady"
     }
   }
 }

@@ -70,6 +70,8 @@ from collections import defaultdict, deque
 # IMPORTS FROM LOWER LAYERS
 # ============================================================================
 
+from aurora_internal.aurora_noncomp_registry import AXIS_NC_DIM
+
 from foundational_contract import (
     ExistenceMode, OntologicalClaim, OntologicalViolation, FoundationalContract
 )
@@ -174,6 +176,25 @@ class SenseRecord:
                 if tok not in self.context_clues:
                     self.context_clues.append(tok)
             self.context_clues = self.context_clues[:20]
+
+
+# Directive NC1, ratified 2026-08-03 (Sunni & Cael). Role -> primary axis
+# mapping for noncomp_id assignment. Grounded in X/T/N/B/A doctrine:
+#   noun/determiner -> X (existence: what a thing IS)
+#   verb            -> T (temporal: action unfolds across time)
+#   adjective/preposition -> B (boundary: qualifies/bounds/relates)
+#   adverb          -> N (energy: manner/intensity of expenditure)
+#   pronoun         -> A (agency: self/other reference)
+ROLE_TO_AXIS = {
+    "noun": "X", "verb": "T", "adjective": "B",
+    "adverb": "N", "pronoun": "A", "preposition": "B",
+    "determiner": "X",
+}
+
+
+def _noncomp_id_for_role(role: str):
+    axis = ROLE_TO_AXIS.get(role)
+    return f"{axis}:{AXIS_NC_DIM[axis]}" if axis else None
 
 
 @dataclass
@@ -612,6 +633,7 @@ class OntologicalWeb:
         node = SemanticNode(
             word=word, role=role, emotional_valence=valence, lineage=lineage
         )
+        node.noncomp_id = _noncomp_id_for_role(role)
         if meaning:
             node.add_definition(meaning, source="initial", confidence=0.3)
 
@@ -846,11 +868,25 @@ class OntologicalWeb:
         if len(known) < 2:
             return
 
-        # Co-occurrence creates weak RELATED_TO links
+        # Directive NC1, ratified 2026-08-03 (Sunni & Cael): this exhaustive
+        # pairwise loop used to hardcode RELATED_TO for every pair -- the
+        # role-pair heuristics below (verb+noun -> ENABLES, adjective+noun
+        # -> CONTEXT_OF) already existed but were only ever applied to
+        # adjacent-word pairs, leaving 99% of live relations generic.
+        # Reuses those same two proven patterns here, order-independent
+        # (this loop's pairs are unordered, unlike the adjacency loop
+        # below) -- no new relation types invented.
         for i, w1 in enumerate(known):
             for w2 in known[i+1:]:
+                r1, r2 = self.nodes[w1].role, self.nodes[w2].role
+                if {r1, r2} == {"verb", "noun"}:
+                    rtype = RelationType.ENABLES
+                elif {r1, r2} == {"adjective", "noun"}:
+                    rtype = RelationType.CONTEXT_OF
+                else:
+                    rtype = RelationType.RELATED_TO
                 self.add_relation(
-                    w1, w2, RelationType.RELATED_TO,
+                    w1, w2, rtype,
                     strength=0.2, confidence=0.3,
                     knowledge_source="co-occurrence"
                 )

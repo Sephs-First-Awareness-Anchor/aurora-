@@ -524,6 +524,7 @@ class OETSPersistence:
                     "first_encountered": node.first_encountered,
                     "last_accessed": node.last_accessed,
                     "lineage": node.lineage,
+                    "noncomp_id": node.noncomp_id,
                 }
 
             # Serialize relations
@@ -697,6 +698,7 @@ class OETSPersistence:
                     role=ndata.get("role", "noun"),
                     emotional_valence=ndata.get("emotional_valence", 0.0),
                     lineage=ndata.get("lineage", ""),
+                    noncomp_id=ndata.get("noncomp_id"),
                 )
                 node.definitions = ndata.get("definitions", [])
 

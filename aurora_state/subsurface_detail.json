@@ -2,26 +2,22 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 1.0,
-      "label": "topic_continuation"
-    },
-    {
       "confidence": 0.35,
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.744,
+  "coherence": 0.872,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "mitochondria",
-    "ambiguity": 0.545,
-    "cost_total": 0.1504,
+    "active_topic": "",
+    "ambiguity": 0.2575,
+    "cost_total": 0.1539,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 1.0,
+    "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
@@ -30,17 +26,6 @@
   "instability_markers": [],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -62,23 +47,22 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.3463,
+    "confidence": 0.4473,
     "expected_observation": "followup",
-    "expected_user_continuation": "mitochondria",
-    "likely_affect_shift": "curiosity",
+    "expected_user_continuation": "",
+    "likely_affect_shift": "calm",
     "mismatch": 0.325,
     "prediction_payload": {
-      "affect": "curiosity",
+      "affect": "calm",
       "axis_signature": "X",
       "certainty_band": "low",
       "intent_type": "followup",
-      "topic": "mitochondria"
+      "topic": ""
     },
     "preload_context": [
-      "mitochondria",
       "followup"
     ],
-    "readiness_bias": 0.3324,
+    "readiness_bias": 0.4202,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -88,19 +72,18 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.7025,
+  "readiness": 0.7665,
   "recalled_fragments": [
-    "mitochondria",
-    "What is your favorite color?\n[recalled:mitochondria] Tell me about mitochondria. [recalled:favorite] What is your favorite color? [recall..."
+    "What is the boiling point of water?\n[recalled:boiling] What is the boiling point of water? [recalled:water] What is the boiling point of ..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2802,
-    "N": 0.0619,
-    "T": 0.658,
+    "B": 0.2992,
+    "N": 0.7008,
+    "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785739315.889687,
+  "saved_at": 1785789511.620164,
   "sub_crests": [
     {
       "axis": "X",
@@ -109,8 +92,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "resonant_recall"
+      "intensity": 0.55,
+      "label": "continuity_stable"
     },
     {
       "axis": "A",
@@ -130,7 +113,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",

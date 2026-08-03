@@ -1,29 +1,30 @@
 {
-  "original": "I become color. I learned color.",
+  "original": "I do point. I did point alive.",
   "candidate": "",
-  "selected": "I become color. I learned color.",
+  "selected": "I do point. I did point alive.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.5,
   "candidate_score": 0.0,
-  "original_pressure": 0.276,
+  "original_pressure": 0.335,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.724,
+  "pressure_relief": -0.665,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What is your favorite color?",
+    "prompt_excerpt": "What is the boiling point of water?",
     "input_interpretation": {
-      "raw_prompt": "What is your favorite color?",
+      "raw_prompt": "What is the boiling point of water?",
       "intent_hint": "question",
       "topic_terms": [
-        "favorite",
-        "color"
+        "boiling",
+        "point",
+        "water"
       ],
       "entities": []
     },
-    "tone": "gentle",
+    "tone": "warm",
     "source": "no_pattern_matched",
-    "timestamp": 1785739315.936139,
+    "timestamp": 1785789511.6515467,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {

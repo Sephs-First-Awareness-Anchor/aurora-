@@ -9463,3 +9463,90 @@ first real one after deploying the fix.
 **First Seen:** Bug Report 2 regression testing surfaced an unexpected
 394.89s test runtime and an `_active_turn_state is None` failure on the
 first live-repo boot after FIX-A089 landed, 2026-08-03.
+
+## Directive NC1 — NonComp ID Population & Relation-Type Completion
+
+**Ratified:** 2026-08-03, per Sunni's explicit direction to proceed.
+**Category:** ARCHITECTURAL + RUNTIME BUG (persistence round-trip gap)
+
+**Root cause, part 1 (persistence gap):** `SemanticNode.noncomp_id`
+(`aurora_internal/aurora_ontological_scaffolding.py`) is a real field but
+was never written by `OETSPersistence.save_web()` nor read by
+`load_web()` (`aurora_internal/aurora_identity_persistence.py`) --
+silently dropped every save/load cycle regardless of what set it. Fix:
+added `"noncomp_id": node.noncomp_id` to `save_web()`'s node dict and
+`noncomp_id=ndata.get("noncomp_id")` to `load_web()`'s `SemanticNode(...)`
+constructor call. Verified with a real save→load round-trip test (not
+just JSON inspection) confirming a non-null noncomp_id survives, and a
+second test confirming `None` also round-trips as `None` (never
+fabricated for an unmapped role).
+
+**Root cause, part 2 (role-blind pairwise loop):** `infer_relations_
+from_context()`'s exhaustive pairwise co-occurrence loop hardcoded
+`RELATED_TO` for every word pair, while two working role-pair heuristics
+(verb+noun -> `ENABLES`, adjective+noun -> `CONTEXT_OF`) existed two
+lines below but were only ever applied to ADJACENT pairs in the input
+list, never the full pairwise set -- leaving 99.0% of live relations
+(18,394 / 18,571) generic. Fix: the pairwise loop now checks each pair's
+roles against the same two proven patterns (order-independent, since
+this loop's pairs are unordered unlike the adjacency loop) before
+falling back to `RELATED_TO`. The adjacency loop is untouched and still
+runs afterward, strengthening any relation both loops independently
+classify the same way.
+
+**Ratified role -> axis mapping** (`ROLE_TO_AXIS`, reusing the existing
+`AXIS_NC_DIM` from `aurora_internal/aurora_noncomp_registry.py` verbatim
+-- no new dimension names):
+```
+noun/determiner -> X:OPERATOR    (existence: what a thing IS)
+verb             -> T:DIFFERENCE (temporal: action unfolds across time)
+adjective/preposition -> B:MAGNITUDE (boundary: qualifies/bounds/relates)
+adverb           -> N:COST       (energy: manner/intensity of expenditure)
+pronoun          -> A:POLARITY   (agency: self/other reference)
+anything else (e.g. "training_gap") -> None, never guessed
+```
+Wired go-forward in `OntologicalWeb.add_node()` (`node.noncomp_id =
+_noncomp_id_for_role(role)`), so every newly-added node gets one
+automatically -- this is a substrate fix, not a one-time patch.
+
+**Backfill of the live state** (`aurora_state/aurora_oets_web.json`,
+1,104 nodes / 18,571 relations, backed up to `.pre-nc1-backup` before
+the swap, via `scripts/backfill_noncomp_and_relations.py`):
+
+| Metric | Before | After |
+|---|---|---|
+| Nodes with `noncomp_id` | 0 / 1,104 | 1,092 / 1,104 (12 unmapped roles honestly left `None`) |
+| `related_to` relations | 18,394 | 11,568 |
+| `enables` relations | 88 | 6,065 (+5,977 backfilled) |
+| `context_of` relations | 20 | 869 (+849 backfilled) |
+| other typed relations (`is_a`, `causes`, etc.) | 69 | 69 (untouched) |
+
+**What did NOT improve, reported honestly:** 11,568 relations (62.3% of
+the total, down from 99.0%) remain the generic `RELATED_TO` type. This
+is correct, not a shortfall to hide -- those pairs genuinely don't fit
+either of the two proven role-pair patterns, and this directive
+explicitly does not invent new relation types or force-classify them.
+Differentiating that remainder further is future work, not claimed here.
+
+**Tests:** new `tests/test_nc1_noncomp_population.py` (9 tests: save/
+load round-trip for both a populated and a `None` noncomp_id, all 7
+mapped roles plus one unmapped role via `add_node()`, `ENABLES`/
+`CONTEXT_OF`/`RELATED_TO` typing for both orderings of each role pair,
+and confirmation the adjacency loop still runs after the pairwise loop).
+Full required battery (`test_m1_1a_relation_pairs.py`, `test_pf3_3_
+descriptor_neighborhood.py`, `test_nc1_noncomp_population.py`): 31
+passed, 0 failed, 0 new regressions. Live backfilled state re-verified
+loadable through the real `OETSPersistence.load_web()` path post-swap
+(1,104 nodes / 18,571 relations, matching pre-backfill counts exactly;
+1,092 nodes carry a noncomp_id; relation-type distribution matches the
+backfill script's own printed counts).
+
+**What this directive does NOT claim** (per its own scope, unchanged
+from the ratified text): it does not make Aurora "understand" in some
+general sense -- it closes one specific, verified substrate gap
+(concept identity + differentiated relation types) so future growth
+compounds instead of flattening into generic edges. It does not touch
+the separate `LexicalEntry.noncomp_id` path, the M1 relation-pairs
+campaign, or PF3's own unresolved motif-shape-mixing measurements.
+**First Seen:** Directive NC1, ratified 2026-08-03 following direct
+inspection of the live OETS web state.
