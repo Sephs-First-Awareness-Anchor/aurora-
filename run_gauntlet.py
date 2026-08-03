@@ -9,9 +9,8 @@ Default flow: learning arc
   Stage 1 : Corpus trainer run (default: 1,000 messages)
   Stage 2 : Study
   Stage 3 : Sensory grounding
-  Stage 4 : Socialization
-  Stage 5 : Dream
-  Stage 6 : Restart daemon
+  Stage 4 : Dream
+  Stage 5 : Restart daemon
 
 Legacy flow is still available with `--flow legacy`:
 
@@ -70,7 +69,6 @@ DEFAULT_CORPUS_PASSES     = "triple"
 DEFAULT_OBSERVER_BATCH    = 15
 DEFAULT_STUDY_CYCLES      = 1
 DEFAULT_SENSORY_CONCEPTS  = 6
-DEFAULT_SOCIAL_TURNS      = 8
 DEFAULT_DREAM_EPISODES    = 4
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -342,100 +340,6 @@ print(json.dumps({{
         _log(f"  Sensory stderr: {result.stderr.strip()[:400]}")
     if result.stdout.strip():
         _log(f"  Sensory stdout: {result.stdout.strip()[:400]}")
-    return False
-
-
-def _run_socialize(turns: int, topic: str | None = None) -> bool:
-    # External structural/safety audit (2026-08-02): aurora_gpt_learning_
-    # session does not exist in this build. Classification: an OPTIONAL
-    # external teacher for this manual gauntlet harness only -- _gen in
-    # the generated script below routes every actual reply through
-    # Aurora's own native process_external_user_turn regardless, so this
-    # is never part of her ordinary response generation. Not restored/
-    # fabricated here (no source for it exists in this repo); the
-    # subprocess fails honestly with a non-zero exit, already handled
-    # below as an ordinary gauntlet-step failure, until/unless that
-    # module is deliberately reintroduced.
-    _log(f"  Running socialization session ({turns} turns" + (f", topic={topic}" if topic else "") + ")")
-    t0 = time.time()
-    script = f"""
-import json
-import os
-import sys
-
-sys.path.insert(0, os.getcwd())
-
-from aurora import boot_aurora, process_external_user_turn
-from aurora_gpt_learning_session import run_learning_session
-from aurora_daemon import _document_session_learnings
-
-state_dir = {json.dumps(str(STATE_DIR))}
-topic = {topic!r}
-systems = boot_aurora(state_dir=state_dir, verbose=False)
-
-def _gen(prompt_text, source="gauntlet_social"):
-    if not prompt_text or len(str(prompt_text).split()) < 3:
-        return None
-    result = process_external_user_turn(
-        systems,
-        str(prompt_text),
-        source_label=f"aurora:{{source}}",
-        session_id="gauntlet_social",
-        auto_search_enabled=False,
-        record_exchange=False,
-        update_interactive_state=False,
-        track_evolutionary_trace=True,
-        run_periodic_maintenance=True,
-        mode_name="AGENTIC",
-    )
-    return result.get("resp_A")
-
-systems["_generate_fn"] = _gen
-try:
-    exchanges = run_learning_session(
-        systems,
-        n_turns={int(turns)},
-        topic=topic,
-        verbose=False,
-    )
-    _document_session_learnings(systems, exchanges or [], topic=topic)
-finally:
-    systems.pop("_generate_fn", None)
-
-if not exchanges:
-    raise SystemExit("socialization produced 0 exchanges")
-
-dt = systems.get("dream_trainer")
-top_fails = []
-if dt is not None and hasattr(dt, "ledger"):
-    try:
-        top_fails = list(dt.ledger.get_top_fails(3) or [])
-    except Exception:
-        top_fails = []
-
-print(json.dumps({{
-    "exchanges": len(exchanges),
-    "top_fails": top_fails,
-}}))
-"""
-    result = subprocess.run(
-        [sys.executable, "-c", script],
-        cwd=str(BASE_DIR),
-        capture_output=True,
-        text=True,
-    )
-    elapsed = time.time() - t0
-    if result.returncode == 0:
-        summary = result.stdout.strip().splitlines()[-1] if result.stdout.strip() else ""
-        if summary:
-            _log(f"  Social summary: {summary}")
-        _log(f"  Socialization done in {elapsed:.1f}s.")
-        return True
-    _log(f"  Socialization FAILED (exit {result.returncode}).")
-    if result.stderr.strip():
-        _log(f"  Socialization stderr: {result.stderr.strip()[:400]}")
-    if result.stdout.strip():
-        _log(f"  Socialization stdout: {result.stdout.strip()[:400]}")
     return False
 
 
@@ -861,9 +765,8 @@ Default flow (`--flow learning_arc`):
   1  Corpus trainer run
   2  Study
   3  Sensory grounding
-  4  Socialization
-  5  Dream
-  6  Restart daemon
+  4  Dream
+  5  Restart daemon
 
 Legacy flow (`--flow legacy`):
   0  Stop daemon
@@ -895,10 +798,6 @@ Legacy flow (`--flow legacy`):
                     help="Study cycles after corpus in learning_arc flow")
     ap.add_argument("--sensory-concepts", type=int, default=DEFAULT_SENSORY_CONCEPTS,
                     help="Max concept images to ground during the sensory stage")
-    ap.add_argument("--social-turns", type=int, default=DEFAULT_SOCIAL_TURNS,
-                    help="GPT social turns in learning_arc flow")
-    ap.add_argument("--social-topic", type=str, default=None,
-                    help="Optional topic for the learning_arc social stage")
     ap.add_argument("--dream-episodes", type=int, default=DEFAULT_DREAM_EPISODES,
                     help="Dream episodes in learning_arc flow")
     ap.add_argument("--chain-seed-ticks", type=int, default=DEFAULT_CHAIN_SEED_TICKS,
@@ -935,7 +834,7 @@ Legacy flow (`--flow legacy`):
         _log(
             f"  Learning : passes={args.corpus_passes} batch={args.batch_size:,} "
             f"study={args.study_cycles} sensory={args.sensory_concepts} "
-            f"social={args.social_turns} dream={args.dream_episodes}"
+            f"dream={args.dream_episodes}"
         )
     _log(f"  Stages   : {args.stages or 'all'}")
 
@@ -1024,24 +923,16 @@ Legacy flow (`--flow legacy`):
             _section("Stage 3 — Sensory Grounding")
             results[3] = _run_sensory_grounding(max(1, int(args.sensory_concepts)))
 
-        # ── Stage 4: Socialization ────────────────────────────────────────────
+        # ── Stage 4: Dream ────────────────────────────────────────────────────
         if _should_run(4):
-            _section("Stage 4 — Socialization")
-            results[4] = _run_socialize(
-                max(1, int(args.social_turns)),
-                topic=args.social_topic,
-            )
-
-        # ── Stage 5: Dream ────────────────────────────────────────────────────
-        if _should_run(5):
-            _section("Stage 5 — Dream")
-            results[5] = _run_dream(max(1, int(args.dream_episodes)))
+            _section("Stage 4 — Dream")
+            results[4] = _run_dream(max(1, int(args.dream_episodes)))
 
         _trim_pressure_log()
 
-        # ── Stage 6: Restart daemon ───────────────────────────────────────────
-        if _should_run(6) and not args.no_restart:
-            _section("Stage 6 — Restart Daemon")
+        # ── Stage 5: Restart daemon ───────────────────────────────────────────
+        if _should_run(5) and not args.no_restart:
+            _section("Stage 5 — Restart Daemon")
             _start_daemon()
 
     # ── Summary ───────────────────────────────────────────────────────────────

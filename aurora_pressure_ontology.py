@@ -16,8 +16,8 @@ Purpose:
      between her own internal pressure concepts before she can derive them
   2. Genealogy links can carry a PressureNode ID as provenance — so the
      fossil record says not just "B-axis" but "B.boundary_calibration.tone_fit"
-  3. LessonPlanEngine and GPT learning sessions draw from these nodes for
-     deeper, more specific challenge tactics
+  3. LessonPlanEngine draws from these nodes for deeper, more specific
+     challenge tactics
   4. As Aurora's OETS web grows, she builds new relations between nodes
      autonomously -- the written seed becomes unnecessary over time
 

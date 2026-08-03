@@ -24437,7 +24437,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         # query_type is already gated above — we only reach here for questions
         # Skip search for questions directed at Aurora's own experience/state,
         # or for personal perspective questions ("to you", "what do you think", etc.)
-        # Also respect auto_search_enabled=False (e.g. GPT learning sessions)
+        # Also respect auto_search_enabled=False (set by callers that don't want search)
         if explicit_lookup_requested and (topic or entities) and not _is_aurora_self_question(user_text) and not _is_personal_perspective_q:
             try:
                 ev = _poedex_lookup_evidence(
@@ -32685,11 +32685,8 @@ def chat(systems: Dict[str, Any]):
     print("  |    /dreambridge-- Bridge shards into OETS now   |")
     print("  |    /phase      -- Genealogy cycle phase + recs  |")
     print("  |    /stalls     -- Stall event history + dims    |")
-    print("  |    /gptlearn [N] [topic] -- GPT peer-learning   |")
-    print("  |    socialize [N] [topic] -- same, natural cmd   |")
     print("  |    /messages   -- Read messages Aurora left you |")
     print("  |    /voice      -- Start push-to-talk voice chat |")
-    print("  |    /browserask -- Aurora asks via social API    |")
     print("  |    /dual       -- Toggle dual-response mode     |")
     print("  |    /search     -- Toggle web lookup on Qs       |")
     print("  |    /study N    -- Run N study cycles            |")
@@ -32790,88 +32787,6 @@ def chat(systems: Dict[str, Any]):
                         interactive_state['last_user_turn_time'] = time.time()
                         print(f"  [Heard]: \"{text}\"")
 
-                        # ── Away mode voice triggers ───────────────────────────
-                        _heard_low = text.strip().lower().rstrip('.!?,')
-                        _away_file_v = __import__("pathlib").Path(__file__).parent / "aurora_state" / "away_mode.json"
-                        _away_on_v = (
-                            "i'm leaving", "im leaving", "i am leaving",
-                            "i'm heading out", "im heading out", "i am heading out",
-                            "i'm going out", "im going out", "i am going out",
-                            "i'm out", "im out", "heading out", "going out",
-                            "i'll be back", "ill be back",
-                        )
-                        _away_off_v = (
-                            "i'm back", "im back", "i am back",
-                            "i'm home", "im home", "i am home",
-                            "i'm here", "im here", "i'm here now", "im here now",
-                            "i'm around", "im around",
-                        )
-                        _is_away_on  = _heard_low in _away_on_v  or any(_heard_low.startswith(p) for p in _away_on_v)
-                        _is_away_off = _heard_low in _away_off_v or any(_heard_low.startswith(p) for p in _away_off_v)
-                        if _is_away_on:
-                            import json as _jv, time as _tv
-                            _interval_v = 30
-                            _mv = __import__("re").search(r'every\s+(\d+)', _heard_low)
-                            if _mv:
-                                _interval_v = max(10, int(_mv.group(1)))
-                            _away_file_v.parent.mkdir(parents=True, exist_ok=True)
-                            _away_file_v.write_text(_jv.dumps({
-                                "active": True,
-                                "interval_minutes": _interval_v,
-                                "started_at": _tv.time(),
-                            }))
-                            _away_confirm = "Away mode activated. Automatic outreach is off right now."
-                            print(f"\n  Aurora: {_away_confirm}")
-                            if voice_mode and integration:
-                                integration.speak(_away_confirm)
-                            print()
-                            sys.stdout.write("  You: ")
-                            sys.stdout.flush()
-                            continue
-                        if _is_away_off:
-                            import json as _jv
-                            _away_file_v.write_text(_jv.dumps({"active": False}))
-                            _learn_log_v = __import__("pathlib").Path(__file__).parent / "aurora_state" / "social_learning_log.json"
-                            _sc_v = 0
-                            _away_start_v = 0.0
-                            try:
-                                _awd_v = _jv.loads(_away_file_v.read_text()) if _away_file_v.exists() else {}
-                                _away_start_v = float(_awd_v.get("started_at", 0.0) or 0.0)
-                            except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:25968",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "chat", "handler_line": 25968, "source_file": "aurora.py"},
-                                )
-                                pass
-                            try:
-                                for _rv in (_jv.loads(_learn_log_v.read_text()) if _learn_log_v.exists() else []):
-                                    if float(_rv.get("timestamp", 0) or 0) >= _away_start_v:
-                                        _sc_v += 1
-                            except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:aurora.py:25974",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "chat", "handler_line": 25974, "source_file": "aurora.py"},
-                                )
-                                pass
-                            _back_confirm = (
-                                f"Welcome back. I ran {_sc_v} GPT session(s) while you were away. "
-                                "The learnings are integrated. Say slash lessons to see what I picked up."
-                            ) if _sc_v > 0 else "Welcome back. Away mode is off."
-                            print(f"\n  Aurora: {_back_confirm}")
-                            if voice_mode and integration:
-                                integration.speak(_back_confirm)
-                            print()
-                            sys.stdout.write("  You: ")
-                            sys.stdout.flush()
-                            continue
-                        # ── end away mode check ────────────────────────────────
-
                         # Process through conversation pipeline
                         resp_A, resp_B, _ = dual_question_pipeline(
                             systems, text, mode, use_search=False,
@@ -32906,54 +32821,6 @@ def chat(systems: Dict[str, Any]):
 
         # Natural language shorthand for standalone operations
         _input_low = user_input.strip().lower().rstrip('.!?')
-        _is_socialize = _input_low in (
-            "socialize", "go socialize", "socialize with gpt",
-            "go talk to gpt", "talk to gpt", "go chat with gpt",
-        ) or re.match(r'^socialize\s+(\d+)', _input_low)
-        if _is_socialize:
-            _soc_match = re.match(r'^socialize\s+(\d+)(?:\s+(.+))?', _input_low)
-            _soc_turns = int(_soc_match.group(1)) if _soc_match else 8
-            _soc_topic = _soc_match.group(2) if _soc_match else None
-            try:
-                if "_generate_fn" not in systems:
-                    def _soc_generate(prompt_text, source="socialize"):
-                        if not prompt_text or len(prompt_text.split()) < 3:
-                            return None
-                        _r = process_external_user_turn(
-                            systems,
-                            prompt_text,
-                            source_label=f"aurora:{source}",
-                            session_id="socialize",
-                            auto_search_enabled=False,
-                            record_exchange=True,
-                            update_interactive_state=False,
-                            track_evolutionary_trace=True,
-                            run_periodic_maintenance=True,
-                            mode_name="AGENTIC",
-                        )
-                        return _r.get("resp_A")
-                    systems["_generate_fn"] = _soc_generate
-                # External structural/safety audit (2026-08-02): this module
-                # does not exist in this build. Classification, per that
-                # audit: an OPTIONAL external teacher for this opt-in
-                # "socialize" CLI command only -- never part of Aurora's
-                # ordinary response generation, which _soc_generate above
-                # routes through her own native process_external_user_turn
-                # regardless. Not restored/fabricated here (no source for
-                # it exists in this repo); this command fails honestly via
-                # the except below (printed to the operator, not swallowed)
-                # until/unless that module is deliberately reintroduced.
-                from aurora_gpt_learning_session import run_learning_session
-                run_learning_session(
-                    systems,
-                    n_turns=_soc_turns,
-                    topic=_soc_topic,
-                    verbose=True,
-                )
-            except Exception as _soc_e:
-                print(f"  [SOCIALIZE] Error: {_soc_e}")
-            print()
-            continue
 
         # "Aurora go play for [duration]" — self-acquired experiential training
         _gp_match = re.match(
@@ -33010,98 +32877,6 @@ def chat(systems: Dict[str, Any]):
             aurora_trade_blows(systems, first_clue=_first_clue, verbose=True)
             continue
 
-        # Away mode triggers — "I'm leaving / heading out" → start timed social sessions
-        # "I'm back / I'm home / I'm here" → stop them
-        # Normalize curly apostrophes + strip all leading/trailing punctuation/spaces
-        _away_norm = user_input.strip().lower()
-        _away_norm = _away_norm.replace('\u2019', "'").replace('\u2018', "'")  # curly → straight
-        _away_norm = _away_norm.strip(".,!?;: ")
-        _away_phrases_on = (
-            "i'm leaving", "im leaving", "i am leaving",
-            "i'm heading out", "im heading out", "i am heading out",
-            "i'm going out", "im going out", "i am going out",
-            "i'm out", "im out", "heading out", "going out",
-            "i'll be back", "ill be back",
-        )
-        _away_phrases_off = (
-            "i'm back", "im back", "i am back",
-            "i'm home", "im home", "i am home",
-            "i'm here", "im here", "i'm here now", "im here now",
-            "i'm around", "im around", "i'm around now",
-        )
-        _away_file = __import__("pathlib").Path(__file__).parent / "aurora_state" / "away_mode.json"
-        _is_away_on_typed  = (_away_norm in _away_phrases_on
-                              or any(_away_norm.startswith(p) for p in _away_phrases_on)
-                              or any(p in _away_norm for p in ("leaving", "heading out", "going out")))
-        _is_away_off_typed = (_away_norm in _away_phrases_off
-                              or any(_away_norm.startswith(p) for p in _away_phrases_off)
-                              or any(p in _away_norm for p in ("i'm back", "im back", "i am back",
-                                                                "i'm home", "im home", "i'm here", "im here")))
-        if _is_away_on_typed:
-            import json as _jmod, time as _tmod
-            _interval = 30  # minutes between sessions while away
-            # Allow "every N" in the phrase to set interval
-            _m = __import__("re").search(r'every\s+(\d+)', _input_low)
-            if _m:
-                _interval = max(10, int(_m.group(1)))
-            _away_file.parent.mkdir(parents=True, exist_ok=True)
-            _away_file.write_text(_jmod.dumps({
-                "active": True,
-                "interval_minutes": _interval,
-                "started_at": _tmod.time(),
-            }))
-            _away_msg = "Got it — away mode is active. Automatic outreach is off right now."
-            print(f"\n  Aurora: {_away_msg}\n")
-            if voice_mode and integration:
-                integration.speak(_away_msg)
-            continue
-        if _is_away_off_typed:
-            import json as _jmod
-            _away_file.write_text(_jmod.dumps({"active": False}))
-            # Pull a brief summary of sessions that ran while away
-            _learn_log = __import__("pathlib").Path(__file__).parent / "aurora_state" / "social_learning_log.json"
-            _session_count = 0
-            _away_start = 0.0
-            _top_fails_seen: list = []
-            try:
-                _awd = _jmod.loads(_away_file.read_text()) if _away_file.exists() else {}
-                _away_start = float(_awd.get("started_at", 0.0) or 0.0)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:26173",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "chat", "handler_line": 26173, "source_file": "aurora.py"},
-                )
-                pass
-            try:
-                _log_data = _jmod.loads(_learn_log.read_text()) if _learn_log.exists() else []
-                for _rec in _log_data:
-                    if float(_rec.get("timestamp", 0) or 0) >= _away_start:
-                        _session_count += 1
-                        for _fd, _fs in (_rec.get("top_fail_dims") or [])[:2]:
-                            if _fd not in _top_fails_seen:
-                                _top_fails_seen.append(_fd)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:26183",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "chat", "handler_line": 26183, "source_file": "aurora.py"},
-                )
-                pass
-            if _session_count > 0:
-                _fail_hint = f" Key focus areas: {', '.join(_top_fails_seen[:3])}." if _top_fails_seen else ""
-                _back_msg = "Welcome back. Away mode was active, but automatic outreach is off right now."
-            else:
-                _back_msg = "Welcome back. Away mode is off."
-            print(f"\n  Aurora: {_back_msg}\n")
-            if voice_mode and integration:
-                integration.speak(_back_msg)
-            continue
-
         # Commands
         if user_input.startswith('/'):
             cmd_parts = user_input.split(None, 1)
@@ -33154,58 +32929,6 @@ def chat(systems: Dict[str, Any]):
                 _full_save(systems)
                 print("\n  All state saved. Aurora remembers. Goodbye.\n")
                 break
-            elif cmd in ('/away', '/leaving'):
-                import json as _jca, time as _tca
-                _interval_ca = 30
-                if len(cmd_parts) > 1:
-                    try:
-                        _interval_ca = max(10, int(cmd_parts[1]))
-                    except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:26239",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "chat", "handler_line": 26239, "source_file": "aurora.py"},
-                        )
-                        pass
-                _away_file_ca = __import__("pathlib").Path(__file__).parent / "aurora_state" / "away_mode.json"
-                _away_file_ca.parent.mkdir(parents=True, exist_ok=True)
-                _away_file_ca.write_text(_jca.dumps({
-                    "active": True, "interval_minutes": _interval_ca, "started_at": _tca.time()
-                }))
-                _aw_msg = "Got it — away mode is active. Automatic outreach is off right now."
-                print(f"\n  Aurora: {_aw_msg}\n")
-                if voice_mode and integration:
-                    integration.speak(_aw_msg)
-                continue
-            elif cmd in ('/back', '/home'):
-                import json as _jcb
-                _away_file_cb = __import__("pathlib").Path(__file__).parent / "aurora_state" / "away_mode.json"
-                _away_file_cb.write_text(_jcb.dumps({"active": False}))
-                _learn_log_cb = __import__("pathlib").Path(__file__).parent / "aurora_state" / "social_learning_log.json"
-                _sc_cb = 0
-                try:
-                    _awd_cb = _jcb.loads(_away_file_cb.read_text())
-                    _ast_cb = float(_awd_cb.get("started_at", 0) or 0)
-                    for _rv in (_jcb.loads(_learn_log_cb.read_text()) if _learn_log_cb.exists() else []):
-                        if float(_rv.get("timestamp", 0) or 0) >= _ast_cb:
-                            _sc_cb += 1
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:26263",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "chat", "handler_line": 26263, "source_file": "aurora.py"},
-                    )
-                    pass
-                _bk_msg = (f"Welcome back. I ran {_sc_cb} GPT session(s) while you were away. Learnings are integrated."
-                           if _sc_cb > 0 else "Welcome back. Away mode is off.")
-                print(f"\n  Aurora: {_bk_msg}\n")
-                if voice_mode and integration:
-                    integration.speak(_bk_msg)
-                continue
             elif cmd == '/status':
                 show_status(systems)
                 continue
@@ -33456,59 +33179,6 @@ def chat(systems: Dict[str, Any]):
                     print("  No stall events yet (file not found).")
                 print()
                 continue
-            elif cmd.startswith('/gptlearn'):
-                _gl_parts = cmd.split(None, 2)
-                _gl_turns = 8
-                _gl_topic = None
-                if len(_gl_parts) > 1:
-                    try:
-                        _gl_turns = int(_gl_parts[1])
-                    except ValueError as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:26514",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "chat", "handler_line": 26514, "source_file": "aurora.py"},
-                        )
-                        _gl_topic = _gl_parts[1]
-                if len(_gl_parts) > 2:
-                    _gl_topic = _gl_parts[2]
-                try:
-                    # Wire _generate_fn so the session can call Aurora's pipeline
-                    if "_generate_fn" not in systems:
-                        def _gl_generate(prompt_text, source="gpt_learning"):
-                            if not prompt_text or len(prompt_text.split()) < 3:
-                                return None
-                            _r = process_external_user_turn(
-                                systems,
-                                prompt_text,
-                                source_label=f"aurora:{source}",
-                                session_id="gpt_learning",
-                                auto_search_enabled=False,
-                                record_exchange=True,
-                                update_interactive_state=False,
-                                track_evolutionary_trace=True,
-                                run_periodic_maintenance=True,
-                                mode_name="AGENTIC",
-                            )
-                            return _r.get("resp_A")
-                        systems["_generate_fn"] = _gl_generate
-                    # Same classification as the /socialize command above:
-                    # optional external teacher, module not present in this
-                    # build, never part of ordinary response generation.
-                    from aurora_gpt_learning_session import run_learning_session
-                    run_learning_session(
-                        systems,
-                        n_turns=_gl_turns,
-                        topic=_gl_topic,
-                        verbose=True,
-                    )
-                except Exception as _gle:
-                    print(f"  [LEARN] Error: {_gle}")
-                print()
-                continue
-
             elif cmd == '/balance':
                 _bs = _field_balancer.status()
                 print(f"  Constraint Field Balance  (exchanges: {_bs['exchanges']})")

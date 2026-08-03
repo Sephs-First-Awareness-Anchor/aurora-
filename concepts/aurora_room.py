@@ -2756,7 +2756,7 @@ def build_room() -> None:
         },
         "poedex": {
             "what": "Poedex — the governing intelligence. Three modes: Observer (internal query), "
-                    "Researcher (internal, no external source), Enforcer (code changes + proposals).",
+                    "Researcher (her own browser, no external LLM), Enforcer (code changes + proposals).",
             "deps": ["aurora_room.py Poedex tab", "quasiarch_diag_report.json",
                      "poedex_log.json", "poedex_lessons.json"],
             "files": ["aurora_state/poedex_log.json", "aurora_state/poedex_lessons.json"],
@@ -2934,23 +2934,37 @@ def build_room() -> None:
 
         if not parts:
             parts.append(f"◈ NOT IN INTERNAL KNOWLEDGE\n"
-                         f"  No match for '{question}'.\n")
+                         f"  No match for '{question}'.\n"
+                         f"\n  Try Researcher mode to look it up herself.\n")
 
         return "".join(parts)
 
     # ── External search (Researcher mode) ─────────────────────────────────────
-    # Researcher mode no longer calls out to any external LLM -- Aurora has no
-    # language faculty that isn't her own. A lookup here honestly reports that
-    # no external source exists rather than reaching for one; the caller falls
-    # through to the same honest-abstain path used when internal knowledge has
-    # no match.
+    # Researcher mode has no external LLM -- Aurora has no language faculty
+    # that isn't her own. External lookup instead means her own browser
+    # (aurora_desktop_agent.py, Playwright) searching and reading a real page
+    # back as text -- her own eyes on the actual source, not a model's
+    # paraphrase of it. If the browser is unavailable (no display, Playwright
+    # not installed, timeout) this reports that honestly rather than
+    # fabricating an answer; the caller falls through to the same
+    # honest-abstain path used when internal knowledge has no match.
 
     def _poe_external_search(question: str) -> None:
         try:
+            try:
+                from aurora_desktop_agent import research as _desktop_research
+                found = _desktop_research(question)
+            except Exception as _research_exc:
+                found = {"ok": False, "error": str(_research_exc), "text": ""}
+            if found.get("ok") and found.get("text"):
+                result = (f"[{found.get('title','?')} -- {found.get('url','?')}]\n"
+                          f"{found['text']}")
+            else:
+                result = ("Researcher mode's browser lookup found nothing usable "
+                          f"({found.get('error', 'no result')}) -- Aurora reasons "
+                          "from her own internal knowledge only.")
             _POEDEX_RESULTS.write_text(json.dumps({
-                "query": question,
-                "result": "Researcher mode has no external source -- Aurora reasons "
-                          "from her own internal knowledge only.",
+                "query": question, "result": result,
                 "status": "done", "ts": time.time()}, indent=2))
         except Exception:
             pass
@@ -3334,7 +3348,7 @@ def build_room() -> None:
                 return
             _poe_ext_waiting[0] = True
             _poe_ext_waiting[1] = question
-            ext_status_lbl.configure(text="Researcher mode has no external source...", fg=WARN)
+            ext_status_lbl.configure(text="Researcher is searching (her own browser)...", fg=WARN)
             rb = _res_refs.get("ext_result_box")
             if rb:
                 _write(rb,
@@ -3751,13 +3765,25 @@ def build_room() -> None:
 
             if cat in ("external", "researcher"):
                 # Researcher mode has no external LLM to call out to -- Aurora
-                # has no language faculty that isn't her own. Report honestly
-                # that there's no external source, same async shape as before
-                # so the daemon-side poller/result-file contract is unchanged.
+                # has no language faculty that isn't her own. External lookup
+                # instead means her own browser (aurora_desktop_agent.py,
+                # Playwright) searching and reading a real page back as text.
+                # Same async shape as before so the daemon-side poller/
+                # result-file contract is unchanged.
                 def _ext_thread(q=question, i=qid, l=lane, c=cat):
                     try:
-                        answer = ("Researcher mode has no external source -- Aurora "
-                                  "reasons from her own internal knowledge only.")
+                        try:
+                            from aurora_desktop_agent import research as _desktop_research
+                            found = _desktop_research(q)
+                        except Exception as _research_exc:
+                            found = {"ok": False, "error": str(_research_exc), "text": ""}
+                        if found.get("ok") and found.get("text"):
+                            answer = (f"[{found.get('title','?')} -- {found.get('url','?')}]\n"
+                                      f"{found['text']}")
+                        else:
+                            answer = ("Researcher mode's browser lookup found nothing usable "
+                                      f"({found.get('error', 'no result')}) -- Aurora reasons "
+                                      "from her own internal knowledge only.")
                         # Write per-request result
                         _write_result_file(i, q, c, l, answer)
                         # Also update the UI results file so Observer tab shows it

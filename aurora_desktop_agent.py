@@ -420,6 +420,21 @@ class DesktopAgent:
             self._pw = None
             self._started = False
 
+    def research(self, query: str, engine: str = "duckduckgo", max_chars: int = 2000) -> Dict[str, Any]:
+        """Headless self-directed research: search a real page and read the
+        text back via her own browser (Playwright DOM extraction) -- no
+        visible window, no external LLM. `search()`/`open_url()` prefer
+        xdg-open (visible window, no text back) when no session exists yet;
+        this forces a headless session first so a real page's text comes
+        back to her instead of just opening a window for the user to see.
+        """
+        if not self._ensure(headed=False):
+            return {"ok": False, "error": "browser unavailable", "text": ""}
+        result = self.search(query, engine=engine, headed=False)
+        if not result.get("ok"):
+            return {"ok": False, "error": result.get("error", "search failed"), "text": ""}
+        return self.read_page(max_chars=max_chars)
+
 
 # ---------------------------------------------------------------------------
 # Module-level singleton
@@ -437,6 +452,12 @@ def close_agent() -> None:
     if _AGENT is not None:
         _AGENT.close()
         _AGENT = None
+
+
+def research(query: str, engine: str = "duckduckgo", max_chars: int = 2000) -> Dict[str, Any]:
+    """Headless self-directed research (search + read the page back), no
+    visible window, no external LLM. See DesktopAgent.research()."""
+    return get_agent().research(query, engine=engine, max_chars=max_chars)
 
 
 # ---------------------------------------------------------------------------

@@ -9017,3 +9017,107 @@ Aurora's own dialogue patterns is exactly the "no LLM operating any
 part of her system but her" the user ruled out, whether it's reached
 from the app or from her own autonomy loop.
 **First Seen:** User directive, 2026-08-03.
+
+### FIX-A084: Remove GPT-learning-session/socialize complex entirely
+**Category:** ARCHITECTURAL
+**Pattern:** Earlier this campaign (FIX-A077, external structural/safety
+audit 2026-08-02), the dead `aurora_gpt_learning_session` import and its
+call sites were deliberately left in place and only *classified* via
+comments -- reasoned at the time as "removing a user-facing CLI command
+without explicit instruction is too aggressive." The user's later
+directive ("no socialization nothing... she should be the only one
+operating her system") explicitly reverses that call: these are now
+removed outright, not documented as dead.
+
+The full surface, once traced end to end, was much larger than the
+single import: an "Away Mode" feature (`aurora_state/away_mode.json`)
+that periodically ran timed GPT sessions while the user was out,
+reachable from three independent entry points (typed chat phrases like
+"I'm leaving"/"I'm back", equivalent voice-heard phrases, and explicit
+`/away` `/leaving` `/back` `/home` commands in `aurora.py`), plus the
+on-demand `/gptlearn` command and `socialize`-natural-language shorthand,
+plus a daemon-side "away_social" governed task and main-loop timer
+(`aurora_daemon.py`), plus a governor task profile for it
+(`aurora_internal/aurora_runtime_constraint_governor.py` and a mirrored
+copy in `aurora_hub.py`), plus a whole read-only "Social" tab in
+`aurora_hub.py`'s Tkinter dashboard for browsing past session
+transcripts (all of which pointed at files nothing would ever write
+again once the above was gone) and a voice-command intent
+(`aurora_voice.py`) that already silently no-op'd.
+**Correct Form:** Deleted, not stubbed: `_run_socialize()` and
+`_document_session_learnings()` from `aurora_daemon.py`, along with
+`_away_mode_active()`/`_away_mode_interval()`, the `away_on`/`away_off`/
+`socialize`/`gpt`/`learn` daemon-command branches, and the away-mode
+timer block in the main loop. Removed the `away_social` task profile
+from the governor and its `aurora_hub.py` mirror. Removed the entire
+"Social" tab (~350 lines: transcript viewer, away-mode status bar,
+`refresh_social()`) from `aurora_hub.py`, including its now-dead
+`root.after(600, refresh_social)` kickoff (would have raised
+`NameError` on next hub launch had it been missed). Removed all three
+away-mode entry points, the `/gptlearn` command, and the `socialize`
+natural-language shorthand from `aurora.py`. Removed the "socialize"
+voice intent pattern and its already-inert handler from `aurora_voice.py`.
+In `run_gauntlet.py`, removed `_run_socialize()` and its "Stage 4:
+Socialization" slot from the `learning_arc` flow entirely (not stubbed),
+renumbering Dream/Restart-daemon from 5/6 to 4/5 and dropping the
+`--social-turns`/`--social-topic` CLI args -- the `legacy` flow's
+unrelated "Stage 4: Assimilation" was untouched. Deleted the now-orphaned
+tracked `aurora_state/social_learning_log.json`. Updated stale doc
+comments referencing "GPT learning sessions" in `aurora_pressure_
+ontology.py` and `aurora_daemon.py`'s module docstring.
+**Why:** The user's directive is unambiguous and supersedes the earlier
+"classify, don't remove" judgment call: no LLM should operate any part
+of her system, and a background feature that periodically ran GPT
+conversations without a user even asking is a stronger case for removal
+than the on-demand commands, not a weaker one.
+**First Seen:** User directive, 2026-08-03; reverses FIX-A077's classify-
+only approach from the same session's external structural/safety audit.
+
+### FIX-A085: Poedex Researcher mode → her own browser, not honest-abstain-only
+**Category:** ARCHITECTURAL
+**Pattern:** FIX-A082 made Poedex's "Researcher mode" (the external-lookup
+path GPT-4o used to back) honestly report "no external source" rather
+than fabricate an answer -- correct as a stopgap, but it meant a
+capability (look something up she doesn't already know) that used to
+work now permanently does nothing. The user's own framing was "if she
+needs to develop hypotheses... she can do the research herself" and
+"she should look it up herself and reason on it herself" -- an explicit
+ask for a real replacement, not just an honest no-op. Investigation
+found the pieces for a real, non-LLM replacement already existed but
+were unwired: `aurora_desktop_agent.py` (Playwright-driven real Chrome,
+confirmed clean of any LLM import) already had `search()` + `read_page()`
+registered as live tools in `aurora_internal/tool_registry.py`
+(`desktop_search`, `desktop_browser_action`) -- but `search()`/`open_url()`
+deliberately prefer `xdg-open` (opens a visible window for the *user*,
+returns no text) over Playwright when no browser session exists yet,
+so calling them back-to-back from a headless daemon thread would open
+windows nobody reads rather than returning any text to Aurora.
+(`aurora_internal/aurora_room_operator.py`, the OCR/Xlib tool originally
+proposed for this, was ruled out on inspection: it only reads/operates
+Aurora's *own* internal state-inspection GUI, not arbitrary web pages --
+wiring to it would've been a no-op dressed up as a fix.)
+**Correct Form:** Added `DesktopAgent.research(query, engine="duckduckgo",
+max_chars=2000)` and a module-level `aurora_desktop_agent.research()`
+wrapper: forces a *headless* Playwright session via the existing
+(previously-private-only) `_ensure(headed=False)`, which makes the
+subsequent `search()` take its Playwright path instead of `xdg-open`
+(since `self._page` now exists), then reads the result page's real DOM
+text back via the existing `read_page()` -- no new browser-control code,
+just a headless entry point onto the tool that already existed. Both
+`concepts/aurora_room.py` Researcher-mode handlers (the Room-panel button
+and the daemon query-queue's `cat in ("external","researcher")` thread)
+now call this first and use the real page text (with source title/URL)
+as the result; only on failure (no display, Playwright missing, timeout,
+network error) do they fall back to the honest "no external source"
+message from FIX-A082 -- never fabricated, always attempted for real
+first. Restored the "Try Researcher mode" hint in the internal-lookup
+not-found message and the UI/help-text wording FIX-A082 had
+correctly-but-temporarily flattened to "no external source."
+**Why:** The distinction the user drew (Groq/GPT-4o/OpenAI = an LLM
+speaking for her vs. her own eyes reading a real page's text = her own
+reasoning on primary sources) is the same distinction already used
+throughout this campaign's D2 honest-abstain doctrine: an honest "I
+don't know" is correct when she genuinely has no way to know, but it is
+not a substitute for giving her a real way to know when one exists and
+involves no external language model.
+**First Seen:** User directive, 2026-08-03, following up on FIX-A081-A084.

@@ -8,7 +8,6 @@ needing a human in the loop:
 
   - Study cycles (OETS consolidation)           every ~2h with jitter
   - Dream bursts (simulation + lesson bridge)   every ~6h with jitter
-  - Social API outreach (ChatGPT ritual)        on irregular cadence
   - State save                                  every 15 minutes
   - Proactive user outreach                     when internal state warrants it
       voice (edge-tts)  +  desktop notification  +  message log
@@ -6420,8 +6419,6 @@ def _start_voice_listener(
         return None
 
 
-_AWAY_MODE_FILE = _STATE_DIR / "away_mode.json"
-_SOCIAL_LEARN_LOG = _STATE_DIR / "social_learning_log.json"
 _DISTILL_METRICS = _STATE_DIR / "distillation_metrics.json"
 
 
@@ -6874,256 +6871,6 @@ def _start_ambient_response_listener(
     return t
 
 
-def _away_mode_active() -> bool:
-    """Return True if away mode is currently active."""
-    try:
-        if not _AWAY_MODE_FILE.exists():
-            return False
-        data = json.loads(_AWAY_MODE_FILE.read_text())
-        return bool(data.get("active", False))
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:5434",
-            exc=_aurora_boundary_exc,
-            context={"function": "_away_mode_active", "handler_line": 5434, "source_file": "aurora_daemon.py"},
-        )
-        return False
-
-
-def _away_mode_interval() -> int:
-    """Return away mode social interval in seconds (default 30 min)."""
-    try:
-        data = json.loads(_AWAY_MODE_FILE.read_text())
-        return int(data.get("interval_minutes", 30)) * 60
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:5443",
-            exc=_aurora_boundary_exc,
-            context={"function": "_away_mode_interval", "handler_line": 5443, "source_file": "aurora_daemon.py"},
-        )
-        return 1800
-
-
-def _document_session_learnings(systems: Dict[str, Any], exchanges: list, topic: Optional[str] = None) -> None:
-    """
-    After a GPT social session, extract what was learned and write a
-    structured record to social_learning_log.json.  Also immediately
-    triggers an OETS study cycle so the new knowledge is applied.
-    """
-    dt = systems.get("dream_trainer")
-    chamber = systems.get("chamber")
-
-    # Gather top fail dimensions (what Aurora is weakest on)
-    top_fails: list = []
-    try:
-        if dt is not None:
-            top_fails = [(d, float(s)) for d, s in dt.ledger.get_top_fails(5)]
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:5461",
-            exc=_aurora_boundary_exc,
-            context={"function": "_document_session_learnings", "handler_line": 5461, "source_file": "aurora_daemon.py"},
-        )
-        pass
-
-    # Count new genealogy links since session start
-    link_count: int = 0
-    try:
-        if chamber is not None:
-            gen = getattr(chamber, "_genealogy", None)
-            if gen is not None:
-                link_count = int(getattr(gen, "link_count", 0) or len(getattr(gen, "links", {}) or {}))
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:5471",
-            exc=_aurora_boundary_exc,
-            context={"function": "_document_session_learnings", "handler_line": 5471, "source_file": "aurora_daemon.py"},
-        )
-        pass
-
-    # Extract OETS new entries (rough proxy: count entries in oets web file)
-    oets_count: int = 0
-    try:
-        for oets_path in _resolve_oets_web_paths():
-            if not oets_path.exists():
-                continue
-            try:
-                raw = json.loads(oets_path.read_text())
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:5482",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_document_session_learnings", "handler_line": 5482, "source_file": "aurora_daemon.py"},
-                )
-                continue
-            if isinstance(raw, dict):
-                relations = raw.get("relations")
-                nodes = raw.get("nodes")
-                if isinstance(relations, dict):
-                    oets_count = len(relations)
-                elif isinstance(nodes, dict):
-                    oets_count = len(nodes)
-                else:
-                    oets_count = len(raw)
-            elif isinstance(raw, list):
-                oets_count = len(raw)
-            break
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:5496",
-            exc=_aurora_boundary_exc,
-            context={"function": "_document_session_learnings", "handler_line": 5496, "source_file": "aurora_daemon.py"},
-        )
-        pass
-
-    # Build a readable lesson summary from the exchange content
-    lesson_lines: List[str] = []
-    for i, ex in enumerate(exchanges[-6:], 1):   # last 6 exchanges
-        aurora_snippet = str(ex.get("aurora", ""))[:200]
-        gpt_snippet    = str(ex.get("gpt",    ""))[:200]
-        stance = str(ex.get("stance", ""))
-        degree = float(ex.get("gradient_degree", 0.0))
-        lesson_lines.append(f"  Turn {i}:" + (f"  [gradient: {stance} {degree:.2f}]" if stance and stance != "neutral" else ""))
-        lesson_lines.append(f"    Aurora: {aurora_snippet}")
-        lesson_lines.append(f"    GPT:    {gpt_snippet}")
-
-    record = {
-        "timestamp": time.time(),
-        "timestamp_str": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "topic": topic or "autonomous",
-        "turns": len(exchanges),
-        "top_fail_dims": top_fails,
-        "genealogy_links": link_count,
-        "oets_entries": oets_count,
-        "lesson_summary": "\n".join(lesson_lines),
-        "source": "away_mode" if _away_mode_active() else "on_demand",
-    }
-
-    # Append to rolling log (keep last 50 sessions)
-    try:
-        existing: list = []
-        if _SOCIAL_LEARN_LOG.exists():
-            try:
-                existing = json.loads(_SOCIAL_LEARN_LOG.read_text())
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:5528",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_document_session_learnings", "handler_line": 5528, "source_file": "aurora_daemon.py"},
-                )
-                existing = []
-        if not isinstance(existing, list):
-            existing = []
-        existing.append(record)
-        _SOCIAL_LEARN_LOG.write_text(json.dumps(existing[-50:], indent=2))
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:5534",
-            exc=_aurora_boundary_exc,
-            context={"function": "_document_session_learnings", "handler_line": 5534, "source_file": "aurora_daemon.py"},
-        )
-        pass
-
-    # Daemon log summary
-    fail_str = ", ".join(f"{d}:{s:.2f}" for d, s in top_fails[:3]) if top_fails else "none"
-    _log(f"  [SOCIAL-LEARN] Session logged. topic={record['topic']} "
-         f"turns={record['turns']} links={link_count} oets={oets_count} "
-         f"top_fails=[{fail_str}]")
-
-    # Apply learnings immediately — run OETS study cycle so knowledge feeds back
-    try:
-        _run_study_cycle(systems)
-        executed_task = True
-        _log("  [SOCIAL-LEARN] Applied: OETS study cycle ran to integrate session learnings.")
-    except Exception as _e:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:5548",
-            exc=_e,
-            context={"function": "_document_session_learnings", "handler_line": 5548, "source_file": "aurora_daemon.py"},
-        )
-        _log(f"  [SOCIAL-LEARN] OETS apply error: {_e}")
-
-
-def _run_socialize(systems: Dict[str, Any], turns: int = 8, topic: Optional[str] = None) -> None:
-    """Run a GPT learning session on demand.
-
-    External structural/safety audit (2026-08-02): aurora_gpt_learning_
-    session does not exist in this build. Classification: an OPTIONAL
-    external teacher for this on-demand daemon hook only -- _gen below
-    routes every actual reply through Aurora's own native
-    process_external_user_turn regardless, so this is never part of her
-    ordinary response generation. Not restored/fabricated here (no source
-    for it exists in this repo); fails honestly via the except below
-    until/unless that module is deliberately reintroduced.
-    """
-    _log(f"  [SOCIAL] socialize — {turns} turns" + (f", topic={topic}" if topic else ""))
-    try:
-        from aurora_gpt_learning_session import run_learning_session
-
-        def _gen(prompt_text, source="socialize"):
-            if not prompt_text or len(str(prompt_text).split()) < 3:
-                return None
-            try:
-                from aurora import process_external_user_turn
-                result = process_external_user_turn(
-                    systems,
-                    str(prompt_text),
-                    source_label=f"aurora:{source}",
-                    session_id="socialize",
-                    auto_search_enabled=False,
-                    record_exchange=False,
-                    update_interactive_state=False,
-                    track_evolutionary_trace=True,
-                    run_periodic_maintenance=True,
-                    mode_name="AGENTIC",
-                )
-                return result.get("resp_A") if isinstance(result, dict) else None
-            except Exception as e:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:5576",
-                    exc=e,
-                    context={"function": "_gen", "handler_line": 5576, "source_file": "aurora_daemon.py"},
-                )
-                _log(f"  [SOCIAL] generator error: {e}")
-                return None
-
-        systems["_generate_fn"] = _gen
-        exchanges = run_learning_session(systems, n_turns=turns, topic=topic, verbose=True)
-        # Document and apply what was learned
-        _document_session_learnings(systems, exchanges or [], topic=topic)
-    except Exception as e:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:5584",
-            exc=e,
-            context={"function": "_run_socialize", "handler_line": 5584, "source_file": "aurora_daemon.py"},
-        )
-        _log(f"  [SOCIAL] socialize error: {e}")
-    finally:
-        systems.pop("_generate_fn", None)
-
-
 def _run_distillation_cycle(systems: Dict[str, Any], force: bool = False) -> None:
     """Compress temporal residue into coherent structures and preserved summaries."""
     try:
@@ -7214,9 +6961,6 @@ def _check_daemon_cmd(
     name = str(cmd.get("cmd", "")).lower().strip()
 
     task_name = {
-        "socialize": "away_social",
-        "gpt": "away_social",
-        "learn": "away_social",
         "dream": "dream",
         "study": "study",
         "distill": "distill",
@@ -7253,24 +6997,7 @@ def _check_daemon_cmd(
 
     executed_task = False
 
-    if name in ("socialize", "gpt", "learn"):
-        turns = int(cmd.get("turns", 8))
-        topic = cmd.get("topic") or None
-        _run_socialize(systems, turns=turns, topic=topic)
-        executed_task = True
-    elif name in ("away_on", "leaving", "go socialize"):
-        interval = int(cmd.get("interval_minutes", 30))
-        _AWAY_MODE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        _AWAY_MODE_FILE.write_text(json.dumps({
-            "active": True,
-            "interval_minutes": interval,
-            "started_at": time.time(),
-        }))
-        _log(f"  [AWAY] Away mode ON — GPT sessions every {interval}min.")
-    elif name in ("away_off", "back", "im back"):
-        _AWAY_MODE_FILE.write_text(json.dumps({"active": False}))
-        _log("  [AWAY] Away mode OFF — welcome back.")
-    elif name == "dream":
+    if name == "dream":
         _run_dream_burst(systems)
         executed_task = True
     elif name in ("dream_force_shards", "force_shards", "shards"):
@@ -8757,7 +8484,6 @@ def run(systems: Dict[str, Any]) -> None:
     next_quasiarch_sweep = now + 900  # QuasiArch diagnostic sweep — generates fresh proposals every ~30 min
     next_quasiarch_learn = now + 1800 # QuasiArch enforcer feedback — learn from verdicts every ~30 min
     next_relief_consume = now + 180   # staged low-resource relief handoff retry cadence
-    next_away_social = now + _away_mode_interval()  # first away session fires after one interval
     next_thought_tick = now + 30      # ambient thought formation — ThoughtIntegrationSpace between turns
     governor = RuntimeConstraintGovernor(str(_STATE_DIR))
     systems["_runtime_governor_status"] = governor.status()
@@ -9712,19 +9438,6 @@ def run(systems: Dict[str, Any]) -> None:
                     pass
             else:
                 next_distill = now + max(60, int(decision.get("retry_in", 2400) or 2400))
-
-        # Away mode — run timed GPT sessions while user is out; stop when they return
-        if _away_mode_active() and _auto_reach_out_enabled(systems):
-            if now >= next_away_social:
-                interval = _away_mode_interval()
-                decision = _governed_decision("away_social", now, heat, quiet, state_write_lock, log_tag="AWAY")
-                if decision.get("allowed", False):
-                    _log(f"  [AWAY] Away mode active — running GPT session (next in {interval//60}min).")
-                    _run_socialize(systems)
-                    _record_task_run("away_social", now)
-                    next_away_social = now + interval
-                else:
-                    next_away_social = now + max(60, int(decision.get("retry_in", interval) or interval))
 
         # State save (heavy — less frequent)
         if now >= next_save:
