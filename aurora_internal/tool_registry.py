@@ -1679,6 +1679,24 @@ def _mobile_search(
         if snippet:
             lines.append(f"   {snippet[:500]}")
 
+    # Read it, not just retrieve it -- scan what came back for words she
+    # doesn't already know and land them the same way a classroom-taught
+    # definition lands, instead of leaving the text as an opaque string.
+    try:
+        from aurora import _digest_research_text
+        for r in results:
+            snippet = str(r.get("snippet", "") or "")
+            if snippet:
+                _digest_research_text(snippet, systems, source_text=query, source="mobile_search")
+    except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_internal/tool_registry.py:mobile_search_digest",
+            exc=exc,
+            context={"function": "_mobile_search", "source_file": "aurora_internal/tool_registry.py"},
+        )
+
     return ToolResult("mobile_search", "\n".join(lines), True)
 
 
@@ -2046,6 +2064,25 @@ def _desktop_browser_action(action: str = "", target: str = "", text: str = "", 
         data = " | ".join(f"{k}={v}" for k, v in r.items() if v is not None and k != "text")
         if "text" in r:
             data += f" | text={str(r['text'])[:200]}"
+        if action == "read" and r.get("ok") and r.get("text"):
+            # Read it, not just retrieve it -- scan the page text for words
+            # she doesn't already know and land them the same way a
+            # classroom-taught definition lands.
+            try:
+                from aurora import _digest_research_text
+                _digest_research_text(
+                    str(r["text"]), systems,
+                    source_text=str(r.get("url", "") or r.get("title", "")),
+                    source="desktop_browser",
+                )
+            except Exception as exc2:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/tool_registry.py:desktop_browser_action_digest",
+                    exc=exc2,
+                    context={"function": "_desktop_browser_action", "source_file": "aurora_internal/tool_registry.py"},
+                )
         return ToolResult("desktop_browser_action", data, bool(r.get("ok")), r.get("error",""))
     except Exception as exc:
         _aurora_record_exception_from_locals(

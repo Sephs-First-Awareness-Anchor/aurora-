@@ -9161,3 +9161,54 @@ it means auditing for functional gaps and closing them with whatever
 mechanism fits the platform. Here the cross-platform mechanism already
 existed and only needed a name.
 **First Seen:** User directive, 2026-08-03, following up on FIX-A085.
+
+### FIX-A087: Research results now land through comprehension, not just retrieval
+**Category:** ARCHITECTURAL
+**Pattern:** FIX-A085/A086 gave Aurora real, non-LLM ways to retrieve text
+(her own browser, her own SearchAdapter) -- but retrieval isn't
+comprehension. User asked directly: does she reason about what she reads,
+notice what she doesn't understand, follow up on it, and does it land the
+same way classroom/dream training lands? Traced the code and answered
+honestly: no. `mobile_search`, `desktop_browser_action(action="read")`,
+and the Researcher-mode results from FIX-A085 all returned a raw string
+that nothing decomposed or checked against what she already knows --
+distinct from the ALREADY-real pathway a single conversational vocabulary
+gap uses (`_apply_word_meaning_learning()` -> `aurora_internal.aurora_
+comprehension_gap.GapResolutionApplicator` -> `comprehension_gap_system`
+-> `working_memory.concept_meanings`), which only fired for one term at a
+time, detected during live dialogue.
+**Correct Form:** Added `_digest_research_text(text, systems, source_text=,
+source=, max_terms=5)` to aurora.py. It runs `aurora_internal.aurora_
+comprehension_gap.VolatilityDetector.detect()` against retrieved text
+(checked against her real lexicon/OETS, not a guess) to find words she
+doesn't already know, looks each one up (her own dictionary API first via
+`SearchAdapter.lookup_word()`; the sentence she found it in as context if
+the dictionary has nothing -- no unbounded per-word network recursion),
+and lands each one through the exact same `_apply_word_meaning_learning()`
+pathway a classroom-taught definition uses. Capped at 5 unknown terms per
+call -- one level of follow-up on what's in the retrieved text itself, not
+recursive digging into the found definitions' own unknowns. Wired into
+three sites: `_mobile_search` and `_desktop_browser_action(action="read")`
+in `aurora_internal/tool_registry.py` (both receive `systems` already),
+and `_try_poedex_lookup()` itself in aurora.py at its two genuinely-fresh-
+research return points (the direct-callable researcher path and the
+queue-based external/researcher path) -- gated on `use_researcher=True`
+so already-known bound-lesson text and internal `cat="define"` lookups
+(not new information) don't get redundantly re-digested. Wiring it inside
+`_try_poedex_lookup` itself, rather than each of its 13 call sites, means
+every current and future caller benefits automatically.
+**Verified live:** booted a real Aurora instance, fed `_digest_research_
+text()` a genuine sentence about photosynthesis with no vocabulary
+pre-seeded, and confirmed real dictionary-sourced definitions (`anchor_
+mode=grounded_definition`) landed in `working_memory.concept_meanings`
+AND `comprehension_gap_system.memory` (`resolved_count: 5`) -- the same
+store real classroom-taught definitions use, not a side channel. One
+definition ("convert") picked the wrong dictionary sense for context (noun
+vs. verb) -- a pre-existing word-sense-disambiguation limitation of
+`SearchAdapter.lookup_word()` shared by every other caller of that method,
+not something new here, and out of scope to fix in this pass.
+**Why:** The user's underlying concern -- "she should know what she's
+saying and reading" -- was correct and the gap was real: retrieval
+without comprehension is not the same claim as "she looked it up herself
+and reasoned on it," which is what the original directive asked for.
+**First Seen:** User directive, 2026-08-03, following up on FIX-A085/A086.

@@ -11070,6 +11070,8 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                 _direct_res = _poedex_direct(topic, cat=_direct_cat, lane="self",
                                              timeout=_direct_to)
                 if _direct_res:
+                    if use_researcher:
+                        _digest_research_text(str(_direct_res), systems, source_text=topic, source="poedex")
                     return str(_direct_res)
                 # If researcher returned nothing, fall through to bound lessons
             except Exception as _aurora_boundary_exc:
@@ -11208,7 +11210,11 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                                 context={"function": "_try_poedex_lookup", "handler_line": 9520, "source_file": "aurora.py"},
                             )
                             pass
-                        return _txt if len(_txt) > 20 else ''
+                        if _txt and len(_txt) > 20:
+                            if use_researcher:
+                                _digest_research_text(_txt, systems, source_text=topic, source="poedex")
+                            return _txt
+                        return ''
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(),
@@ -13198,6 +13204,111 @@ def _apply_word_meaning_learning(
         "definition": definition,
         "systems_updated": list(getattr(resolved, "systems_updated", []) or []),
         "source": source,
+    }
+
+
+def _digest_research_text(
+    text: str,
+    systems: Dict[str, Any],
+    *,
+    source_text: str = "",
+    source: str = "research",
+    max_terms: int = 5,
+) -> Dict[str, Any]:
+    """
+    Read a block of freshly-retrieved research text (a search snippet, a
+    fetched page) the way a classroom-taught definition gets absorbed,
+    instead of leaving it as an opaque string nobody reasons about.
+
+    Scans it for words she doesn't already know (VolatilityDetector,
+    checked against her real lexicon/OETS -- not a guess), looks each one
+    up (her own dictionary API first; the sentence she found it in as
+    context if the dictionary has nothing), and lands each one through the
+    same _apply_word_meaning_learning() pathway a classroom-taught
+    definition uses -- comprehension_gap_system + working_memory.
+    concept_meanings. This is one level of follow-up (the unknown terms in
+    the source text), not unbounded recursion into their own definitions;
+    capped at max_terms per call so a long page can't trigger a runaway
+    chain of lookups.
+    """
+    clean_text = str(text or "").strip()
+    empty = {"scanned": 0, "unknown_found": 0, "learned": 0, "terms": []}
+    if not clean_text or not isinstance(systems, dict):
+        return empty
+
+    try:
+        from aurora_internal.aurora_comprehension_gap import VolatilityDetector
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_digest_research_text",
+            exc=_aurora_boundary_exc,
+            context={"function": "_digest_research_text", "source_file": "aurora.py"},
+        )
+        return empty
+
+    perception = systems.get("perception")
+    lexicon = getattr(perception, "lexicon", None)
+    oets = getattr(perception, "oets", None)
+    if lexicon is None and oets is None:
+        return empty
+
+    report = VolatilityDetector().detect(clean_text[:4000], lexicon=lexicon, oets=oets)
+    unknowns = list(dict.fromkeys(report.get("unknown_words", []) or []))[:max(0, max_terms)]
+    if not unknowns:
+        return {"scanned": 0, "unknown_found": 0, "learned": 0, "terms": []}
+
+    adapter = systems.get("search_adapter")
+    sentences = re.split(r'(?<=[.!?])\s+', clean_text)
+    learned_terms: List[str] = []
+
+    for word in unknowns:
+        definition = ""
+        if adapter is not None:
+            try:
+                lookup = adapter.lookup_word(word)
+                if lookup.get("success") and lookup.get("definitions"):
+                    definition = str(lookup["definitions"][0].get("text", "") or "")
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_digest_research_text:lookup",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_digest_research_text", "word": word, "source_file": "aurora.py"},
+                )
+                definition = ""
+        if not definition:
+            for sent in sentences:
+                if word in sent.lower():
+                    definition = sent.strip()
+                    break
+        if not definition:
+            continue
+        try:
+            learned = _apply_word_meaning_learning(
+                word, definition, systems,
+                source_text=source_text or clean_text[:280],
+                source=source,
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_digest_research_text:apply",
+                exc=_aurora_boundary_exc,
+                context={"function": "_digest_research_text", "word": word, "source_file": "aurora.py"},
+            )
+            learned = None
+        if learned:
+            learned_terms.append(word)
+
+    return {
+        "scanned": len(unknowns),
+        "unknown_found": len(unknowns),
+        "learned": len(learned_terms),
+        "terms": learned_terms,
     }
 
 
