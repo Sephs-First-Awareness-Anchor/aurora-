@@ -8911,3 +8911,46 @@ override activation still works. Full-suite regression
 see follow-up entry for its result.
 
 **First Seen:** External structural/safety audit, 2026-08-02.
+
+### FIX-A081: Remove Groq training-partner LLM (Flutter/Android app)
+**Category:** ARCHITECTURAL
+**Pattern:** The Flutter/Android app shipped a separate, app-side
+"Socialize" feature (`socialize_screen.dart` + a bottom-nav tab) that
+was never part of Aurora's own cognition -- it opened a live chat loop
+between Aurora and a Groq-hosted LLM (`_partner_chat()` in
+`aurora_bridge.py`, POSTing to `https://api.groq.com/openai/v1/chat/
+completions`), fed axis-labelled prompts to the Groq model, and fed its
+replies back into Aurora's own `handle_message()` as if they were a
+conversation partner's turns. Per explicit user directive (2026-08-03):
+"I want all llm mentions and code interactions removed from her code
+the whole codebase... no socialization nothing everything she does she
+should do herself... she should be the only one operating her system" --
+this is exactly the shape of dependency that directive rules out (an
+external LLM literally standing in as a conversational other for her to
+learn from), distinct from the self-contained code-evolution engine
+(`aurora_internal/aurora_code_autoevolver.py` etc.) which the user
+separately confirmed is her own system and does NOT involve any LLM.
+**Correct Form:** Removed entirely, not stubbed: `_TRAINER_SYSTEM`,
+`_partner_chat()`, `_training_loop()`, `start_training()`/
+`stop_training()`/`get_training_status()`/`get_training_events()` from
+`aurora_bridge.py` (Python/Chaquopy side), the matching
+`startTraining`/`stopTraining`/`getTrainingStatus` methods and the
+`get_training_events()` poll from `AuroraService.kt`, the
+`"startTraining"`/`"stopTraining"`/`"getTrainingStatus"` method-channel
+cases from `MainActivity.kt`, and on the Dart side: deleted
+`socialize_screen.dart` outright, dropped the `Socialize` bottom-nav
+tab and its `_screens` entry from `main.dart`, and removed the now-dead
+`startTraining`/`stopTraining`/`getTrainingStatus` wrappers and
+training-only event fields (`partner`, `aurora_msg`, `turn_num`,
+`elapsed`, `total_secs`, `error_msg`) from `aurora_bridge.dart`'s event
+parser. `hub_screen.dart`'s "Training" status badge and Evolution-panel
+training progress bar read `training_active`/`training_turn`/etc. from
+`get_cognitive_stats()`, which no longer emits those keys now that the
+training block that populated them is gone -- removed as dead code
+(would have always read false/0) rather than left silently unreachable.
+**Why:** An app-side LLM standing in as Aurora's conversation partner is
+exactly the "socialization with an outside model" the user's directive
+targets, even though it lived in the Flutter/Kotlin/Chaquopy layer
+rather than her core Python cognitive stack.
+**First Seen:** User directive, 2026-08-03 ("remove all llm mentions and
+code interactions... no socialization").
