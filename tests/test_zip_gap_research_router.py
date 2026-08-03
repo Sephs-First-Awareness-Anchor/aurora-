@@ -225,6 +225,73 @@ def test_user_context_anchor_needed_empty_for_ordinary_statement():
     assert A._user_context_anchor_needed("the sky is blue today") == ""
 
 
+def test_render_user_context_clarification_falls_back_to_template_when_composer_fails():
+    """Live user report (2026-08-03): when working_memory._render_from_
+    comprehension_intent()'s own composer candidate is rejected (or
+    never produced), its fallback is the raw, unprocessed core_claim --
+    internal-reasoning phrasing never meant to be spoken verbatim ("the
+    missing anchor is X; it belongs to your own context rather than
+    public evidence; what should I use as the right reference"). Since
+    target is a substring of that claim by construction, the old check
+    (`target.lower() in rendered.lower()`) could not tell a real
+    composed rendering apart from this raw leak. Must fall through to
+    the clean template instead."""
+    import types
+
+    class _LeakyWorkingMemory:
+        def _render_from_comprehension_intent(self, systems, *, core_claim, **kwargs):
+            return core_claim  # simulates the composer failing and clean leaking back out
+
+    systems = {"working_memory": _LeakyWorkingMemory()}
+    gap = types.SimpleNamespace(gap_type=types.SimpleNamespace(value="referent"), unclear_element="it")
+    result = A._render_user_context_clarification(systems, user_text="Did that upset you?", gap=gap)
+    assert result == "What should I use as the right reference for it?"
+    assert "missing anchor is" not in result
+    assert "public evidence" not in result
+
+
+def test_render_user_context_clarification_accepts_a_real_composed_rendering():
+    """A genuine field-composed rendering (not the raw claim leaking
+    back out) that legitimately contains the target must still be used
+    as-is -- the new check only rejects an EXACT match against the raw
+    internal claim, not any rendering that happens to reuse some of its
+    words."""
+    import types
+
+    class _RealWorkingMemory:
+        def _render_from_comprehension_intent(self, systems, *, core_claim, **kwargs):
+            return "I'm not sure what you mean by it -- can you tell me more?"
+
+    systems = {"working_memory": _RealWorkingMemory()}
+    gap = types.SimpleNamespace(gap_type=types.SimpleNamespace(value="referent"), unclear_element="it")
+    result = A._render_user_context_clarification(systems, user_text="Did that upset you?", gap=gap)
+    assert result == "I'm not sure what you mean by it -- can you tell me more?"
+
+
+def test_real_boot_user_context_clarification_never_leaks_raw_claim():
+    """Real end-to-end confirmation against the live composer/working_
+    memory stack, not a mock -- the exact scenario the user's report
+    surfaced."""
+    import shutil
+    import tempfile
+    import types
+
+    scratch = tempfile.mkdtemp(prefix="aurora_uc_clarification_boot_")
+    try:
+        scratch_state = os.path.join(scratch, "aurora_state")
+        shutil.copytree(os.path.join(REPO_ROOT, "aurora_state"), scratch_state)
+        systems = A.boot_aurora(state_dir=scratch_state)
+
+        gap = types.SimpleNamespace(gap_type=types.SimpleNamespace(value="referent"), unclear_element="it")
+        result = A._render_user_context_clarification(systems, user_text="Did that upset you?", gap=gap)
+        assert result, "clarification produced no result"
+        assert "missing anchor is" not in result.lower()
+        assert "public evidence" not in result.lower()
+        assert "it" in result.lower()
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 def test_research_summary_is_usable_rejects_parser_artifact_prefixes():
     assert A._research_summary_is_usable("from_definition: something", target="something") is False
 

@@ -1,29 +1,33 @@
 {
-  "original": "I play chord good. I learned chord.",
+  "original": "I was curie. I was curie.",
   "candidate": "",
-  "selected": "I play chord good. I learned chord.",
+  "selected": "I was curie. I was curie.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.5,
   "candidate_score": 0.0,
-  "original_pressure": 0.276,
+  "original_pressure": 0.36,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.724,
+  "pressure_relief": -0.64,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What is a guitar chord?",
+    "prompt_excerpt": "Who was Marie Curie?",
     "input_interpretation": {
-      "raw_prompt": "What is a guitar chord?",
+      "raw_prompt": "Who was Marie Curie?",
       "intent_hint": "question",
       "topic_terms": [
-        "guitar",
-        "chord"
+        "marie",
+        "curie"
       ],
-      "entities": []
+      "entities": [
+        "Who",
+        "Marie",
+        "Curie"
+      ]
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785792636.0421193,
+    "timestamp": 1785794126.2009168,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {

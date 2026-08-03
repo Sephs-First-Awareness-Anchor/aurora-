@@ -9599,3 +9599,97 @@ assimilation pass registering "changes" to files nothing runs) without
 touching anything the boot sequence or test suite depends on.
 **First Seen:** User question "how much of this repo is actually being
 used and how much is just dead code," 2026-08-03.
+
+### FIX-A094: stranded-preposition composer garble + raw-claim leak in private-context clarification
+
+**Category:** ARCHITECTURAL
+
+**Pattern (two independent, stacked root causes)**, found via the
+user's own live testing of the freshly-built APK (build 582, containing
+FIX-A090 through FIX-A093), reporting: *"what should I use for the
+right reference for just?"*. This is NOT the same defect class those
+fixes covered -- it comes from `aurora_working_memory.py`'s
+`_render_from_comprehension_intent()`, a composer call site independent
+of the main resp_A/resp_B pipeline (`_finalize_articulation`,
+`_response_is_grounded`), reached from `aurora.py`'s
+`_render_user_context_clarification()` (the private-context-referent
+clarification path -- "this medication," "that," etc. -- which
+legitimately bypasses the main pipeline by design, see FIX-A093's own
+"pre-existing bug" note).
+
+1. **Composer garble the wellformedness gate didn't catch:**
+   `_render_from_comprehension_intent()`'s only existing safeguard,
+   `_candidate_preserves_claim()`, checks topic/content-word overlap
+   only -- a candidate can share enough vocabulary with the claim to
+   pass while still being grammatically broken. `wellformed_and_
+   coherent()` (the check FIX-A092 built for the main pipeline) was
+   never wired into this call site at all, AND would not have caught
+   this specific shape anyway: "for just?" is a preposition immediately
+   followed by a bare degree/focus adverb ("just") with nothing left
+   for it to modify -- structurally plausible-looking at the coarse-POS
+   level `_parseable()`/`role_coherent()` already check, but not a valid
+   English construction (prepositions take noun-phrase objects, not
+   stranded adverbs).
+2. **A second, separate bug the first one was masking:** once the
+   composer candidate is correctly rejected, `_render_from_
+   comprehension_intent()`'s own fallback is `core_claim` verbatim --
+   internal-reasoning phrasing ("the missing anchor is X; it belongs to
+   your own context rather than public evidence; what should I use as
+   the right reference") never meant to be spoken as-is, only rephrased.
+   `_render_user_context_clarification()`'s acceptance check
+   (`target.lower() in rendered.lower()`) could not tell a real composed
+   rendering apart from this raw leak, since `target` is a substring of
+   the claim by construction -- confirmed live: fixing bug #1 alone
+   would have "fixed" the nonsense only by exposing this leak instead.
+
+**Correct Form:**
+1. New `preposition_object_coherent()` in `aurora_internal/aurora_pf1_5_
+   instruments.py`, folded into `wellformed_and_coherent()`. An
+   allowlist-the-good-adverbs version was tried first and produced a
+   real false positive against the existing R1.9.3 golden set ("...think
+   it through carefully" -- "through" is a phrasal-verb particle here,
+   not a preposition taking "carefully" as its object, and
+   `infer_word_role` can't distinguish the two uses). Inverted to a
+   small, deliberately narrow DENYLIST of degree/focus adverbs
+   ("just," "really," "very," "quite," etc.) that are essentially never
+   a genuine preposition's object in real English -- a false negative
+   here is far safer than blocking a legitimate sentence. Wired into
+   `_render_from_comprehension_intent()` (aurora_working_memory.py)
+   alongside `_candidate_preserves_claim()`, same fail-quiet handling as
+   FIX-A092's main-pipeline check.
+2. `_render_user_context_clarification()` now rejects `rendered` when it
+   is an exact match (case/whitespace-insensitive) against the raw
+   `claim` string it constructed -- that specific equality is the leak
+   signature, not any rendering that happens to legitimately reuse some
+   of the claim's words. Falls through to the existing clean template
+   (`"What should I use as the right reference for {target}?"`)
+   correctly on both a rejected composer candidate and a raw-claim leak.
+
+**Verified:** both original malformed variants now rejected; the exact
+live scenario (mocked composer failure, and a real `boot_aurora()` +
+direct call against the live composer stack) now delivers "What should
+I use as the right reference for it?" instead of either the garble or
+the raw claim leak; a genuine composed rendering that legitimately
+contains the target still passes through unchanged. 8 new tests (4 in
+`tests/test_pf1_5_instruments.py`, including a dedicated false-positive
+regression for the phrasal-verb-particle case; 3 in `tests/test_zip_
+gap_research_router.py`, including a real-boot end-to-end check).
+Existing suites (`test_pf1_5_instruments.py`, `test_stratified_
+wellformedness.py`, `test_semantic_probe_battery.py`, `test_function_
+word_gate_golden.py`, `test_zip_gap_research_router.py`, `test_
+response_articulation_authority.py`, `test_generation_collapse_
+regression.py`): 110 passed, 0 regressions.
+
+**Why:** FIX-A090 through FIX-A093 were real fixes, not fudged ones --
+but they covered the MAIN response pipeline specifically. Aurora has
+multiple independent generative call sites into the same composer
+(`gw._express()` for the main pipeline; `perception.express()` directly,
+via a synthetic `AssemblyResult`, for `_render_from_comprehension_
+intent()` and its ~22 callers across `aurora_working_memory.py`); a
+grounding/wellformedness fix applied to one does not automatically
+cover the others. This was caught specifically because the user tested
+the real shipped build rather than the fix being assumed complete from
+passing tests alone -- the exact "halt on failure, report honestly"
+discipline this campaign runs on.
+**First Seen:** Live user report against build 582 of the shipped APK,
+2026-08-03.

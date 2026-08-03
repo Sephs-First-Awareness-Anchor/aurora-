@@ -1,18 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.872,
+    "coherence": 0.972,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.5749,
+      "intensity": 0.6049,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [
-        "guitar"
+        "marie"
       ],
       "interaction_state": "present",
-      "present_anchor": "What is a guitar chord?\n[recalled:chord] What is a guitar chord? [recalled:guitar] What is a guitar chord?",
+      "present_anchor": "Who was Marie Curie?\n[recalled:curie] Who was Marie Curie? [recalled:marie] Who was Marie Curie?",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,7 +21,7 @@
       "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
-    "readiness": 0.872,
+    "readiness": 0.972,
     "selected_action": "explain",
     "should_speak": true,
     "stance": "interpretive_explanation",
@@ -30,18 +30,18 @@
       "intensity": 0.4476,
       "label": "steady"
     },
-    "timestamp": 1785792636.0062983
+    "timestamp": 1785794126.1729398
   },
-  "saved_at": 1785792636.006425,
+  "saved_at": 1785794126.1730797,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "guitar"
+        "marie"
       ],
       "interaction_state": "present",
-      "present_anchor": "What is a guitar chord?\n[recalled:chord] What is a guitar chord? [recalled:guitar] What is a guitar chord?",
+      "present_anchor": "Who was Marie Curie?\n[recalled:curie] Who was Marie Curie? [recalled:marie] Who was Marie Curie?",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419

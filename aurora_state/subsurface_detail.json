@@ -6,7 +6,7 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.872,
+  "coherence": 0.972,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
@@ -72,9 +72,9 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.7665,
+  "readiness": 0.8165,
   "recalled_fragments": [
-    "What is a guitar chord?\n[recalled:chord] What is a guitar chord? [recalled:guitar] What is a guitar chord?"
+    "Who was Marie Curie?\n[recalled:curie] Who was Marie Curie? [recalled:marie] Who was Marie Curie?"
   ],
   "salience_weights": {
     "A": 0.0,
@@ -83,7 +83,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785792636.0056992,
+  "saved_at": 1785794126.1723213,
   "sub_crests": [
     {
       "axis": "X",

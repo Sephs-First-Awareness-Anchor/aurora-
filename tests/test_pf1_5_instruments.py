@@ -15,6 +15,7 @@ sys.path.insert(0, REPO_ROOT)
 
 from aurora_internal.aurora_pf1_5_instruments import (  # noqa: E402
     adequacy_score, role_coherent, wellformed_and_coherent,
+    preposition_object_coherent,
 )
 from aurora_internal.aurora_semantic_probe_battery import _parseable  # noqa: E402
 from tests.test_generation_collapse_regression import (  # noqa: E402
@@ -191,6 +192,43 @@ def test_role_coherent_true_on_empty_and_non_ing_text():
 
 def test_role_coherent_checks_you_subject_too():
     assert role_coherent("You knowing this changes things.") is False
+
+
+# ── preposition_object_coherent ─────────────────────────────────────
+
+def test_preposition_object_coherent_rejects_live_user_reported_garble():
+    """Live user report, 2026-08-03: delivered via aurora_working_memory.
+    py's _render_from_comprehension_intent(), a composer call site
+    independent of the main resp_A/resp_B pipeline. Neither _parseable()
+    nor role_coherent() caught these -- the exact gap this check closes."""
+    assert preposition_object_coherent("What should I use as the right reference for just?") is False
+    assert preposition_object_coherent("What should I use for the right reference for just?") is False
+    assert wellformed_and_coherent("What should I use as the right reference for just?") is False
+    assert wellformed_and_coherent("What should I use for the right reference for just?") is False
+
+
+def test_preposition_object_coherent_accepts_real_prepositional_phrases():
+    assert preposition_object_coherent("I need the water for the garden.") is True
+    assert preposition_object_coherent("What should I use for the reference?") is True
+    assert preposition_object_coherent("I have not seen you until now.") is True
+    assert preposition_object_coherent("Come from here.") is True
+
+
+def test_preposition_object_coherent_does_not_flag_phrasal_verb_particles():
+    """'through' after 'think it' is a phrasal-verb particle, not a
+    preposition taking 'carefully' as its object -- the exact false
+    positive an earlier allowlist-based version of this check produced
+    against the existing R1.9.3 golden good-sentence set."""
+    assert preposition_object_coherent(
+        "That's a lot to hold at once, and it makes sense you'd want to think it through carefully."
+    ) is True
+
+
+def test_preposition_object_coherent_only_flags_denylisted_adverb_at_sentence_end():
+    """A denylisted adverb right after a preposition, with real content
+    still following it, is not the defect this catches -- only a
+    denylisted adverb stranded as the sentence's last word is."""
+    assert preposition_object_coherent("This works for just about anyone.") is True
 
 
 # ── wellformed_and_coherent: combined gate ──────────────────────────

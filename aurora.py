@@ -14206,6 +14206,21 @@ def _render_user_context_clarification(
     # The field may give the clarification a conversational style, but it
     # must retain the actual private anchor.  Otherwise it sounds like a
     # generic uncertainty rather than a question the user can answer.
+    #
+    # Live user report (2026-08-03): when the composer's own candidate
+    # failed (rejected as ungrounded, or never produced at all),
+    # _render_from_comprehension_intent()'s own fallback is `core_claim`
+    # itself -- this function's `claim`, which is internal-reasoning
+    # phrasing ("the missing anchor is X; it belongs to your own
+    # context...") never meant to be spoken verbatim, only rephrased.
+    # `target.lower() in rendered.lower()` alone can't tell "the field
+    # composed something real" apart from "generation failed and the raw
+    # claim leaked back out" -- both satisfy it, since target is a
+    # substring of claim by construction. Reject that exact leak
+    # explicitly so a failed render falls through to the clean template
+    # below instead of reading like exposed internal state.
+    if rendered and rendered.strip().lower() == claim.strip().lower():
+        rendered = ""
     if rendered and target.lower() in rendered.lower():
         return rendered
     # Fallback remains derived from the detected missing anchor, rather than a

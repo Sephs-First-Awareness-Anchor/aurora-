@@ -3331,6 +3331,34 @@ class WorkingMemory:
         ):
             expression_candidate = ""
 
+        # Live user report (2026-08-03): "What should I use for the right
+        # reference for just?" -- delivered through THIS call site, not
+        # the main resp_A/resp_B pipeline. This method calls perception.
+        # express() directly (its own synthetic AssemblyResult), a
+        # separate generative path from gw._express(), so the
+        # wellformedness gate added to aurora.py's _response_is_grounded()
+        # for the main pipeline never covered it. _candidate_preserves_
+        # claim() above only checks topic/content-word overlap -- a
+        # response can share enough vocabulary with the claim to pass
+        # that check while still being grammatically incoherent (exactly
+        # what happened here: "just" -- a real word in `clean`'s own text
+        # -- overlapped enough to preserve the claim, but landed in a
+        # broken sentence). Same real, tested instrument as the main
+        # pipeline, same fail-quiet handling.
+        if expression_candidate:
+            try:
+                from aurora_internal.aurora_pf1_5_instruments import wellformed_and_coherent
+                if not wellformed_and_coherent(expression_candidate):
+                    expression_candidate = ""
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:_render_from_comprehension_intent:wellformedness",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_render_from_comprehension_intent", "source_file": "aurora_working_memory.py"},
+                )
+
         evo = getattr(perception, 'evo', None) if perception is not None else None
         if evo is None or not hasattr(evo, 'sic') or not hasattr(evo, 'multi_draft'):
             return expression_candidate or clean

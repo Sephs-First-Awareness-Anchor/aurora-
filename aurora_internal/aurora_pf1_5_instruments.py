@@ -169,7 +169,62 @@ def role_coherent(text: str) -> bool:
     return True
 
 
+# Live user report (2026-08-03): "What should I use for the right
+# reference for just?" -- delivered from aurora_working_memory.py's
+# _render_from_comprehension_intent(), a composer call site independent
+# of the main resp_A/resp_B pipeline. Neither _parseable() nor
+# role_coherent() catch it: "for just" scans as preposition+word with
+# nothing structurally wrong at the coarse-POS level this module already
+# uses. The actual defect is that a preposition's "object" was a bare
+# degree/focus adverb ("just", "really", "very") with nothing left for
+# it to modify -- prepositions take noun phrases as objects, and these
+# adverbs are never that.
+#
+# An allowlist-the-good-adverbs version of this check was tried first
+# and produced a real false positive against the existing R1.9.3 golden
+# set: "...think it through carefully." -- "through" is a phrasal-verb
+# particle here ("think X through"), not a preposition taking
+# "carefully" as its object, and infer_word_role has no way to tell
+# particle-"through" apart from preposition-"through". Trying to
+# enumerate every legitimate preposition-like-word + adverb combination
+# risks the same false-positive class repeating for other phrasal verbs
+# (see through, work through, get by, look on, come around, ...).
+# Inverted to a small, deliberately narrow DENYLIST of degree/focus
+# adverbs that are essentially never a genuine preposition's object in
+# real English, instead -- a false negative here (missing some other
+# real defect) is far safer than blocking a legitimate sentence.
+_PREP_ADVERB_OBJECT_DENYLIST = frozenset({
+    "just", "really", "very", "quite", "rather", "only", "even",
+    "also", "too", "actually", "basically", "literally", "simply",
+    "truly", "honestly", "seriously", "certainly", "probably",
+    "definitely", "totally", "completely", "absolutely",
+})
+
+
+def preposition_object_coherent(text: str) -> bool:
+    """A preposition immediately followed by a denylisted degree/focus
+    adverb, with that adverb ending its sentence (nothing following for
+    it to modify), fails -- there is no noun phrase serving as the
+    preposition's object. Per sentence, same split as _parseable() uses."""
+    text = str(text or "").strip()
+    if not text:
+        return False
+    for sentence in _SENTENCE_SPLIT_RE.split(text):
+        words = [w.lower() for w in _WORD_RE.findall(sentence)]
+        for i, w in enumerate(words):
+            if infer_word_role(w) != "preposition" or i + 1 >= len(words):
+                continue
+            nxt = words[i + 1]
+            if i + 2 == len(words) and nxt in _PREP_ADVERB_OBJECT_DENYLIST:
+                return False
+    return True
+
+
 def wellformed_and_coherent(text: str, pos_lookup=None) -> bool:
-    """PF1.6's acceptance gate: the existing _parseable() (unchanged)
-    AND role_coherent() (new)."""
-    return _parseable(text, pos_lookup) and role_coherent(text)
+    """PF1.6's acceptance gate: the existing _parseable() (unchanged),
+    role_coherent(), and preposition_object_coherent() (new)."""
+    return (
+        _parseable(text, pos_lookup)
+        and role_coherent(text)
+        and preposition_object_coherent(text)
+    )
