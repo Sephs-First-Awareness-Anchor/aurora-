@@ -159,8 +159,12 @@ def backfill(in_path: Path, out_path: Path):
     content = json.dumps(data, sort_keys=True, default=str)
     data["_checksum"] = hashlib.md5(content.encode()).hexdigest()[:12]
 
+    # Match aurora_identity_persistence.py's own _write_web_payload()
+    # on-disk formatting (indent=1) -- the checksum itself is computed
+    # over the unindented json.dumps(..., sort_keys=True) form either
+    # way, so this only affects readability/diff quality, not content.
     with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=1, default=str)
 
     print(f"Nodes total:              {len(nodes)}")
     print(f"noncomp_id written:       {noncomp_written}")
