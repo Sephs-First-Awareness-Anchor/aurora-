@@ -8996,3 +8996,24 @@ intact and testable without touching `aurora.py` or `quasiarch_diag.py`'s
 calling code.
 **First Seen:** User directive, 2026-08-03 ("remove all llm mentions and
 code interactions... she should be the only one operating her system").
+
+### FIX-A083: Delete aurora_conversation_trainer.py (OpenAI-backed)
+**Category:** ARCHITECTURAL
+**Pattern:** `aurora_conversation_trainer.py` trained Aurora's dialogue
+mechanics by simulating conversation turns against a live OpenAI model
+(`from openai import OpenAI`, `OPENAI_API_KEY`), reachable as one of
+`aurora_autonomy.py`'s `TRAINING_TOOLS` (key `"conversation_trainer"`,
+launched via `run_training_tool()` as a subprocess). Unlike the Groq
+training partner (FIX-A081), this one was launchable from Aurora's own
+autonomy engine, not just an app-side manual feature.
+**Correct Form:** Deleted the file outright and removed its
+`"conversation_trainer": "aurora_conversation_trainer"` entry from
+`TRAINING_TOOLS` in `aurora_autonomy.py` (the two remaining tools,
+`experiential_sim` and `exploration`/`backfill_associations`, are
+self-contained -- no LLM dependency). Also dropped its README.md
+"Conversation Trainer" line. No test suite imported it.
+**Why:** Same directive as FIX-A081/A082 -- an external LLM training
+Aurora's own dialogue patterns is exactly the "no LLM operating any
+part of her system but her" the user ruled out, whether it's reached
+from the app or from her own autonomy loop.
+**First Seen:** User directive, 2026-08-03.

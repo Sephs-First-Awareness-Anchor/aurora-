@@ -166,7 +166,6 @@ Aurora's explicit cognitive pipeline unfolds in nine layers:
 ### **Learning & Adaptation**
 - **Curiosity Engine:** `aurora_curiosity_engine.py` – drive self-directed learning
 - **Response Teacher:** `aurora_response_teacher.py` – train response patterns
-- **Conversation Trainer:** `aurora_conversation_trainer.py` – improve dialogue quality
 - **Autonomy System:** `aurora_autonomy.py` – self-guided decision-making
 
 ### **Persistence & Recovery**
