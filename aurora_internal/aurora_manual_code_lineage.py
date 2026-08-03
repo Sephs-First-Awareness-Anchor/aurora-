@@ -235,6 +235,14 @@ class ManualCodeLineageAssimilator:
         return digest.hexdigest()
 
     def _scan_manifest(self) -> Dict[str, Dict[str, Any]]:
+        # Content hash is the actual change signal. mtime_ns/size are kept only
+        # as a fast-path cache key: when both are unchanged from the previous
+        # scan we reuse the previously computed sha1 instead of re-hashing, so
+        # a checkout/clone that resets mtimes on every file (but not content)
+        # still ends up re-hashing everything once and then finding no real
+        # changes, rather than reporting a false "modified" for nearly the
+        # whole tree the way pure mtime/size comparison did.
+        previous = dict(self._state.get("manifest", {}) or {})
         manifest: Dict[str, Dict[str, Any]] = {}
         for rel_path in self._iter_python_files():
             path = os.path.join(self.repo_root, rel_path)
@@ -249,9 +257,21 @@ class ManualCodeLineageAssimilator:
                     context={"function": "_scan_manifest", "handler_line": 214, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
                 )
                 continue
+            mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
+            size = int(st.st_size)
+            prev_entry = dict(previous.get(rel_path, {}) or {})
+            if (
+                str(prev_entry.get("sha1", "") or "")
+                and int(prev_entry.get("mtime_ns", -1) or -1) == mtime_ns
+                and int(prev_entry.get("size", -1) or -1) == size
+            ):
+                sha1 = str(prev_entry.get("sha1", "") or "")
+            else:
+                sha1 = self._file_sha1(rel_path)
             manifest[rel_path] = {
-                "mtime_ns": int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000))),
-                "size": int(st.st_size),
+                "mtime_ns": mtime_ns,
+                "size": size,
+                "sha1": sha1,
             }
         return manifest
 
@@ -264,22 +284,26 @@ class ManualCodeLineageAssimilator:
         for rel_path in all_paths:
             prev = dict(previous.get(rel_path, {}) or {})
             cur = dict(current_manifest.get(rel_path, {}) or {})
-            if prev == cur:
-                continue
-            if not prev and cur:
+            prev_sha1 = str(prev.get("sha1", "") or "")
+            cur_sha1 = str(cur.get("sha1", "") or "")
+            if prev and cur:
+                if prev_sha1 == cur_sha1:
+                    continue
+                kind = "modified"
+            elif not prev and cur:
                 kind = "added"
             elif prev and not cur:
                 kind = "deleted"
             else:
-                kind = "modified"
+                continue
             change_id = hashlib.sha1(
-                f"{rel_path}:{kind}:{cur.get('mtime_ns', 0)}:{cur.get('size', 0)}".encode("utf-8")
+                f"{rel_path}:{kind}:{cur_sha1}".encode("utf-8")
             ).hexdigest()[:12]
             changes.append({
                 "change_id": f"MC:{change_id}",
                 "file": rel_path,
                 "kind": kind,
-                "sha1": self._file_sha1(rel_path) if kind != "deleted" else "",
+                "sha1": cur_sha1,
             })
         return changes
 
@@ -447,7 +471,7 @@ class ManualCodeLineageAssimilator:
                 "change_id": f"MC:{hashlib.sha1(rel.encode('utf-8')).hexdigest()[:12]}",
                 "file": rel,
                 "kind": "modified",
-                "sha1": self._file_sha1(rel),
+                "sha1": str(current_manifest.get(rel, {}).get("sha1", "") or ""),
             }
             for rel in sorted(current_manifest.keys())
         ]
@@ -483,7 +507,12 @@ class ManualCodeLineageAssimilator:
             reg = {"registered": False, "ability_id": ""}
             if genealogy is not None and hasattr(genealogy, "register_manual_code_assimilation"):
                 try:
-                    reg = dict(genealogy.register_manual_code_assimilation(payload) or {})
+                    # flush=False: this is one file out of a whole assimilation
+                    # batch. Genealogy mutations accumulate in memory across
+                    # every change in this loop; the batch is persisted with a
+                    # single flush_files() call after the loop, not once per
+                    # file (per-file flush() was the multi-hundred-file hang).
+                    reg = dict(genealogy.register_manual_code_assimilation(payload, flush=False) or {})
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(),
@@ -557,6 +586,18 @@ class ManualCodeLineageAssimilator:
                         context={"function": "assimilate", "handler_line": 487, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
                     )
                     pass
+
+        if results and genealogy is not None and hasattr(genealogy, "flush_files"):
+            try:
+                genealogy.flush_files()
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_manual_code_lineage.py:561",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "assimilate", "handler_line": 561, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
+                )
 
         history = list(self._state.get("history", []) or [])
         history.extend(results)

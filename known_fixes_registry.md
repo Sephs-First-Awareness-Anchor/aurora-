@@ -9244,3 +9244,44 @@ would have missed it -- the failure only showed up ~62% through an
 alphabetically-late test file.
 **First Seen:** Full-suite regression verification, 2026-08-03, following
 FIX-A084.
+
+### FIX-A089: Manual code lineage mtime storm + per-file flush hang
+**Category:** ARCHITECTURAL
+**Pattern:** `ManualCodeLineageAssimilator._scan_manifest()`/`_detect_changes()`
+in `aurora_internal/aurora_manual_code_lineage.py` compared raw
+`{mtime_ns, size}` dicts to decide whether a `.py` file had changed since
+the last boot. `mtime_ns` is reset by every checkout, clone, `cp`, or
+extract, regardless of whether file content actually changed, so on a
+fresh checkout nearly the whole tree (433 of 468 files, in the reported
+case) was flagged "modified" and 35 more "added" even though nothing had
+actually changed. Each flagged change then called
+`constraint_genealogy.register_manual_code_assimilation()`, which called
+`self.flush_files()` -- a full `json.dump()` of `abilities.json` (41MB)
+plus links/couplings/pair_stats/tick_state -- once *per file*, turning a
+routine boot into a multi-hundred-file write storm that could hang or
+take minutes. Packaging, cloning, moving, or extracting Aurora could
+trigger a false evolutionary event touching nearly the entire codebase.
+**Correct Form:** Change detection now keys on SHA1 content hash, not
+mtime/size. `_scan_manifest()` still stat()s each file cheaply, but only
+re-hashes when `mtime_ns`/`size` differ from the previous manifest entry
+(a fast-path cache, not the detection signal itself) -- so a checkout
+that resets every mtime re-hashes once, finds identical content, and
+reports zero changes. `register_manual_code_assimilation()` gained a
+`flush: bool = True` keyword; `assimilate()`'s per-change loop now calls
+it with `flush=False` so genealogy mutations accumulate in memory across
+the whole batch, followed by exactly one `genealogy.flush_files()` call
+after the loop -- one disk write per boot's worth of real changes,
+not one per file. Verified with an isolated fake-genealogy harness: an
+all-mtimes-touched-no-content-changed batch now reports 0 changes (was:
+reporting every file), and a batch of 3 real content changes now performs
+exactly 1 flush (was: 3).
+**Why:** mtime is not a content signal -- any operation that recreates
+files without preserving timestamps (checkout, clone, tar extract, `cp`)
+produces a false-positive "changed" signal for that file. Content hashing
+is the correct predicate for "did this file's meaning change." Flushing
+once per file inside a per-change loop is an O(n) full-state rewrite for
+an O(1) conceptual operation (one assimilation pass); batching the mutate
+step and flushing once brings it back to O(1) writes per pass.
+**First Seen:** User bug report with precise diagnostics (434 stored
+manifest entries vs 468 present files, 433 falsely "modified," 35
+"added"), 2026-08-03.

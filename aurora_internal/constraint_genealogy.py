@@ -3862,7 +3862,7 @@ class ConstraintGenealogyLogger:
         self.flush_files()
         return {"registered": True, "ability_id": aid, "accepted": bool(accepted)}
 
-    def register_manual_code_assimilation(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def register_manual_code_assimilation(self, payload: Dict[str, Any], *, flush: bool = True) -> Dict[str, Any]:
         rec = dict(payload or {})
         change_id = str(rec.get("change_id", "") or "").strip()
         if not change_id:
@@ -3937,7 +3937,8 @@ class ConstraintGenealogyLogger:
                 "ability_id": matched_ability_id,
                 "score": float(round(matched_score, 6)),
             })
-            self.flush_files()
+            if flush:
+                self.flush_files()
             return {
                 "registered": True,
                 "ability_id": matched_ability_id,
@@ -4006,7 +4007,8 @@ class ConstraintGenealogyLogger:
             "ability_id": aid,
             "score": 0.72,
         })
-        self.flush_files()
+        if flush:
+            self.flush_files()
         return {"registered": True, "ability_id": aid, "mode": "created_manual_branch"}
 
     def _resolve_ability(self, item: TraceItem) -> Optional[AbilityProfile]:
