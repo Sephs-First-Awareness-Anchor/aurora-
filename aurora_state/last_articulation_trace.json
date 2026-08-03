@@ -1,30 +1,29 @@
 {
-  "original": "I do point. I did point alive.",
+  "original": "I play chord. I learned chord.",
   "candidate": "",
-  "selected": "I do point. I did point alive.",
+  "selected": "I play chord. I learned chord.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.5,
+  "original_score": 0.62,
   "candidate_score": 0.0,
-  "original_pressure": 0.335,
+  "original_pressure": 0.286,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.665,
+  "pressure_relief": -0.714,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What is the boiling point of water?",
+    "prompt_excerpt": "What is a guitar chord?",
     "input_interpretation": {
-      "raw_prompt": "What is the boiling point of water?",
+      "raw_prompt": "What is a guitar chord?",
       "intent_hint": "question",
       "topic_terms": [
-        "boiling",
-        "point",
-        "water"
+        "guitar",
+        "chord"
       ],
       "entities": []
     },
-    "tone": "warm",
+    "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1785789511.6515467,
+    "timestamp": 1785790474.6797016,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {

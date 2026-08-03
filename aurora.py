@@ -14527,6 +14527,61 @@ def _response_is_grounded(text: str, user_text: str, systems: Dict[str, Any]) ->
             context={"function": "_response_is_grounded", "source_file": "aurora.py"},
         )
 
+    # Bug Report 2 follow-up (2026-08-03, per Sunni's direction): "grounded"
+    # should mean the specific content this turn's PropositionFrame commits
+    # to asserting is actually backed by something -- her own accumulated
+    # use (encounters, usage examples, relations) PLUS external
+    # corroboration (definitions/research), not just which function
+    # produced the text. A prior attempt to gate on response SOURCE
+    # (_INTENT_EVIDENCE_GROUNDED_SRC) was reverted for being miscalibrated
+    # (it excluded composer_unified, the most common path). This is the
+    # narrower, correctly-scoped version: SemanticNode.comprehension_
+    # confidence already blends exactly that (ontological_depth --
+    # definitions/examples/relations/research -- plus exposure), per node,
+    # so check it against the SPECIFIC topic/object word this turn's frame
+    # is actually about, not the response's provenance label. Scoped
+    # narrowly to avoid the earlier over-gating failure mode: only fires
+    # when there IS a real, non-generic content word to check (frame
+    # present, topic/obj substantive) AND the frame is asserting fairly
+    # confidently (stance >= 0.6) despite that word being essentially
+    # unverified (comprehension_confidence < 0.15, near the dataclass
+    # floor -- "encountered once or twice, never defined, never related to
+    # anything"). Ordinary greetings/opinions/self-reflection have no such
+    # frame content and never reach this check at all.
+    try:
+        frame = systems.get('_proposition_frame') if isinstance(systems, dict) else None
+        if frame is not None and float(getattr(frame, 'stance', 0.0) or 0.0) >= 0.6:
+            _generic_topics = {
+                'self', 'i', 'you', 'it', 'this', 'that', 'we', 'they',
+                'he', 'she', 'me', 'us', 'them',
+            }
+            candidate_words = []
+            for attr in ('topic', 'obj'):
+                w = str(getattr(frame, attr, '') or '').strip().lower()
+                if w and w not in _generic_topics and len(w) >= 3 and w not in candidate_words:
+                    candidate_words.append(w)
+            if candidate_words:
+                perception = systems.get('perception') if isinstance(systems, dict) else None
+                oets = getattr(perception, 'oets', None)
+                nodes = getattr(getattr(oets, 'web', None), 'nodes', None)
+                if nodes is not None:
+                    weakest = None
+                    for w in candidate_words:
+                        node = nodes.get(w)
+                        conf = float(getattr(node, 'comprehension_confidence', 0.0) or 0.0) if node is not None else 0.0
+                        if weakest is None or conf < weakest:
+                            weakest = conf
+                    if weakest is not None and weakest < 0.15:
+                        return False
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_response_is_grounded:comprehension_confidence",
+            exc=_aurora_boundary_exc,
+            context={"function": "_response_is_grounded", "source_file": "aurora.py"},
+        )
+
     # A non-empty, structurally coherent response that passes the marker
     # checks is grounded. We intentionally do NOT require word-overlap
     # with the prompt — Aurora's FGAE output engages conceptually and

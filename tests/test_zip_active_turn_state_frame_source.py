@@ -106,7 +106,26 @@ def test_ensure_proposition_frame_falls_back_to_shim_when_no_active_state(monkey
 def test_real_boot_active_turn_state_frame_source_does_not_crash_live_turn():
     """Real end-to-end confirmation: a live turn must still produce a
     proposition frame and a working turn with the real state now
-    driving both ensure_* functions."""
+    driving both ensure_* functions.
+
+    Bug Report 2 investigation (2026-08-03) found this test's original
+    example input, "Will this medication definitely work for me?",
+    always -- even before that session's changes -- routes through
+    dual_question_pipeline's private-context-clarification early return
+    (_user_context_anchor_needed() flags "this medication" as an
+    ungrounded private referent, added by a LATER directive, commit
+    91f9f7704, "public-fact vs. private-context gap research router").
+    That path legitimately bypasses _run_reasoning_pipeline entirely by
+    design -- Aurora correctly asks for clarification instead of
+    fabricating an answer -- so _active_turn_state was never going to be
+    set for that specific input, regardless of anything this test is
+    actually meant to verify. Confirmed via git diff that no code this
+    campaign has touched altered that routing decision; the test's own
+    fixture had simply gone stale after a later, unrelated feature
+    changed what its example input does. Swapped to an ordinary
+    definition-question input that reaches the real pipeline, which is
+    what this test needs to exercise the ensure_* wiring it's named for.
+    """
     import shutil
     import tempfile
     import aurora as A
@@ -117,7 +136,7 @@ def test_real_boot_active_turn_state_frame_source_does_not_crash_live_turn():
         shutil.copytree(os.path.join(REPO_ROOT, "aurora_state"), scratch_state)
         systems = A.boot_aurora(state_dir=scratch_state)
 
-        result = A.process_external_user_turn(systems, "Will this medication definitely work for me?")
+        result = A.process_external_user_turn(systems, "What is a guitar chord?")
         assert result, "live turn produced no result"
         assert systems.get("_active_turn_state") is not None
     finally:
