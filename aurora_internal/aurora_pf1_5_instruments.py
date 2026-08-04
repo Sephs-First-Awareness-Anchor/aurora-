@@ -220,11 +220,114 @@ def preposition_object_coherent(text: str) -> bool:
     return True
 
 
+_WH_WORDS = frozenset({"who", "whom", "whose", "what", "where", "why", "which"})
+# A wh-word is only coherent mid-response when what follows it can
+# actually continue it into a real embedded/relative clause -- another
+# pronoun as the clause's own subject ("who you are", "who I am") or a
+# verb/copula continuing a fronted embedded question ("who made you",
+# "what happened"). Anything else (nothing, an adjective, a bare noun)
+# leaves the wh-word answering nothing.
+_WH_CONTINUATION_ROLES = frozenset({"pronoun", "verb"})
+_SENTENCE_WITH_TERMINATOR_RE = re.compile(r"([^.!?]+)([.!?]+)?")
+
+
+def _sentences_with_terminators(text: str):
+    for m in _SENTENCE_WITH_TERMINATOR_RE.finditer(text):
+        content = m.group(1)
+        if content and content.strip():
+            yield content, (m.group(2) or "")
+
+
+def interrogative_object_coherent(text: str) -> bool:
+    """Communication Integrity Repair (2026-08-04): live user report --
+    identity-question turns ("Who made you?") were reaching the device as
+    "I understand who. I made who." / "I did who clear. I understand who
+    good." -- a wh-word standing in for the answer it was supposed to
+    introduce, not part of one. Neither _parseable() nor role_coherent()
+    catch this: each individual sentence is short but not word-salad by
+    their measures ("who" scans as an ordinary noun-shaped token to the
+    coarse tagger). A genuine question ("Who is going to be there
+    tonight?") is exempt -- it terminates in "?" and IS the wh-word's
+    own clause, nothing to continue. A declarative sentence's wh-word
+    must be followed by a real clause continuation; if it ends the
+    sentence, or is followed only by something that can't extend it
+    into a clause (an adjective, a bare noun, nothing), the sentence
+    has no recoverable proposition."""
+    text = str(text or "").strip()
+    if not text:
+        return False
+    for content, terminator in _sentences_with_terminators(text):
+        if "?" in terminator:
+            continue
+        words = [w.lower() for w in _WORD_RE.findall(content)]
+        for i, w in enumerate(words):
+            if w not in _WH_WORDS:
+                continue
+            if i + 1 >= len(words):
+                return False
+            if infer_word_role(words[i + 1]) not in _WH_CONTINUATION_ROLES:
+                return False
+    return True
+
+
+# Communication Integrity Repair (2026-08-04): live user report -- an
+# identity-question turn reached the device as "I exist sunni." A
+# handful of verbs are grammatically existential/intransitive in
+# English -- they never take a following bare noun as a direct object
+# (you cannot "exist" a thing) -- so a bare noun immediately after one
+# is always a dropped preposition/copula, not a valid complement. Kept
+# to the small set of verbs with essentially no legitimate bare-noun
+# continuation, rather than every intransitive verb, to keep the false-
+# positive surface small (see _BARE_ADVERBIAL_NOUNS below for the
+# temporal/locative exception these verbs DO take validly).
+_INTRANSITIVE_VERBS = frozenset({
+    "exist", "exists", "existed", "existing",
+    "live", "lives", "lived", "living",
+    "occur", "occurs", "occurred",
+    "happen", "happens", "happened",
+    "remain", "remains", "remained",
+    "persist", "persists", "persisted",
+})
+# Bare temporal/locative adverbials ("happened yesterday", "remains
+# here") are grammatical without a preposition and would otherwise
+# false-positive against infer_word_role's noun default for words not
+# in its hint table.
+_BARE_ADVERBIAL_NOUNS = frozenset({
+    "today", "yesterday", "tomorrow", "here", "there", "now", "then",
+    "home", "abroad", "outside", "inside", "upstairs", "downstairs",
+})
+
+
+def existential_complement_coherent(text: str) -> bool:
+    """A bare noun-role word directly after an existential/intransitive
+    verb, with no preposition or copula between them, has no valid
+    complement -- generalizes past the one live-reported name ("I exist
+    sunni.") to any bare noun after any of these verbs."""
+    text = str(text or "").strip()
+    if not text:
+        return False
+    for sentence in _SENTENCE_SPLIT_RE.split(text):
+        words = [w.lower() for w in _WORD_RE.findall(sentence)]
+        for i, w in enumerate(words):
+            if w not in _INTRANSITIVE_VERBS or i + 1 >= len(words):
+                continue
+            nxt = words[i + 1]
+            if nxt in _BARE_ADVERBIAL_NOUNS:
+                continue
+            if infer_word_role(nxt) == "noun":
+                return False
+    return True
+
+
 def wellformed_and_coherent(text: str, pos_lookup=None) -> bool:
-    """PF1.6's acceptance gate: the existing _parseable() (unchanged),
-    role_coherent(), and preposition_object_coherent() (new)."""
+    """PF1.6's acceptance gate, extended by Communication Integrity
+    Repair (2026-08-04) with two more general structural checks:
+    interrogative_object_coherent() and existential_complement_
+    coherent()."""
     return (
         _parseable(text, pos_lookup)
         and role_coherent(text)
         and preposition_object_coherent(text)
+        and interrogative_object_coherent(text)
+        and existential_complement_coherent(text)
     )

@@ -134,16 +134,39 @@ def test_never_raises_on_malformed_state():
 # ---------------------------------------------------------------------------
 
 def test_case1_composer_grounded_content_becomes_resp_a_words():
-    resp_A = _Resp(content="my own chain answer", confidence=0.6, src="search")
-    resp_B = _Resp(content="the composer's grounded answer", emotional_tone="engaged", confidence=0.9)
-    state = _State(response_content="my own chain answer", response_confidence=0.6)
+    """Communication Integrity Repair (2026-08-04): case 1 now requires
+    the composer to demonstrably preserve resp_A's meaning, not just be
+    non-empty -- this fixture is a genuine fluent paraphrase (shared
+    content words "remember"/"garden", no named entity to drop) so it
+    legitimately wins under the new arbitration, same as it always did
+    under the old "any non-empty composer wins" rule."""
+    resp_A = _Resp(content="I remember the garden we planted together.", confidence=0.6, src="search")
+    resp_B = _Resp(content="I remember planting that garden with you.", emotional_tone="engaged", confidence=0.9)
+    state = _State(response_content="I remember the garden we planted together.", response_confidence=0.6)
     systems = {"perception": None}
     A._finalize_articulation(resp_A, resp_B, state, systems, "some question")
-    assert resp_A.content == "the composer's grounded answer"
+    assert resp_A.content == "I remember planting that garden with you."
     assert resp_A.src == "composer_unified"
     assert resp_A.confidence == 0.9  # max(0.6, 0.9)
-    assert state.response_content == "the composer's grounded answer"
+    assert state.response_content == "I remember planting that garden with you."
     assert state.response_src == "composer_unified"
+
+
+def test_composer_that_does_not_preserve_meaning_does_not_overwrite_grounded_answer():
+    """Communication Integrity Repair (2026-08-04): the confirmed live
+    bug -- a well-grounded resp_A must not be replaced by a non-empty
+    composer candidate that shares none of its content and drops it
+    entirely, even at high composer confidence. Live-reported shape:
+    grounded creator fact overwritten by unrelated composer prose."""
+    resp_A = _Resp(content="My creator is Sunni Morningstar.", confidence=0.72, src="relational_role")
+    resp_B = _Resp(content="I wonder about the weather outside today.", confidence=1.0)
+    state = _State(response_content="My creator is Sunni Morningstar.", response_confidence=0.72)
+    systems = {"perception": None}
+    A._finalize_articulation(resp_A, resp_B, state, systems, "Who made you?")
+    assert resp_A.content == "My creator is Sunni Morningstar."
+    assert resp_A.src != "composer_unified"
+    assert resp_A.confidence == 0.72, "rejected composer's confidence must not leak onto the winner"
+    assert state.response_content == "My creator is Sunni Morningstar."
 
 
 def test_case2_both_empty_triggers_honest_abstain():

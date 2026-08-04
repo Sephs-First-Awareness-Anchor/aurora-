@@ -5800,6 +5800,26 @@ class WorkingMemory:
         _internal_prefixes = ("[AFTERTHOUGHT]", "[CODE]", "[PRESSURE]", "125-layer manifold:")
         if any(_aurora_text_clean.startswith(p) for p in _internal_prefixes):
             _aurora_text_clean = ""
+        # Communication Integrity Repair (2026-08-04), memory-admission
+        # gate: last_aurora_response feeds conversational continuity
+        # (follow-up/callback resolution reads it as "what she just
+        # said") and had no wellformedness check at all -- a malformed
+        # delivered turn would become reusable context for the NEXT
+        # turn's understanding. A rejected turn simply leaves the prior
+        # (already-validated) value in place rather than overwriting it
+        # with something Aurora didn't coherently say.
+        if _aurora_text_clean:
+            try:
+                from aurora_internal.aurora_pf1_5_instruments import wellformed_and_coherent
+                if not wellformed_and_coherent(_aurora_text_clean):
+                    _aurora_text_clean = ""
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_working_memory.py:last_aurora_response_gate",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "update_from_turn", "source_file": "aurora_working_memory.py"},
+                )
         self.last_aurora_response = _aurora_text_clean or self.last_aurora_response
         if _aurora_text_clean:
             skip_aurora_claim_ingest = bool(

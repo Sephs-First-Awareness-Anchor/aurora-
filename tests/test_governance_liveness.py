@@ -367,7 +367,10 @@ def test_sentence_composer_is_reachable_from_gateway_express():
         "r", encoding="utf-8",
     ) as f:
         aep_source = f.read()
-    assert "self.composer = SentenceComposer(self.lexicon, self.voice)" in aep_source
+    # Communication Integrity Repair (2026-08-04): construction now
+    # threads state_dir through (see SentenceComposer._state_log_path)
+    # -- updated literal, same reachability proof.
+    assert "self.composer = SentenceComposer(self.lexicon, self.voice, state_dir=self._state_dir)" in aep_source
     with open(
         os.path.join(REPO_ROOT, "aurora_governance_persistence_gateway.py"),
         "r", encoding="utf-8",

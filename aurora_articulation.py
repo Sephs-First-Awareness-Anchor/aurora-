@@ -36,6 +36,33 @@ def set_dps(dps) -> None:
     global _dps_ref
     _dps_ref = dps
 
+
+def configure_state_dir(state_dir) -> None:
+    """Communication Integrity Repair (2026-08-04): the six module-level
+    path constants above defaulted to the literal "aurora_state" (relative
+    to process CWD, not even this file's own location), independent of
+    whatever state_dir a given boot_aurora() runtime was actually given.
+    Two runtimes started with different state_dirs would read and write
+    each other's articulation trace, language-state cache, and lexicon
+    familiarity file. Rebinds them to the real runtime's own directory --
+    call this once, early in boot_aurora(), same pattern as set_dps().
+    Also drops the mtime-based language-state cache and lexicon-
+    familiarity cache, since a cached value keyed to the OLD path must
+    not silently keep answering for the new one."""
+    global DECISION_LOG, SUMMARY_FILE, TRACE_FILE, INSIGHTS_FILE
+    global LANGUAGE_STATE_FILE, LEXICON_FILE
+    global _LANGUAGE_STATE_CACHE, _LANGUAGE_STATE_MTIME, _LEXICON_FAMILIAR
+    base = Path(str(state_dir or "aurora_state"))
+    DECISION_LOG = base / "articulation_feedback.jsonl"
+    SUMMARY_FILE = base / "articulation_feedback_summary.json"
+    TRACE_FILE = base / "last_articulation_trace.json"
+    INSIGHTS_FILE = base / "articulation_insights.json"
+    LANGUAGE_STATE_FILE = base / "language_state.json"
+    LEXICON_FILE = base / "lexicon.json"
+    _LANGUAGE_STATE_CACHE = None
+    _LANGUAGE_STATE_MTIME = 0.0
+    _LEXICON_FAMILIAR = None
+
 # Language state cache — invalidated on file change
 _LANGUAGE_STATE_CACHE: Optional[Dict[str, Any]] = None
 _LANGUAGE_STATE_MTIME: float = 0.0

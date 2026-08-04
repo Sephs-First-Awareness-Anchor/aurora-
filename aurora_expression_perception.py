@@ -1583,6 +1583,16 @@ _ROLE_HINTS = {
     'bright': 'adjective', 'warm': 'adjective', 'alive': 'adjective',
     'open': 'adjective', 'clear': 'adjective', 'whole': 'adjective',
     'certain': 'adjective', 'careful': 'adjective',
+    # Communication Integrity Repair (2026-08-04): these were falling
+    # through to the 'noun' default, which produced a false positive in
+    # aurora_internal.aurora_pf1_5_instruments.existential_complement_
+    # coherent ("The problem remains difficult." misread as an
+    # existential verb + bare noun object). Common enough as bare
+    # post-verbal complements that the gap was worth closing directly
+    # rather than narrowing that check's verb coverage instead.
+    'difficult': 'adjective', 'unclear': 'adjective', 'necessary': 'adjective',
+    'sure': 'adjective', 'simple': 'adjective', 'complex': 'adjective',
+    'strong': 'adjective', 'weak': 'adjective', 'ready': 'adjective',
     # Common adverbs
     'very': 'adverb', 'really': 'adverb', 'always': 'adverb',
     'never': 'adverb', 'sometimes': 'adverb', 'often': 'adverb',
@@ -1590,6 +1600,13 @@ _ROLE_HINTS = {
     'perhaps': 'adverb', 'deeply': 'adverb', 'gently': 'adverb',
     'slowly': 'adverb', 'quietly': 'adverb', 'softly': 'adverb',
     # Pronouns
+    # Communication Integrity Repair (2026-08-04): 'i' was missing --
+    # the single most common English pronoun was silently falling
+    # through to the 'noun' default, which produced a false positive in
+    # aurora_internal.aurora_pf1_5_instruments.interrogative_object_
+    # coherent ("That is who I am." misread as an incomplete embedded
+    # clause because "I" after "who" didn't register as a pronoun).
+    'i': 'pronoun', 'he': 'pronoun', 'she': 'pronoun',
     'you': 'pronoun', 'we': 'pronoun', 'they': 'pronoun', 'it': 'pronoun',
     'this': 'pronoun', 'that': 'pronoun', 'something': 'pronoun',
     'everything': 'pronoun', 'nothing': 'pronoun',
@@ -1603,6 +1620,17 @@ _ROLE_HINTS = {
     'the': 'determiner', 'a': 'determiner', 'an': 'determiner',
     'my': 'determiner', 'your': 'determiner', 'our': 'determiner',
     'each': 'determiner', 'every': 'determiner', 'some': 'determiner',
+    # Communication Integrity Repair (2026-08-04): conjunctions were
+    # entirely unclassified, falling through to the 'noun' default --
+    # produced a live false positive in aurora_internal.aurora_pf1_5_
+    # instruments.existential_complement_coherent ("...defined HOW I
+    # should exist and grew." misread "and" as a bare noun object of
+    # "exist").
+    'and': 'conjunction', 'or': 'conjunction', 'but': 'conjunction',
+    'nor': 'conjunction', 'so': 'conjunction', 'yet': 'conjunction',
+    'if': 'conjunction', 'because': 'conjunction', 'since': 'conjunction',
+    'while': 'conjunction', 'when': 'conjunction', 'although': 'conjunction',
+    'unless': 'conjunction', 'though': 'conjunction',
     # Common -ing words that are NOUNS  -- override the -ing ' verb suffix rule
     'morning': 'noun', 'evening': 'noun', 'ceiling': 'noun', 'building': 'noun',
     'meeting': 'noun', 'setting': 'noun', 'blessing': 'noun', 'wedding': 'noun',
@@ -1776,9 +1804,19 @@ class SentenceComposer:
         ],
     }
 
-    def __init__(self, lexicon: LexicalMemory, voice: VoiceGenome):
+    def __init__(self, lexicon: LexicalMemory, voice: VoiceGenome, state_dir: Optional[str] = None):
         self.lexicon = lexicon
         self.voice = voice
+        # Communication Integrity Repair (2026-08-04): the six _log_*
+        # methods below built their log paths from this FILE's own
+        # on-disk location (os.path.dirname(__file__)) rather than the
+        # runtime's actual state_dir -- two boot_aurora() instances
+        # pointed at different state_dirs would both write to the same
+        # shared aurora_state/ next to the source file. Optional so
+        # existing direct-construction call sites (tests, etc.) keep
+        # working; _state_log_path() falls back to the old file-relative
+        # location when unset.
+        self._state_dir = state_dir
 
         # Evolving template pool: tone ' list of template dicts
         self.pool: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
@@ -3066,14 +3104,20 @@ class SentenceComposer:
         signals["reason"] = "neutral_valence"
         return "neutral", signals
 
+    def _state_log_path(self, filename: str) -> str:
+        """Communication Integrity Repair (2026-08-04): route the six
+        _log_* diagnostic files below through this runtime's own
+        state_dir when known, instead of a path relative to this
+        source file's location."""
+        if self._state_dir:
+            return os.path.join(str(self._state_dir), filename)
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), "aurora_state", filename)
+
     def _log_register(self, turn_id: str, register: str, signals: Dict[str, Any]) -> None:
         """F5.1: log the register + contributing signals per turn."""
         try:
             import json as _json
-            path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "aurora_state", "register_log.jsonl",
-            )
+            path = self._state_log_path("register_log.jsonl")
             entry = {"turn_id": turn_id, "register": register, "signals": signals,
                       "timestamp": time.time()}
             with open(path, "a", encoding="utf-8") as f:
@@ -3139,10 +3183,7 @@ class SentenceComposer:
         validate against before exploration is ever switched on."""
         try:
             import json as _json
-            path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "aurora_state", "exploration_log.jsonl",
-            )
+            path = self._state_log_path("exploration_log.jsonl")
             entry = {"turn_id": turn_id, "word": word, "relevance": round(float(relevance), 4),
                       "register": register, "ring_rank": ring_rank, "timestamp": time.time()}
             with open(path, "a", encoding="utf-8") as f:
@@ -3233,10 +3274,7 @@ class SentenceComposer:
         ConstraintEmitter's _emit_abstain())."""
         try:
             import json as _json
-            path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "aurora_state", "abstain_log.jsonl",
-            )
+            path = self._state_log_path("abstain_log.jsonl")
             entry = {
                 "turn_id": turn_id, "floor": floor,
                 "best_candidate": best_candidate, "best_score": round(best_score, 4),
@@ -3304,10 +3342,7 @@ class SentenceComposer:
         silently-swallowed one."""
         try:
             import json as _json
-            path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "aurora_state", "pos_unknown_log.jsonl",
-            )
+            path = self._state_log_path("pos_unknown_log.jsonl")
             entry = {
                 "word": word, "slot_role": role, "lexicon_pos": pos,
                 "timestamp": time.time(),
@@ -3733,10 +3768,7 @@ class SentenceComposer:
         blended score is actually tracking real composition quality."""
         try:
             import json as _json
-            path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "aurora_state", "motif_grounding_log.jsonl",
-            )
+            path = self._state_log_path("motif_grounding_log.jsonl")
             entry = {
                 "skeleton_id": skeleton_id, "sentence": sentence,
                 "grammatical": grammatical, "fitness": round(float(fitness), 4),
@@ -3772,10 +3804,7 @@ class SentenceComposer:
                 if divergence_rate > self._GOODHART_DIVERGENCE_THRESHOLD:
                     self._goodhart_alerted.add(skeleton_id)
                     import json as _json
-                    path = os.path.join(
-                        os.path.dirname(os.path.abspath(__file__)),
-                        "aurora_state", "motif_grounding_log.jsonl",
-                    )
+                    path = self._state_log_path("motif_grounding_log.jsonl")
                     entry = {
                         "alert": "goodhart_divergence", "skeleton_id": skeleton_id,
                         "divergence_rate": round(divergence_rate, 4),
@@ -4620,7 +4649,13 @@ class ExpressionPerceptionEngine(WarpCapable):
         self.ecology = ExpressionEcology()
         self.pressure = ExpressionPressure()
         self.voice = VoiceGenome()
-        self.composer = SentenceComposer(self.lexicon, self.voice)
+        # Communication Integrity Repair (2026-08-04): thread this
+        # engine's own already-correct state_dir into the composer, so
+        # its _log_* diagnostic files land in the same runtime state
+        # directory as everything else instead of a path relative to
+        # this source file's own location (see SentenceComposer.
+        # _state_log_path()).
+        self.composer = SentenceComposer(self.lexicon, self.voice, state_dir=self._state_dir)
 
         # OETS  -- Ontological Evolutionary Template Scaffolding
         self.oets: Optional['OntologicalScaffoldingEngine'] = None

@@ -9913,4 +9913,209 @@ flagged as a plausible next thread, not opened here.
 **First Seen:** Directive NC2, ratified 2026-08-03 following direct
 inspection of the live OETS web state, as a continuation of Directive
 NC1.
+
+## Aurora Build 587 — Communication Integrity Repair Directive
+
+**Ratified:** 2026-08-04 (Aurora Build 587 Communication Integrity
+Repair Directive, uploaded directive).
+**Category:** RUNTIME BUG (arbitration/selection, dead consumption
+path, validation gap, memory-admission gap, state-path isolation)
+
+**Confirmed live bug** (root cause, live-traced against a real
+`boot_aurora()` + `process_external_user_turn()` run, not inferred from
+documentation): Aurora frequently formed a correct grounded answer
+internally (e.g. `"My creator is Sunni (Sir) Morningstar."`, confidence
+0.72-0.74, `src="relational_role"`) but `_finalize_articulation()`
+(`aurora.py`) replaced it with the composer/`SentenceComposer` candidate
+whenever that candidate was merely non-empty -- confirmed live: a
+composer candidate that dropped "Sunni" entirely, or one that claimed
+`"I am sunni sir morningstar..."` (an agency inversion, not a
+paraphrase), both at self-reported confidence 1.0, silently overwrote
+the correct grounded answer. Separately, `_generate_identity_response()`
+computed a real answer for identity questions and stored it in
+`pipeline_state["identity_seed"]`, but that key had zero read sites
+anywhere in the codebase (confirmed by repo-wide search) -- the
+comprehension-response waterfall it was set inside
+(`_build_comprehension_response()`, ~2,190 lines, 80+ early-return
+gates) fell through past it into whichever unrelated later gate matched
+next, live-traced to produce `"no memories on this yet."` for "Who are
+you?" instead of the identity answer that had already been computed two
+lines earlier.
+
+**Fix 1 -- real arbitration, not "nonempty wins"** (`aurora.py`,
+`_finalize_articulation()` and four new helpers:
+`_grounded_semantic_authority()`, `_extract_named_relational_entities()`,
+`_composer_conflates_self_identity()`, `_composer_preserves_meaning()`):
+the composer candidate can now only replace a real grounded answer when
+it demonstrably preserves that answer's meaning -- passes the same
+wellformedness gate as before, does not claim Aurora IS a different
+known entity (agency inversion, checked against `core_identity`'s own
+small closed entity set), keeps any named relational entity the
+grounded candidate names, and shares real content-word substance with
+it (not bare token overlap). A rejected composer's confidence never
+transfers to the winning candidate -- the selected text's confidence
+always comes from evidence that actually supports it. Every decision
+(winner, source, semantic authority, meaning-preserved, rejection
+reasons) is recorded in `state.pipeline_state["articulation_arbitration"]`
+and `systems["_last_articulation_arbitration"]` for the trace.
+
+**Fix 2 -- identity_seed actually consumed**
+(`_build_comprehension_response()` in `aurora.py`): when
+`_generate_identity_response()` produces an answer, it is now rendered
+(via the same `_render_runtime_intent()` generative path the "who are
+you" sub-branch already used) and returned immediately as this turn's
+comprehension response, instead of being stored and discarded. The
+"who made you"/"who is Sunni"/"who is Cael" sub-branches of
+`_generate_identity_response()` itself (`aurora.py`) were also updated
+to render through `_render_runtime_intent()` -- previously only the
+"who are you" branch did, the other three returned raw unrendered fact
+strings.
+
+**Fix 3 -- semantic well-formedness, two new general checks**
+(`aurora_internal/aurora_pf1_5_instruments.py`):
+`interrogative_object_coherent()` rejects a wh-word (who/what/where/
+why/which/whom) that ends a declarative sentence or is followed by
+something that cannot continue it into a real embedded clause --
+catches the reported `"I understand who. I made who."` shape generally
+(any wh-word + verb, not those two literal strings), while exempting
+real questions (`"Who is going to be there tonight?"`) and real
+embedded clauses (`"I understand who you are."`). `existential_
+complement_coherent()` rejects a bare noun directly following an
+existential/intransitive verb (exist/live/occur/happen/remain/persist)
+with no preposition or copula between them -- catches the reported
+`"I exist sunni."` shape generally (any bare noun after any of these
+verbs, not just that one name). Both wired into `wellformed_and_
+coherent()`, which already gates `_response_is_grounded()` (from Bug
+Report 2 / FIX-A094) and is now also the gate for the two memory-
+admission points in Fix 4. Getting these to zero false positives against
+the R1.9.3 golden set required three small, generally-correct fixes to
+the shared `infer_word_role()` role table in
+`aurora_expression_perception.py` (previously silently defaulting
+unknown words to `'noun'`): `'i'`/`'he'`/`'she'` were missing from the
+pronoun set entirely, common adjectives (`difficult`/`unclear`/
+`necessary`/`sure`/`simple`/`complex`/`strong`/`weak`/`ready`) were
+unclassified, and all coordinating/subordinating conjunctions
+(`and`/`or`/`but`/`if`/`because`/... ) were unclassified -- each one
+found by an actual false positive during testing (the conjunction gap
+via the Section 10 live-verification run below), not guessed in
+advance. `"I understand enter beautiful. I did enter clear."` (one of
+the five reported examples) is a documented, known-uncaught case at
+this standalone-validator layer -- `"enter"` is not in the lightweight
+role table and this codebase has no real POS parser, so a general,
+reliable "verb directly followed by another bare verb" check was not
+achievable without a much larger, out-of-scope change (see `docs/`
+grade caution already on record for `_parseable()`'s own precision/
+recall tuning history). It is instead caught by Fix 1's meaning-
+preservation arbitration whenever a grounded candidate exists to compare
+against, which is the case for every live example this directive
+reported.
+
+**Fix 4 -- memory-admission gate** (`aurora.py`'s SediMemory
+turn-pipeline deposit; `aurora_working_memory.py`'s
+`WorkingMemory.update_from_turn()`): both previously had zero
+wellformedness check on the delivered response text. SediMemory's
+ingestion now withholds the response text (setting `response_rejected:
+True`) when it fails `wellformed_and_coherent()`, while still depositing
+the interaction's real geometry (constraint vector, intent, tone,
+confidence, salience) -- preserving Aurora's structural memory design
+per the directive, not erasing it. `last_aurora_response` (read by
+conversational-continuity/callback resolution) now leaves the prior,
+already-validated value in place instead of overwriting it with a
+malformed turn.
+
+**Fix 5 -- runtime state isolation** (`aurora_articulation.py`,
+`aurora_expression_perception.py`): `aurora_articulation.py`'s six
+module-level path constants (`DECISION_LOG`, `SUMMARY_FILE`,
+`TRACE_FILE`, `INSIGHTS_FILE`, `LANGUAGE_STATE_FILE`, `LEXICON_FILE`)
+defaulted to the literal `"aurora_state"` resolved against process CWD,
+independent of any `boot_aurora(state_dir=...)` -- two runtimes with
+different `state_dir`s would read/write each other's articulation
+trace, language-state cache, and lexicon-familiarity file. New
+`configure_state_dir()` (same setter pattern as the file's existing
+`set_dps()`) rebinds them and clears the associated in-memory caches;
+called from `boot_aurora()` alongside the existing `set_dps()` wiring.
+`SentenceComposer`'s six `_log_*` diagnostic methods
+(`aurora_expression_perception.py`) built their paths from
+`os.path.dirname(os.path.abspath(__file__))` (the source file's own
+location) instead of the runtime's `state_dir`; `SentenceComposer.
+__init__()` gained an optional `state_dir` parameter (backward
+compatible -- falls back to the old file-relative path when unset) and
+`ExpressionPerceptionEngine` now passes its own already-correct
+`self._state_dir` through at construction. Both fixes verified via a
+new test booting two real `boot_aurora()` instances with separate
+temp `state_dir`s and confirming their trace paths and composer
+`_state_dir`s differ (`tests/test_communication_integrity_repair.py::
+test_two_runtimes_with_separate_state_dirs_do_not_share_articulation_paths`).
+Three other `aurora_state`-literal sites were investigated and found
+NOT to be violations: `LexicalMemory._DEFAULT_PATH` and
+`ExpressionPerceptionEngine._REPR_STATE_PATH` are both fallback-only
+constants already superseded by a real `state_dir`-derived value at
+construction; `aurora.py`'s many `systems.get("state_dir") or
+"aurora_state"` sites already consult `state_dir` first and only fall
+back to the literal when absent.
+
+**Tests:** new `tests/test_communication_integrity_repair.py` (17
+tests covering identity preservation, composer rejection/acceptance
+with real semantic-preservation proof, confidence integrity, honest
+abstention, memory admission at both gated points, two-runtime state
+isolation, and semantic validation of the reported examples plus
+generated structural variants distinct from the literal strings).
+`tests/test_response_articulation_authority.py`'s `test_case1_
+composer_grounded_content_becomes_resp_a_words` was rewritten -- its
+old fixture asserted the exact "any non-empty composer wins" behavior
+this directive fixes, so it necessarily changed; a new
+`test_composer_that_does_not_preserve_meaning_does_not_overwrite_
+grounded_answer` covers the old fixture's original intent alongside it.
+`tests/test_governance_liveness.py::test_sentence_composer_is_reachable_
+from_gateway_express` updated for the new `SentenceComposer(...,
+state_dir=...)` construction literal (Fix 5). Full required regression
+battery run after all fixes landed (`test_communication_integrity_
+repair.py`, `test_response_articulation_authority.py`, `test_d2_
+condition2_abstain_sanity.py`, `test_governance_liveness.py`, `test_
+cers_conflict_monitoring_veto.py`, `test_pf1_5_instruments.py`, `test_
+generation_collapse_regression.py`, `test_function_word_gate_golden.py`,
+`test_zip_gap_research_router.py`, `test_m1_1a_relation_pairs.py`,
+`test_pf3_3_descriptor_neighborhood.py`, `test_nc1_noncomp_population.
+py`, `test_nc2_strengthen_cascade.py`, `test_p2_3_stance_composer_
+wiring.py`).
+
+**Live verification** (Section 10 of the directive -- real
+`boot_aurora()` from a clean temp copy of build-587 state, real
+`process_external_user_turn()`, full trace of both candidates +
+arbitration decision, captured before AND after the conjunction-gap
+fix below):
+
+| Prompt | Result |
+|---|---|
+| "Who are you?" | Grounded identity answer delivered; composer was empty (already rejected upstream by the existing `_response_is_grounded` gate). |
+| "Who made you?" | Grounded `"My creator is Sunni (Sir) Morningstar."` delivered; composer candidate (confidence 1.0, dropped "Sunni" entirely) correctly rejected -- `rejection_reasons: ["drops_named_entities:sunni (sir) morningstar"]`. This is the exact confirmed live failure, now fixed and proven live. |
+| "What do you know about Sunni?" | Grounded, correct, multi-sentence answer about Sunni delivered. |
+| "How do you form an answer?" | Delivered `"Answer: foundational:answer."` -- a genuine, PRE-EXISTING defect in a different subsystem (`src="crest_compression"`, not part of this directive's traced pipeline), reported honestly rather than hidden: the new `_grounded_semantic_authority()` correctly identified this candidate as failing `_response_is_grounded` (authority 0.15, not the confidence it self-reported) and there was no better candidate to prefer. Left unfixed -- out of this directive's explicit scope ("do not redesign unrelated systems"), flagged as a follow-up thread. |
+| "What remains difficult about communicating with Sunni?" | Delivered a coherent, honest "still building my understanding" answer. |
+
+**A real defect was found and fixed mid-verification, not glossed
+over**: the first live-verification pass on "What do you know about
+Sunni?" surfaced a false positive in Fix 3's own new `existential_
+complement_coherent()` check -- `infer_word_role("and")` defaulted to
+`'noun'` (conjunctions were entirely unclassified), so `"...decided I
+should exist and defined..."` misread `"and"` as a bare noun object of
+`"exist"` and rejected an otherwise-correct, coherent answer. Fixed by
+adding conjunctions to the shared role table (see Fix 3); re-verified
+clean on the second pass, and the full pf1_5/generation-collapse/
+function-word-gate suites re-run clean after the fix.
+
+**What this directive does NOT claim:** it does not fix the `"Answer:
+foundational:answer."` defect surfaced during live verification (a
+separate, pre-existing bug in the `crest_compression` response path,
+not touched by this directive). It does not implement general agency-
+inversion or contradiction detection -- `_composer_conflates_self_
+identity()` is a narrow, honest heuristic scoped to this project's own
+closed identity-entity set (Aurora/Sunni/Cael), not a general semantic-
+role labeler. It does not catch every malformed shape at the standalone
+validator layer (see the documented `"enter"` verb-adjacency gap in Fix
+3) -- arbitration's meaning-preservation check is the second line of
+defense for those, not a redundant guarantee.
+**First Seen:** Aurora Build 587 Communication Integrity Repair
+Directive, uploaded 2026-08-04, following a live user report of
+malformed identity-question responses on a freshly-installed build.
 2026-08-03.

@@ -3379,22 +3379,54 @@ def _generate_identity_response(
                 pass
         return None
 
+    # Communication Integrity Repair (2026-08-04): the "who are you"
+    # branch above already renders its identity_claim through
+    # _render_runtime_intent (the real generative composer/working-
+    # memory stack) before returning it -- the three branches below
+    # returned their raw fact strings unrendered instead, so anything
+    # downstream that later treats this function's output as "already
+    # spoken-shaped" was getting internal-reasoning prose, not composed
+    # language. Route them through the same call for consistency; a
+    # failed/unavailable render (no systems, or the composer produces
+    # nothing usable) falls back to the raw fact rather than losing the
+    # answer.
+    def _render_or_raw(raw_claim: str) -> str:
+        if isinstance(systems, dict):
+            try:
+                rendered = _render_runtime_intent(
+                    systems, raw_claim,
+                    emotion_tone="self-aware", relationship_signal="identity",
+                    certainty=0.9, supporting_concepts=["aurora", "identity", "creator"],
+                    constraints=["identity", "self_grounding"],
+                )
+                if rendered:
+                    return str(rendered).strip()
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_generate_identity_response:render",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_generate_identity_response", "source_file": "aurora.py"},
+                )
+        return raw_claim
+
     # "Who made you?" / "Who created you?"
     if any(m in t for m in ("who made you", "who created you", "who built you",
                              "your creator", "your author")):
-        return core_identity.who_made_me()
+        return _render_or_raw(core_identity.who_made_me())
 
     # "Who is Sunni?"
     if "sunni" in t or "sir morningstar" in t or ("sir" in t and "who" in t):
         entity = core_identity.get_entity("sunni")
         if entity:
-            return f"{entity.name}: {entity.description} {entity.relationship_to_aurora}"
+            return _render_or_raw(f"{entity.name}: {entity.description} {entity.relationship_to_aurora}")
 
     # "Who is Cael?"
     if "cael" in t:
         entity = core_identity.get_entity("cael")
         if entity:
-            return f"{entity.name}: {entity.description} {entity.relationship_to_aurora}"
+            return _render_or_raw(f"{entity.name}: {entity.description} {entity.relationship_to_aurora}")
 
     return None
 
@@ -20397,6 +20429,165 @@ def _record_pressure_experience(state: Any, systems: dict) -> None:
         pass
 
 
+_CIR_WORD_RE = re.compile(r"[A-Za-z']+")
+# Confidence floor for "resp_A itself is grounded enough to defend on its
+# own merits" -- below this, resp_A is treated as too weak to protect
+# from a composer candidate even when the composer's meaning-preservation
+# check fails (arbitration rule 5/6 still prefer *some* grounded content
+# over a rejected composer, but this is the line between "weak but real"
+# and "nothing here").
+_GROUNDED_AUTHORITY_FLOOR = 0.3
+
+
+def _grounded_semantic_authority(text: str, user_text: str, systems: dict, confidence: float) -> float:
+    """Communication Integrity Repair (2026-08-04): how much weight a
+    candidate's CONTENT carries as an actual answer, independent of
+    articulation quality. Reuses _response_is_grounded's existing
+    wellformedness + comprehension-confidence gate (Use structures
+    consistent with the existing project, per the repair directive) as a
+    floor -- a candidate that fails it is either malformed or
+    unverified, and gets a low authority regardless of its own self-
+    reported confidence, which upstream gates set independently and
+    cannot be trusted as a proxy for groundedness on its own."""
+    text = str(text or "").strip()
+    if not text:
+        return 0.0
+    if not _response_is_grounded(text, user_text, systems):
+        return 0.15
+    return max(0.15, min(1.0, float(confidence or 0.0)))
+
+
+def _extract_named_relational_entities(text: str, systems: dict) -> set:
+    """The small, closed set of this project's own relational-identity
+    entity names (aurora/sunni/cael/...) that literally appear in text,
+    case-insensitive. Not a general NER system -- deliberately scoped to
+    core_identity's own known entities, which is exactly the
+    relationship information arbitration rule 2 must not let the
+    composer silently drop or substitute."""
+    found = set()
+    text_low = str(text or "").lower()
+    if not text_low:
+        return found
+    try:
+        core_identity = systems.get("core_identity") if isinstance(systems, dict) else None
+        entities = getattr(core_identity, "entities", {}) or {} if core_identity is not None else {}
+        for entity in entities.values():
+            name = str(getattr(entity, "name", "") or "").strip().lower()
+            if not name:
+                continue
+            if name in text_low:
+                found.add(name)
+                continue
+            first_token = name.split()[0] if name else ""
+            if len(first_token) >= 3 and re.search(rf"\b{re.escape(first_token)}\b", text_low):
+                found.add(first_token)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_extract_named_relational_entities",
+            exc=_aurora_boundary_exc,
+            context={"function": "_extract_named_relational_entities", "source_file": "aurora.py"},
+        )
+    return found
+
+
+def _composer_conflates_self_identity(composer_text: str, systems: dict) -> bool:
+    """Arbitration rule 2's "does not reverse agency," specific to this
+    project's own identity graph: "I am <name>"/"I'm <name>" where
+    <name> is a known OTHER entity (not Aurora's own self-name) claims
+    Aurora IS that entity, rather than describing them -- a real agency
+    inversion (creator became self), not a grammar defect the
+    wellformedness gate would catch on its own."""
+    core_identity = systems.get("core_identity") if isinstance(systems, dict) else None
+    if core_identity is None:
+        return False
+    text_low = str(composer_text or "").lower()
+    if not text_low:
+        return False
+    try:
+        self_name = str(getattr(core_identity, "self_name", "") or "aurora").strip().lower()
+        for key, entity in (getattr(core_identity, "entities", {}) or {}).items():
+            name = str(getattr(entity, "name", "") or "").strip().lower()
+            first = name.split()[0] if name else ""
+            if not first or first == self_name or str(key).lower() == "aurora":
+                continue
+            if re.search(rf"\bi\s*(?:'m|am)\s+{re.escape(first)}\b", text_low):
+                return True
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_composer_conflates_self_identity",
+            exc=_aurora_boundary_exc,
+            context={"function": "_composer_conflates_self_identity", "source_file": "aurora.py"},
+        )
+    return False
+
+
+def _composer_preserves_meaning(grounded_text: str, composer_text: str, user_text: str, systems: dict) -> tuple:
+    """Communication Integrity Repair (2026-08-04), arbitration rule 2:
+    can composer_text stand in for grounded_text? Returns (preserved:
+    bool, reasons: list[str]) -- reasons is always populated (including
+    on success), for the articulation trace. Checks, in order: composer
+    is non-empty; composer passes the same wellformedness/semantic-role
+    gate resp_B is already screened with (grammatical + semantic
+    validation, per rule 2's last bullet); composer does not claim
+    Aurora IS a different known entity (agency inversion); composer
+    keeps any named relational entity the grounded candidate names
+    (identity relationships, not just content words); composer shares
+    real content-word substance with the grounded candidate, not just
+    its topic words in isolation. Deliberately NOT reduced to string
+    length or bare token overlap alone, per the directive."""
+    from aurora_internal.aurora_pf1_5_instruments import wellformed_and_coherent
+    from aurora_expression_perception import infer_word_role
+
+    reasons = []
+    composer_text = str(composer_text or "").strip()
+    grounded_text = str(grounded_text or "").strip()
+    if not composer_text:
+        reasons.append("composer_empty")
+        return False, reasons
+
+    if not wellformed_and_coherent(composer_text):
+        reasons.append("composer_fails_wellformedness")
+        return False, reasons
+
+    if _composer_conflates_self_identity(composer_text, systems):
+        reasons.append("composer_conflates_self_identity_with_named_entity")
+        return False, reasons
+
+    if not grounded_text:
+        # Nothing to preserve against -- composer stands on its own,
+        # subject only to the checks already applied above.
+        reasons.append("no_grounded_candidate_to_compare")
+        return True, reasons
+
+    grounded_entities = _extract_named_relational_entities(grounded_text, systems)
+    if grounded_entities:
+        composer_entities = _extract_named_relational_entities(composer_text, systems)
+        missing = grounded_entities - composer_entities
+        if missing:
+            reasons.append("drops_named_entities:" + ",".join(sorted(missing)))
+            return False, reasons
+        reasons.append("named_entities_preserved")
+
+    def _content_words(text: str) -> set:
+        words = [w.lower() for w in _CIR_WORD_RE.findall(text)]
+        return {w for w in words if len(w) >= 4 and infer_word_role(w) in ("noun", "verb")}
+
+    grounded_words = _content_words(grounded_text)
+    composer_words = _content_words(composer_text)
+    if grounded_words:
+        overlap = grounded_words & composer_words
+        min_required = 1 if len(grounded_words) <= 3 else max(1, len(grounded_words) // 3)
+        if len(overlap) < min_required:
+            reasons.append(f"insufficient_content_overlap:{len(overlap)}/{len(grounded_words)}")
+            return False, reasons
+        reasons.append(f"content_overlap:{len(overlap)}/{len(grounded_words)}")
+
+    reasons.append("meaning_preserved")
+    return True, reasons
+
+
 def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, user_text: str) -> None:
     """The one final articulation authority: the single point that decides
     what Aurora's turn actually says, given her own chain-formed candidate
@@ -20416,48 +20607,28 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
     generation attempts (resp_A's own chain -- mid_chain and emission_
     chokepoint no longer fire abstain inline, see those two sites) and the
     campaign-verified composer (gw._express() -> SentenceComposer, the same
-    call resp_B already makes) computed just before this is called. Three
-    cases:
-      1. Composer produced grounded content -> resp_A's words become the
-         SAME string resp_B carries (the actual generation swap: resp_A no
-         longer speaks through its own mock-assembly rendering --
-         _render_runtime_intent's mock AssemblyResult path in
-         aurora_working_memory.py -- when the real, evidence-grounded
-         composer voice is available).
-      2. Composer produced nothing AND resp_A's own chain also produced
-         nothing -> true last resort: the single honest-abstain crash net
-         fires here, once, now that both generation attempts have had
-         their turn.
-      3. Composer produced nothing but resp_A's own chain DID find
-         something (e.g. a direct fact/identity lookup) -> keep resp_A's
-         own content untouched (graceful degradation, not a case for
-         abstain -- there IS a genuine answer, just not from the composer).
+    call resp_B already makes) computed just before this is called.
 
-    Bug Report 2 (2026-08-03) investigation note: a post-finalize re-
-    application of DMM's thought_intent (deception/harm/accountability)
-    to whatever cases 1-3 above settled on was attempted and REVERTED
-    here, not shipped -- _INTENT_EVIDENCE_GROUNDED_SRC (~line 16021)
-    only recognizes "search"/"researched_reapplication" as evidence-
-    grounded provenance, and does not include "composer_unified", which
-    is case 1's src for the single most common delivered-content path in
-    the whole pipeline (D2.1's entire point) and routinely carries
-    confidence 1.0 (confirmed in the user's own bug report). Reusing
-    _derive_thought_intent's involves_deception check
-    (confidence>=0.7 and not grounded) against that combination as a
-    post-finalize gate would have force-abstained nearly every ordinary
-    composer response, not just the malformed ones -- a severe usability
-    regression, not a fix. The real defect this bug report identified
-    (malformed composer text delivered as if trustworthy) is instead
-    addressed at its actual sources: the wh-word-into-content-slot leak
-    in aurora_internal/aurora_proposition_frame.py, the Semantic
-    Intention Bridge staleness gap closed by aurora_braid_wiring.py's
-    ensure_semantic_intention_for_turn, and a real structural-coherence
-    check now wired into _response_is_grounded() (which already runs on
-    resp_B, the actual final candidate's content, before this function is
-    even called). A correctly-calibrated post-composer "is this
-    generative text evidentially trustworthy" signal is a real remaining
-    gap, distinct from grammatical wellformedness -- left for a
-    dedicated follow-up rather than shipped half-calibrated.
+    Communication Integrity Repair (2026-08-04): the D2.1 "voice
+    transplant" case 1 unconditionally overwrote resp_A with ANY non-
+    empty composer text and took max(resp_A.confidence, resp_B.
+    confidence) as the result -- confirmed live, a well-grounded resp_A
+    ("My creator is Sunni (Sir) Morningstar.", confidence 0.72) was
+    replaced by a composer candidate that had already re-derived the
+    same words into "I am sunni sir morningstar clear." (confidence
+    1.0, grammatically well-formed enough to pass the existing
+    wellformedness gate, but claiming Aurora IS Sunni -- an agency
+    inversion, not a paraphrase). This function now runs real
+    arbitration (_composer_preserves_meaning) instead of "nonempty
+    wins": the composer only replaces a real grounded answer when it
+    demonstrably preserves that answer's meaning (named entities,
+    agency direction, real content overlap) on top of already being
+    well-formed; a rejected composer never lets its confidence leak
+    onto the winning candidate (Section 5 of the repair directive). The
+    three original cases are still exactly what a passing composer / an
+    empty composer with real resp_A content / true double-silence each
+    resolve to -- this only changes what happens when the composer is
+    non-empty but WRONG.
     """
     try:
         _d2_have_chain_content = bool(str(getattr(resp_A, "content", "") or "").strip())
@@ -20478,22 +20649,97 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
         )
         if _d2_unified_text in _d2_composer_abstain_templates:
             _d2_unified_text = ""
+
+        _grounded_text = str(getattr(resp_A, "content", "") or "").strip()
+        _grounded_confidence = float(getattr(resp_A, "confidence", 0.0) or 0.0)
+        _grounded_authority = _grounded_semantic_authority(_grounded_text, user_text, systems, _grounded_confidence)
+        _composer_confidence = float(getattr(resp_B, "confidence", 0.0) or 0.0) if resp_B is not None else 0.0
+
         if _d2_unified_text:
+            _preserved, _reasons = _composer_preserves_meaning(_grounded_text, _d2_unified_text, user_text, systems)
+        else:
+            _preserved, _reasons = (False, ["composer_empty"])
+
+        arbitration = {
+            "text": "", "source": "", "semantic_authority": 0.0,
+            "articulation_quality": 0.0, "confidence": 0.0,
+            "meaning_preserved": _preserved, "rejection_reasons": list(_reasons),
+        }
+
+        if _d2_unified_text and _preserved:
+            # Rule 3: composer improves fluency while preserving meaning
+            # (or stands alone when there was nothing to preserve) -- use it.
+            # Confidence reflects the winning candidate's own evidence,
+            # never a rejected candidate's -- both inputs here genuinely
+            # supported this text, so the stronger of the two is fair,
+            # not "inherited from a loser."
             resp_A.content = _d2_unified_text
             resp_A.emotional_tone = getattr(resp_B, "emotional_tone", resp_A.emotional_tone)
-            resp_A.confidence = max(
-                float(getattr(resp_A, "confidence", 0.0) or 0.0),
-                float(getattr(resp_B, "confidence", 0.0) or 0.0),
-            )
+            resp_A.confidence = max(_grounded_confidence, _composer_confidence) if _grounded_text else _composer_confidence
             resp_A.src = "composer_unified"
             state.response_content = _d2_unified_text
             state.response_src = "composer_unified"
-        elif not _d2_have_chain_content:
+            arbitration.update(
+                text=_d2_unified_text, source="composer_unified",
+                semantic_authority=max(_grounded_authority, _composer_confidence),
+                articulation_quality=_composer_confidence, confidence=resp_A.confidence,
+            )
+        elif _grounded_text and _grounded_authority >= _GROUNDED_AUTHORITY_FLOOR:
+            # Rules 1/2/4: a real grounded answer is not overwritten by a
+            # composer candidate that failed meaning-preservation, no
+            # matter how confident the composer claims to be.
+            resp_A.content = _grounded_text
+            resp_A.src = str(getattr(resp_A, "src", "") or "grounded_chain")
+            resp_A.confidence = _grounded_confidence
+            state.response_content = _grounded_text
+            state.response_src = resp_A.src
+            arbitration.update(
+                text=_grounded_text, source=resp_A.src,
+                semantic_authority=_grounded_authority, articulation_quality=_grounded_authority,
+                confidence=_grounded_confidence,
+            )
+        elif _grounded_text:
+            # Rule 5: both weak, but resp_A is at least a real, non-
+            # empty answer -- prefer it over a rejected/empty composer.
+            resp_A.content = _grounded_text
+            resp_A.src = str(getattr(resp_A, "src", "") or "grounded_chain")
+            state.response_content = _grounded_text
+            state.response_src = resp_A.src
+            arbitration.update(
+                text=_grounded_text, source=resp_A.src,
+                semantic_authority=_grounded_authority, articulation_quality=_grounded_authority,
+                confidence=_grounded_confidence,
+            )
+        else:
+            # Rule 6: neither candidate supports a reliable answer --
+            # Aurora's existing honest-abstention behavior, unchanged.
             _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
             resp_A.content = state.response_content
             resp_A.emotional_tone = state.response_tone
             resp_A.confidence = state.response_confidence
             resp_A.src = state.response_src
+            arbitration.update(
+                text=state.response_content, source="honest_abstain",
+                semantic_authority=0.0, articulation_quality=0.0,
+                confidence=state.response_confidence,
+                rejection_reasons=list(_reasons) + ["neither_candidate_supported_an_answer"],
+            )
+
+        # Recorded for the memory-admission gate and live-verification
+        # captures downstream -- who won, why, and what the loser's
+        # rejection reasons were, not just the winning text.
+        try:
+            if isinstance(getattr(state, "pipeline_state", None), dict):
+                state.pipeline_state["articulation_arbitration"] = arbitration
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora.py:_finalize_articulation:trace",
+                exc=_aurora_boundary_exc,
+                context={"function": "_finalize_articulation", "source_file": "aurora.py"},
+            )
+        if isinstance(systems, dict):
+            systems["_last_articulation_arbitration"] = arbitration
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -22298,10 +22544,36 @@ def _run_reasoning_pipeline(
                         A=float(_agg.get('A', 0.3)),
                     )
             if _cv is not None:
+                # Communication Integrity Repair (2026-08-04), memory-
+                # admission gate: SediMemory had no wellformedness check
+                # at all on the delivered response text -- a malformed
+                # surface realization that slipped past (or predated)
+                # _finalize_articulation's arbitration would be
+                # permanently deposited as a stratigraphic event and
+                # could resurface as reusable expression material later.
+                # The interaction's geometry (constraint vector, intent,
+                # tone, confidence, salience) is real regardless of
+                # whether the words came out right, so it is still
+                # deposited -- only the response TEXT is withheld when
+                # it fails the gate, kept as diagnostic failure data via
+                # response_rejected rather than as language evidence.
+                _resp_text = str(state.response_content or '')[:300]
+                _resp_wellformed = True
+                try:
+                    from aurora_internal.aurora_pf1_5_instruments import wellformed_and_coherent
+                    _resp_wellformed = (not _resp_text) or wellformed_and_coherent(_resp_text)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(), module=__name__,
+                        operation="exception_handler:aurora.py:sedi_memory_admission_gate",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
+                    )
                 _sedi.ingest_event(
                     content={
                         'user_text': str(user_text or '')[:300],
-                        'response': str(state.response_content or '')[:300],
+                        'response': _resp_text if _resp_wellformed else '',
+                        'response_rejected': (not _resp_wellformed),
                         'intent': str(state.intent or ''),
                         'tone': str(state.response_tone or ''),
                         'confidence': float(state.response_confidence or 0.0),
@@ -22957,9 +23229,29 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             systems=systems,
         )
         if _identity_answer:
-            # Store the raw text just in case, but let the TurnChain / Emitter generate the response natively
             if pipeline_state is not None:
                 pipeline_state["identity_seed"] = _identity_answer
+            # Communication Integrity Repair (2026-08-04): this used to
+            # fall through into the rest of this function's ~2000-line
+            # gate waterfall without returning -- identity_seed was
+            # written but had zero read sites anywhere in the codebase
+            # (confirmed by repo-wide search), so the turn's actual
+            # comprehension response ended up coming from whichever
+            # unrelated later gate matched instead (live-traced: "who
+            # are you?" fell through to a generic no-memory fallback,
+            # "no memories on this yet."). _generate_identity_response's
+            # own answer is already genuinely generated (rendered
+            # through _render_runtime_intent -> the real composer/
+            # working-memory stack, not a template) -- return it here so
+            # it actually becomes this turn's response instead of being
+            # silently discarded. _finalize_articulation's arbitration
+            # is what decides, downstream, whether the composer is
+            # allowed to further refine it.
+            _identity_final = str(_identity_answer).strip()
+            if _identity_final and not _surface_fragment_is_invalid(
+                _identity_final, user_text=_raw_user_text, understood=_parsed_intent or {},
+            ):
+                return (_identity_final, "self-aware", 0.9)
 
     # Stamp full access vector into pipeline_state so every downstream layer
     # can read language as a constraint-field perturbation, not just a symbol.
@@ -26658,6 +26950,15 @@ def boot_aurora(
                 import aurora_articulation as _artmod
                 if hasattr(_artmod, 'set_dps'):
                     _artmod.set_dps(_dps_wire)
+                # Communication Integrity Repair (2026-08-04): aurora_
+                # articulation.py's trace/language-state/lexicon file
+                # constants defaulted to a literal "aurora_state" path
+                # independent of THIS runtime's own state_dir -- two
+                # boot_aurora() instances with different state_dirs
+                # would read/write each other's articulation state.
+                # Rebind them to this runtime's real directory.
+                if hasattr(_artmod, 'configure_state_dir'):
+                    _artmod.configure_state_dir(systems.get('state_dir') or state_dir)
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
