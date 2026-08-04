@@ -3379,54 +3379,39 @@ def _generate_identity_response(
                 pass
         return None
 
-    # Communication Integrity Repair (2026-08-04): the "who are you"
-    # branch above already renders its identity_claim through
-    # _render_runtime_intent (the real generative composer/working-
-    # memory stack) before returning it -- the three branches below
-    # returned their raw fact strings unrendered instead, so anything
-    # downstream that later treats this function's output as "already
-    # spoken-shaped" was getting internal-reasoning prose, not composed
-    # language. Route them through the same call for consistency; a
-    # failed/unavailable render (no systems, or the composer produces
-    # nothing usable) falls back to the raw fact rather than losing the
-    # answer.
-    def _render_or_raw(raw_claim: str) -> str:
-        if isinstance(systems, dict):
-            try:
-                rendered = _render_runtime_intent(
-                    systems, raw_claim,
-                    emotion_tone="self-aware", relationship_signal="identity",
-                    certainty=0.9, supporting_concepts=["aurora", "identity", "creator"],
-                    constraints=["identity", "self_grounding"],
-                )
-                if rendered:
-                    return str(rendered).strip()
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:_generate_identity_response:render",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_generate_identity_response", "source_file": "aurora.py"},
-                )
-        return raw_claim
-
+    # CIR audit follow-up (2026-08-04): an earlier version of this
+    # function routed these three branches' raw fact strings through
+    # _render_runtime_intent (the generative composer/working-memory
+    # stack) for consistency with the "who are you" branch above.
+    # Reverted -- an external audit correctly identified this as
+    # sending the raw identity fact through a LOSSY generative/
+    # summarization pipeline before it ever becomes the grounded,
+    # authoritative candidate _finalize_articulation arbitrates from;
+    # arbitration can then only protect whatever survived that pass,
+    # not the actual complete fact. These three branches already
+    # return complete, well-formed prose sentences (unlike the "who are
+    # you" branch's semicolon-joined fragment list, which genuinely
+    # needs rendering to become speech) -- there is nothing here for
+    # generation to add, only something for it to risk losing. The
+    # composer (resp_B) remains free to independently produce a more
+    # natural paraphrase; arbitration's meaning-preservation check is
+    # what evaluates whether it may replace this raw, complete fact.
     # "Who made you?" / "Who created you?"
     if any(m in t for m in ("who made you", "who created you", "who built you",
                              "your creator", "your author")):
-        return _render_or_raw(core_identity.who_made_me())
+        return core_identity.who_made_me()
 
     # "Who is Sunni?"
     if "sunni" in t or "sir morningstar" in t or ("sir" in t and "who" in t):
         entity = core_identity.get_entity("sunni")
         if entity:
-            return _render_or_raw(f"{entity.name}: {entity.description} {entity.relationship_to_aurora}")
+            return f"{entity.name}: {entity.description} {entity.relationship_to_aurora}"
 
     # "Who is Cael?"
     if "cael" in t:
         entity = core_identity.get_entity("cael")
         if entity:
-            return _render_or_raw(f"{entity.name}: {entity.description} {entity.relationship_to_aurora}")
+            return f"{entity.name}: {entity.description} {entity.relationship_to_aurora}"
 
     return None
 
@@ -20740,6 +20725,62 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
             )
         if isinstance(systems, dict):
             systems["_last_articulation_arbitration"] = arbitration
+
+        # CIR audit follow-up (2026-08-04): aurora_articulation.py's
+        # own last_articulation_trace.json only ever recorded
+        # SentenceComposer's internal phrase-repair decision (draft vs.
+        # its own deterministic candidate) -- a real, still-useful
+        # signal, but NOT the same thing as which candidate this
+        # function actually chose to deliver. Confirmed live: the file
+        # showed a rejected composer draft ("I do who. I did who.")
+        # while Aurora had actually said "My creator is Sunni (Sir)
+        # Morningstar." -- anyone debugging from the file alone would
+        # be misled about what she said. This function runs strictly
+        # after smooth_with_decision()'s own write within the same
+        # turn, so writing the real arbitration outcome to the SAME
+        # file, last, makes it the file's final, authoritative state --
+        # not a competing file to remember to check instead.
+        try:
+            import json as _cir_json
+            _state_dir = systems.get("state_dir") if isinstance(systems, dict) else None
+            _trace_dir = Path(str(_state_dir or "aurora_state"))
+            _trace_dir.mkdir(parents=True, exist_ok=True)
+            _final_trace_path = _trace_dir / "last_articulation_trace.json"
+            _existing_trace: Dict[str, Any] = {}
+            if _final_trace_path.exists():
+                try:
+                    _existing_trace = json.loads(_final_trace_path.read_text(encoding="utf-8") or "{}")
+                    if not isinstance(_existing_trace, dict):
+                        _existing_trace = {}
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(), module=__name__,
+                        operation="exception_handler:aurora.py:_finalize_articulation:trace_read",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_finalize_articulation", "source_file": "aurora.py"},
+                    )
+                    _existing_trace = {}
+            _existing_trace["final_delivered"] = {
+                "user_text": str(user_text or ""),
+                "delivered_text": arbitration.get("text", ""),
+                "source": arbitration.get("source", ""),
+                "semantic_authority": arbitration.get("semantic_authority", 0.0),
+                "articulation_quality": arbitration.get("articulation_quality", 0.0),
+                "confidence": arbitration.get("confidence", 0.0),
+                "meaning_preserved": arbitration.get("meaning_preserved"),
+                "rejection_reasons": arbitration.get("rejection_reasons", []),
+                "timestamp": time.time(),
+            }
+            _final_trace_path.write_text(
+                json.dumps(_existing_trace, indent=2, ensure_ascii=True), encoding="utf-8"
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora.py:_finalize_articulation:trace_write",
+                exc=_aurora_boundary_exc,
+                context={"function": "_finalize_articulation", "source_file": "aurora.py"},
+            )
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),

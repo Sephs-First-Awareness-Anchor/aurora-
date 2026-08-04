@@ -1481,7 +1481,19 @@ class NSpaceGateway:
                 )
                 mtsl_context = None
 
-            decision = smooth_with_decision(draft_text, prompt=prompt_text, tone=tone, context=mtsl_context)
+            # CIR audit follow-up (2026-08-04): pass this runtime's own
+            # state_dir through so smooth_with_decision()'s trace/
+            # language-state/lexicon reads and writes resolve against
+            # THIS gateway's runtime, not whichever boot_aurora()
+            # instance most recently rebound aurora_articulation.py's
+            # module-level path globals (see that module's isolation
+            # note) -- the real fix for two runtimes contaminating each
+            # other's articulation state when used interleaved.
+            _articulation_state_dir = getattr(self.perception, "_state_dir", None)
+            decision = smooth_with_decision(
+                draft_text, prompt=prompt_text, tone=tone, context=mtsl_context,
+                state_dir=_articulation_state_dir,
+            )
             if self.perception and hasattr(self.perception, 'ingest_interaction'):
                 self.perception.ingest_interaction({
                     'input': decision.selected,

@@ -319,15 +319,80 @@ def existential_complement_coherent(text: str) -> bool:
     return True
 
 
+# CIR audit follow-up (2026-08-04): "I understand enter beautiful. I
+# did enter clear." was documented at ship time as a known-uncaught
+# case (a bare verb the shared role table doesn't recognize -- "enter"
+# -- adjacent to another bare verb), deliberately left to arbitration's
+# meaning-preservation check as the second line of defense. A follow-up
+# audit both confirmed that gap AND found the SAME general failure
+# shape in it doesn't require verb-verb detection at all: "enter
+# beautiful" and "enter clear" are a bare noun-defaulted word directly
+# followed by a bare adjective, with nothing linking them -- and the
+# audit's own new counter-examples ("I am form real.", "I change form
+# real.") are the identical shape. English attributive adjectives
+# precede the noun they modify, not follow it, except in a small closed
+# class of resultative/object-complement constructions ("makes it
+# simple", "keep the process simple") -- exempted below by checking for
+# a determiner or a known resultative verb immediately before the noun.
+_RESULTATIVE_VERBS = frozenset({
+    "make", "makes", "made", "making",
+    "keep", "keeps", "kept", "keeping",
+    "find", "finds", "found", "finding",
+    "leave", "leaves", "left", "leaving",
+    "call", "calls", "called", "calling",
+    "consider", "considers", "considered", "considering",
+    "get", "gets", "got", "getting",
+    "render", "renders", "rendered", "rendering",
+    "deem", "deems", "deemed", "deeming",
+    "judge", "judges", "judged", "judging",
+    "want", "wants", "wanted", "wanting",
+    "declare", "declares", "declared", "declaring",
+    "paint", "paints", "painted", "painting",
+    "drive", "drives", "drove", "driving",
+})
+# A comma/dash/semicolon/colon is a real syntactic boundary -- two
+# words on opposite sides of one are never "immediately adjacent" in
+# the sense this check cares about ("Hey, good to hear from you."
+# must not be misread as "hey good" bumping into each other).
+_CLAUSE_SPLIT_RE = re.compile(r"[.!?,;:]+|--")
+
+
+def noun_adjective_order_coherent(text: str) -> bool:
+    """A bare noun-role word directly followed by a bare adjective-role
+    word, with no comma/other clause boundary, no determiner, and no
+    resultative verb governing it, has no valid English reading --
+    catches "enter beautiful"/"enter clear"/"form real" generally, not
+    as a blacklist of those literal strings."""
+    text = str(text or "").strip()
+    if not text:
+        return False
+    for sentence in _SENTENCE_SPLIT_RE.split(text):
+        for clause in _CLAUSE_SPLIT_RE.split(sentence):
+            words = [w.lower() for w in _WORD_RE.findall(clause)]
+            for i, w in enumerate(words):
+                if infer_word_role(w) != "noun" or i + 1 >= len(words):
+                    continue
+                if infer_word_role(words[i + 1]) != "adjective":
+                    continue
+                preceding = words[i - 1] if i > 0 else ""
+                if infer_word_role(preceding) == "determiner":
+                    continue
+                if preceding in _RESULTATIVE_VERBS:
+                    continue
+                return False
+    return True
+
+
 def wellformed_and_coherent(text: str, pos_lookup=None) -> bool:
     """PF1.6's acceptance gate, extended by Communication Integrity
-    Repair (2026-08-04) with two more general structural checks:
-    interrogative_object_coherent() and existential_complement_
-    coherent()."""
+    Repair (2026-08-04) with three more general structural checks:
+    interrogative_object_coherent(), existential_complement_coherent(),
+    and noun_adjective_order_coherent()."""
     return (
         _parseable(text, pos_lookup)
         and role_coherent(text)
         and preposition_object_coherent(text)
         and interrogative_object_coherent(text)
         and existential_complement_coherent(text)
+        and noun_adjective_order_coherent(text)
     )

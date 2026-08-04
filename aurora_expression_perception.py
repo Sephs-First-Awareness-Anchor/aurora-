@@ -1541,7 +1541,10 @@ class VoiceGenome:
 # Role inference for learning new words from context
 _ROLE_HINTS = {
     # Common verbs
-    'is': 'verb', 'are': 'verb', 'was': 'verb', 'were': 'verb',
+    # CIR audit follow-up (2026-08-04): 'am' was missing from the
+    # copula set (only is/are/was/were were listed), defaulting to
+    # 'noun' -- contributed to "I am form real." parsing ambiguously.
+    'am': 'verb', 'is': 'verb', 'are': 'verb', 'was': 'verb', 'were': 'verb',
     'do': 'verb', 'does': 'verb', 'did': 'verb', 'have': 'verb',
     'has': 'verb', 'had': 'verb', 'make': 'verb', 'made': 'verb',
     'go': 'verb', 'went': 'verb', 'come': 'verb', 'came': 'verb',
@@ -1559,6 +1562,20 @@ _ROLE_HINTS = {
     'become': 'verb', 'exist': 'verb', 'evolve': 'verb', 'seek': 'verb',
     'discover': 'verb', 'notice': 'verb', 'reflect': 'verb',
     'experience': 'verb', 'connect': 'verb', 'choose': 'verb',
+    # CIR audit follow-up (2026-08-04): common linking verbs and
+    # contractions were unclassified, defaulting to 'noun' -- produced
+    # false positives in aurora_internal.aurora_pf1_5_instruments.
+    # noun_adjective_order_coherent ("...chords feels natural" and
+    # "sounds great"/"it's good" misread the linking verb itself as the
+    # bare noun half of a noun+adjective pair).
+    'feels': 'verb', 'sounds': 'verb', 'looks': 'verb', 'seems': 'verb',
+    'remain': 'verb', 'remains': 'verb', 'remained': 'verb',
+    'occur': 'verb', 'occurs': 'verb', 'occurred': 'verb',
+    'persist': 'verb', 'persists': 'verb', 'persisted': 'verb',
+    'stay': 'verb', 'stays': 'verb', 'stayed': 'verb',
+    'appear': 'verb', 'appears': 'verb', 'appeared': 'verb',
+    "it's": 'verb', "that's": 'verb', "he's": 'verb', "she's": 'verb',
+    "there's": 'verb', "here's": 'verb', "what's": 'verb', "who's": 'verb',
     # Common nouns
     'world': 'noun', 'time': 'noun', 'way': 'noun', 'day': 'noun',
     'thing': 'noun', 'life': 'noun', 'people': 'noun', 'mind': 'noun',
@@ -1599,6 +1616,11 @@ _ROLE_HINTS = {
     'still': 'adverb', 'just': 'adverb', 'also': 'adverb',
     'perhaps': 'adverb', 'deeply': 'adverb', 'gently': 'adverb',
     'slowly': 'adverb', 'quietly': 'adverb', 'softly': 'adverb',
+    # CIR audit follow-up (2026-08-04): 'not' and interrogative-adverb
+    # 'how' were unclassified, defaulting to 'noun' -- produced false
+    # positives in noun_adjective_order_coherent ("not sure", "how
+    # long" both misread as noun+adjective pairs).
+    'not': 'adverb', 'how': 'adverb',
     # Pronouns
     # Communication Integrity Repair (2026-08-04): 'i' was missing --
     # the single most common English pronoun was silently falling

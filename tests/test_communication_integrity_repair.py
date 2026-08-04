@@ -16,6 +16,7 @@ directive's own testing requirements.
 """
 import os
 import sys
+import json
 import shutil
 import tempfile
 
@@ -322,6 +323,86 @@ def test_two_runtimes_with_separate_state_dirs_do_not_share_articulation_paths()
         shutil.rmtree(scratch_b, ignore_errors=True)
 
 
+def test_two_runtimes_do_not_contaminate_each_others_articulation_trace_when_interleaved():
+    """Audit follow-up (2026-08-04): the path-configuration check above
+    passed even while real cross-contamination was reproducible --
+    aurora_articulation.py's path constants are a single mutable value
+    per PROCESS, so booting B after A rebinds them, and A's own turn
+    processing (which never re-asserts its own path) then writes into
+    B's directory. This test actually speaks through A AFTER both are
+    booted and asserts B's on-disk trace file is untouched -- the
+    scenario the path-only check above cannot catch."""
+    import aurora_articulation as art
+
+    scratch_a = tempfile.mkdtemp(prefix="aurora_cir_interleave_a_")
+    scratch_b = tempfile.mkdtemp(prefix="aurora_cir_interleave_b_")
+    try:
+        state_a = os.path.join(scratch_a, "aurora_state")
+        state_b = os.path.join(scratch_b, "aurora_state")
+        shutil.copytree(os.path.join(REPO_ROOT, "aurora_state"), state_a)
+        shutil.copytree(os.path.join(REPO_ROOT, "aurora_state"), state_b)
+
+        systems_a = A.boot_aurora(state_dir=state_a, verbose=False)
+        systems_b = A.boot_aurora(state_dir=state_b, verbose=False)
+
+        trace_b_path = os.path.join(state_b, "last_articulation_trace.json")
+        b_before = open(trace_b_path).read() if os.path.exists(trace_b_path) else None
+
+        A.process_external_user_turn(
+            systems_a, "Who made you?",
+            source_label="isolation_test", session_id="isolation_test",
+            auto_search_enabled=False, record_exchange=True,
+            update_interactive_state=True, track_evolutionary_trace=True,
+            run_periodic_maintenance=False, mode_name="AGENTIC",
+        )
+
+        b_after = open(trace_b_path).read() if os.path.exists(trace_b_path) else None
+        assert b_before == b_after, (
+            "runtime B's articulation trace changed when only runtime A was spoken through -- "
+            "cross-contamination via aurora_articulation.py's module-level path globals"
+        )
+    finally:
+        shutil.rmtree(scratch_a, ignore_errors=True)
+        shutil.rmtree(scratch_b, ignore_errors=True)
+
+
+def test_persisted_trace_file_matches_the_actual_delivered_response():
+    """Audit follow-up (2026-08-04): last_articulation_trace.json
+    showed SentenceComposer's own intermediate phrase-repair decision
+    (e.g. a rejected composer draft) even when Aurora's actually
+    delivered text was the grounded candidate arbitration selected --
+    anyone debugging from the file alone was misled. _finalize_
+    articulation() now writes the real final decision into a
+    "final_delivered" key in the SAME file, last, so it always matches
+    what was actually said."""
+    scratch = tempfile.mkdtemp(prefix="aurora_cir_trace_accuracy_")
+    try:
+        scratch_state = os.path.join(scratch, "aurora_state")
+        shutil.copytree(os.path.join(REPO_ROOT, "aurora_state"), scratch_state)
+        systems = A.boot_aurora(state_dir=scratch_state, verbose=False)
+        result = A.process_external_user_turn(
+            systems, "Who made you?",
+            source_label="trace_accuracy_test", session_id="trace_accuracy_test",
+            auto_search_enabled=False, record_exchange=True,
+            update_interactive_state=True, track_evolutionary_trace=True,
+            run_periodic_maintenance=False, mode_name="AGENTIC",
+        )
+        delivered = str(getattr(result.get("resp_A"), "content", "") or "")
+        assert delivered
+
+        trace_path = os.path.join(scratch_state, "last_articulation_trace.json")
+        assert os.path.exists(trace_path)
+        with open(trace_path, encoding="utf-8") as f:
+            trace = json.load(f)
+        final = trace.get("final_delivered", {})
+        assert final.get("delivered_text") == delivered, (
+            f"trace file's final_delivered.delivered_text {final.get('delivered_text')!r} "
+            f"does not match what was actually said {delivered!r}"
+        )
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 # ---------------------------------------------------------------------------
 # Semantic validation (directive Section 9) -- the 5 reported strings plus
 # generated structural variants, not dependent on the literals alone.
@@ -337,16 +418,46 @@ _REPORTED_MALFORMED = [
 
 
 def test_all_reported_malformed_examples_individually():
+    """Audit follow-up (2026-08-04): "I understand enter beautiful. I
+    did enter clear." was originally shipped as a documented, known-
+    uncaught case at this layer (relying on arbitration's meaning-
+    preservation check as the only defense). noun_adjective_order_
+    coherent() now catches its actual general shape (bare noun
+    immediately followed by bare adjective, no linking structure) --
+    all five reported examples must be rejected here directly, no
+    exceptions."""
     failures = [t for t in _REPORTED_MALFORMED if wellformed_and_coherent(t)]
-    # "I understand enter beautiful. I did enter clear." is a documented,
-    # known-uncaught case at the standalone-validator layer (verb-verb
-    # adjacency the lightweight role tagger can't reliably detect for
-    # unlisted verbs) -- it is caught instead by arbitration's meaning-
-    # preservation check whenever a grounded candidate exists. The other
-    # four must be rejected here.
-    assert set(failures) <= {"I understand enter beautiful. I did enter clear."}, (
-        f"unexpected malformed examples passed validation: {failures}"
-    )
+    assert not failures, f"malformed examples wrongly passed validation: {failures}"
+
+
+_AUDIT_NOUN_ADJECTIVE_VARIANTS = [
+    "I am form real.",
+    "I change form real.",
+]
+
+
+def test_audit_reported_noun_adjective_variants_rejected():
+    """The follow-up audit's own new counter-examples (not literal
+    strings this fix was blacklisted against -- the same general
+    bare-noun+bare-adjective shape as the original enter/beautiful
+    case)."""
+    failures = [t for t in _AUDIT_NOUN_ADJECTIVE_VARIANTS if wellformed_and_coherent(t)]
+    assert not failures, f"audit-reported variants wrongly passed validation: {failures}"
+
+
+def test_resultative_constructions_not_falsely_rejected():
+    """Regression guard: noun_adjective_order_coherent()'s resultative-
+    verb and determiner exemptions must not over-reject real English
+    object-complement constructions."""
+    good = [
+        "That makes me happy.", "Keep it simple.",
+        "This makes the process simple.", "That makes people happy.",
+        "The critics found the movie interesting.",
+        "I want a real answer.", "I am a real person.",
+        "The problem remains difficult.",
+    ]
+    failures = [t for t in good if not wellformed_and_coherent(t)]
+    assert not failures, f"legitimate resultative constructions wrongly rejected: {failures}"
 
 
 _WH_STRUCTURAL_VARIANTS = [

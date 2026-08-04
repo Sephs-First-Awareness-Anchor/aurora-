@@ -70,6 +70,40 @@ _LANGUAGE_STATE_MTIME: float = 0.0
 # Lexicon familiarity — words Aurora has used at least once
 _LEXICON_FAMILIAR: Optional[frozenset] = None
 
+# CIR audit follow-up (2026-08-04): configure_state_dir() above rebinds
+# the module globals, but it is one shared mutable value per PROCESS --
+# a second boot_aurora() call rebinds it again, and any runtime whose
+# turn processing runs after that (even an earlier-booted one) reads
+# and writes through the now-wrong path. Reproduced live: two runtimes
+# with distinct state_dirs, boot A then boot B, speak through A --
+# A's articulation trace lands in B's directory, because A never re-
+# asserts its own path before writing, it just trusts whatever the
+# shared global currently says. The real fix is per-call state_dir
+# threading (below): decide_articulation()/record_decision()/
+# smooth_with_decision() and their dependents now accept an explicit
+# state_dir and resolve their own paths from it when given, falling
+# back to the module globals only when a caller doesn't have one to
+# pass (e.g. direct/legacy invocations) -- configure_state_dir() is
+# kept as that fallback's target, not removed, since it's still
+# correct for the common single-runtime-per-process case.
+# Caches are now keyed by the resolved path string so two state_dirs
+# used interleaved in one process can't serve each other's cached value.
+_LANGUAGE_STATE_CACHE_BY_PATH: Dict[str, Dict[str, Any]] = {}
+_LANGUAGE_STATE_MTIME_BY_PATH: Dict[str, float] = {}
+_LEXICON_FAMILIAR_BY_PATH: Dict[str, frozenset] = {}
+
+
+def _language_state_path(state_dir: Optional[str] = None) -> Path:
+    return (Path(str(state_dir)) / "language_state.json") if state_dir else LANGUAGE_STATE_FILE
+
+
+def _lexicon_path(state_dir: Optional[str] = None) -> Path:
+    return (Path(str(state_dir)) / "lexicon.json") if state_dir else LEXICON_FILE
+
+
+def _trace_path(state_dir: Optional[str] = None) -> Path:
+    return (Path(str(state_dir)) / "last_articulation_trace.json") if state_dir else TRACE_FILE
+
 # Feedback insights — refreshed every 30 minutes
 _FEEDBACK_INSIGHTS: Optional[Dict[str, Any]] = None
 _FEEDBACK_INSIGHTS_TS: float = 0.0
@@ -108,18 +142,23 @@ class ArticulationDecision:
 # State loaders
 # ---------------------------------------------------------------------------
 
-def _load_language_state() -> Dict[str, Any]:
-    """Load language_state.json dims with mtime-based cache."""
-    global _LANGUAGE_STATE_CACHE, _LANGUAGE_STATE_MTIME
+def _load_language_state(state_dir: Optional[str] = None) -> Dict[str, Any]:
+    """Load language_state.json dims with mtime-based cache, keyed by
+    the resolved path so two state_dirs used in one process (see the
+    isolation note above _LANGUAGE_STATE_CACHE_BY_PATH) never share a
+    cache slot."""
+    path = _language_state_path(state_dir)
+    key = str(path)
     try:
-        mtime = LANGUAGE_STATE_FILE.stat().st_mtime if LANGUAGE_STATE_FILE.exists() else 0.0
-        if _LANGUAGE_STATE_CACHE is not None and mtime == _LANGUAGE_STATE_MTIME:
-            return _LANGUAGE_STATE_CACHE
-        if LANGUAGE_STATE_FILE.exists():
-            data = json.loads(LANGUAGE_STATE_FILE.read_text(encoding="utf-8") or "{}")
-            _LANGUAGE_STATE_CACHE = data.get("dims", {}) if isinstance(data, dict) else {}
-            _LANGUAGE_STATE_MTIME = mtime
-            return _LANGUAGE_STATE_CACHE
+        mtime = path.stat().st_mtime if path.exists() else 0.0
+        if key in _LANGUAGE_STATE_CACHE_BY_PATH and mtime == _LANGUAGE_STATE_MTIME_BY_PATH.get(key):
+            return _LANGUAGE_STATE_CACHE_BY_PATH[key]
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8") or "{}")
+            result = data.get("dims", {}) if isinstance(data, dict) else {}
+            _LANGUAGE_STATE_CACHE_BY_PATH[key] = result
+            _LANGUAGE_STATE_MTIME_BY_PATH[key] = mtime
+            return result
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -132,20 +171,24 @@ def _load_language_state() -> Dict[str, Any]:
     return {}
 
 
-def _load_lexicon_familiar() -> frozenset:
-    """Return frozenset of words Aurora has used at least once."""
-    global _LEXICON_FAMILIAR
-    if _LEXICON_FAMILIAR is not None:
-        return _LEXICON_FAMILIAR
+def _load_lexicon_familiar(state_dir: Optional[str] = None) -> frozenset:
+    """Return frozenset of words Aurora has used at least once, keyed
+    by the resolved path (see the isolation note above
+    _LEXICON_FAMILIAR_BY_PATH)."""
+    path = _lexicon_path(state_dir)
+    key = str(path)
+    if key in _LEXICON_FAMILIAR_BY_PATH:
+        return _LEXICON_FAMILIAR_BY_PATH[key]
     try:
-        if LEXICON_FILE.exists():
-            data = json.loads(LEXICON_FILE.read_text(encoding="utf-8") or "{}")
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8") or "{}")
             entries = data.get("entries", {}) if isinstance(data, dict) else {}
-            _LEXICON_FAMILIAR = frozenset(
+            result = frozenset(
                 w.lower() for w, v in entries.items()
                 if isinstance(v, dict) and int(v.get("usage_count", 0) or 0) > 0
             )
-            return _LEXICON_FAMILIAR
+            _LEXICON_FAMILIAR_BY_PATH[key] = result
+            return result
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -155,8 +198,8 @@ def _load_lexicon_familiar() -> frozenset:
             context={"function": "_load_lexicon_familiar", "handler_line": 114, "source_file": "aurora_articulation.py"},
         )
         pass
-    _LEXICON_FAMILIAR = frozenset()
-    return _LEXICON_FAMILIAR
+    _LEXICON_FAMILIAR_BY_PATH[key] = frozenset()
+    return _LEXICON_FAMILIAR_BY_PATH[key]
 
 
 # ---------------------------------------------------------------------------
@@ -379,7 +422,7 @@ def _clarity_score(text: str) -> float:
     return max(0.0, min(1.0, round(score, 4)))
 
 
-def _pressure_score(text: str, prompt: str = "") -> float:
+def _pressure_score(text: str, prompt: str = "", state_dir: Optional[str] = None) -> float:
     """
     Estimate articulation pressure: 0.0 = easy to receive, 1.0 = hard to receive.
     Aurora's own decision signal.
@@ -454,7 +497,7 @@ def _pressure_score(text: str, prompt: str = "") -> float:
     pressure += (1.0 - clarity) * 0.20
 
     # Lexicon familiarity — words Aurora has used before reduce pressure
-    familiar = _load_lexicon_familiar()
+    familiar = _load_lexicon_familiar(state_dir)
     if familiar:
         word_list = re.findall(r"[a-z]{3,}", lower)
         if word_list:
@@ -464,7 +507,7 @@ def _pressure_score(text: str, prompt: str = "") -> float:
     return max(0.0, min(1.0, round(pressure, 4)))
 
 
-def is_safe_revision(original: str, candidate: str) -> bool:
+def is_safe_revision(original: str, candidate: str, state_dir: Optional[str] = None) -> bool:
     original = (original or "").strip()
     candidate = (candidate or "").strip()
     if not original or not candidate or candidate == original:
@@ -501,7 +544,7 @@ def is_safe_revision(original: str, candidate: str) -> bool:
             return False
 
     # Language state constraints — respect Aurora's current grammar tier
-    lang = _load_language_state()
+    lang = _load_language_state(state_dir)
     if lang:
         abstraction_cap = float(lang.get("abstraction_capability", 1.0) or 1.0)
         if abstraction_cap < 0.15:
@@ -743,16 +786,17 @@ def decide_articulation(
     tone: str = "neutral",
     source: str = "deterministic",
     context: Optional[Dict[str, Any]] = None,
+    state_dir: Optional[str] = None,
 ) -> ArticulationDecision:
     """Aurora evaluates whether a candidate smoothing is better than her draft."""
     draft_text = (draft or "").strip()
     candidate_text = (candidate or "").strip()
     original_score = _clarity_score(draft_text)
     candidate_score = _clarity_score(candidate_text)
-    original_pressure = _pressure_score(draft_text, prompt)
-    candidate_pressure = _pressure_score(candidate_text, prompt)
+    original_pressure = _pressure_score(draft_text, prompt, state_dir=state_dir)
+    candidate_pressure = _pressure_score(candidate_text, prompt, state_dir=state_dir)
     pressure_relief = round(original_pressure - candidate_pressure, 4)
-    safe = is_safe_revision(draft_text, candidate_text)
+    safe = is_safe_revision(draft_text, candidate_text, state_dir=state_dir)
     min_relief = _adaptive_min_relief()
 
     # MTSL (Phase 5, live-wired 2026-07-14): semantic_strategy is
@@ -818,11 +862,12 @@ def decide_articulation(
     )
 
 
-def record_decision(decision: ArticulationDecision) -> None:
+def record_decision(decision: ArticulationDecision, state_dir: Optional[str] = None) -> None:
     """Record Aurora's articulation choice — writes to last-trace and stamps crystals."""
     try:
-        TRACE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        TRACE_FILE.write_text(json.dumps(asdict(decision), indent=2, ensure_ascii=True),
+        trace_file = _trace_path(state_dir)
+        trace_file.parent.mkdir(parents=True, exist_ok=True)
+        trace_file.write_text(json.dumps(asdict(decision), indent=2, ensure_ascii=True),
                               encoding="utf-8")
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -865,6 +910,7 @@ def smooth_with_decision(
     prompt: str = "",
     tone: str = "neutral",
     context: Optional[Dict[str, Any]] = None,
+    state_dir: Optional[str] = None,
 ) -> ArticulationDecision:
     """
     Apply Aurora's articulation layer to a draft.
@@ -874,12 +920,21 @@ def smooth_with_decision(
 
     context: optional expression metadata from upstream pipeline
       keys: dominant_axis, coherence, expression_pressure, voice_tone, lineage_id
+    state_dir: this runtime's own state directory (CIR audit follow-up,
+      2026-08-04) -- when given, every path this call touches (language
+      state, lexicon familiarity, the persisted trace) resolves against
+      it directly instead of the module-level globals, which are a
+      single shared value per process and get stolen by whichever
+      boot_aurora() instance rebound them last (see the isolation note
+      above _LANGUAGE_STATE_CACHE_BY_PATH). Optional for backward
+      compatibility with callers that don't have one to pass.
     """
     draft_text = (draft or "").strip()
     if not draft_text:
         decision = decide_articulation("", "", prompt=prompt, tone=tone,
-                                       source="empty_draft", context=context)
-        record_decision(decision)
+                                       source="empty_draft", context=context,
+                                       state_dir=state_dir)
+        record_decision(decision, state_dir=state_dir)
         return decision
 
     # When feedback analysis has determined phrase repair consistently produces
@@ -890,7 +945,7 @@ def smooth_with_decision(
     insights = _get_feedback_insights()
     if insights.get("suggested_mode") == "deterministic_preferred":
         orig_score = _clarity_score(draft_text)
-        orig_pres  = _pressure_score(draft_text, prompt)
+        orig_pres  = _pressure_score(draft_text, prompt, state_dir=state_dir)
         meta: Dict[str, Any] = {
             "prompt_excerpt": str(prompt or "")[:240],
             "input_interpretation": _interpret_prompt_snapshot(prompt),
@@ -919,7 +974,7 @@ def smooth_with_decision(
             safe=True,
             metadata=meta,
         )
-        record_decision(decision)
+        record_decision(decision, state_dir=state_dir)
         return decision
 
     candidate = _deterministic_candidate(draft_text)
@@ -944,7 +999,7 @@ def smooth_with_decision(
         )
         if already_formed:
             orig_score = _clarity_score(draft_text)
-            orig_pres  = _pressure_score(draft_text, prompt)
+            orig_pres  = _pressure_score(draft_text, prompt, state_dir=state_dir)
             decision = ArticulationDecision(
                 original=draft_text,
                 candidate=draft_text,
@@ -958,7 +1013,7 @@ def smooth_with_decision(
                 pressure_relief=0.0,
                 safe=True,
             )
-            record_decision(decision)
+            record_decision(decision, state_dir=state_dir)
             return decision
         candidate = ""
         source = "no_pattern_matched"
@@ -968,10 +1023,11 @@ def smooth_with_decision(
     decision = decide_articulation(
         draft_text, candidate,
         prompt=prompt, tone=tone, source=source, context=context,
+        state_dir=state_dir,
     )
     if decision.accepted:
         decision.reason = "accepted_deterministic"
-    record_decision(decision)
+    record_decision(decision, state_dir=state_dir)
     return decision
 
 
@@ -981,5 +1037,6 @@ def smooth_response(
     prompt: str = "",
     tone: str = "neutral",
     context: Optional[Dict[str, Any]] = None,
+    state_dir: Optional[str] = None,
 ) -> str:
-    return smooth_with_decision(draft, prompt=prompt, tone=tone, context=context).selected
+    return smooth_with_decision(draft, prompt=prompt, tone=tone, context=context, state_dir=state_dir).selected

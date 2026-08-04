@@ -427,6 +427,30 @@ def test_delivered_output_attribution_traces_to_sentence_composer():
         # discarded earlier draft) -- resp_B is attributed to SentenceComposer
         # if it matches ANY call's returned content, not necessarily the
         # first. If it matches none, the attribution genuinely doesn't hold.
+        #
+        # Communication Integrity Repair (2026-08-04): a real wellformedness/
+        # grounding gate now sits between _express()'s raw output and
+        # resp_B.content (aurora.py's _response_is_grounded() call, extended
+        # by CIR's noun_adjective_order_coherent()/interrogative_object_
+        # coherent()/existential_complement_coherent()) -- a malformed
+        # composer draft is deliberately blanked rather than delivered.
+        # Confirmed live: this turn's real composer output ("I am today
+        # clear. I am today real.") is genuinely malformed (bare noun
+        # "today" directly followed by the bare adjective "clear", no
+        # linking structure) and correctly rejected. resp_B.content=="" is
+        # therefore attribution HOLDING, not breaking -- SentenceComposer is
+        # still the source, its output was just correctly judged unfit to
+        # deliver. Only treat resp_B.content=="" as a genuine attribution
+        # failure if none of the captured calls were actually malformed.
+        if resp_b.content == "":
+            from aurora_internal.aurora_pf1_5_instruments import wellformed_and_coherent
+            _wellformed_candidates = [c for c in captured["calls"] if c and wellformed_and_coherent(c)]
+            assert not _wellformed_candidates, (
+                f"resp_B.content is empty, but at least one captured _express() "
+                f"call was well-formed and should have survived the grounding "
+                f"gate: {_wellformed_candidates!r}"
+            )
+            return
         assert resp_b.content in captured["calls"], (
             f"resp_B.content matched none of the {len(captured['calls'])} "
             "gateway._express() call(s) captured this turn -- the delivered-"
