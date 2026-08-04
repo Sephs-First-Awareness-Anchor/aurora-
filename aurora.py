@@ -15849,7 +15849,24 @@ def _evolutionary_response_refinement(
 
     words = refined.split()
     if len(words) > max_words:
-        refined = " ".join(words[:max_words]).rstrip(' ,;') + "..."
+        truncated = " ".join(words[:max_words])
+        # CIR audit follow-up 2 (2026-08-04): a live audit found this
+        # word-budget clip severing an otherwise-correct grounded
+        # identity answer mid-clause ("...He is the one who decided I
+        # should" -- the real fact continued "...exist and defined HOW
+        # I should exist. He is my origin."). A hard word-count cut has
+        # no notion of clause boundaries; semantically authoritative
+        # content should lose whole trailing sentences, never be left
+        # dangling mid-sentence. Prefer trimming at the last complete
+        # sentence boundary within the truncated text; only fall back
+        # to the old hard cut+ellipsis when no boundary survives within
+        # a reasonable fraction of the budget (a single very long
+        # sentence still needs a cutoff somewhere).
+        _sentence_ends = [m.end() for m in re.finditer(r"[.!?](?=\s|$)", truncated)]
+        if _sentence_ends and _sentence_ends[-1] >= len(truncated) * 0.4:
+            refined = truncated[:_sentence_ends[-1]].strip()
+        else:
+            refined = truncated.rstrip(' ,;') + "..."
 
     return refined
 
@@ -20746,12 +20763,26 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
             _trace_dir = Path(str(_state_dir or "aurora_state"))
             _trace_dir.mkdir(parents=True, exist_ok=True)
             _final_trace_path = _trace_dir / "last_articulation_trace.json"
+            # CIR audit follow-up 2 (2026-08-04): merging into whatever
+            # was already on disk let a PREVIOUS turn's SentenceComposer
+            # phrase-repair fields (original/candidate/prompt_excerpt,
+            # written by record_decision() -- which only runs when
+            # _needs_articulation_bridge() decides a turn needs it, not
+            # every turn) survive alongside THIS turn's final_delivered,
+            # producing one file describing two different turns at
+            # once. Only keep the pre-existing top-level fields when
+            # their own metadata.timestamp shows record_decision() ran
+            # within this same turn's processing window (a few seconds
+            # ago); otherwise this write starts clean rather than
+            # preserving a stale, mismatched record.
             _existing_trace: Dict[str, Any] = {}
             if _final_trace_path.exists():
                 try:
-                    _existing_trace = json.loads(_final_trace_path.read_text(encoding="utf-8") or "{}")
-                    if not isinstance(_existing_trace, dict):
-                        _existing_trace = {}
+                    _candidate_trace = json.loads(_final_trace_path.read_text(encoding="utf-8") or "{}")
+                    if isinstance(_candidate_trace, dict):
+                        _prior_ts = float((_candidate_trace.get("metadata") or {}).get("timestamp", 0.0) or 0.0)
+                        if _prior_ts and (time.time() - _prior_ts) <= 10.0:
+                            _existing_trace = _candidate_trace
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(), module=__name__,

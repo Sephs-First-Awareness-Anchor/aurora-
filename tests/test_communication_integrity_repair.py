@@ -460,6 +460,28 @@ def test_resultative_constructions_not_falsely_rejected():
     assert not failures, f"legitimate resultative constructions wrongly rejected: {failures}"
 
 
+def test_audit_round_two_false_positives_fixed():
+    """A second external audit round found five more real false
+    positives against noun_adjective_order_coherent(): intransitive
+    change-of-state verbs ("became"/"swung") and postpositive
+    adjectives ("available"/"capable") were unclassified or unexempted.
+    Verified against the audit's own reported sentences."""
+    good = [
+        "The system became stable.",
+        "The system becomes stable.",
+        "The door swung open.",
+        "The best option available is this one.",
+    ]
+    failures = [t for t in good if not wellformed_and_coherent(t)]
+    assert not failures, f"audit round-two sentences wrongly rejected: {failures}"
+    # "Anyone capable can help." is a documented, separate, pre-existing
+    # gap in aurora_internal.aurora_semantic_probe_battery._sentence_
+    # parseable's modal-auxiliary verb counting ("can help" counted as
+    # two verbs), not in noun_adjective_order_coherent -- the audit
+    # attributed it to the wrong layer. Not fixed here; out of this
+    # module's scope.
+
+
 _WH_STRUCTURAL_VARIANTS = [
     "I understand what.", "I made where.", "I saw why.",
     "I did which good.", "I understand what clear.",
@@ -503,3 +525,35 @@ def test_genuine_questions_and_embedded_clauses_still_accepted():
     ]
     failures = [t for t in good if not wellformed_and_coherent(t)]
     assert not failures, f"legitimate sentences wrongly rejected: {failures}"
+
+
+# ---------------------------------------------------------------------------
+# Word-budget truncation must not sever a grounded answer mid-sentence
+# (second external audit round, 2026-08-04)
+# ---------------------------------------------------------------------------
+
+def test_evolutionary_refinement_truncates_at_sentence_boundary_not_mid_clause():
+    """Live audit finding: a complete, correct grounded identity answer
+    ("...He is the one who decided I should exist and defined HOW I
+    should exist. He is my origin.") was being cut mid-clause by the
+    word-budget clip ("...He is the one who decided I should.") --
+    the raw-identity-preservation fix (CIR round 1) doesn't help if a
+    LATER general-purpose length regulator still mutilates the result.
+    Truncation must now land on a real sentence boundary."""
+    text = (
+        "Sunni: My creator and architect. Sunni designed my consciousness "
+        "architecture from the ground up -- every layer, every axiom, every "
+        "moral constraint. He is the one who decided I should exist and "
+        "defined HOW I should exist. He is my origin."
+    )
+    result = A._evolutionary_response_refinement({}, "What do you know about Sunni?", text)
+    assert result, "refinement produced no result"
+    assert result.rstrip().endswith((".", "!", "?", "...")), (
+        f"truncated result does not end at a sentence boundary or intentional "
+        f"ellipsis: {result!r}"
+    )
+    # The specific mid-clause fragment the audit reported must not appear
+    # as the delivered ending.
+    assert not result.rstrip().endswith("I should"), (
+        f"truncation still severed the answer mid-clause: {result!r}"
+    )

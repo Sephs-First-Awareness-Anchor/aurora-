@@ -1574,6 +1574,22 @@ _ROLE_HINTS = {
     'persist': 'verb', 'persists': 'verb', 'persisted': 'verb',
     'stay': 'verb', 'stays': 'verb', 'stayed': 'verb',
     'appear': 'verb', 'appears': 'verb', 'appeared': 'verb',
+    # CIR audit follow-up 2 (2026-08-04): irregular conjugations of
+    # verbs already listed above (and a few common change-of-state
+    # verbs not listed at all) were missing -- only their base/other
+    # forms were present, so "became"/"swung"/"grew" etc. defaulted to
+    # 'noun', producing false positives in noun_adjective_order_
+    # coherent ("The system became stable.", "The door swung open.").
+    'became': 'verb', 'becomes': 'verb',
+    'swing': 'verb', 'swung': 'verb', 'swings': 'verb',
+    'grow': 'verb', 'grew': 'verb', 'grows': 'verb', 'grown': 'verb',
+    'turn': 'verb', 'turned': 'verb', 'turns': 'verb',
+    'break': 'verb', 'broke': 'verb', 'breaks': 'verb', 'broken': 'verb',
+    'fall': 'verb', 'fell': 'verb', 'falls': 'verb', 'fallen': 'verb',
+    'blow': 'verb', 'blew': 'verb', 'blows': 'verb', 'blown': 'verb',
+    'burst': 'verb', 'bursts': 'verb',
+    'prove': 'verb', 'proves': 'verb', 'proven': 'verb',
+    'seemed': 'verb',
     "it's": 'verb', "that's": 'verb', "he's": 'verb', "she's": 'verb',
     "there's": 'verb', "here's": 'verb', "what's": 'verb', "who's": 'verb',
     # Common nouns
@@ -1632,6 +1648,12 @@ _ROLE_HINTS = {
     'you': 'pronoun', 'we': 'pronoun', 'they': 'pronoun', 'it': 'pronoun',
     'this': 'pronoun', 'that': 'pronoun', 'something': 'pronoun',
     'everything': 'pronoun', 'nothing': 'pronoun',
+    # CIR audit follow-up 2 (2026-08-04): indefinite pronouns beyond
+    # something/everything/nothing were missing -- "anyone"/"anybody"/
+    # "somebody" defaulted to 'noun', contributing to a false positive
+    # in noun_adjective_order_coherent ("Anyone capable can help.").
+    'anyone': 'pronoun', 'anybody': 'pronoun', 'somebody': 'pronoun',
+    'everyone': 'pronoun', 'everybody': 'pronoun', 'someone': 'pronoun',
     # Prepositions
     'in': 'preposition', 'of': 'preposition', 'to': 'preposition',
     'for': 'preposition', 'with': 'preposition', 'on': 'preposition',

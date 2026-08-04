@@ -349,6 +349,41 @@ _RESULTATIVE_VERBS = frozenset({
     "declare", "declares", "declared", "declaring",
     "paint", "paints", "painted", "painting",
     "drive", "drives", "drove", "driving",
+    # CIR audit follow-up 2 (2026-08-04): the transitive/object-
+    # complement verbs above ("makes it simple") are one resultative
+    # shape; INTRANSITIVE change-of-state verbs taking a subject
+    # complement adjective directly ("The system became stable.",
+    # "The door swung open.") are a distinct, equally common one a
+    # live audit found this check rejecting. Same exemption mechanism
+    # (word immediately before the noun), different verb class.
+    "become", "became", "becomes", "becoming",
+    "grow", "grew", "grows", "growing", "grown",
+    "turn", "turned", "turns", "turning",
+    "fall", "fell", "falls", "falling", "fallen",
+    "go", "went", "goes", "going", "gone",
+    "come", "came", "comes", "coming",
+    "run", "ran", "runs", "running",
+    "swing", "swung", "swings", "swinging",
+    "break", "broke", "breaks", "breaking", "broken",
+    "burst", "bursts", "bursting",
+    "blow", "blew", "blows", "blowing", "blown",
+    "prove", "proved", "proves", "proving", "proven",
+    "seem", "seemed", "seems", "seeming",
+    "stay", "stayed", "stays", "staying",
+    "remain", "remains", "remained",
+})
+# CIR audit follow-up 2 (2026-08-04): a live audit found these
+# adjectives disproportionately appear in legitimate POSTPOSITIVE
+# position -- directly after the noun/pronoun they modify, with no
+# copula between them ("the option available", "anyone capable",
+# "everyone present") -- a standard, if less common, English adjective
+# position this check's core "adjective follows noun" rule otherwise
+# treats as backwards. Exempted unconditionally as the adjective half
+# of a pair, rather than trying to detect postpositive position
+# structurally.
+_POSTPOSITIVE_ADJECTIVES = frozenset({
+    "available", "possible", "present", "capable", "responsible",
+    "concerned", "involved", "aware",
 })
 # A comma/dash/semicolon/colon is a real syntactic boundary -- two
 # words on opposite sides of one are never "immediately adjacent" in
@@ -372,7 +407,10 @@ def noun_adjective_order_coherent(text: str) -> bool:
             for i, w in enumerate(words):
                 if infer_word_role(w) != "noun" or i + 1 >= len(words):
                     continue
-                if infer_word_role(words[i + 1]) != "adjective":
+                nxt = words[i + 1]
+                if infer_word_role(nxt) != "adjective":
+                    continue
+                if nxt in _POSTPOSITIVE_ADJECTIVES:
                     continue
                 preceding = words[i - 1] if i > 0 else ""
                 if infer_word_role(preceding) == "determiner":
