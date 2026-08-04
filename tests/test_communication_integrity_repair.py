@@ -465,21 +465,20 @@ def test_audit_round_two_false_positives_fixed():
     positives against noun_adjective_order_coherent(): intransitive
     change-of-state verbs ("became"/"swung") and postpositive
     adjectives ("available"/"capable") were unclassified or unexempted.
-    Verified against the audit's own reported sentences."""
+    The fifth ("Anyone capable can help.") was traced to a DIFFERENT,
+    pre-existing module (aurora_semantic_probe_battery._sentence_
+    parseable's modal-auxiliary verb counting -- "can help" was
+    counted as two verbs, not one predicate) -- fixed there directly,
+    all five verified together here."""
     good = [
         "The system became stable.",
         "The system becomes stable.",
         "The door swung open.",
         "The best option available is this one.",
+        "Anyone capable can help.",
     ]
     failures = [t for t in good if not wellformed_and_coherent(t)]
     assert not failures, f"audit round-two sentences wrongly rejected: {failures}"
-    # "Anyone capable can help." is a documented, separate, pre-existing
-    # gap in aurora_internal.aurora_semantic_probe_battery._sentence_
-    # parseable's modal-auxiliary verb counting ("can help" counted as
-    # two verbs), not in noun_adjective_order_coherent -- the audit
-    # attributed it to the wrong layer. Not fixed here; out of this
-    # module's scope.
 
 
 _WH_STRUCTURAL_VARIANTS = [

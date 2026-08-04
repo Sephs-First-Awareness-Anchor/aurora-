@@ -463,7 +463,27 @@ def _sentence_parseable(sentence: str, pos_lookup=None) -> bool:
     if _is_missing_determiner_violation(raw_words, tags):
         return False
 
-    verb_count = sum(1 for t in tags if t == "verb")
+    # Audit follow-up (2026-08-04): _coarse_pos tags modal auxiliaries
+    # (_MODALS_AUX: can/could/will/would/.../am/is/are/...) the same
+    # coarse "verb" bucket as ordinary verbs, with no separate "modal"
+    # tag -- so "can help" (modal + bare-infinitive) counted as TWO
+    # verbs, failing the single-verb structural check and rejecting
+    # ordinary sentences like "Anyone capable can help." A modal
+    # immediately followed by another verb-tagged word is one predicate,
+    # not two independent clauses' worth of verbs -- don't double-count it.
+    verb_count = 0
+    _skip_next_verb = False
+    for _idx, _t in enumerate(tags):
+        if _t != "verb":
+            continue
+        if _skip_next_verb:
+            _skip_next_verb = False
+            continue
+        verb_count += 1
+        _word_lower = raw_words[_idx].lower().strip(".,!?;:'\"-")
+        if (_word_lower in _MODALS_AUX and _idx + 1 < len(tags)
+                and tags[_idx + 1] == "verb"):
+            _skip_next_verb = True
     other_count = sum(1 for t in tags if t not in ("verb", "pronoun"))
     structural_ok = (verb_count == 1 and other_count >= 1)
 
