@@ -736,7 +736,16 @@ class ReasoningEngine:
             node = oets.web.get_node(topic)
             if node and node.definitions:
                 best = node.definitions[0].get('text', '')
-                if 'may refer to' not in best.lower() and not best.strip().endswith(':') and len(best) > 15:
+                # Crest-compression placeholder-leak repair (Build 598): this path
+                # read node.definitions[0] directly and never called
+                # _meaning_text_is_grounded(), so an internal bookkeeping label
+                # (e.g. "internal:topic") could pass its own narrower inline check
+                # and be spoken verbatim -- the same invariant the shared guard
+                # protects elsewhere, unified here rather than re-implemented.
+                if (
+                    'may refer to' not in best.lower() and not best.strip().endswith(':')
+                    and len(best) > 15 and _meaning_text_is_grounded(best, term=topic)
+                ):
                     answer = f"understanding; {topic}; {best}"
                     related = [r.target_word if r.source_word == topic else r.source_word for r in list(node.relations.values())[:3]]
                     if related: answer += f"; connected to; {'; '.join(related[:3])}"
@@ -847,7 +856,13 @@ class ReasoningEngine:
                 best = node.definitions[0].get('text', '')
                 # Skip disambiguation pages and empty/colon-terminated entries
                 _best_low_re = best.lower()
-                if 'may refer to' not in _best_low_re and not best.strip().endswith(':') and len(best) > 15:
+                # Crest-compression placeholder-leak repair (Build 598): also
+                # require _meaning_text_is_grounded() -- see the matching
+                # comment at the Step 4 occurrence of this same pattern above.
+                if (
+                    'may refer to' not in _best_low_re and not best.strip().endswith(':')
+                    and len(best) > 15 and _meaning_text_is_grounded(best, term=topic)
+                ):
                     related = []
                     for rel in list(node.relations.values())[:3]:
                         other = (rel.target_word if rel.source_word == topic
@@ -8920,7 +8935,13 @@ def _generate_perspective_from_core(
                     _node = _oets.web.get_node(anchor_low)
                     if _node:
                         if hasattr(_node, "definitions") and _node.definitions:
-                            _oets_def = str((_node.definitions[0] or {}).get("text", "") or "")[:80]
+                            # Crest-compression placeholder-leak repair (Build 598):
+                            # this fed straight into _claim_data below with no
+                            # groundedness check -- an internal bookkeeping label
+                            # could reach spoken claim material.
+                            _raw_def_text = str((_node.definitions[0] or {}).get("text", "") or "")
+                            if _meaning_text_is_grounded(_raw_def_text, term=anchor_low):
+                                _oets_def = _raw_def_text[:80]
                         if hasattr(_node, "relations"):
                             for _r in list(_node.relations.values())[:3]:
                                 _other = _r.target_word if _r.source_word == anchor_low else _r.source_word
@@ -12941,13 +12962,25 @@ def _extract_inline_lookup_targets(text: str) -> List[str]:
     return targets[:3]
 
 
+# Crest-compression placeholder-leak repair (Build 598): the union of every
+# internal-bookkeeping prefix previously enforced separately (and
+# inconsistently) by _meaning_text_is_grounded() and
+# _research_summary_is_usable(). A single shared constant means the two
+# guards -- which protect the same invariant, that a bookkeeping label
+# never passes as spoken meaning -- cannot drift apart again.
+_PLACEHOLDER_DEFINITION_PREFIXES = (
+    "from_definition:", "from meaning:", "internal:", "learned:",
+    "pending:", "research:", "context:",
+)
+
+
 def _meaning_text_is_grounded(definition: str, *, term: str = "") -> bool:
     clean = re.sub(r"\s+", " ", str(definition or "")).strip(" \t\r\n.,;:!?")
     if not clean:
         return False
     low = clean.lower()
     term_low = str(term or "").strip().lower()
-    if low.startswith("learned:"):
+    if low.startswith(_PLACEHOLDER_DEFINITION_PREFIXES):
         return False
     if low in {"unknown", "n/a", "tbd", "pending", "is:**", "works:**"}:
         return False
@@ -14024,10 +14057,7 @@ def _research_summary_is_usable(summary: str, *, target: str = "") -> bool:
     if not _meaning_text_is_grounded(clean, term=target):
         return False
     low = clean.lower()
-    if low.startswith((
-        "from_definition:", "from meaning:", "internal:", "learned:",
-        "pending:", "research:", "context:",
-    )):
+    if low.startswith(_PLACEHOLDER_DEFINITION_PREFIXES):
         return False
     words = re.findall(r"[a-z0-9][a-z0-9_'-]*", low)
     content_words = [word for word in words if word not in {target.lower(), "is", "are", "a", "an", "the"}]
@@ -25752,6 +25782,11 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     # and raw OETS dump entries that don't constitute a real answer.
                     _best_low = best.lower()
                     if 'may refer to' in _best_low or best.strip().endswith(':'):
+                        continue
+                    # Crest-compression placeholder-leak repair (Build 598): also
+                    # require _meaning_text_is_grounded() -- see the matching
+                    # comment at the earlier occurrences of this pattern.
+                    if not _meaning_text_is_grounded(best, term=tw):
                         continue
                     if len(best) > 15:
                         # Calibrate text and confidence to crystal depth

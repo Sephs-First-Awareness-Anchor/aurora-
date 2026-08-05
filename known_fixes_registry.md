@@ -10119,3 +10119,110 @@ defense for those, not a redundant guarantee.
 Directive, uploaded 2026-08-04, following a live user report of
 malformed identity-question responses on a freshly-installed build.
 2026-08-03.
+
+---
+
+## Aurora Build 598 — Crest-Compression Placeholder-Leak Repair
+
+**Ratified:** 2026-08-05 (Aurora Build 598 Crest-Compression
+Placeholder-Leak Repair Directive, uploaded directive; doctrine
+classification Level 1 -- runtime validation defect, permitted direct
+fix under `docs/AURORA_CONSTRAINT_NATIVE_DEVELOPMENT_DOCTRINE.md`).
+**Category:** RUNTIME BUG (guard asymmetry, internal-bookkeeping label
+reaching spoken output)
+
+This directive closes the exact `"Answer: foundational:answer."`-shaped
+defect the Build 587 CIR directive found live and explicitly left
+unfixed as out-of-scope (see the entry immediately above), plus
+additional occurrences of the same guard asymmetry found during this
+directive's own live verification.
+
+**Root cause, as traced by the directive:** `_meaning_text_is_grounded()`
+(`aurora.py`) -- the guard gating `_compress_at_crest()` ->
+`_grounded_topic_contribution()` -- only rejected the `"learned:"`
+prefix, while a second, stricter guard in the same file,
+`_research_summary_is_usable()`, additionally rejected
+`"from_definition:"`, `"from meaning:"`, `"internal:"`, `"pending:"`,
+`"research:"`, and `"context:"`. Both guards protect the same
+invariant (never speak an internal bookkeeping label as meaning) but
+enforced different lists, so a node whose sole definition was seeded
+with one of the stricter-list-only prefixes could pass the weaker
+guard.
+
+**Fix 1 -- shared constant** (`aurora.py`): extracted
+`_PLACEHOLDER_DEFINITION_PREFIXES`, the union of both lists.
+`_meaning_text_is_grounded()` now checks against it instead of its own
+narrower `"learned:"`-only check; `_research_summary_is_usable()`'s
+inline tuple was replaced with a reference to the same constant, so
+the two guards cannot drift apart again. The pre-existing exact-token
+denylist (`"unknown"`, `"n/a"`, `"tbd"`, `"pending"`, `"is:**"`,
+`"works:**"`) was kept alongside the prefix check, not replaced by it.
+
+**Real defect found during live verification, not assumed away:** the
+directive's own root-cause section was explicit that it was a *static*
+finding and required live re-confirmation before being marked closed.
+Live verification did NOT reproduce the leak through
+`_grounded_topic_contribution()` (that path was already closed by Fix
+1) -- but driving a real turn through
+`process_external_user_turn(systems, "what is aurorabloomxyz?")` for a
+node whose sole definition was `"internal:aurorabloomxyz"` still
+delivered the literal string `'aurorabloomxyz. understanding,
+aurorabloomxyz. internal:aurorabloomxyz.'` to `resp_A.content`. Tracing
+this exact literal (per the directive's instruction not to assume its
+origin) found three more call sites reading `node.definitions[0]`
+directly with their own narrower inline checks, never calling
+`_meaning_text_is_grounded()` at all -- a different mechanism than the
+two guards the directive's static trace found:
+
+- `QuasiArchReasoner.reason()` (`aurora.py`), two near-identical
+  occurrences (the actual live-reproduced source of the leak above).
+- `_generate_perspective_from_core()` (`aurora.py`) -- fed the raw
+  definition into `_claim_data` used by the SIC/`multi_draft` speech
+  generation path.
+- `_build_comprehension_response()`'s OETS-knowledge-question step
+  (`aurora.py`) -- fed the raw definition into `_crystal_text` for the
+  dimensional/crystal systems.
+
+**Fix 2 -- close the same gap at all four sites** (`aurora.py`): each
+call site now also requires `_meaning_text_is_grounded(best, term=...)`
+before treating `node.definitions[0]`'s text as usable content,
+alongside its own pre-existing checks (kept, not replaced).
+
+**Judgment call reserved for Sunni per the directive, not decided
+unilaterally:** whether to additionally add a general `^[a-z_]+:`
+regex catch for not-yet-enumerated future bookkeeping prefixes.
+Left open -- only the enumerated, union'd prefix list was implemented,
+per the directive's explicit instruction and the doctrine's caution
+against overbuilt general machinery where a narrow fix suffices.
+
+**Tests:** `tests/test_crest_compression_placeholder_guard.py` --
+parametrized over every prefix in `_PLACEHOLDER_DEFINITION_PREFIXES`,
+covering `_meaning_text_is_grounded()` directly, `_grounded_topic_
+contribution()` falling through to `None`, a structural check that
+`_research_summary_is_usable()` references the shared constant rather
+than its own tuple, negative controls proving real grounded content
+still passes, and (added after the live-verification finding above) a
+live full-turn regression driving `process_external_user_turn()` end
+to end for every prefix. 25 tests, all passing. Required regression
+battery (`test_communication_integrity_repair.py`,
+`test_response_articulation_authority.py`, `test_pf1_5_instruments.py`,
+`test_governance_liveness.py`) re-run clean: 72 passed, 3 deselected.
+
+**Live verification** (real `boot_aurora()` from a clean temp copy of
+state, real `process_external_user_turn()`, all 7 prefixes): before
+this fix, `"internal:"` leaked the literal placeholder text through
+`reason()`; after the fix, the same scenario delivers an honest
+"I don't have a clear sense of that." / honest-abstain response for
+every one of the 7 prefixes, with a real grounded definition
+(negative control) still delivered normally.
+
+**What this directive does NOT claim:** it does not touch relation
+typing, `noncomp_id` population, or the generic `RELATED_TO` collapse
+in `_compose_structural_meaning()`'s connective phrasing -- a separate,
+already-identified substrate gap under active repair elsewhere. It
+does not implement a general placeholder-detection classifier -- a
+narrow, enumerated-prefix fix scoped to the guards (now four, not two)
+that already existed doing this job informally.
+**First Seen:** Aurora Build 598 Crest-Compression Placeholder-Leak
+Repair Directive, uploaded 2026-08-05, closing a defect the Build 587
+CIR directive had explicitly deferred. 2026-08-05.
