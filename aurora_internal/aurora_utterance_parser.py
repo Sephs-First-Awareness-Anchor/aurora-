@@ -402,6 +402,10 @@ class UtteranceIntent:
     is_experiential: bool = False
     is_opinion: bool = False
     is_imperative: bool = False   # directive frame: base-verb + entity target, no question mark
+    # Clause-level relation preserved before topic reduction.  This is the
+    # semantic cargo that the X/T/N/B/A chain transforms; it is not an intent
+    # label and carries its own constraint ancestry downstream.
+    relational_form: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to backward-compatible dict (superset of QueryUnderstanding output)."""
@@ -426,6 +430,7 @@ class UtteranceIntent:
             'is_experiential':    self.is_experiential,
             'is_opinion':         self.is_opinion,
             'is_imperative':      self.is_imperative,
+            'relational_form':    dict(self.relational_form or {}),
             'raw_text':           self.raw_text,
         }
 
@@ -653,7 +658,19 @@ class UtteranceParser:
             t_low, intent.topic, intent.entities, intent.topic_words, intent
         )
 
-        # ---- Step 12: Build search query ----
+        # ---- Step 12: Preserve the relational configuration ----
+        # Topic words remain useful for retrieval, but the proposition itself
+        # must survive so the constraint stack has entities and relations to
+        # operate on rather than only a lexical bag.
+        try:
+            from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
+            intent.relational_form = dict(extract_relational_form(t, parsed={}) or {})
+            if intent.time_ref and intent.relational_form:
+                intent.relational_form["time_ref"] = intent.time_ref
+        except Exception:
+            intent.relational_form = {}
+
+        # ---- Step 13: Build search query ----
         intent.search_query = self._build_search_query(intent)
 
         return intent

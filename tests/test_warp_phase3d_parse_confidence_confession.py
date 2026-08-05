@@ -18,6 +18,7 @@ carries none -- this uses the two real signals the parser already
 produces.
 """
 import os
+import re
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -127,9 +128,13 @@ def test_chain_up1_information_wires_the_confession():
     with open(os.path.join(REPO_ROOT, "aurora.py"), "r", encoding="utf-8") as f:
         source = f.read()
     idx = source.index("def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:")
-    # Widened from 600 (zip integration phase D, 2026-07-29): exception
-    # instrumentation added lines to the preceding handler in this
-    # function, pushing the anchor further out without changing the
-    # actual wiring relationship being checked.
-    block = source[idx:idx + 900]
+    # A fixed-width character window is inherently fragile: any
+    # instrumentation added earlier in this function's body (e.g. build
+    # 591's system_introspection boundary-decision probes) pushes later
+    # lines further out without changing the actual wiring relationship
+    # being checked. Bound the search to the function's own body instead,
+    # from its def line to the next top-level def.
+    next_def = re.search(r"\ndef ", source[idx + 1:])
+    end = idx + 1 + next_def.start() if next_def else len(source)
+    block = source[idx:end]
     assert "_confess_low_confidence_parse" in block

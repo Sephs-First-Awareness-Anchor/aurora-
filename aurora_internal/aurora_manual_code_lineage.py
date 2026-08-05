@@ -616,6 +616,26 @@ class ManualCodeLineageAssimilator:
                     )
                     pass
 
+        if results:
+            function_lineage = _system_get(systems, "function_lineage")
+            if function_lineage is not None and hasattr(function_lineage, "rebuild"):
+                try:
+                    lineage_status = dict(function_lineage.rebuild() or {})
+                    if genealogy is not None and hasattr(function_lineage, "attach_genealogy"):
+                        function_lineage.attach_genealogy(genealogy)
+                    for result in results:
+                        result["function_lineage_rebuilt"] = True
+                        result["function_lineage_count"] = int(lineage_status.get("function_count", 0) or 0)
+                        result["function_lineage_coverage"] = float(lineage_status.get("coverage_rate", 0.0) or 0.0)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="manual_code_lineage:rebuild_universal_function_lineage",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "assimilate", "source_file": __file__},
+                    )
+
         if results and genealogy is not None and hasattr(genealogy, "flush_files"):
             try:
                 genealogy.flush_files()

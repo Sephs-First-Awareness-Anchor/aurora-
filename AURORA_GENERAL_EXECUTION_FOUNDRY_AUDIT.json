@@ -1,0 +1,117 @@
+{
+  "capabilities": {
+    "direct_general_ir_candidates": {
+      "lineage_traced": true,
+      "primitive_validation": true,
+      "supported": true
+    },
+    "generated_python": {
+      "ast_validated": true,
+      "imports_allowed": false,
+      "subprocess_sandboxed": true,
+      "supported": true,
+      "tool_access": false
+    },
+    "iterative_programs": {
+      "ops": [
+        "WHILE",
+        "FOR_EACH"
+      ],
+      "runtime_bounded": true,
+      "supported": true
+    },
+    "long_lived_state_machines": {
+      "genealogy_admission": true,
+      "persistent_instances": true,
+      "supported": true
+    },
+    "persistent_program_state": {
+      "size_bounded": true,
+      "supported": true
+    },
+    "recursive_programs": {
+      "max_depth_configurable": true,
+      "runtime_bounded": true,
+      "supported": true
+    },
+    "tool_use": {
+      "demonstration_plan_synthesis": true,
+      "mode": "capability-scoped",
+      "supported": true,
+      "unrestricted_host_access": false
+    }
+  },
+  "created_at": 1785869316.8957326,
+  "execution_limits": {
+    "fuel": 4096,
+    "max_program_nodes": 160,
+    "persistent_state_bytes": 262144,
+    "recursion_depth": 48,
+    "tool_calls_per_run": 24,
+    "wall_seconds": 1.5
+  },
+  "genealogy": {
+    "status": {
+      "available": true,
+      "build_seconds": 23.8376,
+      "co_evolved_functions": 20,
+      "constraint_index_path": "/mnt/data/aurora_general_foundry_work/aurora--build-591-operational-synthesis-chamber/aurora_internal/universal_function_constraints.json",
+      "coverage_rate": 1.0,
+      "cross_module_parent_edges": 2486,
+      "domain_taxonomy_used_for_parentage": false,
+      "file_count": 305,
+      "function_count": 8730,
+      "lambda_count": 626,
+      "manifest_path": "/mnt/data/aurora_general_foundry_work/aurora--build-591-operational-synthesis-chamber/aurora_internal/universal_function_lineage.json",
+      "max_generation": 20,
+      "multi_parent_functions": 8135,
+      "named_function_count": 8104,
+      "orphan_count": 0,
+      "parentage_basis": [
+        "resolved calls",
+        "inheritance overrides",
+        "recursive co-evolution",
+        "direct root novelty"
+      ],
+      "root_reachability": {
+        "A": 6361,
+        "B": 6965,
+        "N": 6718,
+        "T": 4758,
+        "X": 8493
+      },
+      "schema_version": 1,
+      "source_manifest_hash": "2ff97352e57e20c7aae48c57b8a57849d024a2f2afedce25f39a321d844c9b65"
+    },
+    "verification": {
+      "bad_root_path_count": 0,
+      "bad_root_paths": [],
+      "coverage_rate": 1.0,
+      "function_count": 8730,
+      "missing_parent_count": 0,
+      "missing_parents": [],
+      "orphan_count": 0,
+      "orphans": [],
+      "valid": true
+    }
+  },
+  "release": "aurora--build-591-general-execution-foundry",
+  "root_primitives": 35,
+  "safety_boundary": {
+    "filesystem_from_generated_python": false,
+    "literal_unlimited_execution": false,
+    "network_from_generated_python": false,
+    "process_spawn_from_generated_python": false,
+    "raw_eval_exec": false,
+    "side_effect_tools_require_explicit_authorization": true,
+    "tool_calls_require_registration_and_grant": true
+  },
+  "tests": {
+    "combined_unique_focused_tests": 78,
+    "communication_reflection_introspection_articulation_group": 52,
+    "general_execution_foundry": 10,
+    "live_loop_output": 18,
+    "operational_synthesis_and_lineage_group": 26,
+    "surface_boot": true
+  }
+}

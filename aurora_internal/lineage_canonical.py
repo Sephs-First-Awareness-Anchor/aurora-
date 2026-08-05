@@ -132,6 +132,80 @@ KEYWORD_TO_LABELS = {
 
 
 
+
+
+def _load_universal_constraints() -> Dict[str, Tuple[str, ...]]:
+    """Load the whole-function constraint index generated from real source."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(here, "universal_function_constraints.json")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            raw = json.load(fh) or {}
+        ops = raw.get("operation_constraints", {}) if isinstance(raw, dict) else {}
+        out: Dict[str, Tuple[str, ...]] = {}
+        if isinstance(ops, dict):
+            for key, values in ops.items():
+                if not isinstance(key, str):
+                    continue
+                labels: List[str] = []
+                for value in (values if isinstance(values, (list, tuple)) else []):
+                    label = str(value or "").strip().lower()
+                    if label in AXIS_TO_LABEL.values() and label not in labels:
+                        labels.append(label)
+                if labels:
+                    out[key] = tuple(labels)
+        return out
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="lineage_canonical:load_universal_constraints",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_universal_constraints", "source_file": __file__},
+        )
+        return {}
+
+
+UNIVERSAL_OPERATION_CONSTRAINTS: Dict[str, Tuple[str, ...]] = _load_universal_constraints()
+_UNIVERSAL_LOWER: Dict[str, Tuple[str, ...]] = {
+    key.lower(): value for key, value in UNIVERSAL_OPERATION_CONSTRAINTS.items()
+}
+_UNIVERSAL_SUFFIX_BUCKETS: Dict[str, List[Tuple[str, ...]]] = {}
+for _key, _value in _UNIVERSAL_LOWER.items():
+    _parts = [part for part in _key.split(".") if part]
+    for _count in (1, 2, 3, 4):
+        if len(_parts) >= _count:
+            _suffix = ".".join(_parts[-_count:])
+            _UNIVERSAL_SUFFIX_BUCKETS.setdefault(_suffix, []).append(_value)
+_UNIVERSAL_UNIQUE_SUFFIX: Dict[str, Tuple[str, ...]] = {
+    suffix: values[0]
+    for suffix, values in _UNIVERSAL_SUFFIX_BUCKETS.items()
+    if len(values) == 1
+}
+
+def _universal_lookup(op_name: str) -> Tuple[str, ...]:
+    name = str(op_name or "").strip()
+    if not name:
+        return tuple()
+    exact = UNIVERSAL_OPERATION_CONSTRAINTS.get(name)
+    if exact:
+        return exact
+    low = name.lower()
+    exact = _UNIVERSAL_LOWER.get(low)
+    if exact:
+        return exact
+    tokens = [token for token in name.split(".") if token]
+    for count in (4, 3, 2, 1):
+        if len(tokens) < count:
+            continue
+        suffix = ".".join(tokens[-count:]).lower()
+        match = _UNIVERSAL_UNIQUE_SUFFIX.get(suffix)
+        if match:
+            return match
+    return tuple()
+
 def _load_generated_constraints() -> Dict[str, Tuple[str, ...]]:
     here = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(here, "lineage_canonical_generated.json")
@@ -235,6 +309,10 @@ def constraints_for_operation(
     exact = CANONICAL_OPERATION_CONSTRAINTS.get(name)
     if exact:
         return _ordered_unique(exact)
+
+    universal = _universal_lookup(name)
+    if universal:
+        return _ordered_unique(universal)
 
     generated = _generated_lookup(name)
     if generated:

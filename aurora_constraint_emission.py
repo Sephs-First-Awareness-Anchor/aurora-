@@ -1718,7 +1718,7 @@ class EmissionContextBuilder:
                     axis_key = _AXIS_NAME_TO_CANONICAL.get(str(name), _AXIS_NAME_TO_CANONICAL.get(str(name).lower(), str(name)))
                     axis_polarities[axis_key] = float(getattr(axis, "polarity", 0.0))
                     axis_velocities[axis_key] = float(getattr(axis, "angular_velocity", 0.0))
-                dissonance = lattice.compute_dissonance()
+                dissonance = lattice.vertices.compute_dissonance()
                 n_heat     = float(dissonance.get("total_heat", 0.0))
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
@@ -1907,7 +1907,7 @@ def build_emission_context(
         axis_polarities[name] = float(axis.polarity)
         axis_velocities[name] = float(getattr(axis, "angular_velocity", 0.0))
 
-    dissonance = lattice.compute_dissonance()
+    dissonance = lattice.vertices.compute_dissonance()
     n_heat     = float(dissonance.get("total_heat", 0.0))
 
     i_state_polarities: Dict[str, float] = {

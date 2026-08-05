@@ -5033,7 +5033,10 @@ class WorkingMemory:
         result['claims'] = candidates[:3]
         if candidates:
             result['focus_claim'] = candidates[0]
-            result['confidence'] = float(candidates[0].get('score', 0.0))
+            # Candidate scores combine several independent relevance signals and
+            # are not probabilities.  Clamp the public confidence boundary so
+            # downstream authority and developmental credit remain normalized.
+            result['confidence'] = max(0.0, min(1.0, float(candidates[0].get('score', 0.0))))
             result['source'] = str(candidates[0].get('source', ''))
         self.last_claim_resolution = result
         return result

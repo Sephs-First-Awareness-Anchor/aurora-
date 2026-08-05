@@ -32,7 +32,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from aurora_expression_perception import infer_word_role
+from aurora_expression_perception import infer_word_role, is_bare_interrogative_token
 from aurora_internal.aurora_semantic_probe_battery import _STRONG_FUNCTION_WORDS
 
 
@@ -45,7 +45,10 @@ class PropositionFrame:
     stance: float = 0.5
     unresolved: List[str] = field(default_factory=list)
     topic: str = ""
-    source: str = ""  # "thought" | "claim" | "anchor"
+    source: str = ""  # "constraint_relation" | "thought" | "claim" | "anchor"
+    complement: str = ""
+    unknown_role: str = ""
+    derivation_signature: str = ""
     # Directive P2: raw regional-density reading, kept separate from
     # `stance` so downstream consumers can tell "low because untested"
     # (corroboration-only) from "low because unfamiliar territory"
@@ -54,9 +57,67 @@ class PropositionFrame:
     density: Optional[float] = None
 
 
+def _record_frame_decision(
+    systems: Dict[str, Any],
+    *,
+    function_id: str,
+    inputs: Dict[str, Any],
+    frame: Optional[PropositionFrame],
+    decision: str,
+    reason: str,
+    derived: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Publish frame-construction provenance to Aurora's native bridge."""
+    bridge = systems.get("system_introspection") if isinstance(systems, dict) else None
+    if bridge is None or not hasattr(bridge, "record_boundary_decision"):
+        return
+    try:
+        bridge.record_boundary_decision(
+            function_id=function_id,
+            stage="proposition_frame_construction",
+            inputs=inputs,
+            derived={
+                **dict(derived or {}),
+                "frame_source": str(getattr(frame, "source", "") or ""),
+                "frame_subject": str(getattr(frame, "subject", "") or ""),
+                "frame_relation": str(getattr(frame, "relation", "") or ""),
+                "frame_object": str(getattr(frame, "obj", "") or ""),
+                "frame_complement": str(getattr(frame, "complement", "") or ""),
+                "frame_unknown_role": str(getattr(frame, "unknown_role", "") or ""),
+                "frame_derivation_signature": str(getattr(frame, "derivation_signature", "") or ""),
+            },
+            decision=decision,
+            output=frame,
+            reason=reason,
+            confidence=0.94 if frame is not None else 0.75,
+            tags=["proposition_frame", "meaning_to_language", decision],
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="system_introspection:proposition_frame_probe",
+            exc=_aurora_boundary_exc,
+            context={"function": "_record_frame_decision", "source_file": __file__},
+        )
+
+
 # Same noise/length gate SemanticIntentionBridge already uses for
 # thought-text token extraction -- reused, not reinvented.
 _MIN_TOKEN_LEN = 3
+
+
+def _frame_object(value: Any) -> str:
+    """Normalize a frame object without promoting a question marker.
+
+    Thought-text extraction already filters structural words.  Claims,
+    turn-local claims, anchors, restored frames, and future producers do not
+    all pass through that extraction route, so frame construction applies the
+    same fail-quiet invariant before the object reaches SentenceComposer.
+    The final binder repeats the check because frames can also be constructed
+    directly outside this module.
+    """
+    obj = str(value or "").strip()
+    return "" if is_bare_interrogative_token(obj) else obj
 
 
 def density_confidence(systems: Dict[str, Any], topic: str, axis: str) -> Optional[float]:
@@ -222,6 +283,60 @@ def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
     return {"subject": topic, "relation": relation, "obj": obj, "negated": negated, "topic": topic}
 
 
+
+def _frame_from_constraint_relation(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
+    """Highest-authority frame: the current utterance's preserved relation.
+
+    This does not infer a response category.  It carries the clause-level
+    configuration that entered X and was retained through the live turn state.
+    """
+    if not isinstance(systems, dict):
+        return None
+    active = systems.get("_active_turn_state")
+    relation = dict(getattr(active, "relational_form", {}) or {}) if active is not None else {}
+    if not relation:
+        parsed = dict(getattr(active, "parsed", {}) or {}) if active is not None else {}
+        relation = dict(parsed.get("relational_form") or {})
+    if not relation:
+        return None
+    subject = str(relation.get("subject", "") or "").strip()
+    raw_obj = str(relation.get("obj", "") or "").strip()
+    complement = str(relation.get("complement", "") or "").strip()
+    relation_word = str(relation.get("relation", "") or "").strip()
+    unknown_role = str(relation.get("unknown_role", "") or "").strip()
+    obj = _frame_object(raw_obj)
+    if not any((subject, relation_word, obj, complement)):
+        return None
+    # A missing subject/object is a genuine unknown slot, not permission to
+    # place the interrogative token in spoken content.
+    frame = PropositionFrame(
+        subject=subject,
+        relation=relation_word,
+        obj=obj,
+        complement=complement,
+        unknown_role=unknown_role,
+        negated=bool(relation.get("negated", False)),
+        stance=float(relation.get("confidence", 0.5) or 0.5),
+        unresolved=[unknown_role] if unknown_role else [],
+        topic=subject or obj or complement,
+        source="constraint_relation",
+        derivation_signature="X^1*T^1*N^1*B^1*A^1",
+    )
+    _record_frame_decision(
+        systems,
+        function_id="aurora_internal.aurora_proposition_frame._frame_from_constraint_relation",
+        inputs={"relational_form": relation},
+        frame=frame,
+        decision="selected",
+        reason="current utterance relation retained through the root-constraint turn state",
+        derived={
+            "complement": complement,
+            "unknown_role": unknown_role,
+            "derivation_signature": frame.derivation_signature,
+        },
+    )
+    return frame
+
 def _frame_from_thought_state(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
     """W1 (PF1.6 residue characterization, 2026-07-21): unified_
     interpretation/self_application are built by aurora_thought_
@@ -262,7 +377,7 @@ def _frame_from_thought_state(systems: Dict[str, Any]) -> Optional[PropositionFr
     if not triple:
         return None
 
-    return PropositionFrame(
+    frame = PropositionFrame(
         subject=triple["subject"],
         relation=triple["relation"],
         obj=triple["obj"],
@@ -272,6 +387,19 @@ def _frame_from_thought_state(systems: Dict[str, Any]) -> Optional[PropositionFr
         topic=triple["topic"],
         source="thought",
     )
+    _record_frame_decision(
+        systems,
+        function_id="aurora_internal.aurora_proposition_frame._frame_from_thought_state",
+        inputs={
+            "dominant_thread": list(getattr(thought_state, "dominant_thread", []) or []),
+            "unified_interpretation": str(getattr(thought_state, "unified_interpretation", "") or ""),
+        },
+        frame=frame,
+        decision="selected",
+        reason="linguistic thought-state content yielded a proposition triple",
+        derived={"triple": dict(triple)},
+    )
+    return frame
 
 
 def _frame_from_claims(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
@@ -301,8 +429,9 @@ def _frame_from_claims(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
     subject = str(best.get("subject", "") or "").strip()
     if not subject:
         return None
-    obj = str(best.get("object", "") or "").strip()
-    return PropositionFrame(
+    raw_obj = str(best.get("object", "") or "").strip()
+    obj = _frame_object(raw_obj)
+    frame = PropositionFrame(
         subject=subject,
         relation=str(best.get("relation", "") or "").strip(),
         obj=obj,
@@ -312,6 +441,16 @@ def _frame_from_claims(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
         topic=subject,
         source="claim",
     )
+    _record_frame_decision(
+        systems,
+        function_id="aurora_internal.aurora_proposition_frame._frame_from_claims",
+        inputs={"raw_claim": dict(best), "raw_object": raw_obj},
+        frame=frame,
+        decision="selected",
+        reason="highest-scoring current-turn proposition substrate claim",
+        derived={"object_was_structural": bool(raw_obj and not obj)},
+    )
+    return frame
 
 
 def _frame_from_turn_local_claims(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
@@ -352,8 +491,9 @@ def _frame_from_turn_local_claims(systems: Dict[str, Any]) -> Optional[Propositi
     subject = str(best.get("subject", "") or "").strip()
     if not subject:
         return None
-    obj = str(best.get("object", "") or "").strip()
-    return PropositionFrame(
+    raw_obj = str(best.get("object", "") or "").strip()
+    obj = _frame_object(raw_obj)
+    frame = PropositionFrame(
         subject=subject,
         relation=str(best.get("relation", "") or "").strip(),
         obj=obj,
@@ -363,6 +503,16 @@ def _frame_from_turn_local_claims(systems: Dict[str, Any]) -> Optional[Propositi
         topic=subject,
         source="claim",
     )
+    _record_frame_decision(
+        systems,
+        function_id="aurora_internal.aurora_proposition_frame._frame_from_turn_local_claims",
+        inputs={"raw_claim": dict(best), "raw_object": raw_obj},
+        frame=frame,
+        decision="selected",
+        reason="most recent current-turn claim outside the persistent substrate",
+        derived={"object_was_structural": bool(raw_obj and not obj)},
+    )
+    return frame
 
 
 def _frame_from_anchor(systems: Dict[str, Any], state: Any) -> Optional[PropositionFrame]:
@@ -370,16 +520,39 @@ def _frame_from_anchor(systems: Dict[str, Any], state: Any) -> Optional[Proposit
     anchor = str(noncomp_input_state.get("anchor", "") or "").strip()
     if not anchor:
         return None
-    return PropositionFrame(
-        subject="self", relation="", obj=anchor, negated=False,
+    obj = _frame_object(anchor)
+    frame = PropositionFrame(
+        subject="self", relation="", obj=obj, negated=False,
         stance=0.5, unresolved=[], topic=anchor, source="anchor",
     )
+    _record_frame_decision(
+        systems,
+        function_id="aurora_internal.aurora_proposition_frame._frame_from_anchor",
+        inputs={"raw_anchor": anchor},
+        frame=frame,
+        decision="selected",
+        reason="noncomp input anchor supplied the final frame fallback",
+        derived={"object_was_structural": bool(anchor and not obj)},
+    )
+    return frame
 
 
 def _derive_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFrame]:
     """Fail-quiet derivation ladder. Returns None (never raises) if no
     rung produces a usable frame -- callers must treat None exactly like
     "no PropositionFrame available," preserving today's behavior."""
+    try:
+        frame = _frame_from_constraint_relation(systems)
+        if frame is not None:
+            return frame
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_internal/aurora_proposition_frame.py:constraint_relation",
+            exc=_aurora_boundary_exc,
+            context={"function": "build_frame", "source_file": "aurora_internal/aurora_proposition_frame.py"},
+        )
+        pass
     try:
         frame = _frame_from_thought_state(systems)
         if frame is not None:
@@ -447,6 +620,17 @@ def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFram
     stance/density as the ladder produced them)."""
     frame = _derive_frame(systems, state)
     if frame is None:
+        _record_frame_decision(
+            systems,
+            function_id="aurora_internal.aurora_proposition_frame.build_frame",
+            inputs={
+                "has_thought_state": bool(systems.get("_current_thought_state")) if isinstance(systems, dict) else False,
+                "has_working_memory": bool(systems.get("working_memory")) if isinstance(systems, dict) else False,
+            },
+            frame=None,
+            decision="empty",
+            reason="no thought, claim, turn-local claim, or anchor rung produced a usable frame",
+        )
         return frame
     try:
         axis = str(dict(systems.get("_last_noncomp_input") or {}).get("constraint", "") or "").strip()
@@ -463,4 +647,13 @@ def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFram
             exc=_aurora_boundary_exc,
             context={"function": "build_frame", "source_file": "aurora_internal/aurora_proposition_frame.py"},
         )
+    _record_frame_decision(
+        systems,
+        function_id="aurora_internal.aurora_proposition_frame.build_frame",
+        inputs={"selected_rung": str(getattr(frame, "source", "") or "")},
+        frame=frame,
+        decision="emitted",
+        reason="proposition frame completed density-aware construction",
+        derived={"density": getattr(frame, "density", None), "stance": getattr(frame, "stance", None)},
+    )
     return frame

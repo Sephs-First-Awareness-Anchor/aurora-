@@ -3629,9 +3629,26 @@ class AxisProjector:
                 for letter, w in sem_weights.items():
                     ax[letter] += w
 
-        # Normalise utterance sub-vector (now includes both pragmatic + semantic)
+        # Normalise the lexical/pragmatic sub-vector.
         _total = sum(ax.values()) or 1.0
-        utt_vec = {k: v / _total for k, v in ax.items()}
+        lexical_vec = {k: v / _total for k, v in ax.items()}
+
+        # --- 1c. Relational configuration pass ----------------------------------
+        # The proposition's structure carries stronger semantic authority than
+        # isolated words.  Its vector is derived from the root operations needed
+        # to preserve entities, relation, unknown, boundary and authorship.
+        try:
+            from aurora_internal.aurora_constraint_semantic_continuity import relational_axis_vector
+            relational_vec = relational_axis_vector(parsed.get("relational_form") or {})
+        except Exception:
+            relational_vec = {k: 0.2 for k in ("X", "T", "N", "B", "A")}
+        utt_vec = {
+            k: (0.42 * float(lexical_vec.get(k, 0.2))) +
+               (0.58 * float(relational_vec.get(k, 0.2)))
+            for k in ("X", "T", "N", "B", "A")
+        }
+        _utt_total = sum(utt_vec.values()) or 1.0
+        utt_vec = {k: v / _utt_total for k, v in utt_vec.items()}
 
         # --- 2. IVM phase signal (toroidal polarity → axis receptivity) ----------
         # A toroidal axis near polarity=0 (throat of the torus) is unsettled —
@@ -3668,7 +3685,12 @@ class AxisProjector:
         genealogy = systems.get("genealogy")
         if genealogy:
             try:
-                orient = genealogy.pressure_orientation() or {}
+                if hasattr(genealogy, "pressure_orientation"):
+                    orient = genealogy.pressure_orientation() or {}
+                elif isinstance(genealogy, dict):
+                    orient = genealogy.get("pressure_orientation") or genealogy.get("orientation") or {}
+                else:
+                    orient = {}
                 for letter, corr in orient.items():
                     if letter in gen_vec:
                         gen_vec[letter] = float(corr)
@@ -4517,7 +4539,7 @@ def _looks_like_inner_state_query(text: str, parsed: Optional[dict] = None) -> b
     return bool(topic_words & {"you", "yourself", "feel", "feeling", "think", "thinking", "want", "wanting", "name", "identity"})
 
 
-def _classify_input_intent(text: str, *, _axis_activation: dict = None, _parsed: dict = None) -> str:
+def _classify_input_intent(text: str, *, _axis_activation: dict = None, _parsed: dict = None, _semantic_state: dict = None) -> str:
     """
     Derive communicative intent from field state -- no keyword prescriptions.
 
@@ -4568,9 +4590,24 @@ def _classify_input_intent(text: str, *, _axis_activation: dict = None, _parsed:
     if any(trigger in _text_low_cl for trigger in _RECALL_TRIGGERS):
         return "recall_question"
 
-    # Inner-state / wellbeing: keyword check fires regardless of axis dominant
-    # because casual wellbeing queries ("how are you") project X or T, not A.
-    if is_q and _looks_like_inner_state_query(text, parsed):
+    # Inner-state routing is derived from the current relational configuration,
+    # never from a phrase match.  A question must place Aurora/you as the
+    # experiencer of a state relation.  Opinion about an external proposition
+    # remains general even when the surface words include "what do you think".
+    _semantic = dict(_semantic_state or {})
+    _rel = dict(_semantic.get("relational_form") or parsed.get("relational_form") or {})
+    _subject = str(_rel.get("subject", "") or "").strip().lower()
+    _object = str(_rel.get("obj", "") or "").strip().lower()
+    _relation = str(_rel.get("relation", "") or "").strip().lower()
+    _unknown = str(_rel.get("unknown_role", "") or "").strip().lower()
+    _self_subject = _subject in {"you", "aurora", "yourself"} or _object.startswith("your ")
+    _state_relation = _relation in {
+        "am", "is", "are", "was", "were", "feel", "feels", "experience",
+        "experiences", "notice", "notices", "want", "wants", "have", "has",
+    }
+    if is_q and _self_subject and _state_relation and _unknown in {
+        "manner", "object", "subject", "cause", "truth", ""
+    }:
         return "wellbeing_query"
 
     # T-axis dominant + callback/clarification: continuity / recall
@@ -6597,6 +6634,17 @@ def _build_communication_contributors(
             "gap_type": str(gap.get("gap_type") or ""),
             "action": str(gap.get("action") or ""),
         }
+    _constraint_semantics = dict(pipeline_state.get("constraint_semantic_state") or {})
+    if _constraint_semantics:
+        contributors["constraint_semantics"] = {
+            "proposition_id": str(_constraint_semantics.get("proposition_id", "") or ""),
+            "canonical_signature": str(
+                dict(_constraint_semantics.get("genealogy_trace") or {}).get("canonical_signature", "") or ""
+            ),
+            "response_obligation": dict(_constraint_semantics.get("response_obligation") or {}),
+            "emergent_operation": dict(_constraint_semantics.get("emergent_operation") or {}),
+            "completeness": float(_constraint_semantics.get("completeness", 0.0) or 0.0),
+        }
     return contributors
 
 
@@ -6972,6 +7020,19 @@ def _finalize_validated_communication(
     events.append(finalized)
     systems["_finalized_communication_outcomes"] = events[-200:]
     systems["_last_validated_communication_outcome"] = finalized
+    _comm_emergence = systems.get("communication_emergence")
+    if _comm_emergence is not None and hasattr(_comm_emergence, "record_receiver_outcome"):
+        try:
+            finalized["communication_emergence"] = dict(
+                _comm_emergence.record_receiver_outcome(evidence_id, finalized) or {}
+            )
+        except Exception as _comm_emergence_outcome_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="communication_emergence:receiver_outcome",
+                exc=_comm_emergence_outcome_exc,
+                context={"function": "_finalize_validated_communication", "response_id": evidence_id},
+            )
     if kind == "negative":
         dream_trainer = systems.get("dream_trainer")
         ledger = getattr(dream_trainer, "ledger", None) if dream_trainer is not None else None
@@ -17823,6 +17884,26 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
             context={"function": "_chain_up1_information", "handler_line": 14208, "source_file": "aurora.py"},
         )
         state.parsed = {}
+    state.relational_form = dict((state.parsed or {}).get("relational_form") or {})
+    if isinstance(state.pipeline_state, dict):
+        state.pipeline_state["parsed"] = dict(state.parsed or {})
+        state.pipeline_state["relational_form"] = dict(state.relational_form or {})
+    try:
+        _intro = systems.get("system_introspection")
+        if _intro is not None and hasattr(_intro, "record_boundary_decision"):
+            _intro.record_boundary_decision(
+                "aurora_internal.aurora_constraint_semantic_continuity.extract_relational_form",
+                stage="constraint_relational_admission",
+                inputs={"user_text": user_text},
+                derived={"relational_form": dict(state.relational_form or {})},
+                decision="preserved_for_root_constraint_derivation",
+                output=dict(state.relational_form or {}),
+                reason="X admits entities while B preserves their semantic roles before topic reduction",
+                confidence=float((state.relational_form or {}).get("confidence", 0.0) or 0.0),
+                tags=["X", "B", "semantic_continuity"],
+            )
+    except Exception:
+        pass
     _confess_low_confidence_parse(user_text, state.parsed)
     # OETS concept pre-fetch for known topic words
     try:
@@ -18189,6 +18270,25 @@ def _chain_up2_belief(user_text: str, systems: dict, state: Any) -> None:
         )
         state.working_memory_snapshot = {}
 
+    # T-axis reference continuity acts on the SAME relational form rather than
+    # creating a separate topic interpretation.  Unresolved references remain
+    # explicitly unresolved; no context is invented.
+    try:
+        from aurora_internal.aurora_constraint_semantic_continuity import bind_referential_continuity
+        state.relational_form = dict(bind_referential_continuity(
+            state.relational_form or {},
+            referent_map=state.referent_map,
+            working_memory_snapshot=state.working_memory_snapshot,
+        ) or state.relational_form or {})
+        if isinstance(state.pipeline_state, dict):
+            state.pipeline_state["relational_form"] = dict(state.relational_form or {})
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__, operation="constraint_semantics:reference_continuity",
+            exc=_aurora_boundary_exc,
+            context={"function": "_chain_up2_belief", "source_file": "aurora.py"},
+        )
+
 
 def _measure_polarity_gradient_snapshot(systems: Dict[str, Any]) -> Dict[str, Any]:
     lattice = systems.get("lattice")
@@ -18464,9 +18564,137 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
         _raw["A"] = min(1.0, float(_raw.get("A", 0.2)) + 0.45)
         _raw["B"] = min(1.0, float(_raw.get("B", 0.2)) + 0.20)
 
+    # Reflective readdressing does not replace the constraint projection.  It
+    # reopens the prior perspective and blends it with the current evidence,
+    # giving the live chain continuity plus room to reorganize its focus.
+    try:
+        _rr_ctx = dict((state.pipeline_state or {}).get("reflective_readdressing") or {})
+        _rr_bridge = systems.get("reflective_readdressing")
+        if _rr_ctx and _rr_bridge is not None and hasattr(_rr_bridge, "axis_readdress_vector"):
+            _before_rr_axes = dict(_raw)
+            _raw = dict(_rr_bridge.axis_readdress_vector(_raw, _rr_ctx) or _raw)
+            if isinstance(state.pipeline_state, dict):
+                state.pipeline_state["reflective_axis_before"] = _before_rr_axes
+                state.pipeline_state["reflective_axis_after"] = dict(_raw)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="reflective_readdressing:axis_blend",
+            exc=_aurora_boundary_exc,
+            context={"function": "_chain_up3_purpose", "source_file": "aurora.py"},
+        )
+
     state.axis_activation = _field_balancer.rebalanced_activation(_raw)
     _field_balancer.update(state.axis_activation, systems)
     state.dominant_axis = _axis_projector.dominant(state.axis_activation)
+
+    # The root field now acts on the preserved proposition.  This creates one
+    # content-bearing semantic state whose every transformation declares its
+    # X/T/N/B/A ancestry and current genealogy context.
+    try:
+        from aurora_internal.aurora_constraint_semantic_continuity import derive_constraint_semantic_state
+        state.constraint_semantic_state = dict(derive_constraint_semantic_state(
+            state.relational_form or {},
+            axis_activation=state.axis_activation,
+            genealogy=systems.get("genealogy"),
+            referent_map=state.referent_map,
+            claim_resolution=state.claim_resolution,
+            meaning_forms=state.meaning_forms,
+        ) or {})
+        _comm_emergence = systems.get("communication_emergence")
+        if _comm_emergence is not None and hasattr(_comm_emergence, "prepare_semantic_state"):
+            state.constraint_semantic_state = dict(
+                _comm_emergence.prepare_semantic_state(
+                    state.constraint_semantic_state,
+                    raw_text=user_text,
+                    referent_map=state.referent_map,
+                    claim_resolution=state.claim_resolution,
+                    meaning_forms=state.meaning_forms,
+                    axis_activation=state.axis_activation,
+                )
+                or state.constraint_semantic_state
+            )
+            _emergent_axes = dict(state.constraint_semantic_state.get("axis_activation") or {})
+            if _emergent_axes:
+                state.axis_activation = {
+                    ax: float(_emergent_axes.get(ax, state.axis_activation.get(ax, 0.0)) or 0.0)
+                    for ax in ("X", "T", "N", "B", "A")
+                }
+                state.dominant_axis = _axis_projector.dominant(state.axis_activation)
+        # Recursive causal propagation operates on the SAME constraint-derived
+        # proposition.  It may alter axis conditions and evidence-supported
+        # interpretation, but it cannot replace the raw input or author a
+        # response directly.
+        _recursive_causal = systems.get("recursive_causal_waveform")
+        if _recursive_causal is not None and hasattr(_recursive_causal, "prepare_semantic_state"):
+            state.constraint_semantic_state = dict(
+                _recursive_causal.prepare_semantic_state(
+                    state.constraint_semantic_state,
+                    raw_text=user_text,
+                    referent_map=state.referent_map,
+                    claim_resolution=state.claim_resolution,
+                    meaning_forms=state.meaning_forms,
+                    axis_activation=state.axis_activation,
+                    systems=systems,
+                )
+                or state.constraint_semantic_state
+            )
+            _recursive_axes = dict(state.constraint_semantic_state.get("axis_activation") or {})
+            if _recursive_axes:
+                state.axis_activation = {
+                    ax: float(_recursive_axes.get(ax, state.axis_activation.get(ax, 0.0)) or 0.0)
+                    for ax in ("X", "T", "N", "B", "A")
+                }
+                state.dominant_axis = _axis_projector.dominant(state.axis_activation)
+            state.relational_form = dict(
+                state.constraint_semantic_state.get("relational_form")
+                or state.relational_form
+                or {}
+            )
+
+        state.genealogy_trace = dict(state.constraint_semantic_state.get("genealogy_trace") or {})
+        if isinstance(state.pipeline_state, dict):
+            state.pipeline_state["constraint_semantic_state"] = dict(state.constraint_semantic_state)
+            state.pipeline_state["constraint_genealogy_trace"] = dict(state.genealogy_trace)
+            state.pipeline_state["response_obligation"] = dict(
+                state.constraint_semantic_state.get("response_obligation") or {}
+            )
+        try:
+            _intro = systems.get("system_introspection")
+            if _intro is not None and hasattr(_intro, "record_boundary_decision"):
+                _intro.record_boundary_decision(
+                    "aurora_internal.aurora_constraint_semantic_continuity.derive_constraint_semantic_state",
+                    stage="root_constraint_derivation",
+                    inputs={
+                        "relational_form": dict(state.relational_form or {}),
+                        "axis_activation": dict(state.axis_activation or {}),
+                    },
+                    derived={
+                        "axis_derivation": dict(state.constraint_semantic_state.get("axis_derivation") or {}),
+                        "genealogy_trace": dict(state.genealogy_trace or {}),
+                    },
+                    decision=str(
+                        (state.constraint_semantic_state.get("response_obligation") or {}).get("operation", "")
+                        or "derive_understanding"
+                    ),
+                    output={
+                        "proposition_id": state.constraint_semantic_state.get("proposition_id", ""),
+                        "response_obligation": state.constraint_semantic_state.get("response_obligation", {}),
+                    },
+                    reason="one proposition traversed X, T, N, B, and A with explicit root ancestry",
+                    confidence=float(state.constraint_semantic_state.get("completeness", 0.0) or 0.0),
+                    tags=["X", "T", "N", "B", "A", "genealogy"],
+                )
+        except Exception:
+            pass
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__, operation="constraint_semantics:root_derivation",
+            exc=_aurora_boundary_exc,
+            context={"function": "_chain_up3_purpose", "source_file": "aurora.py"},
+        )
+        state.constraint_semantic_state = {}
+        state.genealogy_trace = {}
     try:
         _perc_a3 = systems.get("perception")
         if _perc_a3 and hasattr(_perc_a3, "set_axis_context"):
@@ -18567,6 +18795,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
         user_text,
         _axis_activation=state.axis_activation,
         _parsed=state.parsed,
+        _semantic_state=state.constraint_semantic_state,
     )
     # Goal stack -- active purposes from contract
     try:
@@ -18685,6 +18914,29 @@ def _chain_up4_meaning(user_text: str, systems: dict, state: Any) -> None:
         if contract and hasattr(contract, "rank_meaning_forms"):
             state.meaning_forms = list(contract.rank_meaning_forms(state.axis_activation) or [])
             state.dominant_meaning_form = state.meaning_forms[0] if state.meaning_forms else {}
+            # Rebind canonical meaning forms to the current proposition so they
+            # describe this reality configuration, not only the field itself.
+            try:
+                from aurora_internal.aurora_constraint_semantic_continuity import derive_constraint_semantic_state
+                state.constraint_semantic_state = dict(derive_constraint_semantic_state(
+                    state.relational_form or {},
+                    axis_activation=state.axis_activation,
+                    genealogy=systems.get("genealogy"),
+                    referent_map=state.referent_map,
+                    claim_resolution=state.claim_resolution,
+                    meaning_forms=state.meaning_forms,
+                ) or state.constraint_semantic_state or {})
+                _bound = list(state.constraint_semantic_state.get("bound_meaning_forms") or [])
+                if _bound:
+                    state.meaning_forms = _bound
+                    state.dominant_meaning_form = dict(_bound[0])
+                state.genealogy_trace = dict(state.constraint_semantic_state.get("genealogy_trace") or {})
+                if isinstance(state.pipeline_state, dict):
+                    state.pipeline_state["constraint_semantic_state"] = dict(state.constraint_semantic_state)
+                    state.pipeline_state["constraint_genealogy_trace"] = dict(state.genealogy_trace)
+                    state.pipeline_state["bound_meaning_forms"] = list(_bound)
+            except Exception:
+                pass
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -18791,8 +19043,10 @@ def _chain_up5_understanding(user_text: str, systems: dict, state: Any, *, turn_
         pass
     # Developmental stage
     try:
-        from aurora_internal.aurora_meaning_evolution import assess_developmental_chain
-        state.developmental_stage = dict(assess_developmental_chain(state.meaning_forms or []) or {})
+        from aurora_internal.aurora_meaning_evolution import assess_developmental_stage
+        state.developmental_stage = dict(
+            assess_developmental_stage(state.meaning_forms or []) or {}
+        )
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19034,8 +19288,18 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                 if _fac_parts:
                     _sensory_lines.append(f"Sensory crystal: {', '.join(_fac_parts)}")
             if _sensory_lines:
-                _sensory_block = "[Perceptual state:\n" + "\n".join(_sensory_lines) + "\n]"
-                _user_text_for_comp = _sensory_block + "\n\n" + _user_text_for_comp
+                # Sensory reality perturbs the axis field and remains available
+                # as structured evidence.  It must never impersonate language
+                # spoken by the user, because that corrupts reference and claim
+                # boundaries downstream.
+                state.pipeline_state["structured_perceptual_context"] = {
+                    "lines": list(_sensory_lines),
+                    "scene": _scene_desc,
+                    "maturity": _sc_mat,
+                    "visual_facets": dict(_sc_vis),
+                    "audio_facets": dict(_sc_aud),
+                    "derivation_signature": "X^1*N^1*B^1",
+                }
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19045,6 +19309,33 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             context={"function": "_chain_down5_understanding", "handler_line": 15137, "source_file": "aurora.py"},
         )
         pass
+    # Constraint-semantic candidate: the SAME proposition that traversed
+    # X/T/N/B/A is allowed to supply a grounded response candidate.  This is
+    # not a parallel intent handler.  It is the downward lexicalization of the
+    # root-derived meaning already present in TurnUnderstandingState.
+    _constraint_candidate = {}
+    try:
+        from aurora_internal.aurora_constraint_semantic_continuity import (
+            derive_constraint_grounded_candidate,
+        )
+        _constraint_candidate = dict(derive_constraint_grounded_candidate(
+            state.constraint_semantic_state or {},
+            salient_concepts=list(state.salient_concepts or []),
+            emotional_state=dict(state.emotional_state or {}),
+            prior_claim=dict((state.claim_resolution or {}).get("focus_claim") or {}),
+        ) or {})
+        if isinstance(state.pipeline_state, dict):
+            state.pipeline_state["constraint_grounded_candidate"] = dict(_constraint_candidate)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="constraint_semantics:downward_candidate",
+            exc=_aurora_boundary_exc,
+            context={"function": "_chain_down5_understanding", "source_file": "aurora.py"},
+        )
+        _constraint_candidate = {}
+
     # Gap short-circuit: if CGS fired a gap question, inject it here before
     # _build_comprehension_response runs.  The copy inside _build_comprehension_response
     # silently fails because `state` is not in scope there — this is the correct location.
@@ -19094,6 +19385,8 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             _base_conf = float(comp_conf or 0.9)
             if 0.0 < _ua < 0.5:
                 _base_conf = round(min(_base_conf, 0.5 + _ua * 0.6), 4)
+            _ignition_cap = float((state.pipeline_state or {}).pop("response_confidence_cap", 1.0) or 1.0)
+            _base_conf = min(_base_conf, _ignition_cap)
 
             state.response_tone = str(comp_tone or "attentive")
             state.response_confidence = _base_conf
@@ -19183,6 +19476,93 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                     state.response_confidence = 0.52
                     state.response_src = "learned_hint"
                     break
+
+    # Relation-level authority comparison.  Topic overlap is insufficient: the
+    # selected response must address the unresolved role of the current
+    # proposition.  A root-derived candidate may replace an abstention, an
+    # internal diagnostic dump, or a semantically weaker response, but only
+    # when it has stronger relation alignment.
+    try:
+        from aurora_internal.aurora_constraint_semantic_continuity import relation_alignment
+        _relation_form = dict(state.relational_form or {})
+        _current_text = str(state.response_content or "").strip()
+        _current_alignment = relation_alignment(_relation_form, _current_text) if _current_text else {"score": 0.0}
+        _candidate_text = str((_constraint_candidate or {}).get("text", "") or "").strip()
+        _candidate_alignment = dict((_constraint_candidate or {}).get("relation_alignment") or {})
+        _candidate_conf = float((_constraint_candidate or {}).get("confidence", 0.0) or 0.0)
+        _current_low = _current_text.lower()
+        _current_is_abstain = (
+            not _current_text
+            or "don't have a clear sense" in _current_low
+            or "do not have a clear sense" in _current_low
+            or "still building my understanding" in _current_low
+            or _current_text.startswith("Active axes:")
+            or _current_text.startswith("The recorded path began through")
+        )
+        _candidate_better = (
+            _candidate_text
+            and _candidate_conf >= 0.62
+            and float(_candidate_alignment.get("score", 0.0) or 0.0) >= 0.58
+            and (
+                _current_is_abstain
+                or float(_candidate_alignment.get("score", 0.0) or 0.0)
+                   >= float(_current_alignment.get("score", 0.0) or 0.0) + 0.10
+            )
+        )
+        if _candidate_better:
+            state.response_content = _candidate_text
+            state.response_tone = "attentive"
+            state.response_confidence = _candidate_conf
+            state.response_src = "constraint_semantic_derivation"
+            systems["_preserve_literal_response_once"] = True
+            systems["_skip_belief_refinement_once"] = True
+        if isinstance(state.pipeline_state, dict):
+            state.pipeline_state["constraint_relation_alignment"] = {
+                "selected_source": str(state.response_src or ""),
+                "selected": relation_alignment(_relation_form, str(state.response_content or "")),
+                "preexisting": _current_alignment,
+                "candidate": _candidate_alignment,
+                "candidate_selected": bool(_candidate_better),
+                "proposition_id": str((state.constraint_semantic_state or {}).get("proposition_id", "") or ""),
+                "derivation_signature": str(
+                    ((state.constraint_semantic_state or {}).get("response_obligation") or {}).get("derivation_signature", "")
+                    or ""
+                ),
+            }
+        try:
+            _intro = systems.get("system_introspection")
+            if _intro is not None and hasattr(_intro, "record_boundary_decision"):
+                _intro.record_boundary_decision(
+                    "aurora_internal.aurora_constraint_semantic_continuity.relation_alignment",
+                    stage="constraint_relation_authority",
+                    inputs={
+                        "relational_form": dict(_relation_form),
+                        "preexisting_response": _current_text,
+                        "constraint_candidate": _candidate_text,
+                    },
+                    derived={
+                        "preexisting_alignment": dict(_current_alignment),
+                        "candidate_alignment": dict(_candidate_alignment),
+                    },
+                    decision="select_constraint_candidate" if _candidate_better else "retain_existing_candidate",
+                    output={
+                        "text": str(state.response_content or ""),
+                        "source": str(state.response_src or ""),
+                    },
+                    reason="response authority follows fidelity to the X/T/N/B/A-derived proposition",
+                    confidence=float(state.response_confidence or 0.0),
+                    tags=["X", "T", "N", "B", "A", "response_authority"],
+                )
+        except Exception:
+            pass
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="constraint_semantics:relation_authority",
+            exc=_aurora_boundary_exc,
+            context={"function": "_chain_down5_understanding", "source_file": "aurora.py"},
+        )
 
 def _generate_from_manifold(systems: dict, user_text: str, state: any, core_claim: str = None) -> tuple:
     live_thought = {}  # law_bindings now live in subsurface_detail; use native_meaning_obj below
@@ -19814,10 +20194,68 @@ def _chain_down4_meaning(user_text: str, systems: dict, state: Any, *, auto_sear
     _ability_fx = list(_ps.get("active_ability_effects", []) or [])
     if _ability_fx:
         understood["_active_ability_effects"] = _ability_fx
+
+    # A self-directed inquiry is answered from the actual prior reasoning
+    # episode.  The inquiry reached this source through Aurora's ordinary
+    # semantic parse and continuity resolution, not an exact phrase command.
+    _rr_context = dict(_ps.get("reflective_readdressing") or {})
+    _rr_mode = str(_rr_context.get("mode", "") or "")
+    if _rr_mode == "self_inquiry":
+        try:
+            _rr_bridge = systems.get("reflective_readdressing")
+            _rr_grounded = str(
+                _rr_bridge.render_self_inquiry(_rr_context)
+                if _rr_bridge is not None and hasattr(_rr_bridge, "render_self_inquiry")
+                else ""
+            ).strip()
+            if _rr_grounded:
+                _rr_before_content = str(getattr(state, "response_content", "") or "")
+                _rr_before_confidence = float(getattr(state, "response_confidence", 0.0) or 0.0)
+                state.response_content = _rr_grounded
+                state.response_tone = "reflective"
+                state.response_confidence = max(
+                    0.72,
+                    float((_rr_context.get("inspection_focus") or {}).get("confidence", 0.0) or 0.0),
+                )
+                state.response_src = "reflective_introspection"
+                systems["_preserve_literal_response_once"] = True
+                systems["_skip_belief_refinement_once"] = True
+                _record_response_revision(
+                    state,
+                    "chain_down4_reflective_introspection",
+                    _rr_before_content,
+                    _rr_before_confidence,
+                )
+                # The evidence-grounded introspection answer has authority over
+                # a generic earlier abstention produced before the meaning stage.
+                response_already_set = True
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="reflective_readdressing:render_self_inquiry",
+                exc=_aurora_boundary_exc,
+                context={"function": "_chain_down4_meaning", "source_file": "aurora.py"},
+            )
+
     if not response_already_set:
         try:
+            _reasoning_input = str(
+                _rr_context.get("recontextualized_text", "")
+                if _rr_mode in {"readdress", "perspective_shift", "reflective_continuation"}
+                else user_text
+            ).strip() or user_text
+            if _rr_context:
+                understood["_reflective_readdressing"] = {
+                    "mode": _rr_mode,
+                    "target_episode_id": str(_rr_context.get("target_episode_id", "") or ""),
+                    "original_input": str(_rr_context.get("original_input", "") or "")[:600],
+                    "original_response": str(_rr_context.get("original_response", "") or "")[:600],
+                    "new_evidence": str(_rr_context.get("new_input", "") or user_text)[:600],
+                    "reason": str(_rr_context.get("reason", "") or "")[:400],
+                }
+                understood["_reconsider_prior_reasoning"] = True
             ans = ReasoningEngine().reason(
-                user_text, understood, working_memory, oets, systems=systems
+                _reasoning_input, understood, working_memory, oets, systems=systems
             )
             _ans_str = str(ans or "").strip()
             _malformed_ans = ("What's actually here is", "It changed it is", "[AFTERTHOUGHT]")
@@ -20742,6 +21180,45 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
             )
         if isinstance(systems, dict):
             systems["_last_articulation_arbitration"] = arbitration
+            _si_art = systems.get("system_introspection")
+            if _si_art is not None and hasattr(_si_art, "record_boundary_decision"):
+                try:
+                    _si_art.record_boundary_decision(
+                        function_id="aurora._finalize_articulation",
+                        stage="response_arbitration",
+                        inputs={
+                            "user_text": user_text,
+                            "grounded_text": _grounded_text,
+                            "grounded_confidence": _grounded_confidence,
+                            "composer_text": _d2_unified_text,
+                            "composer_confidence": _composer_confidence,
+                        },
+                        derived={
+                            "grounded_semantic_authority": _grounded_authority,
+                            "meaning_preserved": _preserved,
+                            "rejection_reasons": list(_reasons),
+                        },
+                        decision="selected",
+                        output=dict(arbitration),
+                        reason=(
+                            "final articulation authority selected the delivered candidate "
+                            "after semantic-fidelity and confidence separation"
+                        ),
+                        confidence=float(arbitration.get("confidence", 0.0) or 0.0),
+                        tags=["articulation", "arbitration", "visible_language"],
+                        anomaly=(
+                            "composer_candidate_rejected"
+                            if _d2_unified_text and not _preserved
+                            else None
+                        ),
+                    )
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(), module=__name__,
+                        operation="system_introspection:articulation_probe",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_finalize_articulation", "source_file": "aurora.py"},
+                    )
 
         # CIR audit follow-up (2026-08-04): aurora_articulation.py's
         # own last_articulation_trace.json only ever recorded
@@ -20820,6 +21297,131 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
             exc=_aurora_boundary_exc,
             context={"function": "_finalize_articulation", "source_file": "aurora.py"},
         )
+
+
+
+def _apply_reflective_readdressing_to_state(
+    user_text: str,
+    systems: Dict[str, Any],
+    state: Any,
+    context: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Reopen a prior reasoning episode inside the normal turn chain.
+
+    This is a turn-local semantic reapplication.  It does not alter durable
+    beliefs, memories, rules, or code.  The prior state and new evidence are
+    made available to the existing X/T/N/B/A pipeline, which remains the sole
+    reasoning authority for the reconsidered turn.
+    """
+    bridge = systems.get("reflective_readdressing") if isinstance(systems, dict) else None
+    ctx = dict(context or systems.pop("_pending_reflective_readdressing", {}) or {})
+    if not ctx:
+        return
+    original = dict(getattr(state, "parsed", {}) or {})
+    reapplied: Dict[str, Any] = {}
+    recontextualized = str(ctx.get("recontextualized_text", "") or "").strip()
+    if recontextualized:
+        try:
+            reapplied = dict(UtteranceParser().parse(recontextualized) or {})
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="reflective_readdressing:reparse",
+                exc=_aurora_boundary_exc,
+                context={"function": "_apply_reflective_readdressing_to_state", "source_file": "aurora.py"},
+            )
+            reapplied = {}
+
+    def _merge(*groups: Any, limit: int = 12) -> List[str]:
+        out: List[str] = []
+        seen = set()
+        for group in groups:
+            for raw in list(group or []):
+                label = str(raw or "").strip()
+                key = label.lower()
+                if not label or key in seen:
+                    continue
+                seen.add(key)
+                out.append(label)
+                if len(out) >= limit:
+                    return out
+        return out
+
+    previous_reasoning = dict(ctx.get("original_reasoning") or {})
+    previous_parse = dict(ctx.get("original_parse") or {})
+    topic_words = _merge(
+        original.get("topic_words", []) or [],
+        previous_parse.get("topic_words", []) or [],
+        previous_reasoning.get("salient_concepts", []) or [],
+        reapplied.get("topic_words", []) or [],
+    )
+    entities = _merge(
+        original.get("entities", []) or [],
+        previous_parse.get("entities", []) or [],
+        reapplied.get("entities", []) or [],
+        limit=8,
+    )
+    if topic_words:
+        state.parsed["topic_words"] = topic_words
+        state.parsed["topic"] = str(
+            original.get("topic", "")
+            or previous_parse.get("topic", "")
+            or topic_words[0]
+        )
+    if entities:
+        state.parsed["entities"] = entities
+    state.parsed["reflective_readdressing"] = {
+        "readdress_id": str(ctx.get("readdress_id", "") or ""),
+        "mode": str(ctx.get("mode", "") or ""),
+        "target_episode_id": str(ctx.get("target_episode_id", "") or ""),
+        "reason": str(ctx.get("reason", "") or ""),
+        "original_input": str(ctx.get("original_input", "") or "")[:1200],
+        "original_response": str(ctx.get("original_response", "") or "")[:1200],
+        "new_evidence": str(ctx.get("new_input", "") or user_text)[:1200],
+        "inspection_focus": dict(ctx.get("inspection_focus") or {}),
+    }
+    state.parsed["reflective_reapplied"] = True
+    if isinstance(getattr(state, "pipeline_state", None), dict):
+        state.pipeline_state["reflective_readdressing"] = dict(ctx)
+        state.pipeline_state["reflective_reapplied_to_source"] = True
+        state.pipeline_state["reflective_original_axis"] = dict(
+            previous_reasoning.get("axis_activation") or {}
+        )
+        state.pipeline_state["reflective_original_dominant_axis"] = str(
+            previous_reasoning.get("dominant_axis", "") or ""
+        )
+    systems["_active_reflective_readdressing"] = dict(ctx)
+    systems["_last_reflective_reapplication"] = {
+        "readdress_id": str(ctx.get("readdress_id", "") or ""),
+        "mode": str(ctx.get("mode", "") or ""),
+        "target_episode_id": str(ctx.get("target_episode_id", "") or ""),
+        "source_text": str(user_text or "")[:1200],
+        "provisional": True,
+    }
+    introspection = systems.get("system_introspection")
+    if introspection is not None and hasattr(introspection, "record_boundary_decision"):
+        try:
+            introspection.record_boundary_decision(
+                function_id="aurora._apply_reflective_readdressing_to_state",
+                stage="reflective_reapplication",
+                inputs={
+                    "current_input": user_text,
+                    "original_input": ctx.get("original_input", ""),
+                    "original_response": ctx.get("original_response", ""),
+                },
+                derived={
+                    "mode": ctx.get("mode", ""),
+                    "merged_topics": topic_words,
+                    "target_episode_id": ctx.get("target_episode_id", ""),
+                },
+                decision="reopened",
+                output=dict(state.parsed.get("reflective_readdressing") or {}),
+                reason="a prior reasoning state was reopened with new evidence inside the normal turn chain",
+                confidence=0.9,
+                tags=["reflection", "readdressing", "meaning_boundary"],
+            )
+        except Exception:
+            pass
 
 
 def _run_reasoning_pipeline(
@@ -21024,6 +21626,20 @@ def _run_reasoning_pipeline(
     # ---- UPWARD PASS ----
     _chain_up1_information(user_text, systems, state)
     try:
+        _apply_reflective_readdressing_to_state(
+            user_text,
+            systems,
+            state,
+            dict(systems.get("_pending_reflective_readdressing") or {}),
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="reflective_readdressing:apply_to_state",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
+        )
+    try:
         _apply_research_reapplication_to_state(
             user_text, systems, state, research_reapplication,
         )
@@ -21036,19 +21652,27 @@ def _run_reasoning_pipeline(
             context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
         )
         pass
+    _rr_runtime_context = dict((state.pipeline_state or {}).get("reflective_readdressing") or {})
+    _rr_runtime_mode = str(_rr_runtime_context.get("mode", "") or "")
+    _rr_subject_text = str(
+        _rr_runtime_context.get("original_input", "")
+        if _rr_runtime_mode in {"readdress", "perspective_shift", "reflective_continuation"}
+        else user_text
+    ).strip() or user_text
+
     _capture_waveform_deposit(state, "information", systems)
     _inject_surface_recent_context(systems, state, user_text)
     _chain_up2_belief(user_text, systems, state)
     _capture_waveform_deposit(state, "belief", systems)
     _chain_up3_purpose(user_text, systems, state)
     _capture_waveform_deposit(state, "purpose", systems)
-    _chain_up4_meaning(user_text, systems, state)
+    _chain_up4_meaning(_rr_subject_text, systems, state)
     _capture_waveform_deposit(state, "meaning", systems)
-    _chain_up5_understanding(user_text, systems, state, turn_tick=turn_tick, session_id=session_id)
+    _chain_up5_understanding(_rr_subject_text, systems, state, turn_tick=turn_tick, session_id=session_id)
     _capture_waveform_deposit(state, "understanding", systems)
     # up5 is now the apex (A axis) -- no up6 needed
     try:
-        _apply_noncomp_input_guidance(systems, state, user_text)
+        _apply_noncomp_input_guidance(systems, state, _rr_subject_text)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -21062,7 +21686,7 @@ def _run_reasoning_pipeline(
     try:
         _perc_a4 = systems.get("perception")
         if _perc_a4 and hasattr(_perc_a4, "perceive"):
-            _perc_result = _perc_a4.perceive(user_text)
+            _perc_result = _perc_a4.perceive({"text": user_text})
             if _perc_result and isinstance(state.pipeline_state, dict):
                 state.pipeline_state["perception_result"] = _perc_result if isinstance(_perc_result, dict) else {}
     except Exception as _aurora_boundary_exc:
@@ -21301,18 +21925,18 @@ def _run_reasoning_pipeline(
 
     # ---- DOWNWARD PASS ----
     # down6_apex removed -- hints now propagated inside _chain_down5_understanding
-    _chain_down5_understanding(user_text, systems, state, auto_search_enabled=auto_search_enabled)
+    _chain_down5_understanding(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled)
     _capture_waveform_deposit(state, "understanding", systems)
-    _chain_down4_meaning(user_text, systems, state, auto_search_enabled=auto_search_enabled)
+    _chain_down4_meaning(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled)
     _capture_waveform_deposit(state, "meaning", systems)
-    _chain_down3_purpose(user_text, systems, state, auto_search_enabled=auto_search_enabled,
+    _chain_down3_purpose(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled,
                         use_search=use_search, raw_evidence=raw_evidence or [])
     _capture_waveform_deposit(state, "purpose", systems)
-    _chain_down2_belief(user_text, systems, state, auto_search_enabled=auto_search_enabled,
+    _chain_down2_belief(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled,
                             use_search=use_search)
     _capture_waveform_deposit(state, "belief", systems)
     _skip_post = bool(systems.pop("_skip_response_postprocessing_once", False))
-    _chain_down1_information(user_text, systems, state, use_search=use_search, skip_postprocessing=_skip_post)
+    _chain_down1_information(_rr_subject_text, systems, state, use_search=use_search, skip_postprocessing=_skip_post)
     _capture_waveform_deposit(state, "information", systems)
     _preserve_literal_response = bool(systems.pop("_preserve_literal_response_once", False))
     _skip_surface_expression = bool(systems.pop("_skip_surface_expression_once", False))
@@ -23165,8 +23789,12 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             try:
                 _ign_go = bool(_ign_result.get("go", True))
                 if not _ign_go:
-                    _cur_conf = float(getattr(state, 'response_confidence', 0.5) or 0.5)
-                    state.response_confidence = min(_cur_conf, 0.65)
+                    # This helper does not own the live TurnState.  Confess a
+                    # confidence ceiling structurally so the caller can apply
+                    # it to whichever candidate is ultimately selected.
+                    if isinstance(pipeline_state, dict):
+                        prior_cap = float(pipeline_state.get("response_confidence_cap", 1.0) or 1.0)
+                        pipeline_state["response_confidence_cap"] = min(prior_cap, 0.65)
                     _ign_stages = dict(_ign_result.get("stages", {}) or {})
                     if not _ign_stages.get("reflection", False):
                         try:
@@ -23624,7 +24252,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             elif _corr_ack and pipeline_state.get("correction_absorbed"):
                 # Correction absorbed — prepend acknowledgment so Aurora signals
                 # the repair landed before continuing with her own understanding
-                state.pipeline_state["correction_prefix"] = _corr_ack
+                pipeline_state["correction_prefix"] = _corr_ack
                 pipeline_state.pop("correction_absorbed", None)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -25661,6 +26289,76 @@ def boot_aurora(
         "surface" if surface_profile else "subsurface" if runtime_profile == "subsurface" else "full"
     )
 
+    # Universal function genealogy: every executable Python function is a
+    # multi-parent derivative of X/T/N/B/A. Parentage follows real code
+    # composition and inheritance across former domain boundaries.
+    systems['function_lineage'] = None
+    try:
+        from aurora_internal.aurora_universal_function_lineage import UniversalFunctionLineage
+        _function_lineage = UniversalFunctionLineage(
+            repo_root=str(Path(__file__).resolve().parent),
+            auto_build=True,
+            include_lambdas=True,
+            persist=True,
+        )
+        _function_lineage.attach_systems(systems)
+        systems['function_lineage'] = _function_lineage
+        if verbose:
+            _fl_status = _function_lineage.status()
+            print(
+                "  [FUNCTION-LINEAGE] Universal ancestry online "
+                f"({_fl_status.get('function_count', 0)} functions, "
+                f"coverage={float(_fl_status.get('coverage_rate', 0.0)):.3f})"
+            )
+    except Exception as _function_lineage_e:
+        systems['function_lineage'] = None
+        if verbose:
+            print(f"  [FUNCTION-LINEAGE] unavailable: {_function_lineage_e}")
+
+    # Native system introspection: source-derived function anatomy plus
+    # per-turn decision provenance.  This is an observer over Aurora's
+    # existing fault, understanding, attribution, QAO, and lineage systems;
+    # it has no response-selection authority.
+    systems['system_introspection'] = None
+    try:
+        from aurora_internal.aurora_system_introspection import AuroraSystemIntrospection
+        _system_introspection = AuroraSystemIntrospection(
+            repo_root=str(Path(__file__).resolve().parent),
+            state_dir=state_dir,
+            persist=True,
+            build_index=False,
+        )
+        _system_introspection.attach_systems(systems)
+        _system_introspection.ensure_system_map()
+        systems['system_introspection'] = _system_introspection
+        if verbose:
+            _si_status = _system_introspection.system_map_status()
+            print(
+                f"  [INTROSPECTION] Native system map online "
+                f"({_si_status.get('function_count', 0)} functions)"
+            )
+    except Exception as _si_e:
+        if verbose:
+            print(f"  [INTROSPECTION] Native system map unavailable: {_si_e}")
+
+    # Reflective readdressing: preserves completed reasoning states and lets
+    # Aurora reopen them through her normal semantic and constraint pipeline
+    # when new evidence, perspective, contradiction, or self-inquiry warrants it.
+    systems['reflective_readdressing'] = None
+    try:
+        from aurora_internal.aurora_reflective_readdressing import AuroraReflectiveReaddressing
+        _reflective_readdressing = AuroraReflectiveReaddressing(
+            state_dir=state_dir,
+            persist=True,
+        )
+        _reflective_readdressing.attach_systems(systems)
+        systems['reflective_readdressing'] = _reflective_readdressing
+        if verbose:
+            print("  [REFLECTION] Reflective readdressing online")
+    except Exception as _rr_e:
+        if verbose:
+            print(f"  [REFLECTION] Reflective readdressing unavailable: {_rr_e}")
+
     if verbose and runtime_profile != "full":
         print(f"  [PROFILE] Booting {runtime_profile} runtime profile")
 
@@ -26360,6 +27058,18 @@ def boot_aurora(
     )
     perception = ExpressionPerceptionEngine(contract, state_dir=state_dir)
     systems['perception'] = perception
+    if systems.get('system_introspection') is not None and hasattr(perception, 'connect_system_introspection'):
+        try:
+            perception.connect_system_introspection(systems['system_introspection'])
+            if verbose:
+                print("  [INTROSPECTION → L5] Composer decision probes connected")
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="system_introspection:connect_perception",
+                exc=_aurora_boundary_exc,
+                context={"function": "boot_aurora", "source_file": "aurora.py"},
+            )
     if systems.get('sedimemory') is not None and hasattr(perception, 'connect_sedimemory'):
         try:
             perception.connect_sedimemory(systems['sedimemory'])
@@ -26567,6 +27277,18 @@ def boot_aurora(
             )
             systems['chamber']   = _chamber
             systems['genealogy'] = _genealogy
+            _function_lineage_live = systems.get('function_lineage')
+            if _function_lineage_live is not None:
+                try:
+                    _function_lineage_live.attach_genealogy(_genealogy)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="function_lineage:attach_genealogy",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "boot_aurora", "source_file": __file__},
+                    )
             # EDIT (constraint-expansive concepts): DPS WARP searches the
             # genealogy fossil record before fresh concept synthesis.
             # Also wire DPS into genealogy so events carry crystal context.
@@ -26589,6 +27311,44 @@ def boot_aurora(
             systems['field_balancer'] = _field_balancer
             # Restore corpus-trained links so they inject on first session
             _restore_genealogy_state(_genealogy, output_dir=_gen_dir, verbose=False)
+            # Constraint-semantic continuity is a derived capability of all five
+            # roots, not an external language faculty.  Assimilate the code into
+            # the existing genealogy so future development can trace this
+            # ability back through X/T/N/B/A and its concrete implementation.
+            try:
+                if hasattr(_genealogy, "register_manual_code_assimilation"):
+                    _genealogy.register_manual_code_assimilation({
+                        "change_id": "constraint_semantic_continuity_v1",
+                        "constraints": ["Existence", "Time", "Energy", "Boundary", "Agency"],
+                        "dominant_axis": "A",
+                        "target_files": [
+                            "aurora_internal/aurora_constraint_semantic_continuity.py",
+                            "aurora_internal/aurora_utterance_parser.py",
+                            "aurora_internal/aurora_proposition_frame.py",
+                            "aurora_internal/aurora_turn_chain.py",
+                            "aurora.py",
+                        ],
+                        "target_modules": [
+                            "aurora_internal.aurora_constraint_semantic_continuity",
+                            "aurora_internal.aurora_utterance_parser",
+                            "aurora_internal.aurora_proposition_frame",
+                            "aurora_internal.aurora_turn_chain",
+                            "aurora",
+                        ],
+                        "rewrite_profile": "constraint_relational_continuity",
+                        "axis_signature": "X^1*T^1*N^1*B^1*A^1",
+                        "purpose_lane": "constraint_complete_understanding",
+                        "source": "native_constraint_architecture",
+                        "change_kind": "new_derived_capability",
+                    }, flush=False)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="constraint_semantics:genealogy_assimilation",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "boot_aurora", "source_file": "aurora.py"},
+                )
             # RW5 (wiring audit 2026-07-20, closes F9): PrimitiveExtractor
             # mounted only in aurora_runtime.py's boot_stack, never on the
             # live daemon spine -- the primitive-extraction genealogy lens
@@ -27323,6 +28083,130 @@ def boot_aurora(
         if verbose:
             print(f"  [UNDERSTAND] Runtime contract unavailable: {_understanding_contract_e}")
 
+    # Recursive Causal Reasoning Waveform: treats each live input as an
+    # initiating disturbance, lets root-derived control wavelets shape its
+    # passage through X/T/N/B/A, then allows developed understanding to
+    # reconstruct the evidence-supported interpretation before Aurora emits
+    # the next causal disturbance.  Raw input history is immutable.
+    systems["recursive_causal_waveform"] = None
+    try:
+        from aurora_internal.aurora_recursive_causal_reasoning_waveform import (
+            AuroraRecursiveCausalReasoningWaveform,
+        )
+        _recursive_causal_waveform = AuroraRecursiveCausalReasoningWaveform(
+            state_dir=state_dir,
+            persist=True,
+            genealogy=systems.get("genealogy"),
+        )
+        _recursive_causal_waveform.attach_systems(systems)
+        systems["recursive_causal_waveform"] = _recursive_causal_waveform
+        _wf_recursive = systems.get("warp_field")
+        if _wf_recursive is not None and hasattr(_wf_recursive, "register_warp_capable"):
+            _wf_recursive.register_warp_capable(
+                "recursive_causal_reasoning_waveform",
+                _recursive_causal_waveform,
+            )
+        if verbose:
+            _rcrw_status = _recursive_causal_waveform.status()
+            print(
+                "  [RCRW] Recursive causal reasoning waveform active "
+                f"(cycles={_rcrw_status.get('cycles', 0)}, "
+                f"trials={_rcrw_status.get('trial_wavelets', 0)}, "
+                f"promoted={_rcrw_status.get('promoted_wavelets', 0)})"
+            )
+    except Exception as _recursive_causal_e:
+        systems["recursive_causal_waveform"] = None
+        if verbose:
+            print(f"  [RCRW] unavailable: {_recursive_causal_e}")
+
+    # Communication emergence field: cultivates missing communicative
+    # operations as WARP trials derived from X/T/N/B/A pressure.  It does not
+    # install intent handlers or fixed language functions.
+    systems["communication_emergence"] = None
+    try:
+        from aurora_internal.aurora_communication_emergence import AuroraCommunicationEmergence
+        _communication_emergence = AuroraCommunicationEmergence(
+            state_dir=state_dir,
+            persist=True,
+            genealogy=systems.get("genealogy"),
+        )
+        _communication_emergence.attach_systems(systems)
+        systems["communication_emergence"] = _communication_emergence
+        _wf_comm = systems.get("warp_field")
+        if _wf_comm is not None and hasattr(_wf_comm, "register_warp_capable"):
+            _wf_comm.register_warp_capable("communication_emergence", _communication_emergence)
+        if verbose:
+            _ce_status = _communication_emergence.status()
+            print(
+                "  [COMM-EMERGE] Constraint-derived cultivation active "
+                f"(trials={_ce_status.get('trial_operations', 0)}, "
+                f"promoted={_ce_status.get('promoted_operations', 0)})"
+            )
+    except Exception as _comm_emergence_e:
+        systems["communication_emergence"] = None
+        if verbose:
+            print(f"  [COMM-EMERGE] unavailable: {_comm_emergence_e}")
+
+    # Operational synthesis chamber: composes previously missing pure
+    # operations from X/T/N/B/A-rooted primitives, quarantines them as WARP
+    # trials, and admits only unseen-case-validated programs to genealogy.
+    systems["operational_synthesis"] = None
+    try:
+        from aurora_internal.aurora_operational_synthesis import AuroraOperationalSynthesisChamber
+        _operational_synthesis = AuroraOperationalSynthesisChamber(
+            state_dir=state_dir,
+            persist=True,
+            genealogy=systems.get("genealogy"),
+        )
+        _operational_synthesis.attach_systems(systems)
+        systems["operational_synthesis"] = _operational_synthesis
+        _wf_synth = systems.get("warp_field")
+        if _wf_synth is not None and hasattr(_wf_synth, "register_warp_capable"):
+            _wf_synth.register_warp_capable("operational_synthesis", _operational_synthesis)
+        if verbose:
+            _os_status = _operational_synthesis.status()
+            print(
+                "  [OP-SYNTH] Constraint-native operation chamber active "
+                f"(tasks={_os_status.get('tasks', 0)}, "
+                f"trials={_os_status.get('candidate_trials', 0)}, "
+                f"promoted={_os_status.get('promoted', 0)})"
+            )
+    except Exception as _operational_synthesis_e:
+        systems["operational_synthesis"] = None
+        if verbose:
+            print(f"  [OP-SYNTH] unavailable: {_operational_synthesis_e}")
+
+    # General execution foundry: expands synthesized operations into
+    # expressive loops, recursion, persistent state machines, capability-
+    # scoped tool plans, and AST-sandboxed Python.  Expressive programs remain
+    # fuel-, time-, depth-, state-, and permission-bounded at execution.
+    systems["general_execution_foundry"] = None
+    try:
+        from aurora_internal.aurora_general_execution_foundry import AuroraGeneralExecutionFoundry
+        _general_foundry = AuroraGeneralExecutionFoundry(
+            state_dir=state_dir,
+            persist=True,
+            genealogy=systems.get("genealogy"),
+        )
+        _general_foundry.attach_systems(systems)
+        systems["general_execution_foundry"] = _general_foundry
+        _wf_general = systems.get("warp_field")
+        if _wf_general is not None and hasattr(_wf_general, "register_warp_capable"):
+            _wf_general.register_warp_capable("general_execution_foundry", _general_foundry)
+        if verbose:
+            _gf_status = _general_foundry.status()
+            print(
+                "  [GEN-EXEC] General execution foundry active "
+                f"(tasks={_gf_status.get('tasks', 0)}, "
+                f"machines={_gf_status.get('state_machines', 0)}, "
+                f"tool_plans={_gf_status.get('tool_plans', 0)}, "
+                f"promoted={_gf_status.get('promoted', 0)})"
+            )
+    except Exception as _general_foundry_e:
+        systems["general_execution_foundry"] = None
+        if verbose:
+            print(f"  [GEN-EXEC] unavailable: {_general_foundry_e}")
+
     _boot_noncomp_manifold_runtime(systems, verbose=verbose)
 
     live_training_bridge = _attach_live_response_simulation_bridge(systems)
@@ -27818,6 +28702,19 @@ def boot_aurora(
     except Exception as _ci_e:
         if verbose:
             print(f"  [CRYSTAL] Crystallization loops unavailable: {_ci_e}")
+
+    _function_lineage_final = systems.get('function_lineage')
+    if _function_lineage_final is not None and hasattr(_function_lineage_final, 'attach_genealogy'):
+        try:
+            _function_lineage_final.attach_genealogy(systems.get('genealogy'))
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="function_lineage:final_genealogy_attach",
+                exc=_aurora_boundary_exc,
+                context={"function": "boot_aurora", "source_file": __file__},
+            )
 
     return systems
 
@@ -29519,6 +30416,30 @@ def dual_question_pipeline(
         # If no tool matched, fall through to normal pipeline so Aurora can
         # respond naturally rather than returning silence.
 
+    # Reflective readdressing has already been resolved from the ordinary
+    # utterance frame in process_external_user_turn.  Route it through the
+    # normal bidirectional chain before public/private gap heuristics can
+    # mistake references to Aurora's own prior reasoning for missing user
+    # context.  This is not a response shortcut: _run_reasoning_pipeline still
+    # performs the full X/T/N/B/A upward and downward passes.
+    _rr_route_context = dict(systems.get("_pending_reflective_readdressing") or {})
+    if _rr_route_context:
+        _rr_turn_tick = int(getattr(working_memory, "turn_count", 0) or 0)
+        _rr_session_id = str(systems.get("session_id") or "")
+        return _run_reasoning_pipeline(
+            systems,
+            user_text,
+            mode,
+            turn_tick=_rr_turn_tick,
+            session_id=_rr_session_id,
+            auto_search_enabled=False,
+            use_search=False,
+            raw_evidence=None,
+            manual_lookup=False,
+            lookup_request=None,
+            research_reapplication=None,
+        )
+
     understood = None
     quasiarch_events: List[Dict[str, Any]] = []
     lookup_request = _resolve_lookup_request(user_text, systems)
@@ -30264,6 +31185,19 @@ def _run_live_response_turn(
             "thermal_load": dual_strata_runtime.get("subsurface_state", {}).get("thermal_load"),
             "sensory_maturity": sensory_state.get("maturity"),
         }
+        _si_parser = systems.get("system_introspection")
+        if _si_parser is not None and hasattr(_si_parser, "record_boundary_decision"):
+            _si_parser.record_boundary_decision(
+                function_id="aurora._run_live_response_turn",
+                stage="utterance_parsing",
+                inputs={"user_text": user_text},
+                derived={"parsed": dict(_raw_understood)},
+                decision="parsed",
+                output=dict(_raw_understood),
+                reason="UtteranceParser converted the live input into the turn's semantic frame",
+                confidence=0.94,
+                tags=["input", "parser", "meaning_boundary"],
+            )
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -32057,6 +32991,45 @@ def process_external_user_turn(
         runtime_governor = None
         runtime_contract = {}
 
+    # W1 from the preceding turn becomes causal input to this turn before
+    # any special continuity pathway is considered.  This records recurrence;
+    # it does not classify the new utterance or award developmental credit.
+    _recursive_causal = systems.get("recursive_causal_waveform")
+    if _recursive_causal is not None and hasattr(_recursive_causal, "receive_disturbance"):
+        try:
+            systems["_incoming_recursive_causal_disturbance"] = dict(
+                _recursive_causal.receive_disturbance(user_text, systems=systems) or {}
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="recursive_causal_waveform:receive_disturbance",
+                exc=_aurora_boundary_exc,
+                context={"function": "process_external_user_turn", "source_file": "aurora.py"},
+            )
+
+    # Resolve reflective continuity through Aurora's ordinary pragmatic and
+    # semantic parser before the turn begins.  This is not a keyword command
+    # path: the faculty receives the same bound utterance frame as the rest of
+    # the communication system.
+    _rr_bridge = systems.get("reflective_readdressing")
+    _rr_context: Dict[str, Any] = {}
+    if _rr_bridge is not None and hasattr(_rr_bridge, "prepare_turn"):
+        try:
+            from aurora_internal.aurora_utterance_parser import UtteranceParser as _ReflectiveUtteranceParser
+            _rr_parsed = dict(_ReflectiveUtteranceParser().parse(user_text) or {})
+            _rr_context = dict(_rr_bridge.prepare_turn(user_text, _rr_parsed, systems) or {})
+            if _rr_context:
+                systems["_pending_reflective_readdressing"] = dict(_rr_context)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="reflective_readdressing:prepare_turn",
+                exc=_aurora_boundary_exc,
+                context={"function": "process_external_user_turn", "source_file": "aurora.py"},
+            )
+            _rr_context = {}
+
     # D2.2 (Directive D2 rider, 2026-07-17): reentrancy depth counter. Read
     # by _run_simulation_live_response_bridge to detect when a dream/
     # afterthought simulation episode is trying to recursively re-enter
@@ -32064,6 +33037,27 @@ def process_external_user_turn(
     # in progress -- "training fragments have no business inside a user's
     # live turn." See that function for the guard this counter enables.
     systems["_live_turn_depth"] = int(systems.get("_live_turn_depth", 0) or 0) + 1
+    _si_bridge = systems.get("system_introspection")
+    _si_episode_id = ""
+    if _si_bridge is not None and hasattr(_si_bridge, "begin_episode"):
+        try:
+            _si_episode_id = str(
+                _si_bridge.begin_episode(
+                    user_text,
+                    turn_tick=int(turn_tick or 0),
+                    session_id=str(session_id or source_label or "external"),
+                    source=str(source_label or "external_user_turn"),
+                )
+                or ""
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="system_introspection:begin_episode",
+                exc=_aurora_boundary_exc,
+                context={"function": "process_external_user_turn", "source_file": "aurora.py"},
+            )
+            _si_episode_id = ""
     try:
         result = _run_live_response_turn(
             systems=systems,
@@ -32079,7 +33073,156 @@ def process_external_user_turn(
         )
         if isinstance(result, dict) and runtime_contract:
             result["runtime_contract"] = dict(runtime_contract)
+        if _si_episode_id and _si_bridge is not None and hasattr(_si_bridge, "finish_episode"):
+            try:
+                _si_resp = result.get("resp_A") if isinstance(result, dict) else None
+                _si_diag = _si_bridge.finish_episode(
+                    delivered_text=str(getattr(_si_resp, "content", "") or ""),
+                    response_source=str(
+                        (result.get("src", "") if isinstance(result, dict) else "")
+                        or getattr(_si_resp, "src", "")
+                        or ""
+                    ),
+                    confidence=float(getattr(_si_resp, "confidence", 0.0) or 0.0),
+                    systems=systems,
+                )
+                if isinstance(result, dict):
+                    result["system_introspection"] = dict(_si_diag or {})
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="system_introspection:finish_episode",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "process_external_user_turn", "source_file": "aurora.py"},
+                )
+
+        # Expose this turn to the constraint-native communication cultivation
+        # field.  It receives the proposition and final response, not a surface
+        # intent label.  Receiver validation on the next turn completes credit.
+        _comm_emergence = systems.get("communication_emergence")
+        if _comm_emergence is not None and hasattr(_comm_emergence, "observe_turn"):
+            try:
+                _ce_resp = result.get("resp_A") if isinstance(result, dict) else None
+                _ce_text = str(getattr(_ce_resp, "content", "") or "")
+                _ce_source = str(
+                    (result.get("src", "") if isinstance(result, dict) else "")
+                    or getattr(_ce_resp, "src", "")
+                    or ""
+                )
+                _ce_conf = float(getattr(_ce_resp, "confidence", 0.0) or 0.0)
+                _ce_pipeline = dict(systems.get("_last_pipeline_state") or {})
+                _ce_semantics = dict(_ce_pipeline.get("constraint_semantic_state") or {})
+                _ce_response_id = ""
+                _ce_contract = systems.get("understanding_contract")
+                if _ce_contract is not None and hasattr(_ce_contract, "snapshot"):
+                    _ce_contract_state = dict(_ce_contract.snapshot() or {})
+                    _ce_response_id = str(
+                        dict(_ce_contract_state.get("pending_validation") or {}).get("response_id", "") or ""
+                    )
+                _ce_record = dict(_comm_emergence.observe_turn(
+                    semantic_state=_ce_semantics,
+                    raw_text=user_text,
+                    response_text=_ce_text,
+                    response_source=_ce_source,
+                    response_confidence=_ce_conf,
+                    response_id=_ce_response_id,
+                ) or {})
+                systems["_last_communication_emergence"] = dict(_ce_record)
+                if isinstance(result, dict) and _ce_record:
+                    result["communication_emergence"] = _ce_record
+            except Exception as _comm_emergence_turn_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="communication_emergence:observe_turn",
+                    exc=_comm_emergence_turn_exc,
+                    context={"function": "process_external_user_turn", "source_file": "aurora.py"},
+                )
+
+        # Complete the recursive causal cycle only after final articulation has
+        # selected the delivered response.  H now evaluates and backprojects
+        # over W0, while the emitted response becomes W1 for the next cycle.
+        _recursive_causal = systems.get("recursive_causal_waveform")
+        if _recursive_causal is not None and hasattr(_recursive_causal, "complete_cycle"):
+            try:
+                _rcrw_resp = result.get("resp_A") if isinstance(result, dict) else None
+                _rcrw_record = dict(_recursive_causal.complete_cycle(
+                    delivered_text=str(getattr(_rcrw_resp, "content", "") or ""),
+                    response_source=str(
+                        (result.get("src", "") if isinstance(result, dict) else "")
+                        or getattr(_rcrw_resp, "src", "")
+                        or ""
+                    ),
+                    confidence=float(getattr(_rcrw_resp, "confidence", 0.0) or 0.0),
+                    systems=systems,
+                ) or {})
+                systems["_last_recursive_causal_cycle"] = dict(_rcrw_record)
+                if isinstance(result, dict) and _rcrw_record:
+                    result["recursive_causal_waveform"] = _rcrw_record
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="recursive_causal_waveform:complete_cycle",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "process_external_user_turn", "source_file": "aurora.py"},
+                )
+
+        # Complete any active reflective trial, then preserve this turn as the
+        # next reasoning episode Aurora may consciously re-enter.
+        if _rr_bridge is not None:
+            try:
+                _rr_resp = result.get("resp_A") if isinstance(result, dict) else None
+                _rr_text = str(getattr(_rr_resp, "content", "") or "")
+                _rr_source = str(
+                    (result.get("src", "") if isinstance(result, dict) else "")
+                    or getattr(_rr_resp, "src", "")
+                    or ""
+                )
+                _rr_conf = float(getattr(_rr_resp, "confidence", 0.0) or 0.0)
+                _rr_result = {}
+                if _rr_context and hasattr(_rr_bridge, "finish_turn"):
+                    _rr_result = dict(
+                        _rr_bridge.finish_turn(
+                            delivered_text=_rr_text,
+                            response_source=_rr_source,
+                            confidence=_rr_conf,
+                            systems=systems,
+                        )
+                        or {}
+                    )
+                if hasattr(_rr_bridge, "capture_turn"):
+                    _rr_bridge.capture_turn(
+                        user_input=user_text,
+                        delivered_text=_rr_text,
+                        response_source=_rr_source,
+                        confidence=_rr_conf,
+                        systems=systems,
+                    )
+                if isinstance(result, dict) and _rr_result:
+                    result["reflective_readdressing"] = _rr_result
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="reflective_readdressing:finish_and_capture",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "process_external_user_turn", "source_file": "aurora.py"},
+                )
         return result
+    except Exception as _turn_exc:
+        if _si_episode_id and _si_bridge is not None and hasattr(_si_bridge, "finish_episode"):
+            try:
+                _si_bridge.finish_episode(
+                    delivered_text="",
+                    response_source="runtime_exception",
+                    confidence=0.0,
+                    systems=systems,
+                    observed_problem={
+                        "type": "runtime_exception",
+                        "description": str(_turn_exc),
+                    },
+                )
+            except Exception:
+                pass
+        raise
     finally:
         systems["_live_turn_depth"] = max(0, int(systems.get("_live_turn_depth", 1) or 1) - 1)
         if runtime_governor is not None:

@@ -1,0 +1,187 @@
+{
+  "capability": "Recursive Causal Reasoning Waveform",
+  "principle": {
+    "H": "global understanding developed through X/T/N/B/A interference",
+    "W0": "immutable initiating disturbance",
+    "W1": "delivered response that becomes the next causal disturbance",
+    "backprojection": "evidence-bounded reconstruction of effective interpretation"
+  },
+  "release": "aurora--build-591-recursive-causal-reasoning-waveform",
+  "root_primitives": {
+    "agency_selection": [
+      "X",
+      "T",
+      "B",
+      "A"
+    ],
+    "boundary_separation": [
+      "X",
+      "N",
+      "B"
+    ],
+    "causal_emission": [
+      "X",
+      "T",
+      "N",
+      "B",
+      "A"
+    ],
+    "continuity_phase_lock": [
+      "X",
+      "T",
+      "B"
+    ],
+    "existence_admission": [
+      "X",
+      "B"
+    ],
+    "recursive_backprojection": [
+      "X",
+      "T",
+      "N",
+      "B",
+      "A"
+    ],
+    "transformational_gradient": [
+      "T",
+      "N",
+      "A"
+    ]
+  },
+  "safety_invariants": [
+    "raw input is immutable",
+    "backprojection requires explicit evidence",
+    "control wavelets do not directly author responses",
+    "persistent low-alignment gaps enter WARP rather than immediate permanent mutation",
+    "promoted wavelets remain traceable to X/T/N/B/A"
+  ],
+  "verification": {
+    "focused_tests_passed": 96,
+    "lineage": {
+      "status": {
+        "available": true,
+        "build_seconds": 24.5982,
+        "co_evolved_functions": 20,
+        "constraint_index_path": "/mnt/data/aurora_rcrw_work/aurora--build-591-recursive-causal-reasoning-waveform/aurora_internal/universal_function_constraints.json",
+        "coverage_rate": 1.0,
+        "cross_module_parent_edges": 2504,
+        "domain_taxonomy_used_for_parentage": false,
+        "file_count": 306,
+        "function_count": 8772,
+        "lambda_count": 627,
+        "manifest_path": "/mnt/data/aurora_rcrw_work/aurora--build-591-recursive-causal-reasoning-waveform/aurora_internal/universal_function_lineage.json",
+        "max_generation": 20,
+        "multi_parent_functions": 8177,
+        "named_function_count": 8145,
+        "orphan_count": 0,
+        "parentage_basis": [
+          "resolved calls",
+          "inheritance overrides",
+          "recursive co-evolution",
+          "direct root novelty"
+        ],
+        "root_reachability": {
+          "A": 6397,
+          "B": 7003,
+          "N": 6751,
+          "T": 4785,
+          "X": 8535
+        },
+        "schema_version": 1,
+        "source_manifest_hash": "de79d9387a7d3e29666ad2d8a6e644441da55be53bee520f5091764b76f46f35"
+      },
+      "verification": {
+        "bad_root_path_count": 0,
+        "bad_root_paths": [],
+        "coverage_rate": 1.0,
+        "function_count": 8772,
+        "missing_parent_count": 0,
+        "missing_parents": [],
+        "orphan_count": 0,
+        "orphans": [],
+        "valid": true
+      }
+    },
+    "live_surface_probe": {
+      "booted": true,
+      "cycle_id": "RCRW:4bd055d2390c392f",
+      "cycle_status": "emitted",
+      "duration_seconds": 1.7534,
+      "function_lineage_status": {
+        "available": true,
+        "build_seconds": 24.5982,
+        "co_evolved_functions": 20,
+        "constraint_index_path": "/mnt/data/aurora_rcrw_work/aurora--build-591-recursive-causal-reasoning-waveform/aurora_internal/universal_function_constraints.json",
+        "coverage_rate": 1.0,
+        "cross_module_parent_edges": 2504,
+        "domain_taxonomy_used_for_parentage": false,
+        "file_count": 306,
+        "function_count": 8772,
+        "lambda_count": 627,
+        "manifest_path": "/mnt/data/aurora_rcrw_work/aurora--build-591-recursive-causal-reasoning-waveform/aurora_internal/universal_function_lineage.json",
+        "max_generation": 20,
+        "multi_parent_functions": 8177,
+        "named_function_count": 8145,
+        "orphan_count": 0,
+        "parentage_basis": [
+          "resolved calls",
+          "inheritance overrides",
+          "recursive co-evolution",
+          "direct root novelty"
+        ],
+        "root_reachability": {
+          "A": 6397,
+          "B": 7003,
+          "N": 6751,
+          "T": 4785,
+          "X": 8535
+        },
+        "schema_version": 1,
+        "source_manifest_hash": "de79d9387a7d3e29666ad2d8a6e644441da55be53bee520f5091764b76f46f35"
+      },
+      "hurricane_condition": 0.960172,
+      "input": "What makes an invention elegant?",
+      "raw_input_preserved": true,
+      "rcrw_status": {
+        "active_cycle_id": "RCRW:4bd055d2390c392f",
+        "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+        "cycles": 1,
+        "dissolved_wavelets": 0,
+        "pending_response_cycle_id": "RCRW:4bd055d2390c392f",
+        "promoted_wavelets": 0,
+        "root_constraints": [
+          "X",
+          "T",
+          "N",
+          "B",
+          "A"
+        ],
+        "trial_wavelets": 0,
+        "warp": {
+          "anomalies": 0,
+          "dissolved": 0,
+          "has_sixth_axis_candidates": false,
+          "level": "recursive_causal_reasoning_waveform",
+          "promoted": 0,
+          "promoted_components": [],
+          "trial_components": [],
+          "trials": 0
+        }
+      },
+      "response": "An invention becomes elegant when it retains a distinct identity, keeps its parts and limits in a coherent relation, and continues to hold as conditions change.",
+      "response_alignment": 1.0,
+      "response_source": "constraint_semantic_derivation",
+      "root_constraints": [
+        "X",
+        "B",
+        "T",
+        "N",
+        "A"
+      ],
+      "wavelet_count": 5
+    },
+    "python_compile": true,
+    "rcrw_tests_passed": 6,
+    "universal_lineage_tests_passed": 7
+  }
+}

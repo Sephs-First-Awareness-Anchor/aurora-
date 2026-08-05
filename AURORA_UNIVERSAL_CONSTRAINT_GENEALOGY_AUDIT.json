@@ -1,0 +1,384 @@
+{
+  "artifact": "Aurora Universal Constraint Genealogy Audit",
+  "files": {
+    "added": [
+      "aurora_internal/aurora_universal_function_lineage.py",
+      "aurora_internal/universal_function_constraints.json",
+      "aurora_internal/universal_function_lineage.json",
+      "scripts/compile_universal_function_lineage.py",
+      "tests/test_universal_function_lineage.py"
+    ],
+    "changed": [
+      "aurora.py",
+      "aurora_internal/aurora_manual_code_lineage.py",
+      "aurora_internal/aurora_system_introspection.py",
+      "aurora_internal/constraint_genealogy.py",
+      "aurora_internal/lineage_canonical.py"
+    ]
+  },
+  "lineage_semantics": {
+    "foundational_roots": [
+      "X",
+      "T",
+      "N",
+      "B",
+      "A"
+    ],
+    "future_functions": "Lineage is rebuilt when manual source assimilation changes code; evolved operations can preserve observed parent evidence at emergence.",
+    "older_functions": "Operational ancestry reconstructed from current executable source and surviving explicit genealogy evidence.",
+    "operational_parentage": [
+      "resolved source calls",
+      "class overrides",
+      "lexical nesting",
+      "recursive co-evolution groups",
+      "direct root novelty"
+    ]
+  },
+  "sample_lineages": {
+    "aurora._run_live_response_turn": {
+      "co_evolved_with": [],
+      "direct_root_parents": [
+        "ROOT:B"
+      ],
+      "file": "aurora.py",
+      "functional_parents": [
+        "aurora._advance_intake_pipeline",
+        "aurora._build_communication_contributors",
+        "aurora._capture_pressure_snapshot",
+        "aurora._compose_memory_sweep_response",
+        "aurora._derive_applied_effects",
+        "aurora._finalize_validated_communication",
+        "aurora._flush_quasiarch_runtime_events",
+        "aurora._full_save",
+        "aurora._looks_like_question",
+        "aurora._merge_noncomp_understood_payload",
+        "aurora._normalize_identity_followup_text",
+        "aurora._observe_interaction_runtime_turn",
+        "aurora._observe_live_lineage_emergence",
+        "aurora._read_live_dual_strata_runtime",
+        "aurora._repair_unknown_vocabulary_inline",
+        "aurora._retain_cross_pipeline_learning",
+        "aurora._run_live_response_turn._commit_early_response",
+        "aurora._run_live_response_turn._declarative_segments",
+        "aurora._run_live_response_turn._finalize_early_validation",
+        "aurora._sediment_validated_fact",
+        "aurora._should_prefer_live_perspective",
+        "aurora._should_use_search_for_question",
+        "aurora._track_concept_use_outcome",
+        "aurora.dual_question_pipeline",
+        "aurora_braid_wiring.begin_response_turn",
+        "aurora_developmental_log.record_developmental_snapshot",
+        "aurora_internal.aurora_runtime_faults.record_exception_from_locals"
+      ],
+      "generation": 15,
+      "line": 30791,
+      "lineage_confidence": 0.705471,
+      "lineage_kind": "composite",
+      "root_constraints": [
+        "B"
+      ],
+      "root_paths": {
+        "A": [
+          "ROOT:A",
+          "aurora._advance_intake_pipeline",
+          "aurora._run_live_response_turn"
+        ],
+        "B": [
+          "ROOT:B",
+          "aurora._run_live_response_turn"
+        ],
+        "N": [
+          "ROOT:N",
+          "aurora._advance_intake_pipeline",
+          "aurora._run_live_response_turn"
+        ],
+        "T": [
+          "ROOT:T",
+          "aurora._advance_intake_pipeline",
+          "aurora._run_live_response_turn"
+        ],
+        "X": [
+          "ROOT:X",
+          "aurora._build_communication_contributors",
+          "aurora._run_live_response_turn"
+        ]
+      },
+      "root_weights": {
+        "A": 0.09703444,
+        "B": 0.62101062,
+        "N": 0.15107411,
+        "T": 0.08133999,
+        "X": 0.04954083
+      },
+      "traceable_roots": [
+        "X",
+        "T",
+        "N",
+        "B",
+        "A"
+      ]
+    },
+    "aurora_expression_perception.SentenceComposer._bind_slot_from_frame": {
+      "co_evolved_with": [],
+      "direct_root_parents": [
+        "ROOT:B"
+      ],
+      "file": "aurora_expression_perception.py",
+      "functional_parents": [
+        "aurora_expression_perception.SentenceComposer._conjugate_for_subject",
+        "aurora_expression_perception.SentenceComposer._negate_action_word",
+        "aurora_expression_perception.SentenceComposer._record_introspection_decision",
+        "aurora_expression_perception.infer_word_role",
+        "aurora_expression_perception.is_bare_interrogative_token"
+      ],
+      "generation": 5,
+      "line": 2940,
+      "lineage_confidence": 0.698308,
+      "lineage_kind": "composite",
+      "root_constraints": [
+        "B",
+        "X"
+      ],
+      "root_paths": {
+        "A": [
+          "ROOT:A",
+          "aurora_expression_perception.SentenceComposer._conjugate_for_subject",
+          "aurora_expression_perception.SentenceComposer._bind_slot_from_frame"
+        ],
+        "B": [
+          "ROOT:B",
+          "aurora_expression_perception.SentenceComposer._bind_slot_from_frame"
+        ],
+        "N": [
+          "ROOT:N",
+          "aurora_expression_perception.SentenceComposer._conjugate_for_subject",
+          "aurora_expression_perception.SentenceComposer._bind_slot_from_frame"
+        ],
+        "T": [
+          "ROOT:T",
+          "aurora_expression_perception.infer_word_role",
+          "aurora_expression_perception.SentenceComposer._bind_slot_from_frame"
+        ],
+        "X": [
+          "ROOT:X",
+          "aurora_expression_perception.SentenceComposer._conjugate_for_subject",
+          "aurora_expression_perception.SentenceComposer._bind_slot_from_frame"
+        ]
+      },
+      "root_weights": {
+        "A": 0.16813209,
+        "B": 0.42152249,
+        "N": 0.12696576,
+        "T": 0.0619973,
+        "X": 0.22138236
+      },
+      "traceable_roots": [
+        "X",
+        "T",
+        "N",
+        "B",
+        "A"
+      ]
+    },
+    "aurora_internal.aurora_system_introspection.AuroraSystemIntrospection.diagnose_latest": {
+      "co_evolved_with": [],
+      "direct_root_parents": [
+        "ROOT:T",
+        "ROOT:B",
+        "ROOT:X",
+        "ROOT:N"
+      ],
+      "file": "aurora_internal/aurora_system_introspection.py",
+      "functional_parents": [
+        "aurora_internal.aurora_system_introspection.AuroraSystemIntrospection._active_episode_id",
+        "aurora_internal.aurora_system_introspection.AuroraSystemIntrospection.diagnose_episode"
+      ],
+      "generation": 8,
+      "line": 1218,
+      "lineage_confidence": 0.820076,
+      "lineage_kind": "composite",
+      "root_constraints": [
+        "T",
+        "B",
+        "X",
+        "N",
+        "A"
+      ],
+      "root_paths": {
+        "A": [
+          "ROOT:A",
+          "aurora_internal.aurora_system_introspection.AuroraSystemIntrospection._active_episode_id",
+          "aurora_internal.aurora_system_introspection.AuroraSystemIntrospection.diagnose_latest"
+        ],
+        "B": [
+          "ROOT:B",
+          "aurora_internal.aurora_system_introspection.AuroraSystemIntrospection.diagnose_latest"
+        ],
+        "N": [
+          "ROOT:N",
+          "aurora_internal.aurora_system_introspection.AuroraSystemIntrospection.diagnose_latest"
+        ],
+        "T": [
+          "ROOT:T",
+          "aurora_internal.aurora_system_introspection.AuroraSystemIntrospection.diagnose_latest"
+        ],
+        "X": [
+          "ROOT:X",
+          "aurora_internal.aurora_system_introspection.AuroraSystemIntrospection.diagnose_latest"
+        ]
+      },
+      "root_weights": {
+        "A": 0.14280654,
+        "B": 0.20800682,
+        "N": 0.19286221,
+        "T": 0.25031663,
+        "X": 0.20600781
+      },
+      "traceable_roots": [
+        "X",
+        "T",
+        "N",
+        "B",
+        "A"
+      ]
+    },
+    "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage.rebuild": {
+      "co_evolved_with": [],
+      "direct_root_parents": [
+        "ROOT:B",
+        "ROOT:N"
+      ],
+      "file": "aurora_internal/aurora_universal_function_lineage.py",
+      "functional_parents": [
+        "aurora_internal.aurora_dna_strand_schema.DNAStrand.append",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._build_indices",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._cluster_generations",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._rebuild_suffix_index",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._resolve_call",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._resolve_inheritance",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._scan_surfaces",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._shortest_root_paths",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._tarjan",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._write_constraint_index",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._write_manifest",
+        "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage.status",
+        "aurora_internal.aurora_universal_function_lineage._axis_signature",
+        "aurora_internal.aurora_universal_function_lineage._legacy_constraints",
+        "aurora_internal.aurora_universal_function_lineage._root_evidence",
+        "aurora_internal.aurora_universal_function_lineage._root_evidence.add",
+        "aurora_internal.aurora_universal_function_lineage._selected_axes"
+      ],
+      "generation": 4,
+      "line": 873,
+      "lineage_confidence": 0.5838,
+      "lineage_kind": "composite",
+      "root_constraints": [
+        "B",
+        "N",
+        "T",
+        "A"
+      ],
+      "root_paths": {
+        "A": [
+          "ROOT:A",
+          "aurora_internal.aurora_dna_strand_schema.DNAStrand.append",
+          "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage.rebuild"
+        ],
+        "B": [
+          "ROOT:B",
+          "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage.rebuild"
+        ],
+        "N": [
+          "ROOT:N",
+          "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage.rebuild"
+        ],
+        "T": [
+          "ROOT:T",
+          "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage._cluster_generations",
+          "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage.rebuild"
+        ],
+        "X": [
+          "ROOT:X",
+          "aurora_internal.aurora_dna_strand_schema.DNAStrand.append",
+          "aurora_internal.aurora_universal_function_lineage.UniversalFunctionLineage.rebuild"
+        ]
+      },
+      "root_weights": {
+        "A": 0.16061105,
+        "B": 0.29206754,
+        "N": 0.27443517,
+        "T": 0.17334878,
+        "X": 0.09953746
+      },
+      "traceable_roots": [
+        "X",
+        "T",
+        "N",
+        "B",
+        "A"
+      ]
+    }
+  },
+  "schema_version": 1,
+  "scope": {
+    "domain_taxonomy_used_for_parentage": false,
+    "excluded": [
+      "tests",
+      "aurora_state",
+      "build/dist output",
+      "virtual environments",
+      "cache directories",
+      "non-Python UI/support languages"
+    ],
+    "included": "All executable functions, async functions, nested functions, and lambdas in Aurora production Python source."
+  },
+  "source_manifest_hash": "fc41063c62d5655ab04420294469c30f9390f850a0df1aff3df685bf0ed4a08a",
+  "status": {
+    "build_seconds": 24.1877,
+    "co_evolved_functions": 20,
+    "coverage_rate": 1.0,
+    "cross_module_parent_edges": 2462,
+    "domain_taxonomy_used_for_parentage": false,
+    "file_count": 303,
+    "function_count": 8596,
+    "lambda_count": 618,
+    "max_generation": 20,
+    "multi_parent_functions": 8007,
+    "named_function_count": 7978,
+    "orphan_count": 0,
+    "parentage_basis": [
+      "resolved calls",
+      "inheritance overrides",
+      "recursive co-evolution",
+      "direct root novelty"
+    ],
+    "root_reachability": {
+      "A": 6245,
+      "B": 6852,
+      "N": 6618,
+      "T": 4686,
+      "X": 8363
+    },
+    "schema_version": 1,
+    "source_manifest_hash": "fc41063c62d5655ab04420294469c30f9390f850a0df1aff3df685bf0ed4a08a"
+  },
+  "verification": {
+    "full_runtime": "Not claimed. A prior full-profile boot exceeded the execution window during Aurora\u2019s existing expensive lineage/manual-code startup path.",
+    "orphan_count": 0,
+    "parse_error_count": 0,
+    "surface_runtime": {
+      "boot": "passed",
+      "introspection_roots": [
+        "X",
+        "T",
+        "N",
+        "B",
+        "A"
+      ],
+      "response": "An invention becomes elegant when it retains a distinct identity, turns effort into effective change without needless cost, and keeps its parts and limits in a coherent relation.",
+      "response_source": "constraint_semantic_derivation"
+    },
+    "test_result": "173 focused tests passed",
+    "valid": true
+  }
+}

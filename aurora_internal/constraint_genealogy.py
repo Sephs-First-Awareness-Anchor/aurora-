@@ -1823,6 +1823,45 @@ class ConstraintGenealogyLogger:
         self._application_log: deque = deque(maxlen=200)
         self._OUTCOME_CHECK_TICKS = 25   # ticks to wait before measuring outcome
 
+        # Whole-function ancestry is source anatomy rather than mutable learned
+        # state. It is attached after boot so every executable function can be
+        # traced through multi-parent operations to X/T/N/B/A without flooding
+        # the learned ability registry with thousands of static records.
+        self._function_lineage: Any = None
+
+    def attach_function_lineage(self, lineage: Any) -> bool:
+        if lineage is None or not hasattr(lineage, "lineage_for"):
+            return False
+        self._function_lineage = lineage
+        return True
+
+    def function_lineage_for(self, function_id: str) -> Dict[str, Any]:
+        lineage = self._function_lineage
+        if lineage is None:
+            return {}
+        try:
+            return dict(lineage.lineage_for(function_id) or {})
+        except Exception:
+            return {}
+
+    def trace_function_to_roots(self, function_id: str) -> Dict[str, List[str]]:
+        lineage = self._function_lineage
+        if lineage is None:
+            return {}
+        try:
+            return {str(k): list(v) for k, v in dict(lineage.trace_to_roots(function_id) or {}).items()}
+        except Exception:
+            return {}
+
+    def function_lineage_status(self) -> Dict[str, Any]:
+        lineage = self._function_lineage
+        if lineage is None:
+            return {"available": False, "function_count": 0, "coverage_rate": 0.0}
+        try:
+            return dict(lineage.status() or {})
+        except Exception:
+            return {"available": False, "function_count": 0, "coverage_rate": 0.0}
+
     # ----------------------------------------------------------------
     # PUBLIC API
     # ----------------------------------------------------------------
@@ -2139,6 +2178,7 @@ class ConstraintGenealogyLogger:
             "persistent_pressure_root_ema": round(float(self._persistent_pressure_root_ema), 11),
             "governor": self.governor.status(),
             "top_links": [l.to_dict() for l in top_links],
+            "function_lineage": self.function_lineage_status(),
         }
 
     def chain_report(self) -> Dict[str, Any]:
@@ -2299,6 +2339,7 @@ class ConstraintGenealogyLogger:
             "ontological_status_breakdown": _build_closure_status_summary(
                 self.links, self.abilities
             ),
+            "function_lineage": self.function_lineage_status(),
         }
 
     def flush_files(self) -> None:
@@ -3726,6 +3767,447 @@ class ConstraintGenealogyLogger:
         if updated:
             self.abilities = updated
         return int(count)
+
+    def register_emergent_communication_operation(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Register a receiver-validated communication operation as genealogy.
+
+        The operation is admitted only after the communication emergence field
+        has completed WARP trial promotion.  This method does not invent the
+        operation and does not promote it independently; it preserves its root
+        ancestry, parent structures, evidence, and operating cost as an
+        AbilityProfile so future derivations can trace back to X/T/N/B/A.
+        """
+        rec = dict(payload or {})
+        operation_id = str(rec.get("operation_id", "") or "").strip()
+        component_id = str(rec.get("component_id", "") or "").strip()
+        if not operation_id or not component_id:
+            return {"registered": False, "reason": "missing_operation_identity"}
+
+        constraints = tuple(
+            ax for ax in (
+                _canonical_axis_token(str(raw or ""))
+                for raw in list(rec.get("constraints") or [])
+            )
+            if ax
+        )
+        constraints = tuple(dict.fromkeys(constraints or tuple(AXES)))
+        axis = self._code_evolution_axis(constraints)
+        signature = str(rec.get("canonical_signature", "") or "")
+        primitives = [str(x) for x in list(rec.get("primitive_sequence") or []) if str(x)]
+        parents = [str(x) for x in list(rec.get("parent_ids") or []) if str(x)]
+        evidence_count = max(0, int(rec.get("evidence_count", 0) or 0))
+        distinct_surfaces = max(0, int(rec.get("distinct_surfaces", 0) or 0))
+        trial_score = max(0.0, min(1.0, float(rec.get("trial_score", 0.0) or 0.0)))
+        structural_family = str(rec.get("structural_family", "") or "")
+        digest = hashlib.sha1(
+            f"{operation_id}:{component_id}:{signature}:{','.join(primitives)}".encode()
+        ).hexdigest()[:12]
+        ability_id = f"{axis}:COMM_EMERGE_{digest}"
+        if ability_id in self.abilities:
+            return {"registered": False, "reason": "already_registered", "ability_id": ability_id}
+
+        depth = max(1, len(primitives))
+        base = 0.00055 + (0.00018 * depth)
+        # Communication operations are typically B/A-facing, but their cost
+        # remains defined across all five roots so no ability becomes detached
+        # from Aurora's reality physics.
+        cost = {
+            "X": base * (0.45 if "X" in constraints else 0.18),
+            "T": base * (0.55 if "T" in constraints else 0.18),
+            "N": base * (0.70 if "N" in constraints else 0.20),
+            "B": base * (0.85 if "B" in constraints else 0.22),
+            "A": base * (0.80 if "A" in constraints else 0.22),
+        }
+        risk = {a: 0.0 for a in AXES}
+        risk["X"] = max(0.01, 0.12 * (1.0 - trial_score))
+        risk["T"] = max(0.0, 0.06 * (1.0 - min(1.0, distinct_surfaces / 5.0)))
+
+        tags = [
+            "derived_operation",
+            "communication_emergence",
+            f"warp_component:{component_id}",
+            f"structural_family:{structural_family}",
+            f"origin_signature:{signature or 'unknown'}",
+            f"trial_score:{trial_score:.4f}",
+            f"evidence_count:{evidence_count}",
+            f"surface_diversity:{distinct_surfaces}",
+        ]
+        tags.extend(f"primitive:{name}" for name in primitives)
+        tags.extend(f"parent:{parent}" for parent in parents[:8])
+        ability = _augment_ability_profile_with_origin(AbilityProfile(
+            id=ability_id,
+            axis=axis,
+            requires=constraints,
+            cost=cost,
+            risk=risk,
+            effect_tags=tuple(dict.fromkeys(tags)),
+            notes=(
+                "Receiver-validated communication operation derived by WARP "
+                f"from root constraints {signature or constraints}; "
+                f"primitives={','.join(primitives) or 'none'}; "
+                f"parents={','.join(parents) or 'none'}; "
+                f"evidence={evidence_count}; distinct_surfaces={distinct_surfaces}."
+            ),
+        ))
+        self.abilities[ability_id] = ability
+        trial_record = {
+            "tick": int(self.tick_count),
+            "trigger_mode": "communication_emergence",
+            "operation_id": operation_id,
+            "component_id": component_id,
+            "shape": structural_family,
+            "constraints": list(constraints),
+            "canonical_signature": signature,
+            "primitive_sequence": primitives,
+            "parent_ids": parents,
+            "trial_score": round(trial_score, 6),
+            "evidence_count": evidence_count,
+            "distinct_surfaces": distinct_surfaces,
+            "ability_id": ability_id,
+            "adopted": True,
+        }
+        self._experiment_trials.append(dict(trial_record))
+        self._experiment_adoptions.append(dict(trial_record))
+        self.flush_files()
+        return {"registered": True, "ability_id": ability_id}
+
+    def register_emergent_operational_synthesis(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Admit a validated synthesized operation into constraint genealogy.
+
+        The synthesis chamber owns candidate generation and WARP promotion.
+        This method only preserves the promoted program's actual primitive
+        composition, root ancestry, evidence, and bounded operating cost.
+        """
+        rec = dict(payload or {})
+        task_id = str(rec.get("task_id", "") or "").strip()
+        program_id = str(rec.get("program_id", "") or "").strip()
+        component_id = str(rec.get("component_id", "") or "").strip()
+        if not task_id or not program_id or not component_id:
+            return {"registered": False, "reason": "missing_synthesis_identity"}
+
+        constraints = tuple(
+            ax for ax in (
+                _canonical_axis_token(str(raw or ""))
+                for raw in list(rec.get("constraints") or [])
+            ) if ax
+        )
+        constraints = tuple(dict.fromkeys(constraints or tuple(AXES)))
+        axis = self._code_evolution_axis(constraints)
+        signature = str(rec.get("canonical_signature", "") or "")
+        primitives = [str(x) for x in list(rec.get("primitive_sequence") or []) if str(x)]
+        parents = [str(x) for x in list(rec.get("parent_ids") or []) if str(x)]
+        trial_score = max(0.0, min(1.0, float(rec.get("trial_score", 0.0) or 0.0)))
+        training_examples = max(0, int(rec.get("training_examples", 0) or 0))
+        validation_examples = max(0, int(rec.get("validation_examples", 0) or 0))
+        node_count = max(1, int(rec.get("node_count", 1) or 1))
+        description = str(rec.get("program_description", "") or "")
+        need = str(rec.get("need_description", "") or "")
+        program_tree = dict(rec.get("program_tree") or {})
+        tree_hash = hashlib.sha1(
+            json.dumps(program_tree, sort_keys=True, separators=(",", ":"), default=str).encode()
+        ).hexdigest()[:12]
+        ability_id = f"{axis}:OP_SYNTH_{tree_hash}"
+        if ability_id in self.abilities:
+            return {"registered": False, "reason": "already_registered", "ability_id": ability_id}
+
+        base = 0.00045 + 0.00009 * min(48, node_count)
+        cost = {
+            "X": base * (0.50 if "X" in constraints else 0.18),
+            "T": base * (0.65 if "T" in constraints else 0.18),
+            "N": base * (0.80 if "N" in constraints else 0.20),
+            "B": base * (0.75 if "B" in constraints else 0.20),
+            "A": base * (0.70 if "A" in constraints else 0.20),
+        }
+        risk = {a: 0.0 for a in AXES}
+        risk["X"] = max(0.005, 0.10 * (1.0 - trial_score))
+        risk["T"] = max(0.0, 0.07 * (1.0 - min(1.0, validation_examples / 4.0)))
+        risk["B"] = max(0.0, 0.03 * min(1.0, node_count / 48.0))
+
+        tags = [
+            "derived_operation",
+            "operational_synthesis",
+            f"warp_component:{component_id}",
+            f"synthesis_task:{task_id}",
+            f"program_id:{program_id}",
+            f"program_tree_hash:{tree_hash}",
+            f"origin_signature:{signature or 'unknown'}",
+            f"trial_score:{trial_score:.4f}",
+            f"training_examples:{training_examples}",
+            f"validation_examples:{validation_examples}",
+            f"node_count:{node_count}",
+        ]
+        tags.extend(f"primitive:{name}" for name in primitives)
+        tags.extend(f"parent:{parent}" for parent in parents[:8])
+        ability = _augment_ability_profile_with_origin(AbilityProfile(
+            id=ability_id,
+            axis=axis,
+            requires=constraints,
+            cost=cost,
+            risk=risk,
+            effect_tags=tuple(dict.fromkeys(tags)),
+            notes=(
+                "WARP-promoted operational program synthesized from varied "
+                f"examples; need={need or 'unspecified'}; program={description or tree_hash}; "
+                f"roots={signature or constraints}; primitives={','.join(primitives) or 'none'}; "
+                f"parents={','.join(parents) or 'none'}; training={training_examples}; "
+                f"validation={validation_examples}."
+            ),
+        ))
+        self.abilities[ability_id] = ability
+        record = {
+            "tick": int(self.tick_count),
+            "trigger_mode": "operational_synthesis",
+            "task_id": task_id,
+            "program_id": program_id,
+            "component_id": component_id,
+            "constraints": list(constraints),
+            "canonical_signature": signature,
+            "primitive_sequence": primitives,
+            "parent_ids": parents,
+            "program_tree_hash": tree_hash,
+            "trial_score": round(trial_score, 6),
+            "training_examples": training_examples,
+            "validation_examples": validation_examples,
+            "ability_id": ability_id,
+            "adopted": True,
+        }
+        self._experiment_trials.append(dict(record))
+        self._experiment_adoptions.append(dict(record))
+        self.flush_files()
+        return {"registered": True, "ability_id": ability_id}
+
+    def register_emergent_general_execution(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Admit a validated generalized executable relation into genealogy.
+
+        The general execution foundry owns synthesis, sandboxing, capability
+        boundaries, validation, and WARP promotion.  Genealogy records the
+        promoted relation's real primitive ancestry, parent operations,
+        executable form, evidence, cost, and risk.  Expressive recursion or
+        looping never implies unbounded host resource authority.
+        """
+        rec = dict(payload or {})
+        task_id = str(rec.get("task_id", "") or "").strip()
+        program_id = str(rec.get("program_id", "") or "").strip()
+        component_id = str(rec.get("component_id", "") or "").strip()
+        if not task_id or not program_id or not component_id:
+            return {"registered": False, "reason": "missing_general_execution_identity"}
+
+        constraints = tuple(
+            ax for ax in (
+                _canonical_axis_token(str(raw or ""))
+                for raw in list(rec.get("constraints") or [])
+            ) if ax
+        )
+        constraints = tuple(dict.fromkeys(constraints or tuple(AXES)))
+        axis = self._code_evolution_axis(constraints)
+        signature = str(rec.get("canonical_signature", "") or "")
+        primitives = [str(x) for x in list(rec.get("primitive_sequence") or []) if str(x)]
+        parents = [str(x) for x in list(rec.get("parent_ids") or []) if str(x)]
+        program_kind = str(rec.get("program_kind", "general") or "general")
+        trial_score = max(0.0, min(1.0, float(rec.get("trial_score", 0.0) or 0.0)))
+        training_examples = max(0, int(rec.get("training_examples", 0) or 0))
+        validation_examples = max(0, int(rec.get("validation_examples", 0) or 0))
+        node_count = max(1, int(rec.get("node_count", 1) or 1))
+        need = str(rec.get("need_description", "") or "")
+        program = dict(rec.get("program") or {})
+        functions = dict(rec.get("functions") or {})
+        source_python = str(rec.get("source_python", "") or "")
+        executable_hash = hashlib.sha1(
+            json.dumps(
+                {"program": program, "functions": functions, "python": source_python},
+                sort_keys=True,
+                separators=(",", ":"),
+                default=str,
+            ).encode()
+        ).hexdigest()[:12]
+        ability_id = f"{axis}:GEN_EXEC_{executable_hash}"
+        if ability_id in self.abilities:
+            return {"registered": False, "reason": "already_registered", "ability_id": ability_id}
+
+        base = 0.00070 + 0.00012 * min(160, node_count)
+        cost = {
+            "X": base * (0.62 if "X" in constraints else 0.22),
+            "T": base * (0.90 if "T" in constraints else 0.24),
+            "N": base * (1.00 if "N" in constraints else 0.28),
+            "B": base * (0.95 if "B" in constraints else 0.26),
+            "A": base * (0.92 if "A" in constraints else 0.26),
+        }
+        risk = {a: 0.0 for a in AXES}
+        risk["X"] = max(0.015, 0.18 * (1.0 - trial_score))
+        risk["T"] = max(0.01, 0.10 * (1.0 - min(1.0, validation_examples / 8.0)))
+        risk["B"] = max(0.01, 0.07 * min(1.0, node_count / 160.0))
+        if program_kind in {"python", "tool_plan", "state_machine"}:
+            risk["A"] = 0.025
+
+        tags = [
+            "derived_operation",
+            "general_execution_foundry",
+            f"program_kind:{program_kind}",
+            f"warp_component:{component_id}",
+            f"general_task:{task_id}",
+            f"program_id:{program_id}",
+            f"executable_hash:{executable_hash}",
+            f"origin_signature:{signature or 'unknown'}",
+            f"trial_score:{trial_score:.4f}",
+            f"training_examples:{training_examples}",
+            f"validation_examples:{validation_examples}",
+            f"node_count:{node_count}",
+            "execution:resource_bounded",
+            "tools:capability_scoped",
+            "python:ast_sandboxed",
+        ]
+        tags.extend(f"primitive:{name}" for name in primitives)
+        tags.extend(f"parent:{parent}" for parent in parents[:12])
+        ability = _augment_ability_profile_with_origin(AbilityProfile(
+            id=ability_id,
+            axis=axis,
+            requires=constraints,
+            cost=cost,
+            risk=risk,
+            effect_tags=tuple(dict.fromkeys(tags)),
+            notes=(
+                "WARP-promoted generalized executable relation; "
+                f"kind={program_kind}; need={need or 'unspecified'}; "
+                f"roots={signature or constraints}; primitives={','.join(primitives) or 'none'}; "
+                f"parents={','.join(parents) or 'none'}; training={training_examples}; "
+                f"validation={validation_examples}; runtime remains fuel-, depth-, time-, "
+                "state-, and capability-bounded."
+            ),
+        ))
+        self.abilities[ability_id] = ability
+        record = {
+            "tick": int(self.tick_count),
+            "trigger_mode": "general_execution_foundry",
+            "task_id": task_id,
+            "program_id": program_id,
+            "component_id": component_id,
+            "program_kind": program_kind,
+            "constraints": list(constraints),
+            "canonical_signature": signature,
+            "primitive_sequence": primitives,
+            "parent_ids": parents,
+            "executable_hash": executable_hash,
+            "trial_score": round(trial_score, 6),
+            "training_examples": training_examples,
+            "validation_examples": validation_examples,
+            "ability_id": ability_id,
+            "adopted": True,
+        }
+        self._experiment_trials.append(dict(record))
+        self._experiment_adoptions.append(dict(record))
+        self.flush_files()
+        return {"registered": True, "ability_id": ability_id}
+
+    def register_recursive_causal_waveform(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Admit a WARP-promoted recursive causal control wavelet.
+
+        The wavelet is not a domain skill or a response template.  It is a
+        root-derived modulation that repeatedly improved the passage from an
+        initiating disturbance, through developed understanding, to a
+        meaning-preserving response.  Genealogy records its primitive,
+        parents, validation evidence, and complete X/T/N/B/A ancestry.
+        """
+        rec = dict(payload or {})
+        component_id = str(rec.get("component_id", "") or "").strip()
+        primitive = str(rec.get("primitive", "") or "").strip()
+        if not component_id or not primitive:
+            return {"registered": False, "reason": "missing_recursive_causal_identity"}
+
+        constraints = tuple(
+            ax for ax in (
+                _canonical_axis_token(str(raw or ""))
+                for raw in list(rec.get("constraints") or [])
+            ) if ax
+        )
+        constraints = tuple(dict.fromkeys(constraints or tuple(AXES)))
+        axis = self._code_evolution_axis(constraints)
+        signature = str(rec.get("canonical_signature", "") or "")
+        parents = [str(x) for x in list(rec.get("parent_ids") or []) if str(x)]
+        trial_score = max(0.0, min(1.0, float(rec.get("trial_score", 0.0) or 0.0)))
+        uses = max(0, int(rec.get("uses", 0) or 0))
+        successes = max(0, int(rec.get("successes", 0) or 0))
+        alignment_gain = max(0.0, float(rec.get("alignment_gain", 0.0) or 0.0))
+        wave_hash = hashlib.sha1(
+            json.dumps(
+                {
+                    "component_id": component_id,
+                    "primitive": primitive,
+                    "constraints": constraints,
+                    "parents": parents,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+                default=str,
+            ).encode()
+        ).hexdigest()[:12]
+        ability_id = f"{axis}:RCRW_{wave_hash}"
+        if ability_id in self.abilities:
+            return {"registered": False, "reason": "already_registered", "ability_id": ability_id}
+
+        base = 0.00055
+        cost = {
+            "X": base * (0.78 if "X" in constraints else 0.20),
+            "T": base * (0.92 if "T" in constraints else 0.20),
+            "N": base * (0.88 if "N" in constraints else 0.20),
+            "B": base * (0.95 if "B" in constraints else 0.20),
+            "A": base * (0.90 if "A" in constraints else 0.20),
+        }
+        risk = {a: 0.0 for a in AXES}
+        risk["X"] = max(0.008, 0.10 * (1.0 - trial_score))
+        risk["T"] = max(0.006, 0.08 * (1.0 - min(1.0, uses / 10.0)))
+        risk["B"] = max(0.008, 0.07 * (1.0 - min(1.0, successes / max(1, uses))))
+
+        tags = [
+            "derived_operation",
+            "recursive_causal_reasoning_waveform",
+            f"primitive:{primitive}",
+            f"warp_component:{component_id}",
+            f"origin_signature:{signature or 'unknown'}",
+            f"trial_score:{trial_score:.4f}",
+            f"uses:{uses}",
+            f"successes:{successes}",
+            f"alignment_gain:{alignment_gain:.6f}",
+            "raw_history:preserved",
+            "backprojection:evidence_bounded",
+            "response:next_disturbance",
+        ]
+        tags.extend(f"parent:{parent}" for parent in parents[:16])
+        ability = _augment_ability_profile_with_origin(AbilityProfile(
+            id=ability_id,
+            axis=axis,
+            requires=constraints,
+            cost=cost,
+            risk=risk,
+            effect_tags=tuple(dict.fromkeys(tags)),
+            notes=(
+                "WARP-promoted recursive causal control wavelet; "
+                f"primitive={primitive}; roots={signature or constraints}; "
+                f"parents={','.join(parents) or 'none'}; uses={uses}; "
+                f"successes={successes}; alignment_gain={alignment_gain:.6f}. "
+                "The operation may reconstruct interpretation from developed "
+                "understanding but may not alter raw input history."
+            ),
+        ))
+        self.abilities[ability_id] = ability
+        record = {
+            "tick": int(self.tick_count),
+            "trigger_mode": "recursive_causal_reasoning_waveform",
+            "component_id": component_id,
+            "primitive": primitive,
+            "constraints": list(constraints),
+            "canonical_signature": signature,
+            "parent_ids": parents,
+            "trial_score": round(trial_score, 6),
+            "uses": uses,
+            "successes": successes,
+            "alignment_gain": round(alignment_gain, 6),
+            "ability_id": ability_id,
+            "adopted": True,
+        }
+        self._experiment_trials.append(dict(record))
+        self._experiment_adoptions.append(dict(record))
+        self.flush_files()
+        return {"registered": True, "ability_id": ability_id}
 
     def _code_evolution_axis(self, constraints: Iterable[str]) -> str:
         ordered = ("A", "B", "N", "T", "X")

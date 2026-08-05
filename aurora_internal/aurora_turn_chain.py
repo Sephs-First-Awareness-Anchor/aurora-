@@ -48,6 +48,8 @@ class TurnUnderstandingState:
     # ----------------------------------------------------------------
     raw_text: str = ""
     parsed: Dict[str, Any] = field(default_factory=dict)        # UtteranceParser output
+    # One relational configuration carried through every root constraint.
+    relational_form: Dict[str, Any] = field(default_factory=dict)
     oets_concepts: List[Dict[str, Any]] = field(default_factory=list)
     pipeline_state: Dict[str, Any] = field(default_factory=dict)
 
@@ -82,6 +84,9 @@ class TurnUnderstandingState:
     # ----------------------------------------------------------------
     meaning_forms: List[Dict[str, Any]] = field(default_factory=list)
     dominant_meaning_form: Dict[str, Any] = field(default_factory=dict)
+    # Content-bound meaning produced by X/T/N/B/A over relational_form.
+    constraint_semantic_state: Dict[str, Any] = field(default_factory=dict)
+    genealogy_trace: Dict[str, Any] = field(default_factory=dict)
     salient_concepts: List[str] = field(default_factory=list)
     semantic_pressure: float = 0.0
     a_dominant: bool = False           # True when A-axis > 0.65 -- full-agency field response

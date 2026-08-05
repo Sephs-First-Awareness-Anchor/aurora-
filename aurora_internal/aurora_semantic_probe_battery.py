@@ -216,7 +216,7 @@ _STRONG_FUNCTION_WORDS = {
     "before", "after", "between", "during", "about", "above", "below",
     "without", "within", "through", "into", "onto", "over", "under",
     "if", "when", "while", "because", "since", "until", "though", "although", "whether",
-    "what", "how", "why", "where", "who", "which", "whom",
+    "what", "how", "why", "where", "who", "which", "whom", "whose",
 }
 
 

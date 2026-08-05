@@ -4451,6 +4451,40 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
         "surface_reason": surface_reason,
         "surface_summary": surface_summary,
     }
+
+    # Native introspection now gets first inspection rights.  It correlates
+    # Aurora's own decision trail, articulation arbitration, understanding
+    # contributors, runtime faults, and real source map before Poedex is asked
+    # for broader guidance.  Poedex remains supplementary research rather
+    # than a substitute for direct self-observation.
+    local_diagnosis: Dict[str, Any] = {}
+    try:
+        _si = systems.get("system_introspection")
+        if _si is not None and hasattr(_si, "diagnose_latest"):
+            local_diagnosis = dict(
+                _si.diagnose_latest({
+                    "type": str(candidate_dim or "recurring_runtime_issue"),
+                    "description": str(surface_reason or qao_top_issue or candidate_dim),
+                })
+                or {}
+            )
+            if local_diagnosis:
+                observer_context["system_introspection"] = {
+                    "problem_type": local_diagnosis.get("problem_type", ""),
+                    "summary": local_diagnosis.get("summary", ""),
+                    "confidence": local_diagnosis.get("confidence", 0.0),
+                    "likely_boundary": local_diagnosis.get("likely_boundary", {}),
+                    "inspection_targets": local_diagnosis.get("inspection_targets", [])[:5],
+                }
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="system_introspection:daemon_diagnosis",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_research_recurring_issue", "source_file": "aurora_daemon.py"},
+        )
+        local_diagnosis = {}
+
     signal_issue = candidate_dim if candidate_dim != "surface_wrong_signal" else (qao_top_issue if qao_top_issue != "?" else candidate_dim)
     signal_reason = surface_reason or qao_top_issue or candidate_dim
     signal_intensity = max(0.25, min(1.0, candidate_avg + (0.25 if surface_flagged else 0.0) + min(0.35, qao_recent / 100.0)))
@@ -4470,14 +4504,20 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
         observer_context=observer_context,
     )
 
+    _local_target = dict(local_diagnosis.get("likely_boundary") or {}) if local_diagnosis else {}
+    _local_summary = str(local_diagnosis.get("summary", "") or "") if local_diagnosis else ""
     question = (
         "Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. "
         f"Top fail dimension: {candidate_dim} (avg_sev={candidate_avg:.3f}, fails={candidate_fails}). "
         f"Top QAO issue: {qao_top_issue}. QAO recent events: {qao_recent}. "
         f"Surface wrong-signal flagged: {surface_flagged}. "
         f"Surface reason: {surface_reason or '-'}. "
+        f"My own runtime introspection localized: {_local_target.get('function_id') or '-'} "
+        f"in {_local_target.get('file') or '-'}:{_local_target.get('line') or 0}, "
+        f"confidence={float(local_diagnosis.get('confidence', 0.0) or 0.0):.3f}. "
+        f"Local causal summary: {_local_summary or '-'}. "
         "Return concise, actionable guidance. If possible, use JSON with file, line, proposed_action, code_hint, confidence. "
-        "Focus on the first code areas or runtime adjustments I should inspect. "
+        "Verify or challenge my local evidence rather than replacing it with a guess. "
         "Treat observer evidence as the source of detail and assume subsurface will handle exact repair/application."
     )
 

@@ -1,0 +1,348 @@
+{
+  "schema_version": 1,
+  "created_at": 1785867597.8371801,
+  "chamber": "AuroraOperationalSynthesisChamber",
+  "primitive_count": 20,
+  "safety": {
+    "program_representation": "bounded typed data-flow tree",
+    "python_eval_or_exec": false,
+    "mutation_before_promotion": false,
+    "max_program_nodes": 48,
+    "execution_budget": 256
+  },
+  "veyra": {
+    "training_examples": 3,
+    "pre_holdout_unseen_probe": {
+      "executed": true,
+      "task_id": "veyra",
+      "program_id": "SYN:7b0e267d7027bb91",
+      "status": "trial",
+      "output": [
+        "k",
+        "l",
+        "j",
+        "l"
+      ]
+    },
+    "validation_examples": 10,
+    "final_status": {
+      "exists": true,
+      "task_id": "veyra",
+      "status": "promoted",
+      "need_description": "discover the hidden symbolic operation",
+      "training_examples": 3,
+      "validation_examples": 10,
+      "distinct_training_inputs": 3,
+      "distinct_validation_inputs": 10,
+      "conflicts": 0,
+      "warp_component_id": "warp_operational_synthesis_f2f7b528",
+      "candidate": {
+        "program_id": "SYN:7b0e267d7027bb91",
+        "tree": {
+          "op": "SEQUENCE",
+          "args": [
+            {
+              "op": "SELECT",
+              "path": [
+                1
+              ]
+            },
+            {
+              "op": "SELECT",
+              "path": [
+                2
+              ]
+            },
+            {
+              "op": "SELECT",
+              "path": [
+                0
+              ]
+            },
+            {
+              "op": "SELECT",
+              "path": [
+                2
+              ]
+            }
+          ]
+        },
+        "primitive_sequence": [
+          "SEQUENCE",
+          "SELECT",
+          "SELECT",
+          "SELECT",
+          "SELECT"
+        ],
+        "root_constraints": [
+          "X",
+          "T",
+          "B",
+          "A"
+        ],
+        "canonical_signature": "X^1*T^1*B^1*A^1",
+        "node_count": 5,
+        "training_score": 1.0,
+        "validation_score": 1.0,
+        "status": "promoted",
+        "created_at": 1785867597.5305934,
+        "warp_component_id": "warp_operational_synthesis_f2f7b528",
+        "genealogy_ability_id": "A:OP_SYNTH_a0a6fe816d90"
+      },
+      "description": "construct sequence [select input at 1, select input at 2, select input at 0, select input at 2]"
+    },
+    "lineage": {
+      "available": true,
+      "task_id": "veyra",
+      "program_id": "SYN:7b0e267d7027bb91",
+      "status": "promoted",
+      "program_description": "construct sequence [select input at 1, select input at 2, select input at 0, select input at 2]",
+      "canonical_signature": "X^1*T^1*B^1*A^1",
+      "root_constraints": [
+        "X",
+        "T",
+        "B",
+        "A"
+      ],
+      "primitive_lineage": [
+        {
+          "primitive": "SEQUENCE",
+          "roots": [
+            "X",
+            "T",
+            "B",
+            "A"
+          ],
+          "description": "construct an ordered bounded output"
+        },
+        {
+          "primitive": "SELECT",
+          "roots": [
+            "X",
+            "B",
+            "A"
+          ],
+          "description": "select one bounded part of an admitted structure"
+        },
+        {
+          "primitive": "SELECT",
+          "roots": [
+            "X",
+            "B",
+            "A"
+          ],
+          "description": "select one bounded part of an admitted structure"
+        },
+        {
+          "primitive": "SELECT",
+          "roots": [
+            "X",
+            "B",
+            "A"
+          ],
+          "description": "select one bounded part of an admitted structure"
+        },
+        {
+          "primitive": "SELECT",
+          "roots": [
+            "X",
+            "B",
+            "A"
+          ],
+          "description": "select one bounded part of an admitted structure"
+        }
+      ],
+      "warp_component_id": "warp_operational_synthesis_f2f7b528",
+      "genealogy_ability_id": "A:OP_SYNTH_a0a6fe816d90"
+    },
+    "genealogy_registered": true,
+    "genealogy_contains_ability": true
+  },
+  "cross_shape_evidence": {
+    "numeric_relation": {
+      "probe": {
+        "executed": true,
+        "task_id": "sum_pair",
+        "program_id": "SYN:805791137436cdb1",
+        "status": "trial",
+        "output": 21
+      },
+      "status": {
+        "exists": true,
+        "task_id": "sum_pair",
+        "status": "candidate_trial",
+        "need_description": "unresolved operation",
+        "training_examples": 3,
+        "validation_examples": 0,
+        "distinct_training_inputs": 3,
+        "distinct_validation_inputs": 0,
+        "conflicts": 0,
+        "warp_component_id": "warp_operational_synthesis_f2f7b528",
+        "candidate": {
+          "program_id": "SYN:805791137436cdb1",
+          "tree": {
+            "op": "ADD",
+            "args": [
+              {
+                "op": "SELECT",
+                "path": [
+                  0
+                ]
+              },
+              {
+                "op": "SELECT",
+                "path": [
+                  1
+                ]
+              }
+            ]
+          },
+          "primitive_sequence": [
+            "ADD",
+            "SELECT",
+            "SELECT"
+          ],
+          "root_constraints": [
+            "X",
+            "N",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*N^1*B^1*A^1",
+          "node_count": 3,
+          "training_score": 1.0,
+          "validation_score": 0.0,
+          "status": "trial",
+          "created_at": 1785867597.5468938,
+          "warp_component_id": "warp_operational_synthesis_f2f7b528",
+          "genealogy_ability_id": ""
+        },
+        "description": "add(select input at 0, select input at 1)"
+      }
+    },
+    "mapping_reconstruction": {
+      "probe": {
+        "executed": true,
+        "task_id": "reconstruct",
+        "program_id": "SYN:d2046de6d89fb96f",
+        "status": "trial",
+        "output": {
+          "first": "h",
+          "second": "g"
+        }
+      },
+      "status": {
+        "exists": true,
+        "task_id": "reconstruct",
+        "status": "candidate_trial",
+        "need_description": "unresolved operation",
+        "training_examples": 3,
+        "validation_examples": 0,
+        "distinct_training_inputs": 3,
+        "distinct_validation_inputs": 0,
+        "conflicts": 0,
+        "warp_component_id": "warp_operational_synthesis_0ce1d73d",
+        "candidate": {
+          "program_id": "SYN:d2046de6d89fb96f",
+          "tree": {
+            "op": "MAPPING",
+            "fields": {
+              "first": {
+                "op": "SELECT",
+                "path": [
+                  "right"
+                ]
+              },
+              "second": {
+                "op": "SELECT",
+                "path": [
+                  "left"
+                ]
+              }
+            }
+          },
+          "primitive_sequence": [
+            "MAPPING",
+            "SELECT",
+            "SELECT"
+          ],
+          "root_constraints": [
+            "X",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*B^1*A^1",
+          "node_count": 3,
+          "training_score": 1.0,
+          "validation_score": 0.0,
+          "status": "trial",
+          "created_at": 1785867597.547821,
+          "warp_component_id": "warp_operational_synthesis_0ce1d73d",
+          "genealogy_ability_id": ""
+        },
+        "description": "construct mapping {first: select input at right, second: select input at left}"
+      }
+    }
+  },
+  "universal_function_lineage": {
+    "status": {
+      "available": true,
+      "schema_version": 1,
+      "manifest_path": "/mnt/data/aurora_operation_synthesis_work/aurora--build-591-universal-constraint-genealogy/aurora_internal/universal_function_lineage.json",
+      "constraint_index_path": "/mnt/data/aurora_operation_synthesis_work/aurora--build-591-universal-constraint-genealogy/aurora_internal/universal_function_constraints.json",
+      "source_manifest_hash": "cbbcf178c31211d30f9ad5bf01e6f327da82792cdb1a4bdf33d3ff00d7f65f5c",
+      "file_count": 304,
+      "function_count": 8653,
+      "named_function_count": 8030,
+      "lambda_count": 623,
+      "build_seconds": 22.3717,
+      "co_evolved_functions": 20,
+      "coverage_rate": 1.0,
+      "cross_module_parent_edges": 2471,
+      "domain_taxonomy_used_for_parentage": false,
+      "max_generation": 20,
+      "multi_parent_functions": 8062,
+      "orphan_count": 0,
+      "parentage_basis": [
+        "resolved calls",
+        "inheritance overrides",
+        "recursive co-evolution",
+        "direct root novelty"
+      ],
+      "root_reachability": {
+        "A": 6294,
+        "B": 6902,
+        "N": 6660,
+        "T": 4715,
+        "X": 8418
+      }
+    },
+    "verification": {
+      "valid": true,
+      "function_count": 8653,
+      "coverage_rate": 1.0,
+      "missing_parent_count": 0,
+      "orphan_count": 0,
+      "bad_root_path_count": 0,
+      "missing_parents": [],
+      "orphans": [],
+      "bad_root_paths": []
+    }
+  },
+  "tests": {
+    "focused_synthesis_communication_reflection": 158,
+    "universal_lineage": 7,
+    "total_reported": 165
+  },
+  "known_scope": [
+    "sequence and mapping projection/reconstruction",
+    "bounded scalar arithmetic",
+    "bounded comparisons and boolean composition"
+  ],
+  "not_yet_in_span": [
+    "unbounded loops or recursion",
+    "stateful algorithms whose state transition is not represented in examples",
+    "external tool creation",
+    "arbitrary Python source generation"
+  ]
+}

@@ -792,6 +792,32 @@ class RetainedLearningBank:
                 break
         return tokens
 
+    @staticmethod
+    def _is_generic_strategy_learning(text: str) -> bool:
+        """Return True for simulation strategy traces, not world knowledge.
+
+        RetainedLearningBank stores both semantic learnings and behavioral
+        pressure observations.  The latter may guide development internally,
+        but retrieving them as conversational knowledge produces generic
+        phrases such as "when approached with curious inquiry".  Keep that
+        distinction structural and local to the bank.
+        """
+        low = re.sub(r"\s+", " ", str(text or "").strip().lower())
+        if not low:
+            return False
+        strategy_frames = (
+            "when approached with",
+            "creates friction when approached",
+            "use held attention",
+            "use opened depth",
+            "use focused pressure",
+        )
+        if any(frame in low for frame in strategy_frames):
+            return True
+        if "it connects to" in low and re.search(r"\b[xtnba]-axis\b", low):
+            return True
+        return False
+
     def record(
         self,
         text: str,

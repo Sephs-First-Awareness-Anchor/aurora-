@@ -1539,6 +1539,35 @@ class VoiceGenome:
 # ============================================================================
 
 # Role inference for learning new words from context
+# Communication Integrity Repair (2026-08-04): interrogatives are a
+# closed structural class.  They identify missing information in a question;
+# a bare interrogative is never itself the answer-bearing content of a
+# declarative OBJECT slot.  Keep this set beside role inference so every
+# frame producer and the final slot binder can share the same classification.
+_BARE_INTERROGATIVE_TOKENS = frozenset({
+    "who", "whom", "whose", "what", "which",
+    "where", "when", "why", "how",
+})
+
+
+def is_bare_interrogative_token(value: Any) -> bool:
+    """Return True only for a standalone interrogative token.
+
+    Punctuation and case do not change the classification (``Who?`` is still
+    structural), while a multiword embedded clause such as ``who made Aurora``
+    remains eligible as proposition content and is not collapsed by this
+    guard.
+    """
+    tokens = re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?", str(value or "").lower())
+    return len(tokens) == 1 and tokens[0] in _BARE_INTERROGATIVE_TOKENS
+
+
+def _is_speakable_content_token(value: Any) -> bool:
+    """Legacy/template candidate guard for declarative content slots."""
+    word = str(value or "").lower()
+    return bool(re.fullmatch(r"[a-z][a-z\-']*[a-z]", word)) and not is_bare_interrogative_token(word)
+
+
 _ROLE_HINTS = {
     # Common verbs
     # CIR audit follow-up (2026-08-04): 'am' was missing from the
@@ -1654,6 +1683,13 @@ _ROLE_HINTS = {
     # in noun_adjective_order_coherent ("Anyone capable can help.").
     'anyone': 'pronoun', 'anybody': 'pronoun', 'somebody': 'pronoun',
     'everyone': 'pronoun', 'everybody': 'pronoun', 'someone': 'pronoun',
+    # Communication Integrity Repair (2026-08-04): these previously
+    # fell through to the unknown-word noun default.  Their exact
+    # interrogative subtype is less important to the current coarse POS
+    # system than the invariant that none of them is ordinary noun content.
+    'who': 'pronoun', 'whom': 'pronoun', 'what': 'pronoun',
+    'whose': 'determiner', 'which': 'determiner',
+    'where': 'adverb', 'why': 'adverb',
     # Prepositions
     'in': 'preposition', 'of': 'preposition', 'to': 'preposition',
     'for': 'preposition', 'with': 'preposition', 'on': 'preposition',
@@ -1700,7 +1736,10 @@ _SUFFIX_ROLES = [
 
 def infer_word_role(word: str) -> str:
     """Infer the grammatical role of a word."""
-    w = word.lower().strip(".,!;:'\"")
+    # Include question marks/brackets in normalization so a token arriving
+    # directly from a frame (rather than the parser's cleaned token stream)
+    # cannot evade the role table as ``who?`` and fall back to ``noun``.
+    w = str(word or "").lower().strip(".,!?;:'\"()[]{}")
     if w in _ROLE_HINTS:
         return _ROLE_HINTS[w]
     for suffix, role in _SUFFIX_ROLES:
@@ -1729,16 +1768,6 @@ def infer_word_valence(word: str, context_tone: str = 'neutral') -> float:
     tone_bias = {'warm': 0.1, 'curious': 0.05, 'gentle': 0.05,
                  'precise': 0.0, 'neutral': 0.0, 'determined': 0.1}
     return tone_bias.get(context_tone, 0.0)
-
-
-# Composer health audit (2026-08-04): interrogative pronouns a parsed
-# PropositionFrame can legitimately hold in frame.obj (from a question
-# like "Who made you?") but which are never valid as a spoken content
-# word if reused for generation -- see SentenceComposer._bind_slot_
-# from_frame's object-role branch. Same set as aurora_internal.
-# aurora_pf1_5_instruments._WH_WORDS; kept local rather than imported
-# to avoid a cross-module dependency for one frozenset.
-_WH_WORDS = frozenset({"who", "whom", "whose", "what", "where", "why", "which"})
 
 
 class SentenceComposer:
@@ -1871,6 +1900,10 @@ class SentenceComposer:
         # working; _state_log_path() falls back to the old file-relative
         # location when unset.
         self._state_dir = state_dir
+        # Native system-introspection bridge.  Instance-owned and optional:
+        # when absent, every probe below is a no-op and composition is byte-
+        # equivalent to the pre-introspection path.
+        self._system_introspection = None
 
         # Evolving template pool: tone ' list of template dicts
         self.pool: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
@@ -1928,6 +1961,30 @@ class SentenceComposer:
     def set_oets(self, oets_engine):
         """Wire the Ontological Evolutionary Template Scaffolding engine."""
         self._oets = oets_engine
+
+    def set_system_introspection(self, introspection) -> None:
+        """Attach Aurora's read-only native diagnostic bridge.
+
+        The bridge observes decisions; it never selects words or changes a
+        result.  Keeping it on the composer instance preserves runtime state
+        isolation when multiple Aurora systems share one Python process.
+        """
+        self._system_introspection = introspection
+
+    def _record_introspection_decision(self, **payload) -> str:
+        bridge = self._system_introspection
+        if bridge is None or not hasattr(bridge, "record_boundary_decision"):
+            return ""
+        try:
+            return str(bridge.record_boundary_decision(**payload) or "")
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="system_introspection:sentence_composer_probe",
+                exc=_aurora_boundary_exc,
+                context={"function": "SentenceComposer._record_introspection_decision", "source_file": __file__},
+            )
+            return ""
 
     @property
     def _has_oets(self) -> bool:
@@ -2685,8 +2742,49 @@ class SentenceComposer:
                 turn_id=turn_id, floor=self._RELEVANCE_FLOOR_R_MIN,
                 best_candidate=worst["best_candidate"], best_score=worst["best_score"],
             )
-            return random.choice(self._ABSTAIN_TEMPLATES)
+            abstain_text = random.choice(self._ABSTAIN_TEMPLATES)
+            self._record_introspection_decision(
+                function_id="aurora_expression_perception.SentenceComposer.compose",
+                stage="composer_output",
+                inputs={
+                    "input_text": input_text,
+                    "frame": self._proposition_frame,
+                    "required_slot_attempts": self._last_required_slot_attempts,
+                },
+                derived={
+                    "floor_failures": list(self._last_floor_failures),
+                    "motifs_used": len(self._last_motifs_used),
+                    "words_used": list(self._last_words_used),
+                },
+                decision="abstained",
+                output=abstain_text,
+                reason="every required content-slot candidate failed the relevance floor",
+                confidence=0.95,
+                tags=["composer", "composition", "honest_abstention", "visible_language"],
+            )
+            return abstain_text
 
+        self._record_introspection_decision(
+            function_id="aurora_expression_perception.SentenceComposer.compose",
+            stage="composer_output",
+            inputs={
+                "input_text": input_text,
+                "frame": self._proposition_frame,
+                "tone": tone,
+                "i_state": i_state,
+            },
+            derived={
+                "motifs_used": len(self._last_motifs_used),
+                "words_used": list(self._last_words_used),
+                "word_sources": dict(self._last_word_sources),
+                "floor_failures": list(self._last_floor_failures),
+            },
+            decision="emitted" if text else "empty",
+            output=text,
+            reason="composer completed motif and slot realization",
+            confidence=0.9 if text else 0.55,
+            tags=["composer", "composition", "visible_language"],
+        )
         return text
 
     def _compose_from_motif(self, motif, orientation: Dict[str, float],
@@ -2841,70 +2939,168 @@ class SentenceComposer:
 
     def _bind_slot_from_frame(self, role: str, frame, sentence_roles: list,
                               words: list) -> Optional[str]:
-        """PF1.4: fill ACTION/OBJECT directly from the PropositionFrame
-        (aurora_internal.aurora_proposition_frame) when it has a real,
-        POS-verified word for that role. Returns None (fail-quiet) on
-        anything else -- an empty frame field, a POS mismatch, or an
-        immediate duplicate -- and the caller falls back to today's
-        exact channel-selection path.
+        """PF1.4: fill ACTION/OBJECT directly from the PropositionFrame.
 
-        AGENT is deliberately NOT bound from frame.subject: AGENT is
-        always a pronoun ("I"/"you", enforced by _select_constraint_
-        word's own agent branch) and frame.subject is frequently an
-        arbitrary topic noun ("water", "meeting"), not a pronoun --
-        forcing it in would produce an ungrammatical subject. The
-        proposition's real content lives in relation/obj anyway.
+        In addition to the existing fail-quiet grammatical guards, this
+        boundary now emits a structured decision record to Aurora's native
+        introspection bridge.  The record contains the exact frame value,
+        inferred role, acceptance/rejection decision, and output.  It is
+        observational only and has no authority over composition.
         """
+        _function_id = (
+            "aurora_expression_perception.SentenceComposer."
+            "_bind_slot_from_frame"
+        )
+        _frame_source = str(getattr(frame, "source", "") or "")
+
         if role == "action" and frame.relation:
-            verb = str(frame.relation).strip().lower()
-            if not verb or infer_word_role(verb) != "verb":
+            raw_relation = str(frame.relation).strip()
+            verb = raw_relation.lower()
+            inferred_role = infer_word_role(verb) if verb else ""
+            _inputs = {
+                "slot": role,
+                "frame_relation": raw_relation,
+                "frame_source": _frame_source,
+                "sentence_roles": list(sentence_roles or []),
+                "words": list(words or []),
+                "negated": bool(getattr(frame, "negated", False)),
+            }
+            if not verb or inferred_role != "verb":
+                self._record_introspection_decision(
+                    function_id=_function_id,
+                    stage="composer_slot_binding",
+                    inputs=_inputs,
+                    derived={"inferred_role": inferred_role},
+                    decision="rejected",
+                    output=None,
+                    reason="frame relation was empty or not verb-role content",
+                    confidence=0.95,
+                    tags=["composer", "slot_binding", "action"],
+                )
                 return None
             current_subject = "I"
             for r, w in zip(reversed(sentence_roles), reversed(words)):
                 if r == "agent":
                     current_subject = w
                     break
-            # PF1.5 finding: a bare gerund/present-participle bound
-            # directly as ACTION is not a finite verb ("I planning
-            # water."). role_coherent() (aurora_internal/aurora_pf1_5_
-            # instruments.py) exists to catch exactly this shape, and it
-            # fired on 14/60 real probes. Fixed with the SAME "be"-
-            # auxiliary approach _negate_action_word already uses below,
-            # not a new degerunding table -- stripping "-ing" back to a
-            # base form correctly requires real morphology (consonant
-            # doubling, silent-e restoration) that a rule-of-thumb would
-            # get wrong often enough to trade one defect for another.
-            # Progressive aspect ("I am planning") is genuine, correct
-            # English, not a workaround.
             if verb.endswith("ing") and len(verb) > 4:
                 aux = "am" if current_subject.lower().rstrip(".,!?;:") == "i" else "are"
-                return f"{aux} not {verb}" if frame.negated else f"{aux} {verb}"
-            if frame.negated:
-                return self._negate_action_word(verb, current_subject)
-            return self._conjugate_for_subject(verb, current_subject)
+                bound = f"{aux} not {verb}" if frame.negated else f"{aux} {verb}"
+            elif frame.negated:
+                bound = self._negate_action_word(verb, current_subject)
+            else:
+                bound = self._conjugate_for_subject(verb, current_subject)
+            self._record_introspection_decision(
+                function_id=_function_id,
+                stage="composer_slot_binding",
+                inputs=_inputs,
+                derived={
+                    "inferred_role": inferred_role,
+                    "current_subject": current_subject,
+                },
+                decision="accepted",
+                output=bound,
+                reason="frame relation passed verb-role binding",
+                confidence=0.96,
+                tags=["composer", "slot_binding", "action", "visible_language"],
+            )
+            return bound
 
         if role == "object" and frame.obj:
-            noun = str(frame.obj).strip().lower()
-            # Composer health audit (2026-08-04): root-cause trace of a
-            # live-reported garble ("I exist who alive. I hold who
-            # clear.") found frame.obj holding "who" -- the parsed
-            # frame legitimately captures an interrogative pronoun as
-            # the "object" of a question like "Who made you?" for
-            # UNDERSTANDING purposes, but this same frame gets reused
-            # here for GENERATION, and infer_word_role("who") defaults
-            # to 'noun' (it isn't in the shared role table's pronoun
-            # set, matching the same gap CIR fixed for "I"/"he"/"she"),
-            # so it passed this check and got spoken verbatim as a
-            # content word. A wh-word is never a valid spoken object
-            # regardless of infer_word_role's classification.
-            if noun in _WH_WORDS:
+            raw_object = str(frame.obj).strip()
+            bare_interrogative = is_bare_interrogative_token(raw_object)
+            noun = raw_object.lower()
+            inferred_role = infer_word_role(noun) if noun else ""
+            duplicate = bool(noun and noun in (w.lower() for w in words))
+            _inputs = {
+                "slot": role,
+                "frame_object": raw_object,
+                "token": raw_object,
+                "frame_source": _frame_source,
+                "sentence_roles": list(sentence_roles or []),
+                "words": list(words or []),
+            }
+            _derived = {
+                "inferred_role": inferred_role,
+                "bare_interrogative": bool(bare_interrogative),
+                "duplicate": bool(duplicate),
+            }
+            if bare_interrogative:
+                self._record_introspection_decision(
+                    function_id=_function_id,
+                    stage="composer_slot_binding",
+                    inputs=_inputs,
+                    derived=_derived,
+                    decision="rejected",
+                    output=None,
+                    reason="bare interrogative cannot occupy a declarative object slot",
+                    confidence=0.99,
+                    tags=["composer", "slot_binding", "object", "structural_token"],
+                )
                 return None
-            if not noun or infer_word_role(noun) != "noun":
+            if not noun or inferred_role != "noun":
+                self._record_introspection_decision(
+                    function_id=_function_id,
+                    stage="composer_slot_binding",
+                    inputs=_inputs,
+                    derived=_derived,
+                    decision="rejected",
+                    output=None,
+                    reason="frame object was empty or not noun-role content",
+                    confidence=0.96,
+                    tags=["composer", "slot_binding", "object"],
+                )
                 return None
-            if noun in (w.lower() for w in words):
+            if duplicate:
+                self._record_introspection_decision(
+                    function_id=_function_id,
+                    stage="composer_slot_binding",
+                    inputs=_inputs,
+                    derived=_derived,
+                    decision="rejected",
+                    output=None,
+                    reason="frame object duplicated an existing sentence word",
+                    confidence=0.94,
+                    tags=["composer", "slot_binding", "object", "duplicate_guard"],
+                )
                 return None
+            self._record_introspection_decision(
+                function_id=_function_id,
+                stage="composer_slot_binding",
+                inputs=_inputs,
+                derived=_derived,
+                decision="accepted",
+                output=noun,
+                reason="frame object passed noun-role and duplicate checks",
+                confidence=0.97,
+                tags=["composer", "slot_binding", "object", "visible_language"],
+                anomaly=(
+                    "structural_interrogative_accepted_as_content"
+                    if str(noun or "").strip().lower().strip(".,!?;:'\"()[]{}") in {
+                        "who", "whom", "whose", "what", "which",
+                        "where", "when", "why", "how",
+                    }
+                    else None
+                ),
+            )
             return noun
 
+        self._record_introspection_decision(
+            function_id=_function_id,
+            stage="composer_slot_binding",
+            inputs={
+                "slot": role,
+                "frame_relation": str(getattr(frame, "relation", "") or ""),
+                "frame_object": str(getattr(frame, "obj", "") or ""),
+                "frame_source": _frame_source,
+            },
+            derived={},
+            decision="not_applicable",
+            output=None,
+            reason="frame had no directly bindable content for this slot",
+            confidence=0.8,
+            tags=["composer", "slot_binding", str(role or "unknown")],
+        )
         return None
 
     # PF3.6 Cluster B (2026-07-21): do-support moves TENSE onto the
@@ -3393,6 +3589,12 @@ class SentenceComposer:
         role-strict slots (agent/action/object/connector), permitted only
         in descriptor slots, and logged -- an honest worklist, not silent
         salad."""
+        # Persisted lexicons may still carry wh-words learned before
+        # infer_word_role() was corrected, including entries mislabeled as
+        # nouns.  Structural question markers are not content candidates in
+        # this declarative motif system, regardless of their stored POS.
+        if is_bare_interrogative_token(getattr(entry, "word", "")):
+            return False
         allowed = self._ROLE_POS_CATEGORIES.get(role)
         if allowed is None:
             return True
@@ -4036,7 +4238,7 @@ class SentenceComposer:
                              tone: str, coherence: float,
                              vmin: float, vmax: float) -> str:
         """PRIMITIVE fill: pick any word of the right role."""
-        _is_speakable = lambda w: bool(re.fullmatch(r"[a-z][a-z\-']*[a-z]", (w or '').lower()))
+        _is_speakable = _is_speakable_content_token
         candidates = []
         for role in roles:
             candidates.extend(self.lexicon.find_by_role(role))
@@ -4123,7 +4325,7 @@ class SentenceComposer:
         category in the OETS web, falling back to primitive if needed.
         """
         if self._has_oets:
-            _is_speakable = lambda w: bool(re.fullmatch(r"[a-z][a-z\-']*[a-z]", (w or '').lower()))
+            _is_speakable = _is_speakable_content_token
             nodes = self._oets.web.find_by_semantic_category(category)
             if nodes:
                 candidates = []
@@ -4170,7 +4372,7 @@ class SentenceComposer:
                            vmin: float, vmax: float) -> str:
         """CONCEPTUAL fill: pick a word from a named concept cluster."""
         if self._has_oets:
-            _is_speakable = lambda w: bool(re.fullmatch(r"[a-z][a-z\-']*[a-z]", (w or '').lower()))
+            _is_speakable = _is_speakable_content_token
             target_cluster = None
             for c in self._oets.cluster_engine.clusters.values():
                 if (c.name.lower() == cluster_name or
@@ -4237,11 +4439,11 @@ class SentenceComposer:
                 role_nodes = [n for n in deep_nodes
                               if n.word in self.lexicon.entries
                               and self.lexicon.entries[n.word].role == role
-                              and re.fullmatch(r"[a-z][a-z\-']*[a-z]", (n.word or '').lower())]
+                              and _is_speakable_content_token(n.word)]
                 if not role_nodes:
                     role_nodes = [n for n in deep_nodes
                                  if n.word in self.lexicon.entries
-                                 and re.fullmatch(r"[a-z][a-z\-']*[a-z]", (n.word or '').lower())]
+                                 and _is_speakable_content_token(n.word)]
                 if role_nodes:
                     chosen_node = random.choice(role_nodes[:5])
                     word = chosen_node.word
@@ -4979,6 +5181,12 @@ class ExpressionPerceptionEngine(WarpCapable):
         """Store genealogy reference for axis-based LSV nudging."""
         self._genealogy_ref = genealogy
 
+    def connect_system_introspection(self, introspection) -> None:
+        """Wire the same instance-owned introspection bridge into L5."""
+        self._system_introspection = introspection
+        if hasattr(self.composer, "set_system_introspection"):
+            self.composer.set_system_introspection(introspection)
+
     def set_axis_context(
         self,
         axis_activation: Dict[str, float],
@@ -5033,13 +5241,18 @@ class ExpressionPerceptionEngine(WarpCapable):
             channels = {tone: 0.7, 'neutral': 0.3}
 
         shard = self.cascade.energy_to_shard(channels, mode)
+        # Evolved surfaces may attach lineage/reflection metadata when the
+        # native operation correctly returns None.  That metadata is evidence,
+        # not an EmotionShard, and must not masquerade as perceptual content.
+        if shard is not None and not isinstance(shard, EmotionShard):
+            shard = None
         seed = None
-        if shard:
+        if shard is not None:
             seed = self.cascade.shard_to_seed(shard, mode)
 
         # 4. Manifold mapping
         cp = None
-        if shard:
+        if shard is not None:
             cp = self.manifold.map_to_cp(shard, synthesis, mode)
 
         self.total_perceptions += 1
