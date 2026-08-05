@@ -1731,6 +1731,16 @@ def infer_word_valence(word: str, context_tone: str = 'neutral') -> float:
     return tone_bias.get(context_tone, 0.0)
 
 
+# Composer health audit (2026-08-04): interrogative pronouns a parsed
+# PropositionFrame can legitimately hold in frame.obj (from a question
+# like "Who made you?") but which are never valid as a spoken content
+# word if reused for generation -- see SentenceComposer._bind_slot_
+# from_frame's object-role branch. Same set as aurora_internal.
+# aurora_pf1_5_instruments._WH_WORDS; kept local rather than imported
+# to avoid a cross-module dependency for one frozenset.
+_WH_WORDS = frozenset({"who", "whom", "whose", "what", "where", "why", "which"})
+
+
 class SentenceComposer:
     """
     Composes grammatical sentences from Aurora's evolving template pool.
@@ -2875,6 +2885,20 @@ class SentenceComposer:
 
         if role == "object" and frame.obj:
             noun = str(frame.obj).strip().lower()
+            # Composer health audit (2026-08-04): root-cause trace of a
+            # live-reported garble ("I exist who alive. I hold who
+            # clear.") found frame.obj holding "who" -- the parsed
+            # frame legitimately captures an interrogative pronoun as
+            # the "object" of a question like "Who made you?" for
+            # UNDERSTANDING purposes, but this same frame gets reused
+            # here for GENERATION, and infer_word_role("who") defaults
+            # to 'noun' (it isn't in the shared role table's pronoun
+            # set, matching the same gap CIR fixed for "I"/"he"/"she"),
+            # so it passed this check and got spoken verbatim as a
+            # content word. A wh-word is never a valid spoken object
+            # regardless of infer_word_role's classification.
+            if noun in _WH_WORDS:
+                return None
             if not noun or infer_word_role(noun) != "noun":
                 return None
             if noun in (w.lower() for w in words):
