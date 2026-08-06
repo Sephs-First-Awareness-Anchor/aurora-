@@ -23119,6 +23119,18 @@ def _run_reasoning_pipeline(
         try:
             if hasattr(aurora, "gateway") and hasattr(aurora.gateway, "queue_response_pressure_plan"):
                 aurora.gateway.queue_response_pressure_plan(phase="afterthought", episode_budget=1)
+            # The "[AFTERTHOUGHT]" prefix is kept here deliberately (Build
+            # 616 Repair A) rather than moved to a separate episode_source
+            # kwarg: _answer_from_sedimemory_context() (this file) still
+            # keys off this exact literal prefix on recalled content to
+            # exclude afterthought re-processing artifacts from genuine
+            # recalled memory, so the raw prefixed string must keep
+            # flowing unchanged into the simulation call. The prefix is
+            # still stripped before it can ever become a semantic topic --
+            # see _strip_internal_transport_marker /
+            # _topic_from_seed_prompt in aurora_simulation_engine.py,
+            # which is the single normalization point every seed_prompt-
+            # driven episode passes through.
             aurora.gateway.simulation.run_episode(
                 seed_prompt=f"[AFTERTHOUGHT] {user_text}", turns=2, mode=ExistenceMode.BOUNDED
             )
