@@ -1259,6 +1259,21 @@ class EpisodeStep:
     # call was made (assessment/exploration steps carry the equivalent
     # signal in dual_strata_snapshot/interpretation already).
     witness_report: Optional[Dict[str, Any]] = None
+    # Repair M ("Acquisition is still framed as an assessment"): what KIND
+    # of text observation_text actually holds. "assessment_prompt" (the
+    # default, preserving existing exploration/assessment behavior) means
+    # observation_text is the full ActionInterface.build_prompt() text
+    # Aurora was genuinely asked to act on -- action menu, choose/predict
+    # instruction, all of it, which run_backprojection_step() later
+    # legitimately recalls verbatim as "what you were originally asked."
+    # "observation_only" means observation_text is describe_observation()
+    # output ONLY -- no action menu, no instruction to choose or predict --
+    # used for demonstrated/control acquisition steps, where Aurora was
+    # never asked anything at all. Keeping these two kinds of text
+    # explicitly distinguishable (not just differently-valued under the
+    # same unlabeled field) is what stops a future caller from reusing
+    # observation_text as if it always carries prompt semantics.
+    observation_kind: str = "assessment_prompt"
 
 
 @dataclass
@@ -1282,6 +1297,7 @@ class EpisodeTrace:
         action: ActionInvocation,
         intent: str,
         interpretation: CapturedInterpretation,
+        observation_kind: str = "assessment_prompt",
     ) -> None:
         self.steps.append(EpisodeStep(
             tick=tick,
@@ -1289,6 +1305,7 @@ class EpisodeTrace:
             action=action,
             intent=intent,
             interpretation=interpretation,
+            observation_kind=observation_kind,
         ))
         self._interpretation_pending = True
 
@@ -1395,6 +1412,7 @@ def _episode_step_to_dict(step: EpisodeStep) -> Dict[str, Any]:
         "world_before": _worldstate_to_dict(step.world_before) if step.world_before is not None else None,
         "observed_before": _observed_worldstate_to_dict(step.observed_before) if step.observed_before is not None else None,
         "witness_report": step.witness_report,
+        "observation_kind": step.observation_kind,
     }
 
 
@@ -1431,6 +1449,7 @@ def _episode_step_from_dict(data: Dict[str, Any]) -> EpisodeStep:
         world_before=_worldstate_from_dict(data["world_before"]) if data.get("world_before") is not None else None,
         observed_before=_observed_worldstate_from_dict(data["observed_before"]) if data.get("observed_before") is not None else None,
         witness_report=data.get("witness_report"),
+        observation_kind=str(data.get("observation_kind", "assessment_prompt") or "assessment_prompt"),
     )
 
 
@@ -3360,13 +3379,24 @@ def run_acquisition_episode(
         if scripted_action is None:
             raise ValueError(f"acquisition trial_kind={trial_kind!r} requires an explicit scripted_action")
         observed = boundary.observe(world, agent_id)
-        prompt_text = ActionInterface.build_prompt(observed, skin=skin)
+        # Repair M ("Acquisition is still framed as an assessment"): a
+        # demonstrated/control trial never asks Aurora to choose an action
+        # or predict anything -- ActionInterface.build_prompt() here
+        # produced a self-contradicting witness prompt downstream
+        # (run_witnessed_observation()'s "Earlier you observed: [full
+        # prompt WITH an action menu and a choose/predict instruction
+        # baked in]" immediately followed by "You are not being asked to
+        # choose an action or make a prediction right now"). Acquisition
+        # steps get the observation-only text instead; the assessment
+        # path (run_episode_step(), above) keeps build_prompt() unchanged,
+        # since Aurora genuinely IS being asked to act/predict there.
+        observation_text = describe_observation(observed, skin=skin)
         interpretation = CapturedInterpretation(
             raw_expression="", confidence=0.0, action_commitment="external_actor",
         )
         trace.record_interpretation(
-            tick=world.tick, observation_text=prompt_text, action=scripted_action,
-            intent="observe", interpretation=interpretation,
+            tick=world.tick, observation_text=observation_text, action=scripted_action,
+            intent="observe", interpretation=interpretation, observation_kind="observation_only",
         )
         trace.steps[-1].world_before = world.clone()
         trace.steps[-1].observed_before = observed
