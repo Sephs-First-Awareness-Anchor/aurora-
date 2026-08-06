@@ -28343,8 +28343,8 @@ def boot_aurora(
         try:
             from aurora_internal.aurora_pressure_router import PressureRouter as _PressureRouter
             from aurora_internal.aurora_dpme_pressure_bridge import DPMEPressureBridge as _DPMEPressureBridge
-            _pr = _PressureRouter(repo_root=os.path.dirname(os.path.abspath(__file__)))
-            _db = _DPMEPressureBridge(repo_root=os.path.dirname(os.path.abspath(__file__)))
+            _pr = _PressureRouter(repo_root=os.path.dirname(os.path.abspath(__file__)), state_dir=state_dir)
+            _db = _DPMEPressureBridge(repo_root=os.path.dirname(os.path.abspath(__file__)), state_dir=state_dir)
             systems['_pressure_router'] = _pr
             systems['_dpme_bridge'] = _db
             # Seed both at boot so downstream consumers have fresh data
