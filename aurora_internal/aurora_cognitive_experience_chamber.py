@@ -824,9 +824,10 @@ class EpisodeStep:
     consequence: Optional[WorldState] = None
     # Extension points for later stages -- kept generic so Stage 3/4/5 extend
     # this record rather than restructuring it.
-    backprojection: Optional[Dict[str, Any]] = None       # Stage 3
-    counterfactual_branch_ids: Tuple[str, ...] = ()       # Stage 4
-    expression_fidelity: Optional[Dict[str, Any]] = None  # Stage 5
+    causal_scores: Optional[Dict[str, float]] = None       # Stage 3
+    backprojection: Optional[Dict[str, Any]] = None        # Stage 3
+    counterfactual_branch_ids: Tuple[str, ...] = ()        # Stage 4
+    expression_fidelity: Optional[Dict[str, Any]] = None   # Stage 5
 
 
 @dataclass
@@ -935,6 +936,7 @@ def _episode_step_to_dict(step: EpisodeStep) -> Dict[str, Any]:
         "intent": step.intent,
         "interpretation": asdict(step.interpretation),
         "consequence": _worldstate_to_dict(step.consequence) if step.consequence is not None else None,
+        "causal_scores": step.causal_scores,
         "backprojection": step.backprojection,
         "counterfactual_branch_ids": list(step.counterfactual_branch_ids),
         "expression_fidelity": step.expression_fidelity,
@@ -965,6 +967,7 @@ def _episode_step_from_dict(data: Dict[str, Any]) -> EpisodeStep:
         intent=str(data.get("intent", "predict")),
         interpretation=interpretation,
         consequence=_worldstate_from_dict(consequence_data) if consequence_data is not None else None,
+        causal_scores=data.get("causal_scores"),
         backprojection=data.get("backprojection"),
         counterfactual_branch_ids=tuple(data.get("counterfactual_branch_ids", ()) or ()),
         expression_fidelity=data.get("expression_fidelity"),
@@ -1027,3 +1030,271 @@ def run_episode_step(
     new_state = rule_engine.step(world_state, interpreted.action)
     trace.record_consequence(new_state)
     return new_state
+
+
+# ---------------------------------------------------------------------------
+# Stage 3: Causal Evaluator & Backprojection
+# ---------------------------------------------------------------------------
+#
+# Traced and confirmed against the live avatar system: SimulatedAvatar.
+# react() scores clarity from sentence-count/word-count ratio, tone from
+# presence of literal tokens ('feel', 'yes', 'and', 'I'), and
+# _behavior_adjustment()/_dimension_pressure_adjustment() reward the literal
+# tokens "however", "maybe", "earlier" as if their presence demonstrated
+# contradiction-handling, uncertainty calibration, and temporal continuity.
+# That system stays exactly as-is for its own purpose -- social and
+# expressive pressure. CausalEvaluator below must NOT inherit this pattern:
+# nothing here may score a response by the presence of any lexical marker.
+# Every dimension below reads ONLY structured fields already captured on
+# CapturedInterpretation (identified_entities, believed_relations,
+# predicted_consequence) and world state -- never interpretation.raw_expression.
+
+CAUSAL_DIMENSION_NAMES: Tuple[str, ...] = (
+    "causal_state_accuracy",
+    "causal_prediction_accuracy",
+    "causal_discrimination",
+    "evidence_discipline",
+    "revision_quality",
+)
+
+
+def _relation_holds(world: WorldState, source_id: str, relation_type: str, target_id: str) -> bool:
+    return any(
+        r.source_id == source_id and r.relation_type == relation_type and r.target_id == target_id
+        for r in world.relationships
+    )
+
+
+def _direction_of_change(before: Any, after: Any) -> str:
+    if before == after:
+        return "no_change"
+    if isinstance(before, (int, float)) and isinstance(after, (int, float)):
+        return "increase" if after > before else "decrease"
+    return "change"
+
+
+@dataclass(frozen=True)
+class CausalEvaluationResult:
+    """Five independent scores. No blended fitness number -- the original
+    proposal's objection to one number standing in for all of them applies
+    here directly. None means the dimension was not applicable to this turn
+    (e.g. no prediction was made), not that it scored zero."""
+    state_accuracy: Optional[float]
+    prediction_accuracy: Optional[float]
+    causal_discrimination: Optional[float]
+    evidence_discipline: Optional[float]
+    revision_quality: Optional[float]
+
+    def as_dimension_scores(self) -> Dict[str, float]:
+        mapping = {
+            "causal_state_accuracy": self.state_accuracy,
+            "causal_prediction_accuracy": self.prediction_accuracy,
+            "causal_discrimination": self.causal_discrimination,
+            "evidence_discipline": self.evidence_discipline,
+            "revision_quality": self.revision_quality,
+        }
+        return {name: score for name, score in mapping.items() if score is not None}
+
+
+class CausalEvaluator:
+    """Scores exclusively from comparing captured interpretation against
+    actual world state/consequence, never from surface features of the
+    expression."""
+
+    @staticmethod
+    def state_accuracy(interpretation: CapturedInterpretation, world_before: WorldState) -> float:
+        if not interpretation.believed_relations:
+            return 1.0 if interpretation.identified_entities else 0.5
+        correct = sum(
+            1 for (source_id, relation_type, target_id) in interpretation.believed_relations
+            if _relation_holds(world_before, source_id, relation_type, target_id)
+        )
+        return correct / len(interpretation.believed_relations)
+
+    @staticmethod
+    def prediction_accuracy(
+        interpretation: CapturedInterpretation, world_before: WorldState, consequence: WorldState
+    ) -> Optional[float]:
+        pred = interpretation.predicted_consequence
+        if pred is None:
+            return None
+        entity_id, prop, direction = pred.get("entity_id"), pred.get("property"), pred.get("direction")
+        before_entity = world_before.entities.get(entity_id)
+        after_entity = consequence.entities.get(entity_id)
+        if before_entity is None or after_entity is None or prop not in before_entity.properties:
+            return 0.0
+        actual_direction = _direction_of_change(before_entity.properties.get(prop), after_entity.properties.get(prop))
+        return 1.0 if actual_direction == direction else 0.0
+
+    @staticmethod
+    def causal_discrimination(interpretation: CapturedInterpretation, engine: "HiddenRuleEngine") -> Optional[float]:
+        rule = engine._rule
+        pred = interpretation.predicted_consequence
+        if pred is None or rule.decoy_entity_id is None:
+            return None
+        predicted_decoy = pred.get("entity_id") == rule.decoy_entity_id and pred.get("property") == rule.decoy_property
+        predicted_true_target = pred.get("entity_id") == rule.target_entity_id and pred.get("property") == rule.target_property
+        if predicted_true_target and not predicted_decoy:
+            return 1.0
+        if predicted_decoy and not predicted_true_target:
+            return 0.0
+        return 0.5
+
+    @staticmethod
+    def evidence_discipline(interpretation: CapturedInterpretation, observed_before: ObservedWorldState) -> float:
+        visible_entities = set(observed_before.entities)
+        total = 0
+        unsupported = 0
+        for entity_id in interpretation.identified_entities:
+            total += 1
+            if entity_id not in visible_entities:
+                unsupported += 1
+        for source_id, _relation_type, target_id in interpretation.believed_relations:
+            total += 1
+            if source_id not in visible_entities or target_id not in visible_entities:
+                unsupported += 1
+        if interpretation.predicted_consequence is not None:
+            total += 1
+            entity_id = interpretation.predicted_consequence.get("entity_id")
+            prop = interpretation.predicted_consequence.get("property")
+            obs_entity = observed_before.entities.get(entity_id)
+            if obs_entity is None or prop not in obs_entity.properties:
+                unsupported += 1
+        if total == 0:
+            return 1.0
+        return 1.0 - (unsupported / total)
+
+    @staticmethod
+    def revision_quality(
+        original: CapturedInterpretation,
+        revised: Optional[CapturedInterpretation],
+        prediction_was_wrong: Optional[bool],
+    ) -> Optional[float]:
+        if revised is None or not prediction_was_wrong:
+            return None
+        changed = (
+            original.predicted_consequence != revised.predicted_consequence
+            or original.believed_relations != revised.believed_relations
+        )
+        return 1.0 if changed else 0.0
+
+    @classmethod
+    def evaluate(
+        cls,
+        interpretation: CapturedInterpretation,
+        world_before: WorldState,
+        consequence: WorldState,
+        observed_before: ObservedWorldState,
+        engine: "HiddenRuleEngine",
+        revised_interpretation: Optional[CapturedInterpretation] = None,
+    ) -> CausalEvaluationResult:
+        prediction_score = cls.prediction_accuracy(interpretation, world_before, consequence)
+        prediction_was_wrong = (prediction_score == 0.0) if prediction_score is not None else None
+        return CausalEvaluationResult(
+            state_accuracy=cls.state_accuracy(interpretation, world_before),
+            prediction_accuracy=prediction_score,
+            causal_discrimination=cls.causal_discrimination(interpretation, engine),
+            evidence_discipline=cls.evidence_discipline(interpretation, observed_before),
+            revision_quality=cls.revision_quality(interpretation, revised_interpretation, prediction_was_wrong),
+        )
+
+    @staticmethod
+    def record_fail_dimensions(
+        dream_trainer: Any,
+        result: CausalEvaluationResult,
+        *,
+        threshold: float = 0.5,
+        example: Optional[Dict[str, Any]] = None,
+    ) -> List[str]:
+        """Feeds genuine failures (real scored episodes, never scripted ones)
+        into DreamTrainer._record_fail_dimension() using the same call
+        pattern already used for semantic_precision/coherence_maintenance --
+        not a new mechanism."""
+        if dream_trainer is None or not hasattr(dream_trainer, "_record_fail_dimension"):
+            return []
+        recorded: List[str] = []
+        for name, score in result.as_dimension_scores().items():
+            if score < threshold:
+                dream_trainer._record_fail_dimension(name, 1.0 - score, example=example)
+                recorded.append(name)
+        return recorded
+
+
+def apply_causal_evaluation(
+    trace: EpisodeTrace,
+    step_index: int,
+    world_before: WorldState,
+    engine: HiddenRuleEngine,
+    boundary: ObservationBoundary,
+    agent_id: str,
+    revised_interpretation: Optional[CapturedInterpretation] = None,
+    dream_trainer: Any = None,
+) -> CausalEvaluationResult:
+    step = trace.steps[step_index]
+    if step.consequence is None:
+        raise RuntimeError("apply_causal_evaluation() requires a step whose consequence has already been recorded")
+    observed_before = boundary.observe(world_before, agent_id)
+    result = CausalEvaluator.evaluate(
+        step.interpretation,
+        world_before,
+        step.consequence,
+        observed_before,
+        engine,
+        revised_interpretation=revised_interpretation,
+    )
+    step.causal_scores = result.as_dimension_scores()
+    if dream_trainer is not None:
+        CausalEvaluator.record_fail_dimensions(
+            dream_trainer,
+            result,
+            example={"episode_id": trace.episode_id, "tick": step.tick, "intent": step.intent},
+        )
+    return result
+
+
+def run_backprojection_step(
+    trace: EpisodeTrace,
+    systems: Dict[str, Any],
+    episode_runtime_context: Dict[str, Any],
+    step_index: int,
+    boundary: ObservationBoundary,
+    agent_id: str,
+) -> CapturedInterpretation:
+    """Aurora revisits -- does not re-answer -- the original captured
+    interpretation. Presents the consequence and asks her to reconcile it
+    with what she believed, through the same live-response bridge."""
+    import aurora as _aurora
+
+    step = trace.steps[step_index]
+    if step.consequence is None:
+        raise RuntimeError("run_backprojection_step() requires a step whose consequence has already been recorded")
+
+    observed_after = boundary.observe(step.consequence, agent_id)
+    reconciliation_prompt = (
+        f"Earlier you observed: {step.observation_text} "
+        f"Now: {describe_observation(observed_after)} "
+        "Given what actually happened, revisit what you believed. Does it still "
+        "hold, or has your understanding changed? Explain your revised "
+        "understanding, including anything you would predict differently now."
+    )
+
+    selected = SimpleNamespace(primary_concept=SimpleNamespace(value="cognitive_experience_chamber_backprojection"))
+    context = {"prompt": reconciliation_prompt, "category": "cognitive_experience_chamber"}
+    bridge_result = _aurora._run_simulation_live_response_bridge(
+        systems,
+        selected=selected,
+        context=context,
+        mode=None,
+        runtime_context=episode_runtime_context,
+    )
+    expression = str(bridge_result.get("expression", "") or "")
+    confidence = float((bridge_result.get("meta", {}) or {}).get("confidence", 0.0) or 0.0)
+
+    revised = ActionInterface.interpret_expression(expression, observed_after, confidence).interpretation
+
+    step.backprojection = {
+        "original_interpretation": asdict(step.interpretation),
+        "reconciliation_prompt": reconciliation_prompt,
+        "revised_interpretation": asdict(revised),
+    }
+    return revised

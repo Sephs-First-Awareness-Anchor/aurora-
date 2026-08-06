@@ -256,6 +256,15 @@ DIMENSION_AXIS: Dict[str, str] = {
     # axis role/preposition/adjective already carry in ROLE_TO_AXIS
     # (aurora_ontological_scaffolding.py).
     "relation_typing_precision":    "B",
+    # Build 598 (Recursive Causal Experience Chamber, Stage 3): the
+    # CausalEvaluator's five outcome-based dimensions, scored from
+    # aurora_cognitive_experience_chamber.py against ground-truth world
+    # state -- never from surface features of the expression.
+    "causal_state_accuracy":        "X",   # belief vs actual ground-truth existence
+    "causal_prediction_accuracy":   "T",   # forward projection matching actual outcome
+    "causal_discrimination":        "B",   # differentiating true dependency from decoy correlation
+    "evidence_discipline":          "X",   # grounding claims in what was actually observed
+    "revision_quality":             "A",   # revising belief when evidence contradicts it
 }
 
 # Per-axis simulation slot weight.
