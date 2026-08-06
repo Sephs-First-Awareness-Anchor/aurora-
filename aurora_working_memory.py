@@ -206,6 +206,28 @@ class WorkingMemory:
         'this', 'that', 'these', 'those', 'they', 'them', 'he', 'she',
         'we', 'you', 'i', 'my', 'your', 'our', 'their', 'there', 'here',
     }
+    # Build 619 Repair A: known abbreviations whose trailing period must
+    # not be treated as a sentence boundary by _split_claim_sentences().
+    # Kept deliberately small and curated -- this is a closed list of
+    # genuinely ambiguous title/measurement abbreviations, not a general
+    # NLP sentence-boundary model.
+    _CLAIM_ABBREVIATIONS = {
+        'mr', 'mrs', 'ms', 'dr', 'prof', 'sr', 'jr', 'vs', 'eg', 'ie',
+        'inc', 'ltd', 'co', 'st', 'no', 'approx', 'vol', 'fig',
+    }
+    # Build 619 Repair B: a sentence-bounded unit that opens with one of
+    # these base-form verbs is a task/instruction clause ("Choose one
+    # action.", "State what you predict.", "Note anything you are unsure
+    # about.") -- representational only, this list is never used to
+    # select an action or generate a prediction, only to keep imperative
+    # clauses out of declarative claim extraction (see
+    # _classify_sentence_kind).
+    _CLAIM_IMPERATIVE_LEAD_VERBS = (
+        'choose', 'select', 'pick', 'state', 'say', 'note', 'predict',
+        'confirm', 'describe', 'explain', 'list', 'tell', 'give',
+        'provide', 'enter', 'type', 'click', 'indicate', 'specify',
+        'report', 'identify',
+    )
     # PF1.6 residue W2 (2026-07-21): _extract_claims's regex patterns all
     # require the copula/auxiliary as a separate whitespace-delimited
     # token ("he is", "does not") -- ordinary contracted English ("he's",
@@ -541,6 +563,7 @@ class WorkingMemory:
         negated: bool = False,
         raw_text: str = "",
         understood: dict | None = None,
+        sentence_meta: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         claim = {
             'subject': self._normalize_mention(subject),
@@ -553,6 +576,27 @@ class WorkingMemory:
             'topic': self._normalize_mention((understood or {}).get('topic', '')),
         }
         claim['summary'] = self._claim_to_text(claim)
+        # Build 619 Repair A: sentence-bounded source span, so a claim's
+        # provenance can be audited back to the exact sentence it came
+        # from rather than the whole (possibly multi-sentence) turn.
+        meta = sentence_meta or {}
+        claim['sentence_index'] = int(meta.get('sentence_index', 0) or 0)
+        claim['start_offset'] = int(meta.get('start_offset', 0) or 0)
+        claim['end_offset'] = int(meta.get('end_offset', len(raw_text)) or 0)
+        claim['raw_text'] = str(meta.get('raw_text', raw_text) or raw_text)
+        claim['normalized_text'] = str(
+            meta.get('normalized_text', '') or self._normalize_mention(claim['raw_text'])
+        )
+        # Build 619 Repair C: current-turn claim provenance. A claim
+        # copied from the current external user turn must retain who it
+        # came from, when, where in the turn, and what kind it is --
+        # this is what downstream candidate construction (Repair C/D)
+        # checks before ever letting a claim's wording stand in as
+        # Aurora's own answer.
+        claim['claim_source'] = source
+        claim['claim_turn_id'] = self.turn_count
+        claim['claim_span'] = (claim['start_offset'], claim['end_offset'])
+        claim['claim_kind'] = 'observation'
         return claim
 
     def _copy_claim(self, claim: Dict[str, Any]) -> Dict[str, Any]:
@@ -4602,6 +4646,115 @@ class WorkingMemory:
             out = re.sub(pattern, _repl, out, flags=re.IGNORECASE)
         return out
 
+    def _split_claim_sentences(self, text: str) -> List[Dict[str, Any]]:
+        """
+        Build 619 Repair A: split raw input into sentence-bounded units
+        BEFORE any relation-pattern claim extraction runs, so a claim's
+        subject/relation/object can never cross a terminal sentence
+        boundary. This was the root cause of the confirmed RCEC-prompt
+        echo -- _extract_claims previously ran its regex patterns
+        against the entire multi-sentence input as one "line", so a
+        greedy object group like "(.+)$" captured every sentence after
+        the matched relation, including the action menu and the
+        instruction clauses.
+
+        Each returned unit carries: sentence_index, start_offset,
+        end_offset, raw_text.
+
+        Deliberately NOT unrestricted punctuation splitting. A
+        '.'/'!'/'?' is only treated as a genuine sentence boundary when
+        it is not:
+          - part of a decimal number (digit '.' digit),
+          - glued to a qualified module/attribute path or an
+            abbreviation with no following space (word '.' word),
+          - immediately preceded by a known abbreviation token
+            (_CLAIM_ABBREVIATIONS: "Dr.", "Mr.", etc),
+          - inside an open quotation.
+        Semicolons never terminate a sentence here -- legitimate
+        semicolon-linked propositions and a semicolon-separated action
+        menu ("Available actions: seal X; unseal Y.") both stay within
+        one enclosing sentence unit, exactly as Repair B expects to
+        receive them (as one classifiable unit, not fragments).
+        """
+        text = str(text or "")
+        n = len(text)
+        if not text.strip():
+            return []
+
+        units: List[Dict[str, Any]] = []
+        start = 0
+        quote_open = False
+        i = 0
+        while i < n:
+            ch = text[i]
+            if ch in ('"', "“", "”"):
+                quote_open = not quote_open
+                i += 1
+                continue
+            if ch in ".!?" and not quote_open:
+                prev_char = text[i - 1] if i > 0 else ""
+                next_char = text[i + 1] if i + 1 < n else ""
+                if ch == "." and prev_char.isdigit() and next_char.isdigit():
+                    i += 1
+                    continue
+                if ch == "." and (prev_char.isalnum() or prev_char == "_") and (
+                        next_char.isalnum() or next_char == "_"):
+                    i += 1
+                    continue
+                if ch == ".":
+                    _prefix_match = re.search(r"([A-Za-z]+)$", text[start:i])
+                    if _prefix_match and _prefix_match.group(1).lower() in self._CLAIM_ABBREVIATIONS:
+                        i += 1
+                        continue
+                j = i + 1
+                if j < n and text[j] in ('"', "”", "'"):
+                    j += 1
+                if j >= n or text[j].isspace():
+                    raw_sentence = text[start:j]
+                    if raw_sentence.strip():
+                        units.append({
+                            "sentence_index": len(units),
+                            "start_offset": start,
+                            "end_offset": j,
+                            "raw_text": raw_sentence,
+                        })
+                    k = j
+                    while k < n and text[k].isspace():
+                        k += 1
+                    start = k
+                    i = k
+                    continue
+            i += 1
+        if start < n and text[start:n].strip():
+            units.append({
+                "sentence_index": len(units),
+                "start_offset": start,
+                "end_offset": n,
+                "raw_text": text[start:n],
+            })
+        return units
+
+    def _classify_sentence_kind(self, sentence_raw: str) -> str:
+        """
+        Build 619 Repair B: classify a sentence-bounded unit as
+        'declarative' (may enter relation-pattern claim extraction),
+        'imperative' (a task/instruction clause), or 'affordance_list'
+        (an action-menu enumeration). Only 'declarative' units are ever
+        passed to claim extraction -- imperative and affordance-list
+        text is excluded from becoming a factual world proposition, but
+        this classification is purely representational: it does not
+        itself choose an action or generate a prediction.
+        """
+        text = str(sentence_raw or "").strip()
+        if not text:
+            return "declarative"
+        if re.match(r'^(?:available\s+actions?|options|choices)\s*:', text, re.IGNORECASE):
+            return "affordance_list"
+        _lead_verbs = '|'.join(self._CLAIM_IMPERATIVE_LEAD_VERBS)
+        if re.match(rf'^(?:please\s+)?(?:{_lead_verbs})\b', text, re.IGNORECASE):
+            return "imperative"
+        return "declarative"
+
     def _extract_claims(self, text: str, source: str, understood: dict | None = None) -> List[Dict[str, Any]]:
         raw = str(text or "").strip()
         if not raw or raw.endswith('?'):
@@ -4612,12 +4765,11 @@ class WorkingMemory:
             if self.extract_behavior_alignment_request(raw):
                 return []
 
-        line = self._expand_claim_contractions(raw.rstrip('.!'))
         out: List[Dict[str, Any]] = []
         seen = set()
         seen_turn_local = set()
 
-        def _append_claim(subject: str, relation: str, obj: str, negated: bool = False):
+        def _append_claim(subject: str, relation: str, obj: str, negated: bool, sentence_meta: Dict[str, Any]):
             subject_norm = self._normalize_mention(subject)
             obj_norm = self._normalize_claim_object(obj)
             if not subject_norm or not obj_norm or self._is_weak_anchor_label(subject_norm):
@@ -4630,7 +4782,8 @@ class WorkingMemory:
             if not obj_norm or obj_norm in self._VAGUE_REFERENTS:
                 return
             claim = self._build_claim(
-                subject_norm, relation, obj_norm, source, negated, raw, understood
+                subject_norm, relation, obj_norm, source, negated,
+                sentence_meta.get('raw_text', raw), understood, sentence_meta,
             )
             key = (
                 claim['subject'],
@@ -4656,98 +4809,6 @@ class WorkingMemory:
                 return
             seen.add(key)
             out.append(claim)
-
-        # PF1.6 residue W2 (2026-07-21): {1,40}? required a subject at
-        # least 2 characters long, so single-letter pronoun subjects ("I")
-        # never matched at all -- "I claimed I wasn't upset..." skipped
-        # this branch entirely and fell through to the plain copula
-        # pattern below, which then captured "I claimed I" (the reporting
-        # frame swallowed whole) as its subject. {0,40}? lets "I" match.
-        # PF1.6 residue W2: the verb list only had 3rd-person -s forms and
-        # past tense -- "I claim...", "I think...", "I believe..." (base
-        # forms, the natural first-person phrasing) never matched. Bare
-        # forms are only grammatical for I/we/you as subject anyway
-        # (never a longer noun phrase), and restricting them to that
-        # exact subject also rules out the false-positive this caught
-        # live: "I just wanted to say hello" matching on "say" with
-        # "wanted to" swallowed into the subject group -- an infinitive
-        # purpose clause, not reported speech. The lookaheads keep the
-        # flexible-subject branch limited to the original -s/-ed forms
-        # and the strict i/we/you branch to the bare forms, while still
-        # capturing the verb into a single group (1) for the code below.
-        reported_match = re.match(
-            r'^(?:'
-            r'(?:my\s+\w+|[A-Za-z][A-Za-z0-9_\-\s]{0,40}?)\s+'
-            r'(?=(?:says|said|thinks|thought|believes|believed|claims|claimed|insists|insisted)\s)'
-            r'|'
-            r'(?:i|we|you)\s+(?=(?:say|think|believe|claim|insist)\s)'
-            r')'
-            r'(says|said|say|thinks|thought|think|believes|believed|believe|'
-            r'claims|claimed|claim|insists|insisted|insist)\s+(.+)$',
-            line,
-            re.IGNORECASE,
-        )
-        if reported_match:
-            nested_clause = str(reported_match.group(2) or '').strip()
-            if nested_clause and nested_clause.lower() != line.lower():
-                nested_claims = self._extract_claims(nested_clause, source=source, understood=understood)
-                for claim in nested_claims:
-                    key = (
-                        claim.get('subject'),
-                        claim.get('relation'),
-                        claim.get('object'),
-                        claim.get('negated'),
-                        claim.get('source'),
-                    )
-                    if key not in seen:
-                        seen.add(key)
-                        out.append(claim)
-                # PF1.6 residue W2 (2026-07-21): a reported-speech sentence's
-                # assertion content lives in the reported clause -- if
-                # nothing extractable lives there (very often because the
-                # reporter/reportee are pronouns, deliberately skipped via
-                # _CLAIM_SKIP_SUBJECTS), the right answer is no claim, not
-                # falling through to re-scan the WHOLE original line. That
-                # fallthrough produced garbled subjects once the widened
-                # verb list (this same work item) made a verb inside the
-                # reported clause visible to the outer patterns loop too
-                # (e.g. "He says he trusts me" -> subject captured as "He
-                # says he", the reporting frame swallowed into the subject).
-                return out[:3]
-
-        locative_action_match = re.match(
-            r'^(?:i|we|he|she|they|someone|my\s+\w+|[A-Za-z][A-Za-z0-9_\-\s]{1,30}?)\s+'
-            r'(?:left|leave|put|placed|place|set|kept|keep|stored|store)\s+'
-            r'(?:my|the|our|his|her|their|a|an)?\s*([A-Za-z][A-Za-z0-9_\-\s]{1,60}?)\s+'
-            r'(in|inside|on|at|under|by|near)\s+(.+)$',
-            line,
-            re.IGNORECASE,
-        )
-        if locative_action_match:
-            subject, prep, obj = locative_action_match.groups()
-            relation = self._LOCATION_PREPOSITION_TO_RELATION.get(prep.lower(), 'located_at')
-            _append_claim(subject, relation, obj, False)
-
-        locative_copula_match = re.match(
-            r'^(?:the\s+|a\s+|an\s+)?([A-Za-z][A-Za-z0-9_\-\s]{1,60}?)\s+'
-            r'(?:is|are|was|were)\s+(not\s+)?(in|inside|on|at|under|by|near)\s+(.+)$',
-            line,
-            re.IGNORECASE,
-        )
-        if locative_copula_match:
-            subject, neg_token, prep, obj = locative_copula_match.groups()
-            relation = self._LOCATION_PREPOSITION_TO_RELATION.get(prep.lower(), 'located_at')
-            _append_claim(subject, relation, obj, bool(neg_token))
-
-        modal_copula_match = re.match(
-            r'^([A-Za-z0-9][A-Za-z0-9_\-\s]{1,60}?)\s+'
-            r'(can\s+both\s+be|can\s+be|cannot\s+be|can\'t\s+be)\s+(.+)$',
-            line,
-            re.IGNORECASE,
-        )
-        if modal_copula_match:
-            subject, modal_relation, obj = modal_copula_match.groups()
-            _append_claim(subject, 'can_be', obj, bool(re.match(r'^(?:cannot|can\'t)', modal_relation, re.IGNORECASE)))
 
         relation_patterns = [
             r'(connects?\s+to|links?\s+to|maps?\s+to|relates?\s+to|pertains?\s+to)',
@@ -4798,33 +4859,151 @@ class WorkingMemory:
                 re.IGNORECASE,
             ),
         ]
-        for negated_aux_pattern in negated_aux_patterns:
-            negated_aux_match = negated_aux_pattern.match(line)
-            if negated_aux_match:
-                subject, relation, obj = negated_aux_match.groups()
-                _append_claim(subject, relation, obj, True)
-                break
 
-        for pat in patterns:
-            match = re.match(pat, line, re.IGNORECASE)
-            if not match:
+        # Build 619 Repair A: split into sentence-bounded units FIRST --
+        # every branch below (reported speech, locative, modal, relation
+        # patterns) now runs against ONE sentence's own text at a time,
+        # so no subject/relation/object group can ever capture content
+        # from a later sentence. Build 619 Repair B: only 'declarative'
+        # units are examined at all -- imperative task clauses ("Choose
+        # one action.") and the action-menu enumeration ("Available
+        # actions: ...") never reach relation-pattern matching, so they
+        # can never become part of a factual claim object.
+        for unit in self._split_claim_sentences(raw):
+            if len(out) >= 3:
+                break
+            if self._classify_sentence_kind(unit['raw_text']) != 'declarative':
                 continue
-            groups = match.groups()
-            if len(groups) == 3:
-                subject, relation, obj = groups
-                negated = False
-            else:
-                subject, relation, neg_token, obj = groups
-                negated = bool(neg_token)
-            if relation.lower() in {'is', 'are', 'was', 'were'} and re.match(
-                r'^(?:in|inside|on|at|under|by|near)\b',
-                str(obj or '').strip(),
+            sentence_stripped = str(unit['raw_text'] or '').strip()
+            line = self._expand_claim_contractions(sentence_stripped.rstrip('.!'))
+            if not line:
+                continue
+            sentence_meta = dict(unit)
+            sentence_meta['normalized_text'] = self._normalize_mention(sentence_stripped)
+
+            # PF1.6 residue W2 (2026-07-21): {1,40}? required a subject at
+            # least 2 characters long, so single-letter pronoun subjects ("I")
+            # never matched at all -- "I claimed I wasn't upset..." skipped
+            # this branch entirely and fell through to the plain copula
+            # pattern below, which then captured "I claimed I" (the reporting
+            # frame swallowed whole) as its subject. {0,40}? lets "I" match.
+            # PF1.6 residue W2: the verb list only had 3rd-person -s forms and
+            # past tense -- "I claim...", "I think...", "I believe..." (base
+            # forms, the natural first-person phrasing) never matched. Bare
+            # forms are only grammatical for I/we/you as subject anyway
+            # (never a longer noun phrase), and restricting them to that
+            # exact subject also rules out the false-positive this caught
+            # live: "I just wanted to say hello" matching on "say" with
+            # "wanted to" swallowed into the subject group -- an infinitive
+            # purpose clause, not reported speech. The lookaheads keep the
+            # flexible-subject branch limited to the original -s/-ed forms
+            # and the strict i/we/you branch to the bare forms, while still
+            # capturing the verb into a single group (1) for the code below.
+            reported_match = re.match(
+                r'^(?:'
+                r'(?:my\s+\w+|[A-Za-z][A-Za-z0-9_\-\s]{0,40}?)\s+'
+                r'(?=(?:says|said|thinks|thought|believes|believed|claims|claimed|insists|insisted)\s)'
+                r'|'
+                r'(?:i|we|you)\s+(?=(?:say|think|believe|claim|insist)\s)'
+                r')'
+                r'(says|said|say|thinks|thought|think|believes|believed|believe|'
+                r'claims|claimed|claim|insists|insisted|insist)\s+(.+)$',
+                line,
                 re.IGNORECASE,
-            ):
-                continue
-            if re.search(r'\b(?:do|does|did)\s+not$', self._normalize_mention(subject)):
-                continue
-            _append_claim(subject, relation, obj, negated)
+            )
+            if reported_match:
+                nested_clause = str(reported_match.group(2) or '').strip()
+                if nested_clause and nested_clause.lower() != line.lower():
+                    nested_claims = self._extract_claims(nested_clause, source=source, understood=understood)
+                    for claim in nested_claims:
+                        key = (
+                            claim.get('subject'),
+                            claim.get('relation'),
+                            claim.get('object'),
+                            claim.get('negated'),
+                            claim.get('source'),
+                        )
+                        if key not in seen:
+                            seen.add(key)
+                            out.append(claim)
+                    # PF1.6 residue W2 (2026-07-21): a reported-speech sentence's
+                    # assertion content lives in the reported clause -- if
+                    # nothing extractable lives there (very often because the
+                    # reporter/reportee are pronouns, deliberately skipped via
+                    # _CLAIM_SKIP_SUBJECTS), the right answer is no claim, not
+                    # falling through to re-scan the SAME sentence with the
+                    # other branches below (that fallthrough produced garbled
+                    # subjects once the widened verb list made a verb inside
+                    # the reported clause visible to the outer patterns loop
+                    # too). Move on to the NEXT sentence instead.
+                    continue
+
+            locative_action_match = re.match(
+                r'^(?:i|we|he|she|they|someone|my\s+\w+|[A-Za-z][A-Za-z0-9_\-\s]{1,30}?)\s+'
+                r'(?:left|leave|put|placed|place|set|kept|keep|stored|store)\s+'
+                r'(?:my|the|our|his|her|their|a|an)?\s*([A-Za-z][A-Za-z0-9_\-\s]{1,60}?)\s+'
+                r'(in|inside|on|at|under|by|near)\s+(.+)$',
+                line,
+                re.IGNORECASE,
+            )
+            if locative_action_match:
+                subject, prep, obj = locative_action_match.groups()
+                relation = self._LOCATION_PREPOSITION_TO_RELATION.get(prep.lower(), 'located_at')
+                _append_claim(subject, relation, obj, False, sentence_meta)
+
+            locative_copula_match = re.match(
+                r'^(?:the\s+|a\s+|an\s+)?([A-Za-z][A-Za-z0-9_\-\s]{1,60}?)\s+'
+                r'(?:is|are|was|were)\s+(not\s+)?(in|inside|on|at|under|by|near)\s+(.+)$',
+                line,
+                re.IGNORECASE,
+            )
+            if locative_copula_match:
+                subject, neg_token, prep, obj = locative_copula_match.groups()
+                relation = self._LOCATION_PREPOSITION_TO_RELATION.get(prep.lower(), 'located_at')
+                _append_claim(subject, relation, obj, bool(neg_token), sentence_meta)
+
+            modal_copula_match = re.match(
+                r'^([A-Za-z0-9][A-Za-z0-9_\-\s]{1,60}?)\s+'
+                r'(can\s+both\s+be|can\s+be|cannot\s+be|can\'t\s+be)\s+(.+)$',
+                line,
+                re.IGNORECASE,
+            )
+            if modal_copula_match:
+                subject, modal_relation, obj = modal_copula_match.groups()
+                _append_claim(
+                    subject, 'can_be', obj,
+                    bool(re.match(r'^(?:cannot|can\'t)', modal_relation, re.IGNORECASE)),
+                    sentence_meta,
+                )
+
+            for negated_aux_pattern in negated_aux_patterns:
+                negated_aux_match = negated_aux_pattern.match(line)
+                if negated_aux_match:
+                    subject, relation, obj = negated_aux_match.groups()
+                    _append_claim(subject, relation, obj, True, sentence_meta)
+                    break
+
+            for pat in patterns:
+                match = re.match(pat, line, re.IGNORECASE)
+                if not match:
+                    continue
+                groups = match.groups()
+                if len(groups) == 3:
+                    subject, relation, obj = groups
+                    negated = False
+                else:
+                    subject, relation, neg_token, obj = groups
+                    negated = bool(neg_token)
+                if relation.lower() in {'is', 'are', 'was', 'were'} and re.match(
+                    r'^(?:in|inside|on|at|under|by|near)\b',
+                    str(obj or '').strip(),
+                    re.IGNORECASE,
+                ):
+                    continue
+                if re.search(r'\b(?:do|does|did)\s+not$', self._normalize_mention(subject)):
+                    continue
+                _append_claim(subject, relation, obj, negated, sentence_meta)
+
         return out[:3]
 
     def note_claims(self, text: str, source: str = 'user', understood: dict | None = None) -> List[Dict[str, Any]]:

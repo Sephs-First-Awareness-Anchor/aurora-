@@ -10037,6 +10037,22 @@ def _build_grounded_fallback_response(
         claim_resolution = getattr(working_memory, 'last_claim_resolution', {}) or {}
         focus_claim = dict(claim_resolution.get('focus_claim', {}) or {})
         focus_summary = working_memory._claim_to_text(focus_claim) if focus_claim else ''
+        # Build 619 Repair C: understanding the supplied proposition is
+        # not the same as answering the user's request. focus_summary
+        # (and focus_terms, below) stay available as grounding/anchor
+        # material for the rest of this function -- topic-anchor
+        # selection, lookup-offer anchoring, callback/locative recall --
+        # but a claim whose source is the CURRENT user turn must not be
+        # delivered back to them, verbatim, AS Aurora's own answer
+        # merely because it exists as the active focus claim (confirmed
+        # live: the RCEC assessment prompt's own opening observation,
+        # unbounded by Repair A's absence at the time, came back as the
+        # delivered response through exactly this path). This mirrors
+        # the guard answer_from_claims() already applies to its own
+        # focus_claim fallback.
+        focus_summary_authorial = (
+            focus_summary if str(focus_claim.get('source', '') or '') != 'user' else ''
+        )
         focus_terms = working_memory._claim_terms(focus_claim) if focus_claim else set()
         query_terms = {
             str(term).lower()
@@ -10355,14 +10371,14 @@ def _build_grounded_fallback_response(
                         reason_about=True,
                     ),
                 )
-            if focus_summary:
+            if focus_summary_authorial:
                 return (
                     _render_runtime_intent(
                         systems,
-                        f"{focus_summary}; partial grounding",
+                        f"{focus_summary_authorial}; partial grounding",
                         emotion_tone='reflective',
                         certainty=0.68,
-                        supporting_concepts=[focus_summary],
+                        supporting_concepts=[focus_summary_authorial],
                     ),
                     'honest',
                     0.68,
@@ -10452,14 +10468,14 @@ def _build_grounded_fallback_response(
                         tags=['runtime', 'dialogue', 'uncertainty'],
                     ),
                 )
-            if focus_summary:
+            if focus_summary_authorial:
                 return (
                     _render_runtime_intent(
                         systems,
-                        focus_summary,
+                        focus_summary_authorial,
                         emotion_tone='precise',
                         certainty=0.72,
-                        supporting_concepts=[focus_summary],
+                        supporting_concepts=[focus_summary_authorial],
                     ),
                     'attentive',
                     0.72,
@@ -20928,6 +20944,119 @@ def _grounded_semantic_authority(text: str, user_text: str, systems: dict, confi
     return max(0.15, min(1.0, float(confidence or 0.0)))
 
 
+# Build 619 Repair D: an explicit user request to have their own words
+# repeated, quoted, transcribed, or paraphrased back exempts the turn from
+# input-echo rejection entirely -- restating on request is correct
+# behavior, not a delivery-integrity failure.
+_REPEAT_OR_QUOTE_REQUEST_MARKERS = (
+    'repeat that', 'repeat this', 'repeat it', 'say that again', 'say it again',
+    'read that back', 'read it back', 'read back', 'what did i just say',
+    'what did i say', 'quote that', 'quote this', 'quote me', 'quote it',
+    'transcribe', 'paraphrase', 'in your own words', 'restate', 'rephrase',
+    'repeat the prompt', 'repeat the question', 'echo that', 'echo this',
+    'repeat it back', 'say it back', 'tell me what i said', 'can you repeat',
+    'could you repeat', 'please repeat',
+)
+
+
+def _requests_repetition_or_paraphrase(user_text: str) -> bool:
+    low = str(user_text or "").lower()
+    return any(marker in low for marker in _REPEAT_OR_QUOTE_REQUEST_MARKERS)
+
+
+def _detect_input_echo_without_answer(candidate_text: str, user_text: str, systems: dict) -> Tuple[bool, str]:
+    """
+    Build 619 Repair D: core, pipeline-level check for whether a
+    candidate is an unproductive echo of the current external input --
+    the delivery-integrity failure confirmed live when a full multi-
+    sentence RCEC assessment prompt (world-state observations, an
+    action menu, and task instructions) came back nearly verbatim as
+    Aurora's own "answer" (src=generative, confidence=0.72, while the
+    final articulation trace itself recorded semantic_authority=0.15,
+    meaning_preserved=false). Runs inside the core response pipeline
+    (called from _finalize_articulation), independent of Flutter's
+    aurora_bridge._sanitize_response() and of RCEC's action-commitment
+    detector -- neither is on this call path.
+
+    Returns (is_echo, reason). reason is "input_echo_without_answer"
+    when rejected, "" otherwise (including every exemption case: short
+    prompts/answers, explicit repetition or paraphrase requests, and
+    candidates that introduce real substantive content).
+    """
+    candidate = str(candidate_text or "").strip()
+    prompt = str(user_text or "").strip()
+    if not candidate or not prompt:
+        return False, ""
+    if _requests_repetition_or_paraphrase(prompt):
+        return False, ""
+
+    def _content_words(text: str) -> List[str]:
+        return [w.lower() for w in _CIR_WORD_RE.findall(text) if len(w) >= 3]
+
+    prompt_set = set(_content_words(prompt))
+    candidate_set = set(_content_words(candidate))
+
+    # Short questions/answers legitimately share most of their (few)
+    # content words, and a concise answer necessarily reuses important
+    # nouns -- only apply the strict echo check once the prompt carries
+    # enough substantive content that a near-full reproduction would
+    # plainly not be a real answer.
+    if len(prompt_set) < 8 or not candidate_set:
+        return False, ""
+
+    coverage = len(candidate_set & prompt_set) / max(1, len(prompt_set))
+    novelty = len(candidate_set - prompt_set) / max(1, len(candidate_set))
+    length_ratio = len(candidate) / max(1, len(prompt))
+
+    reproduces_prompt = coverage >= 0.7 and length_ratio >= 0.55
+    introduces_no_answer = novelty <= 0.15
+    # "Reproduces nearly all of the prompt" and "retains the action menu
+    # or instructional clauses" are ALTERNATIVE ways a candidate can be
+    # an echo (a candidate that hands back ONLY the action menu, without
+    # the observation sentences, still never answered anything) -- both
+    # are still gated on "introduces no substantive answer" and the
+    # earlier explicit-request exemption, which apply either way.
+    if not introduces_no_answer:
+        return False, ""
+
+    # Retains the action menu or an instructional clause -- reuse the
+    # SAME sentence classification Repair A/B already built for claim
+    # extraction (aurora_working_memory.WorkingMemory), so "affordance_
+    # list"/"imperative" detection stays defined in exactly one place
+    # rather than duplicated here. Falls back to a throwaway instance
+    # (the two methods used are pure, keyed only off class-level
+    # constants) when no live working_memory is wired into systems.
+    retains_instructions = False
+    try:
+        wm = systems.get('working_memory') if isinstance(systems, dict) else None
+        if wm is None or not hasattr(wm, '_split_claim_sentences'):
+            from aurora_working_memory import WorkingMemory as _WM_for_echo
+            wm = _WM_for_echo()
+        for unit in wm._split_claim_sentences(prompt):
+            kind = wm._classify_sentence_kind(unit['raw_text'])
+            if kind not in ('imperative', 'affordance_list'):
+                continue
+            unit_words = set(_content_words(unit['raw_text']))
+            if not unit_words:
+                continue
+            unit_coverage = len(unit_words & candidate_set) / max(1, len(unit_words))
+            if unit_coverage >= 0.7:
+                retains_instructions = True
+                break
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_detect_input_echo_without_answer",
+            exc=_aurora_boundary_exc,
+            context={"function": "_detect_input_echo_without_answer", "source_file": "aurora.py"},
+        )
+        retains_instructions = False
+
+    if retains_instructions or reproduces_prompt:
+        return True, "input_echo_without_answer"
+    return False, ""
+
+
 def _extract_named_relational_entities(text: str, systems: dict) -> set:
     """The small, closed set of this project's own relational-identity
     entity names (aurora/sunni/cael/...) that literally appear in text,
@@ -21172,15 +21301,69 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
         elif _grounded_text:
             # Rule 5: both weak, but resp_A is at least a real, non-
             # empty answer -- prefer it over a rejected/empty composer.
-            resp_A.content = _grounded_text
-            resp_A.src = str(getattr(resp_A, "src", "") or "grounded_chain")
-            state.response_content = _grounded_text
-            state.response_src = resp_A.src
-            arbitration.update(
-                text=_grounded_text, source=resp_A.src,
-                semantic_authority=_grounded_authority, articulation_quality=_grounded_authority,
-                confidence=_grounded_confidence,
+            #
+            # Build 619 Repair E: "nonempty" alone is not enough. Before
+            # trusting a weak candidate, check whether it is actually an
+            # unproductive echo of the user's own input (Repair D) --
+            # confirmed live as the exact shape of this defect: a full
+            # RCEC assessment prompt, echoed back nearly verbatim,
+            # reached delivery through exactly this branch (src=
+            # generative, confidence=0.72, while semantic_authority sat
+            # at 0.15 and meaning_preserved was false). A candidate is
+            # only invalidated here when ALL FOUR hold: authority below
+            # the delivery floor (this branch is only reached when it
+            # is), meaning not preserved, composer empty/invalid, AND
+            # the candidate substantially echoes the input -- a
+            # genuinely authored, appropriately qualified low-confidence
+            # answer that is NOT an echo still gets delivered, same as
+            # before. There is no third current-turn candidate in this
+            # function's two-input design to fall back to when
+            # invalidated, so the correct next step is Aurora's own
+            # honest abstention, not a fabricated substitute.
+            _grounded_is_echo, _echo_reason = _detect_input_echo_without_answer(
+                _grounded_text, user_text, systems
             )
+            # _preserved is already guaranteed False here (this branch is
+            # only reached after the "_d2_unified_text and _preserved"
+            # case above was skipped) -- covers BOTH an empty composer
+            # and a non-empty composer that was correctly rejected as
+            # invalid, matching Repair E's "composer result is empty or
+            # invalid" condition without excluding the rejected-but-
+            # nonempty case.
+            if _grounded_is_echo and not _preserved:
+                _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
+                resp_A.content = state.response_content
+                resp_A.emotional_tone = state.response_tone
+                resp_A.confidence = state.response_confidence
+                resp_A.src = state.response_src
+                arbitration.update(
+                    text=state.response_content, source="honest_abstain",
+                    semantic_authority=0.0, articulation_quality=0.0,
+                    confidence=state.response_confidence,
+                    rejection_reasons=list(_reasons) + [_echo_reason, "weak_candidate_invalidated"],
+                )
+            else:
+                resp_A.content = _grounded_text
+                resp_A.src = str(getattr(resp_A, "src", "") or "grounded_chain")
+                # Build 619 Repair E: delivered confidence must be
+                # reconciled with final semantic authority -- this branch
+                # is only reached when authority is below the delivery
+                # floor, so an unrelated upstream confidence (e.g. 0.72
+                # from whatever chain first produced resp_A) must not
+                # survive unexamined next to a 0.15 authority score.
+                # Authority IS the measurement of "how much weight this
+                # candidate's content carries as an actual answer" --
+                # reconciling to it, capped by the candidate's own
+                # upstream confidence, keeps delivered confidence honest
+                # without inventing a new, undocumented number.
+                resp_A.confidence = min(_grounded_confidence, _grounded_authority)
+                state.response_content = _grounded_text
+                state.response_src = resp_A.src
+                arbitration.update(
+                    text=_grounded_text, source=resp_A.src,
+                    semantic_authority=_grounded_authority, articulation_quality=_grounded_authority,
+                    confidence=resp_A.confidence,
+                )
         else:
             # Rule 6: neither candidate supports a reliable answer --
             # Aurora's existing honest-abstention behavior, unchanged.
