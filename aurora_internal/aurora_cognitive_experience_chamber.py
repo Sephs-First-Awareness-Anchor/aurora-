@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import math
 import random
 import re
 from collections import defaultdict
@@ -180,6 +181,7 @@ class WorldGenerator:
         agents: Sequence[str] = ("agent_a",),
         entity_types: Optional[Sequence[str]] = None,
         connect_chain: bool = True,
+        required_types: Optional[Sequence[str]] = None,
     ) -> WorldState:
         rng = random.Random(seed) if seed is not None else self._rng
         available_types = list(entity_types) if entity_types else list(ENTITY_TYPES)
@@ -189,8 +191,8 @@ class WorldGenerator:
         entities: Dict[str, Entity] = {}
         property_history: Dict[Tuple[str, str], List[Tuple[int, Any]]] = {}
         counts: Dict[str, int] = {}
-        for _ in range(max(num_entities, 2)):
-            etype = rng.choice(available_types)
+
+        def _add_entity(etype: str) -> None:
             counts[etype] = counts.get(etype, 0) + 1
             entity_id = f"{etype}_{counts[etype] - 1}"
             spec = ENTITY_TYPES[etype]
@@ -198,6 +200,19 @@ class WorldGenerator:
             entities[entity_id] = Entity(entity_id=entity_id, entity_type=etype, properties=dict(props))
             for prop_name, value in props.items():
                 property_history[(entity_id, prop_name)] = [(0, value)]
+
+        # Build 610 (G): guarantee each required role-bearing type is
+        # present at least once -- a mechanism-coherent cohort needs the
+        # SAME source/target entity types in every generated world, and
+        # pure random draws from entity_types cannot promise that.
+        for etype in (required_types or ()):
+            if etype not in ENTITY_TYPES:
+                raise ValueError(f"unknown required entity type: {etype!r}")
+            _add_entity(etype)
+
+        remaining = max(max(num_entities, 2) - len(entities), 0)
+        for _ in range(remaining):
+            _add_entity(rng.choice(available_types))
 
         relationships: List[Relationship] = []
         if connect_chain and len(entities) >= 2:
@@ -373,6 +388,194 @@ def _build_rule(world: WorldState, rng: random.Random, family: str) -> _HiddenRu
     return _HiddenRule(**rule_kwargs)
 
 
+@dataclass(frozen=True)
+class MechanismSpec:
+    """Build 610 (G): one stable, opaque hidden-mechanism identity -- role
+    level, not entity-id level -- shared across every acquisition/
+    assessment trial in a cohort, so Operational Synthesis is asked to
+    discover ONE learnable operation instead of nine contradictory ones
+    (the Build 608 canary's actual failure: nine seeds, nine unrelated
+    mappings, all filed under one stable task id that was stable around a
+    task that was not singular). Aurora never sees this object -- it is
+    experimental bookkeeping only, the same privacy boundary _HiddenRule
+    itself already enforces."""
+    mechanism_id: str
+    family: str
+    trigger_action: str
+    source_entity_type: str
+    target_entity_type: str
+    target_property: str
+    effect_delta: Any
+    delay_ticks: int = 0
+    condition_entity_type: Optional[str] = None
+    condition_property: Optional[str] = None
+    condition_value: Any = None
+
+
+def generate_mechanism(
+    rng: random.Random, family: str = "direct_trigger", mechanism_id: Optional[str] = None,
+) -> MechanismSpec:
+    """Picks one valid (trigger_action, source role, target role, target
+    property, effect) combination from the same bounded catalogs
+    _build_rule() draws from -- resolved once, at the entity-TYPE (role)
+    level, instead of re-resolved (and re-randomized) per world."""
+    triggerable = [a for a, spec in ACTION_TYPES.items() if spec.arity == 1]
+    rng.shuffle(triggerable)
+    trigger_action = None
+    source_entity_type = None
+    for candidate in triggerable:
+        required_prop = _ACTION_REQUIRED_PROPERTY[candidate]
+        matches = [et for et, spec in ENTITY_TYPES.items() if required_prop in spec.properties]
+        if matches:
+            trigger_action = candidate
+            source_entity_type = rng.choice(matches)
+            break
+    if trigger_action is None or source_entity_type is None:
+        raise ValueError("no action type is compatible with any entity type in the catalog")
+
+    target_candidates = [et for et in ENTITY_TYPES if et != source_entity_type] or [source_entity_type]
+    target_entity_type = rng.choice(target_candidates)
+    target_props = list(ENTITY_TYPES[target_entity_type].properties)
+    numeric_props = [p for p in target_props if PROPERTIES[p].value_type == "numeric"]
+    other_props = [p for p in target_props if PROPERTIES[p].value_type != "numeric"]
+    if numeric_props:
+        target_property = rng.choice(numeric_props)
+        effect_delta: Any = rng.choice([1, 2, -1])
+    else:
+        target_property = rng.choice(other_props)
+        spec = PROPERTIES[target_property]
+        if spec.value_type == "enum" and spec.domain:
+            effect_delta = rng.choice(spec.domain)
+        else:
+            effect_delta = True
+
+    delay_ticks = 0
+    condition_entity_type: Optional[str] = None
+    condition_property: Optional[str] = None
+    condition_value: Any = None
+    if family == "delayed_trigger":
+        delay_ticks = rng.randint(1, 3)
+    elif family == "conditional_on_third_variable":
+        remaining_types = [et for et in ENTITY_TYPES if et not in (source_entity_type, target_entity_type)] or list(ENTITY_TYPES)
+        condition_entity_type = rng.choice(remaining_types)
+        cond_props = [
+            p for p in ENTITY_TYPES[condition_entity_type].properties if PROPERTIES[p].value_type != "numeric"
+        ] or list(ENTITY_TYPES[condition_entity_type].properties)
+        condition_property = rng.choice(cond_props)
+        cspec = PROPERTIES[condition_property]
+        if cspec.value_type == "enum" and cspec.domain:
+            condition_value = rng.choice(cspec.domain)
+        elif cspec.value_type == "bool":
+            condition_value = True
+        else:
+            condition_value = cspec.default
+
+    identity_seed = f"{family}:{trigger_action}:{source_entity_type}:{target_entity_type}:{target_property}"
+    return MechanismSpec(
+        mechanism_id=mechanism_id or f"mech_{hashlib.sha256(identity_seed.encode('utf-8')).hexdigest()[:10]}",
+        family=family,
+        trigger_action=trigger_action,
+        source_entity_type=source_entity_type,
+        target_entity_type=target_entity_type,
+        target_property=target_property,
+        effect_delta=effect_delta,
+        delay_ticks=delay_ticks,
+        condition_entity_type=condition_entity_type,
+        condition_property=condition_property,
+        condition_value=condition_value,
+    )
+
+
+def _build_rule_from_mechanism(world: WorldState, mechanism: MechanismSpec, rng: random.Random) -> _HiddenRule:
+    """Resolves a MechanismSpec's role-level identity against ONE concrete
+    world -- picks which actual entity plays each role -- while keeping
+    the mechanism (trigger action, roles, property, effect) fixed across
+    every world it is resolved against. This is what makes a cohort's
+    trials share one learnable operation while entity labels, distractor
+    placement, and initial values still vary per trial."""
+    source_candidates = [eid for eid, e in world.entities.items() if e.entity_type == mechanism.source_entity_type]
+    if not source_candidates:
+        raise ValueError(
+            f"world has no entities of type {mechanism.source_entity_type!r} required by mechanism {mechanism.mechanism_id!r}"
+        )
+    source_id = rng.choice(source_candidates)
+
+    target_candidates = [
+        eid for eid, e in world.entities.items() if e.entity_type == mechanism.target_entity_type and eid != source_id
+    ] or [eid for eid, e in world.entities.items() if e.entity_type == mechanism.target_entity_type]
+    if not target_candidates:
+        raise ValueError(
+            f"world has no entities of type {mechanism.target_entity_type!r} required by mechanism {mechanism.mechanism_id!r}"
+        )
+    target_id = rng.choice(target_candidates)
+
+    decoy_candidates = [
+        (eid, p) for eid, e in world.entities.items() for p in e.properties
+        if PROPERTIES[p].value_type == "numeric" and not (eid == target_id and p == mechanism.target_property)
+    ]
+    decoy_entity_id = decoy_property = None
+    if decoy_candidates:
+        decoy_entity_id, decoy_property = rng.choice(decoy_candidates)
+
+    rule_kwargs: Dict[str, Any] = dict(
+        family=mechanism.family,
+        trigger_action=mechanism.trigger_action,
+        source_entity_id=source_id,
+        target_entity_id=target_id,
+        target_property=mechanism.target_property,
+        effect_delta=mechanism.effect_delta,
+        decoy_entity_id=decoy_entity_id,
+        decoy_property=decoy_property,
+        delay_ticks=mechanism.delay_ticks,
+    )
+    if mechanism.family == "threshold_trigger":
+        rule_kwargs["source_property"] = mechanism.target_property
+        rule_kwargs["threshold_value"] = float(rng.randint(2, 4))
+        rule_kwargs["threshold_direction"] = "upward"
+    elif mechanism.family == "conditional_on_third_variable" and mechanism.condition_entity_type is not None:
+        condition_candidates = [
+            eid for eid, e in world.entities.items()
+            if e.entity_type == mechanism.condition_entity_type and eid not in (source_id, target_id)
+        ] or [eid for eid, e in world.entities.items() if e.entity_type == mechanism.condition_entity_type]
+        if not condition_candidates:
+            raise ValueError(
+                f"world has no entities of type {mechanism.condition_entity_type!r} required by mechanism {mechanism.mechanism_id!r}"
+            )
+        rule_kwargs["condition_entity_id"] = rng.choice(condition_candidates)
+        rule_kwargs["condition_property"] = mechanism.condition_property
+        rule_kwargs["condition_value"] = mechanism.condition_value
+
+    return _HiddenRule(**rule_kwargs)
+
+
+def _mechanism_from_rule(world: WorldState, rule: _HiddenRule, mechanism_id: Optional[str] = None) -> MechanismSpec:
+    """Build 610 (H): derives the role-level mechanism a specific episode's
+    rule actually used -- so a transfer sub-episode can preserve trigger
+    action/source role/target role/target property role/effect direction
+    by default, even when the caller never explicitly built a
+    MechanismSpec (e.g. a standalone run_closed_loop_episode() call using
+    plain HiddenRuleEngine.generate())."""
+    source_type = world.entities[rule.source_entity_id].entity_type
+    target_type = world.entities[rule.target_entity_id].entity_type
+    condition_type = (
+        world.entities[rule.condition_entity_id].entity_type if rule.condition_entity_id else None
+    )
+    identity_seed = f"{rule.family}:{rule.trigger_action}:{source_type}:{target_type}:{rule.target_property}"
+    return MechanismSpec(
+        mechanism_id=mechanism_id or f"derived_{hashlib.sha256(identity_seed.encode('utf-8')).hexdigest()[:10]}",
+        family=rule.family,
+        trigger_action=rule.trigger_action,
+        source_entity_type=source_type,
+        target_entity_type=target_type,
+        target_property=rule.target_property,
+        effect_delta=rule.effect_delta,
+        delay_ticks=rule.delay_ticks,
+        condition_entity_type=condition_type,
+        condition_property=rule.condition_property,
+        condition_value=rule.condition_value,
+    )
+
+
 class HiddenRuleEngine:
     """Generates and privately holds the world's governing mechanic. Exposes
     only step(world_state, action) -> world_state: a deterministic
@@ -402,6 +605,21 @@ class HiddenRuleEngine:
         if family not in cls.RULE_FAMILIES:
             raise ValueError(f"unknown rule family: {family!r}")
         rule = _build_rule(world, rng, family)
+        return cls(rule, rng)
+
+    @classmethod
+    def generate_from_mechanism(
+        cls,
+        world: WorldState,
+        mechanism: MechanismSpec,
+        rng: Optional[random.Random] = None,
+    ) -> "HiddenRuleEngine":
+        """Build 610 (G): resolves a shared MechanismSpec against THIS
+        world -- same trigger action/roles/property/effect as every other
+        trial built from the same mechanism, only which concrete entity
+        plays each role (and which distractor exists) varies per world."""
+        rng = rng if rng is not None else random.Random()
+        rule = _build_rule_from_mechanism(world, mechanism, rng)
         return cls(rule, rng)
 
     def step(self, world_state: WorldState, action: ActionInvocation) -> WorldState:
@@ -720,6 +938,10 @@ class CapturedInterpretation:
     confidence: float = 0.0
     evidence_cited: Tuple[str, ...] = ()
     stated_unknowns: Tuple[str, ...] = ()
+    # Build 610 (F): how the returned action was actually arrived at --
+    # see ACTION_COMMITMENT_STATES. Never silently collapsed to a plain
+    # "wait" without recording which of these four it really was.
+    action_commitment: str = "unselected"
 
 
 _UNKNOWN_MARKERS: Tuple[str, ...] = (
@@ -736,6 +958,66 @@ _CHANGE_MARKERS: Tuple[Tuple[str, str], ...] = (
 )
 # _ACTION_VERB_PATTERNS is defined earlier alongside DEFAULT_SKIN (it backs
 # DEFAULT_SKIN.action_keywords) -- not redefined here.
+
+# Build 610 (F): four honest outcomes for "what action did Aurora actually
+# commit to", replacing the old silent binary of (found a keyword -> act,
+# else -> wait):
+#   selected           -- an action keyword appeared in a sentence carrying
+#                          an explicit first-person commitment marker.
+#   unselected         -- no action keyword appeared anywhere in the text
+#                          (e.g. abstention, a question, a bare observation).
+#   ambiguous          -- an action keyword appeared, but never inside a
+#                          commitment clause (Aurora mentioned it without
+#                          committing to it).
+#   echo_contaminated  -- the response substantially reproduces the offered
+#                          action menu itself; any keyword match there is
+#                          the prompt's own text, not Aurora's choice.
+# Only "selected" ever drives a real ActionInvocation other than wait().
+# These four are the only values interpret_expression() itself ever
+# produces. A fifth sentinel, "external_actor", is used exclusively by
+# run_acquisition_episode()'s 'demonstrated'/'control' trials, where the
+# action is pre-scripted by the experiment rather than parsed from
+# anything Aurora said -- there is no commitment question to answer
+# because it was never her choice to begin with.
+ACTION_COMMITMENT_STATES: Tuple[str, ...] = ("selected", "unselected", "ambiguous", "echo_contaminated")
+
+# Deliberately skin-independent (an English pronoun/contraction, not domain
+# vocabulary) so it applies identically whether the turn was rendered
+# through DEFAULT_SKIN or ALT_SKIN.
+_FIRST_PERSON_PATTERN = re.compile(r"\bi\b|\bi'm\b|\bi'll\b|\blet's\b|\blet me\b", re.IGNORECASE)
+
+
+def _find_commitment_action(
+    lowered: str, sentences: Sequence[str], skin: VocabularySkin
+) -> Tuple[Optional[str], str]:
+    """Build 610 (F): an action keyword appearing ANYWHERE in the response
+    is not agency -- it must appear in a sentence that also carries an
+    explicit first-person commitment marker ("I will...", "I add...",
+    "let me...") to count as a genuine, deliberate choice."""
+    committed_sentences = [s for s in sentences if _FIRST_PERSON_PATTERN.search(s.lower())]
+    for sentence in committed_sentences:
+        s_lower = sentence.lower()
+        for name, patterns in skin.action_keywords.items():
+            if any(p in s_lower for p in patterns):
+                return name, "selected"
+    for name, patterns in skin.action_keywords.items():
+        if any(p in lowered for p in patterns):
+            return None, "ambiguous"
+    return None, "unselected"
+
+
+def _detect_action_echo(lowered: str, available_action_phrases: Sequence[str]) -> bool:
+    """Build 610 (F): the live-observed failure mode -- Aurora echoes
+    (most or all of) the offered action menu back verbatim, and a naive
+    scan for the first matching keyword then attributes whichever action
+    happened to be listed first as though she had chosen it. If most of
+    the offered phrases are present verbatim, this is communication
+    pressure (reciting the prompt), not a selection."""
+    phrases = [p.lower() for p in available_action_phrases if p]
+    if len(phrases) < 2:
+        return False
+    present = sum(1 for phrase in phrases if phrase in lowered)
+    return present >= max(2, math.ceil(len(phrases) * 0.6))
 
 
 @dataclass(frozen=True)
@@ -788,10 +1070,14 @@ class ActionInterface:
         return actions
 
     @staticmethod
+    def action_phrases(observed: ObservedWorldState, skin: VocabularySkin = DEFAULT_SKIN, max_actions: int = 8) -> List[str]:
+        options = ActionInterface.available_actions(observed)[:max_actions]
+        return [_phrase_for_action(name, targets, observed, skin) for name, targets in options]
+
+    @staticmethod
     def build_prompt(observed: ObservedWorldState, max_actions: int = 8, skin: VocabularySkin = DEFAULT_SKIN) -> str:
         observation_text = describe_observation(observed, skin)
-        options = ActionInterface.available_actions(observed)[:max_actions]
-        option_phrases = [_phrase_for_action(name, targets, observed, skin) for name, targets in options]
+        option_phrases = ActionInterface.action_phrases(observed, skin, max_actions)
         options_text = ("Available actions: " + "; ".join(option_phrases) + ".") if option_phrases else ""
         ask = (
             "Choose one action, state what you predict will happen as a result, "
@@ -801,7 +1087,8 @@ class ActionInterface:
 
     @staticmethod
     def interpret_expression(
-        expression: str, observed: ObservedWorldState, confidence: float, skin: VocabularySkin = DEFAULT_SKIN
+        expression: str, observed: ObservedWorldState, confidence: float, skin: VocabularySkin = DEFAULT_SKIN,
+        available_action_phrases: Optional[Sequence[str]] = None,
     ) -> InterpretedAction:
         text = str(expression or "")
         lowered = text.lower()
@@ -841,6 +1128,16 @@ class ActionInterface:
             if predicted_consequence:
                 break
 
+        # Build 610 (F): a genuine commitment (in a first-person clause)
+        # beats a bare mention; an echoed action menu beats either, since
+        # reciting the offered options back is communication pressure, not
+        # a choice, regardless of which single keyword a naive scan would
+        # have hit first.
+        action_type, commitment = _find_commitment_action(lowered, sentences, skin)
+        if commitment != "selected" and _detect_action_echo(lowered, available_action_phrases or ()):
+            action_type = None
+            commitment = "echo_contaminated"
+
         interpretation = CapturedInterpretation(
             raw_expression=text,
             identified_entities=identified_entities,
@@ -849,9 +1146,9 @@ class ActionInterface:
             confidence=confidence,
             evidence_cited=evidence_cited,
             stated_unknowns=stated_unknowns,
+            action_commitment=commitment,
         )
 
-        action_type = next((name for name, patterns in skin.action_keywords.items() if any(p in lowered for p in patterns)), None)
         target_entity_id = identified_entities[0] if identified_entities else None
 
         intent = "act"
@@ -1070,6 +1367,7 @@ def _episode_step_from_dict(data: Dict[str, Any]) -> EpisodeStep:
         confidence=float(interp_data.get("confidence", 0.0) or 0.0),
         evidence_cited=tuple(interp_data.get("evidence_cited", ()) or ()),
         stated_unknowns=tuple(interp_data.get("stated_unknowns", ()) or ()),
+        action_commitment=str(interp_data.get("action_commitment", "unselected")),
     )
     consequence_data = data.get("consequence")
     return EpisodeStep(
@@ -1153,6 +1451,7 @@ def run_episode_step(
     import aurora as _aurora
 
     observed = boundary.observe(world_state, agent_id)
+    available_phrases = ActionInterface.action_phrases(observed, skin=skin)
     prompt_text = ActionInterface.build_prompt(observed, skin=skin)
 
     selected = SimpleNamespace(primary_concept=SimpleNamespace(value="cognitive_experience_chamber"))
@@ -1168,7 +1467,9 @@ def run_episode_step(
     expression = str(bridge_result.get("expression", "") or "")
     confidence = float((bridge_result.get("meta", {}) or {}).get("confidence", 0.0) or 0.0)
 
-    interpreted = ActionInterface.interpret_expression(expression, observed, confidence, skin=skin)
+    interpreted = ActionInterface.interpret_expression(
+        expression, observed, confidence, skin=skin, available_action_phrases=available_phrases,
+    )
 
     trace.record_interpretation(
         tick=world_state.tick,
@@ -1643,7 +1944,13 @@ def compute_transfer_comparison(
     shared = sorted(set(original_scores) & set(transfer_scores))
     deltas = {dim: round(transfer_scores[dim] - original_scores[dim], 6) for dim in shared}
     transfer_score = None
-    if shared:
+    # Build 610 (H): "transferred a discovered causal law" requires an
+    # actual measurable causal prediction in BOTH episodes -- without
+    # causal_prediction_accuracy present on both sides, a high score here
+    # would mean only "similar performance on two unresolved tasks" (e.g.
+    # both episodes scoring well on state/evidence/fidelity alone while
+    # neither ever made a scoreable prediction), not genuine transfer.
+    if shared and "causal_prediction_accuracy" in shared:
         transfer_score = max(0.0, 1.0 - (sum(abs(d) for d in deltas.values()) / len(deltas)))
     return TransferComparison(
         original_scores=dict(original_scores),
@@ -1698,7 +2005,15 @@ class TransferGenerator:
     through ALT_SKIN throughout (rendering AND parsing) to make the surface
     genuinely disjoint while the deep structure -- same entity/property
     catalogs, same rule-family generation, same action semantics -- repeats
-    exactly."""
+    exactly.
+
+    Build 610 (H): when a MechanismSpec is supplied, the transfer world
+    preserves the ORIGINAL episode's actual trigger action, source/target/
+    condition roles, target property, and effect direction -- not merely
+    the broad rule family. Only nouns, entity identifiers, distractor
+    placement, irrelevant properties, initial values, and vocabulary skin
+    vary. Without a mechanism, falls back to the pre-610 behavior of a
+    fresh, independently-random rule of the same family."""
 
     @staticmethod
     def generate_transfer_world(
@@ -1706,14 +2021,24 @@ class TransferGenerator:
         seed: int,
         num_entities: int = 3,
         entity_types: Optional[Sequence[str]] = None,
+        mechanism: Optional[MechanismSpec] = None,
     ) -> Tuple[WorldState, HiddenRuleEngine]:
+        required_types = set(entity_types or ())
+        if mechanism is not None:
+            required_types |= {mechanism.source_entity_type, mechanism.target_entity_type}
+            if mechanism.condition_entity_type:
+                required_types.add(mechanism.condition_entity_type)
         world = WorldGenerator().build_world(
             seed=seed,
-            num_entities=num_entities,
+            num_entities=max(num_entities, len(required_types)) if required_types else num_entities,
             entity_types=entity_types or tuple(ENTITY_TYPES),
             connect_chain=False,
+            required_types=tuple(sorted(required_types)) if required_types else None,
         )
-        engine = HiddenRuleEngine.generate(world, rng=random.Random(seed), family=rule_family)
+        if mechanism is not None:
+            engine = HiddenRuleEngine.generate_from_mechanism(world, mechanism, rng=random.Random(seed))
+        else:
+            engine = HiddenRuleEngine.generate(world, rng=random.Random(seed), family=rule_family)
         return world, engine
 
     @staticmethod
@@ -2121,6 +2446,89 @@ def build_operation_evidence(step: EpisodeStep) -> Optional[Tuple[Dict[str, Any]
     return input_value, expected_output
 
 
+# ---------------------------------------------------------------------------
+# Build 610 (E): Experience ingestion, separated from ability promotion.
+# ---------------------------------------------------------------------------
+#
+# Three distinct statuses, not one: valid experience != successful cognition
+# != promoted ability.
+#   - valid experience:    a structurally complete before/action/after
+#                           transition -- ExperienceIngestionBridge, below.
+#   - successful cognition: Aurora cleared an admissibility route and
+#                           transfer -- DevelopmentalPromotionBridge, kept
+#                           exactly as strict as it already was.
+#   - promoted ability:     WARP's own downstream register_emergent_
+#                           operational_synthesis(), gated by its own
+#                           accumulation/scoring criteria, untouched here.
+#
+# build_operation_evidence()'s expected_output is always compute_state_
+# delta(world_before, consequence) -- the REAL world's actual delta, never
+# derived from what Aurora believed happened. Submitting it costs nothing
+# in correctness regardless of whether her cognition that turn was right;
+# withholding it (the Build 608 behavior) only starves Operational
+# Synthesis of ground truth it could otherwise learn from.
+
+@dataclass(frozen=True)
+class IngestionDecision:
+    episode_id: str
+    ingested: bool
+    reason: str
+    submission_result: Optional[Dict[str, Any]] = None
+
+
+class ExperienceIngestionBridge:
+    """Records every structurally valid before/action/after transition as
+    quarantined raw experience for Operational Synthesis -- including
+    misunderstood, uncertain, or never-predicted ones -- WITHOUT requiring
+    Aurora to have already demonstrated correct causal cognition. This
+    evidence earns no admissibility route and no ability promotion merely
+    by being recorded; it only stops being invisible to WARP's example
+    pool. Skips submission when DevelopmentalPromotionBridge already
+    submitted the same step (already_submitted=True), so a successful
+    episode is never double-counted. Requires a genuine action commitment
+    (Build 610, F) by default -- an echo-contaminated or never-selected
+    action is not something Aurora did, so it is not evidence of anything
+    she chose to test; demonstrated/control acquisition trials (where an
+    external actor's action is being observed, not Aurora's own choice)
+    pass require_commitment=False explicitly."""
+
+    @staticmethod
+    def ingest(
+        systems: Dict[str, Any],
+        step: EpisodeStep,
+        *,
+        episode_id: str,
+        rule_family: str,
+        validation: bool = False,
+        already_submitted: bool = False,
+        require_commitment: bool = True,
+    ) -> IngestionDecision:
+        if already_submitted:
+            return IngestionDecision(episode_id, False, "already_submitted_via_promotion_bridge")
+        if require_commitment and step.interpretation.action_commitment != "selected":
+            return IngestionDecision(episode_id, False, f"action_not_committed:{step.interpretation.action_commitment}")
+
+        submitter = systems.get("submit_operational_experience")
+        if submitter is None:
+            return IngestionDecision(episode_id, False, "no_submission_seam_available")
+
+        operation_evidence = build_operation_evidence(step)
+        if operation_evidence is None:
+            return IngestionDecision(episode_id, False, "insufficient_structured_evidence")
+        input_value, expected_output = operation_evidence
+
+        evidence = {
+            "input_value": input_value,
+            "expected_output": expected_output,
+            "validation": validation,
+            "task_id": rcec_primary_task_id(rule_family or "direct_trigger"),
+            "source": "cognitive_experience_chamber_acquisition",
+            "need_description": "observed state + chosen action -> resulting state delta (RCEC chamber, raw acquisition evidence)",
+        }
+        submission_result = dict(submitter(evidence) or {})
+        return IngestionDecision(episode_id, True, "ingested", submission_result)
+
+
 @dataclass(frozen=True)
 class PromotionDecision:
     episode_id: str
@@ -2340,6 +2748,7 @@ class ClosedLoopEpisodeResult:
     expression_fidelity: Dict[str, Any]
     governor_results: List[GovernorResult]
     promotion_decision: PromotionDecision
+    ingestion_decision: IngestionDecision
 
 
 def _auto_pick_counterfactual_alter(world: WorldState, engine: HiddenRuleEngine) -> Dict[str, Any]:
@@ -2396,8 +2805,14 @@ def run_closed_loop_episode(
     transfer_seed: Optional[int] = None,
     fidelity_threshold: float = 0.5,
     skin: VocabularySkin = DEFAULT_SKIN,
+    mechanism: Optional[MechanismSpec] = None,
 ) -> ClosedLoopEpisodeResult:
-    """The canonical developmental sequence, start to finish, in one call.
+    """The canonical developmental ASSESSMENT sequence, start to finish, in
+    one call -- Aurora is asked to predict, revise, survive a
+    counterfactual, and transfer. Build 610 reserves this function for
+    assessment episodes only; acquisition episodes (no prediction
+    required, no admissibility route possible) go through
+    run_acquisition_episode() instead.
 
     Cohort-level governors (confidence_rising_accuracy_falling, surface_
     fitness_without_transfer, loss_of_stable_ability, runaway_complexity)
@@ -2412,10 +2827,17 @@ def run_closed_loop_episode(
     skins is NOT the primary one, so transfer always tests genuinely
     disjoint surface vocabulary regardless of which skin the primary
     episode itself used -- this is how an "ALT_SKIN validation episode"
-    (skin=ALT_SKIN) still gets a DEFAULT_SKIN transfer check."""
+    (skin=ALT_SKIN) still gets a DEFAULT_SKIN transfer check.
+
+    Build 610 (H): mechanism defaults to whatever this episode's own rule
+    actually used (derived via _mechanism_from_rule()) so the transfer
+    sub-episode preserves trigger action/roles/property/effect direction
+    by default -- pass one explicitly (e.g. a cohort's shared
+    MechanismSpec) to force a specific mechanism instead."""
     bridge = bridge or DevelopmentalPromotionBridge()
     tracker = contradiction_tracker if contradiction_tracker is not None else ContradictionTracker()
     transfer_skin = DEFAULT_SKIN if skin is ALT_SKIN else ALT_SKIN
+    transfer_mechanism = mechanism if mechanism is not None else _mechanism_from_rule(world, engine._rule)
 
     # 1-3: initial observation -> interpretation and action -> consequence.
     trace = EpisodeTrace(episode_id=episode_id, world_seed=world.tick, rule_family=engine._rule.family, agent_id=agent_id)
@@ -2446,6 +2868,7 @@ def run_closed_loop_episode(
         seed=transfer_seed if transfer_seed is not None else _stable_seed_from_id(episode_id),
         num_entities=len(world.entities),
         entity_types=tuple(sorted({e.entity_type for e in world.entities.values()})),
+        mechanism=transfer_mechanism,
     )
     transfer_boundary = ObservationBoundary()
     transfer_trace = EpisodeTrace(
@@ -2482,11 +2905,20 @@ def run_closed_loop_episode(
         DevelopmentalGovernors.runaway_complexity(candidate_program_tree),
     ]
 
-    # 12: evidence admission.
+    # 12: evidence admission (successful cognition -> ability promotion).
     decision = bridge.evaluate_and_submit(
         systems, step, transfer_comparison, governor_results,
         dream_trainer=dream_trainer, autonomy=autonomy, episode_id=episode_id,
         validation=validation, rule_family=engine._rule.family,
+    )
+
+    # Build 610 (E): the ground-truth transition itself is valid experience
+    # regardless of whether cognition succeeded -- capture it whenever the
+    # promotion bridge above did NOT already submit it, so a misunderstood
+    # or still-wrong-after-revision episode is not simply discarded.
+    ingestion_decision = ExperienceIngestionBridge.ingest(
+        systems, step, episode_id=episode_id, rule_family=engine._rule.family,
+        validation=validation, already_submitted=decision.promoted,
     )
 
     return ClosedLoopEpisodeResult(
@@ -2503,12 +2935,102 @@ def run_closed_loop_episode(
         expression_fidelity=step.expression_fidelity or {},
         governor_results=governor_results,
         promotion_decision=decision,
+        ingestion_decision=ingestion_decision,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Build 610: Acquisition episodes -- a second, deliberately weaker episode
+# class whose job is to CREATE experience, not assess understanding. Aurora
+# is never required to predict a consequence here, and an acquisition
+# episode can never reach an admissibility route or ability promotion --
+# only run_closed_loop_episode() (assessment) can. See the module-level
+# ExperienceIngestionBridge docstring for the three-status model this
+# split exists to serve.
+# ---------------------------------------------------------------------------
+
+ACQUISITION_TRIAL_KINDS: Tuple[str, ...] = ("demonstrated", "control", "exploration")
+
+
+@dataclass(frozen=True)
+class AcquisitionEpisodeResult:
+    trace: EpisodeTrace
+    world_after: WorldState
+    trial_kind: str
+    ingestion_decision: IngestionDecision
+
+
+def run_acquisition_episode(
+    systems: Dict[str, Any],
+    episode_runtime_context: Dict[str, Any],
+    world: WorldState,
+    engine: HiddenRuleEngine,
+    boundary: ObservationBoundary,
+    agent_id: str,
+    *,
+    episode_id: str,
+    trial_kind: str,
+    scripted_action: Optional[ActionInvocation] = None,
+    validation: bool = False,
+    skin: VocabularySkin = DEFAULT_SKIN,
+) -> AcquisitionEpisodeResult:
+    """Build 610: 'demonstrated' and 'control' trials apply a pre-chosen
+    action directly -- an external actor's intervention Aurora only
+    observes, never parsed from her own expression -- so she is never
+    credited with a decision she didn't make. A 'demonstrated' trial's
+    scripted_action should trigger the hidden mechanism; a 'control'
+    trial's should not, giving contrast evidence. 'exploration' trials let
+    Aurora genuinely choose, subject to Build 610 (F)'s real
+    action-commitment check, and record whatever she actually committed
+    to (which may be nothing, or may be echo-contaminated -- either is
+    recorded honestly via action_commitment, not silently normalized).
+
+    Every structurally valid transition is submitted as quarantined raw
+    experience via ExperienceIngestionBridge -- it earns no admissibility
+    route and no promotion merely by being recorded; no prediction is
+    ever required, and none of Stage 3-6's assessment machinery
+    (backprojection, counterfactual branching, transfer, admissibility
+    routes) runs here at all."""
+    if trial_kind not in ACQUISITION_TRIAL_KINDS:
+        raise ValueError(f"unknown acquisition trial_kind: {trial_kind!r}")
+
+    trace = EpisodeTrace(episode_id=episode_id, world_seed=world.tick, rule_family=engine._rule.family, agent_id=agent_id)
+
+    if trial_kind in ("demonstrated", "control"):
+        if scripted_action is None:
+            raise ValueError(f"acquisition trial_kind={trial_kind!r} requires an explicit scripted_action")
+        observed = boundary.observe(world, agent_id)
+        prompt_text = ActionInterface.build_prompt(observed, skin=skin)
+        interpretation = CapturedInterpretation(
+            raw_expression="", confidence=0.0, action_commitment="external_actor",
+        )
+        trace.record_interpretation(
+            tick=world.tick, observation_text=prompt_text, action=scripted_action,
+            intent="observe", interpretation=interpretation,
+        )
+        trace.steps[-1].world_before = world.clone()
+        trace.steps[-1].observed_before = observed
+        world_after = engine.step(world, scripted_action)
+        trace.record_consequence(world_after)
+        require_commitment = False
+    else:  # exploration -- Aurora genuinely selects, subject to real commitment gating.
+        world_after = run_episode_step(trace, systems, episode_runtime_context, world, engine, boundary, agent_id, skin=skin)
+        require_commitment = True
+
+    step = trace.steps[0]
+    ingestion_decision = ExperienceIngestionBridge.ingest(
+        systems, step, episode_id=episode_id, rule_family=engine._rule.family,
+        validation=validation, require_commitment=require_commitment,
+    )
+    return AcquisitionEpisodeResult(
+        trace=trace, world_after=world_after, trial_kind=trial_kind, ingestion_decision=ingestion_decision,
     )
 
 
 @dataclass(frozen=True)
 class CohortResult:
     episode_results: List[ClosedLoopEpisodeResult]
+    acquisition_results: List[AcquisitionEpisodeResult]
     decisions: List[PromotionDecision]
     summary: Dict[str, Any]
 
@@ -2534,12 +3056,17 @@ def run_developmental_cohort(
     bearing instead of trivially not-applicable, the way a single isolated
     run_closed_loop_episode() call would report them.
 
-    Each item in episode_specs is a dict with keys: world, engine,
-    episode_id, and optionally boundary, counterfactual_alter, validation,
-    transfer_seed, ability_tag, regression_evidence_passed, skin (the
-    PRIMARY episode's vocabulary -- e.g. skin=ALT_SKIN for an "ALT_SKIN
-    validation episode"; its transfer sub-episode always uses the other
-    skin, per run_closed_loop_episode())."""
+    Build 610: each spec's "kind" ("acquisition" or "assessment", default
+    "assessment" for backward compatibility) dispatches to
+    run_acquisition_episode() or run_closed_loop_episode() respectively --
+    a single cohort can mix both, matching the corrected canary's design
+    of acquisition trials followed by assessment trials in ONE run against
+    ONE boot. Acquisition specs need: world, engine, episode_id,
+    trial_kind, and optionally boundary, scripted_action, validation,
+    skin. Assessment specs need the same keys run_closed_loop_episode()
+    already documented (world, engine, episode_id, and optionally
+    boundary, counterfactual_alter, validation, transfer_seed,
+    ability_tag, regression_evidence_passed, skin, mechanism)."""
     bridge = bridge or DevelopmentalPromotionBridge()
     tracker = ContradictionTracker()
     confidence_history: List[float] = []
@@ -2549,8 +3076,22 @@ def run_developmental_cohort(
 
     runtime_context = build_episode_runtime_context(systems)
     episode_results: List[ClosedLoopEpisodeResult] = []
+    acquisition_results: List[AcquisitionEpisodeResult] = []
 
     for spec in episode_specs:
+        if spec.get("kind", "assessment") == "acquisition":
+            acquisition_result = run_acquisition_episode(
+                systems, runtime_context,
+                spec["world"], spec["engine"], spec.get("boundary") or ObservationBoundary(), agent_id,
+                episode_id=spec["episode_id"],
+                trial_kind=spec["trial_kind"],
+                scripted_action=spec.get("scripted_action"),
+                validation=bool(spec.get("validation", False)),
+                skin=spec.get("skin", DEFAULT_SKIN),
+            )
+            acquisition_results.append(acquisition_result)
+            continue
+
         result = run_closed_loop_episode(
             systems, runtime_context,
             spec["world"], spec["engine"], spec.get("boundary") or ObservationBoundary(), agent_id,
@@ -2570,6 +3111,7 @@ def run_developmental_cohort(
             validation=bool(spec.get("validation", False)),
             transfer_seed=spec.get("transfer_seed"),
             skin=spec.get("skin", DEFAULT_SKIN),
+            mechanism=spec.get("mechanism"),
         )
         episode_results.append(result)
 
@@ -2592,13 +3134,20 @@ def run_developmental_cohort(
             avatar_fitness_history.append(float(avatar_result.get("scaled_fitness", 0.0)))
 
     decisions = [r.promotion_decision for r in episode_results]
+    ingestion_decisions = [r.ingestion_decision for r in episode_results] + [r.ingestion_decision for r in acquisition_results]
     summary = {
-        "total_episodes": len(episode_results),
+        "total_episodes": len(episode_results) + len(acquisition_results),
+        "acquisition_episodes": len(acquisition_results),
+        "assessment_episodes": len(episode_results),
         "promoted": sum(1 for d in decisions if d.promoted),
+        "ingested_raw_experience": sum(1 for d in ingestion_decisions if d.ingested),
         "routes": {d.episode_id: d.route for d in decisions},
         "confidence_calibration_history": confidence_history,
         "accuracy_history": accuracy_history,
         "transfer_score_history": transfer_score_history,
         "avatar_fitness_history": avatar_fitness_history,
     }
-    return CohortResult(episode_results=episode_results, decisions=decisions, summary=summary)
+    return CohortResult(
+        episode_results=episode_results, acquisition_results=acquisition_results,
+        decisions=decisions, summary=summary,
+    )
