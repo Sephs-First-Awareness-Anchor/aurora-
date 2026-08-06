@@ -263,6 +263,7 @@ def test_causal_dimension_names_match_result_mapping():
     result = CausalEvaluationResult(
         state_accuracy=0.1, prediction_accuracy=0.2, causal_discrimination=0.3,
         evidence_discipline=0.4, revision_quality=0.5, counterfactual_consistency=0.6,
+        confidence_calibration=0.7,
     )
     assert set(result.as_dimension_scores()) == set(CAUSAL_DIMENSION_NAMES) - {"transfer"}
 

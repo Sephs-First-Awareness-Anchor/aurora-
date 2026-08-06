@@ -269,6 +269,10 @@ DIMENSION_AXIS: Dict[str, str] = {
     # mechanism or associate the sequence/scenery.
     "counterfactual_consistency":   "T",   # stated rule projected onto an altered timeline
     "transfer":                     "N",   # generalizing structure across surface variation = reuse
+    # Build 598 (Stage 5): expression fidelity -- does spoken output honestly
+    # track pre-articulation internal state (CERSVerdict), the direct
+    # "cognitive failure hidden by fluent language" check made measurable.
+    "confidence_calibration":       "X",   # expressed certainty admitting/tracking internal confidence
 }
 
 # Per-axis simulation slot weight.

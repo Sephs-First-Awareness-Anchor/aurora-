@@ -33715,6 +33715,8 @@ def _run_simulation_live_response_bridge(
                 'offered_lookup': False,
                 'selected_concept': str(getattr(getattr(selected, 'primary_concept', None), 'value', '') or ''),
             },
+            # No real turn ran here (reentrancy guard) -- empty, not fabricated.
+            'dual_strata_snapshot': {},
         }
 
     episode_context = runtime_context or _build_simulation_live_bridge_context(systems)
@@ -33752,6 +33754,13 @@ def _run_simulation_live_response_bridge(
             'offered_lookup': bool(result.get('offered_lookup', False)),
             'selected_concept': str(getattr(getattr(selected, 'primary_concept', None), 'value', '') or ''),
         },
+        # Narrow, additive surfacing of the pre-articulation dual-strata
+        # snapshot already computed this turn (conscious_frame carries
+        # semantic_salience/semantic_hesitation/variant_confidence/
+        # semantic_mode/response_bias via _read_cers_salience()) -- this is
+        # a read of an existing field, not a new computation, and does not
+        # change what any other caller of process_external_user_turn() sees.
+        'dual_strata_snapshot': dict(result.get('conscious_frame') or {}),
     }
 
 

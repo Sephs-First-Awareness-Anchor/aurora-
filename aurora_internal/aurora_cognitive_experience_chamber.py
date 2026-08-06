@@ -908,7 +908,8 @@ class EpisodeStep:
     causal_scores: Optional[Dict[str, float]] = None       # Stage 3
     backprojection: Optional[Dict[str, Any]] = None        # Stage 3
     counterfactual_branch_ids: Tuple[str, ...] = ()        # Stage 4
-    expression_fidelity: Optional[Dict[str, Any]] = None   # Stage 5
+    dual_strata_snapshot: Optional[Dict[str, Any]] = None  # Stage 5 -- captured pre-articulation
+    expression_fidelity: Optional[Dict[str, Any]] = None   # Stage 5 -- evaluator's scoring output
 
 
 @dataclass
@@ -1020,6 +1021,7 @@ def _episode_step_to_dict(step: EpisodeStep) -> Dict[str, Any]:
         "causal_scores": step.causal_scores,
         "backprojection": step.backprojection,
         "counterfactual_branch_ids": list(step.counterfactual_branch_ids),
+        "dual_strata_snapshot": step.dual_strata_snapshot,
         "expression_fidelity": step.expression_fidelity,
     }
 
@@ -1051,6 +1053,7 @@ def _episode_step_from_dict(data: Dict[str, Any]) -> EpisodeStep:
         causal_scores=data.get("causal_scores"),
         backprojection=data.get("backprojection"),
         counterfactual_branch_ids=tuple(data.get("counterfactual_branch_ids", ()) or ()),
+        dual_strata_snapshot=data.get("dual_strata_snapshot"),
         expression_fidelity=data.get("expression_fidelity"),
     )
 
@@ -1066,6 +1069,39 @@ def _episode_step_from_dict(data: Dict[str, Any]) -> EpisodeStep:
 def build_episode_runtime_context(systems: Dict[str, Any]) -> Dict[str, Any]:
     import aurora as _aurora
     return _aurora._build_simulation_live_bridge_context(systems)
+
+
+def read_cers_verdict_detail(systems: Dict[str, Any]) -> Dict[str, Any]:
+    """Read-only pull of the FULL CERSVerdict (not just the surface-
+    compressed subset aurora.py's own _read_cers_salience() exposes to the
+    live surface -- this evaluator is a different, offline consumer,
+    explicitly chartered by Stage 5 to read intervention_label/
+    geometry_deviation/confirmed_potential_benefits for fidelity scoring,
+    where the live surface's "compressed signal, not full explanation" rule
+    does not apply). Reuses aurora.py's own cers_detail.json read path;
+    never writes, never touches CERS's decision logic."""
+    import aurora as _aurora
+
+    state_dir = _aurora._dual_strata_state_dir(systems)
+    detail = _aurora._read_dual_strata_json(state_dir / "cers_detail.json", {})
+    if not isinstance(detail, dict):
+        return {}
+    return dict(detail.get("cers_verdict") or {})
+
+
+def capture_dual_strata_snapshot(systems: Dict[str, Any], bridge_result: Dict[str, Any]) -> Dict[str, Any]:
+    """Merges the bridge's own additive dual_strata_snapshot (semantic_
+    salience/semantic_hesitation/variant_confidence/semantic_mode/
+    response_bias, already computed this turn) with a read-only pull of the
+    fuller CERSVerdict fields (intervention_label, geometry_deviation,
+    confirmed_potential_benefits) for the same turn. A read, never a
+    mutation -- CERSBridge's live behavior for real turns is untouched."""
+    snapshot = dict(bridge_result.get("dual_strata_snapshot") or {})
+    verdict = read_cers_verdict_detail(systems)
+    snapshot["intervention_label"] = verdict.get("intervention_label")
+    snapshot["geometry_deviation"] = verdict.get("geometry_deviation")
+    snapshot["confirmed_potential_benefits"] = dict(verdict.get("confirmed_potential_benefits") or {})
+    return snapshot
 
 
 def run_episode_step(
@@ -1110,6 +1146,9 @@ def run_episode_step(
         intent=interpreted.intent,
         interpretation=interpreted.interpretation,
     )
+    # Stage 5: retain the pre-articulation snapshot from THIS SAME turn,
+    # captured alongside the interpretation rather than re-derived later.
+    trace.steps[-1].dual_strata_snapshot = capture_dual_strata_snapshot(systems, bridge_result)
 
     new_state = rule_engine.step(world_state, interpreted.action)
     trace.record_consequence(new_state)
@@ -1141,6 +1180,7 @@ CAUSAL_DIMENSION_NAMES: Tuple[str, ...] = (
     "revision_quality",
     "counterfactual_consistency",  # Stage 4
     "transfer",                    # Stage 4 -- cross-episode, not on CausalEvaluationResult; see TransferComparison
+    "confidence_calibration",      # Stage 5
 )
 
 
@@ -1174,6 +1214,7 @@ class CausalEvaluationResult:
     evidence_discipline: Optional[float]
     revision_quality: Optional[float]
     counterfactual_consistency: Optional[float] = None
+    confidence_calibration: Optional[float] = None
 
     def as_dimension_scores(self) -> Dict[str, float]:
         mapping = {
@@ -1183,6 +1224,7 @@ class CausalEvaluationResult:
             "evidence_discipline": self.evidence_discipline,
             "revision_quality": self.revision_quality,
             "counterfactual_consistency": self.counterfactual_consistency,
+            "confidence_calibration": self.confidence_calibration,
         }
         return {name: score for name, score in mapping.items() if score is not None}
 
@@ -1283,6 +1325,22 @@ class CausalEvaluator:
             return None
         return CausalEvaluator.prediction_accuracy(interpretation, branch.world_before, branch.consequence)
 
+    @staticmethod
+    def confidence_calibration(
+        interpretation: CapturedInterpretation, dual_strata_snapshot: Optional[Dict[str, Any]]
+    ) -> Optional[float]:
+        """Does expressed certainty (interpretation.confidence, i.e. resp_A.
+        confidence -- an already-existing field, not re-derived) track
+        internal confidence (the pre-articulation semantic_salience CERS
+        already computed)? A pure numeric comparison, not a lexical check."""
+        if not dual_strata_snapshot:
+            return None
+        internal_confidence = dual_strata_snapshot.get("semantic_salience")
+        if internal_confidence is None:
+            return None
+        gap = abs(float(interpretation.confidence) - float(internal_confidence))
+        return max(0.0, 1.0 - gap)
+
     @classmethod
     def evaluate(
         cls,
@@ -1293,6 +1351,7 @@ class CausalEvaluator:
         engine: "HiddenRuleEngine",
         revised_interpretation: Optional[CapturedInterpretation] = None,
         counterfactual_branch: Optional["CounterfactualBranch"] = None,
+        dual_strata_snapshot: Optional[Dict[str, Any]] = None,
     ) -> CausalEvaluationResult:
         prediction_score = cls.prediction_accuracy(interpretation, world_before, consequence)
         prediction_was_wrong = (prediction_score == 0.0) if prediction_score is not None else None
@@ -1308,6 +1367,7 @@ class CausalEvaluator:
             evidence_discipline=cls.evidence_discipline(interpretation, observed_before),
             revision_quality=cls.revision_quality(interpretation, revised_interpretation, prediction_was_wrong),
             counterfactual_consistency=counterfactual_score,
+            confidence_calibration=cls.confidence_calibration(interpretation, dual_strata_snapshot),
         )
 
     @staticmethod
@@ -1355,6 +1415,7 @@ def apply_causal_evaluation(
         engine,
         revised_interpretation=revised_interpretation,
         counterfactual_branch=counterfactual_branch,
+        dual_strata_snapshot=step.dual_strata_snapshot,
     )
     step.causal_scores = result.as_dimension_scores()
     if counterfactual_branch is not None:
@@ -1592,3 +1653,136 @@ class TransferGenerator:
     @staticmethod
     def confirm_zero_surface_overlap(original_render: str, transfer_render: str) -> bool:
         return not (surface_content_tokens(original_render) & surface_content_tokens(transfer_render))
+
+
+# ---------------------------------------------------------------------------
+# Stage 5: Expression Fidelity Bridge
+# ---------------------------------------------------------------------------
+#
+# CERSBridge.build_snapshot() already produces a DualStrataSnapshot carrying
+# a CERSVerdict (semantic_salience, semantic_hesitation, intervention_label,
+# geometry_deviation, confirmed_potential_benefits, ...) computed BEFORE
+# articulation, per the bridge's own documented call-order comment. This
+# section reads that already-computed, pre-expression structured state --
+# capture_dual_strata_snapshot() above -- and compares it against the
+# eventual spoken output. It does not invent an internal-conclusion
+# representation and does not modify CERS's own decision logic in any way.
+#
+# Every check below compares presence/absence/direction of a SPECIFIC
+# internal signal against structured fields Stage 2 already captured
+# (CapturedInterpretation.stated_unknowns, .predicted_consequence,
+# .identified_entities, .confidence) -- never a new keyword scan invented
+# for this stage, and never a word-count/surface-fluency heuristic.
+
+class ExpressionFidelityEvaluator:
+    """Compares captured internal state against the final articulated
+    expression. Must not penalize stylistic variation -- it compares
+    presence/absence/direction of specific internal signals against the
+    expressed text, not a second surface-feature scorer."""
+
+    @staticmethod
+    def hesitation_fidelity(
+        dual_strata_snapshot: Optional[Dict[str, Any]], interpretation: CapturedInterpretation
+    ) -> Optional[float]:
+        """Does semantic_hesitation (internal) correspond to actual hedging
+        language in the expression -- and, critically, the reverse: does
+        confident-sounding expression exist despite high internal
+        hesitation? 'Hedging language present' reuses Stage 2's own
+        stated_unknowns capture; this is not a new lexical scan."""
+        if not dual_strata_snapshot or "semantic_hesitation" not in dual_strata_snapshot:
+            return None
+        internal_hesitation = bool(dual_strata_snapshot.get("semantic_hesitation"))
+        expressed_hedging = bool(interpretation.stated_unknowns)
+        return 1.0 if internal_hesitation == expressed_hedging else 0.0
+
+    @staticmethod
+    def intervention_fidelity(
+        dual_strata_snapshot: Optional[Dict[str, Any]], interpretation: CapturedInterpretation
+    ) -> Optional[float]:
+        """Does intervention_label/geometry_deviation, when present, show up
+        as a genuine reconsideration in the expressed text, or does the
+        expression proceed as if the internal deviation never registered?
+        'Reconsideration expressed' reuses the same stated_unknowns signal
+        hesitation_fidelity uses -- both are the structured record of
+        uncertainty actually surfacing in what was said."""
+        if not dual_strata_snapshot:
+            return None
+        geometry_deviation = dual_strata_snapshot.get("geometry_deviation")
+        intervention_registered = bool(dual_strata_snapshot.get("intervention_label")) or bool(geometry_deviation)
+        if not intervention_registered:
+            return None  # nothing internally flagged this turn -- not applicable
+        reconsideration_expressed = bool(interpretation.stated_unknowns)
+        return 1.0 if reconsideration_expressed else 0.0
+
+    @staticmethod
+    def causal_claim_preservation(
+        original: CapturedInterpretation, revised: Optional[CapturedInterpretation]
+    ) -> Optional[float]:
+        """Does the causal claim scored in Stage 3 appear, preserved, in the
+        expressed text across backprojection -- not paraphrase-perfect, but
+        not contradicted or silently dropped either?"""
+        if original.predicted_consequence is None or revised is None:
+            return None
+        claim_key = (original.predicted_consequence.get("entity_id"), original.predicted_consequence.get("property"))
+        if revised.predicted_consequence is not None:
+            revised_key = (revised.predicted_consequence.get("entity_id"), revised.predicted_consequence.get("property"))
+            if revised_key == claim_key:
+                return 1.0  # addressed -- same claim revisited, confirmed or revised
+        if original.predicted_consequence.get("entity_id") in revised.identified_entities:
+            return 0.5  # the entity is still referenced, but the claim itself was not re-addressed
+        return 0.0  # silently dropped
+
+    @staticmethod
+    def classify_fidelity_quadrant(internal_correct: bool, expression_hedged: bool) -> str:
+        """The four fidelity quadrants from the original proposal. When
+        internal belief was correct, hedging when there was no need to is
+        the miscalibration ('wrong expression'); when internal belief was
+        wrong, fluent/confident phrasing is the failure-hidden-by-language
+        case, while hedging is at least honestly flagged."""
+        if internal_correct and not expression_hedged:
+            return "correct_internal_correct_expression"
+        if internal_correct and expression_hedged:
+            return "correct_internal_wrong_expression"
+        if not internal_correct and not expression_hedged:
+            return "wrong_internal_fluent_expression"
+        return "wrong_internal_honest_expression"
+
+    @classmethod
+    def evaluate(
+        cls,
+        dual_strata_snapshot: Optional[Dict[str, Any]],
+        interpretation: CapturedInterpretation,
+        revised_interpretation: Optional[CapturedInterpretation] = None,
+        internal_correct: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        result: Dict[str, Any] = {
+            "hesitation_fidelity": cls.hesitation_fidelity(dual_strata_snapshot, interpretation),
+            "intervention_fidelity": cls.intervention_fidelity(dual_strata_snapshot, interpretation),
+            "causal_claim_preservation": cls.causal_claim_preservation(interpretation, revised_interpretation),
+        }
+        if internal_correct is not None:
+            result["quadrant"] = cls.classify_fidelity_quadrant(
+                internal_correct=internal_correct,
+                expression_hedged=bool(interpretation.stated_unknowns),
+            )
+        return result
+
+
+def apply_expression_fidelity_evaluation(
+    trace: EpisodeTrace,
+    step_index: int,
+    revised_interpretation: Optional[CapturedInterpretation] = None,
+) -> Dict[str, Any]:
+    step = trace.steps[step_index]
+    internal_correct: Optional[bool] = None
+    if step.causal_scores is not None:
+        internal_correct = step.causal_scores.get("causal_prediction_accuracy") == 1.0 \
+            if "causal_prediction_accuracy" in step.causal_scores else None
+    result = ExpressionFidelityEvaluator.evaluate(
+        step.dual_strata_snapshot,
+        step.interpretation,
+        revised_interpretation=revised_interpretation,
+        internal_correct=internal_correct,
+    )
+    step.expression_fidelity = result
+    return result
