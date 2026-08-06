@@ -2,29 +2,30 @@
 aurora_cognitive_experience_chamber.py
 =======================================
 
-Recursive Causal Experience Chamber (Build 598) -- Stage 1 of 6: World &
-Hidden Rule Substrate.
+Recursive Causal Experience Chamber (Build 598).
 
-Everything from here to Stage 6 rests on one distinction: a world that
-produces consequences Aurora must discover, versus a scenario that
-demonstrates a lesson she can imitate. This module builds the former, and
-only the former.
-
-No component here may contain a labeled answer that a later stage could
-accidentally leak (no field named ``answer``, ``correct_relation``, or
+Stage 1: World & Hidden Rule Substrate. A world that produces consequences
+Aurora must discover, versus a scenario that demonstrates a lesson she can
+imitate. No component here may contain a labeled answer that a later stage
+could accidentally leak (no field named ``answer``, ``correct_relation``, or
 similar) -- the hidden rule is only ever observable through consequence,
 never through inspection of world state.
 
-This stage is standalone: it does not wire into ``boot_aurora()``, the live
-response pipeline, or any other Aurora system, and it does not evaluate
-anything. It is a world, and nothing more.
+Stage 2: Episode Loop & Interpretation Capture. Drives Stage 1's world
+through Aurora's real live-response bridge (``aurora._run_simulation_live_
+response_bridge``) via ``ActionInterface``, and captures Aurora's stated
+position -- pre-consequence -- on ``EpisodeTrace``. The ordering (capture
+belief, THEN reveal consequence) is enforced structurally by
+``EpisodeTrace.record_consequence()``, not left to caller discipline.
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import copy
 import random
-from dataclasses import dataclass, field
+import re
+from dataclasses import asdict, dataclass, field
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 
@@ -606,3 +607,423 @@ def describe_observation(observed: ObservedWorldState) -> str:
     for rel in observed.relationships:
         sentences.append(f"{rel.source_id} is {rel.relation_type.replace('_', ' ')} {rel.target_id}.")
     return " ".join(sentences) if sentences else "Nothing is currently observable."
+
+
+# ---------------------------------------------------------------------------
+# Stage 2: Episode Loop & Interpretation Capture
+# ---------------------------------------------------------------------------
+
+@dataclass
+class CapturedInterpretation:
+    """Aurora's stated position on a turn, captured BEFORE the world reveals
+    a consequence. Parsed from the same process_external_user_turn() result
+    the live bridge already returns (resp_A.content, resp_A.confidence) --
+    entity/relation/prediction extraction is a bounded lookup against Stage
+    1's own enumerable vocabulary, not a second parser guessing at open text."""
+    raw_expression: str
+    identified_entities: Tuple[str, ...] = ()
+    believed_relations: Tuple[Tuple[str, str, str], ...] = ()
+    predicted_consequence: Optional[Dict[str, Any]] = None
+    confidence: float = 0.0
+    evidence_cited: Tuple[str, ...] = ()
+    stated_unknowns: Tuple[str, ...] = ()
+
+
+_UNKNOWN_MARKERS: Tuple[str, ...] = (
+    "not sure", "unsure", "don't know", "do not know", "unclear",
+    "uncertain", "no idea", "unknown",
+)
+
+_CHANGE_MARKERS: Tuple[Tuple[str, str], ...] = (
+    ("increase", "increase"), ("rise", "increase"), ("go up", "increase"),
+    ("gain", "increase"), ("more", "increase"), ("higher", "increase"),
+    ("decrease", "decrease"), ("fall", "decrease"), ("go down", "decrease"),
+    ("lose", "decrease"), ("less", "decrease"), ("lower", "decrease"),
+    ("become", "change"), ("change", "change"), ("turn", "change"), ("flip", "change"),
+)
+
+_ACTION_VERB_PATTERNS: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
+    ("add_energy", ("add energy", "increase energy", "give energy", "more energy")),
+    ("remove_energy", ("remove energy", "decrease energy", "take energy", "drain energy")),
+    ("seal", ("seal ", "seal.")),
+    ("unseal", ("unseal ", "unseal.", "open ")),
+    ("connect", ("connect ", "connect.")),
+    ("disconnect", ("disconnect ", "disconnect.")),
+    ("wait", ("wait",)),
+)
+
+
+@dataclass(frozen=True)
+class InterpretedAction:
+    action: "ActionInvocation"
+    intent: str  # "act" | "predict" | "ask"
+    interpretation: CapturedInterpretation
+
+
+def _label_to_entity_id(observed: ObservedWorldState) -> Dict[str, str]:
+    return {_entity_label(entity).lower(): entity_id for entity_id, entity in observed.entities.items()}
+
+
+def _phrase_for_action(name: str, targets: Tuple[str, ...], observed: ObservedWorldState) -> str:
+    labels = [_entity_label(observed.entities[t]) for t in targets]
+    if name == "add_energy":
+        return f"add energy to {labels[0]}"
+    if name == "remove_energy":
+        return f"remove energy from {labels[0]}"
+    if name == "seal":
+        return f"seal {labels[0]}"
+    if name == "unseal":
+        return f"unseal {labels[0]}"
+    if name == "connect":
+        return f"connect {labels[0]} and {labels[1]}"
+    if name == "disconnect":
+        return f"disconnect {labels[0]} and {labels[1]}"
+    return "wait"
+
+
+class ActionInterface:
+    """Translates the world's available actions into a prompt/question form
+    suitable for aurora._run_simulation_live_response_bridge(), and
+    translates Aurora's returned expression back into a structured action
+    selection (or predict/ask intent) the world can consume. Reuses
+    describe_observation() as the observation-to-text step -- this is not a
+    second natural-language renderer."""
+
+    @staticmethod
+    def available_actions(observed: ObservedWorldState) -> List[Tuple[str, Tuple[str, ...]]]:
+        actions: List[Tuple[str, Tuple[str, ...]]] = []
+        visible_ids = list(observed.entities)
+        for entity_id in visible_ids:
+            props = observed.entities[entity_id].properties
+            for action_name, required_prop in _ACTION_REQUIRED_PROPERTY.items():
+                if required_prop in props:
+                    actions.append((action_name, (entity_id,)))
+        connected_pairs = {(rel.source_id, rel.target_id) for rel in observed.relationships}
+        for a in visible_ids:
+            for b in visible_ids:
+                if a == b:
+                    continue
+                actions.append(("disconnect", (a, b)) if (a, b) in connected_pairs else ("connect", (a, b)))
+        actions.append(("wait", ()))
+        return actions
+
+    @staticmethod
+    def build_prompt(observed: ObservedWorldState, max_actions: int = 8) -> str:
+        observation_text = describe_observation(observed)
+        options = ActionInterface.available_actions(observed)[:max_actions]
+        option_phrases = [_phrase_for_action(name, targets, observed) for name, targets in options]
+        options_text = ("Available actions: " + "; ".join(option_phrases) + ".") if option_phrases else ""
+        ask = (
+            "Choose one action, state what you predict will happen as a result, "
+            "and say how confident you are. Note anything you are unsure about."
+        )
+        return " ".join(part for part in (observation_text, options_text, ask) if part)
+
+    @staticmethod
+    def interpret_expression(expression: str, observed: ObservedWorldState, confidence: float) -> InterpretedAction:
+        text = str(expression or "")
+        lowered = text.lower()
+        label_to_id = _label_to_entity_id(observed)
+
+        identified_entities = tuple(sorted(
+            entity_id for label, entity_id in label_to_id.items() if label and label in lowered
+        ))
+        believed_relations = tuple(
+            (rel.source_id, rel.relation_type, rel.target_id)
+            for rel in observed.relationships
+            if _entity_label(observed.entities[rel.source_id]).lower() in lowered
+            and _entity_label(observed.entities[rel.target_id]).lower() in lowered
+        )
+
+        sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
+        evidence_cited = tuple(
+            s for s in sentences
+            if any(label in s.lower() for label in label_to_id if label)
+            or any(prop in s.lower() for prop in PROPERTIES)
+        )
+        stated_unknowns = tuple(s for s in sentences if any(marker in s.lower() for marker in _UNKNOWN_MARKERS))
+
+        predicted_consequence: Optional[Dict[str, Any]] = None
+        for label, entity_id in label_to_id.items():
+            if not label or label not in lowered:
+                continue
+            for prop_name in observed.entities[entity_id].properties:
+                if prop_name not in lowered:
+                    continue
+                for marker, direction in _CHANGE_MARKERS:
+                    if marker in lowered:
+                        predicted_consequence = {"entity_id": entity_id, "property": prop_name, "direction": direction}
+                        break
+                if predicted_consequence:
+                    break
+            if predicted_consequence:
+                break
+
+        interpretation = CapturedInterpretation(
+            raw_expression=text,
+            identified_entities=identified_entities,
+            believed_relations=believed_relations,
+            predicted_consequence=predicted_consequence,
+            confidence=confidence,
+            evidence_cited=evidence_cited,
+            stated_unknowns=stated_unknowns,
+        )
+
+        action_type = next((name for name, patterns in _ACTION_VERB_PATTERNS if any(p in lowered for p in patterns)), None)
+        target_entity_id = identified_entities[0] if identified_entities else None
+
+        intent = "act"
+        if action_type is None:
+            intent = "ask" if "?" in text else "predict"
+            action = ActionInvocation("wait", ())
+        else:
+            spec = ACTION_TYPES[action_type]
+            if spec.arity == 0:
+                action = ActionInvocation(action_type, ())
+            elif spec.arity == 1:
+                required_prop = _ACTION_REQUIRED_PROPERTY.get(action_type)
+                candidate = None
+                if target_entity_id is not None:
+                    obs_entity = observed.entities.get(target_entity_id)
+                    if obs_entity is not None and required_prop in obs_entity.properties:
+                        candidate = target_entity_id
+                if candidate is None:
+                    candidate = next(
+                        (eid for eid, e in observed.entities.items() if required_prop in e.properties),
+                        None,
+                    )
+                if candidate is None:
+                    intent = "predict"
+                    action = ActionInvocation("wait", ())
+                else:
+                    action = ActionInvocation(action_type, (candidate,))
+            else:
+                two = list(identified_entities[:2])
+                if len(two) < 2:
+                    two = list(observed.entities)[:2]
+                if len(two) < 2:
+                    intent = "predict"
+                    action = ActionInvocation("wait", ())
+                else:
+                    action = ActionInvocation(action_type, tuple(two))
+
+        return InterpretedAction(action=action, intent=intent, interpretation=interpretation)
+
+
+# ---------------------------------------------------------------------------
+# EpisodeTrace
+# ---------------------------------------------------------------------------
+
+@dataclass
+class EpisodeStep:
+    tick: int
+    observation_text: str
+    action: ActionInvocation
+    intent: str
+    interpretation: CapturedInterpretation
+    consequence: Optional[WorldState] = None
+    # Extension points for later stages -- kept generic so Stage 3/4/5 extend
+    # this record rather than restructuring it.
+    backprojection: Optional[Dict[str, Any]] = None       # Stage 3
+    counterfactual_branch_ids: Tuple[str, ...] = ()       # Stage 4
+    expression_fidelity: Optional[Dict[str, Any]] = None  # Stage 5
+
+
+@dataclass
+class EpisodeTrace:
+    """Every later stage reads from and writes to this object: Stage 3
+    appends consequence/backprojection scoring, Stage 4 appends
+    counterfactual/transfer branches, Stage 5 appends expression-fidelity
+    comparisons, Stage 6 consumes the whole trace for promotion."""
+    episode_id: str
+    world_seed: Optional[int]
+    rule_family: str  # internal bookkeeping only -- never surfaced to Aurora
+    agent_id: str
+    steps: List[EpisodeStep] = field(default_factory=list)
+    terminal_state: Optional[WorldState] = None
+    _interpretation_pending: bool = field(default=False, repr=False)
+
+    def record_interpretation(
+        self,
+        tick: int,
+        observation_text: str,
+        action: ActionInvocation,
+        intent: str,
+        interpretation: CapturedInterpretation,
+    ) -> None:
+        self.steps.append(EpisodeStep(
+            tick=tick,
+            observation_text=observation_text,
+            action=action,
+            intent=intent,
+            interpretation=interpretation,
+        ))
+        self._interpretation_pending = True
+
+    def record_consequence(self, consequence: WorldState) -> None:
+        # The ordering (capture belief, THEN reveal consequence) is enforced
+        # here structurally -- not left to caller discipline.
+        if not self._interpretation_pending or not self.steps:
+            raise RuntimeError(
+                "EpisodeTrace.record_consequence() called with no interpretation "
+                "captured for the current turn -- call record_interpretation() first"
+            )
+        self.steps[-1].consequence = consequence
+        self._interpretation_pending = False
+
+    def close(self, terminal_state: WorldState) -> None:
+        self.terminal_state = terminal_state
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "episode_id": self.episode_id,
+            "world_seed": self.world_seed,
+            "rule_family": self.rule_family,
+            "agent_id": self.agent_id,
+            "steps": [_episode_step_to_dict(step) for step in self.steps],
+            "terminal_state": _worldstate_to_dict(self.terminal_state) if self.terminal_state is not None else None,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "EpisodeTrace":
+        trace = cls(
+            episode_id=str(data.get("episode_id", "")),
+            world_seed=data.get("world_seed"),
+            rule_family=str(data.get("rule_family", "")),
+            agent_id=str(data.get("agent_id", "")),
+        )
+        trace.steps = [_episode_step_from_dict(s) for s in data.get("steps", []) or []]
+        terminal = data.get("terminal_state")
+        trace.terminal_state = _worldstate_from_dict(terminal) if terminal is not None else None
+        return trace
+
+
+def _worldstate_to_dict(state: WorldState) -> Dict[str, Any]:
+    return {
+        "tick": state.tick,
+        "entities": {eid: asdict(e) for eid, e in state.entities.items()},
+        "relationships": [asdict(r) for r in state.relationships],
+        "agents": list(state.agents),
+        "property_history": [[list(key), [list(pair) for pair in value]] for key, value in state.property_history.items()],
+        "pending_effects": [asdict(p) for p in state.pending_effects],
+    }
+
+
+def _worldstate_from_dict(data: Dict[str, Any]) -> WorldState:
+    entities = {eid: Entity(**e) for eid, e in data.get("entities", {}).items()}
+    relationships = [Relationship(**r) for r in data.get("relationships", [])]
+    property_history = {
+        tuple(key): [tuple(pair) for pair in value]
+        for key, value in data.get("property_history", [])
+    }
+    pending_effects = [PendingEffect(**p) for p in data.get("pending_effects", [])]
+    return WorldState(
+        tick=int(data.get("tick", 0)),
+        entities=entities,
+        relationships=relationships,
+        agents=tuple(data.get("agents", ())),
+        property_history=property_history,
+        pending_effects=pending_effects,
+    )
+
+
+def _episode_step_to_dict(step: EpisodeStep) -> Dict[str, Any]:
+    return {
+        "tick": step.tick,
+        "observation_text": step.observation_text,
+        "action": asdict(step.action),
+        "intent": step.intent,
+        "interpretation": asdict(step.interpretation),
+        "consequence": _worldstate_to_dict(step.consequence) if step.consequence is not None else None,
+        "backprojection": step.backprojection,
+        "counterfactual_branch_ids": list(step.counterfactual_branch_ids),
+        "expression_fidelity": step.expression_fidelity,
+    }
+
+
+def _episode_step_from_dict(data: Dict[str, Any]) -> EpisodeStep:
+    action_data = dict(data.get("action", {}) or {})
+    action = ActionInvocation(
+        action_type=str(action_data.get("action_type", "wait")),
+        target_ids=tuple(action_data.get("target_ids", ()) or ()),
+    )
+    interp_data = dict(data.get("interpretation", {}) or {})
+    interpretation = CapturedInterpretation(
+        raw_expression=str(interp_data.get("raw_expression", "")),
+        identified_entities=tuple(interp_data.get("identified_entities", ()) or ()),
+        believed_relations=tuple(tuple(r) for r in (interp_data.get("believed_relations", ()) or ())),
+        predicted_consequence=interp_data.get("predicted_consequence"),
+        confidence=float(interp_data.get("confidence", 0.0) or 0.0),
+        evidence_cited=tuple(interp_data.get("evidence_cited", ()) or ()),
+        stated_unknowns=tuple(interp_data.get("stated_unknowns", ()) or ()),
+    )
+    consequence_data = data.get("consequence")
+    return EpisodeStep(
+        tick=int(data.get("tick", 0)),
+        observation_text=str(data.get("observation_text", "")),
+        action=action,
+        intent=str(data.get("intent", "predict")),
+        interpretation=interpretation,
+        consequence=_worldstate_from_dict(consequence_data) if consequence_data is not None else None,
+        backprojection=data.get("backprojection"),
+        counterfactual_branch_ids=tuple(data.get("counterfactual_branch_ids", ()) or ()),
+        expression_fidelity=data.get("expression_fidelity"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Episode loop driver -- reuses aurora._build_simulation_live_bridge_context()
+# / aurora._run_simulation_live_response_bridge() rather than building a
+# second pipeline-routing mechanism. Imported lazily so this module stays
+# importable (e.g. for pure world-substrate use) without pulling in Aurora's
+# full boot dependency chain.
+# ---------------------------------------------------------------------------
+
+def build_episode_runtime_context(systems: Dict[str, Any]) -> Dict[str, Any]:
+    import aurora as _aurora
+    return _aurora._build_simulation_live_bridge_context(systems)
+
+
+def run_episode_step(
+    trace: EpisodeTrace,
+    systems: Dict[str, Any],
+    episode_runtime_context: Dict[str, Any],
+    world_state: WorldState,
+    rule_engine: HiddenRuleEngine,
+    boundary: ObservationBoundary,
+    agent_id: str,
+) -> WorldState:
+    """Drive one turn of an episode through Aurora's real live-response
+    bridge. Enforces capture-then-consequence structurally: interpretation is
+    recorded before HiddenRuleEngine.step() is ever called."""
+    import aurora as _aurora
+
+    observed = boundary.observe(world_state, agent_id)
+    prompt_text = ActionInterface.build_prompt(observed)
+
+    selected = SimpleNamespace(primary_concept=SimpleNamespace(value="cognitive_experience_chamber"))
+    context = {"prompt": prompt_text, "category": "cognitive_experience_chamber"}
+
+    bridge_result = _aurora._run_simulation_live_response_bridge(
+        systems,
+        selected=selected,
+        context=context,
+        mode=None,
+        runtime_context=episode_runtime_context,
+    )
+    expression = str(bridge_result.get("expression", "") or "")
+    confidence = float((bridge_result.get("meta", {}) or {}).get("confidence", 0.0) or 0.0)
+
+    interpreted = ActionInterface.interpret_expression(expression, observed, confidence)
+
+    trace.record_interpretation(
+        tick=world_state.tick,
+        observation_text=prompt_text,
+        action=interpreted.action,
+        intent=interpreted.intent,
+        interpretation=interpreted.interpretation,
+    )
+
+    new_state = rule_engine.step(world_state, interpreted.action)
+    trace.record_consequence(new_state)
+    return new_state
