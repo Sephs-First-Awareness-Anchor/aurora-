@@ -660,6 +660,52 @@ class OntologicalWeb:
     def has_node(self, word: str) -> bool:
         return word in self.nodes
 
+    # Build 598 (Relation-Typing Pressure Calibration): the two role-pair
+    # combinations infer_relations_from_context() already types with
+    # positive confidence -- verb+noun -> ENABLES, adjective+noun ->
+    # CONTEXT_OF. Every other role pair still falls through that same
+    # function to the generic RELATED_TO/"co-occurrence" label. This is
+    # read-only lookup metadata, not a rule to encode a classifier from.
+    _NC1_COVERED_ROLE_PAIRS = (frozenset({"verb", "noun"}), frozenset({"adjective", "noun"}))
+
+    def underworked_relation_type_pairs(self, limit: int = 10) -> List[Dict[str, str]]:
+        """Read-only enumeration of RELATED_TO relations whose role-pair
+        combination is NOT already covered by the two ratified NC1
+        heuristics, and whose source_of_knowledge is the honestly-untyped
+        generic co-occurrence pass (infer_relations_from_context()'s first
+        loop). This is the population a relation-typing trial surface
+        should prioritize stressing -- the existing heuristics already have
+        positive evidence for their two covered role pairs, so probing
+        those again would not add anything new. Returns dicts, never
+        SemanticRelation/RelationType objects, and writes nothing."""
+        candidates: List[Dict[str, str]] = []
+        seen_pairs: Set[Tuple[str, str]] = set()
+        for rel_id in self._relations_by_type.get(RelationType.RELATED_TO, set()):
+            rel = self.relations.get(rel_id)
+            if rel is None or rel.source_of_knowledge != "co-occurrence":
+                continue
+            source_node = self.nodes.get(rel.source_word)
+            target_node = self.nodes.get(rel.target_word)
+            if source_node is None or target_node is None:
+                continue
+            role_pair = frozenset({source_node.role, target_node.role})
+            if role_pair in self._NC1_COVERED_ROLE_PAIRS:
+                continue
+            pair_key = tuple(sorted((rel.source_word, rel.target_word)))
+            if pair_key in seen_pairs:
+                continue
+            seen_pairs.add(pair_key)
+            candidates.append({
+                "left": rel.source_word,
+                "right": rel.target_word,
+                "left_role": source_node.role,
+                "right_role": target_node.role,
+                "relation_id": rel.relation_id,
+            })
+            if len(candidates) >= max(1, int(limit or 1)):
+                break
+        return candidates
+
     # ================================================================
     # RELATION MANAGEMENT
     # ================================================================

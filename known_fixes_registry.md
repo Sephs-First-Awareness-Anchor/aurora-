@@ -10333,3 +10333,108 @@ follow-on.
 uploaded 2026-08-05, as the traced concrete blocker on the
 relation-typing thread noted in the Build 598 Crest-Compression
 Placeholder-Leak Repair entry above. 2026-08-05.
+
+---
+
+## Aurora Build 598 — Relation-Typing Pressure Calibration (Relational Probe Extension)
+
+**Ratified:** 2026-08-05 (Aurora Build 598 Relation-Typing Pressure
+Calibration Directive, uploaded directive; doctrine classification
+Level 7 -- Provide a Trial Surface, depending on the Categorical Branch
+Primitive directive above having landed first).
+**Category:** TRIAL SURFACE EXTENSION (evidence pipeline only -- never
+assigns a `RelationType` or `noncomp_id` itself)
+
+`aurora_dream_trainer.py`'s `DreamTrainer` already runs a real,
+pressure-calibrated relational trial surface
+(`_build_relational_probe_specs()` / `record_relational_probe_outcomes()`),
+scoped to conversational cause/effect demonstration, not to
+`OntologicalWeb`'s `RelationType` classification. This directive extends
+that existing surface to also serve relation-typing, rather than
+building a second, parallel scenario engine.
+
+**Extension (`aurora_dream_trainer.py`, plus one read-only method on
+`OntologicalWeb` in `aurora_internal/aurora_ontological_scaffolding.py`):**
+
+1. **Dual-mode pair sourcing.** New `OntologicalWeb.underworked_
+   relation_type_pairs()` -- read-only, writes nothing -- enumerates
+   `RELATED_TO` relations whose `source_of_knowledge == "co-occurrence"`
+   (the honestly-untyped generic pass) and whose role-pair combination is
+   NOT already covered by the two ratified NC1 heuristics (verb+noun,
+   adjective+noun). `_build_relational_probe_specs()` was refactored
+   (extracting `_relational_probe_spec_from_pair()` so both sources share
+   one spec-construction path) to draw from this source once the
+   existing fail-dimension-mined pairs are exhausted, since that source
+   has no reason to prefer underworked role pairs on its own.
+2. **New fail dimension**, `relation_typing_precision` -> axis `B`,
+   registered in `DIMENSION_AXIS` the same way the existing 15 dimensions
+   are -- no new mechanism.
+3. **Evidence submission.** New `_relation_type_probe_success()` --
+   reuses `_relational_probe_success()`'s existing gate (length, fitness,
+   both terms present, cue density) as its floor, then checks the SAME
+   reply against `_RELATION_TYPE_CUES`, a table of phrases specific
+   enough to one `RelationType` (deliberately excluding `RELATED_TO`
+   itself, since confirming and resubmitting the untyped fallback would
+   defeat the directive's purpose). Returns a type only when one type's
+   cues clearly dominate; returns `None` -- an honest, legitimate
+   outcome, not a defect -- when the probe succeeded conversationally but
+   wasn't specific enough to type. `record_relational_probe_outcomes()`,
+   alongside its existing cause/effect success branch, now calls this and
+   (when a type is confirmed and both words' roles resolve from the live
+   web) submits `{"source_role": left_role, "target_role": right_role}`
+   -> confirmed-type-string to `systems["operational_synthesis"].
+   observe_example()` under one stable `task_id`
+   (`"relation_type_from_role_pair"`) so evidence accumulates into a
+   single categorical-synthesis task over time.
+4. `OntologicalWeb.infer_relations_from_context()`'s own two hardcoded
+   heuristics were not touched -- they remain the known-good baseline,
+   not something to retire preemptively.
+
+**Tests:** `tests/test_relation_typing_probe_extension.py` -- 13 tests:
+`underworked_relation_type_pairs()` correctly excludes NC1-covered role
+pairs and non-co-occurrence-sourced `RELATED_TO` relations; the new
+dimension is registered in `DIMENSION_AXIS`; dual-mode sourcing produces
+`rel_probe_` specs from the ontology source when fail-dimension examples
+are absent, and existing fail-dimension-mined pairs still take priority
+when present (additive, not a replacement); `_relation_type_probe_
+success()` identifies a specific type from a real cue-bearing reply,
+returns `None` for a conversationally-successful-but-generic reply, and
+returns `None` when the base success gate itself fails; full
+`record_relational_probe_outcomes()` submits correctly-shaped evidence
+end to end; an explicit non-write check confirming this pipeline never
+adds a relation or changes any node's `noncomp_id` (`web.relations`
+count and every node's `noncomp_id` snapshotted before/after and
+asserted unchanged); and a case where an unresolvable word (not in the
+web) correctly skips evidence submission rather than submitting
+malformed roles. Regression: existing `tests/test_d2_2_corpus_fragment_
+nesting.py` (the only prior file touching `rel_probe_`/relational-probe
+machinery) re-run unchanged, 6 passed; broader dream-trainer test
+sweep (50 tests across 5 files) also re-run clean.
+
+**Live verification:** confirmed `relation_typing_precision` registered
+in `DIMENSION_AXIS` the same way as existing dimensions; ran
+`_build_relational_probe_specs()` against a fresh ledger with zero
+fail-dimension examples and confirmed a `rel_probe_` spec still gets
+generated purely from an underworked ontology role pair; drove
+`record_relational_probe_outcomes()` with a real cause-cue-bearing probe
+reply and confirmed evidence reached `observe_example()` with
+`input_value={"source_role": "noun", "target_role": "noun"}` and
+`expected_output="causes"`; confirmed the `AuroraOperationalSynthesis
+Chamber`'s `_MIN_TRAINING_EXAMPLES`/`_MIN_DISTINCT_TRAINING_INPUTS`
+gates behave identically for the `"relation_type_from_role_pair"` task
+as for any other task -- one submitted example leaves it at `status:
+"observing"` with no candidate yet, exactly the generic threshold, no
+special case.
+
+**What this directive does NOT claim:** it does not itself teach Aurora
+a relation-typing rule -- it is the evidence pipeline, not the rule,
+which stays hers to synthesize via the operational synthesis chamber
+(the Categorical Branch Primitive directive above) once fed enough
+varied, honest evidence. It does not replace or diminish the existing
+cause/effect relational-probe function -- both purposes now share one
+trial surface. It does not write a `RelationType` or `noncomp_id`
+anywhere, confirmed by a dedicated test.
+**First Seen:** Aurora Build 598 Relation-Typing Pressure Calibration
+Directive, uploaded 2026-08-05, as the second, dependent half of the
+relation-typing thread opened by the Crest-Compression and Categorical
+Branch Primitive entries above. 2026-08-05.

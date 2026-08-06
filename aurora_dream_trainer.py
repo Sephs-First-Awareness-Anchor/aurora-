@@ -115,6 +115,26 @@ _RELATIONAL_CAUSE_CUES = (
     "because", "causes", "cause", "leads", "lead", "triggers", "trigger",
     "makes", "produces", "effect", "affect", "changes", "shifts",
 )
+# Build 598 (Relation-Typing Pressure Calibration): cue phrases specific
+# enough to one RelationType (aurora_internal.aurora_ontological_scaffolding)
+# to serve as a confirmed label for that turn's answer. Deliberately
+# narrower and more specific than _RELATIONAL_RELATION_CUES /
+# _RELATIONAL_CAUSE_CUES above, which only judge generic relational
+# engagement, not which type. RELATED_TO has no entry here on purpose --
+# it is the untyped fallback this directive exists to move past, not
+# something to confirm and re-submit as evidence.
+_RELATION_TYPE_CUES: Dict[str, Tuple[str, ...]] = {
+    "causes": ("because", "causes", "cause", "leads to", "triggers", "results in", "makes happen"),
+    "enables": ("enables", "allows", "lets", "makes possible", "permits"),
+    "opposite_of": ("opposite", "opposes", "contrary to", "unlike", "against"),
+    "is_a": ("is a type of", "is a kind of", "is an instance of", "is a form of", "is a sort of"),
+    "part_of": ("part of", "made up of", "consists of", "composed of"),
+    "has_a": ("has a", "contains", "includes"),
+    "context_of": ("describes", "characterizes", "qualifies", "modifies", "in the context of"),
+    "implies": ("implies", "suggests", "means that", "entails"),
+    "precedes": ("before", "precedes", "comes before", "leads into"),
+    "contrasts": ("contrasts", "differs from", "in contrast to"),
+}
 
 
 def _extract_relational_terms(text: str, limit: int = 6) -> List[str]:
@@ -231,6 +251,11 @@ DIMENSION_AXIS: Dict[str, str] = {
     "emotional_calibration":        "B",   # warmth without overextension
     "framing_selection":            "A",   # outlet push = agency relief
     "adaptive_strategy_selection":  "A",   # agency → switch strategy
+    # Build 598 (Relation-Typing Pressure Calibration): typing a relation
+    # correctly is a categorization/differentiation decision -- the same
+    # axis role/preposition/adjective already carry in ROLE_TO_AXIS
+    # (aurora_ontological_scaffolding.py).
+    "relation_typing_precision":    "B",
 }
 
 # Per-axis simulation slot weight.
@@ -2295,6 +2320,90 @@ class DreamTrainer:
                 context={"function": "record_sensory_tension", "handler_line": 2051, "source_file": "aurora_dream_trainer.py"},
             )
             pass
+    def _relational_probe_spec_from_pair(
+        self,
+        left: str,
+        right: str,
+        *,
+        dim: str,
+        score: float,
+        conv_id: str,
+        source_snippet: str,
+        index: int,
+    ) -> Dict[str, Any]:
+        prompt_candidates = _dedupe_texts(
+            [
+                f"Use this corpus fragment as context: {source_snippet}",
+                f"Take {left} and {right} together and explain their likely relation.",
+                f"In this context, what does {left} do relative to {right}?",
+            ],
+            limit=6,
+        )
+        followup_candidates = _dedupe_texts(
+            [
+                f"What behavior links {left} and {right} here?",
+                f"What would likely cause that relation to change?",
+                f"What effect would that change have next?",
+                f"If {left} shifts, what changes for {right}?",
+            ],
+            limit=6,
+        )
+        axis = DIMENSION_AXIS.get(dim, "T")
+        return {
+            "avatar_id": f"rel_probe_{left[:12]}_{right[:12]}_{index}",
+            "pressure_targets": {
+                dim: min(1.0, max(0.72, float(score or 0.0) + 0.18)),
+                "semantic_precision": 0.82,
+                "coherence_maintenance": 0.74,
+            },
+            "behavior_modes": {
+                "demand_synthesis": 0.9,
+                "test_cross_turn_memory": 0.65,
+                "ask_about_confidence": 0.45,
+            },
+            "code_hints": [
+                _pack_relational_probe_hint(left, right, conv_id),
+                "[RELATION] hold two concepts in one frame, infer behavior, then trace cause and effect",
+            ],
+            "source_episode_ids": _dedupe_texts([conv_id, dim], limit=6),
+            "avatar_overrides": {
+                "topic": {
+                    "category": "relational_probe",
+                    "prompt": source_snippet[:220],
+                    "expected_tone": "analytical",
+                }
+            },
+            "constraint_axes": {axis: 1.0},
+            "source_leverage_points": {dim: score, "relational_probe": 1.0},
+            "prompt_candidates": prompt_candidates,
+            "followup_candidates": followup_candidates,
+        }
+
+    def _ontological_role_pair_candidates(self, limit: int) -> List[Dict[str, str]]:
+        """Build 598 (Relation-Typing Pressure Calibration): the second,
+        dual-mode pair source. Unlike the fail-dimension-mined pairs above,
+        this reads OntologicalWeb directly for role-pair combinations the
+        two ratified NC1 heuristics don't already cover -- this is what
+        actually stresses relation-typing specifically, since the
+        fail-dimension source has no reason to prefer underworked role
+        pairs. Read-only: does not write to the web."""
+        try:
+            perception = self._systems.get("perception") if self._systems else None
+            oets = getattr(perception, "oets", None)
+            web = getattr(oets, "web", None)
+            if web is None or not hasattr(web, "underworked_relation_type_pairs"):
+                return []
+            return web.underworked_relation_type_pairs(limit=limit)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:_ontological_role_pair_candidates",
+                exc=_aurora_boundary_exc,
+                context={"function": "_ontological_role_pair_candidates", "source_file": "aurora_dream_trainer.py"},
+            )
+            return []
+
     def _build_relational_probe_specs(
         self,
         fail_dims: List[Tuple[str, float]],
@@ -2303,6 +2412,7 @@ class DreamTrainer:
     ) -> List[Dict[str, Any]]:
         specs: List[Dict[str, Any]] = []
         seen_pairs = set()
+        cap = max(1, int(limit or 1))
 
         for dim, score in list(fail_dims or [])[:4]:
             examples = self.ledger.get_examples(dim, limit=3)
@@ -2333,57 +2443,33 @@ class DreamTrainer:
                         continue
                     seen_pairs.add(pair_key)
                     source_snippet = texts[0] if texts else f"{left} {right}"
-                    prompt_candidates = _dedupe_texts(
-                        [
-                            f"Use this corpus fragment as context: {source_snippet}",
-                            f"Take {left} and {right} together and explain their likely relation.",
-                            f"In this context, what does {left} do relative to {right}?",
-                        ],
-                        limit=6,
-                    )
-                    followup_candidates = _dedupe_texts(
-                        [
-                            f"What behavior links {left} and {right} here?",
-                            f"What would likely cause that relation to change?",
-                            f"What effect would that change have next?",
-                            f"If {left} shifts, what changes for {right}?",
-                        ],
-                        limit=6,
-                    )
-                    axis = DIMENSION_AXIS.get(dim, "T")
-                    specs.append(
-                        {
-                            "avatar_id": f"rel_probe_{left[:12]}_{right[:12]}_{len(specs)}",
-                            "pressure_targets": {
-                                dim: min(1.0, max(0.72, float(score or 0.0) + 0.18)),
-                                "semantic_precision": 0.82,
-                                "coherence_maintenance": 0.74,
-                            },
-                            "behavior_modes": {
-                                "demand_synthesis": 0.9,
-                                "test_cross_turn_memory": 0.65,
-                                "ask_about_confidence": 0.45,
-                            },
-                            "code_hints": [
-                                _pack_relational_probe_hint(left, right, conv_id),
-                                "[RELATION] hold two concepts in one frame, infer behavior, then trace cause and effect",
-                            ],
-                            "source_episode_ids": _dedupe_texts([conv_id, dim], limit=6),
-                            "avatar_overrides": {
-                                "topic": {
-                                    "category": "relational_probe",
-                                    "prompt": source_snippet[:220],
-                                    "expected_tone": "analytical",
-                                }
-                            },
-                            "constraint_axes": {axis: 1.0},
-                            "source_leverage_points": {dim: score, "relational_probe": 1.0},
-                            "prompt_candidates": prompt_candidates,
-                            "followup_candidates": followup_candidates,
-                        }
-                    )
-                    if len(specs) >= max(1, int(limit or 1)):
+                    specs.append(self._relational_probe_spec_from_pair(
+                        left, right, dim=dim, score=score, conv_id=conv_id,
+                        source_snippet=source_snippet, index=len(specs),
+                    ))
+                    if len(specs) >= cap:
                         return specs
+
+        # Dual-mode pair sourcing: once the fail-dimension-mined pairs are
+        # exhausted (or absent), also draw underworked role-pair evidence
+        # directly from the web so relation-typing itself gets stressed,
+        # not just whatever dimensions happen to already be failing.
+        if len(specs) < cap:
+            for candidate in self._ontological_role_pair_candidates(limit=cap * 3):
+                left, right = candidate.get("left", ""), candidate.get("right", "")
+                if not left or not right:
+                    continue
+                pair_key = tuple(sorted((left, right)))
+                if pair_key in seen_pairs:
+                    continue
+                seen_pairs.add(pair_key)
+                specs.append(self._relational_probe_spec_from_pair(
+                    left, right, dim="relation_typing_precision", score=0.65,
+                    conv_id=candidate.get("relation_id", ""),
+                    source_snippet=f"{left} {right}", index=len(specs),
+                ))
+                if len(specs) >= cap:
+                    return specs
 
         return specs
 
@@ -2407,6 +2493,80 @@ class DreamTrainer:
             if cue in reply:
                 cue_hits += 1
         return cue_hits >= 2
+
+    def _relation_type_probe_success(
+        self,
+        assistant_text: str,
+        *,
+        left: str,
+        right: str,
+        avg_fitness: float,
+    ) -> Optional[str]:
+        """Build 598 (Relation-Typing Pressure Calibration): a parallel
+        judgment to _relational_probe_success() -- reuses that same success
+        gate (length, fitness, both terms present, cue density) as its
+        floor, then asks a narrower question on top of it: does Aurora's
+        OWN reply, in her own words, use language specific enough to one
+        RelationType to serve as a confirmed label? Returns the
+        RelationType value string (e.g. "causes", "enables") only when one
+        type's cues clearly dominate; returns None when the probe was
+        conversationally successful but not specific enough to type --
+        that is an honest, legitimate outcome, not a defect, and no
+        evidence is submitted for it (submitting "related_to" here would
+        just reinforce the untyped baseline this directive exists to move
+        past)."""
+        if not self._relational_probe_success(assistant_text, left=left, right=right, avg_fitness=avg_fitness):
+            return None
+        reply = re.sub(r"\s+", " ", str(assistant_text or "").strip().lower())
+        best_type = None
+        best_hits = 0
+        for rtype, cues in _RELATION_TYPE_CUES.items():
+            hits = sum(1 for cue in cues if cue in reply)
+            if hits > best_hits:
+                best_hits = hits
+                best_type = rtype
+        return best_type if best_hits >= 1 else None
+
+    def _submit_relation_type_evidence(
+        self,
+        systems: Dict[str, Any],
+        left: str,
+        right: str,
+        confirmed_type: str,
+    ) -> None:
+        """Build 598 (Relation-Typing Pressure Calibration): the evidence
+        pipeline, not the rule. This never writes a RelationType or
+        noncomp_id anywhere -- it only feeds one categorical training
+        example to the operational synthesis chamber. The rule stays hers
+        to compose once she's earned enough varied evidence, same as
+        everything else the chamber synthesizes."""
+        try:
+            perception = systems.get("perception") if isinstance(systems, dict) else None
+            oets = getattr(perception, "oets", None)
+            web = getattr(oets, "web", None)
+            left_role = str(getattr(web.get_node(left), "role", "") or "") if web is not None else ""
+            right_role = str(getattr(web.get_node(right), "role", "") or "") if web is not None else ""
+            if not left_role or not right_role:
+                return
+            op_synth = systems.get("operational_synthesis") if isinstance(systems, dict) else None
+            if op_synth is None or not hasattr(op_synth, "observe_example"):
+                return
+            op_synth.observe_example(
+                "relation_type_from_role_pair",
+                {"source_role": left_role, "target_role": right_role},
+                confirmed_type,
+                source="relational_probe",
+                need_description="infer relation type from a source/target role pair",
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:_submit_relation_type_evidence",
+                exc=_aurora_boundary_exc,
+                context={"function": "_submit_relation_type_evidence", "source_file": "aurora_dream_trainer.py"},
+            )
+            pass
 
     def record_relational_probe_outcomes(
         self,
@@ -2485,6 +2645,19 @@ class DreamTrainer:
                 )
                 summary["successful"] += 1
                 summary["applied_learnings"] += 1 if recorded else 0
+                # Build 598 (Relation-Typing Pressure Calibration): alongside
+                # the existing cause/effect success check above, submit
+                # typed evidence to the operational synthesis chamber when
+                # this turn's own reply was specific enough to confirm a
+                # particular relation type -- not just generic relational
+                # engagement. This never assigns a RelationType or
+                # noncomp_id itself; it only feeds the chamber's evidence
+                # pipeline, same as any other task it learns.
+                confirmed_type = self._relation_type_probe_success(
+                    assistant_text, left=left, right=right, avg_fitness=avg_fitness,
+                )
+                if confirmed_type:
+                    self._submit_relation_type_evidence(systems, left, right, confirmed_type)
                 continue
 
             severity = max(0.45, min(1.0, 1.0 - avg_fitness))
