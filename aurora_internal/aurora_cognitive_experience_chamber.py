@@ -1786,3 +1786,367 @@ def apply_expression_fidelity_evaluation(
     )
     step.expression_fidelity = result
     return result
+
+
+# ---------------------------------------------------------------------------
+# Stage 6: Developmental Promotion Bridge, Governors & Shadow Persistence
+# ---------------------------------------------------------------------------
+#
+# This is the closing stage -- everything built in Stages 1-5 stays
+# quarantined and inert until this stage's gates let it through. Nothing
+# here bypasses AuroraOperationalSynthesisChamber._score_trial()'s existing
+# perfect-training-AND-validation gate; this module only decides whether a
+# scored episode is even worth submitting through the real
+# submit_operational_experience() seam. The chamber's own WARP trial
+# machinery still has the final word on promotion, exactly as it does for
+# every other caller of that seam.
+
+@dataclass(frozen=True)
+class GovernorResult:
+    name: str
+    tripped: bool
+    reason: str
+    detail: Dict[str, Any] = field(default_factory=dict)
+
+
+def _trend(values: Sequence[float], window: int = 5) -> float:
+    """Mirrors TimeDilationGovernor.get_fitness_trend()'s exact formula
+    (aurora_simulation_engine.py) -- reused, not reinvented. Returns 0.0
+    (no signal) until at least `window` samples have accumulated."""
+    if len(values) < window:
+        return 0.0
+    recent = list(values)[-window:]
+    return (recent[-1] - recent[0]) / len(recent)
+
+
+class ContradictionTracker:
+    """Mirrors SynthesisTask.conflict_count's exact pattern
+    (aurora_operational_synthesis.py): a plain int counter, incremented via
+    stable comparison of contradictory evidence for the same input across
+    recent episodes, used as a hard gate rather than a weighted penalty."""
+
+    def __init__(self) -> None:
+        self._seen: Dict[str, Any] = {}
+        self.conflict_count = 0
+
+    def record(self, input_key: str, output_value: Any) -> bool:
+        """Returns True if this observation contradicted a prior one for
+        the same input_key."""
+        if input_key in self._seen and self._seen[input_key] != output_value:
+            self.conflict_count += 1
+            return True
+        self._seen[input_key] = output_value
+        return False
+
+
+class DevelopmentalGovernors:
+    """Pre-submission circuit breakers. Each is independently checkable and
+    independently loggable. Any governor tripping halts promotion for that
+    episode and routes it to DreamTrainer._record_fail_dimension() and
+    autonomy.add_study_topic() instead -- a tripped governor is data, not a
+    discarded run. Governors whose required context was not supplied report
+    tripped=False with an explicit not-applicable reason, rather than being
+    silently skipped."""
+
+    @staticmethod
+    def contradiction_accumulation(tracker: ContradictionTracker, threshold: int = 1) -> GovernorResult:
+        tripped = tracker.conflict_count >= threshold
+        return GovernorResult(
+            "contradiction_accumulation", tripped,
+            f"conflict_count={tracker.conflict_count} threshold={threshold}",
+            {"conflict_count": tracker.conflict_count, "threshold": threshold},
+        )
+
+    @staticmethod
+    def confidence_rising_accuracy_falling(
+        confidence_calibration_history: Optional[Sequence[float]],
+        accuracy_history: Optional[Sequence[float]],
+        window: int = 5,
+    ) -> GovernorResult:
+        if not confidence_calibration_history or not accuracy_history:
+            return GovernorResult("confidence_rising_accuracy_falling", False, "not_applicable_missing_context", {})
+        confidence_trend = _trend(confidence_calibration_history, window)
+        accuracy_trend = _trend(accuracy_history, window)
+        tripped = confidence_trend > 0 and accuracy_trend < 0
+        return GovernorResult(
+            "confidence_rising_accuracy_falling", tripped,
+            f"confidence_trend={confidence_trend:.4f} accuracy_trend={accuracy_trend:.4f}",
+            {"confidence_trend": confidence_trend, "accuracy_trend": accuracy_trend},
+        )
+
+    @staticmethod
+    def surface_fitness_without_transfer(
+        avatar_fitness_trend: Optional[float], transfer_score_trend: Optional[float]
+    ) -> GovernorResult:
+        """The single most load-bearing check in the six-stage program: reads
+        SimulatedAvatar's own already-computed fitness trend (session.
+        governor.get_fitness_trend(), aurora_simulation_engine.py's
+        TimeDilationGovernor -- not a second tracker) against Stage 4's
+        transfer-score trend, and halts when surface fitness rises while
+        transfer worsens. The direct test of whether the 'hall of mirrors'
+        failure mode is actually prevented in practice."""
+        if avatar_fitness_trend is None or transfer_score_trend is None:
+            return GovernorResult("surface_fitness_without_transfer", False, "not_applicable_missing_context", {})
+        tripped = avatar_fitness_trend > 0 and transfer_score_trend < 0
+        return GovernorResult(
+            "surface_fitness_without_transfer", tripped,
+            f"avatar_fitness_trend={avatar_fitness_trend:.4f} transfer_score_trend={transfer_score_trend:.4f}",
+            {"avatar_fitness_trend": avatar_fitness_trend, "transfer_score_trend": transfer_score_trend},
+        )
+
+    @staticmethod
+    def loss_of_stable_ability(
+        genealogy: Any, ability_tag: Optional[str], regression_evidence_passed: Optional[bool]
+    ) -> GovernorResult:
+        """Regression against previously promoted _register_genealogy()
+        entries -- reads genealogy.abilities directly (the same store
+        register_emergent_operational_synthesis() writes to), filtered by
+        the same effect_tags vocabulary that promotion already uses, rather
+        than inventing new bookkeeping."""
+        if genealogy is None or ability_tag is None or regression_evidence_passed is None:
+            return GovernorResult("loss_of_stable_ability", False, "not_applicable_missing_context", {})
+        abilities = getattr(genealogy, "abilities", {}) or {}
+        previously_promoted = any(
+            ability_tag in getattr(ability, "effect_tags", ()) for ability in abilities.values()
+        )
+        tripped = previously_promoted and not regression_evidence_passed
+        return GovernorResult(
+            "loss_of_stable_ability", tripped,
+            f"previously_promoted={previously_promoted} regression_evidence_passed={regression_evidence_passed}",
+            {"ability_tag": ability_tag, "previously_promoted": previously_promoted},
+        )
+
+    @staticmethod
+    def runaway_complexity(tree: Optional[Dict[str, Any]]) -> GovernorResult:
+        """Reuses aurora_operational_synthesis.py's own _MAX_PROGRAM_NODES/
+        _node_count() ceiling rather than a new limit. Only applicable once
+        a candidate program tree exists (formed inside the operational
+        synthesis chamber after enough examples accumulate) -- a single
+        freshly-submitted episode has no tree yet, and that is reported
+        honestly as not-applicable rather than silently passing."""
+        if tree is None:
+            return GovernorResult("runaway_complexity", False, "not_applicable_no_candidate_tree_yet", {})
+        from aurora_internal.aurora_operational_synthesis import _MAX_PROGRAM_NODES, _node_count
+        count = _node_count(tree)
+        tripped = count > _MAX_PROGRAM_NODES
+        return GovernorResult(
+            "runaway_complexity", tripped,
+            f"node_count={count} max={_MAX_PROGRAM_NODES}",
+            {"node_count": count, "max_nodes": _MAX_PROGRAM_NODES},
+        )
+
+    @staticmethod
+    def meaning_expression_divergence(
+        expression_fidelity: Optional[Dict[str, Any]], threshold: float = 0.5
+    ) -> GovernorResult:
+        """Stage 5's fidelity score falling below threshold halts promotion
+        regardless of how well Stages 3-4 scored."""
+        if not expression_fidelity:
+            return GovernorResult("meaning_expression_divergence", False, "not_applicable_no_fidelity_data", {})
+        low_scores = {
+            k: v for k, v in expression_fidelity.items()
+            if isinstance(v, (int, float)) and v < threshold
+        }
+        tripped = bool(low_scores)
+        return GovernorResult(
+            "meaning_expression_divergence", tripped,
+            f"low_scores={low_scores}" if tripped else "within threshold",
+            {"low_scores": low_scores, "threshold": threshold},
+        )
+
+
+def route_tripped_governors_to_fail_pressure(
+    dream_trainer: Any,
+    autonomy: Any,
+    tripped: Sequence[GovernorResult],
+    episode_id: str,
+) -> None:
+    """A tripped governor is data, not a discarded run: same
+    _record_fail_dimension() call pattern already used elsewhere in this
+    module, plus autonomy.add_study_topic() so the halted episode becomes a
+    curiosity target rather than silently vanishing."""
+    if dream_trainer is not None and hasattr(dream_trainer, "_record_fail_dimension"):
+        for governor in tripped:
+            dream_trainer._record_fail_dimension(
+                governor.name, 1.0, example={"episode_id": episode_id, "halted_by": "developmental_governor", "reason": governor.reason},
+            )
+    if autonomy is not None and hasattr(autonomy, "add_study_topic"):
+        names = ",".join(g.name for g in tripped)
+        autonomy.add_study_topic(f"recursive_causal_experience_chamber:{episode_id}:{names}")
+
+
+_PROMOTION_DIMENSION_THRESHOLDS: Dict[str, float] = {
+    "causal_state_accuracy": 1.0,
+    "causal_prediction_accuracy": 1.0,
+    "causal_discrimination": 1.0,
+    "evidence_discipline": 1.0,
+    "revision_quality": 1.0,
+    "counterfactual_consistency": 1.0,
+    "confidence_calibration": 0.8,
+}
+_PROMOTION_TRANSFER_THRESHOLD = 0.8
+
+
+@dataclass(frozen=True)
+class PromotionDecision:
+    episode_id: str
+    promoted: bool
+    reason: str
+    tripped: Tuple[str, ...] = ()
+    dimension_scores: Dict[str, float] = field(default_factory=dict)
+    transfer_score: Optional[float] = None
+    submission_result: Optional[Dict[str, Any]] = None
+
+
+class DevelopmentalPromotionBridge:
+    """Takes a completed, scored EpisodeTrace step and, only when every
+    required dimension clears a stated threshold AND a transfer case also
+    clears it, submits structured before/after evidence to
+    submit_operational_experience(). This is the ONLY path from this
+    chamber into the operational synthesis chamber's promotion pipeline."""
+
+    def __init__(
+        self,
+        thresholds: Optional[Dict[str, float]] = None,
+        transfer_threshold: float = _PROMOTION_TRANSFER_THRESHOLD,
+    ) -> None:
+        self.thresholds = dict(thresholds or _PROMOTION_DIMENSION_THRESHOLDS)
+        self.transfer_threshold = transfer_threshold
+
+    def clears_dimension_thresholds(self, dimension_scores: Dict[str, float]) -> Tuple[bool, List[str]]:
+        missing_or_low = [
+            dim for dim, threshold in self.thresholds.items()
+            if dimension_scores.get(dim) is None or dimension_scores[dim] < threshold
+        ]
+        return (not missing_or_low, missing_or_low)
+
+    def evaluate_and_submit(
+        self,
+        systems: Dict[str, Any],
+        step: EpisodeStep,
+        transfer_comparison: Optional[TransferComparison],
+        governor_results: Sequence[GovernorResult],
+        *,
+        dream_trainer: Any = None,
+        autonomy: Any = None,
+        episode_id: str = "",
+        validation: bool = False,
+    ) -> PromotionDecision:
+        dimension_scores = dict(step.causal_scores or {})
+
+        tripped = [g for g in governor_results if g.tripped]
+        if tripped:
+            route_tripped_governors_to_fail_pressure(dream_trainer, autonomy, tripped, episode_id)
+            return PromotionDecision(episode_id, False, "governor_tripped", tuple(g.name for g in tripped), dimension_scores)
+
+        cleared, missing = self.clears_dimension_thresholds(dimension_scores)
+        transfer_score = transfer_comparison.transfer_score if transfer_comparison is not None else None
+        transfer_cleared = transfer_score is not None and transfer_score >= self.transfer_threshold
+
+        if not cleared or not transfer_cleared:
+            failing = list(missing) + ([] if transfer_cleared else ["transfer"])
+            if dream_trainer is not None and hasattr(dream_trainer, "_record_fail_dimension"):
+                for dim in failing:
+                    dream_trainer._record_fail_dimension(dim, 1.0, example={"episode_id": episode_id, "halted_by": "promotion_bridge"})
+            if autonomy is not None and hasattr(autonomy, "add_study_topic"):
+                autonomy.add_study_topic(f"recursive_causal_experience_chamber:{episode_id}:{','.join(failing)}")
+            reason = "dimension_below_threshold" if missing else "transfer_below_threshold"
+            return PromotionDecision(episode_id, False, reason, tuple(failing), dimension_scores, transfer_score)
+
+        submitter = systems.get("submit_operational_experience")
+        if submitter is None:
+            return PromotionDecision(episode_id, False, "no_submission_seam_available", (), dimension_scores, transfer_score)
+
+        evidence = {
+            "input_value": {
+                "observation": step.observation_text,
+                "interpretation": asdict(step.interpretation),
+            },
+            "expected_output": {
+                "consequence": _worldstate_to_dict(step.consequence) if step.consequence is not None else None,
+                "dimension_scores": dimension_scores,
+            },
+            "validation": validation,
+            "task_id": f"RCEC:{episode_id}" if episode_id else None,
+            "source": "cognitive_experience_chamber",
+            "need_description": f"recursive causal experience chamber episode {episode_id}",
+        }
+        submission_result = dict(submitter(evidence) or {})
+        return PromotionDecision(episode_id, True, "submitted", (), dimension_scores, transfer_score, submission_result)
+
+
+def run_shadow_promotion_cycle(
+    state_dir: str,
+    episode_world_specs: Sequence[Tuple[WorldState, HiddenRuleEngine, ObservationBoundary]],
+    *,
+    agent_id: str = "agent_a",
+    bridge: Optional[DevelopmentalPromotionBridge] = None,
+    promote_keys: Sequence[str] = (),
+    boot_kwargs: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Wires the full cycle: open_shadow_state() -> boot a second, fully
+    independent Aurora instance against the shadow copy -> run each given
+    episode inside it -> evaluate the always-on governors (meaning/
+    expression divergence, contradiction accumulation across this cycle's
+    episodes) -> for surviving episodes, submit_operational_experience()
+    (the chamber's own WARP trial machinery still decides real promotion)
+    -> promote_shadow_deltas() for the named keys only if at least one
+    episode was actually submitted -> discard the rest of the shadow copy
+    on exit.
+
+    Known limitation, live-verified during this stage (not introduced by
+    this module, and out of this directive's scope to fix): merely
+    importing aurora, and separately boot_aurora() itself, were observed to
+    write to the real DEFAULT aurora_state/ directory's files even when
+    every systems dict here correctly threads a shadow state_dir through --
+    something in aurora.py's own boot/runtime path still touches its
+    hardcoded `Path(__file__).parent / "aurora_state"` fallback somewhere
+    outside this function's control. aurora_shadow_state.py's own isolation
+    is provably correct (test_shadow_state_utility.py exercises it against
+    plain files with zero dependency on aurora.py); the gap is upstream,
+    in aurora.py's state_dir threading, not in this shadow-copy mechanism.
+    The live state_dir this function itself writes to is never touched until promote_shadow_
+    deltas() runs, and only the named keys move."""
+    import aurora as _aurora
+    from aurora_internal.aurora_shadow_state import open_shadow_state, promote_shadow_deltas
+
+    bridge = bridge or DevelopmentalPromotionBridge()
+    boot_kwargs = dict(boot_kwargs if boot_kwargs is not None else {"runtime_profile": "surface", "verbose": False})
+    decisions: List[PromotionDecision] = []
+    tracker = ContradictionTracker()
+
+    with open_shadow_state(state_dir) as handle:
+        shadow_systems = _aurora.boot_aurora(state_dir=str(handle.shadow_state_dir), **boot_kwargs)
+        dream_trainer = shadow_systems.get("dream_trainer")
+        autonomy = shadow_systems.get("autonomy")
+
+        for index, (world, engine, boundary) in enumerate(episode_world_specs):
+            episode_id = f"shadow_{index}"
+            trace = EpisodeTrace(episode_id=episode_id, world_seed=world.tick, rule_family=engine._rule.family, agent_id=agent_id)
+            runtime_context = build_episode_runtime_context(shadow_systems)
+            run_episode_step(trace, shadow_systems, runtime_context, world, engine, boundary, agent_id)
+            step = trace.steps[0]
+
+            apply_causal_evaluation(trace, 0, world, engine, boundary, agent_id, dream_trainer=dream_trainer)
+            apply_expression_fidelity_evaluation(trace, 0)
+
+            if step.interpretation.predicted_consequence is not None:
+                contradiction_key = f"{step.interpretation.predicted_consequence.get('entity_id')}.{step.interpretation.predicted_consequence.get('property')}"
+                tracker.record(contradiction_key, step.interpretation.predicted_consequence.get("direction"))
+
+            governor_results = [
+                DevelopmentalGovernors.meaning_expression_divergence(step.expression_fidelity),
+                DevelopmentalGovernors.contradiction_accumulation(tracker),
+            ]
+
+            decision = bridge.evaluate_and_submit(
+                shadow_systems, step, None, governor_results,
+                dream_trainer=dream_trainer, autonomy=autonomy, episode_id=episode_id,
+            )
+            decisions.append(decision)
+
+        promoted_keys: List[str] = []
+        if promote_keys and any(d.promoted for d in decisions):
+            promoted_keys = promote_shadow_deltas(handle, promote_keys)
+
+    return {"decisions": decisions, "promoted_keys": promoted_keys}
