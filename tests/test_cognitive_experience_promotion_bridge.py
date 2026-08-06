@@ -27,8 +27,11 @@ from aurora_internal.aurora_cognitive_experience_chamber import (  # noqa: E402
     Entity,
     EpisodeTrace,
     GovernorResult,
+    ObservedEntity,
+    ObservedWorldState,
     WorldState,
     compute_transfer_comparison,
+    determine_admissibility_route,
     route_tripped_governors_to_fail_pressure,
 )
 
@@ -40,6 +43,12 @@ def _fully_scored_step(trace: EpisodeTrace) -> None:
         confidence=0.9,
     )
     trace.record_interpretation(0, "obs", ActionInvocation("add_energy", ("vessel_0",)), "act", interp)
+    world_before = WorldState(
+        tick=0,
+        entities={"vessel_0": Entity("vessel_0", "vessel", {"energy": 1})},
+        relationships=[],
+        agents=("agent_a",),
+    )
     consequence = WorldState(
         tick=1,
         entities={"vessel_0": Entity("vessel_0", "vessel", {"energy": 2})},
@@ -47,6 +56,12 @@ def _fully_scored_step(trace: EpisodeTrace) -> None:
         agents=("agent_a",),
     )
     trace.record_consequence(consequence)  # causal_scores are set directly below
+    trace.steps[0].world_before = world_before
+    trace.steps[0].observed_before = ObservedWorldState(
+        tick=0, agent_id="agent_a",
+        entities={"vessel_0": ObservedEntity("vessel_0", "vessel", {"energy": 1})},
+        relationships=(),
+    )
     trace.steps[0].causal_scores = {
         "causal_state_accuracy": 1.0,
         "causal_prediction_accuracy": 1.0,
@@ -102,17 +117,117 @@ def test_fully_scored_episode_reaches_submission_with_shaped_evidence():
 
     decision = bridge.evaluate_and_submit(
         systems, trace.steps[0], comparison, governor_results=[], episode_id="promo_ep",
+        rule_family="direct_trigger",
     )
 
     assert decision.promoted is True
     assert decision.reason == "submitted"
+    assert decision.route == "immediate_understanding"
     assert len(submitter.calls) == 1
     evidence = submitter.calls[0]
     assert "input_value" in evidence and "expected_output" in evidence
-    assert evidence["input_value"]["observation"] == "obs"
-    assert evidence["expected_output"]["dimension_scores"]["causal_state_accuracy"] == 1.0
-    assert evidence["task_id"] == "RCEC:promo_ep"
+    # Build 608 (C): the narrow target operation -- observed state + chosen
+    # action -> resulting state delta, under a STABLE task id (not unique
+    # per episode) so examples can accumulate under one WARP task.
+    assert evidence["input_value"]["observed_state"]["entities"]["vessel_0"]["properties"]["energy"] == 1
+    assert evidence["input_value"]["action"]["action_type"] == "add_energy"
+    assert evidence["expected_output"] == {"vessel_0.energy": {"before": 1, "after": 2}}
+    assert evidence["task_id"] == "RCEC:observed_state_plus_action_to_state_delta:direct_trigger"
     assert decision.submission_result["accepted"] is True
+
+
+# ---------------------------------------------------------------------------
+# Build 608 (B): two legitimate admissibility routes.
+# ---------------------------------------------------------------------------
+
+def test_immediate_understanding_route_admits_without_revision_quality():
+    scores = {
+        "causal_state_accuracy": 1.0,
+        "causal_prediction_accuracy": 1.0,  # correct the first time
+        "causal_discrimination": 1.0,
+        "evidence_discipline": 1.0,
+        "counterfactual_consistency": 1.0,
+        "confidence_calibration": 0.85,
+        # revision_quality deliberately absent -- not applicable, not required.
+    }
+    assert determine_admissibility_route(scores) == "immediate_understanding"
+
+
+def test_successful_correction_route_admits_on_genuine_revision_improvement():
+    scores = {
+        "causal_state_accuracy": 1.0,
+        "causal_prediction_accuracy": 0.0,  # wrong the first time
+        "causal_discrimination": 1.0,
+        "evidence_discipline": 1.0,
+        "revision_quality": 1.0,           # but the revision fully corrected it
+        "counterfactual_consistency": 1.0,
+        "confidence_calibration": 0.85,
+    }
+    assert determine_admissibility_route(scores) == "successful_correction"
+
+
+def test_no_admissible_route_when_wrong_and_never_corrected():
+    scores = {
+        "causal_state_accuracy": 1.0,
+        "causal_prediction_accuracy": 0.0,
+        # no revision_quality at all -- no backprojection ever ran, or it
+        # ran but original was already correct (contradiction, so N/A here
+        # too) -- either way, neither route's precondition is met.
+    }
+    assert determine_admissibility_route(scores) is None
+
+
+def test_successful_correction_route_requires_full_revision_quality_threshold():
+    trace = EpisodeTrace(episode_id="e", world_seed=1, rule_family="direct_trigger", agent_id="agent_a")
+    _fully_scored_step(trace)
+    # Wrong originally, only PARTIALLY improved by the revision.
+    trace.steps[0].causal_scores["causal_prediction_accuracy"] = 0.0
+    trace.steps[0].causal_scores["revision_quality"] = 0.5
+
+    comparison = compute_transfer_comparison({"causal_prediction_accuracy": 1.0}, {"causal_prediction_accuracy": 1.0})
+    submitter = _FakeSubmitter()
+    bridge = DevelopmentalPromotionBridge()
+    decision = bridge.evaluate_and_submit(
+        {"submit_operational_experience": submitter}, trace.steps[0], comparison, governor_results=[],
+        episode_id="e", rule_family="direct_trigger",
+    )
+    assert decision.promoted is False
+    assert decision.route == "successful_correction"
+    assert "revision_quality" in decision.tripped
+    assert submitter.calls == []
+
+
+# ---------------------------------------------------------------------------
+# Build 608 (C): evidence is grouped under a stable task per rule family,
+# not a fresh task per episode -- training and validation examples for the
+# SAME operation must feed the SAME task_id.
+# ---------------------------------------------------------------------------
+
+def test_training_and_validation_episodes_share_the_same_stable_task_id():
+    submitter = _FakeSubmitter()
+    systems = {"submit_operational_experience": submitter}
+    bridge = DevelopmentalPromotionBridge()
+
+    training_trace = EpisodeTrace(episode_id="train_1", world_seed=1, rule_family="direct_trigger", agent_id="agent_a")
+    _fully_scored_step(training_trace)
+    bridge.evaluate_and_submit(
+        systems, training_trace.steps[0],
+        compute_transfer_comparison({"causal_prediction_accuracy": 1.0}, {"causal_prediction_accuracy": 0.9}),
+        governor_results=[], episode_id="train_1", rule_family="direct_trigger", validation=False,
+    )
+
+    validation_trace = EpisodeTrace(episode_id="val_1", world_seed=2, rule_family="direct_trigger", agent_id="agent_a")
+    _fully_scored_step(validation_trace)
+    bridge.evaluate_and_submit(
+        systems, validation_trace.steps[0],
+        compute_transfer_comparison({"causal_prediction_accuracy": 1.0}, {"causal_prediction_accuracy": 0.9}),
+        governor_results=[], episode_id="val_1", rule_family="direct_trigger", validation=True,
+    )
+
+    assert len(submitter.calls) == 2
+    assert submitter.calls[0]["task_id"] == submitter.calls[1]["task_id"]
+    assert submitter.calls[0]["validation"] is False
+    assert submitter.calls[1]["validation"] is True
 
 
 def test_missing_submission_seam_does_not_crash():

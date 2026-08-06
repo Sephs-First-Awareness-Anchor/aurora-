@@ -66,8 +66,25 @@ class DPMEPressureBridge:
         bridge.apply()   # calls set_external_pressure_guidance internally
     """
 
-    def __init__(self, repo_root: str):
+    def __init__(self, repo_root: str, state_dir: Optional[str] = None):
         self.repo_root = os.path.abspath(repo_root)
+        self.state_dir = os.path.abspath(state_dir) if state_dir else None
+
+    def _state_root(self) -> str:
+        """Build 608 (D1): mirrors PressureRouter._state_root() -- reads
+        adapter_hints.json from the active boot's state_dir rather than
+        always the real repo, so a shadow/test boot doesn't pick up
+        stale real-state hints."""
+        if self.state_dir:
+            return self.state_dir
+        try:
+            from aurora_internal.aurora_state_context import get_active_state_dir
+            active = get_active_state_dir()
+            if active:
+                return active
+        except Exception:
+            pass
+        return os.path.join(self.repo_root, "aurora_state")
 
     # ── public ────────────────────────────────────────────────────────────────
 
@@ -159,7 +176,7 @@ class DPMEPressureBridge:
     # ── helpers ───────────────────────────────────────────────────────────────
 
     def _load_hints(self) -> Dict[str, Any]:
-        path = os.path.join(self.repo_root, _ADAPTER_HINTS_REL)
+        path = os.path.join(self._state_root(), os.path.basename(_ADAPTER_HINTS_REL))
         if not os.path.exists(path):
             return {}
         try:

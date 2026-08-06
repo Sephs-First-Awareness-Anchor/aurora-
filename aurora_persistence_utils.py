@@ -133,7 +133,14 @@ class DeviceAwareness:
 
     DEVICE_LOG_PATH = "aurora_state/device_log.json"
 
-    def __init__(self):
+    def __init__(self, state_dir: Optional[str] = None):
+        # Build 608 (D1): instance-level path derived from state_dir when
+        # given, falling back to the class-level constant otherwise --
+        # the isolation-gap bug class (known_fixes_registry.md) previously
+        # had no way to configure this at all.
+        self.device_log_path = (
+            os.path.join(str(state_dir), "device_log.json") if state_dir else self.DEVICE_LOG_PATH
+        )
         self.current_hostname: str = socket.gethostname()
         self._devices: Dict[str, DeviceRecord] = {}
         self._previous_hostname: Optional[str] = None
@@ -207,16 +214,16 @@ class DeviceAwareness:
             "devices": {h: d.to_dict() for h, d in self._devices.items()},
             "timestamp": time.time(),
         }
-        os.makedirs(os.path.dirname(self.DEVICE_LOG_PATH), exist_ok=True)
+        os.makedirs(os.path.dirname(self.device_log_path), exist_ok=True)
         try:
             import tempfile
-            dirp = os.path.dirname(os.path.abspath(self.DEVICE_LOG_PATH))
+            dirp = os.path.dirname(os.path.abspath(self.device_log_path))
             fd, tmp = tempfile.mkstemp(dir=dirp, suffix=".tmp")
             with os.fdopen(fd, 'w') as f:
                 json.dump(data, f, indent=2)
                 f.flush()
                 os.fsync(f.fileno())
-            os.replace(tmp, self.DEVICE_LOG_PATH)
+            os.replace(tmp, self.device_log_path)
         except Exception as e:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -228,10 +235,10 @@ class DeviceAwareness:
             logger.debug(f"[DeviceAwareness] Save failed: {e}")
 
     def load(self):
-        if not os.path.exists(self.DEVICE_LOG_PATH):
+        if not os.path.exists(self.device_log_path):
             return
         try:
-            with open(self.DEVICE_LOG_PATH) as f:
+            with open(self.device_log_path) as f:
                 data = json.load(f)
             for h, d in data.get("devices", {}).items():
                 self._devices[h] = DeviceRecord.from_dict(d)
@@ -456,7 +463,7 @@ class DriveSync:
                  local_path:     str = "aurora_state",
                  sync_interval:  float = DEFAULT_INTERVAL):
 
-        self.device       = DeviceAwareness()
+        self.device       = DeviceAwareness(state_dir=local_path)
         self.rclone       = RcloneInterface(remote_name=remote_name,
                                             local_path=local_path)
         self.interval     = sync_interval

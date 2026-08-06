@@ -8472,6 +8472,17 @@ class AuroraEvolvedSurfaceEngine:
     def __init__(self, systems: Any = None, state_dir: Optional[str] = None):
         self.systems = systems
         repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # Build 608 (D1): the ~20 call sites across the codebase construct
+        # this with no state_dir at all (bare module-level lazy singletons --
+        # see aurora_internal/aurora_state_context.py's docstring for why
+        # that can't be fixed per-call-site as a narrow change). Falls back
+        # to the active boot's state_dir before the hardcoded repo path.
+        if state_dir is None:
+            try:
+                from aurora_internal.aurora_state_context import get_active_state_dir
+                state_dir = get_active_state_dir()
+            except Exception:
+                state_dir = None
         self.state_dir = os.path.abspath(state_dir or os.path.join(repo_root, "aurora_state"))
         self._registry = dict(_SURFACE_REGISTRY)
         self._events: List[Dict[str, Any]] = []

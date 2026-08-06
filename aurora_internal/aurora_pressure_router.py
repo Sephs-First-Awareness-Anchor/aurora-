@@ -275,9 +275,28 @@ class PressureRouter:
         bias = router.load_query_bias()
     """
 
-    def __init__(self, repo_root: str):
+    def __init__(self, repo_root: str, state_dir: Optional[str] = None):
         self.repo_root  = os.path.abspath(repo_root)
+        self.state_dir  = os.path.abspath(state_dir) if state_dir else None
         self._classifier = PressureClassifier(repo_root)
+
+    def _state_root(self) -> str:
+        """Build 608 (D1): where to read/write query_bias.json and
+        adapter_hints.json -- NOT necessarily self.repo_root, which the
+        classifier legitimately needs to stay pointed at the real repo
+        for source scanning. Explicit state_dir wins; otherwise the
+        active boot's state_dir (if any boot has set one); otherwise the
+        pre-608 default of repo_root/aurora_state."""
+        if self.state_dir:
+            return self.state_dir
+        try:
+            from aurora_internal.aurora_state_context import get_active_state_dir
+            active = get_active_state_dir()
+            if active:
+                return active
+        except Exception:
+            pass
+        return os.path.join(self.repo_root, "aurora_state")
 
     # ── public ────────────────────────────────────────────────────────────────
 
@@ -325,7 +344,7 @@ class PressureRouter:
 
     def load_query_bias(self) -> Dict[str, Any]:
         """Read the most recent query_bias.json (safe if missing)."""
-        path = os.path.join(self.repo_root, _QUERY_BIAS_REL)
+        path = os.path.join(self._state_root(), os.path.basename(_QUERY_BIAS_REL))
         if not os.path.exists(path):
             return {}
         try:
@@ -387,7 +406,7 @@ class PressureRouter:
         if not active:
             return {"dispatched": False, "reason": "no_active_types"}
 
-        path = os.path.join(self.repo_root, _EVOLVER_BIAS_REL)
+        path = os.path.join(self._state_root(), os.path.basename(_EVOLVER_BIAS_REL))
         try:
             hints: Dict[str, Any] = {}
             if os.path.exists(path):
@@ -601,7 +620,7 @@ class PressureRouter:
             "pressure_scores":    {t: round(s, 4) for t, s in signal.ranked},
         }
 
-        path = os.path.join(self.repo_root, _QUERY_BIAS_REL)
+        path = os.path.join(self._state_root(), os.path.basename(_QUERY_BIAS_REL))
         os.makedirs(os.path.dirname(path), exist_ok=True)
         try:
             with open(path, "w", encoding="utf-8") as fh:

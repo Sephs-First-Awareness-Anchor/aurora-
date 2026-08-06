@@ -12568,6 +12568,7 @@ def _boot_noncomp_manifold_runtime(systems: Dict[str, Any], *, verbose: bool = F
             directory=directory,
             router=router,
             band_pos=band_pos,
+            state_dir=state_dir,
         )
         systems["noncomp_runtime_status"] = {
             "available": True,
@@ -26320,6 +26321,18 @@ def boot_aurora(
     systems = {}
     systems['state_dir'] = state_dir
     systems['runtime_profile'] = runtime_profile
+
+    # Build 608 (D1): last-resort isolation-gap fallback -- see
+    # aurora_internal/aurora_state_context.py's own docstring. Explicit
+    # state_dir threading (systems['state_dir'] above, and passing state_dir
+    # directly wherever a subsystem accepts it) remains the correct fix and
+    # is used everywhere practical; this is only consulted by the handful of
+    # call sites that cannot cleanly receive state_dir any other way.
+    try:
+        from aurora_internal.aurora_state_context import set_active_state_dir
+        set_active_state_dir(state_dir)
+    except Exception:
+        pass
     systems['stratum_role'] = (
         "surface" if surface_profile else "subsurface" if runtime_profile == "subsurface" else "full"
     )
@@ -26990,7 +27003,7 @@ def boot_aurora(
     # Layer 4: Consciousness Engine
     if verbose: print("  [L4] Consciousness Engine...", end=" ", flush=True)
     from aurora_consciousness_engine import ConsciousnessEngine
-    consciousness = ConsciousnessEngine(contract, lattice, collective, dimensional)
+    consciousness = ConsciousnessEngine(contract, lattice, collective, dimensional, state_dir=state_dir)
     systems['consciousness'] = consciousness
     _register_layer(systems, 'L4', 'Consciousness Engine', 'consciousness', consciousness, {
         'process': 'process_input',
@@ -28330,8 +28343,8 @@ def boot_aurora(
         try:
             from aurora_internal.aurora_pressure_router import PressureRouter as _PressureRouter
             from aurora_internal.aurora_dpme_pressure_bridge import DPMEPressureBridge as _DPMEPressureBridge
-            _pr = _PressureRouter(repo_root=os.path.dirname(os.path.abspath(__file__)))
-            _db = _DPMEPressureBridge(repo_root=os.path.dirname(os.path.abspath(__file__)))
+            _pr = _PressureRouter(repo_root=os.path.dirname(os.path.abspath(__file__)), state_dir=state_dir)
+            _db = _DPMEPressureBridge(repo_root=os.path.dirname(os.path.abspath(__file__)), state_dir=state_dir)
             systems['_pressure_router'] = _pr
             systems['_dpme_bridge'] = _db
             # Seed both at boot so downstream consumers have fresh data
@@ -28752,6 +28765,89 @@ def boot_aurora(
             )
 
     return systems
+
+
+def shutdown_aurora(systems: Dict[str, Any]) -> None:
+    """
+    Build 608 (RCEC Closed-Loop Activation, D3): the runtime shutdown/
+    cleanup path boot_aurora() never had a counterpart for. Every boot_
+    aurora() call unconditionally starts background daemon threads that
+    outlive the call (ConnectivityMonitor -- aurora_offline_resilience.py,
+    polling a raw socket connect every 30s; ThoughtBraid's
+    StreamingThoughtThread -- aurora_braid_wiring.py, ticking every 2s) and
+    nothing ever stopped them. Confirmed live: in this environment the
+    connectivity probe (raw TCP to 8.8.8.8:53, bypassing the HTTPS proxy)
+    times out after its full 3s every time, so each unstopped
+    ConnectivityMonitor is a permanently-retrying blocked thread -- repeated
+    boot_aurora() calls without a shutdown in between accumulate these
+    daemon threads across the whole battery, which is what produced the
+    "stalled after 22 of 25 cases" symptom the RCEC live-test battery hit.
+
+    Best-effort and idempotent -- safe to call on a systems dict that was
+    never booted, or twice on the same one. Does not touch state_dir or any
+    persisted file; this is process-lifetime cleanup only.
+
+    Note: stopping a thread mid-blocking-call (the connectivity monitor's
+    raw socket connect, in particular) is not instantaneous -- the thread
+    notices the stop signal once its current blocking operation returns,
+    up to a few seconds later. All threads here are daemon=True, so this
+    matters for resource accumulation across a cohort, not for process exit.
+    """
+    if not isinstance(systems, dict):
+        return
+
+    checkpoint = systems.get('checkpoint')
+    if checkpoint is not None and hasattr(checkpoint, 'stop_auto_save'):
+        try:
+            checkpoint.stop_auto_save()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:shutdown_aurora:checkpoint",
+                exc=_aurora_boundary_exc,
+                context={"function": "shutdown_aurora", "source_file": __file__},
+            )
+
+    connectivity_monitor = systems.get('_connectivity_monitor')
+    if connectivity_monitor is not None and hasattr(connectivity_monitor, 'stop'):
+        try:
+            connectivity_monitor.stop()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:shutdown_aurora:connectivity",
+                exc=_aurora_boundary_exc,
+                context={"function": "shutdown_aurora", "source_file": __file__},
+            )
+    systems['_connectivity_monitor'] = None
+
+    try:
+        from aurora_braid_wiring import shutdown_thought_braid
+        shutdown_thought_braid(systems)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:shutdown_aurora:braid",
+            exc=_aurora_boundary_exc,
+            context={"function": "shutdown_aurora", "source_file": __file__},
+        )
+
+    screen_observer = systems.get('screen_observer')
+    if screen_observer is not None and hasattr(screen_observer, 'stop'):
+        try:
+            screen_observer.stop()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:shutdown_aurora:screen_observer",
+                exc=_aurora_boundary_exc,
+                context={"function": "shutdown_aurora", "source_file": __file__},
+            )
+    systems['screen_observer'] = None
 
 
 # ============================================================================

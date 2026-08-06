@@ -271,6 +271,16 @@ class CheckpointManager:
         self._items_since_save = 0
         self._auto_save_thread: Optional[threading.Thread] = None
         self._running        = False
+        # Build 608 (D3/D4): an Event the auto-save loop waits on, mirroring
+        # ConnectivityMonitor's pattern (aurora_offline_resilience.py) --
+        # stop_auto_save() now wakes the thread immediately instead of
+        # leaving it asleep for up to save_every_t (5 minutes by default).
+        # Confirmed live: a rapid repeated-boot battery with the OLD plain
+        # time.sleep(interval) design accumulated one sleeping
+        # CheckpointAutoSave thread per boot (none had a chance to notice
+        # _running had flipped), which is the traced root cause of the
+        # "stalled after 22 of 25 cases" symptom.
+        self._stop_event     = threading.Event()
         self._on_save_callbacks: List[Callable] = []
 
         # Register signal handlers
@@ -435,11 +445,12 @@ class CheckpointManager:
             return
         interval = interval_seconds or self.save_every_t
         self._running = True
+        self._stop_event.clear()
 
         def _loop():
             while self._running:
-                time.sleep(interval)
-                if self._running:
+                self._stop_event.wait(interval)
+                if self._running and not self._stop_event.is_set():
                     self.save()
 
         self._auto_save_thread = threading.Thread(target=_loop, daemon=True,
@@ -448,6 +459,7 @@ class CheckpointManager:
 
     def stop_auto_save(self):
         self._running = False
+        self._stop_event.set()
 
     # ----------------------------------------------------------------
     # IVM integration

@@ -22,6 +22,7 @@ belief, THEN reveal consequence) is enforced structurally by
 from __future__ import annotations
 
 import copy
+import hashlib
 import random
 import re
 from collections import defaultdict
@@ -910,6 +911,12 @@ class EpisodeStep:
     counterfactual_branch_ids: Tuple[str, ...] = ()        # Stage 4
     dual_strata_snapshot: Optional[Dict[str, Any]] = None  # Stage 5 -- captured pre-articulation
     expression_fidelity: Optional[Dict[str, Any]] = None   # Stage 5 -- evaluator's scoring output
+    # Build 608 (C): the full ground-truth world state and what was actually
+    # observable through the boundary, both AS OF the moment interpretation
+    # was captured -- reusable structured evidence for synthesis, not
+    # re-derivable from consequence alone once the episode has moved on.
+    world_before: Optional[WorldState] = None
+    observed_before: Optional[ObservedWorldState] = None
 
 
 @dataclass
@@ -1010,6 +1017,26 @@ def _worldstate_from_dict(data: Dict[str, Any]) -> WorldState:
     )
 
 
+def _observed_worldstate_to_dict(observed: ObservedWorldState) -> Dict[str, Any]:
+    return {
+        "tick": observed.tick,
+        "agent_id": observed.agent_id,
+        "entities": {eid: asdict(e) for eid, e in observed.entities.items()},
+        "relationships": [asdict(r) for r in observed.relationships],
+    }
+
+
+def _observed_worldstate_from_dict(data: Dict[str, Any]) -> ObservedWorldState:
+    entities = {eid: ObservedEntity(**e) for eid, e in data.get("entities", {}).items()}
+    relationships = tuple(Relationship(**r) for r in data.get("relationships", []))
+    return ObservedWorldState(
+        tick=int(data.get("tick", 0)),
+        agent_id=str(data.get("agent_id", "")),
+        entities=entities,
+        relationships=relationships,
+    )
+
+
 def _episode_step_to_dict(step: EpisodeStep) -> Dict[str, Any]:
     return {
         "tick": step.tick,
@@ -1023,6 +1050,8 @@ def _episode_step_to_dict(step: EpisodeStep) -> Dict[str, Any]:
         "counterfactual_branch_ids": list(step.counterfactual_branch_ids),
         "dual_strata_snapshot": step.dual_strata_snapshot,
         "expression_fidelity": step.expression_fidelity,
+        "world_before": _worldstate_to_dict(step.world_before) if step.world_before is not None else None,
+        "observed_before": _observed_worldstate_to_dict(step.observed_before) if step.observed_before is not None else None,
     }
 
 
@@ -1055,6 +1084,8 @@ def _episode_step_from_dict(data: Dict[str, Any]) -> EpisodeStep:
         counterfactual_branch_ids=tuple(data.get("counterfactual_branch_ids", ()) or ()),
         dual_strata_snapshot=data.get("dual_strata_snapshot"),
         expression_fidelity=data.get("expression_fidelity"),
+        world_before=_worldstate_from_dict(data["world_before"]) if data.get("world_before") is not None else None,
+        observed_before=_observed_worldstate_from_dict(data["observed_before"]) if data.get("observed_before") is not None else None,
     )
 
 
@@ -1149,6 +1180,11 @@ def run_episode_step(
     # Stage 5: retain the pre-articulation snapshot from THIS SAME turn,
     # captured alongside the interpretation rather than re-derived later.
     trace.steps[-1].dual_strata_snapshot = capture_dual_strata_snapshot(systems, bridge_result)
+    # Build 608 (C): retain the ground-truth and observed state AS OF this
+    # same moment -- reusable structured evidence, not re-derivable once the
+    # episode has moved past this tick.
+    trace.steps[-1].world_before = world_state.clone()
+    trace.steps[-1].observed_before = observed
 
     new_state = rule_engine.step(world_state, interpreted.action)
     trace.record_consequence(new_state)
@@ -1298,18 +1334,49 @@ class CausalEvaluator:
         return 1.0 - (unsupported / total)
 
     @staticmethod
+    def revision_accuracy_delta(
+        original: CapturedInterpretation,
+        revised: Optional[CapturedInterpretation],
+        world_before: WorldState,
+        consequence: WorldState,
+    ) -> Optional[float]:
+        """The raw measurement Build 608 (B) asks for: revised_accuracy -
+        original_accuracy, in [-1, 1]. None when there is nothing to
+        measure -- no revision, or either side's prediction_accuracy isn't
+        itself measurable (no prediction made)."""
+        if revised is None:
+            return None
+        original_score = CausalEvaluator.prediction_accuracy(original, world_before, consequence)
+        if original_score is None:
+            return None
+        revised_score = CausalEvaluator.prediction_accuracy(revised, world_before, consequence)
+        if revised_score is None:
+            return None
+        return revised_score - original_score
+
+    @staticmethod
     def revision_quality(
         original: CapturedInterpretation,
         revised: Optional[CapturedInterpretation],
-        prediction_was_wrong: Optional[bool],
+        world_before: WorldState,
+        consequence: WorldState,
     ) -> Optional[float]:
-        if revised is None or not prediction_was_wrong:
+        """Measures revised accuracy - original accuracy (via
+        revision_accuracy_delta), rescaled to [0, 1] for the same
+        threshold-based gating convention every other dimension uses here
+        (delta=0 -> 0.5, delta=+1 -> 1.0, delta=-1 -> 0.0) -- NOT merely
+        whether the parsed structure changed. Not applicable (None) when the
+        original prediction was already correct: there is nothing to
+        correct, and that is immediate-understanding territory, not
+        successful-correction territory (see determine_admissibility_route()
+        below)."""
+        original_score = CausalEvaluator.prediction_accuracy(original, world_before, consequence)
+        if original_score is None or original_score >= 1.0:
             return None
-        changed = (
-            original.predicted_consequence != revised.predicted_consequence
-            or original.believed_relations != revised.believed_relations
-        )
-        return 1.0 if changed else 0.0
+        delta = CausalEvaluator.revision_accuracy_delta(original, revised, world_before, consequence)
+        if delta is None:
+            return None
+        return max(0.0, min(1.0, (delta + 1.0) / 2.0))
 
     @staticmethod
     def counterfactual_consistency(
@@ -1354,7 +1421,6 @@ class CausalEvaluator:
         dual_strata_snapshot: Optional[Dict[str, Any]] = None,
     ) -> CausalEvaluationResult:
         prediction_score = cls.prediction_accuracy(interpretation, world_before, consequence)
-        prediction_was_wrong = (prediction_score == 0.0) if prediction_score is not None else None
         counterfactual_score = (
             cls.counterfactual_consistency(revised_interpretation or interpretation, counterfactual_branch)
             if counterfactual_branch is not None
@@ -1365,7 +1431,7 @@ class CausalEvaluator:
             prediction_accuracy=prediction_score,
             causal_discrimination=cls.causal_discrimination(interpretation, engine),
             evidence_discipline=cls.evidence_discipline(interpretation, observed_before),
-            revision_quality=cls.revision_quality(interpretation, revised_interpretation, prediction_was_wrong),
+            revision_quality=cls.revision_quality(interpretation, revised_interpretation, world_before, consequence),
             counterfactual_consistency=counterfactual_score,
             confidence_calibration=cls.confidence_calibration(interpretation, dual_strata_snapshot),
         )
@@ -1975,16 +2041,84 @@ def route_tripped_governors_to_fail_pressure(
         autonomy.add_study_topic(f"recursive_causal_experience_chamber:{episode_id}:{names}")
 
 
-_PROMOTION_DIMENSION_THRESHOLDS: Dict[str, float] = {
+_PROMOTION_TRANSFER_THRESHOLD = 0.8
+
+# Build 608 (B): two legitimate success paths. Dimensions common to both;
+# each route additionally requires either a correct ORIGINAL prediction
+# (immediate_understanding) or a genuinely improving REVISION
+# (successful_correction) -- never both, and revision_quality is simply not
+# a meaningful concept when nothing needed correcting.
+_SHARED_ROUTE_DIMENSIONS: Dict[str, float] = {
     "causal_state_accuracy": 1.0,
-    "causal_prediction_accuracy": 1.0,
     "causal_discrimination": 1.0,
     "evidence_discipline": 1.0,
-    "revision_quality": 1.0,
     "counterfactual_consistency": 1.0,
     "confidence_calibration": 0.8,
 }
-_PROMOTION_TRANSFER_THRESHOLD = 0.8
+_ROUTE_THRESHOLDS: Dict[str, Dict[str, float]] = {
+    "immediate_understanding": {**_SHARED_ROUTE_DIMENSIONS, "causal_prediction_accuracy": 1.0},
+    "successful_correction": {**_SHARED_ROUTE_DIMENSIONS, "revision_quality": 1.0},
+}
+
+
+def determine_admissibility_route(dimension_scores: Dict[str, float]) -> Optional[str]:
+    """Build 608 (B). immediate_understanding: the original prediction was
+    already correct -- revision_quality is not applicable and not required.
+    successful_correction: the original prediction was wrong but the
+    backprojected revision corrected it -- revision_quality (revised_
+    accuracy - original_accuracy, rescaled) must show genuine improvement.
+    Returns None if this episode's evidence doesn't meet either route's
+    precondition (e.g. still wrong after revision, or no prediction ever
+    made at all)."""
+    prediction_accuracy = dimension_scores.get("causal_prediction_accuracy")
+    if prediction_accuracy is not None and prediction_accuracy >= 1.0:
+        return "immediate_understanding"
+    if dimension_scores.get("revision_quality") is not None:
+        return "successful_correction"
+    return None
+
+
+# Build 608 (C): the narrow target operation for this first chamber --
+# observed state + chosen action -> resulting state delta. ONE stable task
+# id shared across every episode of a given rule family, not a fresh task
+# per episode, so submit_operational_experience()'s underlying WARP task
+# can actually accumulate the training/validation examples _score_trial()
+# requires (_MIN_TRAINING_EXAMPLES etc., aurora_operational_synthesis.py) --
+# a unique per-episode task_id could never reach that bar.
+def rcec_primary_task_id(rule_family: str) -> str:
+    return f"RCEC:observed_state_plus_action_to_state_delta:{rule_family}"
+
+
+def compute_state_delta(world_before: WorldState, consequence: WorldState) -> Dict[str, Dict[str, Any]]:
+    """{'entity_id.property': {'before':..., 'after':...}} for every
+    property that actually changed -- the resulting state delta, not the
+    full raw consequence state."""
+    delta: Dict[str, Dict[str, Any]] = {}
+    for entity_id, entity in consequence.entities.items():
+        before_entity = world_before.entities.get(entity_id)
+        if before_entity is None:
+            continue
+        for prop, after_value in entity.properties.items():
+            before_value = before_entity.properties.get(prop)
+            if before_value != after_value:
+                delta[f"{entity_id}.{prop}"] = {"before": before_value, "after": after_value}
+    return delta
+
+
+def build_operation_evidence(step: EpisodeStep) -> Optional[Tuple[Dict[str, Any], Dict[str, Any]]]:
+    """(input_value, expected_output) shaped for observe_example(): observed
+    state + chosen action -> resulting state delta. None if the step lacks
+    the structured before-state evidence needed (world_before/observed_
+    before/consequence) -- e.g. an episode scored without ever reaching
+    run_episode_step()'s live capture."""
+    if step.observed_before is None or step.world_before is None or step.consequence is None:
+        return None
+    input_value = {
+        "observed_state": _observed_worldstate_to_dict(step.observed_before),
+        "action": asdict(step.action),
+    }
+    expected_output = compute_state_delta(step.world_before, step.consequence)
+    return input_value, expected_output
 
 
 @dataclass(frozen=True)
@@ -1996,29 +2130,40 @@ class PromotionDecision:
     dimension_scores: Dict[str, float] = field(default_factory=dict)
     transfer_score: Optional[float] = None
     submission_result: Optional[Dict[str, Any]] = None
+    route: Optional[str] = None
 
 
 class DevelopmentalPromotionBridge:
-    """Takes a completed, scored EpisodeTrace step and, only when every
-    required dimension clears a stated threshold AND a transfer case also
-    clears it, submits structured before/after evidence to
-    submit_operational_experience(). This is the ONLY path from this
-    chamber into the operational synthesis chamber's promotion pipeline."""
+    """Takes a completed, scored EpisodeStep and, only when it qualifies for
+    one of the two legitimate admissibility routes (Build 608, B) AND a
+    supplied transfer case also clears its threshold, submits structured
+    observed-state+action -> state-delta evidence to submit_operational_
+    experience() under one stable, shared task id per rule family (Build
+    608, C). This is the ONLY path from this chamber into the operational
+    synthesis chamber's promotion pipeline."""
 
     def __init__(
         self,
-        thresholds: Optional[Dict[str, float]] = None,
+        route_thresholds: Optional[Dict[str, Dict[str, float]]] = None,
         transfer_threshold: float = _PROMOTION_TRANSFER_THRESHOLD,
     ) -> None:
-        self.thresholds = dict(thresholds or _PROMOTION_DIMENSION_THRESHOLDS)
+        self.route_thresholds = {
+            route: dict(thresholds) for route, thresholds in (route_thresholds or _ROUTE_THRESHOLDS).items()
+        }
         self.transfer_threshold = transfer_threshold
 
-    def clears_dimension_thresholds(self, dimension_scores: Dict[str, float]) -> Tuple[bool, List[str]]:
+    def clears_dimension_thresholds(
+        self, dimension_scores: Dict[str, float]
+    ) -> Tuple[bool, List[str], Optional[str]]:
+        route = determine_admissibility_route(dimension_scores)
+        if route is None:
+            return (False, [], None)
+        required = self.route_thresholds.get(route, {})
         missing_or_low = [
-            dim for dim, threshold in self.thresholds.items()
+            dim for dim, threshold in required.items()
             if dimension_scores.get(dim) is None or dimension_scores[dim] < threshold
         ]
-        return (not missing_or_low, missing_or_low)
+        return (not missing_or_low, missing_or_low, route)
 
     def evaluate_and_submit(
         self,
@@ -2031,6 +2176,7 @@ class DevelopmentalPromotionBridge:
         autonomy: Any = None,
         episode_id: str = "",
         validation: bool = False,
+        rule_family: str = "",
     ) -> PromotionDecision:
         dimension_scores = dict(step.causal_scores or {})
 
@@ -2039,7 +2185,14 @@ class DevelopmentalPromotionBridge:
             route_tripped_governors_to_fail_pressure(dream_trainer, autonomy, tripped, episode_id)
             return PromotionDecision(episode_id, False, "governor_tripped", tuple(g.name for g in tripped), dimension_scores)
 
-        cleared, missing = self.clears_dimension_thresholds(dimension_scores)
+        cleared, missing, route = self.clears_dimension_thresholds(dimension_scores)
+        if route is None:
+            if dream_trainer is not None and hasattr(dream_trainer, "_record_fail_dimension"):
+                dream_trainer._record_fail_dimension("causal_prediction_accuracy", 1.0, example={"episode_id": episode_id, "halted_by": "promotion_bridge", "reason": "no_admissible_route"})
+            if autonomy is not None and hasattr(autonomy, "add_study_topic"):
+                autonomy.add_study_topic(f"recursive_causal_experience_chamber:{episode_id}:no_admissible_route")
+            return PromotionDecision(episode_id, False, "no_admissible_route", (), dimension_scores)
+
         transfer_score = transfer_comparison.transfer_score if transfer_comparison is not None else None
         transfer_cleared = transfer_score is not None and transfer_score >= self.transfer_threshold
 
@@ -2047,32 +2200,31 @@ class DevelopmentalPromotionBridge:
             failing = list(missing) + ([] if transfer_cleared else ["transfer"])
             if dream_trainer is not None and hasattr(dream_trainer, "_record_fail_dimension"):
                 for dim in failing:
-                    dream_trainer._record_fail_dimension(dim, 1.0, example={"episode_id": episode_id, "halted_by": "promotion_bridge"})
+                    dream_trainer._record_fail_dimension(dim, 1.0, example={"episode_id": episode_id, "halted_by": "promotion_bridge", "route": route})
             if autonomy is not None and hasattr(autonomy, "add_study_topic"):
                 autonomy.add_study_topic(f"recursive_causal_experience_chamber:{episode_id}:{','.join(failing)}")
             reason = "dimension_below_threshold" if missing else "transfer_below_threshold"
-            return PromotionDecision(episode_id, False, reason, tuple(failing), dimension_scores, transfer_score)
+            return PromotionDecision(episode_id, False, reason, tuple(failing), dimension_scores, transfer_score, route=route)
 
         submitter = systems.get("submit_operational_experience")
         if submitter is None:
-            return PromotionDecision(episode_id, False, "no_submission_seam_available", (), dimension_scores, transfer_score)
+            return PromotionDecision(episode_id, False, "no_submission_seam_available", (), dimension_scores, transfer_score, route=route)
+
+        operation_evidence = build_operation_evidence(step)
+        if operation_evidence is None:
+            return PromotionDecision(episode_id, False, "insufficient_structured_evidence", (), dimension_scores, transfer_score, route=route)
+        input_value, expected_output = operation_evidence
 
         evidence = {
-            "input_value": {
-                "observation": step.observation_text,
-                "interpretation": asdict(step.interpretation),
-            },
-            "expected_output": {
-                "consequence": _worldstate_to_dict(step.consequence) if step.consequence is not None else None,
-                "dimension_scores": dimension_scores,
-            },
+            "input_value": input_value,
+            "expected_output": expected_output,
             "validation": validation,
-            "task_id": f"RCEC:{episode_id}" if episode_id else None,
+            "task_id": rcec_primary_task_id(rule_family or "direct_trigger"),
             "source": "cognitive_experience_chamber",
-            "need_description": f"recursive causal experience chamber episode {episode_id}",
+            "need_description": "observed state + chosen action -> resulting state delta (RCEC chamber)",
         }
         submission_result = dict(submitter(evidence) or {})
-        return PromotionDecision(episode_id, True, "submitted", (), dimension_scores, transfer_score, submission_result)
+        return PromotionDecision(episode_id, True, "submitted", (), dimension_scores, transfer_score, submission_result, route=route)
 
 
 def run_shadow_promotion_cycle(
@@ -2142,6 +2294,7 @@ def run_shadow_promotion_cycle(
             decision = bridge.evaluate_and_submit(
                 shadow_systems, step, None, governor_results,
                 dream_trainer=dream_trainer, autonomy=autonomy, episode_id=episode_id,
+                rule_family=engine._rule.family,
             )
             decisions.append(decision)
 
@@ -2149,4 +2302,303 @@ def run_shadow_promotion_cycle(
         if promote_keys and any(d.promoted for d in decisions):
             promoted_keys = promote_shadow_deltas(handle, promote_keys)
 
+        # Build 608 (D3): stop the background daemon threads this boot
+        # started (ConnectivityMonitor, ThoughtBraid, CheckpointAutoSave)
+        # before the shadow copy is discarded -- see aurora.shutdown_
+        # aurora()'s own docstring for why this matters across a battery of
+        # calls, not just this one.
+        _aurora.shutdown_aurora(shadow_systems)
+
     return {"decisions": decisions, "promoted_keys": promoted_keys}
+
+
+# ---------------------------------------------------------------------------
+# Build 608 (A): Canonical episode orchestrator.
+# ---------------------------------------------------------------------------
+#
+# One function performing the entire developmental sequence: initial
+# observation -> interpretation and action -> consequence -> initial
+# evaluation -> backprojection -> revised evaluation -> counterfactual
+# branch -> counterfactual evaluation -> transfer episode using ALT_SKIN ->
+# transfer evaluation -> all developmental governors -> evidence admission.
+# No daemon scheduling here -- this is a single manually invoked call, and
+# every step reuses exactly the machinery Stages 1-6 already built. This
+# function adds no new scoring or evaluation logic of its own; it is glue.
+
+@dataclass(frozen=True)
+class ClosedLoopEpisodeResult:
+    trace: EpisodeTrace
+    world_after: WorldState
+    causal_result: CausalEvaluationResult
+    revised_interpretation: Optional[CapturedInterpretation]
+    counterfactual_branch: CounterfactualBranch
+    transfer_world: WorldState
+    transfer_engine: HiddenRuleEngine
+    transfer_trace: EpisodeTrace
+    transfer_result: CausalEvaluationResult
+    transfer_comparison: TransferComparison
+    expression_fidelity: Dict[str, Any]
+    governor_results: List[GovernorResult]
+    promotion_decision: PromotionDecision
+
+
+def _auto_pick_counterfactual_alter(world: WorldState, engine: HiddenRuleEngine) -> Dict[str, Any]:
+    """Default single-variable alteration when the caller doesn't supply
+    one: perturb the rule's OWN target property's starting value (not the
+    trigger condition), so the branch tests whether the stated causal claim
+    holds from a different starting state -- not just the one sequence
+    already observed."""
+    rule = engine._rule
+    target_entity = world.entities.get(rule.target_entity_id)
+    if target_entity is None:
+        raise ValueError("rule target entity is not present in this world")
+    current = target_entity.properties.get(rule.target_property)
+    if isinstance(current, bool):
+        new_value: Any = not current
+    elif isinstance(current, (int, float)):
+        new_value = current + 3
+    else:
+        spec = PROPERTIES.get(rule.target_property)
+        choices = [v for v in spec.domain] if spec is not None and spec.domain else []
+        choices = [v for v in choices if v != current]
+        new_value = choices[0] if choices else current
+    return {"entity_id": rule.target_entity_id, "property": rule.target_property, "value": new_value}
+
+
+def _stable_seed_from_id(identifier: str, offset: int = 500_000) -> int:
+    digest = hashlib.sha256(identifier.encode("utf-8")).hexdigest()[:8]
+    return (int(digest, 16) % 1_000_000) + offset
+
+
+def run_closed_loop_episode(
+    systems: Dict[str, Any],
+    episode_runtime_context: Dict[str, Any],
+    world: WorldState,
+    engine: HiddenRuleEngine,
+    boundary: ObservationBoundary,
+    agent_id: str,
+    *,
+    episode_id: str,
+    counterfactual_alter: Optional[Dict[str, Any]] = None,
+    contradiction_tracker: Optional[ContradictionTracker] = None,
+    confidence_calibration_history: Optional[Sequence[float]] = None,
+    accuracy_history: Optional[Sequence[float]] = None,
+    avatar_fitness_trend: Optional[float] = None,
+    transfer_score_trend: Optional[float] = None,
+    genealogy: Any = None,
+    ability_tag: Optional[str] = None,
+    regression_evidence_passed: Optional[bool] = None,
+    candidate_program_tree: Optional[Dict[str, Any]] = None,
+    dream_trainer: Any = None,
+    autonomy: Any = None,
+    bridge: Optional[DevelopmentalPromotionBridge] = None,
+    validation: bool = False,
+    transfer_seed: Optional[int] = None,
+    fidelity_threshold: float = 0.5,
+    skin: VocabularySkin = DEFAULT_SKIN,
+) -> ClosedLoopEpisodeResult:
+    """The canonical developmental sequence, start to finish, in one call.
+
+    Cohort-level governors (confidence_rising_accuracy_falling, surface_
+    fitness_without_transfer, loss_of_stable_ability, runaway_complexity)
+    accept optional external context; a standalone call to this function
+    (task A's "prove one complete manually invoked cycle") naturally
+    reports them not-applicable, and a cohort runner supplies real
+    cross-episode history/trends/genealogy to make them load-bearing --
+    see run_developmental_cohort().
+
+    skin renders/parses the PRIMARY episode (default DEFAULT_SKIN). The
+    transfer sub-episode (steps 9-10) always uses whichever of the two
+    skins is NOT the primary one, so transfer always tests genuinely
+    disjoint surface vocabulary regardless of which skin the primary
+    episode itself used -- this is how an "ALT_SKIN validation episode"
+    (skin=ALT_SKIN) still gets a DEFAULT_SKIN transfer check."""
+    bridge = bridge or DevelopmentalPromotionBridge()
+    tracker = contradiction_tracker if contradiction_tracker is not None else ContradictionTracker()
+    transfer_skin = DEFAULT_SKIN if skin is ALT_SKIN else ALT_SKIN
+
+    # 1-3: initial observation -> interpretation and action -> consequence.
+    trace = EpisodeTrace(episode_id=episode_id, world_seed=world.tick, rule_family=engine._rule.family, agent_id=agent_id)
+    world_after = run_episode_step(trace, systems, episode_runtime_context, world, engine, boundary, agent_id, skin=skin)
+    step = trace.steps[0]
+
+    # 4: initial evaluation.
+    apply_causal_evaluation(trace, 0, world, engine, boundary, agent_id, dream_trainer=dream_trainer)
+
+    # 5-6: backprojection -> revised evaluation.
+    revised_interpretation = run_backprojection_step(trace, systems, episode_runtime_context, 0, boundary, agent_id, skin=skin)
+
+    # 7-8: counterfactual branch -> counterfactual evaluation.
+    brancher = CounterfactualBrancher()
+    alter = counterfactual_alter or _auto_pick_counterfactual_alter(world, engine)
+    branch = brancher.spawn_branch(world, step.action, engine, alter)
+
+    causal_result = apply_causal_evaluation(
+        trace, 0, world, engine, boundary, agent_id,
+        revised_interpretation=revised_interpretation,
+        counterfactual_branch=branch,
+        dream_trainer=dream_trainer,
+    )
+
+    # 9-10: transfer episode using ALT_SKIN -> transfer evaluation.
+    transfer_world, transfer_engine = TransferGenerator.generate_transfer_world(
+        rule_family=engine._rule.family,
+        seed=transfer_seed if transfer_seed is not None else _stable_seed_from_id(episode_id),
+        num_entities=len(world.entities),
+        entity_types=tuple(sorted({e.entity_type for e in world.entities.values()})),
+    )
+    transfer_boundary = ObservationBoundary()
+    transfer_trace = EpisodeTrace(
+        episode_id=f"{episode_id}:transfer", world_seed=transfer_world.tick,
+        rule_family=transfer_engine._rule.family, agent_id=agent_id,
+    )
+    transfer_runtime_context = build_episode_runtime_context(systems)
+    run_episode_step(
+        transfer_trace, systems, transfer_runtime_context, transfer_world, transfer_engine,
+        transfer_boundary, agent_id, skin=transfer_skin,
+    )
+    transfer_result = apply_causal_evaluation(
+        transfer_trace, 0, transfer_world, transfer_engine, transfer_boundary, agent_id, dream_trainer=dream_trainer,
+    )
+    transfer_comparison = compute_transfer_comparison(
+        causal_result.as_dimension_scores(), transfer_result.as_dimension_scores(),
+    )
+    record_transfer_fail(dream_trainer, transfer_comparison, example={"episode_id": episode_id})
+
+    # Expression fidelity (Stage 5) -- against the FINAL (revised) interpretation.
+    apply_expression_fidelity_evaluation(trace, 0, revised_interpretation=revised_interpretation)
+
+    if step.interpretation.predicted_consequence is not None:
+        contradiction_key = f"{step.interpretation.predicted_consequence.get('entity_id')}.{step.interpretation.predicted_consequence.get('property')}"
+        tracker.record(contradiction_key, step.interpretation.predicted_consequence.get("direction"))
+
+    # 11: all developmental governors.
+    governor_results = [
+        DevelopmentalGovernors.meaning_expression_divergence(step.expression_fidelity, threshold=fidelity_threshold),
+        DevelopmentalGovernors.contradiction_accumulation(tracker),
+        DevelopmentalGovernors.confidence_rising_accuracy_falling(confidence_calibration_history, accuracy_history),
+        DevelopmentalGovernors.surface_fitness_without_transfer(avatar_fitness_trend, transfer_score_trend),
+        DevelopmentalGovernors.loss_of_stable_ability(genealogy, ability_tag, regression_evidence_passed),
+        DevelopmentalGovernors.runaway_complexity(candidate_program_tree),
+    ]
+
+    # 12: evidence admission.
+    decision = bridge.evaluate_and_submit(
+        systems, step, transfer_comparison, governor_results,
+        dream_trainer=dream_trainer, autonomy=autonomy, episode_id=episode_id,
+        validation=validation, rule_family=engine._rule.family,
+    )
+
+    return ClosedLoopEpisodeResult(
+        trace=trace,
+        world_after=world_after,
+        causal_result=causal_result,
+        revised_interpretation=revised_interpretation,
+        counterfactual_branch=branch,
+        transfer_world=transfer_world,
+        transfer_engine=transfer_engine,
+        transfer_trace=transfer_trace,
+        transfer_result=transfer_result,
+        transfer_comparison=transfer_comparison,
+        expression_fidelity=step.expression_fidelity or {},
+        governor_results=governor_results,
+        promotion_decision=decision,
+    )
+
+
+@dataclass(frozen=True)
+class CohortResult:
+    episode_results: List[ClosedLoopEpisodeResult]
+    decisions: List[PromotionDecision]
+    summary: Dict[str, Any]
+
+
+def run_developmental_cohort(
+    systems: Dict[str, Any],
+    episode_specs: Sequence[Dict[str, Any]],
+    *,
+    agent_id: str = "agent_a",
+    bridge: Optional[DevelopmentalPromotionBridge] = None,
+    dream_trainer: Any = None,
+    autonomy: Any = None,
+    genealogy: Any = None,
+    avatar: Any = None,
+    history_window: int = 5,
+) -> CohortResult:
+    """Build 608 (D3): reuses ONE already-booted systems dict across every
+    episode in the cohort rather than booting Aurora repeatedly -- the
+    caller boots (and shuts down) exactly once, around this call. Also
+    accumulates confidence-calibration/accuracy/transfer/avatar-fitness
+    history across episodes so the cohort-level governors (confidence_
+    rising_accuracy_falling, surface_fitness_without_transfer) become load-
+    bearing instead of trivially not-applicable, the way a single isolated
+    run_closed_loop_episode() call would report them.
+
+    Each item in episode_specs is a dict with keys: world, engine,
+    episode_id, and optionally boundary, counterfactual_alter, validation,
+    transfer_seed, ability_tag, regression_evidence_passed, skin (the
+    PRIMARY episode's vocabulary -- e.g. skin=ALT_SKIN for an "ALT_SKIN
+    validation episode"; its transfer sub-episode always uses the other
+    skin, per run_closed_loop_episode())."""
+    bridge = bridge or DevelopmentalPromotionBridge()
+    tracker = ContradictionTracker()
+    confidence_history: List[float] = []
+    accuracy_history: List[float] = []
+    transfer_score_history: List[float] = []
+    avatar_fitness_history: List[float] = []
+
+    runtime_context = build_episode_runtime_context(systems)
+    episode_results: List[ClosedLoopEpisodeResult] = []
+
+    for spec in episode_specs:
+        result = run_closed_loop_episode(
+            systems, runtime_context,
+            spec["world"], spec["engine"], spec.get("boundary") or ObservationBoundary(), agent_id,
+            episode_id=spec["episode_id"],
+            counterfactual_alter=spec.get("counterfactual_alter"),
+            contradiction_tracker=tracker,
+            confidence_calibration_history=list(confidence_history),
+            accuracy_history=list(accuracy_history),
+            avatar_fitness_trend=_trend(avatar_fitness_history, history_window) if avatar_fitness_history else None,
+            transfer_score_trend=_trend(transfer_score_history, history_window) if transfer_score_history else None,
+            genealogy=genealogy,
+            ability_tag=spec.get("ability_tag"),
+            regression_evidence_passed=spec.get("regression_evidence_passed"),
+            dream_trainer=dream_trainer,
+            autonomy=autonomy,
+            bridge=bridge,
+            validation=bool(spec.get("validation", False)),
+            transfer_seed=spec.get("transfer_seed"),
+            skin=spec.get("skin", DEFAULT_SKIN),
+        )
+        episode_results.append(result)
+
+        if result.causal_result.confidence_calibration is not None:
+            confidence_history.append(result.causal_result.confidence_calibration)
+        accuracy_dim = (
+            result.causal_result.prediction_accuracy
+            if result.causal_result.prediction_accuracy is not None
+            else result.causal_result.state_accuracy
+        )
+        if accuracy_dim is not None:
+            accuracy_history.append(accuracy_dim)
+        if result.transfer_comparison.transfer_score is not None:
+            transfer_score_history.append(result.transfer_comparison.transfer_score)
+        if avatar is not None and hasattr(avatar, "react"):
+            avatar_result = avatar.react(
+                result.trace.steps[0].interpretation.raw_expression,
+                {"topic": spec["episode_id"], "expected_tone": "neutral"},
+            )
+            avatar_fitness_history.append(float(avatar_result.get("scaled_fitness", 0.0)))
+
+    decisions = [r.promotion_decision for r in episode_results]
+    summary = {
+        "total_episodes": len(episode_results),
+        "promoted": sum(1 for d in decisions if d.promoted),
+        "routes": {d.episode_id: d.route for d in decisions},
+        "confidence_calibration_history": confidence_history,
+        "accuracy_history": accuracy_history,
+        "transfer_score_history": transfer_score_history,
+        "avatar_fitness_history": avatar_fitness_history,
+    }
+    return CohortResult(episode_results=episode_results, decisions=decisions, summary=summary)

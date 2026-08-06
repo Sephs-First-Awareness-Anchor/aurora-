@@ -322,7 +322,8 @@ class ImageIngestionProtocol:
     SEED_DIR    = "aurora_state/vision_seeds"
     INDEX_PATH  = "aurora_state/vision_index.json"
 
-    def __init__(self, oets=None, network_gateway=None, allow_network: bool = False):
+    def __init__(self, oets=None, network_gateway=None, allow_network: bool = False,
+                 state_dir: Optional[str] = None):
         self.extractor  = FeatureExtractor()
         self.clusterer  = SimpleKMeans(k=12)
         self.binder     = OETSVisionBinder(oets)
@@ -333,8 +334,15 @@ class ImageIngestionProtocol:
         self._clusters: Dict[str, VisualCluster]        = {}
         self._lock      = threading.RLock()
 
-        os.makedirs(self.SEED_DIR, exist_ok=True)
-        os.makedirs(os.path.join(self.SEED_DIR, "web"), exist_ok=True)
+        # Build 608 (D1): instance-level paths derived from state_dir when
+        # given, falling back to the class-level constants otherwise --
+        # the isolation-gap bug class (known_fixes_registry.md) previously
+        # had no way to configure this at all.
+        self.seed_dir   = os.path.join(str(state_dir), "vision_seeds") if state_dir else self.SEED_DIR
+        self.index_path = os.path.join(str(state_dir), "vision_index.json") if state_dir else self.INDEX_PATH
+
+        os.makedirs(self.seed_dir, exist_ok=True)
+        os.makedirs(os.path.join(self.seed_dir, "web"), exist_ok=True)
         self.load_index()
 
     def _constraint_axes(self) -> Dict[str, float]:
@@ -396,7 +404,7 @@ class ImageIngestionProtocol:
         Scan a folder for images, extract features, cluster, bind.
         Returns summary dict.
         """
-        folder = folder or self.SEED_DIR
+        folder = folder or self.seed_dir
         supported = FeatureExtractor.SUPPORTED_FORMATS
         image_paths = []
 
@@ -479,7 +487,7 @@ class ImageIngestionProtocol:
 
         paths = self.downloader.download_seed_batch(n_concepts=3)
         if paths:
-            result = self.ingest_folder(os.path.join(self.SEED_DIR, "web"))
+            result = self.ingest_folder(os.path.join(self.seed_dir, "web"))
             result["downloaded"] = len(paths)
             return result
         return {"downloaded": 0, "reason": "download_failed"}
@@ -604,14 +612,14 @@ class ImageIngestionProtocol:
             }
         try:
             import tempfile
-            dirp = os.path.dirname(os.path.abspath(self.INDEX_PATH))
+            dirp = os.path.dirname(os.path.abspath(self.index_path))
             os.makedirs(dirp, exist_ok=True)
             fd, tmp = tempfile.mkstemp(dir=dirp, suffix=".tmp")
             with os.fdopen(fd, 'w') as f:
                 json.dump(data, f)
                 f.flush()
                 os.fsync(f.fileno())
-            os.replace(tmp, self.INDEX_PATH)
+            os.replace(tmp, self.index_path)
         except Exception as e:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -623,10 +631,10 @@ class ImageIngestionProtocol:
             logger.debug(f"[Vision] Index save failed: {e}")
 
     def load_index(self):
-        if not os.path.exists(self.INDEX_PATH):
+        if not os.path.exists(self.index_path):
             return
         try:
-            with open(self.INDEX_PATH) as f:
+            with open(self.index_path) as f:
                 data = json.load(f)
             for path, vd in data.get("vectors", {}).items():
                 self._vectors[path] = VisualFeatureVector.from_dict(vd)
@@ -654,7 +662,7 @@ class ImageIngestionProtocol:
                 "concept_labels":     [c.concept_label for _, c in named],
                 "downloads_today":    self.downloader._downloads_today,
                 "downloads_available": self.downloader.can_download(),
-                "seed_dir":           self.SEED_DIR,
+                "seed_dir":           self.seed_dir,
                 "pil_available":      _PIL_AVAILABLE,
                 "numpy_available":    _NP_AVAILABLE,
                 "lineage_signature":  (self.constraint_profile().weighted_signature() if hasattr(self.constraint_profile(), "weighted_signature") else "XTNBA"),

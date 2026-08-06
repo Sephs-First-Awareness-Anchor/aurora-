@@ -114,6 +114,26 @@ if not _SKIP_OETS_IMPORTS:
         pass
 
 # Language State  -- Expression Evolution (CSSEE)
+#
+# Build 608 (D1) note: the correct import path is
+# `aurora_internal.aurora_language_state` (the module lives in that
+# package). Fixing the missing prefix here closes a real isolation leak
+# (this except block's exception recording writes to the real repo's
+# aurora_state/runtime_faults.jsonl at bare `import aurora` time, before
+# any boot has set an active state_dir) -- but it also flips
+# _LANG_STATE_AVAILABLE True for the first time in this codebase's
+# history, which activates ExpressionEvolutionOrchestra.process_output()
+# in express() (~line 5360) as the FINAL rewrite of every expressed
+# response. That subsystem has never run for real before and produces
+# degenerate cold-start output (live-verified: "Who are you?" returned
+# "self role is self carries through admissible." instead of Aurora's
+# real identity grounding, reproduced consistently, and confirmed absent
+# on the pre-608 commit). Fixing the import is deliberately deferred
+# until CSSEE's cold-start behavior is validated -- the import is left
+# broken on purpose so this subsystem stays inert, and the exception
+# recorded below stays a known, diagnostic-only, once-per-process leak
+# (see known_fixes_registry.md) rather than trading it for a live
+# regression in real response quality.
 _LANG_STATE_AVAILABLE = False
 if not _SKIP_LANG_IMPORTS:
     try:
@@ -5771,7 +5791,7 @@ def build_layer5_associative_modules(
 
     if verbose: print("  [L5+] Vision Bootstrap...", end=" ", flush=True)
     try:
-        vision_bootstrap = ImageIngestionProtocol(oets=perception.oets if perception else None)
+        vision_bootstrap = ImageIngestionProtocol(oets=perception.oets if perception else None, state_dir=state_dir)
         modules['vision_bootstrap'] = vision_bootstrap
 
         vstatus = vision_bootstrap.status()
