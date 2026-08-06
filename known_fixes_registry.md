@@ -10226,3 +10226,110 @@ that already existed doing this job informally.
 **First Seen:** Aurora Build 598 Crest-Compression Placeholder-Leak
 Repair Directive, uploaded 2026-08-05, closing a defect the Build 587
 CIR directive had explicitly deferred. 2026-08-05.
+
+---
+
+## Aurora Build 598 — Categorical Branch Primitive for the Operational Synthesis Chamber
+
+**Ratified:** 2026-08-05 (Aurora Build 598 Categorical Branch Primitive
+Directive, uploaded directive; doctrine classification Level 6 --
+Provide Representational Substrate, under
+`docs/AURORA_CONSTRAINT_NATIVE_DEVELOPMENT_DOCTRINE.md`).
+**Category:** SUBSTRATE ADDITION (missing primitive, not a coded
+classifier -- the directive stops at Level 6 on purpose)
+
+`aurora_internal/aurora_operational_synthesis.py`'s
+`AuroraOperationalSynthesisChamber` already implements the doctrine's
+observe -> synthesize -> trial -> genealogical-promotion loop, proven
+domain-neutral on abstract sequence tasks. But `execute_program()`'s
+primitive set (`INPUT, SELECT, CONST, SEQUENCE, MAPPING, ADD, SUB, MUL,
+DIV, NEG, ABS, EQ, NE, LT, LE, GT, GE, NOT, AND, OR`) had no way to
+express "if condition then value-A else value-B" for a non-boolean
+output -- `_synthesize_boolean_scalar()` only ever returned
+`True`/`False`, and `_synthesize_value()`'s only non-constant string
+path was `SELECT` (copying a field already literally present in the
+input). This was the concrete blocker on the relation-typing thread:
+the vocabulary to compose a rule like "if source_role is verb and
+target_role is noun -> enables" did not exist, independent of evidence.
+
+**Fix (`aurora_internal/aurora_operational_synthesis.py` only):**
+
+1. New `IFELSE` primitive in `PRIMITIVES` and `execute_program()`'s
+   dispatch. Evaluated with short-circuit semantics (the untaken branch
+   never runs, so it may safely contain an operation like `DIV` that
+   would fail outside its guarding condition). Multi-way categorical
+   selection is chained `IFELSE` (nested in `then`/`else`), not a
+   separate `SWITCH` construct -- kept minimal per doctrine's caution
+   against overbuilt machinery.
+2. New `_synthesize_categorical()` search step in `_synthesize_value()`
+   (tried after `_constant_candidate()`, before `SEQUENCE`/`MAPPING`/
+   numeric/boolean): for scalar outputs that are not numeric, not
+   boolean, and not constant, recursively partitions examples by
+   condition programs built the same way `_synthesize_boolean_scalar()`
+   already builds them (`_categorical_condition_pool()`), building
+   `CONST` leaves where a partition is homogeneous and chaining
+   `IFELSE` nodes depth-first, mirroring `_synthesize_numeric_scalar()`'s
+   frontier-growth shape rather than inventing a new search strategy.
+3. `_node_count()`, `_primitive_sequence()`, and `describe_program()`
+   updated to walk `IFELSE`'s `cond`/`then`/`else` children -- they
+   previously only walked `args`/`fields`, so genealogy and complexity
+   accounting would have silently undercounted an `IFELSE` program's
+   real size.
+
+**A real gap found and fixed during implementation, not left latent:**
+the directive's own prose said to build "EQ/NE conditions... mirroring
+`_synthesize_boolean_scalar()`'s own condition-building loop," but
+`_synthesize_boolean_scalar()`'s actual loop iterates over all six
+comparison ops (`EQ, NE, LT, LE, GT, GE`), not just `EQ`/`NE`. Following
+the prose literally (EQ/NE only) was tested against the directive's own
+named example -- sign classification of an integer into
+`"neg"/"zero"/"pos"` -- and it composed a program that fit every
+training literal exactly but predicted `"neg"` for a held-out `x=42`
+never seen in training: it had memorized per-example equality tests
+instead of learning an ordering rule, because no `LT`/`GT` condition was
+ever offered to the search. Fixed by including all six comparison ops
+in `_categorical_condition_pool()`, matching the referenced function's
+real loop rather than the prose's shorthand; re-verified the same
+scenario correctly generalizes to arbitrary unseen integers on both
+sides of zero.
+
+**Tests:** `tests/test_ifelse_synthesis_primitive.py` -- 10 tests:
+direct `IFELSE` dispatch (taken branch, short-circuit of the untaken
+branch, nested multi-way chains), traversal-utility coverage
+(`_node_count`/`_primitive_sequence`/`describe_program` walking
+`cond`/`then`/`else`), the sign-classification generalization case
+above, a role-pair relation-typing-shaped categorical rule that
+generalizes to an unseen role combination (proving the primitive is
+adequate for the motivating use case without touching
+`OntologicalWeb`/`RelationType` at all), negative controls confirming
+constant/numeric/boolean outputs still use their own existing paths
+rather than being captured by the new search, and a full chamber
+lifecycle test (`observe_example()` -> `synthesize()` -> WARP trial ->
+promotion -> genealogy registration with real X/T/N/B/A ancestry,
+same path any other promoted program uses). Regression:
+`tests/test_operational_synthesis_chamber.py` re-run unchanged, 9
+passed.
+
+**Live verification:** booted `AuroraOperationalSynthesisChamber` in
+isolation (no full `boot_aurora()` needed, per the directive -- the
+chamber is domain-neutral by design), fed it >= `_MIN_TRAINING_EXAMPLES`
+varied sign-classification examples, confirmed `synthesize()` returns
+an `IFELSE`-rooted program, confirmed `execute()` predicts correctly on
+unseen inputs on both sides of zero, and confirmed
+`_register_genealogy()` records the promoted program with
+`root_constraints: ['X', 'T', 'B', 'A']` and a real
+`genealogy_ability_id` -- the same fields any other promoted program
+carries.
+
+**What this directive does NOT claim:** it does not make Aurora capable
+of role-pair relation-typing -- only gives her the vocabulary to
+eventually compose that rule herself, given evidence. It does not touch
+`OntologicalWeb.infer_relations_from_context()` or `RelationType`. It
+does not add a general multi-way `SWITCH` construct. The evidence-wiring
+that would let real conversational pressure feed this primitive (the
+Relation-Typing Pressure Calibration directive) is a separate, dependent
+follow-on.
+**First Seen:** Aurora Build 598 Categorical Branch Primitive Directive,
+uploaded 2026-08-05, as the traced concrete blocker on the
+relation-typing thread noted in the Build 598 Crest-Compression
+Placeholder-Leak Repair entry above. 2026-08-05.

@@ -110,6 +110,11 @@ PRIMITIVES: Dict[str, PrimitiveSpec] = {
     "NOT": PrimitiveSpec("NOT", ("X", "B", "A"), "invert a bounded truth relation", 1),
     "AND": PrimitiveSpec("AND", ("N", "B", "A"), "require joint truth across bounded relations", 2),
     "OR": PrimitiveSpec("OR", ("N", "B", "A"), "admit either of two bounded relations", 2),
+    # Build 598 (categorical branch primitive): selects between bounded
+    # alternatives by a bounded condition. Chaining IFELSE nodes (then/else
+    # holding a further IFELSE) is how multi-way categorical selection is
+    # expressed -- deliberately no separate multi-branch SWITCH primitive.
+    "IFELSE": PrimitiveSpec("IFELSE", ("X", "B", "A"), "select one of two bounded alternatives by a bounded condition", 3),
 }
 
 
@@ -287,6 +292,10 @@ def _node_count(tree: Mapping[str, Any]) -> int:
     for child in dict(tree.get("fields") or {}).values():
         if isinstance(child, Mapping):
             total += _node_count(child)
+    for key in ("cond", "then", "else"):
+        child = tree.get(key)
+        if isinstance(child, Mapping):
+            total += _node_count(child)
     return total
 
 
@@ -300,6 +309,10 @@ def _primitive_sequence(tree: Mapping[str, Any]) -> List[str]:
             if isinstance(arg, Mapping):
                 walk(arg)
         for child in dict(node.get("fields") or {}).values():
+            if isinstance(child, Mapping):
+                walk(child)
+        for key in ("cond", "then", "else"):
+            child = node.get(key)
             if isinstance(child, Mapping):
                 walk(child)
     walk(tree)
@@ -334,6 +347,13 @@ def execute_program(tree: Mapping[str, Any], input_value: Any, *, budget: int = 
             return [run(arg) for arg in list(node.get("args") or [])]
         if op == "MAPPING":
             return {str(k): run(v) for k, v in dict(node.get("fields") or {}).items()}
+        if op == "IFELSE":
+            # Short-circuit by construction: the untaken branch is never run,
+            # so it may safely contain an operation (e.g. DIV) that would
+            # fail outside its guarding condition.
+            cond_val = run(dict(node.get("cond") or {}))
+            branch = node.get("then") if bool(cond_val) else node.get("else")
+            return run(dict(branch or {}))
 
         args = [run(arg) for arg in list(node.get("args") or [])]
         if op == "ADD": return args[0] + args[1]
@@ -500,6 +520,132 @@ def _synthesize_boolean_scalar(examples: Sequence[SynthesisExample], outputs: Se
     return None
 
 
+_MAX_CATEGORICAL_DEPTH = 3
+_MAX_CATEGORICAL_CONDITIONS = 200
+
+
+def _categorical_condition_pool(examples: Sequence[SynthesisExample]) -> List[Dict[str, Any]]:
+    """Comparison conditions built from _select_candidates() projections,
+    mirroring _synthesize_boolean_scalar()'s own condition-building loop --
+    reused here rather than re-invented, per the directive's explicit
+    instruction. Ordering comparisons (LT/LE/GT/GE), not just EQ/NE, are
+    required for a categorical rule to generalize past the literal training
+    values on any ordered input (e.g. sign classification) rather than
+    memorizing one EQ test per training example."""
+    atoms = _select_candidates(examples)
+    scalar_atoms: List[Dict[str, Any]] = []
+    for atom in atoms:
+        try:
+            vals = [execute_program(atom, e.input_value) for e in examples]
+        except Exception:
+            continue
+        if all(isinstance(v, (int, float, str, bool)) for v in vals):
+            scalar_atoms.append(atom)
+
+    # Literal values actually observed in the inputs are the only constants
+    # worth comparing against -- this is what lets a condition like
+    # SELECT(source_role) EQ CONST("verb") get proposed at all.
+    literal_values: List[Any] = []
+    seen_literals = set()
+    for e in examples:
+        for _, v in _iter_paths(e.input_value):
+            if isinstance(v, bool) or not isinstance(v, (int, float, str)):
+                continue
+            key = (type(v).__name__, v)
+            if key not in seen_literals:
+                seen_literals.add(key)
+                literal_values.append(v)
+    constants = [{"op": "CONST", "value": v} for v in (-1, 0, 1, True, False)]
+    constants += [{"op": "CONST", "value": v} for v in literal_values[:24]]
+
+    pool = scalar_atoms + constants
+    conditions: List[Dict[str, Any]] = []
+    seen_signatures = set()
+    for left in pool:
+        for right in pool:
+            for op in ("EQ", "NE", "LT", "LE", "GT", "GE"):
+                node = {"op": op, "args": [left, right]}
+                sig = _program_signature(node)
+                if sig in seen_signatures:
+                    continue
+                seen_signatures.add(sig)
+                conditions.append(node)
+                if len(conditions) >= _MAX_CATEGORICAL_CONDITIONS:
+                    return conditions
+    return conditions
+
+
+def _build_categorical_branch(
+    examples: Sequence[SynthesisExample],
+    outputs: Sequence[Any],
+    condition_pool: Sequence[Dict[str, Any]],
+    depth: int,
+) -> Optional[Dict[str, Any]]:
+    """Grow an IFELSE chain depth-first, the same frontier-growth shape
+    _synthesize_numeric_scalar() already uses: at each node, prefer the
+    simplest explanation (a single CONST leaf) and only branch when the
+    group is not yet homogeneous."""
+    const = _constant_candidate(outputs)
+    if const is not None:
+        return const
+    if depth <= 0 or not condition_pool:
+        return None
+    for cond in condition_pool:
+        try:
+            cond_vals = [execute_program(cond, e.input_value) for e in examples]
+        except Exception:
+            continue
+        if not all(isinstance(v, bool) for v in cond_vals):
+            continue
+        true_idx = [i for i, v in enumerate(cond_vals) if v]
+        false_idx = [i for i, v in enumerate(cond_vals) if not v]
+        if not true_idx or not false_idx:
+            continue  # condition doesn't actually split this group
+        then_branch = _build_categorical_branch(
+            [examples[i] for i in true_idx], [outputs[i] for i in true_idx],
+            condition_pool, depth - 1,
+        )
+        if then_branch is None:
+            continue
+        else_branch = _build_categorical_branch(
+            [examples[i] for i in false_idx], [outputs[i] for i in false_idx],
+            condition_pool, depth - 1,
+        )
+        if else_branch is None:
+            continue
+        node = {"op": "IFELSE", "cond": cond, "then": then_branch, "else": else_branch}
+        if _node_count(node) > _MAX_PROGRAM_NODES:
+            continue
+        return node
+    return None
+
+
+def _synthesize_categorical(examples: Sequence[SynthesisExample], outputs: Sequence[Any]) -> Optional[Dict[str, Any]]:
+    """Compose an IFELSE chain for scalar outputs that are neither numeric
+    nor boolean and are not constant across the examples -- e.g. selecting
+    one of several category labels ("neg"/"zero"/"pos",
+    "enables"/"opposes"/...) by a bounded condition on the input."""
+    if not outputs:
+        return None
+    if any(isinstance(v, bool) for v in outputs):
+        return None
+    if any(isinstance(v, (int, float)) for v in outputs):
+        return None
+    if any(isinstance(v, (list, tuple, Mapping)) for v in outputs):
+        return None
+    if all(_values_equal(outputs[0], v) for v in outputs[1:]):
+        return None  # constant case is _constant_candidate()'s job, not this one's
+
+    condition_pool = _categorical_condition_pool(examples)
+    if not condition_pool:
+        return None
+    tree = _build_categorical_branch(list(examples), list(outputs), condition_pool, _MAX_CATEGORICAL_DEPTH)
+    if tree is None:
+        return None
+    target_examples = [SynthesisExample(f"categorical:{i}", e.input_value, outputs[i]) for i, e in enumerate(examples)]
+    return tree if _fits(tree, target_examples) else None
+
+
 def _synthesize_value(examples: Sequence[SynthesisExample], outputs: Sequence[Any]) -> Optional[Dict[str, Any]]:
     if not examples or len(examples) != len(outputs):
         return None
@@ -512,6 +658,10 @@ def _synthesize_value(examples: Sequence[SynthesisExample], outputs: Sequence[An
     const = _constant_candidate(outputs)
     if const is not None:
         return const
+
+    categorical = _synthesize_categorical(examples, outputs)
+    if categorical is not None:
+        return categorical
 
     if all(isinstance(v, (list, tuple)) for v in outputs):
         lengths = {len(v) for v in outputs}
@@ -573,6 +723,13 @@ def describe_program(tree: Mapping[str, Any]) -> str:
         return "construct sequence [" + ", ".join(describe_program(x) for x in list(dict(tree or {}).get("args") or [])) + "]"
     if op == "MAPPING":
         return "construct mapping {" + ", ".join(f"{k}: {describe_program(v)}" for k, v in dict(dict(tree or {}).get("fields") or {}).items()) + "}"
+    if op == "IFELSE":
+        rec = dict(tree or {})
+        return (
+            f"if {describe_program(dict(rec.get('cond') or {}))} "
+            f"then {describe_program(dict(rec.get('then') or {}))} "
+            f"else {describe_program(dict(rec.get('else') or {}))}"
+        )
     args = list(dict(tree or {}).get("args") or [])
     if len(args) == 1:
         return f"{op.lower()}({describe_program(args[0])})"
