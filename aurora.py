@@ -23119,6 +23119,18 @@ def _run_reasoning_pipeline(
         try:
             if hasattr(aurora, "gateway") and hasattr(aurora.gateway, "queue_response_pressure_plan"):
                 aurora.gateway.queue_response_pressure_plan(phase="afterthought", episode_budget=1)
+            # The "[AFTERTHOUGHT]" prefix is kept here deliberately (Build
+            # 616 Repair A) rather than moved to a separate episode_source
+            # kwarg: _answer_from_sedimemory_context() (this file) still
+            # keys off this exact literal prefix on recalled content to
+            # exclude afterthought re-processing artifacts from genuine
+            # recalled memory, so the raw prefixed string must keep
+            # flowing unchanged into the simulation call. The prefix is
+            # still stripped before it can ever become a semantic topic --
+            # see _strip_internal_transport_marker /
+            # _topic_from_seed_prompt in aurora_simulation_engine.py,
+            # which is the single normalization point every seed_prompt-
+            # driven episode passes through.
             aurora.gateway.simulation.run_episode(
                 seed_prompt=f"[AFTERTHOUGHT] {user_text}", turns=2, mode=ExistenceMode.BOUNDED
             )
@@ -33931,19 +33943,44 @@ def _run_simulation_live_response_bridge(
 
     turn_tick = int(episode_context.get('turn_tick', 0) or 0) + 1
     episode_context['turn_tick'] = turn_tick
-    result = process_external_user_turn(
-        sandbox_systems,
-        prompt,
-        source_label="simulation_live_bridge",
-        session_id=str(episode_context.get('session_id', '') or ''),
-        auto_search_enabled=False,
-        record_exchange=False,
-        update_interactive_state=False,
-        track_evolutionary_trace=True,
-        run_periodic_maintenance=False,
-        mode_override=mode,
-        turn_tick=turn_tick,
+
+    # Build 616 follow-up (2026-08-06): sandbox_systems above is only a
+    # shallow dict copy, so objects reached via the shared `aurora`
+    # reference -- notably aurora.gateway.dimensional's DMC memory store
+    # -- are NOT isolated the way working_memory/conversation_memory/
+    # understanding_contract already are in
+    # _build_simulation_live_bridge_context(). Without this, a simulated
+    # turn's own synthesis could be written into DMC and later recalled
+    # verbatim by an unrelated real external turn via RecallPacket.
+    # as_context_fragment()'s "[recalled:<concept>]" prefix -- confirmed
+    # via live tracing while verifying that directive. Suspend DMC writes
+    # (not reads) for exactly the duration of this sandboxed call, always
+    # restoring in `finally` even on exception, matching the established
+    # turn-context cleanup pattern (Build 613 reflective-context binding).
+    _dmc_for_suspend = getattr(
+        getattr(getattr(systems.get('aurora'), 'gateway', None), 'dimensional', None),
+        'dmc', None,
     )
+    _dmc_was_suspended = bool(getattr(_dmc_for_suspend, '_write_suspended', False))
+    if _dmc_for_suspend is not None:
+        _dmc_for_suspend._write_suspended = True
+    try:
+        result = process_external_user_turn(
+            sandbox_systems,
+            prompt,
+            source_label="simulation_live_bridge",
+            session_id=str(episode_context.get('session_id', '') or ''),
+            auto_search_enabled=False,
+            record_exchange=False,
+            update_interactive_state=False,
+            track_evolutionary_trace=True,
+            run_periodic_maintenance=False,
+            mode_override=mode,
+            turn_tick=turn_tick,
+        )
+    finally:
+        if _dmc_for_suspend is not None:
+            _dmc_for_suspend._write_suspended = _dmc_was_suspended
     resp_A = result.get('resp_A')
     expression = str(getattr(resp_A, 'content', '') or '').strip()
     if not expression:

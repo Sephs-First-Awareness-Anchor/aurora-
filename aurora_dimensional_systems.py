@@ -1324,8 +1324,26 @@ class MemoryConstantSystem:
         self.dimension_index: Dict[str, List[str]] = defaultdict(list)
         self.concept_index: Dict[str, str] = {}
         self.pattern_counts: Dict[str, int] = defaultdict(int)
+        # Build 616 follow-up (2026-08-06): aurora.py's
+        # _run_simulation_live_response_bridge() routes simulated/
+        # sandboxed turns (afterthought, RCEC acquisition) through this
+        # SAME shared DMC instance -- its own sandbox_systems dict is
+        # only a shallow copy, so it can't isolate objects reached via
+        # the shared `aurora.gateway.dimensional` reference the way it
+        # already isolates working_memory/conversation_memory/
+        # understanding_contract in _build_simulation_live_bridge_context().
+        # This flag closes that gap for DMC specifically: when a
+        # sandboxed turn is in flight, new memory nodes simply aren't
+        # written, so a later unrelated real turn can never recall
+        # something a simulated turn only imagined saying. Recall (read)
+        # is untouched -- a sandboxed turn still draws on Aurora's real
+        # accumulated memory while it runs, only its OWN synthesis is
+        # withheld from becoming persistent, recallable memory.
+        self._write_suspended: bool = False
 
     def store(self, envelope: IVMEnvelope) -> Optional[Dict[str, Any]]:
+        if self._write_suspended:
+            return None
         if not mode_gate(envelope, self.GATE):
             return None
 
@@ -1396,6 +1414,8 @@ class MemoryConstantSystem:
 
         Gate: PERSISTENT+. Falls back to plain store() if signals empty.
         """
+        if self._write_suspended:
+            return None
         if not mode_gate(envelope, self.GATE):
             return None
         if not signals:

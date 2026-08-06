@@ -2089,7 +2089,23 @@ class LearnedBehaviorApplicator:
         shards = getattr(learner, "shards", {}) or {}
         injected = 0
 
+        # Build 616 Repair D: this is a second, independent OETS-injection
+        # path (ConsciousLearner.inject_into_oets is the other) that reads
+        # learner.shards directly, so it must consult the same
+        # persistent-memory admission decision rather than re-deriving its
+        # own (weaker) confidence/word-count-only filter. check_admission
+        # is duck-typed via getattr so this still degrades gracefully for
+        # any non-ConsciousLearner object that merely exposes .shards.
+        check_admission = getattr(learner, "check_admission", None)
+        quarantine = getattr(learner, "_quarantine", None)
+
         for shard in shards.values():
+            if callable(check_admission):
+                admissible, reason = check_admission(shard)
+                if not admissible:
+                    if callable(quarantine):
+                        quarantine(shard, reason)
+                    continue
             conf = max(0.0, min(1.0, float(getattr(shard, "confidence", 0) or 0.0)))
             understanding = str(getattr(shard, "understanding", "") or "").strip()
             if not understanding:
