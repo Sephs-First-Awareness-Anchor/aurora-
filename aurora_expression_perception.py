@@ -117,7 +117,7 @@ if not _SKIP_OETS_IMPORTS:
 _LANG_STATE_AVAILABLE = False
 if not _SKIP_LANG_IMPORTS:
     try:
-        from aurora_language_state import (
+        from aurora_internal.aurora_language_state import (
             ExpressionEvolutionOrchestra, LSVMetrics
         )
         _LANG_STATE_AVAILABLE = True
@@ -5771,7 +5771,7 @@ def build_layer5_associative_modules(
 
     if verbose: print("  [L5+] Vision Bootstrap...", end=" ", flush=True)
     try:
-        vision_bootstrap = ImageIngestionProtocol(oets=perception.oets if perception else None)
+        vision_bootstrap = ImageIngestionProtocol(oets=perception.oets if perception else None, state_dir=state_dir)
         modules['vision_bootstrap'] = vision_bootstrap
 
         vstatus = vision_bootstrap.status()

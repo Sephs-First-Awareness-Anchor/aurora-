@@ -186,7 +186,14 @@ def test_evidence_discipline_penalizes_unsupported_claims_beyond_the_boundary():
 # revision_quality
 # ---------------------------------------------------------------------------
 
-def test_revision_quality_rewards_structural_change_after_wrong_prediction():
+def test_revision_quality_measures_accuracy_delta_not_structural_change():
+    """Build 608 (B): revision_quality measures revised_accuracy -
+    original_accuracy, not merely whether the parsed structure changed.
+    vessel_0's energy actually increases (1 -> 2); original wrongly
+    predicted decrease (accuracy 0.0), revised correctly predicts increase
+    (accuracy 1.0) -- full improvement, rescaled to 1.0."""
+    world_before = _ground_truth_world()
+    consequence = _consequence_energy_increased()
     original = CapturedInterpretation(
         raw_expression="...",
         predicted_consequence={"entity_id": "vessel_0", "property": "energy", "direction": "decrease"},
@@ -195,10 +202,18 @@ def test_revision_quality_rewards_structural_change_after_wrong_prediction():
         raw_expression="...",
         predicted_consequence={"entity_id": "vessel_0", "property": "energy", "direction": "increase"},
     )
-    assert CausalEvaluator.revision_quality(original, revised, prediction_was_wrong=True) == 1.0
+    delta = CausalEvaluator.revision_accuracy_delta(original, revised, world_before, consequence)
+    assert delta == 1.0  # revised_accuracy(1.0) - original_accuracy(0.0)
+    assert CausalEvaluator.revision_quality(original, revised, world_before, consequence) == 1.0
 
 
-def test_revision_quality_penalizes_restating_the_same_wrong_belief():
+def test_revision_quality_scores_restating_the_same_wrong_belief_as_no_improvement():
+    """Same wrong claim restated -- zero accuracy delta, not a full penalty
+    to 0.0 (that would conflate 'no improvement' with 'got worse', which
+    isn't possible once already at the accuracy floor). Still fails the
+    successful_correction route's >=1.0 threshold either way."""
+    world_before = _ground_truth_world()
+    consequence = _consequence_energy_increased()
     original = CapturedInterpretation(
         raw_expression="Energy will decrease.",
         predicted_consequence={"entity_id": "vessel_0", "property": "energy", "direction": "decrease"},
@@ -207,14 +222,24 @@ def test_revision_quality_penalizes_restating_the_same_wrong_belief():
         raw_expression="I still believe energy will decrease.",
         predicted_consequence={"entity_id": "vessel_0", "property": "energy", "direction": "decrease"},
     )
-    assert CausalEvaluator.revision_quality(original, revised, prediction_was_wrong=True) == 0.0
+    delta = CausalEvaluator.revision_accuracy_delta(original, revised, world_before, consequence)
+    assert delta == 0.0
+    assert CausalEvaluator.revision_quality(original, revised, world_before, consequence) == 0.5
 
 
-def test_revision_quality_not_applicable_when_original_prediction_was_correct():
-    original = CapturedInterpretation(raw_expression="...")
+def test_revision_quality_not_applicable_when_original_prediction_was_already_correct():
+    """Immediate-understanding territory: nothing needed correcting, so
+    revision_quality is not a meaningful concept regardless of whether a
+    revision object exists."""
+    world_before = _ground_truth_world()
+    consequence = _consequence_energy_increased()
+    original = CapturedInterpretation(
+        raw_expression="...",
+        predicted_consequence={"entity_id": "vessel_0", "property": "energy", "direction": "increase"},
+    )
     revised = CapturedInterpretation(raw_expression="...")
-    assert CausalEvaluator.revision_quality(original, revised, prediction_was_wrong=False) is None
-    assert CausalEvaluator.revision_quality(original, revised, prediction_was_wrong=None) is None
+    assert CausalEvaluator.revision_quality(original, revised, world_before, consequence) is None
+    assert CausalEvaluator.revision_quality(original, None, world_before, consequence) is None
 
 
 # ---------------------------------------------------------------------------

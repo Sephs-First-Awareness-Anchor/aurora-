@@ -101,6 +101,20 @@ def _severity_from_exception(
     return "subsystem_degradation"
 
 
+def _active_boot_state_dir_fallback() -> Optional[str]:
+    """Build 608 (D1): last resort before the bare 'aurora_state' literal
+    (which resolves against the process cwd) -- most exception handlers
+    that reach this function have no systems/state_dir in their immediate
+    scope at all (they're swallowed-exception sites deep in unrelated
+    modules), so per-call-site threading can't close this gap. See
+    aurora_internal/aurora_state_context.py's own docstring."""
+    try:
+        from aurora_internal.aurora_state_context import get_active_state_dir
+        return get_active_state_dir()
+    except Exception:
+        return None
+
+
 def _active_state_dir(
     target: Optional[Mapping[str, Any]],
     state_dir: Optional[str] = None,
@@ -110,6 +124,7 @@ def _active_state_dir(
             (target.get("state_dir") if isinstance(target, Mapping) else None)
             or state_dir
             or os.environ.get("AURORA_STATE_DIR")
+            or _active_boot_state_dir_fallback()
             or "aurora_state"
         )
     )

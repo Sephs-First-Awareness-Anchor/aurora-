@@ -1144,7 +1144,8 @@ class ConsciousnessEngine:
     def __init__(self, contract: FoundationalContract,
                  lattice: IVMLattice,
                  collective: IStateCollective,
-                 dimensional: DimensionalSystems):
+                 dimensional: DimensionalSystems,
+                 state_dir: Optional[str] = None):
         self.contract = contract
         self.lattice = lattice
         self.collective = collective
@@ -1153,12 +1154,19 @@ class ConsciousnessEngine:
         self.entropy = EntropicPressure()
         self.dce = DCEAssembly(collective, dimensional, self.entropy)
         self.dpme = DPME(self.entropy, lattice, collective, dimensional)
-        self.dual_strata = DualStrataBridge()
+        # Build 608 (D1): state_dir threaded through so this instance --
+        # the one _attach_dual_strata_snapshot() actually calls every turn,
+        # BEFORE aurora.py's own correctly-isolated _refresh_live_dual_
+        # strata_runtime() -- respects an isolated/shadow state_dir instead
+        # of always falling back to DualStrataBridge()/CERSBridge()'s own
+        # Path(__file__)-relative default (the isolation-gap bug class;
+        # see known_fixes_registry.md).
+        self.dual_strata = DualStrataBridge(state_dir=state_dir)
         # CERS shadow — runs in parallel, never authoritative. See
         # ERS_Experiential_Regulation_System_Concept_Spec.md Section 8.
         # Reads only; result.subsurface_state / result.conscious_frame stay
         # driven by self.dual_strata exactly as before.
-        self.cers_bridge = CERSBridge()
+        self.cers_bridge = CERSBridge(state_dir=state_dir)
 
         self.tick_count = 0
 
