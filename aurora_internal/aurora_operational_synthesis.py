@@ -164,6 +164,13 @@ class SynthesisTask:
     updated_at: float = field(default_factory=time.time)
     warp_component_id: str = ""
     status: str = "observing"
+    # Repair N ("Operational Synthesis is exposing a stale invalid
+    # candidate"): which example most recently invalidated a candidate,
+    # kept even after the candidate itself is discarded/replaced, so the
+    # task's history stays honest and inspectable rather than the
+    # invalidation silently vanishing once resynthesis runs.
+    last_invalidated_by: str = ""
+    last_invalidation_reason: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         payload = asdict(self)
@@ -993,6 +1000,56 @@ class AuroraOperationalSynthesisChamber(WarpCapable):
         task.updated_at = time.time()
         self._tick += 1
 
+        # Repair N ("Operational Synthesis is exposing a stale invalid
+        # candidate"): a trial candidate must mean "fits ALL currently
+        # available training evidence," not "once fit an earlier subset."
+        # Previously, an existing candidate was only ever re-checked when
+        # a VALIDATION-flagged example arrived -- an ordinary training
+        # example that contradicted it (exactly the confirmed canary
+        # scenario: examples 1-3 synthesize a candidate, example 4
+        # contradicts it) never rescored, invalidated, or triggered
+        # resynthesis at all, so the stale candidate kept advertising its
+        # original training_score and stayed reachable through
+        # execute(..., allow_trial=True). Every new example -- validation
+        # or ordinary training alike -- now re-checks an existing,
+        # not-yet-dissolved/failed/stale candidate immediately, before
+        # anything else in this call.
+        if task.candidate is not None and task.candidate.status not in ("dissolved", "failed", "stale"):
+            try:
+                still_correct = _values_equal(
+                    execute_program(task.candidate.tree, example.input_value), example.expected_output,
+                )
+            except Exception:
+                still_correct = False
+            if not still_correct:
+                recheck_pool = [e for e in task.examples if not e.validation] or [example]
+                task.candidate.training_score = self._score_examples(task.candidate.tree, recheck_pool)
+                task.candidate.status = "stale"
+                task.status = "candidate_invalidated"
+                task.last_invalidated_by = example.example_id
+                task.last_invalidation_reason = (
+                    f"failed on new {'validation' if validation else 'training'} "
+                    f"example {example.example_id}"
+                )
+                task.updated_at = time.time()
+                # Attempt resynthesis against the COMPLETE current
+                # evidence set (not just the surviving prefix) -- a
+                # candidate that emerges from this must fit everything
+                # currently on record, including the example that just
+                # invalidated the old one.
+                resynth = self.synthesize(task_key)
+                if not resynth.get("synthesized"):
+                    # synthesize_program() found no program spanning the
+                    # full evidence set (e.g. "no_program_in_current_
+                    # primitive_span") -- leave the task honestly
+                    # unsynthesized rather than continuing to advertise
+                    # the invalidated candidate under a new status label.
+                    # synthesize() already set task.status to
+                    # "unsynthesized_gap" on this path.
+                    task.candidate = None
+                self._persist()
+                return self.task_status(task_key)
+
         training = [e for e in task.examples if not e.validation]
         if not validation:
             # Every unmet example contributes one observation of the same root
@@ -1019,22 +1076,16 @@ class AuroraOperationalSynthesisChamber(WarpCapable):
                 len(training) >= _MIN_TRAINING_EXAMPLES
                 and len(distinct_inputs) >= _MIN_DISTINCT_TRAINING_INPUTS
                 and task.warp_component_id
-                and (task.candidate is None or task.candidate.status in {"dissolved", "failed"})
+                and (task.candidate is None or task.candidate.status in {"dissolved", "failed", "stale"})
             ):
                 self.synthesize(task_key)
 
         if validation and task.candidate is not None:
-            try:
-                predicted = execute_program(task.candidate.tree, input_value)
-                correct = _values_equal(predicted, expected_output)
-            except Exception:
-                predicted = None
-                correct = False
-            if not correct:
-                task.status = "validation_failed"
-                task.candidate.status = "failed"
-            else:
-                task.status = "validation_active"
+            # The invalidation branch above already handled (and returned
+            # early for) an example the candidate failed -- reaching here
+            # means it still holds, so this only advances WARP trial
+            # evaluation for a candidate that continues to earn its status.
+            task.status = "validation_active"
             self.evaluate_development()
         self._persist()
         return self.task_status(task_key)
@@ -1086,6 +1137,18 @@ class AuroraOperationalSynthesisChamber(WarpCapable):
         task = self._tasks.get(str(task_id or ""))
         if task is None or task.candidate is None:
             return {"executed": False, "reason": "no_candidate"}
+        # Repair N (defense in depth): allow_trial=True was written to mean
+        # "let me consult an as-yet-unpromoted TRIAL candidate anyway" --
+        # it loosens the "must be promoted" requirement, not "must not be
+        # known-broken." Before this, the status check below only fired
+        # when allow_trial was False, so a candidate already marked
+        # failed/dissolved/stale by any path (validation failure, WARP
+        # trial dissolution, or Repair N's own new incremental re-check)
+        # was still reachable through the read-only allow_trial=True
+        # consultation seam. A known-invalid candidate is rejected
+        # regardless of allow_trial.
+        if task.candidate.status in ("failed", "dissolved", "stale"):
+            return {"executed": False, "reason": "candidate_invalidated"}
         if task.candidate.status != "promoted" and not allow_trial:
             return {"executed": False, "reason": "candidate_not_promoted"}
         try:
@@ -1248,6 +1311,8 @@ class AuroraOperationalSynthesisChamber(WarpCapable):
                     updated_at=float(rec.get("updated_at", time.time()) or time.time()),
                     warp_component_id=str(rec.get("warp_component_id", "") or ""),
                     status=str(rec.get("status", "observing") or "observing"),
+                    last_invalidated_by=str(rec.get("last_invalidated_by", "") or ""),
+                    last_invalidation_reason=str(rec.get("last_invalidation_reason", "") or ""),
                 )
                 self._tasks[task.task_id] = task
                 if task.warp_component_id:
