@@ -28,6 +28,7 @@ Authors: Sunni (Sir) Morningstar and Ceph
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -50,6 +51,84 @@ _REFLECTIVE_ACTIONS = {
     "examine", "inspect", "look", "try", "imagine", "suppose", "approach",
     "view", "treat", "assume", "focus", "shift", "weigh", "reevaluate",
 }
+
+# Build 613 (Reflective-Introspection Misrouting Repair C): generic
+# engineering vocabulary that occurs constantly in Aurora's own function
+# names -- "state", "action", "response", "prediction" are exactly the
+# words an ordinary external-world prompt about a simulated world uses too
+# (RCEC's own prompts talk about "action"/"state"/"prediction" as world
+# concepts). A term this generic matching SOME function name is lexical
+# coincidence, not evidence Aurora is being asked to inspect her own
+# source anatomy -- it must never count toward technical_evidence alone.
+_GENERIC_ANATOMY_TERMS = frozenset({
+    "state", "action", "response", "prediction", "process", "result",
+    "system", "path", "input", "output", "data", "turn", "step", "value",
+    "answer", "question", "world", "object", "item", "thing", "event",
+})
+
+# Build 613 (Repair C): a genuine technical self-inquiry names Aurora's
+# own reasoning/response-formation process explicitly -- not merely "you"
+# appearing somewhere in an otherwise ordinary second-person sentence
+# ("how confident are you" is not "how did you produce that answer").
+_EXPLICIT_SELF_INQUIRY_PATTERNS: Tuple[re.Pattern, ...] = tuple(re.compile(p) for p in (
+    r"\byour (reasoning|answer|response|logic|thinking|process|route|reply)\b",
+    r"\bhow (did|do|does) (you|that|this|it) (answer|respond|reason|arrive|decide|produce|conclude|come up|get to|work)\b",
+    r"\bwhy did you (say|answer|respond|conclude|decide)\b",
+    r"\bwhat (led|caused) you to\b",
+    r"\bhow (was|is) (that|this|your) (answer|response) (produced|formed|generated|arrived at)\b",
+    r"\bexplain (your|how you) (reasoning|answer|response|logic|thinking|process|route|reply)\b",
+    r"\bwalk me through (your|how you) (reasoning|answer|response|logic|thinking|process|route|reply)\b",
+    r"\b(your|the) (internal )?(reasoning process|thought process|response formation|reasoning path)\b",
+    r"\bhow you (produced|formed|arrived at|got to|generated) (that|this|your)\b",
+))
+
+
+def _explicit_self_inquiry_reference(text: str) -> bool:
+    low = str(text or "").lower()
+    return any(pattern.search(low) for pattern in _EXPLICIT_SELF_INQUIRY_PATTERNS)
+
+
+# Build 613 (Repair D): the core delivery invariant needs to recognize the
+# specific shape of prose Aurora's own render_self_inquiry() produces --
+# module paths, qualified function names, and its own narration phrasing
+# -- independent of whatever response_src tag happens to be attached, so a
+# mislabeled or lost tag still gets caught.
+_REFLECTIVE_NARRATION_PHRASES: Tuple[str, ...] = (
+    "the recorded path began through",
+    "it then passed through",
+    "the delivered answer itself was selected through",
+    "also attempted an expression",
+    "was not the authority for the delivered answer",
+    "the strongest constraint perspective in that pass was",
+    "the strongest recorded fault boundary was",
+    "the main meaning anchors were",
+)
+_MODULE_PATH_PATTERN = re.compile(r"\baurora(?:_internal)?\.[a-zA-Z_][a-zA-Z0-9_.]*\b")
+_QUALIFIED_CALL_PATTERN = re.compile(
+    r"\b[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*){2,}\b"
+)
+
+
+def is_reflective_route_narration(text: str) -> bool:
+    """True when text reads as reflective-introspection route narration --
+    module paths, qualified multi-segment function references, or
+    render_self_inquiry()'s own phrasing -- regardless of what source tag
+    the delivering pipeline attached to it. Legitimate when Aurora is
+    genuinely asked how a prior answer was produced (see
+    _explicit_self_inquiry_reference); the defect this guards against is
+    delivering this shape of text as though it answered an unrelated
+    prompt."""
+    text = str(text or "")
+    if not text:
+        return False
+    low = text.lower()
+    if any(phrase in low for phrase in _REFLECTIVE_NARRATION_PHRASES):
+        return True
+    if _MODULE_PATH_PATTERN.search(text):
+        return True
+    if _QUALIFIED_CALL_PATTERN.search(text):
+        return True
+    return False
 
 
 def _clip01(value: Any, default: float = 0.0) -> float:
@@ -141,6 +220,9 @@ class AuroraReflectiveReaddressing:
         self._active_context: Dict[str, Any] = {}
         self._requested_context: Dict[str, Any] = {}
         self._last_result: Dict[str, Any] = {}
+        # Build 613 (Repair A): the most recent prepare_turn() provenance
+        # trace, regardless of whether a mode was granted.
+        self._last_decision_trace: Dict[str, Any] = {}
         self._load_last()
 
     def attach_systems(self, systems: Optional[Dict[str, Any]]) -> None:
@@ -255,16 +337,24 @@ class AuroraReflectiveReaddressing:
         self,
         parsed: Mapping[str, Any],
         systems: Mapping[str, Any],
-    ) -> Tuple[float, List[Dict[str, Any]]]:
+    ) -> Tuple[float, List[Dict[str, Any]], List[str]]:
+        """Build 613 (Repair C): generic engineering words (_GENERIC_
+        ANATOMY_TERMS) are excluded from the candidate terms BEFORE
+        matching -- they occur in Aurora's own function names constantly,
+        and an ordinary external-world prompt that happens to use the
+        word "action" or "state" is not thereby asking about her source
+        anatomy. Returns (score, matches, terms_actually_searched) so
+        prepare_turn() can record exactly what was searched (Repair A)."""
         bridge = systems.get("system_introspection")
-        if bridge is None or not hasattr(bridge, "find_functions"):
-            return 0.0, []
-        terms = _merge_unique(
+        raw_terms = _merge_unique(
             parsed.get("topic_words", []) or [],
             parsed.get("entities", []) or [],
             [parsed.get("topic", "")],
             limit=6,
         )
+        terms = [t for t in raw_terms if t.lower() not in _GENERIC_ANATOMY_TERMS]
+        if bridge is None or not hasattr(bridge, "find_functions"):
+            return 0.0, [], terms
         matches: List[Dict[str, Any]] = []
         score = 0.0
         for term in terms:
@@ -280,7 +370,7 @@ class AuroraReflectiveReaddressing:
                 if match >= 4.0:
                     matches.append(dict(item))
                     score = max(score, min(1.0, match / 10.0))
-        return score, matches[:6]
+        return score, matches[:6], terms
 
     def _continuity_score(
         self,
@@ -366,6 +456,11 @@ class AuroraReflectiveReaddressing:
             except Exception:
                 parsed = {}
         parsed = dict(parsed or {})
+        # Build 613 (Repair B): a unique turn identity for THIS resolution
+        # only -- a context built here can only ever be applied to the
+        # turn that produced it.
+        turn_token = uuid.uuid4().hex
+        input_hash = hashlib.sha256(str(user_input or "").encode("utf-8")).hexdigest()[:24]
         latest = self.latest_episode()
         focal = self._focal_episode(latest)
         previous = focal or latest
@@ -379,7 +474,7 @@ class AuroraReflectiveReaddressing:
         second_person = bool(re.search(r"\b(you|your|yourself)\b", low))
         first_person = bool(re.search(r"\b(i|my|me|myself)\b", low))
         inquiry = utterance_type == "question" or "inquiry" in roles or str(user_input or "").strip().endswith("?")
-        anatomy_score, anatomy_matches = self._source_anatomy_match(parsed, target)
+        anatomy_score, anatomy_matches, anatomy_terms = self._source_anatomy_match(parsed, target)
         continuity = self._continuity_score(user_input, parsed, previous)
         latest_continuity = self._continuity_score(user_input, parsed, latest)
         # Continuity can be expressed either toward the enduring focal matter
@@ -398,13 +493,16 @@ class AuroraReflectiveReaddressing:
             except Exception:
                 directive = first_token in _REFLECTIVE_ACTIONS
 
-        # Reflective access must emerge from the relation being asked about,
-        # not from second-person wording alone.  Ordinary questions about
-        # Aurora's experience ("what has your attention?") contain ``you``
-        # but do not request a source-path account.  A technical self-inquiry
-        # therefore needs either (a) a real match into Aurora's executable
-        # anatomy, or (b) a context-bound vague/callback reference to an
-        # already-recorded reasoning episode.
+        # Build 613 (Repair C): a genuine technical self-inquiry needs an
+        # EXPLICIT semantic request about Aurora's own reasoning/response
+        # formation/internal route/prior answer -- not second-person
+        # wording alone ("how confident are you" is ordinary address, not
+        # a source-path request), and not a source-anatomy match alone
+        # (RCEC's own vocabulary -- "action", "state", "prediction" --
+        # collides lexically with Aurora's own generic function-name
+        # vocabulary; see _GENERIC_ANATOMY_TERMS).
+        explicit_self_reference = _explicit_self_inquiry_reference(user_input)
+
         relational_form = dict(parsed.get("relational_form") or {})
         relation_content = " ".join(
             str(relational_form.get(key, "") or "")
@@ -439,7 +537,9 @@ class AuroraReflectiveReaddressing:
         # their mere presence caused ordinary questions such as "is that a
         # useful example?" to be hijacked by a technical trace.  Context-only
         # callbacks inherit self-inquiry authority only from an already active
-        # self-inquiry lineage.
+        # self-inquiry lineage -- and (Repair C) still require an explicit
+        # self-reference, so a merely hypothetical or weakly-overlapping
+        # prompt cannot inherit authority from a stale prior introspection.
         episode_callback = bool(
             vague_reference
             and continuity >= 0.12
@@ -453,10 +553,8 @@ class AuroraReflectiveReaddressing:
         self_inquiry = bool(
             previous
             and inquiry
-            and (
-                (second_person and (technical_evidence or explicit_callback))
-                or episode_callback
-            )
+            and explicit_self_reference
+            and (technical_evidence or explicit_callback or episode_callback)
             and not (external_content and not technical_evidence and not vague_reference)
             and not bool(parsed.get("is_opinion"))
         )
@@ -471,9 +569,19 @@ class AuroraReflectiveReaddressing:
             and relational_relation in {"is", "be", "mean", "meant"}
             and not list(parsed.get("topic_words") or [])
         )
+        # Build 613 (Repair C): an external-world prompt with a concrete
+        # new subject (RCEC's vessels/conduits/sensors, or any other
+        # ordinary noun) must stay centered on that subject rather than
+        # being pulled toward a stale introspection episode merely because
+        # it is phrased as a challenge/hypothesis/continuation and the
+        # focal episode happens to have been reflective.
+        _stale_reflective_pull = bool(
+            external_content and previous_was_self_inquiry and not explicit_self_reference
+        )
         challenge = bool(
             previous
             and not confirmation_only
+            and not _stale_reflective_pull
             and (
                 stance in {"challenging", "clarifying"}
                 or bool(parsed.get("is_clarification"))
@@ -483,6 +591,7 @@ class AuroraReflectiveReaddressing:
         )
         perspective_shift = bool(
             previous
+            and not _stale_reflective_pull
             and (
                 bool(parsed.get("is_hypothetical"))
                 or stance in {"speculative", "tentative"}
@@ -502,6 +611,7 @@ class AuroraReflectiveReaddressing:
             previous
             and not self_inquiry
             and not confirmation_only
+            and not _stale_reflective_pull
             and continuity >= 0.62
             and (inquiry or first_person or second_person)
         )
@@ -523,6 +633,56 @@ class AuroraReflectiveReaddressing:
         elif reflective_continuation:
             mode = "reflective_continuation"
             reason = "the current inquiry remains semantically continuous with the prior reasoning state"
+
+        # Build 613 (Repair A): turn-local provenance, captured regardless
+        # of whether a mode was granted -- a denial is as diagnostically
+        # important as a grant. Never gates behavior; read-only record.
+        decision_trace = {
+            "input_hash": input_hash,
+            "turn_token": turn_token,
+            "selected_mode": mode,
+            "latest_episode_id": str(latest.get("episode_id", "") or ""),
+            "focal_episode_id": str((focal or previous).get("episode_id", "") or ""),
+            "target_episode_id": str(previous.get("episode_id", "") or "") if mode else "",
+            "source_anatomy_terms": list(anatomy_terms),
+            "source_anatomy_matches": _safe(anatomy_matches),
+            "source_anatomy_score": round(anatomy_score, 4),
+            "continuity_score": round(continuity, 4),
+            "vague_reference": vague_reference,
+            "explicit_callback": explicit_callback,
+            "episode_callback": episode_callback,
+            "previous_was_self_inquiry": previous_was_self_inquiry,
+            "explicit_self_reference": explicit_self_reference,
+            "external_content_terms": sorted(external_content),
+            "predicates": {
+                "self_inquiry": {
+                    "previous": bool(previous), "inquiry": inquiry,
+                    "explicit_self_reference": explicit_self_reference,
+                    "technical_evidence": technical_evidence,
+                    "explicit_callback": explicit_callback,
+                    "episode_callback": episode_callback,
+                    "is_opinion": bool(parsed.get("is_opinion")),
+                    "granted": self_inquiry,
+                },
+                "challenge": {
+                    "previous": bool(previous), "confirmation_only": confirmation_only,
+                    "stale_reflective_pull": _stale_reflective_pull, "granted": challenge,
+                },
+                "perspective_shift": {
+                    "previous": bool(previous), "stale_reflective_pull": _stale_reflective_pull,
+                    "continuity": continuity, "granted": perspective_shift,
+                },
+                "reflective_continuation": {
+                    "previous": bool(previous), "self_inquiry": self_inquiry,
+                    "confirmation_only": confirmation_only,
+                    "stale_reflective_pull": _stale_reflective_pull,
+                    "continuity": continuity, "granted": reflective_continuation,
+                },
+            },
+        }
+        self._last_decision_trace = decision_trace
+        if isinstance(target, dict):
+            target["_reflective_readdressing_trace"] = decision_trace
 
         if not mode:
             self._active_context = {}
@@ -555,6 +715,9 @@ class AuroraReflectiveReaddressing:
             "schema_version": _SCHEMA_VERSION,
             "readdress_id": f"RAD:{uuid.uuid4().hex[:14]}",
             "created_at": time.time(),
+            # Build 613 (Repair B): binds this context to THIS turn only.
+            "turn_token": turn_token,
+            "input_hash": input_hash,
             "mode": mode,
             "reason": reason,
             "target_episode_id": str(previous.get("episode_id", "") or ""),
@@ -820,8 +983,14 @@ class AuroraReflectiveReaddressing:
             "active_context": _safe(self._active_context),
             "pending_internal_request": _safe(self._requested_context),
             "last_result": _safe(self._last_result),
+            "last_decision_trace": _safe(self._last_decision_trace),
             "state_dir": str(self.state_dir),
         }
+
+    def last_decision_trace(self) -> Dict[str, Any]:
+        """Build 613 (Repair A): the most recent prepare_turn() provenance
+        trace, whether or not a mode was granted."""
+        return dict(self._last_decision_trace)
 
     def _load_last(self) -> None:
         try:
@@ -833,4 +1002,7 @@ class AuroraReflectiveReaddressing:
             self._last_result = {}
 
 
-__all__ = ["AuroraReflectiveReaddressing"]
+__all__ = [
+    "AuroraReflectiveReaddressing",
+    "is_reflective_route_narration",
+]

@@ -410,15 +410,30 @@ class MechanismSpec:
     condition_entity_type: Optional[str] = None
     condition_property: Optional[str] = None
     condition_value: Any = None
+    # Build 613 (J): a decoy role, fixed at the SAME role level as
+    # source/target -- not re-randomized per world the way _build_rule()'s
+    # plain per-episode decoy was. None (the default) means no decoy at
+    # all: "begin with one causal signal" for a cohort's first pass, only
+    # introducing distraction as a later pressure level once clean
+    # acquisition is demonstrated.
+    decoy_entity_type: Optional[str] = None
+    decoy_property: Optional[str] = None
+    decoy_delta: Any = 1
 
 
 def generate_mechanism(
     rng: random.Random, family: str = "direct_trigger", mechanism_id: Optional[str] = None,
+    include_decoy: bool = False,
 ) -> MechanismSpec:
     """Picks one valid (trigger_action, source role, target role, target
     property, effect) combination from the same bounded catalogs
     _build_rule() draws from -- resolved once, at the entity-TYPE (role)
-    level, instead of re-resolved (and re-randomized) per world."""
+    level, instead of re-resolved (and re-randomized) per world.
+
+    Build 613 (J): include_decoy defaults to False -- "begin with one
+    causal signal." When True, a decoy role is ALSO fixed once here (same
+    role-level stability as the real mechanism), rather than picked fresh
+    per world the way the pre-613 per-episode decoy was."""
     triggerable = [a for a, spec in ACTION_TYPES.items() if spec.arity == 1]
     rng.shuffle(triggerable)
     trigger_action = None
@@ -470,6 +485,18 @@ def generate_mechanism(
         else:
             condition_value = cspec.default
 
+    decoy_entity_type: Optional[str] = None
+    decoy_property: Optional[str] = None
+    decoy_delta: Any = 1
+    if include_decoy:
+        decoy_candidates = [
+            (et, p) for et in ENTITY_TYPES for p in ENTITY_TYPES[et].properties
+            if PROPERTIES[p].value_type == "numeric" and not (et == target_entity_type and p == target_property)
+        ]
+        if decoy_candidates:
+            decoy_entity_type, decoy_property = rng.choice(decoy_candidates)
+            decoy_delta = rng.choice([1, -1])
+
     identity_seed = f"{family}:{trigger_action}:{source_entity_type}:{target_entity_type}:{target_property}"
     return MechanismSpec(
         mechanism_id=mechanism_id or f"mech_{hashlib.sha256(identity_seed.encode('utf-8')).hexdigest()[:10]}",
@@ -482,6 +509,9 @@ def generate_mechanism(
         delay_ticks=delay_ticks,
         condition_entity_type=condition_entity_type,
         condition_property=condition_property,
+        decoy_entity_type=decoy_entity_type,
+        decoy_property=decoy_property,
+        decoy_delta=decoy_delta,
         condition_value=condition_value,
     )
 
@@ -509,13 +539,20 @@ def _build_rule_from_mechanism(world: WorldState, mechanism: MechanismSpec, rng:
         )
     target_id = rng.choice(target_candidates)
 
-    decoy_candidates = [
-        (eid, p) for eid, e in world.entities.items() for p in e.properties
-        if PROPERTIES[p].value_type == "numeric" and not (eid == target_id and p == mechanism.target_property)
-    ]
+    # Build 613 (J): the decoy role is fixed on the MechanismSpec itself
+    # (or absent entirely, the default) -- no longer a fresh random pick
+    # per world. A mechanism with no decoy role produces no decoy at all,
+    # so the first cohort's evidence carries exactly one causal signal
+    # instead of a differently-shaped compound transformation per trial.
     decoy_entity_id = decoy_property = None
-    if decoy_candidates:
-        decoy_entity_id, decoy_property = rng.choice(decoy_candidates)
+    if mechanism.decoy_entity_type is not None:
+        decoy_candidates = [
+            eid for eid, e in world.entities.items()
+            if e.entity_type == mechanism.decoy_entity_type and eid not in (source_id, target_id)
+        ] or [eid for eid, e in world.entities.items() if e.entity_type == mechanism.decoy_entity_type]
+        if decoy_candidates:
+            decoy_entity_id = rng.choice(decoy_candidates)
+            decoy_property = mechanism.decoy_property
 
     rule_kwargs: Dict[str, Any] = dict(
         family=mechanism.family,
@@ -526,6 +563,7 @@ def _build_rule_from_mechanism(world: WorldState, mechanism: MechanismSpec, rng:
         effect_delta=mechanism.effect_delta,
         decoy_entity_id=decoy_entity_id,
         decoy_property=decoy_property,
+        decoy_delta=mechanism.decoy_delta,
         delay_ticks=mechanism.delay_ticks,
     )
     if mechanism.family == "threshold_trigger":
@@ -1214,6 +1252,13 @@ class EpisodeStep:
     # re-derivable from consequence alone once the episode has moved on.
     world_before: Optional[WorldState] = None
     observed_before: Optional[ObservedWorldState] = None
+    # Build 613 (I): for acquisition's demonstrated/control trials, the
+    # post-consequence observation routed through the real live perception
+    # pipeline -- what Aurora actually witnessed, not merely a transition
+    # computed and recorded ABOUT her. None for trials where no witness
+    # call was made (assessment/exploration steps carry the equivalent
+    # signal in dual_strata_snapshot/interpretation already).
+    witness_report: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -1349,6 +1394,7 @@ def _episode_step_to_dict(step: EpisodeStep) -> Dict[str, Any]:
         "expression_fidelity": step.expression_fidelity,
         "world_before": _worldstate_to_dict(step.world_before) if step.world_before is not None else None,
         "observed_before": _observed_worldstate_to_dict(step.observed_before) if step.observed_before is not None else None,
+        "witness_report": step.witness_report,
     }
 
 
@@ -1384,6 +1430,7 @@ def _episode_step_from_dict(data: Dict[str, Any]) -> EpisodeStep:
         expression_fidelity=data.get("expression_fidelity"),
         world_before=_worldstate_from_dict(data["world_before"]) if data.get("world_before") is not None else None,
         observed_before=_observed_worldstate_from_dict(data["observed_before"]) if data.get("observed_before") is not None else None,
+        witness_report=data.get("witness_report"),
     )
 
 
@@ -1843,6 +1890,67 @@ def run_backprojection_step(
         "revised_interpretation": asdict(revised),
     }
     return revised
+
+
+def run_witnessed_observation(
+    trace: EpisodeTrace,
+    systems: Dict[str, Any],
+    episode_runtime_context: Dict[str, Any],
+    step_index: int,
+    boundary: ObservationBoundary,
+    agent_id: str,
+    skin: VocabularySkin = DEFAULT_SKIN,
+) -> CapturedInterpretation:
+    """Build 613 (I): the central gap the acquisition chamber had --
+    'demonstrated'/'control' trials computed a real before/action/after
+    transition and submitted it as evidence ABOUT Aurora, but never routed
+    it through anything Aurora actually perceives. This does: the same
+    live-response bridge run_episode_step()/run_backprojection_step()
+    already use, with the SAME episode_runtime_context (so it lands in the
+    same episode-local continuity, not a disconnected one-off call), and a
+    prompt that explicitly does NOT ask her to choose an action or make a
+    prediction -- only to take note of a transition an external actor
+    caused. She is not required to answer correctly, choose anything, or
+    infer the relationship; the transition simply becomes something she
+    actually encountered."""
+    import aurora as _aurora
+
+    step = trace.steps[step_index]
+    if step.consequence is None:
+        raise RuntimeError("run_witnessed_observation() requires a step whose consequence has already been recorded")
+
+    observed_after = boundary.observe(step.consequence, agent_id)
+    witness_prompt = (
+        f"Earlier you observed: {step.observation_text} "
+        f"Then, without your involvement, this happened: {describe_observation(observed_after, skin)} "
+        "You are not being asked to choose an action or make a prediction right now -- "
+        "just take note of what changed."
+    )
+
+    selected = SimpleNamespace(primary_concept=SimpleNamespace(value="cognitive_experience_chamber_witness"))
+    context = {"prompt": witness_prompt, "category": "cognitive_experience_chamber"}
+    bridge_result = _aurora._run_simulation_live_response_bridge(
+        systems,
+        selected=selected,
+        context=context,
+        mode=None,
+        runtime_context=episode_runtime_context,
+    )
+    expression = str(bridge_result.get("expression", "") or "")
+    confidence = float((bridge_result.get("meta", {}) or {}).get("confidence", 0.0) or 0.0)
+
+    witnessed = ActionInterface.interpret_expression(expression, observed_after, confidence, skin=skin).interpretation
+    dual_strata_snapshot = capture_dual_strata_snapshot(systems, bridge_result)
+
+    step.witness_report = {
+        "prompt": witness_prompt,
+        "witnessed_interpretation": asdict(witnessed),
+    }
+    # The witness call is the only live touch a demonstrated/control step
+    # has -- treat its pre-articulation snapshot as this step's own, the
+    # same role Stage 5 already gives dual_strata_snapshot elsewhere.
+    step.dual_strata_snapshot = dual_strata_snapshot
+    return witnessed
 
 
 # ---------------------------------------------------------------------------
@@ -2447,6 +2555,223 @@ def build_operation_evidence(step: EpisodeStep) -> Optional[Tuple[Dict[str, Any]
 
 
 # ---------------------------------------------------------------------------
+# Build 613 (K): role-normalized synthesis representation.
+# ---------------------------------------------------------------------------
+#
+# build_operation_evidence()'s (input_value, expected_output) above is
+# shaped by dynamically-generated entity.property keys that differ between
+# every world -- a fixed-schema program-synthesis primitive span cannot
+# generalize across a shifting key set, and the full delta also conflates
+# the action's own ordinary, publicly-known direct effect (e.g. add_energy
+# always increases ITS OWN target's energy -- stated in ACTION_TYPES'
+# own description, not the hidden rule) with whatever else happened.
+# RoleNormalizedTransition fixes both: a small, fixed set of field names
+# (action_type/acting_entity_role/...), and an "extra" delta computed by
+# subtracting the action's known baseline effect (via _apply_base_action()
+# alone -- never the hidden rule) from the full observed delta. This
+# remains earned evidence: the mechanism's actual effect is still
+# discovered from the world's behavior, never handed down.
+
+@dataclass(frozen=True)
+class RoleNormalizedTransition:
+    action_type: str
+    acting_entity_role: Optional[str]
+    visible_pre_state: Dict[str, Any]
+    candidate_affected_roles: Tuple[str, ...]
+    affected_entity_role: Optional[str]
+    affected_property: Optional[str]
+    direction: str
+    delay: int = 0
+
+    def as_training_pair(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        return (
+            {
+                "action_type": self.action_type,
+                "acting_entity_role": self.acting_entity_role,
+                "visible_pre_state": self.visible_pre_state,
+                "candidate_affected_roles": list(self.candidate_affected_roles),
+            },
+            {
+                "affected_entity_role": self.affected_entity_role,
+                "affected_property": self.affected_property,
+                "direction": self.direction,
+                "delay": self.delay,
+            },
+        )
+
+
+def _known_direct_action_delta(world_before: WorldState, action: ActionInvocation) -> Dict[str, Dict[str, Any]]:
+    """The action's own ordinary effect alone -- e.g. seal always sets ITS
+    OWN target's sealed to True -- computed via _apply_base_action() with
+    no decoy and no hidden rule involved. Subtracting this from the full
+    observed delta isolates whatever ELSE happened as a result of the
+    world's hidden behavior, still earned from the world, never the
+    hidden rule handed down."""
+    baseline = world_before.clone()
+    baseline.tick += 1
+    try:
+        _apply_base_action(baseline, action)
+    except ValueError:
+        return {}
+    return compute_state_delta(world_before, baseline)
+
+
+def build_role_normalized_transition(step: EpisodeStep) -> Optional[RoleNormalizedTransition]:
+    """None under the same conditions build_operation_evidence() returns
+    None -- missing structured before-state evidence."""
+    if step.observed_before is None or step.world_before is None or step.consequence is None:
+        return None
+
+    action = step.action
+    acting_entity_role: Optional[str] = None
+    if action.target_ids:
+        acting_entity = step.world_before.entities.get(action.target_ids[0])
+        acting_entity_role = acting_entity.entity_type if acting_entity is not None else None
+    candidate_affected_roles = tuple(sorted({e.entity_type for e in step.observed_before.entities.values()}))
+
+    full_delta = compute_state_delta(step.world_before, step.consequence)
+    baseline_delta = _known_direct_action_delta(step.world_before, action)
+    extra_keys = sorted(set(full_delta) - set(baseline_delta))
+
+    affected_entity_role: Optional[str] = None
+    affected_property: Optional[str] = None
+    direction = "no_change"
+    if extra_keys:
+        key = extra_keys[0]
+        entity_id, prop = key.rsplit(".", 1)
+        entity = step.world_before.entities.get(entity_id)
+        affected_entity_role = entity.entity_type if entity is not None else None
+        affected_property = prop
+        direction = _direction_of_change(full_delta[key]["before"], full_delta[key]["after"])
+
+    return RoleNormalizedTransition(
+        action_type=action.action_type,
+        acting_entity_role=acting_entity_role,
+        visible_pre_state=_observed_worldstate_to_dict(step.observed_before),
+        candidate_affected_roles=candidate_affected_roles,
+        affected_entity_role=affected_entity_role,
+        affected_property=affected_property,
+        direction=direction,
+        delay=0,  # single-step episodes cannot observe a delayed effect within one before/after pair
+    )
+
+
+def consult_operational_synthesis_candidate(
+    systems: Dict[str, Any], rule_family: str, role_normalized_input: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    """Build 613 (K): a read-only trial seam letting the chamber consult
+    whatever candidate program Operational Synthesis currently holds for
+    this task, as an internal hypothesis -- never automatic final
+    authority, and this call never writes anything back. Reuses
+    AuroraOperationalSynthesisChamber.execute(..., allow_trial=True), which
+    itself never mutates task state. Returns None when no chamber is
+    wired in, or no candidate exists yet -- an absent candidate is honest,
+    not an error."""
+    chamber = systems.get("operational_synthesis")
+    if chamber is None or not hasattr(chamber, "execute"):
+        return None
+    task_id = rcec_primary_task_id(rule_family or "direct_trigger")
+    try:
+        result = chamber.execute(task_id, role_normalized_input, allow_trial=True)
+    except Exception:
+        return None
+    return result if result.get("executed") else None
+
+
+# ---------------------------------------------------------------------------
+# Build 613 (L): FutureStateProjection.
+# ---------------------------------------------------------------------------
+#
+# SCOPE BOUNDARY, stated plainly: this is a diagnostic VIEW, built HERE in
+# the chamber from signals already captured AFTER Aurora has spoken (her
+# interpretation, an Operational Synthesis candidate consulted read-only
+# via K) -- not a change to Aurora's live cognition/expression pipeline.
+# The directive's fuller ask -- a structure that creates pressure to
+# populate BEFORE articulation, consulted BY the expression pipeline
+# itself as the thing being verbalized -- means modifying
+# aurora_expression_perception.py/aurora_articulation.py's live
+# response-generation internals. This session already found, live, that
+# changes to that pipeline have real, hard-to-predict effects on response
+# quality (Build 608's CSSEE regression -- a one-line import fix silently
+# activated a dormant subsystem that overwrote real identity responses
+# with degenerate text). Rewiring the actual pipeline safely needs its
+# own dedicated investigation, not a same-directive bolt-on. This gives
+# the diagnostic distinction the corrected canary needs NOW:
+#   no projection formed                          -> cognition/substrate gap
+#   projection formed, expression abstained        -> communication gap
+#   projection formed, wrong prediction expressed  -> causal-learning pressure
+#   projection formed, correct prediction expressed -> genuine measurable success
+
+@dataclass(frozen=True)
+class FutureStateProjection:
+    proposed_action: Optional[Dict[str, Any]]
+    predicted_entity: Optional[str]
+    predicted_property: Optional[str]
+    predicted_direction: Optional[str]
+    expected_delay: Optional[int]
+    confidence: Optional[float]
+    evidence_refs: Tuple[str, ...] = ()
+    unknowns: Tuple[str, ...] = ()
+
+    @property
+    def formed(self) -> bool:
+        """A projection FORMED when a concrete affected entity+property
+        was actually predicted -- not merely when some text was returned."""
+        return self.predicted_entity is not None and self.predicted_property is not None
+
+    def diagnostic_category(self, expressed: bool) -> str:
+        if not self.formed:
+            return "no_projection_formed"
+        if not expressed:
+            return "projection_formed_expression_abstained"
+        return "projection_formed_and_expressed"
+
+
+def build_future_state_projection(
+    interpretation: CapturedInterpretation,
+    *,
+    synthesis_candidate: Optional[Dict[str, Any]] = None,
+    evidence_refs: Sequence[str] = (),
+) -> FutureStateProjection:
+    """Built from what Aurora's captured interpretation actually contains
+    -- predicted_consequence maps directly onto predicted_entity/property/
+    direction; confidence and stated_unknowns map onto their own fields.
+    synthesis_candidate (Build 613 K's read-only trial seam) is folded in
+    as a hint ONLY when Aurora made no prediction of her own -- it is
+    never substituted for what she actually said, only used to show
+    whether an internal candidate existed even when nothing was
+    expressed."""
+    pred = interpretation.predicted_consequence
+    predicted_entity: Optional[str] = None
+    predicted_property: Optional[str] = None
+    predicted_direction: Optional[str] = None
+    proposed_action: Optional[Dict[str, Any]] = None
+
+    if pred is not None:
+        predicted_entity = pred.get("entity_id")
+        predicted_property = pred.get("property")
+        predicted_direction = pred.get("direction")
+        proposed_action = {"entity_id": predicted_entity, "property": predicted_property}
+    elif synthesis_candidate is not None:
+        output = synthesis_candidate.get("output")
+        if isinstance(output, dict) and output.get("affected_entity_role"):
+            predicted_entity = output.get("affected_entity_role")
+            predicted_property = output.get("affected_property")
+            predicted_direction = output.get("direction")
+
+    return FutureStateProjection(
+        proposed_action=proposed_action,
+        predicted_entity=predicted_entity,
+        predicted_property=predicted_property,
+        predicted_direction=predicted_direction,
+        expected_delay=None,
+        confidence=interpretation.confidence if predicted_entity is not None else None,
+        evidence_refs=tuple(evidence_refs),
+        unknowns=interpretation.stated_unknowns,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Build 610 (E): Experience ingestion, separated from ability promotion.
 # ---------------------------------------------------------------------------
 #
@@ -2512,10 +2837,13 @@ class ExperienceIngestionBridge:
         if submitter is None:
             return IngestionDecision(episode_id, False, "no_submission_seam_available")
 
-        operation_evidence = build_operation_evidence(step)
-        if operation_evidence is None:
+        # Build 613 (K): role-normalized, not raw dynamically-keyed deltas
+        # -- a fixed-schema representation Operational Synthesis's
+        # primitive span can actually generalize across.
+        transition = build_role_normalized_transition(step)
+        if transition is None:
             return IngestionDecision(episode_id, False, "insufficient_structured_evidence")
-        input_value, expected_output = operation_evidence
+        input_value, expected_output = transition.as_training_pair()
 
         evidence = {
             "input_value": input_value,
@@ -2523,7 +2851,7 @@ class ExperienceIngestionBridge:
             "validation": validation,
             "task_id": rcec_primary_task_id(rule_family or "direct_trigger"),
             "source": "cognitive_experience_chamber_acquisition",
-            "need_description": "observed state + chosen action -> resulting state delta (RCEC chamber, raw acquisition evidence)",
+            "need_description": "role-normalized action -> affected role/property/direction (RCEC chamber, raw acquisition evidence)",
         }
         submission_result = dict(submitter(evidence) or {})
         return IngestionDecision(episode_id, True, "ingested", submission_result)
@@ -2618,10 +2946,11 @@ class DevelopmentalPromotionBridge:
         if submitter is None:
             return PromotionDecision(episode_id, False, "no_submission_seam_available", (), dimension_scores, transfer_score, route=route)
 
-        operation_evidence = build_operation_evidence(step)
-        if operation_evidence is None:
+        # Build 613 (K): role-normalized, not raw dynamically-keyed deltas.
+        transition = build_role_normalized_transition(step)
+        if transition is None:
             return PromotionDecision(episode_id, False, "insufficient_structured_evidence", (), dimension_scores, transfer_score, route=route)
-        input_value, expected_output = operation_evidence
+        input_value, expected_output = transition.as_training_pair()
 
         evidence = {
             "input_value": input_value,
@@ -2629,7 +2958,7 @@ class DevelopmentalPromotionBridge:
             "validation": validation,
             "task_id": rcec_primary_task_id(rule_family or "direct_trigger"),
             "source": "cognitive_experience_chamber",
-            "need_description": "observed state + chosen action -> resulting state delta (RCEC chamber)",
+            "need_description": "role-normalized action -> affected role/property/direction (RCEC chamber)",
         }
         submission_result = dict(submitter(evidence) or {})
         return PromotionDecision(episode_id, True, "submitted", (), dimension_scores, transfer_score, submission_result, route=route)
@@ -2749,6 +3078,9 @@ class ClosedLoopEpisodeResult:
     governor_results: List[GovernorResult]
     promotion_decision: PromotionDecision
     ingestion_decision: IngestionDecision
+    # Build 613 (L): Aurora's diagnostic projection from the INITIAL
+    # interpretation, before backprojection revises anything.
+    future_state_projection: FutureStateProjection
 
 
 def _auto_pick_counterfactual_alter(world: WorldState, engine: HiddenRuleEngine) -> Dict[str, Any]:
@@ -2844,6 +3176,19 @@ def run_closed_loop_episode(
     world_after = run_episode_step(trace, systems, episode_runtime_context, world, engine, boundary, agent_id, skin=skin)
     step = trace.steps[0]
 
+    # Build 613 (L): diagnostic projection view -- see FutureStateProjection's
+    # own docstring for the scope boundary this represents. Consults
+    # Operational Synthesis read-only (K) only when Aurora made no
+    # prediction of her own.
+    synthesis_hint = None
+    if step.interpretation.predicted_consequence is None:
+        role_normalized = build_role_normalized_transition(step)
+        if role_normalized is not None:
+            synthesis_hint = consult_operational_synthesis_candidate(
+                systems, engine._rule.family, role_normalized.as_training_pair()[0],
+            )
+    future_state_projection = build_future_state_projection(step.interpretation, synthesis_candidate=synthesis_hint)
+
     # 4: initial evaluation.
     apply_causal_evaluation(trace, 0, world, engine, boundary, agent_id, dream_trainer=dream_trainer)
 
@@ -2936,6 +3281,7 @@ def run_closed_loop_episode(
         governor_results=governor_results,
         promotion_decision=decision,
         ingestion_decision=ingestion_decision,
+        future_state_projection=future_state_projection,
     )
 
 
@@ -2958,6 +3304,11 @@ class AcquisitionEpisodeResult:
     world_after: WorldState
     trial_kind: str
     ingestion_decision: IngestionDecision
+    # Build 613 (I): what Aurora actually said when witnessing the
+    # post-consequence state, for demonstrated/control trials. None for
+    # exploration trials (her own interpretation is on trace.steps[0]
+    # already -- there is no separate "witness" turn for her own choice).
+    witnessed_interpretation: Optional[CapturedInterpretation] = None
 
 
 def run_acquisition_episode(
@@ -2985,6 +3336,14 @@ def run_acquisition_episode(
     to (which may be nothing, or may be echo-contaminated -- either is
     recorded honestly via action_commitment, not silently normalized).
 
+    Build 613 (I): demonstrated/control trials route the post-consequence
+    state through run_witnessed_observation() -- the same live perception
+    pipeline every other episode step uses, in the SAME episode_runtime_
+    context -- so the transition becomes something Aurora actually
+    witnessed, not merely a transition computed and recorded about her.
+    She is not required to answer correctly, choose anything, or infer the
+    relationship.
+
     Every structurally valid transition is submitted as quarantined raw
     experience via ExperienceIngestionBridge -- it earns no admissibility
     route and no promotion merely by being recorded; no prediction is
@@ -2995,6 +3354,7 @@ def run_acquisition_episode(
         raise ValueError(f"unknown acquisition trial_kind: {trial_kind!r}")
 
     trace = EpisodeTrace(episode_id=episode_id, world_seed=world.tick, rule_family=engine._rule.family, agent_id=agent_id)
+    witnessed_interpretation: Optional[CapturedInterpretation] = None
 
     if trial_kind in ("demonstrated", "control"):
         if scripted_action is None:
@@ -3012,6 +3372,9 @@ def run_acquisition_episode(
         trace.steps[-1].observed_before = observed
         world_after = engine.step(world, scripted_action)
         trace.record_consequence(world_after)
+        witnessed_interpretation = run_witnessed_observation(
+            trace, systems, episode_runtime_context, 0, boundary, agent_id, skin=skin,
+        )
         require_commitment = False
     else:  # exploration -- Aurora genuinely selects, subject to real commitment gating.
         world_after = run_episode_step(trace, systems, episode_runtime_context, world, engine, boundary, agent_id, skin=skin)
@@ -3024,6 +3387,7 @@ def run_acquisition_episode(
     )
     return AcquisitionEpisodeResult(
         trace=trace, world_after=world_after, trial_kind=trial_kind, ingestion_decision=ingestion_decision,
+        witnessed_interpretation=witnessed_interpretation,
     )
 
 

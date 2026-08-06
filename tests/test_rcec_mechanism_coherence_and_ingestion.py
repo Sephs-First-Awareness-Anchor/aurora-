@@ -26,18 +26,26 @@ from aurora_internal.aurora_cognitive_experience_chamber import (  # noqa: E402
     ENTITY_TYPES,
     PROPERTIES,
     ActionInterface,
+    ActionInvocation,
     CapturedInterpretation,
+    Entity,
     EpisodeStep,
     ExperienceIngestionBridge,
+    FutureStateProjection,
     HiddenRuleEngine,
     IngestionDecision,
     ObservationBoundary,
     ObservedEntity,
     ObservedWorldState,
+    RoleNormalizedTransition,
     TransferGenerator,
     WorldGenerator,
+    WorldState,
     _ACTION_REQUIRED_PROPERTY,
+    build_future_state_projection,
+    build_role_normalized_transition,
     compute_transfer_comparison,
+    consult_operational_synthesis_candidate,
     generate_mechanism,
 )
 
@@ -191,17 +199,30 @@ def test_interpret_expression_without_available_action_phrases_still_works():
 def _step_with_commitment(commitment: str) -> EpisodeStep:
     from aurora_internal.aurora_cognitive_experience_chamber import ActionInvocation, Entity, WorldState
 
+    # A second entity (conduit_0) carries the hidden mechanism's effect,
+    # distinct from add_energy's own known direct effect on vessel_0
+    # itself -- Build 613 (K)'s role-normalized evidence needs a genuine
+    # cross-entity signal to be meaningful.
     world_before = WorldState(
-        tick=0, entities={"vessel_0": Entity("vessel_0", "vessel", {"energy": 1, "sealed": False, "color": "neutral"})},
+        tick=0, entities={
+            "vessel_0": Entity("vessel_0", "vessel", {"energy": 1, "sealed": False, "color": "neutral"}),
+            "conduit_0": Entity("conduit_0", "conduit", {"charge": "neutral", "sealed": False}),
+        },
         relationships=[], agents=("agent_a",), property_history={},
     )
     consequence = WorldState(
-        tick=1, entities={"vessel_0": Entity("vessel_0", "vessel", {"energy": 2, "sealed": False, "color": "neutral"})},
+        tick=1, entities={
+            "vessel_0": Entity("vessel_0", "vessel", {"energy": 2, "sealed": False, "color": "neutral"}),
+            "conduit_0": Entity("conduit_0", "conduit", {"charge": "positive", "sealed": False}),
+        },
         relationships=[], agents=("agent_a",), property_history={},
     )
     observed_before = ObservedWorldState(
         tick=0, agent_id="agent_a",
-        entities={"vessel_0": ObservedEntity("vessel_0", "vessel", {"energy": 1, "sealed": False, "color": "neutral"})},
+        entities={
+            "vessel_0": ObservedEntity("vessel_0", "vessel", {"energy": 1, "sealed": False, "color": "neutral"}),
+            "conduit_0": ObservedEntity("conduit_0", "conduit", {"charge": "neutral", "sealed": False}),
+        },
         relationships=(),
     )
     return EpisodeStep(
@@ -222,7 +243,12 @@ def test_ingest_submits_ground_truth_evidence_for_a_committed_action_regardless_
     assert decision.ingested is True
     assert len(submitted) == 1
     assert submitted[0]["task_id"] == "RCEC:observed_state_plus_action_to_state_delta:direct_trigger"
-    assert submitted[0]["expected_output"] == {"vessel_0.energy": {"before": 1, "after": 2}}
+    # Build 613 (K): role-normalized -- add_energy's own known direct
+    # effect on vessel_0 itself is excluded; only the hidden mechanism's
+    # effect on conduit_0 (the affected role) is reported.
+    assert submitted[0]["expected_output"] == {
+        "affected_entity_role": "conduit", "affected_property": "charge", "direction": "change", "delay": 0,
+    }
 
 
 def test_ingest_refuses_ambiguous_and_echo_contaminated_and_unselected_actions_by_default():
@@ -307,3 +333,195 @@ def test_transfer_generator_preserves_mechanism_roles_across_seeds():
 def test_transfer_generator_without_a_mechanism_falls_back_to_pre_610_random_rule_behavior():
     world, engine = TransferGenerator.generate_transfer_world(rule_family="direct_trigger", seed=1, num_entities=3)
     assert engine._rule.family == "direct_trigger"
+
+
+# ---------------------------------------------------------------------------
+# Build 613 (J): begin with one causal signal -- decoys fixed at the role
+# level (or absent by default), not re-randomized per world.
+# ---------------------------------------------------------------------------
+
+def test_generate_mechanism_has_no_decoy_by_default():
+    mechanism = generate_mechanism(random.Random(1), family="direct_trigger")
+    assert mechanism.decoy_entity_type is None
+    assert mechanism.decoy_property is None
+
+
+def test_generate_from_mechanism_produces_no_decoy_when_mechanism_has_none():
+    mechanism = generate_mechanism(random.Random(1), family="direct_trigger")
+    for seed in (10, 20, 30):
+        world = WorldGenerator().build_world(
+            seed=seed, num_entities=4, entity_types=("vessel", "conduit", "sensor"), connect_chain=False,
+            required_types=(mechanism.source_entity_type, mechanism.target_entity_type),
+        )
+        engine = HiddenRuleEngine.generate_from_mechanism(world, mechanism, rng=random.Random(seed + 1))
+        assert engine._rule.decoy_entity_id is None
+        assert engine._rule.decoy_property is None
+
+
+def test_generate_mechanism_with_decoy_fixes_the_decoy_role_across_worlds():
+    mechanism = generate_mechanism(random.Random(3), family="direct_trigger", include_decoy=True)
+    assert mechanism.decoy_entity_type is not None
+    assert mechanism.decoy_property is not None
+
+    roles_seen = set()
+    for seed in (10, 20, 30):
+        required = {mechanism.source_entity_type, mechanism.target_entity_type, mechanism.decoy_entity_type}
+        world = WorldGenerator().build_world(
+            seed=seed, num_entities=4, entity_types=("vessel", "conduit", "sensor"), connect_chain=False,
+            required_types=tuple(sorted(required)),
+        )
+        engine = HiddenRuleEngine.generate_from_mechanism(world, mechanism, rng=random.Random(seed + 1))
+        assert engine._rule.decoy_property == mechanism.decoy_property
+        assert engine._rule.decoy_entity_id is not None
+        roles_seen.add(world.entities[engine._rule.decoy_entity_id].entity_type)
+    # The ROLE is fixed even though the concrete entity id can differ.
+    assert roles_seen == {mechanism.decoy_entity_type}
+
+
+# ---------------------------------------------------------------------------
+# Build 613 (K): role-normalized synthesis representation and the
+# read-only trial seam.
+# ---------------------------------------------------------------------------
+
+def _cross_entity_step() -> EpisodeStep:
+    world_before = WorldState(
+        tick=0, entities={
+            "vessel_0": Entity("vessel_0", "vessel", {"energy": 0, "sealed": False, "color": "neutral"}),
+            "sensor_0": Entity("sensor_0", "sensor", {"temperature": 0}),
+        },
+        relationships=[], agents=("agent_a",), property_history={},
+    )
+    consequence = WorldState(
+        tick=1, entities={
+            "vessel_0": Entity("vessel_0", "vessel", {"energy": 1, "sealed": False, "color": "neutral"}),
+            "sensor_0": Entity("sensor_0", "sensor", {"temperature": 3}),
+        },
+        relationships=[], agents=("agent_a",), property_history={},
+    )
+    observed_before = ObservedWorldState(
+        tick=0, agent_id="agent_a",
+        entities={
+            "vessel_0": ObservedEntity("vessel_0", "vessel", {"energy": 0, "sealed": False, "color": "neutral"}),
+            "sensor_0": ObservedEntity("sensor_0", "sensor", {"temperature": 0}),
+        },
+        relationships=(),
+    )
+    return EpisodeStep(
+        tick=0, observation_text="...", action=ActionInvocation("add_energy", ("vessel_0",)), intent="act",
+        interpretation=CapturedInterpretation(raw_expression="...", action_commitment="selected"),
+        consequence=consequence, world_before=world_before, observed_before=observed_before,
+    )
+
+
+def test_role_normalized_transition_excludes_the_actions_own_known_effect():
+    transition = build_role_normalized_transition(_cross_entity_step())
+    assert isinstance(transition, RoleNormalizedTransition)
+    assert transition.action_type == "add_energy"
+    assert transition.acting_entity_role == "vessel"
+    assert set(transition.candidate_affected_roles) == {"vessel", "sensor"}
+    # vessel_0's OWN energy change (0->1, add_energy's known direct
+    # effect) is excluded; only sensor_0's temperature (the hidden
+    # mechanism's effect) is reported.
+    assert transition.affected_entity_role == "sensor"
+    assert transition.affected_property == "temperature"
+    assert transition.direction == "increase"
+
+
+def test_role_normalized_transition_reports_no_change_when_nothing_extra_happened():
+    step = _cross_entity_step()
+    step.consequence.entities["sensor_0"].properties["temperature"] = 0  # only the action's own effect occurred
+    transition = build_role_normalized_transition(step)
+    assert transition.affected_entity_role is None
+    assert transition.affected_property is None
+    assert transition.direction == "no_change"
+
+
+def test_role_normalized_transition_as_training_pair_has_a_fixed_schema():
+    transition = build_role_normalized_transition(_cross_entity_step())
+    input_value, expected_output = transition.as_training_pair()
+    assert set(input_value) == {"action_type", "acting_entity_role", "visible_pre_state", "candidate_affected_roles"}
+    assert set(expected_output) == {"affected_entity_role", "affected_property", "direction", "delay"}
+
+
+def test_role_normalized_transition_is_none_without_structured_before_state():
+    step = EpisodeStep(
+        tick=0, observation_text="...", action=ActionInvocation("wait", ()), intent="predict",
+        interpretation=CapturedInterpretation(raw_expression="..."),
+    )
+    assert build_role_normalized_transition(step) is None
+
+
+def test_consult_operational_synthesis_candidate_returns_none_without_a_chamber():
+    assert consult_operational_synthesis_candidate({}, "direct_trigger", {}) is None
+
+
+def test_consult_operational_synthesis_candidate_is_read_only_and_never_writes():
+    calls = []
+
+    class _StubChamber:
+        def execute(self, task_id, input_value, allow_trial=True):
+            calls.append((task_id, input_value, allow_trial))
+            return {"executed": True, "output": {"affected_entity_role": "sensor", "affected_property": "temperature", "direction": "increase"}}
+
+    result = consult_operational_synthesis_candidate(
+        {"operational_synthesis": _StubChamber()}, "direct_trigger", {"action_type": "add_energy"},
+    )
+    assert result is not None
+    assert result["output"]["affected_entity_role"] == "sensor"
+    assert calls == [("RCEC:observed_state_plus_action_to_state_delta:direct_trigger", {"action_type": "add_energy"}, True)]
+
+
+def test_consult_operational_synthesis_candidate_returns_none_when_nothing_executed():
+    class _StubChamber:
+        def execute(self, task_id, input_value, allow_trial=True):
+            return {"executed": False, "reason": "no_candidate"}
+
+    result = consult_operational_synthesis_candidate({"operational_synthesis": _StubChamber()}, "direct_trigger", {})
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Build 613 (L): FutureStateProjection -- chamber-scoped diagnostic view.
+# ---------------------------------------------------------------------------
+
+def test_future_state_projection_forms_from_a_real_prediction():
+    interp = CapturedInterpretation(
+        raw_expression="I predict sensor 0's temperature will increase.",
+        predicted_consequence={"entity_id": "sensor_0", "property": "temperature", "direction": "increase"},
+        confidence=0.7,
+    )
+    projection = build_future_state_projection(interp)
+    assert isinstance(projection, FutureStateProjection)
+    assert projection.formed is True
+    assert projection.predicted_entity == "sensor_0"
+    assert projection.predicted_property == "temperature"
+    assert projection.predicted_direction == "increase"
+    assert projection.confidence == 0.7
+    assert projection.diagnostic_category(expressed=True) == "projection_formed_and_expressed"
+
+
+def test_future_state_projection_does_not_form_from_abstention():
+    interp = CapturedInterpretation(raw_expression="I don't have a clear sense of that.", confidence=0.3)
+    projection = build_future_state_projection(interp)
+    assert projection.formed is False
+    assert projection.confidence is None
+    assert projection.diagnostic_category(expressed=False) == "no_projection_formed"
+
+
+def test_future_state_projection_folds_in_a_synthesis_hint_only_when_aurora_made_no_prediction():
+    interp_no_pred = CapturedInterpretation(raw_expression="I'm not sure.", confidence=0.2)
+    hint = {"executed": True, "output": {"affected_entity_role": "sensor", "affected_property": "temperature", "direction": "increase"}}
+    projection = build_future_state_projection(interp_no_pred, synthesis_candidate=hint)
+    assert projection.formed is True
+    assert projection.predicted_entity == "sensor"
+    assert projection.predicted_property == "temperature"
+
+    # But a hint never overrides what Aurora actually said.
+    interp_with_pred = CapturedInterpretation(
+        raw_expression="I predict vessel 0's energy will decrease.",
+        predicted_consequence={"entity_id": "vessel_0", "property": "energy", "direction": "decrease"},
+        confidence=0.6,
+    )
+    projection2 = build_future_state_projection(interp_with_pred, synthesis_candidate=hint)
+    assert projection2.predicted_entity == "vessel_0"
+    assert projection2.predicted_property == "energy"

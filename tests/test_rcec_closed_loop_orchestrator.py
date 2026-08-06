@@ -195,6 +195,16 @@ def test_live_demonstrated_acquisition_trial_ingests_ground_truth_without_a_pred
     assert result.ingestion_decision.ingested is True
     assert result.ingestion_decision.submission_result is not None
 
+    # Build 613 (I): the after-consequence state was routed through
+    # Aurora's real live perception pipeline -- not merely computed and
+    # recorded about her. A real expression was captured (even if it's an
+    # abstention -- the point is the call happened, not what she said),
+    # and the pre-articulation snapshot from that live touch is retained.
+    assert step.witness_report is not None
+    assert "witnessed_interpretation" in step.witness_report
+    assert result.witnessed_interpretation is not None
+    assert step.dual_strata_snapshot is not None
+
 
 def test_live_exploration_acquisition_trial_records_whatever_aurora_actually_committed_to(live_systems):
     from aurora_internal.aurora_cognitive_experience_chamber import (

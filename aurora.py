@@ -21348,6 +21348,37 @@ def _apply_reflective_readdressing_to_state(
     ctx = dict(context or systems.pop("_pending_reflective_readdressing", {}) or {})
     if not ctx:
         return
+
+    # Build 613 (Reflective-Introspection Misrouting Repair B): a prepared
+    # reflective context is valid only for the exact turn that produced
+    # it. Compared against the hash process_external_user_turn() stashed
+    # at prepare_turn() time (_current_turn_input_hash) -- NOT a fresh
+    # hash of this function's own user_text, which by this point in the
+    # pipeline may already be normalized (_normalize_identity_followup_
+    # text() strips/rewrites it) and would falsely mismatch a genuinely
+    # valid same-turn context.
+    _rr_expected_hash = str(systems.get("_current_turn_input_hash", "") or "")
+    _rr_ctx_hash = str(ctx.get("input_hash", "") or "")
+    _rr_ctx_token = str(ctx.get("turn_token", "") or "")
+    if not _rr_ctx_token or not _rr_ctx_hash or not _rr_expected_hash or _rr_ctx_hash != _rr_expected_hash:
+        systems["_last_reflective_authority_rejection"] = {
+            "rejected_at": time.time(),
+            "stage": "apply_reflective_readdressing_to_state",
+            "reason": "turn_token_or_input_hash_mismatch",
+            "context_mode": str(ctx.get("mode", "") or ""),
+            "context_turn_token": _rr_ctx_token,
+            "context_input_hash": _rr_ctx_hash,
+            "expected_input_hash": _rr_expected_hash,
+        }
+        systems.pop("_pending_reflective_readdressing", None)
+        systems.pop("_active_reflective_readdressing", None)
+        if bridge is not None and hasattr(bridge, "_active_context"):
+            try:
+                bridge._active_context = {}
+            except Exception:
+                pass
+        return
+
     original = dict(getattr(state, "parsed", {}) or {})
     reapplied: Dict[str, Any] = {}
     recontextualized = str(ctx.get("recontextualized_text", "") or "").strip()
@@ -31851,6 +31882,62 @@ def _run_live_response_turn(
     # Clean up the pressure-before scratch key so it doesn't leak to other turns
     systems.pop("_pressure_before", None)
 
+    # Build 613 (Reflective-Introspection Misrouting Repair D): the core
+    # delivery invariant. A response authored as reflective_introspection
+    # -- or that merely READS as reflective route narration, independent
+    # of whatever src tag survived -- is valid only when THIS turn carries
+    # verified self_inquiry authority (systems["_active_reflective_
+    # readdressing"], which Repair B already bound to this exact turn's
+    # token/input hash before this point). On mismatch: invalidate the
+    # candidate, clear the context, let resp_B (the ordinary pipeline's
+    # own candidate) compete, and fall back to honest abstention only if
+    # resp_B has nothing usable either. Legitimate explicit introspection
+    # is untouched -- it always carries valid same-turn authority by
+    # construction. Does not depend on aurora_bridge._sanitize_response();
+    # this is the primary check, not a secondary one.
+    try:
+        from aurora_internal.aurora_reflective_readdressing import is_reflective_route_narration as _rr_is_narration
+        _rr_resp_a_src = str(getattr(resp_A, "src", "") or "")
+        _rr_resp_a_text = str(getattr(resp_A, "content", "") or "")
+        _rr_claims_introspection = _rr_resp_a_src == "reflective_introspection"
+        _rr_looks_like_narration = _rr_is_narration(_rr_resp_a_text)
+        if _rr_claims_introspection or _rr_looks_like_narration:
+            _rr_active_ctx = dict(systems.get("_active_reflective_readdressing") or {})
+            _rr_authority_valid = str(_rr_active_ctx.get("mode", "") or "") == "self_inquiry"
+            if not _rr_authority_valid:
+                systems["_last_reflective_authority_rejection"] = {
+                    "rejected_at": time.time(),
+                    "stage": "run_live_response_turn_core_invariant",
+                    "reason": "reflective_introspection_content_without_verified_current_turn_authority",
+                    "resp_a_src": _rr_resp_a_src,
+                    "looked_like_route_narration": _rr_looks_like_narration,
+                    "active_context_mode": str(_rr_active_ctx.get("mode", "") or ""),
+                }
+                systems.pop("_pending_reflective_readdressing", None)
+                systems.pop("_active_reflective_readdressing", None)
+                _rr_fallback_text = str(getattr(resp_B, "content", "") or "").strip()
+                if _rr_fallback_text and not _rr_is_narration(_rr_fallback_text):
+                    resp_A = SimpleNamespace(
+                        content=_rr_fallback_text,
+                        emotional_tone=str(getattr(resp_B, "emotional_tone", "neutral") or "neutral"),
+                        confidence=float(getattr(resp_B, "confidence", 0.0) or 0.0),
+                        src=str(getattr(resp_B, "src", "") or "gateway_fallback"),
+                    )
+                else:
+                    resp_A = SimpleNamespace(
+                        content="I don't have a clear sense of that.",
+                        emotional_tone="neutral",
+                        confidence=0.0,
+                        src="constraint_abstain",
+                    )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="reflective_readdressing:core_delivery_invariant",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
+
     elapsed_A = (time.time() - start) * 1000
     src = getattr(resp_A, "src", "mind")
     if src != "comprehension" and src != "search":
@@ -33139,6 +33226,14 @@ def process_external_user_turn(
                 context={"function": "process_external_user_turn", "source_file": "aurora.py"},
             )
 
+    # Build 613 (Reflective-Introspection Misrouting Repair B): clear any
+    # reflective context left over from a prior turn BEFORE preparing this
+    # one -- an interrupted (exception/cancelled) prior turn must never
+    # leak its pending/active context into a new external turn.
+    systems.pop("_pending_reflective_readdressing", None)
+    systems.pop("_active_reflective_readdressing", None)
+    systems.pop("_current_turn_input_hash", None)
+
     # Resolve reflective continuity through Aurora's ordinary pragmatic and
     # semantic parser before the turn begins.  This is not a keyword command
     # path: the faculty receives the same bound utterance frame as the rest of
@@ -33149,6 +33244,13 @@ def process_external_user_turn(
         try:
             from aurora_internal.aurora_utterance_parser import UtteranceParser as _ReflectiveUtteranceParser
             _rr_parsed = dict(_ReflectiveUtteranceParser().parse(user_text) or {})
+            # Stashed once, here, from the SAME raw user_text prepare_turn()
+            # itself hashes -- _apply_reflective_readdressing_to_state()
+            # compares against this rather than re-hashing user_text later,
+            # since downstream normalization can rewrite it.
+            systems["_current_turn_input_hash"] = hashlib.sha256(
+                str(user_text or "").encode("utf-8")
+            ).hexdigest()[:24]
             _rr_context = dict(_rr_bridge.prepare_turn(user_text, _rr_parsed, systems) or {})
             if _rr_context:
                 systems["_pending_reflective_readdressing"] = dict(_rr_context)
@@ -33355,6 +33457,13 @@ def process_external_user_turn(
                 pass
         raise
     finally:
+        # Build 613 (Reflective-Introspection Misrouting Repair B): a
+        # reflective context (pending or active) must never survive past
+        # the turn that produced it -- success, exception, or otherwise.
+        # This runs unconditionally regardless of which branch above ran.
+        systems.pop("_pending_reflective_readdressing", None)
+        systems.pop("_active_reflective_readdressing", None)
+        systems.pop("_current_turn_input_hash", None)
         systems["_live_turn_depth"] = max(0, int(systems.get("_live_turn_depth", 1) or 1) - 1)
         if runtime_governor is not None:
             try:
