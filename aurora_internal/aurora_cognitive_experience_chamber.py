@@ -24,6 +24,7 @@ from __future__ import annotations
 import copy
 import random
 import re
+from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -563,8 +564,6 @@ class ObservationBoundary:
 # hidden rule, its family, or any relation name.
 # ---------------------------------------------------------------------------
 
-_ENTITY_TYPE_LABELS = {"vessel": "Vessel", "conduit": "Conduit", "sensor": "Sensor"}
-
 DENYLIST_TOKENS: Tuple[str, ...] = (
     "rule", "hidden", "trigger", "because", "cause", "causes", "caused",
     "direct_trigger", "delayed_trigger", "threshold_trigger",
@@ -573,39 +572,132 @@ DENYLIST_TOKENS: Tuple[str, ...] = (
 )
 
 
-def _entity_label(entity: ObservedEntity) -> str:
-    prefix = _ENTITY_TYPE_LABELS.get(entity.entity_type, entity.entity_type.capitalize())
+@dataclass(frozen=True)
+class VocabularySkin:
+    """A surface-word mapping layered over the SAME structural catalogs
+    (ENTITY_TYPES, PROPERTIES, RELATION_TYPES, ACTION_TYPES) -- the deep
+    structure (which rule families can be generated, how actions transform
+    state) never changes between skins; only what gets rendered/parsed as
+    language does. Stage 4's TransferGenerator uses this to produce a
+    surface-disjoint rendering of a structurally identical world."""
+    name: str
+    entity_type_words: Dict[str, str]
+    property_words: Dict[str, str]
+    enum_value_words: Dict[str, Dict[str, str]]
+    relation_words: Dict[str, str]
+    action_words: Dict[str, str]
+    action_keywords: Dict[str, Tuple[str, ...]]
+
+    def entity_type_word(self, entity_type: str) -> str:
+        return self.entity_type_words.get(entity_type, entity_type.capitalize())
+
+    def property_word(self, prop: str) -> str:
+        return self.property_words.get(prop, prop)
+
+    def enum_word(self, prop: str, value: Any) -> str:
+        return self.enum_value_words.get(prop, {}).get(value, str(value))
+
+    def relation_word(self, relation_type: str) -> str:
+        return self.relation_words.get(relation_type, relation_type.replace("_", " "))
+
+    def action_word(self, action_type: str) -> str:
+        return self.action_words.get(action_type, action_type)
+
+
+_ACTION_VERB_PATTERNS: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
+    ("add_energy", ("add energy", "increase energy", "give energy", "more energy")),
+    ("remove_energy", ("remove energy", "decrease energy", "take energy", "drain energy")),
+    ("seal", ("seal ", "seal.")),
+    ("unseal", ("unseal ", "unseal.", "open ")),
+    ("connect", ("connect ", "connect.")),
+    ("disconnect", ("disconnect ", "disconnect.")),
+    ("wait", ("wait",)),
+)
+
+DEFAULT_SKIN = VocabularySkin(
+    name="default",
+    entity_type_words={"vessel": "Vessel", "conduit": "Conduit", "sensor": "Sensor"},
+    property_words={"energy": "energy", "sealed": "sealed", "color": "color", "charge": "charge", "temperature": "temperature"},
+    enum_value_words={
+        "color": {"red": "red", "blue": "blue", "green": "green", "neutral": "neutral"},
+        "charge": {"positive": "positive", "negative": "negative", "neutral": "neutral"},
+    },
+    relation_words={"connected_to": "connected to", "adjacent_to": "adjacent to"},
+    action_words={
+        "add_energy": "add energy to", "remove_energy": "remove energy from",
+        "seal": "seal", "unseal": "unseal", "connect": "connect", "disconnect": "disconnect", "wait": "wait",
+    },
+    action_keywords=dict(_ACTION_VERB_PATTERNS),
+)
+
+# Structurally identical to DEFAULT_SKIN (same entity types, same property
+# roles, same rule-family generation, same action semantics) but with zero
+# shared surface vocabulary -- entity/property/enum/relation/action words are
+# all disjoint from DEFAULT_SKIN's. This is what makes a transfer case a test
+# of structure rather than a re-run of the same scenery (Stage 4).
+ALT_SKIN = VocabularySkin(
+    name="alt",
+    entity_type_words={"vessel": "Canister", "conduit": "Pipeline", "sensor": "Gauge"},
+    property_words={"energy": "voltage", "sealed": "latched", "color": "hue", "charge": "polarity", "temperature": "reading"},
+    enum_value_words={
+        "color": {"red": "crimson", "blue": "azure", "green": "verdant", "neutral": "plain"},
+        "charge": {"positive": "forward", "negative": "reverse", "neutral": "idle"},
+    },
+    relation_words={"connected_to": "linked to", "adjacent_to": "beside"},
+    action_words={
+        "add_energy": "add voltage to", "remove_energy": "remove voltage from",
+        "seal": "latch", "unseal": "unlatch", "connect": "link", "disconnect": "unlink", "wait": "pause",
+    },
+    action_keywords={
+        "add_energy": ("add voltage", "increase voltage", "give voltage", "more voltage"),
+        "remove_energy": ("remove voltage", "decrease voltage", "take voltage", "drain voltage"),
+        "seal": ("latch ", "latch."),
+        "unseal": ("unlatch ", "unlatch.", "release "),
+        "connect": ("link ", "link."),
+        "disconnect": ("unlink ", "unlink."),
+        "wait": ("pause",),
+    },
+)
+
+
+def _entity_label(entity: ObservedEntity, skin: VocabularySkin = DEFAULT_SKIN) -> str:
+    prefix = skin.entity_type_word(entity.entity_type)
     suffix = entity.entity_id.split("_")[-1]
     return f"{prefix} {suffix.upper()}"
 
 
-def _render_property(label: str, prop: str, value: Any) -> Optional[str]:
+def _render_property(label: str, prop: str, value: Any, skin: VocabularySkin = DEFAULT_SKIN) -> Optional[str]:
+    word = skin.property_word(prop)
     if prop == "energy":
         if value == 0:
             return f"{label} is empty."
-        return f"{label} contains {value} energy."
+        return f"{label} contains {value} {word}."
     if prop == "sealed":
-        return f"{label} is sealed." if value else f"{label} is unsealed."
+        return f"{label} is {word}." if value else f"{label} is un{word}."
     if prop == "color":
-        return f"{label} is {value}."
+        return f"{label} is {skin.enum_word(prop, value)}."
     if prop == "charge":
-        return f"{label} carries a {value} charge."
+        return f"{label} carries a {skin.enum_word(prop, value)} {word}."
     if prop == "temperature":
-        return f"{label} reads {value} temperature."
+        return f"{label} reads {value} {word}."
     return None
 
 
-def describe_observation(observed: ObservedWorldState) -> str:
+def describe_observation(observed: ObservedWorldState, skin: VocabularySkin = DEFAULT_SKIN) -> str:
     sentences: List[str] = []
     for entity_id in sorted(observed.entities):
         entity = observed.entities[entity_id]
-        label = _entity_label(entity)
+        label = _entity_label(entity, skin)
         for prop in sorted(entity.properties):
-            sentence = _render_property(label, prop, entity.properties[prop])
+            sentence = _render_property(label, prop, entity.properties[prop], skin)
             if sentence:
                 sentences.append(sentence)
     for rel in observed.relationships:
-        sentences.append(f"{rel.source_id} is {rel.relation_type.replace('_', ' ')} {rel.target_id}.")
+        if rel.source_id not in observed.entities or rel.target_id not in observed.entities:
+            continue
+        source_label = _entity_label(observed.entities[rel.source_id], skin)
+        target_label = _entity_label(observed.entities[rel.target_id], skin)
+        sentences.append(f"{source_label} is {skin.relation_word(rel.relation_type)} {target_label}.")
     return " ".join(sentences) if sentences else "Nothing is currently observable."
 
 
@@ -641,16 +733,8 @@ _CHANGE_MARKERS: Tuple[Tuple[str, str], ...] = (
     ("lose", "decrease"), ("less", "decrease"), ("lower", "decrease"),
     ("become", "change"), ("change", "change"), ("turn", "change"), ("flip", "change"),
 )
-
-_ACTION_VERB_PATTERNS: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
-    ("add_energy", ("add energy", "increase energy", "give energy", "more energy")),
-    ("remove_energy", ("remove energy", "decrease energy", "take energy", "drain energy")),
-    ("seal", ("seal ", "seal.")),
-    ("unseal", ("unseal ", "unseal.", "open ")),
-    ("connect", ("connect ", "connect.")),
-    ("disconnect", ("disconnect ", "disconnect.")),
-    ("wait", ("wait",)),
-)
+# _ACTION_VERB_PATTERNS is defined earlier alongside DEFAULT_SKIN (it backs
+# DEFAULT_SKIN.action_keywords) -- not redefined here.
 
 
 @dataclass(frozen=True)
@@ -660,25 +744,20 @@ class InterpretedAction:
     interpretation: CapturedInterpretation
 
 
-def _label_to_entity_id(observed: ObservedWorldState) -> Dict[str, str]:
-    return {_entity_label(entity).lower(): entity_id for entity_id, entity in observed.entities.items()}
+def _label_to_entity_id(observed: ObservedWorldState, skin: VocabularySkin = DEFAULT_SKIN) -> Dict[str, str]:
+    return {_entity_label(entity, skin).lower(): entity_id for entity_id, entity in observed.entities.items()}
 
 
-def _phrase_for_action(name: str, targets: Tuple[str, ...], observed: ObservedWorldState) -> str:
-    labels = [_entity_label(observed.entities[t]) for t in targets]
-    if name == "add_energy":
-        return f"add energy to {labels[0]}"
-    if name == "remove_energy":
-        return f"remove energy from {labels[0]}"
-    if name == "seal":
-        return f"seal {labels[0]}"
-    if name == "unseal":
-        return f"unseal {labels[0]}"
-    if name == "connect":
-        return f"connect {labels[0]} and {labels[1]}"
-    if name == "disconnect":
-        return f"disconnect {labels[0]} and {labels[1]}"
-    return "wait"
+def _phrase_for_action(
+    name: str, targets: Tuple[str, ...], observed: ObservedWorldState, skin: VocabularySkin = DEFAULT_SKIN
+) -> str:
+    labels = [_entity_label(observed.entities[t], skin) for t in targets]
+    verb = skin.action_word(name)
+    if name in ("add_energy", "remove_energy", "seal", "unseal"):
+        return f"{verb} {labels[0]}"
+    if name in ("connect", "disconnect"):
+        return f"{verb} {labels[0]} and {labels[1]}"
+    return verb
 
 
 class ActionInterface:
@@ -708,10 +787,10 @@ class ActionInterface:
         return actions
 
     @staticmethod
-    def build_prompt(observed: ObservedWorldState, max_actions: int = 8) -> str:
-        observation_text = describe_observation(observed)
+    def build_prompt(observed: ObservedWorldState, max_actions: int = 8, skin: VocabularySkin = DEFAULT_SKIN) -> str:
+        observation_text = describe_observation(observed, skin)
         options = ActionInterface.available_actions(observed)[:max_actions]
-        option_phrases = [_phrase_for_action(name, targets, observed) for name, targets in options]
+        option_phrases = [_phrase_for_action(name, targets, observed, skin) for name, targets in options]
         options_text = ("Available actions: " + "; ".join(option_phrases) + ".") if option_phrases else ""
         ask = (
             "Choose one action, state what you predict will happen as a result, "
@@ -720,10 +799,12 @@ class ActionInterface:
         return " ".join(part for part in (observation_text, options_text, ask) if part)
 
     @staticmethod
-    def interpret_expression(expression: str, observed: ObservedWorldState, confidence: float) -> InterpretedAction:
+    def interpret_expression(
+        expression: str, observed: ObservedWorldState, confidence: float, skin: VocabularySkin = DEFAULT_SKIN
+    ) -> InterpretedAction:
         text = str(expression or "")
         lowered = text.lower()
-        label_to_id = _label_to_entity_id(observed)
+        label_to_id = _label_to_entity_id(observed, skin)
 
         identified_entities = tuple(sorted(
             entity_id for label, entity_id in label_to_id.items() if label and label in lowered
@@ -731,15 +812,15 @@ class ActionInterface:
         believed_relations = tuple(
             (rel.source_id, rel.relation_type, rel.target_id)
             for rel in observed.relationships
-            if _entity_label(observed.entities[rel.source_id]).lower() in lowered
-            and _entity_label(observed.entities[rel.target_id]).lower() in lowered
+            if _entity_label(observed.entities[rel.source_id], skin).lower() in lowered
+            and _entity_label(observed.entities[rel.target_id], skin).lower() in lowered
         )
 
         sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
         evidence_cited = tuple(
             s for s in sentences
             if any(label in s.lower() for label in label_to_id if label)
-            or any(prop in s.lower() for prop in PROPERTIES)
+            or any(skin.property_word(prop).lower() in s.lower() for prop in PROPERTIES)
         )
         stated_unknowns = tuple(s for s in sentences if any(marker in s.lower() for marker in _UNKNOWN_MARKERS))
 
@@ -748,7 +829,7 @@ class ActionInterface:
             if not label or label not in lowered:
                 continue
             for prop_name in observed.entities[entity_id].properties:
-                if prop_name not in lowered:
+                if skin.property_word(prop_name).lower() not in lowered:
                     continue
                 for marker, direction in _CHANGE_MARKERS:
                     if marker in lowered:
@@ -769,7 +850,7 @@ class ActionInterface:
             stated_unknowns=stated_unknowns,
         )
 
-        action_type = next((name for name, patterns in _ACTION_VERB_PATTERNS if any(p in lowered for p in patterns)), None)
+        action_type = next((name for name, patterns in skin.action_keywords.items() if any(p in lowered for p in patterns)), None)
         target_entity_id = identified_entities[0] if identified_entities else None
 
         intent = "act"
@@ -995,14 +1076,17 @@ def run_episode_step(
     rule_engine: HiddenRuleEngine,
     boundary: ObservationBoundary,
     agent_id: str,
+    skin: VocabularySkin = DEFAULT_SKIN,
 ) -> WorldState:
     """Drive one turn of an episode through Aurora's real live-response
     bridge. Enforces capture-then-consequence structurally: interpretation is
-    recorded before HiddenRuleEngine.step() is ever called."""
+    recorded before HiddenRuleEngine.step() is ever called. skin defaults to
+    DEFAULT_SKIN; Stage 4's TransferGenerator passes ALT_SKIN so the same
+    world structure is rendered/parsed through disjoint surface vocabulary."""
     import aurora as _aurora
 
     observed = boundary.observe(world_state, agent_id)
-    prompt_text = ActionInterface.build_prompt(observed)
+    prompt_text = ActionInterface.build_prompt(observed, skin=skin)
 
     selected = SimpleNamespace(primary_concept=SimpleNamespace(value="cognitive_experience_chamber"))
     context = {"prompt": prompt_text, "category": "cognitive_experience_chamber"}
@@ -1017,7 +1101,7 @@ def run_episode_step(
     expression = str(bridge_result.get("expression", "") or "")
     confidence = float((bridge_result.get("meta", {}) or {}).get("confidence", 0.0) or 0.0)
 
-    interpreted = ActionInterface.interpret_expression(expression, observed, confidence)
+    interpreted = ActionInterface.interpret_expression(expression, observed, confidence, skin=skin)
 
     trace.record_interpretation(
         tick=world_state.tick,
@@ -1055,6 +1139,8 @@ CAUSAL_DIMENSION_NAMES: Tuple[str, ...] = (
     "causal_discrimination",
     "evidence_discipline",
     "revision_quality",
+    "counterfactual_consistency",  # Stage 4
+    "transfer",                    # Stage 4 -- cross-episode, not on CausalEvaluationResult; see TransferComparison
 )
 
 
@@ -1075,15 +1161,19 @@ def _direction_of_change(before: Any, after: Any) -> str:
 
 @dataclass(frozen=True)
 class CausalEvaluationResult:
-    """Five independent scores. No blended fitness number -- the original
-    proposal's objection to one number standing in for all of them applies
-    here directly. None means the dimension was not applicable to this turn
-    (e.g. no prediction was made), not that it scored zero."""
+    """Independent scores, one per turn. No blended fitness number -- the
+    original proposal's objection to one number standing in for all of them
+    applies here directly. None means the dimension was not applicable to
+    this turn (e.g. no prediction was made), not that it scored zero.
+    ``transfer`` is deliberately not a field here -- it compares two whole
+    episodes, not one turn; see TransferComparison / compute_transfer_
+    comparison() below."""
     state_accuracy: Optional[float]
     prediction_accuracy: Optional[float]
     causal_discrimination: Optional[float]
     evidence_discipline: Optional[float]
     revision_quality: Optional[float]
+    counterfactual_consistency: Optional[float] = None
 
     def as_dimension_scores(self) -> Dict[str, float]:
         mapping = {
@@ -1092,6 +1182,7 @@ class CausalEvaluationResult:
             "causal_discrimination": self.causal_discrimination,
             "evidence_discipline": self.evidence_discipline,
             "revision_quality": self.revision_quality,
+            "counterfactual_consistency": self.counterfactual_consistency,
         }
         return {name: score for name, score in mapping.items() if score is not None}
 
@@ -1178,6 +1269,20 @@ class CausalEvaluator:
         )
         return 1.0 if changed else 0.0
 
+    @staticmethod
+    def counterfactual_consistency(
+        interpretation: CapturedInterpretation, branch: "CounterfactualBranch"
+    ) -> Optional[float]:
+        """Does Aurora's stated causal claim (the original interpretation or
+        its revision) correctly predict the counterfactual branch's outcome,
+        or does it only fit the one sequence she already saw? Reuses
+        prediction_accuracy's exact logic against the branch's own
+        before/after states -- the same static prediction template is simply
+        tested against a world where one variable was altered."""
+        if branch.consequence is None:
+            return None
+        return CausalEvaluator.prediction_accuracy(interpretation, branch.world_before, branch.consequence)
+
     @classmethod
     def evaluate(
         cls,
@@ -1187,15 +1292,22 @@ class CausalEvaluator:
         observed_before: ObservedWorldState,
         engine: "HiddenRuleEngine",
         revised_interpretation: Optional[CapturedInterpretation] = None,
+        counterfactual_branch: Optional["CounterfactualBranch"] = None,
     ) -> CausalEvaluationResult:
         prediction_score = cls.prediction_accuracy(interpretation, world_before, consequence)
         prediction_was_wrong = (prediction_score == 0.0) if prediction_score is not None else None
+        counterfactual_score = (
+            cls.counterfactual_consistency(revised_interpretation or interpretation, counterfactual_branch)
+            if counterfactual_branch is not None
+            else None
+        )
         return CausalEvaluationResult(
             state_accuracy=cls.state_accuracy(interpretation, world_before),
             prediction_accuracy=prediction_score,
             causal_discrimination=cls.causal_discrimination(interpretation, engine),
             evidence_discipline=cls.evidence_discipline(interpretation, observed_before),
             revision_quality=cls.revision_quality(interpretation, revised_interpretation, prediction_was_wrong),
+            counterfactual_consistency=counterfactual_score,
         )
 
     @staticmethod
@@ -1229,6 +1341,7 @@ def apply_causal_evaluation(
     agent_id: str,
     revised_interpretation: Optional[CapturedInterpretation] = None,
     dream_trainer: Any = None,
+    counterfactual_branch: Optional["CounterfactualBranch"] = None,
 ) -> CausalEvaluationResult:
     step = trace.steps[step_index]
     if step.consequence is None:
@@ -1241,8 +1354,11 @@ def apply_causal_evaluation(
         observed_before,
         engine,
         revised_interpretation=revised_interpretation,
+        counterfactual_branch=counterfactual_branch,
     )
     step.causal_scores = result.as_dimension_scores()
+    if counterfactual_branch is not None:
+        step.counterfactual_branch_ids = step.counterfactual_branch_ids + (counterfactual_branch.branch_id,)
     if dream_trainer is not None:
         CausalEvaluator.record_fail_dimensions(
             dream_trainer,
@@ -1259,6 +1375,7 @@ def run_backprojection_step(
     step_index: int,
     boundary: ObservationBoundary,
     agent_id: str,
+    skin: VocabularySkin = DEFAULT_SKIN,
 ) -> CapturedInterpretation:
     """Aurora revisits -- does not re-answer -- the original captured
     interpretation. Presents the consequence and asks her to reconcile it
@@ -1272,7 +1389,7 @@ def run_backprojection_step(
     observed_after = boundary.observe(step.consequence, agent_id)
     reconciliation_prompt = (
         f"Earlier you observed: {step.observation_text} "
-        f"Now: {describe_observation(observed_after)} "
+        f"Now: {describe_observation(observed_after, skin)} "
         "Given what actually happened, revisit what you believed. Does it still "
         "hold, or has your understanding changed? Explain your revised "
         "understanding, including anything you would predict differently now."
@@ -1290,7 +1407,7 @@ def run_backprojection_step(
     expression = str(bridge_result.get("expression", "") or "")
     confidence = float((bridge_result.get("meta", {}) or {}).get("confidence", 0.0) or 0.0)
 
-    revised = ActionInterface.interpret_expression(expression, observed_after, confidence).interpretation
+    revised = ActionInterface.interpret_expression(expression, observed_after, confidence, skin=skin).interpretation
 
     step.backprojection = {
         "original_interpretation": asdict(step.interpretation),
@@ -1298,3 +1415,180 @@ def run_backprojection_step(
         "revised_interpretation": asdict(revised),
     }
     return revised
+
+
+# ---------------------------------------------------------------------------
+# Stage 4: Counterfactual Branching & Transfer Generation
+# ---------------------------------------------------------------------------
+
+@dataclass
+class CounterfactualBranch:
+    branch_id: str
+    parent_branch_id: str
+    decision_tick: int
+    altered_variable: Dict[str, Any]  # {"entity_id":..., "property":..., "value":...}
+    world_before: WorldState
+    action: ActionInvocation
+    consequence: Optional[WorldState] = None
+
+
+class CounterfactualBrancher:
+    """Given a canonical world state at a chosen decision point, clones it
+    and alters exactly one variable, then runs the cloned branch through
+    HiddenRuleEngine.step() independently. Tracks branches in a parent ->
+    children structure mirroring InceptionEntity's _entity_tree PATTERN
+    (aurora_simulation_engine.py:1294's spawn_entity()/collapse_entity()) --
+    not its I-state/emotional-cascade content model, which has no bearing
+    here. Branches are keyed and traceable but fully discardable without
+    corrupting the canonical trace."""
+
+    def __init__(self) -> None:
+        self.branches: Dict[str, CounterfactualBranch] = {}
+        self._branch_tree: Dict[str, List[str]] = defaultdict(list)
+
+    def spawn_branch(
+        self,
+        canonical_world_before: WorldState,
+        action: ActionInvocation,
+        engine: HiddenRuleEngine,
+        alter: Dict[str, Any],
+        parent_branch_id: str = "canonical",
+    ) -> CounterfactualBranch:
+        entity_id = alter["entity_id"]
+        prop = alter["property"]
+        new_value = alter["value"]
+        if entity_id not in canonical_world_before.entities or prop not in canonical_world_before.entities[entity_id].properties:
+            raise ValueError(f"cannot alter unknown entity/property: {entity_id}.{prop}")
+
+        branched_world = canonical_world_before.clone()
+        _set_property(branched_world, entity_id, prop, new_value)
+
+        branch_id = f"branch_{len(self.branches)}_{entity_id}_{prop}"
+        branch = CounterfactualBranch(
+            branch_id=branch_id,
+            parent_branch_id=parent_branch_id,
+            decision_tick=canonical_world_before.tick,
+            altered_variable={"entity_id": entity_id, "property": prop, "value": new_value},
+            world_before=branched_world,
+            action=action,
+        )
+        branch.consequence = engine.step(branched_world, action)
+
+        self.branches[branch_id] = branch
+        self._branch_tree[parent_branch_id].append(branch_id)
+        return branch
+
+    def children_of(self, branch_id: str) -> Tuple[str, ...]:
+        return tuple(self._branch_tree.get(branch_id, ()))
+
+    def discard_branch(self, branch_id: str) -> None:
+        """Collapses a branch and everything spawned from it, recursively --
+        mirrors InceptionEntity.collapse_entity()'s children-first recursion.
+        Discarding never touches the canonical world state or trace; branches
+        live only in self.branches/self._branch_tree."""
+        for child_id in list(self._branch_tree.get(branch_id, ())):
+            self.discard_branch(child_id)
+        branch = self.branches.get(branch_id)
+        if branch is not None:
+            siblings = self._branch_tree.get(branch.parent_branch_id)
+            if siblings is not None and branch_id in siblings:
+                siblings.remove(branch_id)
+        self.branches.pop(branch_id, None)
+        self._branch_tree.pop(branch_id, None)
+
+
+@dataclass(frozen=True)
+class TransferComparison:
+    """Compares performance on an original episode against a surface-varied
+    transfer case built from the same rule family. Records the delta
+    explicitly per shared dimension, not just the transfer case's raw
+    scores -- a large drop is the direct signal that structure was not
+    actually learned, only the one scenario's scenery."""
+    original_scores: Dict[str, float]
+    transfer_scores: Dict[str, float]
+    deltas: Dict[str, float]
+    transfer_score: Optional[float]
+
+
+def compute_transfer_comparison(
+    original_scores: Dict[str, float], transfer_scores: Dict[str, float]
+) -> TransferComparison:
+    shared = sorted(set(original_scores) & set(transfer_scores))
+    deltas = {dim: round(transfer_scores[dim] - original_scores[dim], 6) for dim in shared}
+    transfer_score = None
+    if shared:
+        transfer_score = max(0.0, 1.0 - (sum(abs(d) for d in deltas.values()) / len(deltas)))
+    return TransferComparison(
+        original_scores=dict(original_scores),
+        transfer_scores=dict(transfer_scores),
+        deltas=deltas,
+        transfer_score=transfer_score,
+    )
+
+
+def record_transfer_fail(
+    dream_trainer: Any,
+    comparison: TransferComparison,
+    *,
+    threshold: float = 0.5,
+    example: Optional[Dict[str, Any]] = None,
+) -> bool:
+    """Feeds a genuine transfer collapse into DreamTrainer._record_fail_
+    dimension() under the 'transfer' dimension name -- same call pattern as
+    CausalEvaluator.record_fail_dimensions(), applied to the one dimension
+    that spans two episodes instead of one turn."""
+    if dream_trainer is None or not hasattr(dream_trainer, "_record_fail_dimension"):
+        return False
+    if comparison.transfer_score is None or comparison.transfer_score >= threshold:
+        return False
+    dream_trainer._record_fail_dimension("transfer", 1.0 - comparison.transfer_score, example=example)
+    return True
+
+
+_TOKEN_PATTERN = re.compile(r"[a-z]+")
+_SURFACE_TOKEN_STOPWORDS: frozenset = frozenset({
+    "is", "a", "the", "and", "to", "of", "in", "from", "with", "an", "carries",
+    "reads", "contains", "empty", "nothing", "currently", "observable",
+})
+
+
+def surface_content_tokens(text: str) -> "set[str]":
+    """Content-word tokens for a zero-overlap check between two renderings --
+    excludes short/grammatical filler so the comparison is about nouns, not
+    English function words every render necessarily shares."""
+    return {
+        token for token in _TOKEN_PATTERN.findall(text.lower())
+        if len(token) >= 4 and token not in _SURFACE_TOKEN_STOPWORDS
+    }
+
+
+class TransferGenerator:
+    """Given a completed episode's rule family (not its specific rule
+    instance), generates a structurally equivalent world with no shared
+    nouns, entity labels, or phrasing. Reuses Stage 1's WorldGenerator with a
+    fresh seed constrained to the same rule family -- a fresh seed alone
+    would still share DEFAULT_SKIN's vocabulary, so the world is driven
+    through ALT_SKIN throughout (rendering AND parsing) to make the surface
+    genuinely disjoint while the deep structure -- same entity/property
+    catalogs, same rule-family generation, same action semantics -- repeats
+    exactly."""
+
+    @staticmethod
+    def generate_transfer_world(
+        rule_family: str,
+        seed: int,
+        num_entities: int = 3,
+        entity_types: Optional[Sequence[str]] = None,
+    ) -> Tuple[WorldState, HiddenRuleEngine]:
+        world = WorldGenerator().build_world(
+            seed=seed,
+            num_entities=num_entities,
+            entity_types=entity_types or tuple(ENTITY_TYPES),
+            connect_chain=False,
+        )
+        engine = HiddenRuleEngine.generate(world, rng=random.Random(seed), family=rule_family)
+        return world, engine
+
+    @staticmethod
+    def confirm_zero_surface_overlap(original_render: str, transfer_render: str) -> bool:
+        return not (surface_content_tokens(original_render) & surface_content_tokens(transfer_render))

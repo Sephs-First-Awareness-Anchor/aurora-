@@ -257,11 +257,14 @@ def test_causal_evaluator_never_inspects_raw_expression_text():
 
 
 def test_causal_dimension_names_match_result_mapping():
+    # "transfer" is cross-episode (see TransferComparison) and deliberately
+    # never appears in a single CausalEvaluationResult -- every OTHER
+    # registered dimension name must be reachable via as_dimension_scores().
     result = CausalEvaluationResult(
         state_accuracy=0.1, prediction_accuracy=0.2, causal_discrimination=0.3,
-        evidence_discipline=0.4, revision_quality=0.5,
+        evidence_discipline=0.4, revision_quality=0.5, counterfactual_consistency=0.6,
     )
-    assert set(result.as_dimension_scores()) == set(CAUSAL_DIMENSION_NAMES)
+    assert set(result.as_dimension_scores()) == set(CAUSAL_DIMENSION_NAMES) - {"transfer"}
 
 
 # ---------------------------------------------------------------------------

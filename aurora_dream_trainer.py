@@ -265,6 +265,10 @@ DIMENSION_AXIS: Dict[str, str] = {
     "causal_discrimination":        "B",   # differentiating true dependency from decoy correlation
     "evidence_discipline":          "X",   # grounding claims in what was actually observed
     "revision_quality":             "A",   # revising belief when evidence contradicts it
+    # Build 598 (Stage 4): counterfactual/transfer -- did she find the
+    # mechanism or associate the sequence/scenery.
+    "counterfactual_consistency":   "T",   # stated rule projected onto an altered timeline
+    "transfer":                     "N",   # generalizing structure across surface variation = reuse
 }
 
 # Per-axis simulation slot weight.
