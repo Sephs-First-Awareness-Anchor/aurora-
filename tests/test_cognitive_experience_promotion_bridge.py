@@ -37,21 +37,31 @@ from aurora_internal.aurora_cognitive_experience_chamber import (  # noqa: E402
 
 
 def _fully_scored_step(trace: EpisodeTrace) -> None:
+    # A second entity (conduit_0) whose property changes as the hidden
+    # mechanism's effect, distinct from add_energy's own known direct
+    # effect on vessel_0 itself -- Build 613 (K)'s role-normalized
+    # evidence needs a genuine cross-entity signal to be meaningful.
     interp = CapturedInterpretation(
-        raw_expression="Vessel 0's energy will increase.",
-        predicted_consequence={"entity_id": "vessel_0", "property": "energy", "direction": "increase"},
+        raw_expression="Vessel 0's energy will increase, and Conduit 0's charge will change.",
+        predicted_consequence={"entity_id": "conduit_0", "property": "charge", "direction": "change"},
         confidence=0.9,
     )
     trace.record_interpretation(0, "obs", ActionInvocation("add_energy", ("vessel_0",)), "act", interp)
     world_before = WorldState(
         tick=0,
-        entities={"vessel_0": Entity("vessel_0", "vessel", {"energy": 1})},
+        entities={
+            "vessel_0": Entity("vessel_0", "vessel", {"energy": 1}),
+            "conduit_0": Entity("conduit_0", "conduit", {"charge": "neutral"}),
+        },
         relationships=[],
         agents=("agent_a",),
     )
     consequence = WorldState(
         tick=1,
-        entities={"vessel_0": Entity("vessel_0", "vessel", {"energy": 2})},
+        entities={
+            "vessel_0": Entity("vessel_0", "vessel", {"energy": 2}),
+            "conduit_0": Entity("conduit_0", "conduit", {"charge": "positive"}),
+        },
         relationships=[],
         agents=("agent_a",),
     )
@@ -59,7 +69,10 @@ def _fully_scored_step(trace: EpisodeTrace) -> None:
     trace.steps[0].world_before = world_before
     trace.steps[0].observed_before = ObservedWorldState(
         tick=0, agent_id="agent_a",
-        entities={"vessel_0": ObservedEntity("vessel_0", "vessel", {"energy": 1})},
+        entities={
+            "vessel_0": ObservedEntity("vessel_0", "vessel", {"energy": 1}),
+            "conduit_0": ObservedEntity("conduit_0", "conduit", {"charge": "neutral"}),
+        },
         relationships=(),
     )
     trace.steps[0].causal_scores = {
@@ -126,12 +139,19 @@ def test_fully_scored_episode_reaches_submission_with_shaped_evidence():
     assert len(submitter.calls) == 1
     evidence = submitter.calls[0]
     assert "input_value" in evidence and "expected_output" in evidence
-    # Build 608 (C): the narrow target operation -- observed state + chosen
-    # action -> resulting state delta, under a STABLE task id (not unique
-    # per episode) so examples can accumulate under one WARP task.
-    assert evidence["input_value"]["observed_state"]["entities"]["vessel_0"]["properties"]["energy"] == 1
-    assert evidence["input_value"]["action"]["action_type"] == "add_energy"
-    assert evidence["expected_output"] == {"vessel_0.energy": {"before": 1, "after": 2}}
+    # Build 608 (C): the narrow target operation, under a STABLE task id
+    # (not unique per episode) so examples can accumulate under one WARP
+    # task. Build 613 (K): role-normalized, fixed-schema shape -- the
+    # action's own known direct effect on vessel_0 itself is excluded from
+    # expected_output; only the hidden mechanism's effect on conduit_0
+    # (the affected role) is reported.
+    assert evidence["input_value"]["action_type"] == "add_energy"
+    assert evidence["input_value"]["acting_entity_role"] == "vessel"
+    assert evidence["input_value"]["visible_pre_state"]["entities"]["vessel_0"]["properties"]["energy"] == 1
+    assert set(evidence["input_value"]["candidate_affected_roles"]) == {"vessel", "conduit"}
+    assert evidence["expected_output"] == {
+        "affected_entity_role": "conduit", "affected_property": "charge", "direction": "change", "delay": 0,
+    }
     assert evidence["task_id"] == "RCEC:observed_state_plus_action_to_state_delta:direct_trigger"
     assert decision.submission_result["accepted"] is True
 
