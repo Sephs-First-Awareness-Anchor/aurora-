@@ -1,19 +1,27 @@
 # Genealogy-Native Representational Environment — Implementation Report
 
-**Status:** Phase 1 (observational derivation + shadow comparison) implemented,
-then **Phase 1.1 (edge-fidelity repair)** implemented on top of it after a
-targeted re-review surfaced two real bugs in the Phase 1 derivation — see §8.
-Both phases remain fully observational. Phases 2–4 (live representational
-exposure, WARP coverage-authority change, pressure-map expansion,
-meaning/understanding rewrite) intentionally **not** started — the directive
-that scoped this work requires shadow validation before any of those, and
-this report's job is to state honestly whether that validation supports
-moving on, not to assume it does.
+**Status:** Phase 1 (observational derivation + shadow comparison)
+implemented, then **Phase 1.1 (edge-fidelity repair)** on top of it after a
+targeted re-review surfaced two real bugs in the Phase 1 derivation (§8),
+then **Phase 2 (promotion-time dimension-participation observer)** — a
+retrospective, purely-observational measurement of whether Aurora's live
+formation dynamics actually engage NonComp dimensions the current genealogy
+atoms cannot preserve (§10). All three phases are purely observational: none
+of them alter promotion behavior, WARP's coverage authority, the pressure
+map, or the meaning/understanding registry. Live representational exposure,
+the WARP coverage-authority change, pressure-map expansion, and the
+meaning/understanding rewrite are intentionally **not** started — the
+directive that scoped this work requires shadow validation before any of
+those, and this report's job is to state honestly whether that validation
+supports moving on, not to assume it does.
 
 **Files added:** `aurora_genealogy_environment.py`,
 `aurora_genealogy_environment_shadow.py`,
-`tests/test_genealogy_environment_dag_preservation.py`. Nothing existing was
-modified in either phase.
+`tests/test_genealogy_environment_dag_preservation.py` (Phase 1/1.1);
+`aurora_genealogy_promotion_dimension_observer.py`,
+`aurora_genealogy_promotion_dimension_shadow.py`,
+`tests/test_genealogy_promotion_dimension_observer.py` (Phase 2). Nothing
+existing was modified in any phase.
 
 **Phase 1.1 field renames** (Phase 1 → Phase 1.1, on `EnvironmentSignature`;
 nothing outside this module's own test file imports it, so this was a
@@ -609,3 +617,199 @@ covering exactly the scenarios in §8.1/§8.2/§8.3) all pass.
    match. This is pre-existing `derive_lineage()` behavior this repair
    surfaced but did not change; worth flagging for anyone consuming
    `closure_projection` expecting it to depend only on `edge_provenance`.
+
+---
+
+## 10. Phase 2 — promotion-time dimension-participation observer
+
+**Question asked:** does Aurora's live formation dynamics actually involve
+NonComp dimensions that the current OPERATOR×COST genealogy atoms fail to
+preserve? If yes, §3's "five-dimensional ceiling" is measured
+representational loss. If no, it may be a faithful compression instead.
+
+**Method:** purely observational, and more conservative than a live hook —
+no code that could affect promotion was touched, modified, imported, or
+executed. This phase is entirely (a) direct inspection of the real
+promotion code path's actual signatures/call sites, and (b) a read-only
+statistical pass over already-persisted, real `ReliefRecord` fossils from
+past Aurora runs. No Aurora process was booted or run to produce this
+section's numbers.
+
+### 10.1 Structural finding (CONFIRMED): promotion's live input is axis-only, not dimension-typed
+
+`PairStats.update()` — promotion's entire live input surface — verified via
+`inspect.signature()`:
+
+```
+(self, relief: 'PressureVec', cost: 'Dict[str, float]', x_risk: 'float', tick: 'int')
+```
+
+Both `PressureVec` and `Dict[str, float]` are keyed by AXES (X/T/N/B/A).
+There is no parameter shape here that could carry "which NonComp dimension"
+information even if a caller wanted to supply it — this is not a missing
+value, it is a missing *channel*. `_try_promote()`
+(`aurora_internal/constraint_genealogy.py:5433-5433+`) reads only
+axis-level aggregates of exactly this input
+(`mean_relief/mean_pos_relief/pos_fraction/stdev_relief/mean_cost/
+mean_x_risk_val`), and the `ConstraintLink` it constructs stores only
+axis-level fields — consistent with, and now completing, Phase 1's
+output-side finding (§3): the confinement is not introduced downstream by
+the genealogy-atom vocabulary; the atoms are confined because their input
+already was.
+
+### 10.2 Structural finding (CONFIRMED): dimension-typed live data exists at the exact same tick, and is never forwarded
+
+`ConstraintGenealogyLogger.observe()` (`:1869-2118`, read start to finish)
+is the single call that produces BOTH promotion's input and a much richer
+per-tick fossil record, in this order:
+
+1. Computes `relief`/`cost_total` (axis-level) — line ~1897-1924.
+2. Accepts an optional `difference_snapshot: Optional[DifferenceSnapshot]`
+   parameter (line 1877) — a **real, live, per-axis DIFFERENCE-dimension**
+   value, computed by the evolution chamber's `DifferenceHistoryBuffer` via
+   `compute_difference()` against each constraint's own
+   `DifferenceParams.ref_type` (`aurora_internal/aurora_difference_buffer.py:21,347-360`).
+   That module's own docstring: *"This snapshot is the live output of the
+   Difference channel — the fifth lens made operationally real"*
+   (`aurora_difference_buffer.py:136-137`) — Aurora's own code describing
+   exactly the dimension this investigation is asking about.
+3. Merges it into `record.notes["difference_snapshot"]` (line 1976) for the
+   fossil log.
+4. Only THEN calls `self._accumulate_pairs(trace, relief, cost_total,
+   x_risk_total)` (line 2074) — **no `difference_snapshot` argument.**
+   Verified directly (not by inspection alone —
+   `test_observe_never_forwards_difference_snapshot_to_pair_accumulation`
+   parses every actual `_accumulate_pairs(` call site in `observe()`'s real
+   source via `inspect.getsource()` and asserts none of them mention
+   `difference_snapshot`).
+
+This is the core Phase 2 finding: a genuinely dimension-typed live physics
+quantity is computed, at the same tick, by the same function call that
+produces promotion's inputs — and is structurally excluded from reaching
+promotion by that function's own call signature, not merely discarded by a
+later reduction step.
+
+### 10.3 A second, weaker-graded live signal (CONFIRMED present, graded differently)
+
+`record.active_concepts` (line 1983-1995, sourced from
+`self._dps.get_recently_active(5)`) can contain strings like
+`"tensor:MANIFOLD:X:NC[N:COST]xNC[T:DIFFERENCE]"` — produced by
+`aurora_internal/dual_strata/cers_tensor_locator.py`'s
+`record_tensor_trace()`, which writes concepts named `f"tensor:{coord.slot_id}"`
+for a `SlotCoord` (`aurora_constraint_manifold_router.py`). This **does**
+reference dimensions beyond OPERATOR/COST in real persisted data.
+
+Graded weaker than §10.2 because, per `_resolve_slot_coord()`
+(`cers_tensor_locator.py:119-138`): the coordinate's two axes
+(`nc_law_c`/`law_c`, the 2nd/3rd-most-active axis that tick) ARE genuinely
+live and vary tick to tick — but each axis's attached *dimension name*
+(`nc_dim`/`law_d`) comes from `axis_to_dim.get(axis, "OPERATOR")`, a
+**static per-axis lookup table** (`_DIMENSION_TO_AXIS`, inverted,
+`aurora_constraint_manifold_router.py:231`), not a live per-event dimension
+computation. So this signal proves a real, separate live subsystem (CERS)
+treats dimension identity as a fixed badge per axis — a different design
+choice than `aurora_closure_basis._build_noncomp_channels()`, which gives
+every dimension-channel of a constraint identical physics (§1.3) — but it
+is not itself proof of live per-dimension *physics*, only of live
+per-dimension *labeling*. Both are reported; neither is overstated as the
+other.
+
+### 10.4 Empirical measurement, real data (`aurora_genealogy_promotion_dimension_shadow.py`)
+
+Two corpora, reported and interpreted **separately**, not pooled:
+
+```
+=== PRIMARY: aurora_state/genealogy/events_recent.json (real run) ===
+  record_count: 137
+  difference_signal_present: 49 / 137  (35.8%)
+  difference_values_nontrivial: 49 / 137  (35.8%)
+  tensor_concept_reference_present: 137 / 137  (100.0%)
+  non_operator_cost_tensor_reference: 137 / 137  (100.0%)
+  any_non_operator_cost_signal: 137 / 137  (100.0%)
+  non_operator_cost_dimension_counts: {'DIFFERENCE': 143}
+
+=== SECONDARY (excluded from the live-dynamics conclusion): synthetic
+    artificial_seed lineage events (aurora_state/ability_lineages/**) ===
+  record_count: 414
+  (every stat 0/414, 0.0% — no tensor concepts, no difference signal at all)
+```
+
+**Interpretation (separated from the numbers):**
+
+- **35.8% of real relief events in this corpus carried a genuine, live,
+  per-axis DIFFERENCE-dimension value** (§10.2's strong signal). It is
+  never present-but-empty when present: `difference_signal_present_count ==
+  difference_nontrivial_count` exactly (49 == 49, locked in as a regression
+  by `test_difference_signal_when_present_is_always_nontrivial_in_this_corpus`).
+  It is not present on every tick — `observe()`'s `difference_snapshot`
+  parameter is optional, and cross-referencing individual records shows it
+  co-occurs specifically with dream/evolution-chamber-originated ticks
+  (`notes.seed_lineage_id == "dream_episode"` in the manually-inspected
+  example quoted in §10.2's write-up), not plain interaction ticks. The
+  honest claim is therefore: *when the evolution chamber is active, it
+  computes real DIFFERENCE-dimension physics that promotion structurally
+  cannot see* — not "35.8% of all Aurora activity, universally."
+- **100% of real relief events referenced at least one non-OPERATOR/COST
+  tensor dimension** (§10.3's weaker signal) — but only DIFFERENCE ever
+  appears among the three (POLARITY, MAGNITUDE never occurred in this
+  corpus's 143 references). Given §10.3's finding that the dimension label
+  is a static per-axis badge, this means: in this particular corpus, the
+  axis statically bound to DIFFERENCE was frequently the 2nd/3rd-most-active
+  axis; the axes statically bound to POLARITY/MAGNITUDE never were. This is
+  a property of this corpus's activity pattern, not a claim that
+  POLARITY/MAGNITUDE participation is structurally impossible.
+- The synthetic corpus's flat 0% across every stat is itself a useful
+  negative control: it confirms the observer isn't spuriously finding
+  signal everywhere, and correctly distinguishes organic live activity from
+  deliberately-constructed seed records.
+
+**Answer to the question this phase asked:** yes, measured, not assumed.
+Real Aurora runtime already computes and records genuine dimension-typed
+physics (DIFFERENCE, confirmed strongly) at ticks that feed promotion, and
+that physics never reaches `PairStats`, `_try_promote()`, the resulting
+`ConstraintLink`, or (per §3) any genealogy atom derived from it. The
+OPERATOR×COST confinement found in Phase 1 is **not** a faithful
+compression of what promotion's inputs ever carried — it is measured loss
+of information Aurora's own runtime was already producing, at minimum for
+the DIFFERENCE dimension. POLARITY and MAGNITUDE remain unconfirmed by this
+corpus specifically (see §10.6) — the finding is proven for one of the
+three missing dimensions, not automatically extended to all three.
+
+### 10.5 What this phase deliberately did not do
+
+Per its own framing ("observe... without changing promotion behavior"):
+no live hook was wired into `observe()`/`_accumulate_pairs()`/`_try_promote()`
+to carry this forward into future runs — `aurora_genealogy_promotion_dimension_observer.py`
+is a standalone library, callable against a `ReliefRecord`'s already-built
+`notes`/`active_concepts` (documented in its own docstring as "designed to
+be called right after `record = ReliefRecord(...)` construction," were a
+future pass to wire it in). This keeps Phase 2 at zero execution risk —
+consistent with every prior phase's rule of new files only, no edits to
+existing files — at the cost of only being able to measure what past runs
+happened to already persist, not what's happening in any run now. Whether
+to wire a real-time version of this observer into a live `observe()` call
+is a decision for a future pass, not assumed here.
+
+### 10.6 Remaining gaps this phase surfaces
+
+1. Only one corpus (`events_recent.json`, 137 records from a single run)
+   was available to measure against — a second, independent real run would
+   strengthen or weaken §10.4's specific percentages without changing the
+   structural finding in §10.1/§10.2, which holds regardless of any corpus
+   (it's a property of the function signatures, not of the data).
+2. POLARITY and MAGNITUDE never appeared in this corpus's tensor
+   references, and neither has any confirmed live-physics analog to
+   `DifferenceSnapshot` been located for them (this pass did not search
+   exhaustively for one — `aurora_internal/aurora_polarity_gradient.py` is
+   an unexamined candidate for POLARITY; no MAGNITUDE-specific module was
+   identified at all). Whether genuine live MAGNITUDE-dimension physics
+   exists anywhere in Aurora and is similarly excluded from promotion is an
+   open question this phase did not resolve either way.
+3. `events_recent.json` is a bounded ring buffer (`maxlen=10_000`,
+   confirmed Phase 1 §1) reflecting only the most recent portion of one run
+   — it cannot be used to check whether any of the 356 `ConstraintLink`s
+   analyzed in Phase 1/1.1 specifically had a `difference_snapshot` at their
+   own moment of promotion; the tick numbering spaces don't overlap.
+   Establishing that link-by-link would require either a fresh live run
+   instrumented from the start, or an older, currently-absent full event
+   log.
