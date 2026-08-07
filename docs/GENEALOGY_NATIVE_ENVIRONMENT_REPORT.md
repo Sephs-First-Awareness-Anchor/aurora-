@@ -17,11 +17,19 @@ to distinguish "DIFFERENCE genuinely isn't computed near pair-forming
 calls" from "it's computed elsewhere but unreachable" from "it exists but
 is stale" (§12; result: live execution confirms Phase 3A's zero-cooccurrence
 finding by two independent methods, and narrows the diagnosis for the one
-real caller directly examined). All five phases are purely observational:
-none of them alter promotion behavior, WARP's coverage authority, the
-pressure map, or the meaning/understanding registry. Live representational
-exposure, the WARP
-coverage-authority change, pressure-map expansion, and the
+real caller directly examined) — then **Phase 3A.2 (producer observatory)**
+— instrumenting the PRODUCER boundary this time
+(`DifferenceHistoryBuffer.record()`/`.snapshot()`, class-level, still no
+behavioral wiring), to ask whether the processes that experience DIFFERENCE
+and the processes that form genealogical relationships ever share a causal
+moment at all (§13; result: four real producer call sites and four real
+consumer call sites found across the codebase, hand-verified by reading —
+none of the eight connects to any other; leans toward genuine architectural
+separation between developmental regimes rather than fossil compression,
+though not yet fully closed). All six phases are purely observational: none
+of them alter promotion behavior, WARP's coverage authority, the pressure
+map, or the meaning/understanding registry. Live representational exposure,
+the WARP coverage-authority change, pressure-map expansion, and the
 meaning/understanding rewrite are intentionally **not** started — the
 directive that scoped this work requires shadow validation before any of
 those, and this report's job is to state honestly whether that validation
@@ -38,10 +46,13 @@ supports moving on, not to assume it does.
 `tests/test_genealogy_difference_shadow.py` (Phase 3A);
 `aurora_genealogy_cooccurrence_observatory.py`,
 `aurora_genealogy_cooccurrence_observatory_report.py`,
-`tests/test_genealogy_cooccurrence_observatory.py` (Phase 3A.1). Nothing
-existing was modified in any phase — Phase 3A.1's sidecar wraps a real
-logger instance's bound method at runtime rather than editing
-`constraint_genealogy.py` itself.
+`tests/test_genealogy_cooccurrence_observatory.py` (Phase 3A.1);
+`aurora_genealogy_difference_producer_observatory.py`,
+`aurora_genealogy_difference_producer_observatory_report.py`,
+`tests/test_genealogy_difference_producer_observatory.py` (Phase 3A.2).
+Nothing existing was modified in any phase — Phase 3A.1 and 3A.2's sidecars
+wrap real bound/class methods at runtime rather than editing
+`constraint_genealogy.py` or `aurora_internal/aurora_difference_buffer.py`.
 
 **Phase 1.1 field renames** (Phase 1 → Phase 1.1, on `EnvironmentSignature`;
 nothing outside this module's own test file imports it, so this was a
@@ -1201,3 +1212,192 @@ itself (`genealogy atom += DIFFERENCE`). No representational change is made
 on this basis here; that remains a decision for whenever (if ever) a corpus
 exists that can actually test pair-level relevance, per §11.4's
 unblocking step.
+
+---
+
+## 13. Phase 3A.2 — producer observatory: is this fossil compression, or an ecology split?
+
+Phase 3A.1 observed the CONSUMER boundary (`ConstraintGenealogyLogger.observe()`).
+This phase observes the PRODUCER boundary — `DifferenceHistoryBuffer.record()`/
+`.snapshot()` (`aurora_internal/aurora_difference_buffer.py`) — to answer
+the sharper question the directive posed: do the processes that experience
+DIFFERENCE and the processes that form genealogical relationships ever
+inhabit the same causal moment at all? Still no behavioral wiring.
+
+### 13.1 Method
+
+`aurora_genealogy_difference_producer_observatory.py`'s
+`install_producer_observatory()` wraps `DifferenceHistoryBuffer.record` and
+`.snapshot` **at the class level** — every instance, process-wide, for the
+duration of the installation. This is the actual production boundary: the
+buffer is instance-scoped (§12.1), owned independently by whatever object
+constructs one, so there is no per-instance way to catch every real
+production event generically; class-level wrapping is the only way to
+observe the boundary itself rather than one particular owner of it. Each
+wrapped method calls the real, original method first, with every argument
+unchanged, and returns its real result unmodified —
+`test_wrapped_snapshot_and_record_produce_identical_results` proves this
+directly (byte-identical `DifferenceSnapshot.to_dict()` from a wrapped and
+an unwrapped call), and `test_producer_sidecar_never_feeds_anything_back`
+confirms the buffer's own internal history is exactly what the caller put
+there, nothing added by the sidecar.
+
+Each observation records (per the directive's spec): `tick`, `producer_class`
+and `producer_instance_id` (`id()` of the buffer instance), `call_path`
+(nearest-first qualnames walked via `inspect`, real stack frames — verified,
+`test_call_path_captures_real_caller_chain`), `axis_values` (for `snapshot`
+calls), and `causal_context` — a best-effort, read-only scan of the
+immediate caller's `self` for attributes whose *name* suggests identity/
+lifecycle (`episode`, `session`, `run_id`, `lineage`, `turn`, `chamber`,
+`tick_count`), extended one level into any dict-valued attribute after
+discovering Aurora's common pattern is a `self._systems`-style registry
+dict rather than direct attributes (confirmed on `TrainingPulse` and
+`aurora.py`'s turn processing) — verified on both shapes,
+`test_causal_context_found_on_direct_self_attribute` and
+`test_causal_context_found_one_level_into_dict_attribute`.
+
+### 13.2 The real producer/consumer catalog (hand-verified by reading, not an automated tracer)
+
+Grepping for every real call to `.snapshot(`/`.record(` on a difference
+buffer, and reading each call site, found four real producers — not one:
+
+| Producer call site | Context |
+|---|---|
+| `aurora_evolution_chamber.py:1402` | Evolution chamber's own per-tick processing (already known, §12) |
+| `aurora_evolution_chamber.py:1847` | A second call site, a "last computed" accessor (`diff_snapshot` property) |
+| `aurora.py:31436-31449`, inside `_run_live_response_turn` | Computes a **real snapshot on every ordinary conversational turn** — not gated on dream/artificial-seed state — stores it at `systems['_last_diff_snapshot']` |
+| `aurora_training_pulse.py:206-249`, `TrainingPulse._record_and_snapshot()` | Its own docstring: "Mirror of aurora.py's per-turn diff buffer record + snapshot" — stores at `self._systems["_last_diff_snapshot"]` |
+
+And four real consumers (pair-forming or promotion-adjacent `observe()` calls):
+
+| Consumer call site | What it passes as `difference_snapshot` |
+|---|---|
+| `aurora_grammar_engine.py:1547` (`_log_relief_to_genealogy`) | hardcoded `None` (Phase 3A/3A.1's original finding) |
+| `aurora.py:17728` (`_log_modulation_event`) | omitted — defaults to `None` |
+| `aurora.py:17830` (`_log_claim_resolution_relief`) | omitted — defaults to `None` |
+| `aurora.py:4362` (a field-balance injector) | `{}` — **a real, separate, confirmed bug**, found as a side effect of this investigation (see §13.3) |
+
+**`systems['_last_diff_snapshot']` — the value written on every real
+conversational turn — is read by nothing else anywhere in the
+repository**, confirmed by grepping the full codebase for that exact key.
+This is now a code-level finding, not a corpus-limited one: across every
+real call site located on both sides, there is no code path anywhere in
+this repository connecting a value a producer wrote to an argument any
+consumer reads.
+
+### 13.3 A real bug, found and not fixed
+
+`aurora.py:4362` passes `difference_snapshot={}` — a plain dict, not a
+`DifferenceSnapshot` instance. `observe()`'s own body
+(`constraint_genealogy.py:1975-1976`) calls `difference_snapshot.to_dict()`
+unconditionally whenever the argument `is not None`. Live-verified,
+`test_confirmed_empty_dict_difference_snapshot_bug`:
+
+```
+AttributeError: 'dict' object has no attribute 'to_dict'
+```
+
+This raises inside `observe()` itself; the call site's own surrounding
+`try/except` silently swallows it (`_aurora_record_exception_from_locals`),
+so **this caller's relief event never gets logged at all** when it fires —
+not merely without DIFFERENCE, the entire call fails silently. Not fixed
+here: fixing it is a live-behavior change to a file no other part of this
+project touches, and is out of scope for an observational phase. Reported
+so it isn't lost in the course of an unrelated investigation.
+
+### 13.4 Live demonstration: two real call sites, driven together
+
+The static catalog (§13.2) is the strongest evidence, but the directive
+asked for a dynamic instrument too. `aurora_genealogy_difference_producer_observatory_report.py`
+drives a real `TrainingPulse._record_and_snapshot()` (producer) and a real
+`GrammarEngine._log_relief_to_genealogy()` (consumer) together, in the same
+loop, against a shared tick sequence and a shared `run_id`, with both
+sidecars installed:
+
+```
+Producer observations: 24
+Consumer observations: 12
+Pair-eligible consumer observations: 12
+Correlation case: B_same_tick_no_link
+Detail: {'n_proximate_pairs': 12, 'n_with_shared_causal_context': 0, 'tick_window': 2}
+```
+
+**Important caveat, stated in the report script's own docstring so it can't
+be misread later**: the "same tick" proximity here is a property of this
+test's design — both real call sites are deliberately driven from the same
+loop, once per iteration. This demonstrates the correlation *mechanism*
+correctly detects a same-tick/no-causal-link pattern when one is genuinely
+present (`causal_context` on the producer side carries `run_id`; nothing on
+the consumer side matches it, correctly yielding zero shared-context
+pairs) — it is not a claim that real, unattended Aurora execution
+autonomously interleaves these two subsystems this tightly. §13.2's static
+catalog is the claim about real, natural execution; this section is proof
+the instrument works correctly on real code, not a frequency estimate.
+
+### 13.5 Which case does the evidence support?
+
+`correlate_producer_consumer()` distinguishes the three cases via
+nearest-producer-per-consumer pairing (not an all-pairs join over a loose
+window, which was tried first and found to drift into spurious cross-pairs
+whenever sequences overlap — fixed before any real numbers were reported,
+`test_case_c_consistent_temporal_offset` locks in the corrected behavior):
+
+- **Case A (no proximity anywhere)**: not directly testable from a single
+  synthetic/live-combined run the way §13.4 was constructed, since that run
+  was designed to interleave the two call sites. What IS directly
+  testable, and holds: the one real historical corpus available
+  (Phase 3A/3A.1) already showed zero pair-eligible ticks with any
+  DIFFERENCE signal at all across its full 137-record span — consistent
+  with Case A within that corpus.
+- **Case B (same tick, no causal link)**: demonstrated live in §13.4 when
+  the two real call sites are deliberately run together — this is the case
+  the instrument is proven to detect correctly, not (per the §13.4 caveat)
+  a claim about natural co-occurrence frequency.
+- **Case C (consistent temporal offset)**: not observed in any real data;
+  the detection logic is implemented and verified only against synthetic
+  data built to exercise it (`test_case_c_consistent_temporal_offset`).
+
+**The strongest evidence remains §13.2's static catalog**: across every
+real producer and every real consumer call site found in this repository,
+none references the other. That is closer to Case A (genuine architectural
+separation between developmental regimes) than Case B (production and
+consumption inhabiting the same causal moment in different branches) — the
+four producers and four consumers found don't merely fail to connect at
+runtime, they were never wired with any intention of connecting; nothing
+here suggests a "missing pipe" between two systems designed to talk to each
+other, more like two systems that were never designed with each other in
+view. This is consistent with, and sharpens, the report's earlier framing
+(§11.4): the question is no longer "did genealogy throw away a dimension it
+had," but closer to "do the process that experiences DIFFERENCE and the
+process that forms genealogical relationships currently share any causal
+moment in this codebase" — and on the evidence gathered so far, the honest
+answer leans toward *not yet, and not by design*, which is a different and
+larger claim than fossil compression.
+
+### 13.6 The evidence ladder, updated
+
+| Question | Status |
+|---|---|
+| DIFFERENCE exists live and is structurally dropped (Phase 2) | ✓ confirmed |
+| DIFFERENCE is informationally rich (Phase 3A) | ✓ confirmed |
+| DIFFERENCE appears inheritable (Phase 3A) | ✗ unsupported — currently looks transient |
+| DIFFERENCE naturally co-occurs with pair formation (Phase 3A/3A.1) | ✗ not observed, in the one corpus available |
+| Consumer-side missing-forwarding bug (Phase 3A.1/3A.2) | ✗ increasingly unlikely — every real consumer call site, in two different files, shows the same pattern |
+| Producer/consumer architectural separation (Phase 3A.2) | **leaning yes** — every real producer and every real consumer call site found in the repository, hand-verified, connects to none of the others |
+
+### 13.7 Tests
+
+17 new tests in `tests/test_genealogy_difference_producer_observatory.py`,
+all passing: behavioral-identity and purity proofs on the producer sidecar,
+call-path and causal-context correctness (including the nested-dict
+pattern discovered on real classes), the `{}` bug reproduced directly, all
+three correlation cases verified on synthetic data built to exercise each
+one, and the live combined exercise locked in as a regression.
+
+Same test-hygiene issue as Phase 3A.1 recurs here (exercising
+`GrammarEngine` repeatedly touches the same `PressureExperienceLedger`
+singleton) — guarded with the identical autouse snapshot/restore fixture,
+now present in two test files. Worth treating as a standing pattern for any
+future phase that exercises real promotion-adjacent code: check for
+process-global organs hidden inside otherwise instance-local systems before
+trusting that a throwaway instance means an isolated test.
