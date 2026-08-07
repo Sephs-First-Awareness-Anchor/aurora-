@@ -10,10 +10,17 @@ atoms cannot preserve (§10) — then **Phase 3A (native DIFFERENCE
 preservation shadow)** — a parallel `PairStats` companion, replayed against
 real events, asking whether the dropped DIFFERENCE signal would actually
 matter if kept (§11; verdict: partially confirmed, decisive experiment
-blocked by a newly-found architectural gap, not by a negative result). All
-four phases are purely observational: none of them alter promotion
-behavior, WARP's coverage authority, the pressure map, or the
-meaning/understanding registry. Live representational exposure, the WARP
+blocked by a newly-found architectural gap, not by a negative result) —
+then **Phase 3A.1 (co-occurrence observatory)** — this time instrumenting
+the real, live `observe()` call path itself (still no behavioral wiring),
+to distinguish "DIFFERENCE genuinely isn't computed near pair-forming
+calls" from "it's computed elsewhere but unreachable" from "it exists but
+is stale" (§12; result: live execution confirms Phase 3A's zero-cooccurrence
+finding by two independent methods, and narrows the diagnosis for the one
+real caller directly examined). All five phases are purely observational:
+none of them alter promotion behavior, WARP's coverage authority, the
+pressure map, or the meaning/understanding registry. Live representational
+exposure, the WARP
 coverage-authority change, pressure-map expansion, and the
 meaning/understanding rewrite are intentionally **not** started — the
 directive that scoped this work requires shadow validation before any of
@@ -28,8 +35,13 @@ supports moving on, not to assume it does.
 `tests/test_genealogy_promotion_dimension_observer.py` (Phase 2);
 `aurora_genealogy_difference_shadow.py`,
 `aurora_genealogy_difference_shadow_report.py`,
-`tests/test_genealogy_difference_shadow.py` (Phase 3A). Nothing existing was
-modified in any phase.
+`tests/test_genealogy_difference_shadow.py` (Phase 3A);
+`aurora_genealogy_cooccurrence_observatory.py`,
+`aurora_genealogy_cooccurrence_observatory_report.py`,
+`tests/test_genealogy_cooccurrence_observatory.py` (Phase 3A.1). Nothing
+existing was modified in any phase — Phase 3A.1's sidecar wraps a real
+logger instance's bound method at runtime rather than editing
+`constraint_genealogy.py` itself.
 
 **Phase 1.1 field renames** (Phase 1 → Phase 1.1, on `EnvironmentSignature`;
 nothing outside this module's own test file imports it, so this was a
@@ -1012,3 +1024,180 @@ the actual empirical findings above (zero pair/DIFFERENCE overlap, all
 DIFFERENCE-bearing records are single-item traces, non-dominant-axis signal
 exists, killer experiment returns empty), so this section's numbers are
 enforced, not just narrated.
+
+---
+
+## 12. Phase 3A.1 — co-occurrence observatory
+
+Phase 3A's floor effect (§11.1) was diagnosed from static, already-persisted
+JSON. This phase asks the same question of the REAL, LIVE call path — still
+with no behavioral wiring — to distinguish three different explanations for
+that floor effect, which lead to different architectural conclusions:
+
+1. DIFFERENCE is genuinely not computed anywhere near pair-forming calls.
+2. DIFFERENCE **is** computed elsewhere at the same tick, but the specific
+   caller that forms the pair has no reference to it.
+3. A snapshot exists and gets passed, but it's stale relative to the pair
+   event — a lifecycle mismatch, not an absence.
+
+### 12.1 Method — this time, the real live call is actually exercised
+
+`aurora_genealogy_cooccurrence_observatory.py`'s `install(logger)` wraps the
+real, bound `ConstraintGenealogyLogger.observe` with a sidecar that (a)
+calls the real, original `observe()` first, with every argument passed
+through completely unchanged, and returns its real result unmodified, then
+(b) only afterward, read-only and try/except-guarded, records what it can
+observe. `test_wrapped_observe_produces_identical_result_to_unwrapped`
+proves behavioral identity directly: same inputs through a wrapped and an
+unwrapped fresh logger produce identical `ReliefRecord` contents, identical
+`links_promoted`, identical `_pair_stats` keys.
+`test_sidecar_failure_never_breaks_real_observe` forces the sidecar's
+recording function to raise and confirms `observe()` still returns its real
+result. `test_sidecar_never_feeds_difference_back_into_pairstats` confirms
+the recorded difference value never appears on any real `PairStats`
+instance — its field set is asserted exactly, unchanged.
+
+For "available anywhere upstream," the honest scope is narrower than it
+might sound: `DifferenceHistoryBuffer` is instance-scoped
+(`self._diff_buffer` on whichever evolution-chamber-shaped object owns one
+— `aurora_evolution_chamber.py:1089`), not a global registry, so there is
+no ambient place to check "does DIFFERENCE exist anywhere in the live
+process right now." What the sidecar can honestly do: read the direct
+`difference_snapshot` argument (always exactly knowable — this alone
+distinguishes possibility 3 via `.tick` vs. the pair's own tick), and, when
+that argument is `None`, use read-only stack-frame introspection
+(`inspect`, never `sys.settrace`) to check whether the immediate caller's
+own `self` holds a `DifferenceHistoryBuffer`/`DifferenceSnapshot` instance
+attribute it simply didn't pass — distinguishing possibility 2 (found,
+just not threaded through) from possibility 1 (not found on this specific
+caller at all). It does not and cannot rule out some unrelated object
+elsewhere in the process holding one; the reported reason string says
+exactly this rather than overclaiming a global negative.
+
+### 12.2 Run against real, live code — two ways
+
+**(a) Direct exercise of the real, confirmed caller.**
+`aurora_grammar_engine.GrammarEngine` is cheap to construct (no heavy
+boot). `_log_relief_to_genealogy()` — the exact method Phase 3A found
+hardcodes `difference_snapshot=None` — was called 10 times against a real,
+fresh `ConstraintGenealogyLogger` with the sidecar installed:
+
+```
+callers observed: {'GrammarEngine._log_relief_to_genealogy': 10}
+pair-eligible: 10/10
+difference_passed: 0/10
+difference_source (when not passed): {None: 10} -- "no difference_snapshot
+  argument passed, and no DifferenceHistoryBuffer/DifferenceSnapshot
+  instance attribute found on the caller's `self`..."
+```
+
+Live-confirmed: for this real caller, possibility 1/2's boundary — no
+buffer is reachable from `GrammarEngine`'s own `self` at all. `GrammarEngine`
+holds `self._genealogy`, `self._ivm`, `self._dps` — no difference-buffer
+reference of any kind (confirmed by reading its `__init__`,
+`aurora_grammar_engine.py:1396-1407`). `aurora_grammar_engine.py`'s own
+module comment places it explicitly "beneath aurora_evolution_chamber.py"
+in the architecture's layering — the module that owns
+`DifferenceHistoryBuffer` sits *above* this caller, not below it, so this
+caller structurally cannot hold a reference to one without inverting that
+layering. This is closer to possibility 1 for this specific call site (not
+merely "didn't bother, but could") than possibility 2.
+
+**(b) Live replay of the real historical corpus through the real pipeline.**
+All 137 real `events_recent.json` records were reconstructed into real
+`PressureVec`/`TraceItem`/`DifferenceSnapshot` objects and fed through
+`ConstraintGenealogyLogger.observe()` on a fresh, throwaway logger (temp
+directory; promotion outcomes during this replay are not expected to, and
+do not need to, match the original historical run's — a fresh instance has
+different ability/link state, and this replay exists to exercise the real
+`observe()`/`_accumulate_pairs()` code with real inputs, not to reproduce
+history's promotion decisions):
+
+```
+total observe() calls recorded: 137
+pair-eligible (trace_length >= 2, after real rewrite_trace()): 67
+difference_passed=True: 49
+pair-eligible AND difference_passed (genuine co-occurrence): 0
+```
+
+(The pair-eligible count, 67, is lower than Phase 3A's static 88 — a real,
+expected consequence of exercising the actual live `rewrite_trace()` step
+this time: as this fresh logger accumulates its own promotions partway
+through the 137-record replay, some later multi-item traces get rewritten
+down to a single already-promoted-link id, correctly making them no longer
+pair-eligible. Phase 3A's simplified shadow replay didn't include gated
+promotion, so it couldn't see this effect; this is a genuine improvement
+in fidelity, not a discrepancy to be resolved.)
+
+**Zero genuine co-occurrence, now confirmed by two independent methods**:
+Phase 3A's static analysis of persisted JSON, and Phase 3A.1's live
+execution of the real `observe()` pipeline against both the real historical
+corpus and a real, freshly-exercised organic caller. Locked in as
+regressions: `test_live_replay_of_real_corpus_confirms_zero_cooccurrence`,
+`test_live_grammar_engine_exercise_never_shows_difference_signal`.
+
+### 12.3 Answering the three-way distinction
+
+- **Possibility 1 (genuinely not computed near pair-forming calls):**
+  supported for the one real caller directly examined
+  (`aurora_grammar_engine.py`) — confirmed no buffer reference exists on
+  that caller at all, and the module layering explains why one structurally
+  can't, without this being read as proof for *every* organic caller in the
+  codebase (only one was directly instrumented; §11.1's caveat about the
+  loose 53-file `.observe(` grep still applies).
+- **Possibility 2 (computed elsewhere, caller can't see it):** not
+  demonstrated for the caller examined — the frame-introspection path is
+  implemented and verified correct
+  (`test_reachable_buffer_on_caller_found_via_frame_introspection`, a
+  synthetic case built to exercise it), but it found nothing on the one
+  real caller checked, consistent with possibility 1 for that caller
+  specifically.
+- **Possibility 3 (stale/lifecycle mismatch):** the age-computation
+  machinery is implemented and verified
+  (`test_difference_argument_captured_with_full_values`), ready to flag
+  this the moment a corpus exists where a `difference_snapshot` is passed
+  with a `.tick` meaningfully different from the pair event's own tick —
+  no such case has been observed yet, real or synthetic-from-real-data, so
+  this possibility is neither confirmed nor ruled out by what's available.
+
+### 12.4 Tests
+
+12 new tests in `tests/test_genealogy_cooccurrence_observatory.py`, all
+passing — including two that regression-lock the live-execution
+confirmation of §12.2's numbers, so a future run where genuine
+co-occurrence stops being zero is a visible, deliberate signal.
+
+A minor but genuine finding surfaced while building this: exercising real
+`observe()` calls that reach real promotion-gate rejections triggers
+`PressureExperienceLedger.get()` — a process-wide singleton with a
+hardcoded path (`aurora_pressure_ledger.py:114`) — regardless of which
+throwaway `ConstraintGenealogyLogger` triggered it. Even a fully isolated,
+temp-directory logger cannot avoid touching that one real, shared
+`aurora_state/pressure_experiences.jsonl` file if a gate actually rejects
+something. The test file guards this with an autouse fixture that snapshots
+and restores that file around every test; the standalone report script
+documents the same effect in its own docstring rather than silently leaving
+it for whoever runs it next to discover.
+
+### 12.5 Phase 3A recorded, as requested
+
+DIFFERENCE loss confirmed at an event-recording boundary (Phase 2: computed
+live, structurally excluded from `PairStats`'s call signature).
+Informational richness confirmed (Phase 3A §11.2 Q6: 97% of non-dominant-axis
+slots carry real signal — not reducible to an axis label). Inheritance
+value not demonstrated (Phase 3A §11.2 Q4: within-link variability ~3.4×
+larger than between-link variability, leaning transient over persistent,
+n=6). Pair-level relevance currently unobservable (Phase 3A §11.1, now
+confirmed by live execution in Phase 3A.1 §12.2 via two independent
+methods, not merely one static pass) — not refuted, not confirmed; the
+zero-candidate result is a boundary marker, regression-locked in both
+phases, that will announce itself the moment the experimental landscape
+changes rather than silently going stale.
+
+The data currently favors treating DIFFERENCE as a property of the
+*formation event* — a local environmental condition present while a
+genealogy forms — rather than a property to fold into genealogy identity
+itself (`genealogy atom += DIFFERENCE`). No representational change is made
+on this basis here; that remains a decision for whenever (if ever) a corpus
+exists that can actually test pair-level relevance, per §11.4's
+unblocking step.
