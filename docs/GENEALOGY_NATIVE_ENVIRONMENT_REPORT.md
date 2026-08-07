@@ -6,10 +6,15 @@ targeted re-review surfaced two real bugs in the Phase 1 derivation (§8),
 then **Phase 2 (promotion-time dimension-participation observer)** — a
 retrospective, purely-observational measurement of whether Aurora's live
 formation dynamics actually engage NonComp dimensions the current genealogy
-atoms cannot preserve (§10). All three phases are purely observational: none
-of them alter promotion behavior, WARP's coverage authority, the pressure
-map, or the meaning/understanding registry. Live representational exposure,
-the WARP coverage-authority change, pressure-map expansion, and the
+atoms cannot preserve (§10) — then **Phase 3A (native DIFFERENCE
+preservation shadow)** — a parallel `PairStats` companion, replayed against
+real events, asking whether the dropped DIFFERENCE signal would actually
+matter if kept (§11; verdict: partially confirmed, decisive experiment
+blocked by a newly-found architectural gap, not by a negative result). All
+four phases are purely observational: none of them alter promotion
+behavior, WARP's coverage authority, the pressure map, or the
+meaning/understanding registry. Live representational exposure, the WARP
+coverage-authority change, pressure-map expansion, and the
 meaning/understanding rewrite are intentionally **not** started — the
 directive that scoped this work requires shadow validation before any of
 those, and this report's job is to state honestly whether that validation
@@ -20,8 +25,11 @@ supports moving on, not to assume it does.
 `tests/test_genealogy_environment_dag_preservation.py` (Phase 1/1.1);
 `aurora_genealogy_promotion_dimension_observer.py`,
 `aurora_genealogy_promotion_dimension_shadow.py`,
-`tests/test_genealogy_promotion_dimension_observer.py` (Phase 2). Nothing
-existing was modified in any phase.
+`tests/test_genealogy_promotion_dimension_observer.py` (Phase 2);
+`aurora_genealogy_difference_shadow.py`,
+`aurora_genealogy_difference_shadow_report.py`,
+`tests/test_genealogy_difference_shadow.py` (Phase 3A). Nothing existing was
+modified in any phase.
 
 **Phase 1.1 field renames** (Phase 1 → Phase 1.1, on `EnvironmentSignature`;
 nothing outside this module's own test file imports it, so this was a
@@ -806,10 +814,201 @@ is a decision for a future pass, not assumed here.
    exists anywhere in Aurora and is similarly excluded from promotion is an
    open question this phase did not resolve either way.
 3. `events_recent.json` is a bounded ring buffer (`maxlen=10_000`,
-   confirmed Phase 1 §1) reflecting only the most recent portion of one run
-   — it cannot be used to check whether any of the 356 `ConstraintLink`s
-   analyzed in Phase 1/1.1 specifically had a `difference_snapshot` at their
-   own moment of promotion; the tick numbering spaces don't overlap.
-   Establishing that link-by-link would require either a fresh live run
-   instrumented from the start, or an older, currently-absent full event
-   log.
+   confirmed Phase 1 §1) reflecting only the most recent portion of one run.
+   **Correction (found during Phase 3A, §11):** the claim originally here —
+   that this ring buffer's tick space doesn't overlap with `links.json`'s —
+   was wrong. Both files share `run_id "2026-07-29_050108"`; `links.json`'s
+   356 links have `created_at_tick` up to 129144, and
+   `events_recent.json`'s 137-record window starts at tick 132643 — the same
+   continuous session, just after all 356 promotions had already happened.
+   So this ring buffer genuinely is the tail of the exact session that
+   produced every link in Phase 1/1.1's corpus; it just doesn't capture any
+   of their original promotion moments (which are further back than the
+   buffer's `maxlen=10_000` retains) — it only captures later *reuse* of
+   already-promoted links. See §11 for what that reuse data does and
+   doesn't support.
+
+---
+
+## 11. Phase 3A — Native DIFFERENCE Preservation Shadow
+
+**Question asked:** if DIFFERENCE were preserved instead of dropped, would
+it turn out to matter — does it differentiate genealogies the current
+representation conflates, correlate with real outcomes, persist across
+ancestry, and (critically) carry information beyond axis identity? The
+directive framed a specific "killer experiment" as the bar for the case to
+become extremely strong. This section reports exactly what was found,
+including where the experiment as specified could not be run and why.
+
+**Method:** no code that could affect promotion was touched. `PairStats` was
+not modified. A parallel structure, `ShadowPairStats`
+(`aurora_genealogy_difference_shadow.py`), mirrors real `PairStats`'s
+axis-level accumulation field-for-field and rule-for-rule (verified by
+`test_axis_accumulation_matches_real_pairstats_update` — constructs a real
+`PairStats`, runs the same updates through both, asserts numeric parity),
+plus a companion channel for DIFFERENCE participation with explicit
+provenance (`difference_source`, per-tick `difference_values_by_tick`,
+never collapsed into "axis"). `replay_events()` reconstructs pair keys from
+real, already-persisted `ReliefRecord`s using the exact adjacent-pair rule
+`_accumulate_pairs()` uses (`constraint_genealogy.py:5388-5391`) — this is a
+replay over static JSON, not a live hook; nothing here imports
+`ConstraintGenealogyLogger` (verified,
+`test_module_never_imports_constraint_genealogy_promotion_surfaces`).
+
+### 11.1 The corpus has a floor effect the analysis had to surface honestly
+
+Before any of the six questions could be answered, replaying the real 137
+records revealed something none of the phases up to now had checked:
+**every record carrying a real `DifferenceSnapshot` has trace length
+exactly 1, and every record with trace length ≥ 2 (the only ones that ever
+form a pair, since `_accumulate_pairs()` requires `len(trace) >= 2`) has no
+`DifferenceSnapshot` at all.** Confirmed exactly: 49/49 DIFFERENCE-bearing
+records are single-item `LINK`-replay traces with
+`notes.artificial_seed=True, notes.seed_lineage_id="dream_episode"`; the
+other 88 records (9 of length 2, 62 of length 3, 17 of length 8 — the ones
+producing all 252 real pair-observations) carry zero DIFFERENCE signal
+between them.
+
+This is not only a property of this specific 137-record sample.
+`aurora_grammar_engine.py:1563` — a real, confirmed, organic,
+multi-item-trace caller of `observe()` — **hardcodes
+`difference_snapshot=None`** on every call; it constructs its
+`PressureVec`s from fixed formulas and never reads a live difference
+buffer at all. The dream/evolution-chamber path
+(`aurora_internal/aurora_evolution_chamber.py:1434`) does pass a real one,
+but, in this corpus, only ever for single-link replay traces. (This pass
+did not exhaustively audit every `.observe()`-named call site in the
+repo — 53 files matched a loose grep, most almost certainly unrelated
+`.observe()` methods on other classes — so "at least one confirmed organic
+caller hardcodes None" is the honest claim, not "all organic callers
+always do.")
+
+Practical consequence: **the strongest, pair-level version of every
+question below is untestable against this specific corpus**, not because
+DIFFERENCE lacks predictive value, but because no real pair-observation in
+it ever carries a real DIFFERENCE value to test with. Below, each question
+is answered either from the pair-level replay (where it returns a clean,
+honest null result explained by the floor effect) or from the closest
+available real-data analog (the 6 links that DO get replayed repeatedly),
+clearly labeled as such.
+
+### 11.2 Question by question
+
+1. **Differentiates signature-colliding genealogies?** Untestable at the
+   pair level in this corpus: of 8 current-signature groups, 2 collide
+   (>1 pair-key sharing the same axis pair), but difference-participation
+   rate is 0% for every one of the 10 pair-keys, so there is nothing to
+   diverge. Not a negative finding — a floor effect from §11.1.
+2. **Correlates with DAG structure?** The 6 real links that get replayed in
+   this window all happen to share the identical current signature
+   (dominant axis T, depth 5) — no structural variation exists in this
+   corpus's reuse sample to correlate against. Reported as a limitation,
+   not a null result.
+3. **Correlates with promotion success / relief / recurrence / closure
+   grade / later reuse?** *Promotion success:* untestable — zero new
+   promotions occur inside the available window (confirmed, §10.6#1 logic
+   applies here too). *Relief / recurrence at the pair level:* untestable,
+   same floor effect as Q1. *Closure grade / later reuse, via the 6 reused
+   links:* replay counts range 5–12 per link; all 6 share the same closure
+   signature (§11.2 Q2), so there is no structural spread to correlate
+   replay count against in this sample — reported with the raw numbers in
+   §11.3 rather than a synthesized correlation coefficient that would imply
+   more structure than 6 identical-signature data points can support.
+4. **Persists across ancestral chains, or transient?** **Measured, real
+   answer, leans transient.** For the 6 reused links, own-axis DIFFERENCE
+   values across repeated replays give a between-link standard deviation of
+   means of **0.00318**, versus a mean *within-link* standard deviation of
+   **0.01097** — within-link (tick-to-tick, same link) variability is
+   **~3.4× larger** than between-link variability. If DIFFERENCE were a
+   stable trait tied to a link's identity/ancestry, repeated replays of the
+   *same* link should cluster more tightly than replays of *different*
+   links do; here the opposite holds. Caveat: n=6 links, 5–12 replays each
+   — real, but a small sample from one corpus.
+5. **Two genealogies identical under current physics become distinguishable
+   under native+DIFFERENCE?** Not demonstrated in this corpus — a direct
+   consequence of §11.1's floor effect (Q1) and the identical-signature-only
+   sample in Q2/Q3: there was no pair of colliding, difference-divergent
+   genealogies available to compare.
+6. **Carries information beyond axis identity?** **Yes, clearly, and this
+   is the strongest result in this phase.** Across the 49 real
+   DIFFERENCE-bearing records, **190 of 196 possible non-dominant-axis
+   slots (97%) carry a nonzero DIFFERENCE value** — i.e. the live
+   5-value measurement is almost never a one-hot reflection of "which axis
+   is dominant"; nearly every one of the other four slots also carries real
+   signal. Within the dominant axis itself: the T-axis group (n=5) shows
+   real internal spread (stdev 0.0123, range −0.0210 to +0.0129) — same
+   axis, materially different DIFFERENCE readings. The X-axis group (n=44)
+   shows *zero* internal spread (every value exactly 0.0) — worth reporting
+   honestly rather than folding into the headline number: in this corpus,
+   dream-episode replay apparently never drives real existential (X) drift,
+   so X-dominant records happen to carry no extra X-axis information here
+   specifically (the cross-axis, non-dominant-slot result above still
+   stands independent of this).
+
+### 11.3 The killer experiment: implemented, correct, and empty on this corpus — for a confirmed reason
+
+`find_pairs_with_divergent_difference()` searches for pairs of pair-keys
+that share a current signature and similar mean relief but diverge in real
+DIFFERENCE participation, then checks whether their recurrence diverges
+too. It is implemented generically (not hand-fit to any known-empty case)
+and verified correct against synthetic data built to qualify
+(`test_finds_synthetic_divergent_candidate` constructs exactly such a pair
+and confirms it's found, along with two negative-control tests confirming
+it correctly rejects non-qualifying pairs). Run against the real corpus, it
+returns **zero candidates** — the direct, expected, confirmed consequence
+of §11.1: no real pair-observation in this corpus ever carries a real
+DIFFERENCE value at all, so no divergence between two of them can exist to
+find. `test_real_corpus_killer_experiment_correctly_returns_empty` locks
+this in as a regression, so a future corpus where this stops being empty is
+a visible, deliberate signal rather than a silent behavior change.
+
+### 11.4 Honest verdict
+
+**Not** the "extremely strong case" outcome the directive described as the
+threshold result — but not a refutation either. What actually holds:
+
+- The infrastructure works and is correct (§11.3's synthetic tests, and the
+  exact-parity test against real `PairStats.update()`).
+- One of the six questions has a clear, real-data-backed **yes**: DIFFERENCE
+  carries information beyond axis identity (§11.2 Q6) — a necessary
+  precondition for the whole doctrine ("preserve the actual live value...
+  not `axis -> DIFFERENCE`") to be meaningful at all, and it holds.
+- Another has a clear, real-data-backed lean toward **no persistence**
+  (§11.2 Q4) — worth weighing against any future argument that DIFFERENCE
+  should be treated as an inheritable trait along a lineage; in this
+  corpus it looks more like tick-local signal.
+- The decisive killer experiment (§11.2 Q5, §11.3) could not be run — not
+  because it failed, but because this phase surfaced a **more specific**
+  architectural gap than Phase 2 found: it's not merely that promotion's
+  input is axis-only (Phase 2, §10.1) — in the only real corpus available,
+  the event stream that carries live DIFFERENCE data and the event stream
+  that forms genealogy pairs are **currently disjoint**, and at least one
+  real organic caller (`aurora_grammar_engine.py`) hardcodes that
+  disjointness rather than merely happening to exhibit it.
+
+**Consequence for Phase 3B:** the case remains open and plausible (Phase 2:
+the raw physics exists and is dropped; Phase 3A: when present, that physics
+is informationally rich) but is **not yet empirically demonstrated to carry
+predictive value for genealogy formation** — no real sample exists where a
+pair-forming tick also carried real DIFFERENCE physics, so that specific
+claim has neither been confirmed nor refuted. The smallest concrete
+unblocking step, if this is worth pursuing further, is smaller than
+altering `PairStats`: wiring at least one organic, multi-item-trace
+`observe()` caller (starting with `aurora_grammar_engine.py`'s hardcoded
+`None`) to pass a real `difference_snapshot` when the evolution chamber has
+one available, so a *future* corpus could actually exercise the overlap
+this phase needed and didn't have. That is itself a live-behavior change
+and is explicitly not done here — flagged as the natural next question,
+not attempted.
+
+### 11.5 Tests
+
+17 new tests in `tests/test_genealogy_difference_shadow.py`, all passing:
+exact-parity replay tests against real `PairStats`, independence of the
+DIFFERENCE companion channel from axis accumulation, killer-experiment
+logic verified on synthetic qualifying/non-qualifying cases, and — critically
+— four tests that run directly against the real fossil corpus and assert
+the actual empirical findings above (zero pair/DIFFERENCE overlap, all
+DIFFERENCE-bearing records are single-item traces, non-dominant-axis signal
+exists, killer experiment returns empty), so this section's numbers are
+enforced, not just narrated.
