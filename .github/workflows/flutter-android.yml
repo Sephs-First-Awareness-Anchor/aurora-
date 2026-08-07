@@ -46,8 +46,8 @@ jobs:
           git clone https://github.com/flutter/flutter.git --depth 1 -b 3.22.3 $HOME/flutter
           echo "$HOME/flutter/bin" >> $GITHUB_PATH
           echo "FLUTTER_ROOT=$HOME/flutter" >> $GITHUB_ENV
-          # Verify
-          flutter --version
+          # Verify using full path since $GITHUB_PATH takes effect in next steps
+          $HOME/flutter/bin/flutter --version
 
       # settings.gradle reads local.properties at evaluation time — must exist first
       - name: Write local.properties
@@ -100,6 +100,15 @@ jobs:
           sudo apt-get install -y gh
 
       - name: Create GitHub Release (gh)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Authenticate gh using the provided token and create a release attaching the APK
+          echo "$GITHUB_TOKEN" | gh auth login --with-token
+          gh release create build-${{ github.run_number }} aurora-release.apk \
+            -t "Aurora Build ${{ github.run_number }}" \
+            -n "Automated build" \
+            -R "${{ github.repository }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
