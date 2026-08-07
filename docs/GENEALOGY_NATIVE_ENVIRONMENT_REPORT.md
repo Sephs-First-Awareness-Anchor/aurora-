@@ -326,12 +326,55 @@ reported as such rather than rounded up.
 
 ---
 
-## 5. Regression suite
+## 5. Regression suite (CONFIRMED — actual run, not the directive's cited baseline)
 
-Full existing test suite run: `python3 -m pytest tests/` (184 test files).
-See the commit for the exact pass/fail/skip counts from this run — reported
-literally as pytest printed them, no filtering. Zero existing test files were
-modified; the two new files added are purely additive.
+Full suite: `python3 -m pytest tests/` (184 test files, 1856 collected items,
+46m19s). The directive's cited "147 passing, zero failures" baseline could
+not be located anywhere in this repository (no script or doc references that
+number) and does not match the current suite size (1856 items across 184
+files today), so it is not something this report can reconcile — the numbers
+below are the real, current, literally-reported result instead:
+
+```
+14 failed, 1841 passed, 1 skipped, 1 warning in 2779.08s (0:46:19)
+```
+
+All 8 new tests in `tests/test_genealogy_environment_dag_preservation.py`
+pass. **All 14 failures are pre-existing and unrelated to this work** —
+confirmed by grep: none of the 6 failing test files reference
+`aurora_genealogy_environment` in any way, and this change modified zero
+existing files. The failures, for the record:
+
+- `test_concept_image_ingestion_import.py` (1) — concept-image ingestion
+  fixture path, unrelated to genealogy/closure-basis/WARP.
+- `test_d1_device_path_attribution.py` (1) — device-path response
+  unification.
+- `test_general_execution_foundry.py` (3) — Python-candidate AST sandboxing
+  and runaway-loop termination.
+- `test_m1_2_provenance_hygiene.py` (1) — blind-origin tagging.
+- `test_reflective_readdressing.py` (7) — self-inquiry/reflective-lineage
+  turn handling; one thread also threw `FileNotFoundError: [Errno 2] No such
+  file or directory` from `aurora_checkpoint.py`'s autosave loop mid-run
+  (`sh: 0: getcwd() failed`), consistent with this remote sandbox's working
+  directory churning during a 46-minute run rather than a code defect.
+- `test_rw4_relation_to_self.py` (1) — self-relation population in live-turn
+  NonComp input.
+
+None of these touch `ConstraintLink`, `aurora_closure_basis`,
+`aurora_warp_protocol`, `aurora_internal.dual_strata.subsystem_waveforms`, or
+`aurora_internal.aurora_meaning_evolution` — the modules this work actually
+reads. They are reported here rather than silently ignored, per the
+directive's instruction to distinguish confirmed behavior from
+interpretation, but investigating/fixing them is out of scope for this
+directive and was not attempted.
+
+Running the suite also writes to a number of live `aurora_state/*.json` /
+`.jsonl` files as a side effect of booting real Aurora subsystems inside
+individual tests (e.g. `aurora_state/genealogy/{abilities,couplings,
+events_recent,tick_state}.json`, `aurora_state/concept_crystals.json.gz`,
+`aurora_state/*_snapshot.json`). Those are runtime artifacts of *running the
+suite in this sandbox*, not part of this change — they were reverted before
+committing and are not included in this branch.
 
 ---
 
