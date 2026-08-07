@@ -1,16 +1,26 @@
 # Genealogy-Native Representational Environment — Implementation Report
 
-**Status:** Phase 1 (observational derivation + shadow comparison) implemented.
-Phases 2–4 (live representational exposure, WARP coverage-authority change,
-pressure-map expansion, meaning/understanding rewrite) intentionally **not**
-started — the directive that scoped this work requires shadow validation
-before any of those, and this report's job is to state honestly whether that
-validation supports moving on, not to assume it does.
+**Status:** Phase 1 (observational derivation + shadow comparison) implemented,
+then **Phase 1.1 (edge-fidelity repair)** implemented on top of it after a
+targeted re-review surfaced two real bugs in the Phase 1 derivation — see §8.
+Both phases remain fully observational. Phases 2–4 (live representational
+exposure, WARP coverage-authority change, pressure-map expansion,
+meaning/understanding rewrite) intentionally **not** started — the directive
+that scoped this work requires shadow validation before any of those, and
+this report's job is to state honestly whether that validation supports
+moving on, not to assume it does.
 
 **Files added:** `aurora_genealogy_environment.py`,
 `aurora_genealogy_environment_shadow.py`,
 `tests/test_genealogy_environment_dag_preservation.py`. Nothing existing was
-modified.
+modified in either phase.
+
+**Phase 1.1 field renames** (Phase 1 → Phase 1.1, on `EnvironmentSignature`;
+nothing outside this module's own test file imports it, so this was a
+free rename, not a breaking change): `lineage` → `closure_projection`
+(documented as a slot-deduplicated projection, not a faithful replay —
+see §8.3); `signature_hash` → `provenance_hash` (unchanged meaning); new
+`structural_hash` and `edge_provenance` fields added.
 
 Every claim below is either (a) marked CONFIRMED, meaning it was verified by
 reading or executing the actual code in this repository, or (b)
@@ -158,19 +168,26 @@ not something to rush into the same pass as the primary objective.
     tallying `walk_link_sequence`'s own `recursion_level` (0–4,
     already-existing depth bucketing) and `i_state` (already-existing
     `AXIS_I_STATE`-derived per-node label) fields — no new mapping;
-  - builds `dimension_distribution` by resolving every **consecutive
-    transition** in the ordered sequence to a real genealogy atom
-    (`NC:{a}>{b}`), looking up its actual `InteractionSlot` via
-    `genealogy_atom_to_channel_pair()`/`slot_for_pair()`, and weighting by
-    that slot's own `depth_score` — an existing field, not an invented
-    constant;
-  - chains **every** touched atom (not just 2) into one `root_slot` string
-    and calls the existing `derive_lineage()` with it, producing a real
-    `ConstraintLineage` (leverage_grade, formation_cost, viable_band_alignment,
-    energetic_footprint, ontological_status) from the *full* preserved
-    ancestry instead of the 2-atom synthetic one;
-  - records `active_slots` and `provenance` in traversal order (this is what
-    makes the signature order-sensitive), and a `signature_hash` over them.
+  - builds `dimension_distribution` by resolving every **real
+    `ConstraintLink.parents` edge** among the walked nodes (`_derive_edges()`
+    — as of Phase 1.1, §8; NOT adjacency in the walked list, which was the
+    Phase 1 approach and is now known to fabricate sibling transitions) to a
+    real genealogy atom (`NC:{a}>{b}`), looking up its actual
+    `InteractionSlot` via `genealogy_atom_to_channel_pair()`/
+    `slot_for_pair()`, and weighting by that slot's own `depth_score` — an
+    existing field, not an invented constant;
+  - chains **every** real edge atom (not just 2, and not fabricated ones)
+    into one Unicode-`"×"`-joined `root_slot` string (as of Phase 1.1 — the
+    Phase 1 ASCII join silently failed to resolve for 3+ atoms, §8.2) and
+    calls the existing `derive_lineage()` with it, producing a real
+    `ConstraintLineage` — renamed `closure_projection` as of Phase 1.1, §8.3
+    (`leverage_grade`, `formation_cost`, `viable_band_alignment`,
+    `energetic_footprint`, `ontological_status`) from the *full* preserved,
+    edge-accurate ancestry instead of the 2-atom synthetic one;
+  - records `edge_provenance` (every real edge, with multiplicity),
+    `active_slots`, and `provenance` in traversal order, plus a label-blind
+    `structural_hash` (topology only) and a `provenance_hash` (includes real
+    link ids) — split into two hashes as of Phase 1.1, §8.3.
 - `project_to_crest_profile()` / `compare_against_core_crests()`: re-keys
   `istate_distribution` + `recursion_distribution` (already in the same
   15-key vocabulary `_CORE_CREST_PROFILES` uses) and computes cosine
@@ -188,20 +205,25 @@ Standalone, read-only script. Loads all 356 real promoted links from
 reports the cross-tabulation against the 8 authored crest profiles. Not
 imported by any live path — a diagnostic tool, run manually.
 
-### 2.3 Tests (`tests/test_genealogy_environment_dag_preservation.py`, 8 tests)
+### 2.3 Tests (`tests/test_genealogy_environment_dag_preservation.py`, 13 tests)
 
 | Test | What it proves |
 |---|---|
 | `test_merged_axis_counts_treats_both_chains_as_identical` | Executes the **existing** `_axis_counts_from_item()` on two structurally different 3-link DAGs with the same per-axis histogram and shows it returns identical counts — reproducing the information loss this directive targeted, on real `ConstraintLink` objects. |
-| `test_full_dag_derivation_distinguishes_the_same_pair` | Same two DAGs, run through `derive_environment_signature()`: identical `axis_distribution`, but different `chained_root_slot`, `active_slots`, and `signature_hash`. |
-| `test_same_genealogy_under_different_labels_produces_identical_signature` | Identical DAG structure, entirely different link ids/"names": every structural field of the signature matches. The derivation never reads a name. |
-| `test_different_genealogies_same_totals_can_differ` | Two 2-axis-histogram-equal DAGs differing only in recursion depth diverge in `recursion_distribution` and `signature_hash`. |
+| `test_full_dag_derivation_distinguishes_the_same_pair` | Same two DAGs, run through `derive_environment_signature()`: identical `axis_distribution`, but different `chained_root_slot`, `active_slots`, `structural_hash`, and `provenance_hash`. |
+| `test_same_genealogy_under_different_labels_produces_identical_signature` | Identical DAG structure, entirely different link ids/"names": every structural field matches, including `structural_hash`; only `provenance_hash` (which intentionally includes real link ids) differs. The derivation never reads a name. |
+| `test_different_genealogies_same_totals_can_differ` | Two 2-axis-histogram-equal DAGs differing only in recursion depth diverge in `recursion_distribution` and `structural_hash`. |
+| `test_four_plus_atom_chain_resolves_through_unicode_separator` *(Phase 1.1)* | A genuine 5-node chain resolves through the Unicode `"×"` join into a non-empty, correctly-populated `closure_projection` — the case Phase 1's ASCII join silently failed on. |
+| `test_ascii_join_of_the_same_chain_would_have_silently_failed` *(Phase 1.1)* | Regression guard: rejoining the same 5 atoms with ASCII `"x"` (reproducing Phase 1 exactly) is proven to resolve to `[]` via `_resolve_slots_from_root_slot()`. |
+| `test_diamond_dag_produces_real_edges_not_flat_adjacency` *(Phase 1.1)* | A genuine diamond DAG produces exactly the 5 real edges (1 self + 4 parent_child) implied by its actual `.parents` structure, not by list adjacency. |
+| `test_no_sibling_transition_is_fabricated_between_diamond_branches` *(Phase 1.1)* | Directly asserts no `edge_provenance` entry connects the diamond's two sibling branches, which the Phase 1 adjacency-based code would have fabricated. |
+| `test_same_linear_walk_different_real_structure_diverges` *(Phase 1.1)* | Two DAGs with byte-identical `walk_link_sequence()` axis order but different real parent structure (plain chain vs. one node with two real parents) produce different edge counts and `structural_hash`es — the exact bug Phase 1 could not have caught. |
 | `test_compare_against_core_crests_runs_and_stays_bounded` | Shadow comparison returns exactly the 8 authored keys, all cosine-bounded, and leaves `_CORE_CREST_PROFILES` byte-identical before/after. |
 | `test_empty_genealogy_projects_to_empty_profile` | An unresolvable link id degrades to an explicit `insufficient_genealogy` flag rather than a fabricated signature. |
 | `test_module_never_imports_warp_authority_surfaces` | Source-scans the new module for any reference to WARP's promotion/anomaly/generation entry points. None exist. |
 | `test_derivation_and_comparison_are_pure` | Running derivation + shadow comparison creates zero new files under the real `aurora_state/` directory. |
 
-All 8 pass.
+All 13 pass. (8 from Phase 1, 5 added in Phase 1.1 — see §8.)
 
 ---
 
@@ -408,11 +430,166 @@ to be validated first — and §4 shows validation is partial, not complete:
   honest interpretation section, is a separate piece of work from this one,
   not a few extra lines to bolt on at the end.
 
-## 7. Remaining architectural gaps (confirmed, not interpretation)
+## 8. Phase 1.1 — edge-fidelity repair
+
+A follow-up review of the Phase 1 code (not new directive scope, just closer
+reading of what was actually shipped) surfaced two real bugs. Both are fixed
+here; both stayed fully within the "observational, no invented constants"
+constraint — no new domain branches or behavioral thresholds were added,
+only a correction to which existing data feeds the existing physics.
+
+### 8.1 Bug 1 (CONFIRMED): transitions were read from list adjacency, not real edges
+
+Phase 1's `derive_environment_signature()` built `pairs` from **consecutive
+entries in `walk_link_sequence()`'s flat output list**
+(`zip(axis_sequence, axis_sequence[1:])`), not from `ConstraintLink.parents`.
+`walk_link_sequence()` is a post-order DFS
+(`constraint_genealogy.py:6276-6287`): for any node with 2+ parents, two
+nodes adjacent in its output are frequently **siblings from independent
+branches with no real edge between them**. Treating that adjacency as a
+genealogical transition fabricated edges that never happened in the real
+DAG.
+
+Fixed by `_derive_edges()` (`aurora_genealogy_environment.py`), which reads
+each walked node's actual `ConstraintLink.parents` and only ever pairs a
+node with an ancestor that is really one of its parents. A node whose every
+parent is a non-`Link` leaf (a bare ability id, or a root-level genealogy
+atom like `"NC:N>N"` — both already invisible to `walk_link_sequence()`
+itself, confirmed at `constraint_genealogy.py:6280-6282`) now contributes an
+explicit `edge_type="self"` entry instead of being silently paired with an
+unrelated neighbor or silently dropped.
+
+**Test:** `test_diamond_dag_produces_real_edges_not_flat_adjacency` and
+`test_no_sibling_transition_is_fabricated_between_diamond_branches` build a
+genuine diamond (`L_A -> {L_B, L_C} -> L_D`), confirm the DFS really does
+place `L_B`/`L_C` adjacently in the flat list (the exact condition that
+fooled Phase 1), and assert no `edge_provenance` entry connects them.
+`test_same_linear_walk_different_real_structure_diverges` goes further:
+constructs two 3-node DAGs whose `walk_link_sequence()` axis order is
+byte-identical (`[X, T, N]`) but whose real parent structure differs (a
+plain chain vs. one node with two real parents) — Phase 1's logic would have
+produced identical output for both; the repaired logic correctly produces 3
+edges vs. 4 and different `structural_hash`es.
+
+### 8.2 Bug 2 (CONFIRMED): the ASCII separator silently failed for 3+ atoms
+
+`_resolve_slots_from_root_slot()` (`aurora_closure_basis.py:743-763`) only
+takes the ASCII-`"x"`-split branch when `root_slot.count("x") == 1` — exactly
+2 atoms. Phase 1 joined the full chain with ASCII `"x"`
+(`"x".join(atoms_in_order)`). For any genealogy with 3+ transitions — the
+common case, since the 356-link shadow corpus has mean `node_count=3.96` —
+`root_slot.count("x")` was ≥2, landing in the `else` branch, which treats the
+**entire joined string as one unparseable atom** and returns an **empty**
+slot list. `derive_lineage()` then silently fell through to its
+axis+`requires`-only fallback path (`aurora_closure_basis.py:966`), meaning
+the Phase 1 report's claim that `derive_lineage()` received "the full
+preserved chain" **did not actually hold for most of the real genealogies it
+was run against** — spot-checked directly: the one example quoted in the
+Phase 1 report (`L:be51b47ae4`, a 6-atom chain) had already silently hit this
+failure path, though because every atom in that particular chain happened to
+be `T>T`, the axis+requires fallback (`requires=("T",)`) coincidentally
+produced the same single slot the intended chain would have, masking the bug
+in that one spot-check.
+
+Fixed by joining with the canonical Unicode `"×"`
+`_resolve_slots_from_root_slot()` checks **first and unconditionally**, for
+any chain length.
+
+**Test:** `test_four_plus_atom_chain_resolves_through_unicode_separator`
+builds a genuine 5-node linear chain (X→T→N→B→A, 5 distinct atoms) and
+asserts `_resolve_slots_from_root_slot()` actually returns non-empty slots
+and that all 5 expected slot ids reach `closure_projection.active_slots`.
+`test_ascii_join_of_the_same_chain_would_have_silently_failed` is a direct
+regression guard: it takes that same 5-atom chain, rejoins it with ASCII
+`"x"` (reproducing exactly what Phase 1 did), and asserts
+`_resolve_slots_from_root_slot()` returns `[]` for it — proving the bug was
+real and that the Unicode join is load-bearing, not cosmetic.
+
+### 8.3 Renamed `lineage` → `closure_projection`, documented honestly
+
+`derive_lineage()`'s `_add()` helper (`aurora_closure_basis.py:959-962`)
+deduplicates by `slot_id`. Even with both bugs fixed, its output can never
+by itself certify branch multiplicity or topology — two real, distinct
+edges that resolve to the same slot collapse to one entry. Worse (found
+while re-verifying the fix, not anticipated going in):
+`derive_lineage()` **also unconditionally unions in slots from its own
+axis+`requires` resolution path** (`aurora_closure_basis.py:966`), regardless
+of `root_slot` content — so `closure_projection.active_slots` can legally
+contain *more* slots than `edge_provenance` describes. The 5-atom linear
+chain in §8.2's test resolves to **8** deduplicated slots, not 5, because
+`requires` covered all 5 axes and pulled in 3 additional `X>*` slots the
+real edges never touched.
+
+None of this makes `closure_projection` wrong — it is a real,
+physics-grounded reading, exactly as before. But it can no longer be
+described as "the chain, resolved." It is renamed and documented as a
+**closure projection**: a lawful but lossy view, useful for the existing
+closure-basis grades (`leverage_grade`, `formation_cost`,
+`viable_band_alignment`, `energetic_footprint`, `ontological_status`), never
+for multiplicity or topology claims. `edge_provenance` (full multiplicity,
+every real edge) and `structural_hash` (topology fingerprint, label-blind)
+are the fields that carry what `closure_projection` structurally cannot.
+
+**Test:** `test_same_genealogy_under_different_labels_produces_identical_signature`
+now asserts `structural_hash` matches across relabeled-but-isomorphic
+genealogies while `provenance_hash` (which intentionally includes real link
+ids) does not — confirming `structural_hash` is the label-independent
+signal the directive's testing strategy asked for, distinct from and
+narrower than the old single `signature_hash`.
+
+### 8.4 Re-run of the 356-link shadow, before/after
+
+```
+Best-matching authored crest profile (argmax cosine):        [UNCHANGED]
+  memory: 302   continuity: 23   pressure: 16   sensory: 10   prediction: 5
+
+Per-crest cosine similarity means:                            [UNCHANGED]
+  memory 0.6299   continuity 0.5033   pressure 0.5018   sensory 0.4569 ...
+
+Edge-fidelity stats (new in Phase 1.1):
+  edges per genealogy: min=1 max=16 mean=5.13
+  self edges (leaf-rooted nodes): total=772  mean=2.17
+  parent_child edges (real DAG edges): total=1054  mean=2.96
+  chained_root_slot empty (unresolvable): 0 / 356
+
+closure_projection stats (new in Phase 1.1 — not collected in the Phase 1
+report, since Phase 1 never instrumented this and, per §8.2, was mostly
+silently falling back to the axis+requires-only path for these genealogies
+anyway, so there is no valid "before" number to diff against here):
+  deduped active_slots per genealogy: min=1 max=7 mean=1.97
+  leverage_grade: min=0.0769 max=1.0000 mean=0.1734 stdev=0.2194
+  formation_cost: min=0.0067 max=1.0000 mean=0.1181 stdev=0.1989
+```
+
+Exactly as predicted going in: the crest-comparison numbers in §4 are
+**byte-identical** before and after, because `istate_distribution` and
+`recursion_distribution` are node-level (from `walk_link_sequence()`
+directly) and untouched by the edge-fidelity repair. The **closure-basis**
+statistics are where the ASCII-separator and false-edge bugs mattered, and
+those are now populated from real data for the first time at corpus scale —
+mean edges-per-genealogy (5.13) exceeds mean `node_count - 1` (2.96), which
+is the direct, confirmed signature of real branching (diamond merges
+contributing multiple parent edges) being captured instead of flattened
+into a linear list.
+
+### 8.5 Regression scope for Phase 1.1
+
+`grep -rl "aurora_genealogy_environment" --include="*.py" .` returns only
+this module's own test file — nothing else in the repository imports it.
+The full 184-file / 46-minute suite from §5 was therefore not re-run for
+this follow-up; the change is fully isolated by construction (renamed
+dataclass fields with no external consumers, new fields, corrected internal
+logic), and the 13 tests in
+`tests/test_genealogy_environment_dag_preservation.py` (up from 8; 5 new,
+covering exactly the scenarios in §8.1/§8.2/§8.3) all pass.
+
+## 9. Remaining architectural gaps (confirmed, not interpretation)
 
 1. `ConstraintLink` cannot express which of a constraint's 5 dimension-roles
    an operation engaged (§3) — this is the most consequential open gap for
-   the "derived environmental signature" goal specifically.
+   the "derived environmental signature" goal specifically. Unaffected by
+   Phase 1.1: real edges still resolve to genealogy atoms, which are still
+   hard-confined to OPERATOR×COST.
 2. No `ConstraintLink` field ties a promoted link to a subsystem/substrate
    name — the shadow comparison in §4 is corpus-wide, not per-substrate,
    for exactly this reason.
@@ -424,3 +601,11 @@ to be validated first — and §4 shows validation is partial, not complete:
    "the same axis dominant at multiple *distinct* links," not "the same
    link visited multiple times" — worth being precise about if this
    distinction matters for later work.
+4. `derive_lineage()`'s unconditional axis+`requires` slot union (§8.3) means
+   `closure_projection` is not a pure function of `edge_provenance` — two
+   genealogies with identical edges but different `axis_distribution`
+   coverage (different `requires` tuples) can get different
+   `closure_projection.active_slots` padding even when their real edges
+   match. This is pre-existing `derive_lineage()` behavior this repair
+   surfaced but did not change; worth flagging for anyone consuming
+   `closure_projection` expecting it to depend only on `edge_provenance`.

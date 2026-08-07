@@ -52,6 +52,14 @@ def main() -> None:
     dominant_axis_counter = Counter()
     insufficient = 0
 
+    edge_counts = []
+    self_edge_counts = []
+    parent_child_edge_counts = []
+    deduped_slot_counts = []
+    leverage_grades = []
+    formation_costs = []
+    empty_root_slot_count = 0
+
     for link_id in links:
         sig = derive_environment_signature(logger, link_id)
         if sig.insufficient_genealogy:
@@ -67,6 +75,16 @@ def main() -> None:
             per_crest_scores[name].append(score)
         top_axis = max(sig.axis_distribution, key=lambda a: sig.axis_distribution[a]) if sig.axis_distribution else "?"
         dominant_axis_counter[top_axis] += 1
+
+        edge_counts.append(len(sig.edge_provenance))
+        self_edge_counts.append(sum(1 for e in sig.edge_provenance if e["edge_type"] == "self"))
+        parent_child_edge_counts.append(sum(1 for e in sig.edge_provenance if e["edge_type"] == "parent_child"))
+        if not sig.chained_root_slot:
+            empty_root_slot_count += 1
+        if sig.closure_projection is not None:
+            deduped_slot_counts.append(len(sig.closure_projection.active_slots))
+            leverage_grades.append(sig.closure_projection.leverage_grade)
+            formation_costs.append(sig.closure_projection.formation_cost)
 
     print(f"Total links in fossil record: {len(links)}")
     print(f"Insufficient/empty genealogies: {insufficient}")
@@ -90,6 +108,19 @@ def main() -> None:
             f"stdev={statistics.pstdev(scores):.4f} "
             f"min={min(scores):+.4f} max={max(scores):+.4f}"
         )
+    print()
+    print("Edge-fidelity stats (Phase 1.1 -- real ConstraintLink.parents edges, not list adjacency):")
+    if edge_counts:
+        print(f"  edges per genealogy: min={min(edge_counts)} max={max(edge_counts)} mean={statistics.mean(edge_counts):.2f}")
+        print(f"  self edges (leaf-rooted nodes): total={sum(self_edge_counts)} mean={statistics.mean(self_edge_counts):.2f}")
+        print(f"  parent_child edges: total={sum(parent_child_edge_counts)} mean={statistics.mean(parent_child_edge_counts):.2f}")
+    print(f"  chained_root_slot empty (no resolvable edges): {empty_root_slot_count}")
+    print()
+    print("closure_projection stats (derive_lineage() fed the real, Unicode-x-joined chain):")
+    if deduped_slot_counts:
+        print(f"  deduped active_slots per genealogy: min={min(deduped_slot_counts)} max={max(deduped_slot_counts)} mean={statistics.mean(deduped_slot_counts):.2f}")
+        print(f"  leverage_grade: min={min(leverage_grades):.4f} max={max(leverage_grades):.4f} mean={statistics.mean(leverage_grades):.4f} stdev={statistics.pstdev(leverage_grades):.4f}")
+        print(f"  formation_cost: min={min(formation_costs):.4f} max={max(formation_costs):.4f} mean={statistics.mean(formation_costs):.4f} stdev={statistics.pstdev(formation_costs):.4f}")
 
 
 if __name__ == "__main__":
