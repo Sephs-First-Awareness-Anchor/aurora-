@@ -531,6 +531,16 @@ _MAX_CATEGORICAL_DEPTH = 3
 _MAX_CATEGORICAL_CONDITIONS = 200
 
 
+def _apply_condition_op(op: str, left: Any, right: Any) -> bool:
+    if op == "EQ": return _values_equal(left, right)
+    if op == "NE": return not _values_equal(left, right)
+    if op == "LT": return bool(left < right)
+    if op == "LE": return bool(left <= right)
+    if op == "GT": return bool(left > right)
+    if op == "GE": return bool(left >= right)
+    raise ValueError(f"unknown_condition_op:{op}")
+
+
 def _categorical_condition_pool(examples: Sequence[SynthesisExample]) -> List[Dict[str, Any]]:
     """Comparison conditions built from _select_candidates() projections,
     mirroring _synthesize_boolean_scalar()'s own condition-building loop --
@@ -538,16 +548,47 @@ def _categorical_condition_pool(examples: Sequence[SynthesisExample]) -> List[Di
     instruction. Ordering comparisons (LT/LE/GT/GE), not just EQ/NE, are
     required for a categorical rule to generalize past the literal training
     values on any ordered input (e.g. sign classification) rather than
-    memorizing one EQ test per training example."""
+    memorizing one EQ test per training example.
+
+    Admissibility repair: a condition that is all-True or all-False across
+    every example can never partition any subgroup either (a constant
+    condition on the whole set stays constant on any subset of it), so it
+    is filtered here before it can consume one of the 200 usable slots.
+    Projections that yield identical values across every example are
+    functionally the same condition ingredient and are collapsed to one
+    representative. Projection-vs-observed-literal EQ/NE comparisons on
+    discriminative (non-constant) projections are proposed before
+    projection-vs-projection and ordering comparisons, so a categorical
+    learner reaches "field == observed category" long before its budget
+    is spent on self-comparisons and constant-field pairings. None of this
+    is domain-specific -- it is the same admissibility test (does the
+    condition actually partition the evidence?) applied uniformly to every
+    candidate, regardless of what field or value it happens to involve.
+    """
     atoms = _select_candidates(examples)
-    scalar_atoms: List[Dict[str, Any]] = []
+    seen_atom_signatures: set = set()
+    scalar_atoms: List[Tuple[Dict[str, Any], List[Any]]] = []
     for atom in atoms:
         try:
             vals = [execute_program(atom, e.input_value) for e in examples]
         except Exception:
             continue
-        if all(isinstance(v, (int, float, str, bool)) for v in vals):
-            scalar_atoms.append(atom)
+        if not all(isinstance(v, (int, float, str, bool)) for v in vals):
+            continue
+        sig = _stable_hash(vals, 24)
+        if sig in seen_atom_signatures:
+            continue  # another projection already produces these exact values
+        seen_atom_signatures.add(sig)
+        scalar_atoms.append((atom, vals))
+
+    def _is_discriminative(vals: Sequence[Any]) -> bool:
+        return len({(type(v).__name__, v) for v in vals}) > 1
+
+    # Stable sort: discriminative projections first, but the deterministic
+    # path ordering from _select_candidates() is preserved within each group.
+    scalar_atoms.sort(key=lambda pair: 0 if _is_discriminative(pair[1]) else 1)
+    discriminative_atoms = [pair for pair in scalar_atoms if _is_discriminative(pair[1])]
+    constant_atoms = [pair for pair in scalar_atoms if not _is_discriminative(pair[1])]
 
     # Literal values actually observed in the inputs are the only constants
     # worth comparing against -- this is what lets a condition like
@@ -562,23 +603,68 @@ def _categorical_condition_pool(examples: Sequence[SynthesisExample]) -> List[Di
             if key not in seen_literals:
                 seen_literals.add(key)
                 literal_values.append(v)
-    constants = [{"op": "CONST", "value": v} for v in (-1, 0, 1, True, False)]
-    constants += [{"op": "CONST", "value": v} for v in literal_values[:24]]
+    literal_terms: List[Tuple[Dict[str, Any], List[Any]]] = [
+        ({"op": "CONST", "value": v}, [v] * len(examples)) for v in literal_values[:24]
+    ]
+    generic_terms: List[Tuple[Dict[str, Any], List[Any]]] = [
+        ({"op": "CONST", "value": v}, [v] * len(examples)) for v in (-1, 0, 1, True, False)
+    ]
 
-    pool = scalar_atoms + constants
     conditions: List[Dict[str, Any]] = []
-    seen_signatures = set()
-    for left in pool:
-        for right in pool:
-            for op in ("EQ", "NE", "LT", "LE", "GT", "GE"):
-                node = {"op": op, "args": [left, right]}
-                sig = _program_signature(node)
-                if sig in seen_signatures:
-                    continue
-                seen_signatures.add(sig)
-                conditions.append(node)
-                if len(conditions) >= _MAX_CATEGORICAL_CONDITIONS:
-                    return conditions
+    seen_condition_signatures: set = set()
+
+    def _emit(
+        left: Dict[str, Any], left_vals: Sequence[Any],
+        right: Dict[str, Any], right_vals: Sequence[Any],
+        ops: Sequence[str],
+    ) -> bool:
+        """Add each op's condition unless it's a duplicate signature or it
+        fails to partition these examples (all-True/all-False). Returns
+        True once the budget is filled."""
+        for op in ops:
+            node = {"op": op, "args": [left, right]}
+            sig = _program_signature(node)
+            if sig in seen_condition_signatures:
+                continue
+            seen_condition_signatures.add(sig)
+            try:
+                cond_vals = [_apply_condition_op(op, lv, rv) for lv, rv in zip(left_vals, right_vals)]
+            except Exception:
+                continue
+            if len(set(cond_vals)) < 2:
+                continue  # constant across all examples -- cannot partition anything
+            conditions.append(node)
+            if len(conditions) >= _MAX_CATEGORICAL_CONDITIONS:
+                return True
+        return False
+
+    # Phase 1: discriminative projection ==/!= an observed literal.
+    for atom, avals in discriminative_atoms:
+        for lit, lvals in literal_terms:
+            if _emit(atom, avals, lit, lvals, ("EQ", "NE")):
+                return conditions
+
+    # Phase 2: discriminative projection ordered against an observed literal.
+    for atom, avals in discriminative_atoms:
+        for lit, lvals in literal_terms:
+            if _emit(atom, avals, lit, lvals, ("LT", "LE", "GT", "GE")):
+                return conditions
+
+    # Phase 3: discriminative projection vs. discriminative projection.
+    for left, lvals in discriminative_atoms:
+        for right, rvals in discriminative_atoms:
+            if _emit(left, lvals, right, rvals, ("EQ", "NE", "LT", "LE", "GT", "GE")):
+                return conditions
+
+    # Phase 4: everything else -- constant projections and the generic
+    # small-integer/boolean constants -- tried only once the discriminative
+    # frontier above is exhausted.
+    remaining_terms = discriminative_atoms + constant_atoms + literal_terms + generic_terms
+    for left, lvals in remaining_terms:
+        for right, rvals in remaining_terms:
+            if _emit(left, lvals, right, rvals, ("EQ", "NE", "LT", "LE", "GT", "GE")):
+                return conditions
+
     return conditions
 
 
