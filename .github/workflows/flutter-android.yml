@@ -109,12 +109,4 @@ jobs:
             -t "Aurora Build ${{ github.run_number }}" \
             -n "Automated build" \
             -R "${{ github.repository }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Authenticate gh using the provided token and create a release attaching the APK
-          echo "$GITHUB_TOKEN" | gh auth login --with-token
-          gh release create build-${{ github.run_number }} aurora-release.apk \
-            -t "Aurora Build ${{ github.run_number }}" \
-            -n "Automated build" \
-            -R "${{ github.repository }}"
+        
