@@ -99,12 +99,18 @@ class TestRealCorpusRegression:
     @pytest.fixture(scope="class")
     @classmethod
     def real_records(cls):
+        # Pinned to a committed snapshot (tests/fixtures/), not the live
+        # aurora_state/genealogy/events_recent.json path -- found, running
+        # the full suite, that some OTHER test boots a real
+        # ConstraintGenealogyLogger against that live path and overwrites it
+        # (31259 lines -> 1), which made this "real corpus" regression
+        # flaky depending on test order/full-suite-vs-isolated runs.
         path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "aurora_state", "genealogy", "events_recent.json",
+            os.path.dirname(os.path.abspath(__file__)),
+            "fixtures", "genealogy_events_recent_snapshot.json",
         )
         if not os.path.exists(path):
-            pytest.skip("real genealogy fossils not present in this checkout")
+            pytest.skip("tests/fixtures/genealogy_events_recent_snapshot.json not present in this checkout")
         with open(path, "r", encoding="utf-8") as f:
             return list(json.load(f).get("records") or [])
 

@@ -268,16 +268,21 @@ class TestLiveReplayAgainstRealCorpus:
     (not a parallel shadow structure) still shows zero genuine co-occurrence."""
 
     def test_live_replay_of_real_corpus_confirms_zero_cooccurrence(self):
+        # Pinned to the committed snapshot, not the live aurora_state/genealogy/
+        # path -- found, running the full suite, that some OTHER test boots a
+        # real ConstraintGenealogyLogger against that live path and overwrites
+        # events_recent.json (31259 lines -> 1), which made this regression
+        # flaky depending on test order/full-suite-vs-isolated runs.
         events_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "aurora_state", "genealogy", "events_recent.json",
+            os.path.dirname(os.path.abspath(__file__)),
+            "fixtures", "genealogy_events_recent_snapshot.json",
         )
         if not os.path.exists(events_path):
-            pytest.skip("real genealogy fossils not present in this checkout")
+            pytest.skip("tests/fixtures/genealogy_events_recent_snapshot.json not present in this checkout")
 
         from aurora_genealogy_cooccurrence_observatory_report import replay_real_corpus_live
 
-        sink = replay_real_corpus_live()
+        sink = replay_real_corpus_live(events_path=events_path)
         assert len(sink) > 0
         eligible_and_passed = [o for o in sink if o.pair_eligible and o.difference_passed]
         assert eligible_and_passed == []

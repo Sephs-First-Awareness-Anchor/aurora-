@@ -75,9 +75,17 @@ def _difference_snapshot_from_dict(d):
         return None
 
 
-def replay_real_corpus_live():
+def replay_real_corpus_live(events_path: str = None):
+    """`events_path` defaults to the live, current
+    aurora_state/genealogy/events_recent.json (correct for this diagnostic
+    script's own purpose: reflect current real state). Tests that need a
+    deterministic, committed snapshot instead (found: some other test in
+    the full suite boots a real ConstraintGenealogyLogger against that live
+    path and overwrites it) should pass tests/fixtures/genealogy_events_
+    recent_snapshot.json explicitly."""
     root = os.path.dirname(os.path.abspath(__file__))
-    events_path = os.path.join(root, "aurora_state", "genealogy", "events_recent.json")
+    if events_path is None:
+        events_path = os.path.join(root, "aurora_state", "genealogy", "events_recent.json")
     with open(events_path, "r", encoding="utf-8") as f:
         records = list(json.load(f).get("records") or [])
 
