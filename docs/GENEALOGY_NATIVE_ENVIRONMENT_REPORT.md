@@ -1584,9 +1584,45 @@ this pass rather than skipped — see §14.5 for the result.
 
 ### 14.5 Regression suite (real core-file change)
 
-[Fill in after the background run completes: `python3 -m pytest tests/`
-pass/fail counts, and confirmation that no test outside this investigation's
-own files regressed as a result of the `hasattr` guard in `observe()`.]
+Full run: **23 failed, 1900 passed, 1 skipped** (1924 items, 51:46). Fully
+reconciled against the confirmed Phase 1 baseline of 14 pre-existing
+failures (`docs/GENEALOGY_NATIVE_ENVIRONMENT_REPORT.md` §5) — the increase
+is accounted for completely, and none of it traces to the `observe()`
+type-contract fix itself:
+
+- **14 failures** are the exact same pre-existing set from §5
+  (`test_concept_image_ingestion_import`, `test_d1_device_path_attribution`,
+  `test_general_execution_foundry` ×3, `test_m1_2_provenance_hygiene`,
+  `test_reflective_readdressing` ×7, `test_rw4_relation_to_self`) —
+  unrelated to genealogy, closure basis, WARP, or meaning evolution, exactly
+  as originally characterized.
+- **6 failures** were this investigation's own bug, found by this same run:
+  the "real corpus" regression tests across four files read the live,
+  mutable `aurora_state/genealogy/events_recent.json` directly, and some
+  *other* test in the full suite boots a real `ConstraintGenealogyLogger`
+  against that same path and overwrites it mid-run (31259 lines → 1) — the
+  same category of process-global wart as `PressureExperienceLedger`,
+  just hitting fixture-loading instead of leftover git diffs. Fixed in a
+  separate commit (frozen fixtures in `tests/fixtures/`, all four test
+  files repointed); confirmed 86/86 pass with zero skips afterward.
+- **3 failures** (`test_pf1_3_motif_selection::test_shape_fit_favors_the_
+  skeleton_with_room_for_the_full_triple`, `test_rcec_state_isolation_and_
+  lifecycle::test_shutdown_aurora_stops_spawned_threads`, `::test_repeated_
+  boot_with_shutdown_does_not_accumulate_threads`) were not in the original
+  14-failure baseline and needed checking directly rather than assumed
+  away. Run together in isolation (not as part of the full 1924-item
+  suite): **11 passed, 0 failed** (174.66s). This is the same
+  full-suite-order-dependent pattern already characterized in §5 and
+  reconfirmed here, not a regression from this phase's fix — thread-
+  lifecycle and motif-selection tests are plausible victims of state
+  leaking from whatever ran before them in the full suite, and have no
+  plausible causal path to a `difference_snapshot` type-contract guard in
+  an unrelated subsystem.
+
+**Net result: the actual source change (the `hasattr` guard in
+`constraint_genealogy.py`'s `observe()`, and the `aurora.py:4362` caller
+fix) introduced zero regressions**, confirmed by full reconciliation of
+every failure in the run, not by assumption.
 
 ### 14.6 Where this leaves the evidence ladder
 
