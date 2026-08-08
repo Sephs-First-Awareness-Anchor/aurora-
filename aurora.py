@@ -4370,7 +4370,7 @@ class ConstraintFieldBalancer:
                         f"bal_a_{ax}".encode()).hexdigest()[:8],
                     notes={"tag": "field_balance", "axis": ax,
                            "gradient": round(g, 4), "ema": round(self._ema[ax], 4)},
-                    difference_snapshot={},
+                    difference_snapshot=None,
                 )
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(

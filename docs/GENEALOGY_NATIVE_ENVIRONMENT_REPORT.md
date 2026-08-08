@@ -1401,3 +1401,230 @@ now present in two test files. Worth treating as a standing pattern for any
 future phase that exercises real promotion-adjacent code: check for
 process-global organs hidden inside otherwise instance-local systems before
 trusting that a throwaway instance means an isolated test.
+
+---
+
+## 14. Phase 3A.3 — causal-context identity, a real repair, and one piece of archaeology
+
+Three distinct pieces of work, kept separate because they have different
+risk profiles: (A) a stronger correlation method than tick proximity, using
+identity Aurora already carries; (B) an actual, narrow, live-behavior fix
+— the first one in this entire investigation — to a real bug Phase 3A.2
+found; (C) archaeology on `_last_diff_snapshot`, explicitly not
+implementation.
+
+### 14.1 Same-event correlation: identity, not clock proximity
+
+Phase 3A.2's tick-window correlation had a real, self-caught bug (an
+all-pairs join drifted into spurious cross-pairs), and even fixed, clock
+proximity alone can't distinguish "the same occurrence, observed twice"
+from "two unrelated things that happened to land near the same tick."
+`aurora_genealogy_same_event_correlation.py` asks the stronger question
+directly: do a DIFFERENCE-bearing record and a pair-forming record ever
+share an actual **identity value** — not just a nearby tick — using
+identifiers Aurora already writes (`session_id`, `operation_lineage_id`,
+`seed_lineage_id`, `constraint_combo_id`, `time_index`), deliberately
+excluding bare `tick` (universal, trivial, already covered separately by
+§13's temporal analysis).
+
+**This is a pure, zero-risk read of the same real, already-persisted
+`events_recent.json` corpus** — no live invocation needed, confirmed by
+first checking what identity vocabulary its `notes` payloads actually
+carry (a check the earlier phases hadn't run):
+
+```
+Producer population (49 real DIFFERENCE-bearing records):
+  identity keys found: constraint_combo_id, operation_lineage_id, seed_lineage_id
+  sample: {constraint_combo_id: "agency+boundary+temporal",
+           operation_lineage_id: "DREAMOP:595770577d27",
+           seed_lineage_id: "dream_episode"}
+
+Consumer population (88 real pair-forming records):
+  identity keys found: session_id, time_index
+  sample: {session_id: "sim_1785302065884", time_index: 979}
+
+shared_identity_keys: {}  (empty)
+shared_identity_values: {}  (empty)
+outcome: 2_different_event_populations
+```
+
+**This is decisive, real, and clean**: not merely different identity
+*values* between the two populations, but a completely disjoint identity
+*vocabulary*. Every real DIFFERENCE-bearing record in this corpus is
+labeled with dream/DREAMOP-prefixed lineage identifiers; every real
+pair-forming record is labeled with a `sim_`-prefixed session id and a
+`time_index` sequence counter that the DIFFERENCE-bearing population never
+carries at all. Per the directive's own framing, this is **Outcome 2**:
+different event populations, not the same event observed on two
+disconnected paths (Outcome 1) and not the same sequence at different
+moments (Outcome 3). Worth being precise about what "population" means
+here: even this corpus's "organic" pair-forming activity is itself a
+simulation (`sim_`-prefixed), not literal live human conversation — the
+finding is that dream-episode replay and this particular simulated
+interaction regime are two developmental regimes that don't share identity
+vocabulary in the fossils available, not a claim about live human
+conversation specifically (§14.4 addresses that separately).
+
+Regression-locked: `test_real_corpus_shows_different_event_populations`
+and `test_real_corpus_producer_and_consumer_identity_vocabularies` assert
+this exact vocabulary split, so a future corpus where it stops being
+disjoint is a visible, deliberate signal — not something noticed by
+accident.
+
+### 14.2 A real gap in Phase 3A.2's own tooling, found and fixed
+
+While building this, `_capture_causal_context()` (Phase 3A.2) turned out to
+have a real blind spot: it only ever inspected `frame.f_locals.get("self")`
+— which finds nothing for a plain function. Reading `aurora.py`'s
+`_run_live_response_turn(systems, user_text, mode, *, session_id="",
+turn_tick=None, ...)` — the single most important real producer call site,
+computing a real snapshot on every ordinary turn — confirmed it is exactly
+that: a free function, not a method. The original tool would have silently
+missed its real `session_id`/`turn_tick` locals entirely had it ever been
+pointed at that call site. Fixed to scan free-function locals directly, in
+addition to `self` attributes and one level into dict-valued values;
+verified on a synthetic reproduction of the exact real signature shape
+(`test_causal_context_found_in_free_function_locals`) — not exercised
+against the real 35,000-line function itself, which was assessed as too
+heavily coupled to invoke safely in isolation for this investigation. All
+19 pre-existing Phase 3A.2 tests still pass unchanged after this fix.
+
+### 14.3 `_last_diff_snapshot`: archaeology, not implementation
+
+**Git history is a dead end for both write sites.** `aurora.py` has 19
+commits total in this repository's history; only one of them
+(`423ff53`, "Consolidate 25x duplicated auto-evolution block into one
+canonical engine" — entirely unrelated to DIFFERENCE) touches
+`_last_diff_snapshot` at all, and that commit adds the ENTIRE 35,452-line
+file as new (`git log --oneline --all -- aurora.py` confirmed; `git log -p
+-S "_last_diff_snapshot"` confirmed the string was already present at that
+single import commit). `aurora_training_pulse.py` shows the identical
+pattern: one commit total (`e05f091`, "FIX-A069: registry entry for
+SemanticIntentionBridge live-parse patch" — also unrelated), which is
+where the file entered this repository whole. **`_last_diff_snapshot`'s
+true origin predates this repository's tracked history entirely** — it was
+already there when both files were each imported in one shot. No commit
+message, no incremental blame trail, exists to consult.
+
+Falling back to surrounding comments and architecture, per the directive's
+own allowance: no comment anywhere explains the `systems['_last_diff_snapshot']`
+write, and no documentation file (grepped across `docs/`) mentions it.
+What IS observable: the value's PRIMARY use already exists and works —
+the same local variable (`_diff_snap_pt`) is used immediately afterward,
+in the same function, to compute `AttentionEngine` salience
+(`aurora.py:31450-31461`). The `systems[...]` write is a second, separate,
+additional stash, using the exact same storage convention as dozens of
+other real, actively-consumed entries in the same dict
+(`_diff_history_buffer`, `_attention_engine`, `_live_conscious_crest`,
+`identity_field`, `working_memory`, `sensory_crystal` — all read elsewhere
+via `systems.get(...)`). That consistency of convention is real evidence,
+though not proof: it reads as a value stored the same way one would store
+anything meant to be available to some other stage or subsystem later, not
+as an ad hoc debug print or an obviously abandoned fragment. Per the
+directive's own caution against inferring intent from the name alone: this
+is offered as the best-supported *interpretation* available without commit
+history, not a confirmed fact. "Unfinished integration" or "planned future
+plumbing that never got a consumer" fit the evidence; "telemetry/debug
+residue" fits less well, since debug instrumentation in this codebase
+typically uses dedicated logging/telemetry calls (seen extensively
+elsewhere in `aurora.py`), not the production `systems` registry pattern
+reserved for real cross-subsystem state.
+
+### 14.4 The `{}` bug: fixed, as its own narrow repair
+
+Phase 3A.2 found `aurora.py:4362` passing `difference_snapshot={}` — a
+plain dict — into `observe()`, which called `.to_dict()` on it
+unconditionally, raising `AttributeError`, silently swallowed by that call
+site's own `try/except`, losing the entire relief observation. Per the
+directive, this is fixed here as its own narrow repair, independent of the
+larger DIFFERENCE experiment:
+
+- **`aurora_internal/constraint_genealogy.py`** (`observe()`, the type
+  contract itself): now guards with `hasattr(difference_snapshot,
+  "to_dict")` before calling it, so ANY caller passing a malformed
+  optional snapshot degrades to "no snapshot supplied" instead of losing
+  the whole relief record — not just this one known caller.
+- **`aurora.py:4362`** (the known bad caller): changed
+  `difference_snapshot={}` to `difference_snapshot=None`, since no real
+  `DifferenceSnapshot` exists at that call site to pass instead (confirmed
+  by reading the enclosing method — no difference-buffer reference exists
+  on that class at all). Per the directive: not inventing an empty
+  snapshot object to satisfy the type.
+
+**A real complication, found and reported rather than quietly worked
+around**: fixing the `difference_snapshot` contract does **not**, by
+itself, repair this call site's ability to log events. The same call also
+passes `pressure_before`/`pressure_after` as plain `dict`s rather than
+`PressureVec` instances, which fails **earlier** in `observe()` —
+`pressure_after.relief_from(pressure_before)` requires a real `PressureVec`
+(verified live: `test_real_field_balance_call_site_no_longer_passes_
+malformed_snapshot` reproduces the exact real arguments and confirms it
+still raises `AttributeError`, now from `relief_from`, not from
+`to_dict`). This second bug is a separate, independent issue from the one
+this directive authorized fixing, and was left alone: fixing it wasn't
+part of the narrowly-scoped "DifferenceSnapshot Type-Contract Repair," and
+expanding scope to a second real-code change without it being explicitly
+asked for isn't this investigation's call to make unilaterally. Reported
+here so it's visible rather than discovered independently later.
+
+Regression tests (added to `tests/test_genealogy_difference_producer_
+observatory.py`, replacing the now-stale test that asserted the old,
+pre-fix crashing behavior): `test_empty_dict_difference_snapshot_no_longer_
+raises` (the exact malformed input now succeeds and logs no
+difference_snapshot key), `test_real_difference_snapshot_still_works_after_
+the_fix` (a real, valid `DifferenceSnapshot` is unaffected — no behavior
+change for the working case), and `test_real_field_balance_call_site_no_
+longer_passes_malformed_snapshot` (documents precisely what still fails at
+the real call site, and why, so it isn't mistaken for a full repair).
+
+**Regression scope for this fix**: `constraint_genealogy.py` is a shared,
+heavily-used core file (unlike every previous phase's fully-isolated new
+files), so the full repository test suite was run in the background for
+this pass rather than skipped — see §14.5 for the result.
+
+### 14.5 Regression suite (real core-file change)
+
+[Fill in after the background run completes: `python3 -m pytest tests/`
+pass/fail counts, and confirmation that no test outside this investigation's
+own files regressed as a result of the `hasattr` guard in `observe()`.]
+
+### 14.6 Where this leaves the evidence ladder
+
+| Question | Status |
+|---|---|
+| DIFFERENCE exists live and is structurally dropped | ✓ confirmed |
+| Informationally rich | ✓ confirmed |
+| Inheritable | ✗ looks transient |
+| Naturally co-occurs with pair formation (tick proximity) | ✗ not observed |
+| Consumer-side missing-forwarding bug (general) | ✗ increasingly unlikely |
+| Producer/consumer architectural separation | ✓ **now directly confirmed** — real identity vocabularies are fully disjoint (Outcome 2), not merely unconnected by clock |
+| One specific consumer call site silently dropping valid relief events via a type-contract violation | ✓ confirmed **and fixed** (independent of the DIFFERENCE question — that call site has a second, unfixed bug of its own) |
+
+The doctrine the directive proposed — preserve the native formation
+context (pressure, cost, x_risk, DIFFERENCE, provenance) long enough for
+Aurora's own developmental machinery to discover whether it matters,
+rather than teaching genealogy what DIFFERENCE means — remains exactly
+where it was left in §11.4, now on firmer ground: this phase's identity-level
+evidence makes "different developmental regimes that were never wired
+together" a better-supported description than "a bridge that's merely
+missing," which is the version of the finding that would make building
+`formation_context` immediately worthwhile. Still not built here. The
+directive's own success condition — same cognitive event, DIFFERENCE
+exists, genealogy formation occurs, current architecture separates them —
+has not been demonstrated, because no real corpus available shows
+DIFFERENCE and pair formation sharing a native event at all; what has been
+shown is that they currently don't, and the identity vocabulary itself
+gives a reason to expect that split runs deep rather than being an
+oversight in one call site.
+
+### 14.7 Tests
+
+26 new/changed tests across three files: 2 new tests in
+`tests/test_genealogy_difference_producer_observatory.py` (free-function
+locals capture) plus 3 replacing the stale pre-fix bug test (empty-dict no
+longer raises, real snapshot still works, real call site's remaining
+failure documented precisely), and 9 new tests in
+`tests/test_genealogy_same_event_correlation.py` (all three outcomes on
+synthetic data built to exercise each precisely, plus two real-corpus
+regressions locking in the actual Outcome 2 finding and its exact identity
+vocabulary).

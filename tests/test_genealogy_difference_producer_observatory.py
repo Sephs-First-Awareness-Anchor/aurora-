@@ -106,6 +106,25 @@ class TestCausalContextAndCallPath:
         uninstall()
         assert sink[0].call_path[0].endswith("_my_caller")
 
+    def test_causal_context_found_in_free_function_locals(self):
+        """Phase 3A.3 finding: aurora.py's _run_live_response_turn(systems,
+        user_text, mode, *, session_id="", turn_tick=None, ...) is a plain
+        FREE FUNCTION, not a method -- self-only introspection (this
+        function's original Phase 3A.2 shape) would silently miss its real
+        session_id/turn_tick locals entirely. This reproduces that exact
+        real signature pattern."""
+        def fake_run_live_response_turn(systems, user_text, mode, *, session_id="", turn_tick=None):
+            buf = systems.get("_diff_history_buffer")
+            buf.record(tick=turn_tick, magnitudes=_MAGNITUDES)
+
+        sink, uninstall = install_producer_observatory()
+        systems = {"_diff_history_buffer": DifferenceHistoryBuffer()}
+        fake_run_live_response_turn(systems, "hello", None, session_id="conv_abc123", turn_tick=42)
+        uninstall()
+
+        assert sink[0].causal_context.get("fake_run_live_response_turn.session_id") == "conv_abc123"
+        assert sink[0].causal_context.get("fake_run_live_response_turn.turn_tick") == 42
+
     def test_causal_context_found_on_direct_self_attribute(self):
         class FakeProducer:
             def __init__(self):
@@ -169,22 +188,74 @@ class TestRealCallSites:
         assert "TrainingPulse._record_and_snapshot" in obs.call_path
         assert obs.causal_context.get("TrainingPulse._systems['run_id']") == "tp_test"
 
-    def test_confirmed_empty_dict_difference_snapshot_bug(self):
-        """Real, separate bug found as a side effect of this investigation
-        (aurora.py:4362 passes difference_snapshot={} -- a plain dict, not a
-        DifferenceSnapshot instance). observe()'s own body calls
-        difference_snapshot.to_dict() unconditionally whenever the argument
-        `is not None`, so this raises. The call site's own surrounding
-        try/except swallows it silently in production; this test proves the
-        underlying raise is real, not speculation."""
+    def test_empty_dict_difference_snapshot_no_longer_raises(self):
+        """Phase 3A.2 found a real, separate bug (aurora.py:4362 passed
+        difference_snapshot={} -- a plain dict, not a DifferenceSnapshot
+        instance): observe()'s body called difference_snapshot.to_dict()
+        unconditionally whenever the argument `is not None`, raising
+        AttributeError and silently losing the entire relief observation
+        (the call site's own try/except swallowed it). FIXED as Phase 3A.3's
+        "ConstraintGenealogy DifferenceSnapshot Type-Contract Repair":
+        constraint_genealogy.py's observe() now guards with
+        `hasattr(difference_snapshot, "to_dict")` before calling it, and the
+        real caller (aurora.py:4362) now passes `None` instead of `{}`. This
+        test now asserts the FIXED behavior -- the call succeeds, the relief
+        event is logged, and no difference_snapshot key is written (since
+        none was actually supplied)."""
         logger = ConstraintGenealogyLogger(run_id="bug_check", output_dir=tempfile.mkdtemp())
-        with pytest.raises(AttributeError):
+        result = logger.observe(
+            pressure_before=PressureVec(X=0.1, T=0.1, N=0.1, B=0.1, A=0.1),
+            trace=[TraceItem(kind="ABILITY", id="A:one")],
+            pressure_after=PressureVec(X=0.0, T=0.0, N=0.0, B=0.0, A=0.0),
+            notes={"tag": "test"},
+            difference_snapshot={},
+        )
+        assert result is not None
+        assert "difference_snapshot" not in result.notes
+
+    def test_real_difference_snapshot_still_works_after_the_fix(self):
+        """The type-contract guard must not change behavior for the
+        currently-working case: a real DifferenceSnapshot is still merged
+        into notes exactly as before."""
+        buf = DifferenceHistoryBuffer()
+        buf.record(tick=1, magnitudes=_MAGNITUDES)
+        snap = buf.snapshot(tick=1, magnitudes=_MAGNITUDES)
+
+        logger = ConstraintGenealogyLogger(run_id="real_snap_check", output_dir=tempfile.mkdtemp())
+        result = logger.observe(
+            pressure_before=PressureVec(X=0.5, T=0.5, N=0.5, B=0.5, A=0.5),
+            trace=[TraceItem(kind="ABILITY", id="A:one")],
+            pressure_after=PressureVec(X=0.0, T=0.0, N=0.0, B=0.0, A=0.0),
+            notes={"tag": "test"},
+            difference_snapshot=snap,
+        )
+        assert result is not None
+        assert result.notes["difference_snapshot"]["values"] == snap.to_dict()["values"]
+
+    def test_real_field_balance_call_site_no_longer_passes_malformed_snapshot(self):
+        """aurora.py:4362 itself: confirms the fixed call site's literal
+        argument (difference_snapshot=None) no longer raises from the
+        DifferenceSnapshot type contract. NOTE: this call site independently
+        also passes pressure_before/pressure_after as plain dicts rather
+        than PressureVec instances, which fails EARLIER in observe()
+        (`pressure_after.relief_from(pressure_before)`, PressureVec-only) --
+        a separate, real bug this phase found but did not fix (out of scope
+        for the narrowly-authorized DifferenceSnapshot type-contract repair;
+        reported in docs/GENEALOGY_NATIVE_ENVIRONMENT_REPORT.md section 14).
+        This test documents that remaining failure precisely, so it isn't
+        mistaken for this fix having fully repaired that call site."""
+        logger = ConstraintGenealogyLogger(run_id="real_site_check", output_dir=tempfile.mkdtemp())
+        pv_before = {a: 0.1 for a in ("X", "T", "N", "B", "A")}
+        pv_after = {a: 0.0 for a in ("X", "T", "N", "B", "A")}
+        with pytest.raises(AttributeError, match="relief_from"):
             logger.observe(
-                pressure_before=PressureVec(X=0.1, T=0.1, N=0.1, B=0.1, A=0.1),
-                trace=[TraceItem(kind="ABILITY", id="A:one")],
-                pressure_after=PressureVec(X=0.0, T=0.0, N=0.0, B=0.0, A=0.0),
-                notes={"tag": "test"},
-                difference_snapshot={},
+                pressure_before=pv_before,
+                trace=[{"ability": "X:SOMETHING", "cost": 0.0003, "source": "field_balance"}],
+                pressure_after=pv_after,
+                state_sig_before="b",
+                state_sig_after="a",
+                notes={"tag": "field_balance"},
+                difference_snapshot=None,
             )
 
 

@@ -125,35 +125,58 @@ def _capture_call_path(frame, depth: int = 5) -> List[str]:
 
 
 def _capture_causal_context(frame) -> Dict[str, Any]:
-    """Best-effort, read-only: look at the immediate caller's `self` for
-    attributes whose NAME suggests an identity/lifecycle context (episode,
-    session, run_id, lineage, turn, chamber, tick_count) -- exactly what
-    the directive asked for "where naturally available". Only scalar-ish
-    values (str/int/float/bool) are captured; objects are skipped rather
-    than risking an expensive or unsafe repr(). Aurora's common pattern is a
-    `self._systems` (or similarly named) dict-of-subsystems registry rather
-    than direct instance attributes (confirmed: TrainingPulse, aurora.py's
-    turn processing) -- one level into any dict-valued attribute is also
-    scanned for the same name hints, read-only, no recursion beyond that."""
+    """Best-effort, read-only: look at the immediate caller's frame for
+    names that suggest an identity/lifecycle context (episode, session,
+    run_id, lineage, turn, chamber, tick_count) -- exactly what the
+    directive asked for "where naturally available". Only scalar-ish values
+    (str/int/float/bool) are captured; objects are skipped rather than
+    risking an expensive or unsafe repr().
+
+    Three real patterns confirmed by reading actual Aurora call sites, all
+    scanned here:
+      1. `self` attributes (methods -- confirmed: TrainingPulse, GrammarEngine).
+      2. Free-function LOCAL VARIABLES directly (confirmed:
+         aurora.py's `_run_live_response_turn(systems, user_text, mode, *,
+         session_id="", turn_tick=None, ...)` is a plain function, not a
+         method -- `self`-only introspection, as this function originally
+         did, would silently miss it entirely; this was found and fixed
+         while building Phase 3A.3, not anticipated going in).
+      3. One level into any dict-valued local/attribute (confirmed:
+         Aurora's common `systems`-registry-dict pattern, e.g.
+         `systems["session_id"]`, `self._systems["run_id"]`).
+    """
     context: Dict[str, Any] = {}
     try:
         if frame is None:
             return context
-        self_obj = frame.f_locals.get("self")
-        if self_obj is None:
-            return context
-        owner = type(self_obj).__name__
-        for attr_name, attr_val in vars(self_obj).items():
-            lowered = attr_name.lower()
+
+        def _scan(owner: str, name: str, val: Any) -> None:
+            lowered = name.lower()
             if any(hint in lowered for hint in _IDENTITY_ATTR_HINTS):
-                if isinstance(attr_val, (str, int, float, bool)) or attr_val is None:
-                    context[f"{owner}.{attr_name}"] = attr_val
-            if isinstance(attr_val, dict):
-                for key, val in attr_val.items():
+                if isinstance(val, (str, int, float, bool)) or val is None:
+                    context[f"{owner}.{name}"] = val
+            if isinstance(val, dict):
+                for key, inner in val.items():
                     key_lowered = str(key).lower()
                     if any(hint in key_lowered for hint in _IDENTITY_ATTR_HINTS):
-                        if isinstance(val, (str, int, float, bool)) or val is None:
-                            context[f"{owner}.{attr_name}['{key}']"] = val
+                        if isinstance(inner, (str, int, float, bool)) or inner is None:
+                            context[f"{owner}.{name}['{key}']"] = inner
+
+        # Pattern 1 & 3: self attributes (methods).
+        self_obj = frame.f_locals.get("self")
+        if self_obj is not None:
+            owner = type(self_obj).__name__
+            for attr_name, attr_val in vars(self_obj).items():
+                _scan(owner, attr_name, attr_val)
+
+        # Pattern 2 & 3: free-function locals directly (covers the case
+        # self_obj is None entirely, and also covers a method's OWN local
+        # variables in addition to its self's attributes).
+        frame_owner = frame.f_code.co_name
+        for local_name, local_val in frame.f_locals.items():
+            if local_name == "self":
+                continue
+            _scan(frame_owner, local_name, local_val)
     except Exception:
         pass
     return context
