@@ -897,6 +897,16 @@ class ReflexiveInterpreter:
     def update_band(self, band_pos:str) -> None:
         self._band_pos = band_pos
 
+    def connect_sedimemory(self, sedimemory) -> None:
+        """Wire a live SediMemory instance in after boot. SediMemory (L3.5)
+        boots later in aurora.py's boot sequence than this interpreter does,
+        so it can never be supplied through __init__'s sedimemory= kwarg in
+        production -- mirrors the same connect_sedimemory(...) pattern
+        already used by ConsciousnessEngine, DimensionalSystems,
+        ExpressionPerceptionEngine, BehavioralIdentityEngine, and
+        SimulationEngine to receive it post-boot."""
+        self._sedimemory = sedimemory
+
     def interpret(self, expression:str, min_evo:float=0.40, max_t:int=8) -> UnderstandingState:
         match  = self._matcher.match(expression)
 

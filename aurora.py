@@ -4348,6 +4348,7 @@ class ConstraintFieldBalancer:
         Only injects for axes genuinely below ideal (gradient > threshold).
         """
         import hashlib as _hl
+        from aurora_evolution_stack import PressureVec, TraceItem
         gradient = self.field_gradient()
         for ax, g in gradient.items():
             if g < 0.005:   # only inject for meaningfully starved axes
@@ -4356,13 +4357,12 @@ class ConstraintFieldBalancer:
             if not ability:
                 continue
             try:
-                pv_before = {a: (g * 0.015 if a == ax else 0.0)
-                             for a in ("X", "T", "N", "B", "A")}
-                pv_after = {a: 0.0 for a in ("X", "T", "N", "B", "A")}
+                pv_before = PressureVec(**{a: (g * 0.015 if a == ax else 0.0)
+                                            for a in ("X", "T", "N", "B", "A")})
+                pv_after = PressureVec(**{a: 0.0 for a in ("X", "T", "N", "B", "A")})
                 genealogy.observe(
                     pressure_before=pv_before,
-                    trace=[{"ability": ability,
-                            "cost": 0.0003, "source": "field_balance"}],
+                    trace=[TraceItem(kind="ABILITY", id=ability)],
                     pressure_after=pv_after,
                     state_sig_before=_hl.md5(
                         f"bal_b_{ax}".encode()).hexdigest()[:8],
@@ -27153,6 +27153,31 @@ def boot_aurora(
         if verbose: print("  [L3.5] SediMemory online")
     except Exception as _sedi_e:
         if verbose: print(f"  [L3.5] SediMemory unavailable: {_sedi_e}")
+
+    # Wire L3.5 → NonComp reflexive interpreter: recall_confidence_boost()
+    # already exists and is already exercised by tests (aurora_reflexive_
+    # interpreter.py's interpret()), but the interpreter boots long before
+    # SediMemory does (systems["noncomp_reflexive_interpreter"] is built in
+    # _boot_noncomp_manifold_runtime(), well before this L3.5 section), so
+    # __init__'s sedimemory= kwarg is always None in production and the
+    # recall-confidence coupling has never fired live. Same wiring pattern
+    # as the L3.5 -> L4/L5/L6 blocks below.
+    if systems.get('sedimemory') is not None and systems.get('noncomp_reflexive_interpreter') is not None:
+        try:
+            _ri_for_sedi = systems['noncomp_reflexive_interpreter']
+            if hasattr(_ri_for_sedi, 'connect_sedimemory'):
+                _ri_for_sedi.connect_sedimemory(systems['sedimemory'])
+                if verbose:
+                    print("  [L3.5 → NONCOMP] ReflexiveInterpreter wired to SediMemory for recall coupling")
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:noncomp_reflexive_interpreter_connect_sedimemory",
+                exc=_aurora_boundary_exc,
+                context={"function": "boot_aurora", "source_file": "aurora.py"},
+            )
+            pass
 
     # Contradiction Ledger — first-class contradiction tracking for Aurora's
     # truth system. Previously defined in aurora_ivm.py but never
