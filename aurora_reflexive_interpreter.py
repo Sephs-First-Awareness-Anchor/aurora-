@@ -140,6 +140,19 @@ except ImportError as _aurora_boundary_exc:
     )
     _SEDIMENT_AVAILABLE = False
 
+try:
+    from aurora_representational_address import RepresentationalRef as _RepresentationalRef
+    _REPRESENTATIONAL_REF_AVAILABLE = True
+except ImportError as _aurora_boundary_exc:
+    _aurora_record_exception_from_locals(
+        locals(),
+        module=__name__,
+        operation="exception_handler:aurora_reflexive_interpreter.py:representational_ref_import",
+        exc=_aurora_boundary_exc,
+        context={"function": "<module>", "source_file": "aurora_reflexive_interpreter.py"},
+    )
+    _REPRESENTATIONAL_REF_AVAILABLE = False
+
 SHIFT_COST: Dict[str, float] = {"X":1.0,"T":4.0,"N":10.0,"B":40.0,"A":150.0}
 AXES = ("X","T","N","B","A")
 DIM_NAMES = ("POLARITY","MAGNITUDE","OPERATOR","COST","DIFFERENCE")
@@ -912,6 +925,8 @@ class ReflexiveInterpreter:
 
         # Field map
         origin_weight=0.0; origin_region="sparse"; depth_sc=0.50
+        _nc_target_resolved = None  # populated below when idx_e resolves; used to
+                                     # build a C1-level RepresentationalRef at deposit time
         if self._directory and match.nc_name:
             try:
                 with self._directory.open(match.nc_name) as m:
@@ -922,6 +937,7 @@ class ReflexiveInterpreter:
                     idx_e = self._directory.get_index_entry(match.nc_name)
                     if idx_e:
                         depth_sc = SHIFT_COST.get(idx_e.nc_law_c,1.0)/150.0
+                        _nc_target_resolved = idx_e.nc_target
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
@@ -1038,9 +1054,30 @@ class ReflexiveInterpreter:
         # The next nearby expression reads a denser field.
         if is_und and self._overlay is not None and _slot is not None:
             try:
+                # Canonical representational reference for this deposit --
+                # C1-level (nc identity + target) when the target resolved,
+                # otherwise D1-level (constraint + dimension only). Never
+                # guesses sub_law_c/sub_law_d/col_law_c/col_law_d here --
+                # this call site does not independently know a "row x
+                # column" relation, only which NonComp landed. Carrying an
+                # honestly-partial ref is the point: a later consumer that
+                # needs the full C2 slot can still resolve it from
+                # (nc identity) without this overlay having to store the
+                # entire ManifoldSlot body.
+                _deposit_ref_encoded = None
+                if _REPRESENTATIONAL_REF_AVAILABLE:
+                    if _nc_target_resolved is not None:
+                        _deposit_ref_encoded = _RepresentationalRef.for_c1(
+                            match.constraint, match.dimension, _nc_target_resolved
+                        ).encode()
+                    else:
+                        _deposit_ref_encoded = _RepresentationalRef.for_d1(
+                            match.constraint, match.dimension
+                        ).encode()
                 sediment_delta = self._overlay.deposit(
                     match.nc_name or f"{match.constraint}:{match.dimension}",
-                    _slot, ws, threshold=UNDERSTANDING_THRESHOLD)
+                    _slot, ws, threshold=UNDERSTANDING_THRESHOLD,
+                    ref=_deposit_ref_encoded)
                 self._overlay.save()
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(

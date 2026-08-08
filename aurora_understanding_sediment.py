@@ -106,7 +106,12 @@ class UnderstandingSedimentOverlay:
                 "delta":       float,   # value as of last_touch
                 "last_touch":  float,   # unix seconds
                 "deposits":    int,     # lifetime deposit count
-                "last_worth":  float    # worth score of most recent deposit
+                "last_worth":  float,   # worth score of most recent deposit
+                "representational_ref": str | absent  # optional, encoded
+                                         # aurora_representational_address.
+                                         # RepresentationalRef -- absent on
+                                         # records written before this field
+                                         # existed or when no ref was supplied
               }, ...
             }, ...
           }
@@ -231,13 +236,21 @@ class UnderstandingSedimentOverlay:
     # ── write path ──
 
     def deposit(self, field_key: Optional[str], slot: str, worth: float,
-                threshold: float = 0.55, now: Optional[float] = None) -> float:
+                threshold: float = 0.55, now: Optional[float] = None,
+                ref: Optional[str] = None) -> float:
         """
         Deposit sediment for an understood expression. Magnitude scales
         with the margin by which worth cleared the understanding
         threshold — barely-understood meaning lays thin strata,
         strongly-understood meaning compacts fast. Returns the new live
         delta for the slot.
+
+        ref: optional encoded aurora_representational_address.
+        RepresentationalRef string, carried alongside the delta so a later
+        retrieval can recover the canonical representational context this
+        deposit was formed under, rather than re-deriving it by re-parsing
+        the original expression. Purely additive -- omitting it (the
+        default) preserves the exact prior record shape and behavior.
         """
         if not field_key:
             return 0.0
@@ -249,14 +262,34 @@ class UnderstandingSedimentOverlay:
             rec = fk.get(slot)
             live = self._decayed(rec, now) if rec else 0.0
             new_delta = min(DEPOSIT_CAP, live + gain)
-            fk[slot] = {
+            new_rec = {
                 "delta": round(new_delta, 6),
                 "last_touch": now,
                 "deposits": int((rec or {}).get("deposits", 0) or 0) + 1,
                 "last_worth": round(float(worth), 4),
             }
+            # Preserve an existing ref if this deposit didn't supply one
+            # (never overwrite a known reference with an unknown one).
+            existing_ref = (rec or {}).get("representational_ref")
+            if ref is not None:
+                new_rec["representational_ref"] = ref
+            elif existing_ref is not None:
+                new_rec["representational_ref"] = existing_ref
+            fk[slot] = new_rec
             self._dirty = True
         return new_delta
+
+    def ref_for(self, field_key: Optional[str], slot: str) -> Optional[str]:
+        """The encoded RepresentationalRef carried alongside this slot's
+        deposit, or None if this deposit predates the ref field or never
+        received one. Never fabricates a reference for an old record."""
+        if not field_key:
+            return None
+        with self._lock:
+            rec = (self._entries.get(field_key) or {}).get(slot)
+            if not rec:
+                return None
+            return rec.get("representational_ref")
 
     # ── introspection ──
 

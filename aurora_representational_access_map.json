@@ -1,0 +1,88 @@
+{
+  "_meta": {
+    "title": "Aurora Representational Access Map",
+    "generated_for": "AURORA ESTABLISHED REPRESENTATIONAL SUBSTRATE FULL INTEGRATION DIRECTIVE",
+    "ladder": ["D1_25", "C1_125", "D2_625", "M21_3125", "M22_15625", "C2_78125"],
+    "canonical_type": "aurora_representational_address.RepresentationalRef",
+    "canonical_fields": ["nc_law_c", "nc_dim", "nc_target", "sub_law_c", "sub_law_d", "col_law_c", "col_law_d"],
+    "third_degree_status": "NOT CREATED. 390,625 (625x625) and both proposed C3 cardinalities (30,517,578,125 and 48,828,125) remain unauthorized and unimplemented. Verified by tests/test_no_speculative_d3.py."
+  },
+  "ladder_levels": [
+    {
+      "level": "D1_25", "cardinality": 25, "formula": "5 constraints x 5 dimensions",
+      "resolved_fields": ["nc_law_c", "nc_dim"],
+      "addressable": true, "exhaustively_tested": true,
+      "test": "tests/test_representational_addressability.py::TestD1Addressability"
+    },
+    {
+      "level": "C1_125", "cardinality": 125, "formula": "D1 x 5 target constraints",
+      "resolved_fields": ["nc_law_c", "nc_dim", "nc_target"],
+      "addressable": true, "exhaustively_tested": true,
+      "test": "tests/test_representational_addressability.py::TestC1Addressability"
+    },
+    {
+      "level": "D2_625", "cardinality": 625, "formula": "D1 x D1 (canonical, closure-basis level)",
+      "resolved_fields": ["nc_law_c", "nc_dim", "col_law_c", "col_law_d"],
+      "addressable": true, "exhaustively_tested": true,
+      "test": "tests/test_representational_addressability.py::TestD2Addressability"
+    },
+    {
+      "level": "M21_3125", "cardinality": 3125, "formula": "C1 x D1(as column) -- SlotCoord-equivalent",
+      "resolved_fields": ["nc_law_c", "nc_dim", "nc_target", "col_law_c", "col_law_d"],
+      "unresolved_fields": ["sub_law_c", "sub_law_d"],
+      "addressable": true, "exhaustively_tested": true,
+      "test": "tests/test_representational_addressability.py::TestM21Addressability",
+      "note": "sub_law_c/sub_law_d left explicitly unresolved -- SlotCoord itself has no field for them. Live ReflexiveInterpreter/CERS construction implicitly pins them equal to nc_law_c/nc_dim; this module's as_pinned_anchor() makes that pin an explicit, separately-named operation instead of a silent default."
+    },
+    {
+      "level": "M22_15625", "cardinality": 15625, "formula": "M2,1 x 5 (confirmed-independent Candidate-A: freed sub_law_c)",
+      "resolved_fields": ["nc_law_c", "nc_dim", "nc_target", "sub_law_c", "col_law_c", "col_law_d"],
+      "unresolved_fields": ["sub_law_d"],
+      "addressable": true, "exhaustively_tested": true,
+      "test": "tests/test_representational_addressability.py::TestM22Addressability",
+      "note": "sub_law_d deliberately NOT promoted alongside sub_law_c -- the rank-6 audit established it is coupled, not independent."
+    },
+    {
+      "level": "C2_78125", "cardinality": 78125, "formula": "125 NonComps x 625 ManifoldSlots -- all 7 fields resolved",
+      "resolved_fields": ["nc_law_c", "nc_dim", "nc_target", "sub_law_c", "sub_law_d", "col_law_c", "col_law_d"],
+      "addressable": true, "exhaustively_tested": true, "exhaustive_count_verified": 78125,
+      "test": "tests/test_representational_addressability.py::TestC2Addressability",
+      "resolves_to_real_slot": true,
+      "resolver_function": "aurora_representational_address.resolve_manifold_slot"
+    }
+  ],
+  "subsystem_integration_status": [
+    {"system": "UnderstandingSedimentOverlay", "status": "INTEGRATED", "mechanism": "new optional 'representational_ref' field on each deposit record, backward-compatible (absent on old records, never fabricated)", "code_changed": true, "file": "aurora_understanding_sediment.py"},
+    {"system": "ReflexiveInterpreter", "status": "INTEGRATED", "mechanism": "interpret() now builds and passes a C1-level (or D1-level fallback) RepresentationalRef to the overlay deposit call", "code_changed": true, "file": "aurora_reflexive_interpreter.py"},
+    {"system": "RCEC (EpisodeStep)", "status": "INTEGRATED", "mechanism": "new optional 'representational_ref' field, default None, never auto-populated by RCEC itself -- pure carry-through capability, matches the dataclass's own existing 'Extension points for later stages' convention", "code_changed": true, "file": "aurora_internal/aurora_cognitive_experience_chamber.py"},
+    {"system": "Genealogy (ConstraintGenealogyLogger.observe notes)", "status": "COMPATIBLE_NO_CHANGE_NEEDED", "mechanism": "notes: Optional[Dict[str, Any]] is already open -- a producer can pass notes={'representational_ref': ref.encode()} today with zero code change. Verified by a real observe() call in the cross-system canary.", "code_changed": false},
+    {"system": "Dream (DreamEvidenceRecord.origin_tags)", "status": "COMPATIBLE_NO_CHANGE_NEEDED", "mechanism": "origin_tags: Dict[str, Any] is already open, round-trips through to_dict() unchanged. Verified directly.", "code_changed": false},
+    {"system": "WARP (WarpDemand.profile / CoverageGap.axis_profile)", "status": "ASSESSED_NOT_IMPLEMENTED", "mechanism": "profile/axis_profile are typed Dict[str, float] -- inserting a string ref would violate that type contract (unlike genealogy's/dream's Dict[str, Any] fields). The narrowest safe mechanism is a new, separate optional parameter threaded through warp_guard()/check_and_extend(). Identified but deliberately deferred given WARP's sealed, safety-critical role and this pass's verification budget. Existing WARP behavior confirmed unchanged (file not modified)."},
+    {"system": "old SediMemory (write direction)", "status": "UNREACHABLE_UNCHANGED", "mechanism": "ReflexiveInterpreter still contains no call to SediMemory.ingest_event/ingest_envelope -- unchanged from the prior conservation report."},
+    {"system": "PersistentWorthLedger", "status": "NOT_EXTENDED_THIS_PASS", "mechanism": "Keys by (field_key) only, stores a float window -- no natural slot for a per-entry ref without restructuring its schema; UnderstandingSedimentOverlay (which shares the same call site) was extended instead since it already stores one record per slot."},
+    {"system": "Evolution Chamber", "status": "UNREACHABLE_UNCHANGED", "mechanism": "Confirmed by the prior conservation report: zero data flow with ReflexiveInterpreter. Its own genealogy.observe() calls could carry a ref via the same open notes dict if a future pass wires it, but nothing currently produces one from that path."},
+    {"system": "BehavioralIdentityEngine / ConsciousnessEngine / DimensionalSystems", "status": "UNREACHABLE_UNCHANGED", "mechanism": "Confirmed by the prior native-selection-feedback audit: zero references to the classification/manifold identifiers anywhere in these files."}
+  ],
+  "canaries": {
+    "script": "aurora_representational_cross_system_canary.py",
+    "test": "tests/test_representational_cross_system_integration.py",
+    "A_D1": "PRESERVED -- same constraint, different dimension, distinguishable",
+    "B_C1": "PRESERVED -- same D1, different target, resolves to different real NonComp",
+    "C_D2": "PRESERVED -- same row, different column, resolves to different real ManifoldSlot",
+    "D_3125": "PRESERVED (substrate) / PINNED (live construction) -- the substrate keeps what live SlotCoord construction currently discards",
+    "E_15625": "PRESERVED across address, real manifold physics, and UnderstandingSedimentOverlay persistence",
+    "F_C2": "Mixed, honestly classified: PRESERVED (manifold resolution, genealogy notes, dream origin_tags, RCEC field) / UNREACHABLE (WARP, old SediMemory write direction)"
+  },
+  "final_questions_summary": {
+    "1_d1_uniquely_addressable": true,
+    "2_c1_uniquely_addressable": true,
+    "3_d2_uniquely_addressable": true,
+    "4_m21_3125_uniquely_addressable": true,
+    "5_m22_15625_uniquely_addressable": true,
+    "6_c2_78125_uniquely_addressable": true,
+    "7_c2_resolves_original_slot": true,
+    "8_dimensional_genealogy_recoverable": true,
+    "23_third_degree_evidence": false,
+    "24_third_degree_created": false
+  }
+}

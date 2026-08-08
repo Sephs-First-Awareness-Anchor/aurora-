@@ -1274,6 +1274,17 @@ class EpisodeStep:
     # same unlabeled field) is what stops a future caller from reusing
     # observation_text as if it always carries prompt semantics.
     observation_kind: str = "assessment_prompt"
+    # AURORA ESTABLISHED REPRESENTATIONAL SUBSTRATE FULL INTEGRATION
+    # DIRECTIVE: optional, encoded aurora_representational_address.
+    # RepresentationalRef carried alongside this step when the experience
+    # that produced it already had one (e.g. its observation_text or intent
+    # originated from a ReflexiveInterpreter.interpret() call). Never
+    # populated automatically by RCEC itself -- RCEC's own entity/property
+    # vocabulary is unchanged, and nothing here teaches RCEC what the
+    # coordinate means. This is purely a carry-through slot so a caller
+    # that already has a ref can avoid re-deriving it from consequence
+    # alone once the episode has moved on.
+    representational_ref: Optional[str] = None
 
 
 @dataclass
