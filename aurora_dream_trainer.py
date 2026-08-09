@@ -56,6 +56,7 @@ from aurora_internal.aurora_directed_training_corpus import (
 # ---------------------------------------------------------------------------
 _DEFAULT_STATE_DIR = "aurora_state"
 _FAIL_POINTS_FILE  = "fail_points.json"
+_FAIL_STREAM_FILE  = "fail_stream.jsonl"
 if not os.path.exists(_FAIL_POINTS_FILE):
     with open(_FAIL_POINTS_FILE, 'w') as f:
         json.dump({}, f)
@@ -493,12 +494,198 @@ class DimensionRecord:
         return r
 
 
+@dataclass
+class FailStreamEvent:
+    """
+    AURORA DREAM SUBSTRATE, FAIL-STREAM, POSITIVE-AFFECT, DEVELOPMENTAL
+    WRITEBACK, AND NATIVE INTERMEDIATE RESOLUTION DIRECTIVE, Sections 6-9.
+
+    One entry in the rich, temporally-ordered fail stream. This sits
+    BESIDE FailPointLedger's existing per-dimension aggregate (fail_count/
+    severity_sum/score) -- it never replaces or reweights that aggregate.
+    Its job is only to answer "what internal experience created this
+    pressure", preserving order and, where the producer legitimately had
+    one, the pressure state that existed BEFORE the outcome was known
+    (pre_outcome_pressure), distinguished from any post-outcome severity.
+    """
+    seq: int
+    timestamp: float
+    source: str                                   # e.g. "dream_trainer_fail", "live_correction"
+    dimension: Optional[str] = None                # rubric/corpus dimension, if this event has one
+    severity: float = 0.0
+    outcome_label: str = ""                        # e.g. "corrected", "expression_unclear", or the dimension name
+    pre_outcome_pressure: Optional[Dict[str, float]] = None   # X/T/N/B/A, only when genuinely captured before the outcome was known
+    identity: Optional[Dict[str, Any]] = None       # minimal representational identity: topic/response_id/action_type/conversation_id -- never full waking detail
+    recurrence_of: Optional[int] = None             # seq of an earlier event this one recurs from, established natively (see _find_recurrence), never a fabricated count
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "seq": self.seq,
+            "timestamp": self.timestamp,
+            "source": self.source,
+            "dimension": self.dimension,
+            "severity": self.severity,
+            "outcome_label": self.outcome_label,
+            "pre_outcome_pressure": dict(self.pre_outcome_pressure) if self.pre_outcome_pressure else None,
+            "identity": dict(self.identity) if self.identity else None,
+            "recurrence_of": self.recurrence_of,
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "FailStreamEvent":
+        return cls(
+            seq=int(d.get("seq", 0)),
+            timestamp=float(d.get("timestamp", 0.0) or 0.0),
+            source=str(d.get("source", "") or ""),
+            dimension=d.get("dimension"),
+            severity=float(d.get("severity", 0.0) or 0.0),
+            outcome_label=str(d.get("outcome_label", "") or ""),
+            pre_outcome_pressure=dict(d["pre_outcome_pressure"]) if d.get("pre_outcome_pressure") else None,
+            identity=dict(d["identity"]) if d.get("identity") else None,
+            recurrence_of=d.get("recurrence_of"),
+        )
+
+
+class RichFailStream:
+    """
+    Temporally-ordered, cross-domain fail-event stream (Sections 6-9).
+
+    Deliberately does not touch FailPointLedger's own _records/fail_count/
+    severity_sum/curriculum-targeting logic -- it is an independent,
+    append-only sequence that both the existing corpus/rubric fail path
+    and the live conversational-correction path can feed, so that
+    relationships between individually-preserved failures remain
+    available to Dream's pattern recognition rather than being flattened
+    into one aggregate or scattered as fully isolated objects.
+    """
+
+    def __init__(self, state_dir: str = _DEFAULT_STATE_DIR, maxlen: int = 2000):
+        self.state_dir = state_dir
+        self._events: "deque[FailStreamEvent]" = deque(maxlen=maxlen)
+        self._next_seq = 0
+
+    def append(
+        self,
+        *,
+        source: str,
+        dimension: Optional[str] = None,
+        severity: float = 0.0,
+        outcome_label: str = "",
+        pre_outcome_pressure: Optional[Dict[str, float]] = None,
+        identity: Optional[Dict[str, Any]] = None,
+    ) -> FailStreamEvent:
+        recurrence_of = self._find_recurrence(dimension, identity)
+        event = FailStreamEvent(
+            seq=self._next_seq,
+            timestamp=time.time(),
+            source=str(source or ""),
+            dimension=dimension,
+            severity=max(0.0, min(1.0, float(severity or 0.0))),
+            outcome_label=str(outcome_label or ""),
+            pre_outcome_pressure=dict(pre_outcome_pressure) if pre_outcome_pressure else None,
+            identity=dict(identity) if identity else None,
+            recurrence_of=recurrence_of,
+        )
+        self._next_seq += 1
+        self._events.append(event)
+        return event
+
+    def _find_recurrence(self, dimension: Optional[str], identity: Optional[Dict[str, Any]]) -> Optional[int]:
+        """
+        Native recurrence only: an earlier event with the SAME dimension,
+        or the same (topic, action_type) identity pair already produced by
+        Aurora's own contract/ledger machinery. No embedding similarity or
+        fabricated threshold is introduced here -- this is exact-match
+        recurrence on identifiers that already exist, per Section 9's
+        "use Aurora's native persistence/similarity/recurrence machinery
+        where possible" and its ban on inventing a recurrence count.
+        """
+        if not self._events:
+            return None
+        topic = None
+        action = None
+        if identity:
+            topic = identity.get("topic") or identity.get("expected_topic")
+            action = identity.get("action_type")
+        if not dimension and not (topic and action):
+            return None
+        for event in reversed(self._events):
+            if dimension and event.dimension == dimension:
+                return event.seq
+            if topic and action and event.identity:
+                ev_topic = event.identity.get("topic") or event.identity.get("expected_topic")
+                if ev_topic == topic and event.identity.get("action_type") == action:
+                    return event.seq
+        return None
+
+    def ordered(self) -> List[FailStreamEvent]:
+        """Return all retained events in original temporal order."""
+        return list(self._events)
+
+    def save(self) -> bool:
+        try:
+            os.makedirs(self.state_dir, exist_ok=True)
+            path = os.path.join(self.state_dir, _FAIL_STREAM_FILE)
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                for event in self._events:
+                    f.write(json.dumps(event.to_dict()) + "\n")
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, path)
+            return True
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:RichFailStream.save",
+                exc=_aurora_boundary_exc,
+                context={"function": "save", "source_file": "aurora_dream_trainer.py"},
+            )
+            return False
+
+    def load(self) -> bool:
+        try:
+            path = os.path.join(self.state_dir, _FAIL_STREAM_FILE)
+            if not os.path.exists(path):
+                return False
+            events: List[FailStreamEvent] = []
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    events.append(FailStreamEvent.from_dict(json.loads(line)))
+            self._events.clear()
+            for event in events:
+                self._events.append(event)
+            self._next_seq = (max((e.seq for e in events), default=-1) + 1)
+            return True
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:RichFailStream.load",
+                exc=_aurora_boundary_exc,
+                context={"function": "load", "source_file": "aurora_dream_trainer.py"},
+            )
+            return False
+
+
 class FailPointLedger:
     """
     Persistent per-dimension failure tracker.
 
     Fed by DreamTrainer.record_corpus_fail() during corpus comparison.
     Queried by LessonPlanEngine to build targeted avatar specs.
+
+    AggregateDevelopmentalPressure (this class's original _records/score/
+    get_top_fails behavior, unchanged) + RichSourceStream (self.rich_stream,
+    added by the AURORA DREAM SUBSTRATE... DIRECTIVE) -- see class
+    RichFailStream. The aggregate answers "where is developmental pressure
+    accumulating"; the rich stream answers "what internal experiences
+    created that pressure". record_fail()'s own dimension-scoring/
+    curriculum-targeting behavior is untouched by this addition.
     """
 
     ALL_DIMENSIONS = list(DIMENSION_CODE_LOGIC.keys())
@@ -510,6 +697,7 @@ class FailPointLedger:
         }
         self._total_fails = 0
         self._dps = None  # injected after boot via set_dps()
+        self.rich_stream = RichFailStream(state_dir)
 
     def set_dps(self, dps) -> None:
         """Wire DPS crystal system so fail point changes stamp active crystals."""
@@ -638,6 +826,63 @@ class FailPointLedger:
                 context={"function": "record_fail", "handler_line": 564, "source_file": "aurora_dream_trainer.py"},
             )
             pass
+        # AURORA DREAM SUBSTRATE... DIRECTIVE, Section 8: complement the
+        # aggregate above with a rich, individually-preserved stream entry.
+        # No pre_outcome_pressure is available on this path -- corpus/rubric
+        # comparison is inherently retrospective (see record_pre_outcome_event
+        # for the one path that genuinely has a pre-outcome pressure sample).
+        try:
+            identity = None
+            if normalized_example:
+                identity = {
+                    "conversation_id": normalized_example.get("conversation_id"),
+                    "topic": (normalized_example.get("user_turns") or [""])[0][:80] or None,
+                }
+            self.rich_stream.append(
+                source="dream_trainer_fail",
+                dimension=dimension,
+                severity=severity,
+                outcome_label=dimension,
+                pre_outcome_pressure=None,
+                identity=identity,
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_dream_trainer.py:record_fail.rich_stream",
+                exc=_aurora_boundary_exc,
+                context={"function": "record_fail", "source_file": "aurora_dream_trainer.py"},
+            )
+            pass
+
+    def record_pre_outcome_event(
+        self,
+        *,
+        outcome_label: str,
+        severity: float,
+        pre_outcome_pressure: Optional[Dict[str, float]],
+        identity: Optional[Dict[str, Any]] = None,
+    ) -> "FailStreamEvent":
+        """
+        AURORA DREAM SUBSTRATE... DIRECTIVE, Sections 4-9: record a fail/
+        surprise event from a path that genuinely captured its pressure
+        state BEFORE the outcome was known (e.g. a live conversational
+        correction), into the rich stream ONLY. Deliberately does not
+        touch self._records / fail_count / severity_sum / curriculum
+        targeting -- this is a different fail domain (live conversational
+        correction, not corpus/rubric dimension weakness) and must not be
+        conflated into the same aggregate that drives
+        flush_lessons_to_simulation()'s dimension targeting.
+        """
+        return self.rich_stream.append(
+            source="live_correction",
+            dimension=None,
+            severity=severity,
+            outcome_label=outcome_label,
+            pre_outcome_pressure=pre_outcome_pressure,
+            identity=identity,
+        )
 
     def record(
         self,
@@ -723,6 +968,19 @@ class FailPointLedger:
                 f.flush()
                 os.fsync(f.fileno())
             os.replace(tmp, path)
+            # Rich stream persistence is additive and must never affect this
+            # method's own success/failure contract for the aggregate file.
+            try:
+                self.rich_stream.save()
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:save.rich_stream",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "save", "source_file": "aurora_dream_trainer.py"},
+                )
+                pass
             return True
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
@@ -737,6 +995,17 @@ class FailPointLedger:
     def load(self) -> bool:
         try:
             path = os.path.join(self.state_dir, _FAIL_POINTS_FILE)
+            try:
+                self.rich_stream.load()
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dream_trainer.py:load.rich_stream",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "load", "source_file": "aurora_dream_trainer.py"},
+                )
+                pass
             if not os.path.exists(path):
                 return False
             with open(path, "r", encoding="utf-8") as f:

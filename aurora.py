@@ -33292,6 +33292,20 @@ def _run_live_response_turn(
         'conscious_crest': dict(_dual_strata_runtime_out.get('conscious_crest') or {}),
         'processing_mode': str(_dual_strata_runtime_out.get('processing_mode', '') or ''),
         'overlay': dict(_dual_strata_runtime_out.get('overlay') or {}),
+        # AURORA DREAM SUBSTRATE... DIRECTIVE, Section 44: associate the
+        # final waking response with its originating representation on
+        # the SAME turn/output object that already carries noncomp_input/
+        # noncomp_output, rather than requiring every caller to know to
+        # reach into those sibling dicts themselves (the one existing
+        # caller that already does this manually is
+        # _run_simulation_live_response_bridge -- this is the same read,
+        # applied once here so it does not have to be repeated by every
+        # future consumer). Not a new interpretation event: purely a read
+        # of an already-computed field.
+        'representational_ref': (
+            dict(_noncomp_output_out or {}).get('representational_ref') or
+            dict(_noncomp_input_out or {}).get('representational_ref')
+        ),
     }
 
 

@@ -123,6 +123,52 @@ class TestNoD3MarkersInLivePropagationPassChanges:
             assert marker.replace(" ", "") not in lowered
 
 
+class TestNoD3MarkersInDreamSubstratePassChanges:
+    """AURORA DREAM SUBSTRATE, FAIL-STREAM, POSITIVE-AFFECT, DEVELOPMENTAL
+    WRITEBACK, AND NATIVE INTERMEDIATE RESOLUTION DIRECTIVE, Section 65:
+    this pass's new/touched files must not introduce D3 markers, and the
+    M2,1/M2,2 producer audit must not have manufactured one either."""
+
+    def test_no_d3_markers_in_dream_substrate_module(self):
+        import aurora_dream_substrate as ds
+        src = inspect.getsource(ds)
+        lowered = src.lower().replace(" ", "")
+        for marker in FORBIDDEN_D3_MARKERS:
+            assert marker.replace(" ", "") not in lowered
+
+    def test_no_d3_markers_in_dream_new_experience_canary(self):
+        import aurora_dream_new_experience_canary as canary
+        src = inspect.getsource(canary)
+        lowered = src.lower().replace(" ", "")
+        for marker in FORBIDDEN_D3_MARKERS:
+            assert marker.replace(" ", "") not in lowered
+
+    def test_no_d3_markers_in_rich_fail_stream_addition(self):
+        import aurora_dream_trainer as dt
+        src = (
+            inspect.getsource(dt.FailStreamEvent) +
+            inspect.getsource(dt.RichFailStream) +
+            inspect.getsource(dt.FailPointLedger.record_pre_outcome_event)
+        )
+        lowered = src.lower().replace(" ", "")
+        for marker in FORBIDDEN_D3_MARKERS:
+            assert marker.replace(" ", "") not in lowered
+
+    def test_no_d3_markers_in_understanding_contract_pre_outcome_addition(self):
+        from aurora_internal.aurora_understanding_contract import RuntimeUnderstandingContract
+        src = inspect.getsource(RuntimeUnderstandingContract._record_pre_outcome_fail_if_applicable)
+        lowered = src.lower().replace(" ", "")
+        for marker in FORBIDDEN_D3_MARKERS:
+            assert marker.replace(" ", "") not in lowered
+
+    def test_no_d3_markers_in_dream_genealogy_bridge_fix(self):
+        from aurora_internal.aurora_dream_genealogy_bridge import DreamGenealogyBridge
+        src = inspect.getsource(DreamGenealogyBridge.format_for_genealogy)
+        lowered = src.lower().replace(" ", "")
+        for marker in FORBIDDEN_D3_MARKERS:
+            assert marker.replace(" ", "") not in lowered
+
+
 class TestNoNewManifoldOrPressureStructureGenerated:
     def test_manifold_directory_still_has_exactly_125_files(self):
         import glob

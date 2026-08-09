@@ -808,10 +808,26 @@ class DreamGenealogyBridge:
         - pressure_before/after as PressureVec-compatible dicts
         - trace as list of TraceItem-compatible dicts
         - notes with origin metadata
+
+        AURORA DREAM SUBSTRATE... DIRECTIVE, Section 35: "directive_projection"
+        evidence (_build_directive_evidence) computes pressure_after as an
+        algebraic projection of what scores WOULD be if a not-yet-applied
+        steering directive succeeds -- it is not a measurement of what
+        Aurora's dream actually produced. ConstraintGenealogyLogger.observe()
+        logs every entry it receives as a ReliefRecord, whose own docstring
+        calls it "a confirmed pressure-relief event"; logging an unexecuted
+        projection there would misrepresent an intended-but-untested
+        correction as something Aurora actually experienced and learned.
+        format_for_code_evolution() (above) already excludes this same
+        evidence_type from code-evolution outcomes for the identical reason
+        -- this mirrors that existing, already-decided exclusion rather than
+        deciding new semantics.
         """
         entries: List[Dict[str, Any]] = []
 
         for rec in records:
+            if rec.evidence_type == "directive_projection":
+                continue
             trace_items = []
             for ability_id in rec.trace_abilities:
                 trace_items.append({

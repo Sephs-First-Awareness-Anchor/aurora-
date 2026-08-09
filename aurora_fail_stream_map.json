@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "title": "Aurora Rich Fail Stream Map",
+    "generated_for": "AURORA DREAM SUBSTRATE... DIRECTIVE, Sections 6-10, 40-41",
+    "principle": "FailPointLedger = AggregateDevelopmentalPressure (unchanged) + RichSourceStream (new, additive)"
+  },
+  "aggregate_layer": {
+    "class": "FailPointLedger (aurora_dream_trainer.py)",
+    "unchanged_behavior": ["_records dict scoring", "get_top_fails()", "record_fail()'s dimension aggregate update", "flush_lessons_to_simulation()'s curriculum targeting", "record()'s legacy wrapper", "WARP demand emission on record_fail()"],
+    "verified_unchanged_by": "tests/test_rich_fail_stream.py::TestAggregateBehaviorUnchanged, plus pre-existing test_d2_2_corpus_fragment_nesting.py/test_l4_grounded_motif_fitness.py/test_relation_typing_probe_extension.py (26/26 passing after this pass's changes)"
+  },
+  "rich_stream_layer": {
+    "class": "RichFailStream (new, aurora_dream_trainer.py)",
+    "event_shape": ["seq", "timestamp", "source", "dimension", "severity", "outcome_label", "pre_outcome_pressure", "identity", "recurrence_of"],
+    "sources_feeding_it": [
+      {"source": "dream_trainer_fail", "trigger": "FailPointLedger.record_fail() (existing corpus/rubric comparison path) -- automatically appends one rich-stream entry per call, no call-site changes needed", "has_pre_outcome_pressure": false},
+      {"source": "live_correction", "trigger": "FailPointLedger.record_pre_outcome_event() (new), called from aurora_internal/aurora_understanding_contract.py's _record_pre_outcome_fail_if_applicable() when a live conversational correction/confusion is genuinely detected", "has_pre_outcome_pressure": true}
+    ],
+    "persistence": "aurora_state/fail_stream.jsonl, append-on-save (JSON-lines, one event per line), bounded at maxlen=2000 in memory. Independent of fail_points.json -- a corrupt stream file cannot break the aggregate's own load().",
+    "temporal_ordering": "Strictly preserved via monotonic seq counter -- never reordered, never flattened into a single aggregate object.",
+    "recurrence_mechanism": {
+      "method": "RichFailStream._find_recurrence()",
+      "basis": "exact match on 'dimension' (corpus/rubric domain) OR exact match on (identity.topic, identity.action_type) pair (live-correction domain)",
+      "no_fabricated_threshold": "Recurrence is recognized on the SECOND occurrence -- no hardcoded minimum count was introduced, per Section 9's explicit prohibition.",
+      "no_embedding_similarity": "Pure identifier equality on values Aurora's own contract/ledger already produced -- no new similarity scoring was added."
+    }
+  },
+  "individual_identity_preservation": {
+    "claim": "Each fail event remains individually distinguishable -- order preserved, not flattened into one aggregate, not scattered as fully isolated unrelated objects.",
+    "verified_by": "tests/test_rich_fail_stream.py::TestRichStreamPreservesIndividualIdentity, tests/test_fail_recurrence_novelty.py"
+  }
+}

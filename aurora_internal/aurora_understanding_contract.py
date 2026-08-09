@@ -1931,6 +1931,17 @@ class RuntimeUnderstandingContract:
             "delta": delta,
             "fit_reason": " ".join(fit_parts),
             "matched_expectation": matched_expectation,
+            # AURORA DREAM SUBSTRATE... DIRECTIVE, Section 4: surface the
+            # pressure state pending_validation already carries (captured
+            # in commit_application(), before this turn's verdict existed)
+            # so a caller that finds label in {"corrected",
+            # "expression_unclear"} can bind the outcome back to P_pre
+            # instead of substituting whatever pressure exists now, after
+            # the error is already known.
+            "pre_outcome_pressure": pending.get("pre_outcome_pressure"),
+            "expected_topic": expected_topic,
+            "action_type": str(pending.get("action_type", "") or ""),
+            "response_id": str(pending.get("response_id", "") or ""),
         }
 
     def _derive_observation(self, user_text: str, understood: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -2286,6 +2297,52 @@ class RuntimeUnderstandingContract:
             )
             pass
 
+    def _record_pre_outcome_fail_if_applicable(
+        self, systems: Dict[str, Any], accuracy: Dict[str, Any],
+    ) -> None:
+        """
+        AURORA DREAM SUBSTRATE... DIRECTIVE, Sections 4, 6: when
+        _evaluate_previous_accuracy() has just determined the previous
+        turn's interpretation/action was wrong or confusing, bind that
+        outcome back to the pressure state captured BEFORE the outcome was
+        known (accuracy["pre_outcome_pressure"], set in
+        commit_application()) rather than substituting whatever pressure
+        exists now that the error is already recognized. Feeds only the
+        rich stream (FailPointLedger.record_pre_outcome_event) -- never
+        FailPointLedger's own corpus/rubric dimension aggregate, which is
+        a different fail domain and must keep its existing curriculum-
+        targeting behavior untouched.
+        """
+        label = str(accuracy.get("label", "") or "")
+        if label not in ("corrected", "expression_unclear"):
+            return
+        pre_outcome_pressure = accuracy.get("pre_outcome_pressure")
+        dream_trainer = systems.get("dream_trainer") if isinstance(systems, dict) else None
+        ledger = getattr(dream_trainer, "ledger", None)
+        if ledger is None or not hasattr(ledger, "record_pre_outcome_event"):
+            return
+        severity = 1.0 - float(accuracy.get("score", 0.5) or 0.5)
+        try:
+            ledger.record_pre_outcome_event(
+                outcome_label=label,
+                severity=severity,
+                pre_outcome_pressure=pre_outcome_pressure,
+                identity={
+                    "topic": accuracy.get("expected_topic") or None,
+                    "action_type": accuracy.get("action_type") or None,
+                    "response_id": accuracy.get("response_id") or None,
+                },
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_understanding_contract.py:_record_pre_outcome_fail_if_applicable",
+                exc=_aurora_boundary_exc,
+                context={"function": "_record_pre_outcome_fail_if_applicable", "source_file": "aurora_internal/aurora_understanding_contract.py"},
+            )
+            pass
+
     def ingest_observation(
         self,
         systems: Dict[str, Any],
@@ -2304,6 +2361,7 @@ class RuntimeUnderstandingContract:
         # state clears it below, so taking this copy here is intentional.
         validated_pending = copy.deepcopy(self.state.get("pending_validation", {}) or {})
         accuracy = self._evaluate_previous_accuracy(systems, user_text, understood)
+        self._record_pre_outcome_fail_if_applicable(systems, accuracy)
         meaning_state = self._derive_meaning_state(systems, user_text, understood)
         perspective_state = self._derive_perspective_state(systems, meaning_state, source=source)
         boundary_state = self._derive_boundary_state(systems, meaning_state, perspective_state)
@@ -2587,6 +2645,19 @@ class RuntimeUnderstandingContract:
         self.state["P"] = perspective_state
         self.state["Pi"] = policy_state
         self.state["A"]["projected_next"] = round(_clip01(projected_accuracy, 0.5), 4)
+        # AURORA DREAM SUBSTRATE... DIRECTIVE, Sections 4-5: capture the
+        # pressure state that already exists at this exact point -- before
+        # this turn's prediction is committed to pending_validation, and
+        # therefore strictly before _evaluate_previous_accuracy() (which
+        # only runs on the NEXT turn) can determine whether this
+        # interpretation/action was wrong. before_state is already
+        # deep-copied at the top of this method and already has a
+        # producer (_pressure_from_state, used identically by
+        # _record_genealogy_event below) -- this only preserves that
+        # already-computed value somewhere it can be read back out,
+        # rather than letting it be discarded when self.state is
+        # overwritten by the assignments above.
+        pre_outcome_pressure = self._pressure_from_state(before_state).to_dict()
         self.state["pending_validation"] = {
             "response_id": str(policy_state.get("response_id", "") or ""),
             "action_type": str(policy_state.get("action_type", "") or ""),
@@ -2600,6 +2671,7 @@ class RuntimeUnderstandingContract:
             "tone": str(tone or ""),
             "session_id": str(session_id or ""),
             "contributors": copy.deepcopy(dict(contributors or {})),
+            "pre_outcome_pressure": pre_outcome_pressure,
         }
 
         dominant_form = dict(meaning_state.get("dominant_meaning_form", {}) or {})
