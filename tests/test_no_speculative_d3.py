@@ -87,6 +87,42 @@ class TestRepresentationalRefCannotConstructD3Shape:
                 assert "range(625*625)" not in src
 
 
+class TestNoD3MarkersInLivePropagationPassChanges:
+    """AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-BINDING
+    DIRECTIVE, Section 19: this pass's additional touched files/functions
+    must not introduce D3 markers either."""
+
+    def test_no_d3_markers_in_closed_loop_canary(self):
+        import aurora_representational_closed_loop_canary as canary
+        src = inspect.getsource(canary)
+        lowered = src.lower().replace(" ", "")
+        for marker in FORBIDDEN_D3_MARKERS:
+            assert marker.replace(" ", "") not in lowered, (
+                f"forbidden D3 marker {marker!r} found in aurora_representational_closed_loop_canary"
+            )
+
+    def test_no_d3_markers_in_warp_protocol_ref_addition(self):
+        import aurora_warp_protocol as warp
+        src = inspect.getsource(warp.WarpDemand) + inspect.getsource(warp.warp_guard)
+        lowered = src.lower().replace(" ", "")
+        for marker in FORBIDDEN_D3_MARKERS:
+            assert marker.replace(" ", "") not in lowered
+
+    def test_no_d3_markers_in_sedimemory_whitelist_fix(self):
+        import aurora_sedimemory as sm
+        src = inspect.getsource(sm.NCStrainFilter._extract_slice)
+        lowered = src.lower().replace(" ", "")
+        for marker in FORBIDDEN_D3_MARKERS:
+            assert marker.replace(" ", "") not in lowered
+
+    def test_no_d3_markers_in_boot_noncomp_manifold_runtime_repair(self):
+        import aurora as A
+        src = inspect.getsource(A._boot_noncomp_manifold_runtime)
+        lowered = src.lower().replace(" ", "")
+        for marker in FORBIDDEN_D3_MARKERS:
+            assert marker.replace(" ", "") not in lowered
+
+
 class TestNoNewManifoldOrPressureStructureGenerated:
     def test_manifold_directory_still_has_exactly_125_files(self):
         import glob

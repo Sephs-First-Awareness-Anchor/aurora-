@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "title": "Aurora Representational Provenance Map",
+    "generated_for": "AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-BINDING DIRECTIVE",
+    "baseline_commit": "3433638",
+    "core_invariant": "Ref_origin = Ref_memory = Ref_consequence = Ref_replay unless a subsystem intentionally creates a new interpretation event, in which case BOTH Ref_original and Ref_reinterpretation are preserved. Ref_before is never overwritten by Ref_after.",
+    "canonical_type": "aurora_representational_address.RepresentationalRef",
+    "d3_status": "NOT CREATED this pass either. Verified by tests/test_no_speculative_d3.py (extended) and tests/test_no_representational_selection_learning.py."
+  },
+  "repair_authority_actions": [
+    {
+      "id": "R1",
+      "file": "aurora.py",
+      "function": "_boot_noncomp_manifold_runtime",
+      "defect": "Pre-existing NameError: line referenced a local variable `state_dir` that was never a parameter of, nor assigned within, this function -- introduced in commit 747a74f ('Build 608: RCEC Closed-Loop Activation and Admissibility Repair') when `state_dir=state_dir` was added to the ReflexiveInterpreter(...) call without threading a state_dir parameter through. Silently caught by the function's own broad except-Exception handler, leaving systems['noncomp_reflexive_interpreter'] permanently None and systems['noncomp_runtime_status'] = {'available': False, 'reason': \"name 'state_dir' is not defined\", ...} on every boot_aurora() call, regardless of profile.",
+      "repair_authority_basis": "Criterion 3 (missing wiring / type-contract defect) plus criterion 1 (an existing producer, boot_aurora's own `systems['state_dir']`, already possessed the correct value) plus criterion 2 (ReflexiveInterpreter.__init__ already accepts state_dir: Optional[str], an existing consumer already structurally capable). No new semantics decided -- criterion 4 satisfied.",
+      "fix": "Added `_noncomp_state_dir = systems.get(\"state_dir\")` and passed `state_dir=str(_noncomp_state_dir) if _noncomp_state_dir else None` to the existing ReflexiveInterpreter(...) call, replacing the undefined bare `state_dir`.",
+      "verified_by": "Direct boot_aurora(state_dir=..., runtime_profile='surface') call showing noncomp_runtime_status['available'] == True and noncomp_reflexive_interpreter is not None (previously False/None on every boot); aurora_representational_closed_loop_canary.py Part 2, which went from step.representational_ref == None (UNREACHABLE) to a real, non-None ref (PRESERVED) purely from this fix, with no other code changed in between the two runs.",
+      "scope_note": "This bug predates this entire representational-substrate work (all three prior directives) and predates this session's changes. It affected every boot_aurora() call, not just 'surface' profile or test patterns -- the noncomp/ReflexiveInterpreter runtime never activated in ANY real boot until this fix. Confirmed pre-existing via git log -L on the exact line: the bug was introduced in 747a74f, which never touched the function's signature."
+    }
+  ],
+  "producers": [
+    {"field": "representational_ref", "site": "aurora_reflexive_interpreter.py::ReflexiveInterpreter.interpret()", "mechanism": "Computes _turn_ref_encoded unconditionally (C1-level RepresentationalRef.for_c1 if nc_target resolved, else D1-level RepresentationalRef.for_d1), attaches to UnderstandingState.representational_ref and to the sediment deposit call.", "kind": "origin"},
+    {"field": "representational_ref", "site": "aurora.py::_run_simulation_live_response_bridge()", "mechanism": "Reads the already-computed ref back out of noncomp_output/noncomp_input (both built from UnderstandingState.to_dict()) and surfaces it as a top-level 'representational_ref' key in the bridge result dict. Not a new interpretation event -- a read of an already-computed field.", "kind": "relay"},
+    {"field": "representational_ref", "site": "aurora_internal/aurora_cognitive_experience_chamber.py::run_episode_step()", "mechanism": "trace.steps[-1].representational_ref = bridge_result.get('representational_ref') -- records the origin ref onto the EpisodeStep.", "kind": "relay"},
+    {"field": "original_representational_ref / revised_representational_ref", "site": "aurora_internal/aurora_cognitive_experience_chamber.py::run_backprojection_step()", "mechanism": "Records step.representational_ref (untouched, the origin) as 'original_representational_ref' and the NEW bridge_result ref from the reinterpretation call as 'revised_representational_ref'. step.representational_ref itself is never reassigned.", "kind": "reinterpretation_event"},
+    {"field": "witnessed_representational_ref", "site": "aurora_internal/aurora_cognitive_experience_chamber.py::run_witnessed_observation()", "mechanism": "Records the ref produced by the witness's own interpretation call, alongside (not overwriting) step.representational_ref.", "kind": "reinterpretation_event"}
+  ],
+  "consumers": [
+    {"field": "representational_ref", "site": "aurora_understanding_sediment.py::UnderstandingSedimentOverlay.deposit()", "mechanism": "Stores ref on each deposit record (optional, backward compatible)."},
+    {"field": "representational_ref", "site": "aurora_understanding_sediment.py::UnderstandingSedimentOverlay.ref_for(field_key, slot)", "mechanism": "Direct read-back of a single deposit's ref."},
+    {"field": "representational_ref", "site": "aurora_understanding_sediment.py::UnderstandingSedimentOverlay.field_keys_for_ref(ref)", "mechanism": "NEW this pass: reverse lookup, ref -> every field_key with a matching deposit, enabling RepresentationalRef -> PersistentWorthLedger.scores_for(field_key) historical worth traversal without modifying PersistentWorthLedger's own float-list schema."},
+    {"field": "representational_ref", "site": "aurora_sedimemory.py::NCStrainFilter._extract_slice()", "mechanism": "REPAIRED this pass: added 'representational_ref' to the fixed content-key whitelist tuple. Previously silently dropped by both the full-strain path (_strainer.strain()) and the channel-hit fast path (_deposit_via_channel()), despite SedimentFragment.content being nominally Dict[str, Any] -- a type-openness-does-not-imply-passthrough bug, not a design decision. Repair authority basis: criterion 3 (type-contract defect: an already-open field silently filtered by an unrelated whitelist), criterion 4 satisfied (no semantics decided, purely restores passthrough)."},
+    {"field": "representational_ref", "site": "aurora_warp_protocol.py::WarpDemand / warp_guard()", "mechanism": "NEW this pass: optional provenance-only field/parameter, never read by _classify()/_route(), confirmed backward compatible with all existing call sites."}
+  ],
+  "closed_loop_canary": {
+    "script": "aurora_representational_closed_loop_canary.py",
+    "part_1_interpret_memory_persistence": {
+      "interpret": "PRESERVED",
+      "memory_restart": "PRESERVED -- fresh ReflexiveInterpreter instance (simulated process exit/restart), same on-disk overlay, ref recovered unchanged",
+      "ref_to_worth_history": "PRESERVED -- field_keys_for_ref() -> PersistentWorthLedger.scores_for() round trip",
+      "understanding_state_to_dict": "PRESERVED"
+    },
+    "part_2_rcec_episode": {
+      "rcec_episode_step": "PRESERVED (required the R1 boot-runtime repair; before the repair this boundary was UNREACHABLE because the noncomp runtime never activated on any real boot)",
+      "rcec_consequence": "PRESERVED -- ref unchanged across the interpretation-to-consequence step",
+      "rcec_backprojection_reinterpretation": "PRESERVED -- step.representational_ref (Ref_before) never overwritten by the reinterpretation's own ref (Ref_after)",
+      "before_after_both_recoverable": "PRESERVED -- both original_representational_ref and revised_representational_ref present and distinct",
+      "genealogy": "UNREACHABLE -- no live path connects RCEC/ReflexiveInterpreter output to ConstraintGenealogyLogger's write path",
+      "evolution_chamber": "UNREACHABLE -- no live path, confirmed by prior and this pass's audit",
+      "dream_replay": "UNREACHABLE -- no live path, confirmed by prior and this pass's audit"
+    }
+  },
+  "negative_guards": {
+    "no_experiential_selection_learning": "No modification to SemanticMatcher.match(), frame/stance mappings, _find_nc() scoring, routing rankings, default constraint/dimension, or anchor-selection behavior. No reinforcement tables, coordinate-preference tables, consequence-to-coordinate maps, or manually authored salience rules added. Verified by tests/test_no_representational_selection_learning.py.",
+    "no_d3": "390,625 (625x625) and both proposed C3 cardinalities remain unimplemented. Verified by tests/test_no_speculative_d3.py.",
+    "no_silent_repin": "None fields are never converted to inferred anchor values; unresolved stays unresolved end-to-end. Verified by tests/test_representational_unresolved_fields.py."
+  }
+}

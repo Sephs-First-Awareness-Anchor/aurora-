@@ -1211,6 +1211,12 @@ class WarpDemand:
     local_attempts  list of resolution strategies already tried and failed
     severity        0.0–1.0; governs pathway selection and escalation
     persistence_key stable key to track a recurring unresolved state across ticks
+    representational_ref optional encoded aurora_representational_address.
+                    RepresentationalRef -- contextual provenance only, never
+                    read by _classify()/_route() or any numeric pathway
+                    logic. profile stays the sole numeric axis/I-state
+                    contract; this field never carries a coordinate value
+                    into it.
     """
     source:           str
     layer:            str
@@ -1227,6 +1233,12 @@ class WarpDemand:
     demand_id:        str             = field(
         default_factory=lambda: uuid.uuid4().hex[:12]
     )
+    # AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-BINDING
+    # DIRECTIVE, Section 12: the narrowest backward-compatible mechanism
+    # for optional contextual provenance. Old callers that never pass it
+    # are unaffected -- default None, never read by any existing WARP
+    # computation.
+    representational_ref: Optional[str] = None
 
 
 @dataclass
@@ -1550,6 +1562,7 @@ def warp_guard(
     local_attempts: Optional[List[str]] = None,
     severity: float = 0.5,
     persistence_key: str = "",
+    representational_ref: Optional[str] = None,
 ) -> WarpDecision:
     """
     The universal confession: "I cannot resolve this."
@@ -1580,6 +1593,7 @@ def warp_guard(
         local_attempts=local_attempts or [],
         severity=severity,
         persistence_key=persistence_key,
+        representational_ref=representational_ref,
     )
     return get_warp_field().submit(demand)
 

@@ -291,6 +291,23 @@ class UnderstandingSedimentOverlay:
                 return None
             return rec.get("representational_ref")
 
+    def field_keys_for_ref(self, ref: str) -> List[str]:
+        """AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-BINDING
+        DIRECTIVE, Section 9: the RepresentationalRef -> historical worth/
+        consequence observations direction. Returns every field_key (the
+        same key PersistentWorthLedger.scores_for() takes) whose deposits
+        carry the given encoded ref on at least one slot. Does not touch
+        or restructure PersistentWorthLedger's own float-list schema --
+        the association is recovered transitively through the field_key
+        both stores already share, not by adding a parallel ontology."""
+        if not ref:
+            return []
+        with self._lock:
+            return [
+                field_key for field_key, slots in self._entries.items()
+                if any(rec.get("representational_ref") == ref for rec in slots.values())
+            ]
+
     # ── introspection ──
 
     def stats(self) -> Dict[str, Any]:

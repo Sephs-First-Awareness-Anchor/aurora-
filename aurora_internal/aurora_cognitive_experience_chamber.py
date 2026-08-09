@@ -1558,6 +1558,15 @@ def run_episode_step(
     # Stage 5: retain the pre-articulation snapshot from THIS SAME turn,
     # captured alongside the interpretation rather than re-derived later.
     trace.steps[-1].dual_strata_snapshot = capture_dual_strata_snapshot(systems, bridge_result)
+    # AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-BINDING
+    # DIRECTIVE: this same live-response-bridge call already ran a real
+    # ReflexiveInterpreter.interpret() (inside process_external_user_turn's
+    # reasoning pipeline) and bridge_result already surfaces the resulting
+    # canonical RepresentationalRef -- carry it onto this step exactly like
+    # dual_strata_snapshot/world_before/observed_before above: a read of an
+    # already-computed field, not a new interpretation event, and RCEC's own
+    # entity/property vocabulary (action/intent/interpretation) is untouched.
+    trace.steps[-1].representational_ref = bridge_result.get("representational_ref")
     # Build 608 (C): retain the ground-truth and observed state AS OF this
     # same moment -- reusable structured evidence, not re-derivable once the
     # episode has moved past this tick.
@@ -1914,10 +1923,18 @@ def run_backprojection_step(
 
     revised = ActionInterface.interpret_expression(expression, observed_after, confidence, skin=skin).interpretation
 
+    # AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-BINDING
+    # DIRECTIVE, Section 10: backprojection is a genuine reinterpretation
+    # event -- preserve BOTH the step's original representational_ref
+    # (set at record_interpretation time, untouched here) and this
+    # reconciliation's own ref, rather than overwriting the former with
+    # the latter. Ref_before := Ref_after never happens.
     step.backprojection = {
         "original_interpretation": asdict(step.interpretation),
         "reconciliation_prompt": reconciliation_prompt,
         "revised_interpretation": asdict(revised),
+        "original_representational_ref": step.representational_ref,
+        "revised_representational_ref": bridge_result.get("representational_ref"),
     }
     return revised
 
@@ -1972,9 +1989,13 @@ def run_witnessed_observation(
     witnessed = ActionInterface.interpret_expression(expression, observed_after, confidence, skin=skin).interpretation
     dual_strata_snapshot = capture_dual_strata_snapshot(systems, bridge_result)
 
+    # Section 10: another genuine reinterpretation event -- record its own
+    # ref alongside the witnessed interpretation without touching the
+    # step's original representational_ref.
     step.witness_report = {
         "prompt": witness_prompt,
         "witnessed_interpretation": asdict(witnessed),
+        "witnessed_representational_ref": bridge_result.get("representational_ref"),
     }
     # The witness call is the only live touch a demonstrated/control step
     # has -- treat its pre-articulation snapshot as this step's own, the

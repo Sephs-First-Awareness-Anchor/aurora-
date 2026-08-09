@@ -12580,11 +12580,12 @@ def _boot_noncomp_manifold_runtime(systems: Dict[str, Any], *, verbose: bool = F
         systems["noncomp_manifold_directory"] = directory
         systems["noncomp_manifold_router"] = router
         band_pos = _sync_noncomp_runtime_band(systems)
+        _noncomp_state_dir = systems.get("state_dir")
         systems["noncomp_reflexive_interpreter"] = ReflexiveInterpreter(
             directory=directory,
             router=router,
             band_pos=band_pos,
-            state_dir=state_dir,
+            state_dir=str(_noncomp_state_dir) if _noncomp_state_dir else None,
         )
         systems["noncomp_runtime_status"] = {
             "available": True,
@@ -34211,6 +34212,19 @@ def _run_simulation_live_response_bridge(
         # a read of an existing field, not a new computation, and does not
         # change what any other caller of process_external_user_turn() sees.
         'dual_strata_snapshot': dict(result.get('conscious_frame') or {}),
+        # AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-BINDING
+        # DIRECTIVE: this turn's real ReflexiveInterpreter.interpret() call
+        # (inside process_external_user_turn's own reasoning pipeline)
+        # already computed a canonical RepresentationalRef and stamped it
+        # into noncomp_output_state/noncomp_input_state's
+        # representational_ref key -- another read of an already-computed
+        # field, not a new interpretation event. Output preferred (the
+        # turn's final interpretation state); falls back to input if the
+        # output guidance stage didn't run for some reason.
+        'representational_ref': (
+            dict(result.get('noncomp_output') or {}).get('representational_ref') or
+            dict(result.get('noncomp_input') or {}).get('representational_ref')
+        ),
     }
 
 

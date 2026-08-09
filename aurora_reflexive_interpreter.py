@@ -781,6 +781,14 @@ class UnderstandingState:
     match_confidence:float; band_pos:str; summary:str
     query_type:Optional[str]=None; semantic_override:Optional[str]=None
     noncomp_state:Dict[str, object]=field(default_factory=dict)
+    # AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-BINDING
+    # DIRECTIVE: encoded aurora_representational_address.RepresentationalRef
+    # for this turn's interpretation -- C1-level when nc_target resolved,
+    # D1-level otherwise. Included in to_dict() so it flows, unchanged,
+    # into every existing consumer of that dict (aurora.py's
+    # noncomp_input_state/noncomp_output_state, evidence dicts) without
+    # any of those consumers needing to re-derive or re-interpret it.
+    representational_ref:Optional[str]=None
 
     def to_dict(self)->Dict:
         return {k:v for k,v in {
@@ -793,6 +801,7 @@ class UnderstandingState:
             "summary":self.summary,"query_type":self.query_type,
             "semantic_override":self.semantic_override,
             "noncomp_state": dict(self.noncomp_state or {}),
+            "representational_ref": self.representational_ref,
         }.items()}
 
     def __repr__(self)->str:
@@ -1048,36 +1057,37 @@ class ReflexiveInterpreter:
         coherent     = _polarity_coherent(match, route_result)
         is_und, summ = _reconcile(ws, traj, origin_region, coherent, match.confidence, route_result)
 
+        # Canonical representational reference for this turn -- C1-level
+        # (nc identity + target) when the target resolved, otherwise
+        # D1-level (constraint + dimension only). Never guesses
+        # sub_law_c/sub_law_d/col_law_c/col_law_d here -- this call site
+        # does not independently know a "row x column" relation, only
+        # which NonComp landed. Computed unconditionally (not gated on
+        # is_und) so UnderstandingState.representational_ref reflects the
+        # real interpretation outcome for every turn, not only understood
+        # ones; the sediment deposit below remains gated on is_und exactly
+        # as before -- this ref's existence doesn't change that gate.
+        _turn_ref_encoded = None
+        if _REPRESENTATIONAL_REF_AVAILABLE:
+            if _nc_target_resolved is not None:
+                _turn_ref_encoded = _RepresentationalRef.for_c1(
+                    match.constraint, match.dimension, _nc_target_resolved
+                ).encode()
+            else:
+                _turn_ref_encoded = _RepresentationalRef.for_d1(
+                    match.constraint, match.dimension
+                ).encode()
+
         # ── Deposition: understanding writes back into the field ──
         # Every understood expression lays sediment at the slot it landed
         # in (capped, decaying — see aurora_understanding_sediment).
         # The next nearby expression reads a denser field.
         if is_und and self._overlay is not None and _slot is not None:
             try:
-                # Canonical representational reference for this deposit --
-                # C1-level (nc identity + target) when the target resolved,
-                # otherwise D1-level (constraint + dimension only). Never
-                # guesses sub_law_c/sub_law_d/col_law_c/col_law_d here --
-                # this call site does not independently know a "row x
-                # column" relation, only which NonComp landed. Carrying an
-                # honestly-partial ref is the point: a later consumer that
-                # needs the full C2 slot can still resolve it from
-                # (nc identity) without this overlay having to store the
-                # entire ManifoldSlot body.
-                _deposit_ref_encoded = None
-                if _REPRESENTATIONAL_REF_AVAILABLE:
-                    if _nc_target_resolved is not None:
-                        _deposit_ref_encoded = _RepresentationalRef.for_c1(
-                            match.constraint, match.dimension, _nc_target_resolved
-                        ).encode()
-                    else:
-                        _deposit_ref_encoded = _RepresentationalRef.for_d1(
-                            match.constraint, match.dimension
-                        ).encode()
                 sediment_delta = self._overlay.deposit(
                     match.nc_name or f"{match.constraint}:{match.dimension}",
                     _slot, ws, threshold=UNDERSTANDING_THRESHOLD,
-                    ref=_deposit_ref_encoded)
+                    ref=_turn_ref_encoded)
                 self._overlay.save()
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
@@ -1125,6 +1135,7 @@ class ReflexiveInterpreter:
             band_pos=self._band_pos, summary=summ, query_type=match.query_type,
             semantic_override=match.semantic_override,
             noncomp_state=noncomp_state,
+            representational_ref=_turn_ref_encoded,
         )
 
         # Surface the deposition physics of this pass so DCE evidence and
