@@ -1,0 +1,103 @@
+{
+  "_meta": {
+    "title": "Aurora Native Selection-Feedback Map",
+    "generated_for": "AURORA NATIVE REPRESENTATIONAL SELECTION AND CAUSAL-TO-REPRESENTATIONAL TRANSITION FALSIFICATION DIRECTIVE",
+    "central_question": "Does any existing Aurora mechanism allow prior experience/consequence to alter the inputs, context, weighting, interpretation, or selection process that determines a later (constraint, dimension) coordinate?",
+    "method": "Hand-curated from direct source reads and live code execution this session, cross-checked by an independent background research pass covering 6 subsystem areas. Every edge below is traced data flow (a variable produced by one function consumed by another), not co-import or shared terminology.",
+    "selector_definition": "The coordinate selector is SemanticMatcher.match(expression: str) -> MatchResult (aurora_reflexive_interpreter.py:662-696), which fixes (constraint, dimension, nc_name) from UtteranceParser.parse(expression) plus three static lookup tables (FRAME_TO_CONSTRAINT, STANCE_TO_DIMENSION, ROLE_TO_DIMENSION) plus _find_nc()'s scoring against the static manifold directory."
+  },
+  "selector_inputs": [
+    {"name": "UtteranceParser.parse(text)", "file": "aurora_internal/aurora_utterance_parser.py:541", "stateful": false, "evidence": "No __init__ defined on UtteranceParser -- zero instance state. All lookup sets (_TRUE_FILLER, _STRUCTURAL, _WORD_ROLES, _PHRASE_ROLES, _TOPIC_OVERRIDES, etc.) are class-level literals assigned once at class-definition time, never reassigned anywhere in the repo (confirmed by exhaustive grep for reassignment/monkeypatch)."},
+    {"name": "FRAME_TO_CONSTRAINT", "file": "aurora_reflexive_interpreter.py:151-156", "stateful": false, "evidence": "Module-level dict literal, never mutated anywhere in the repo."},
+    {"name": "STANCE_TO_DIMENSION", "file": "aurora_reflexive_interpreter.py:157-162", "stateful": false, "evidence": "Same as above."},
+    {"name": "ROLE_TO_DIMENSION", "file": "aurora_reflexive_interpreter.py:163-167", "stateful": false, "evidence": "Same as above."},
+    {"name": "_find_nc() candidate scoring", "file": "aurora_reflexive_interpreter.py:711-720", "stateful": false, "evidence": "Reads only IndexEntry objects built once at ManifoldDirectory construction from a static _index.json; no runtime writer of that file was found (see dead_write_path below)."}
+  ],
+  "candidate_feedback_paths_searched": [
+    {
+      "area": "UtteranceParser adaptive state",
+      "found": false,
+      "evidence": "No subclassing, monkeypatching, or mutable instance/class state found anywhere; every call site constructs a fresh UtteranceParser() and only reads .parse()'s return value."
+    },
+    {
+      "area": "BehavioralIdentityEngine",
+      "found": false,
+      "evidence": "aurora_behavioral_identity.py contains zero references to FRAME_TO_CONSTRAINT/STANCE_TO_DIMENSION/ROLE_TO_DIMENSION/SemanticMatcher/UtteranceParser/entries_for_axis/_find_nc/ManifoldDirectory (direct grep of full source)."
+    },
+    {
+      "area": "ConsciousnessEngine",
+      "found": false,
+      "evidence": "Same zero-match result as BehavioralIdentityEngine, confirmed by direct grep of aurora_consciousness_engine.py."
+    },
+    {
+      "area": "DimensionalSystems",
+      "found": false,
+      "evidence": "Same zero-match result, confirmed by direct grep of aurora_dimensional_systems.py."
+    },
+    {
+      "area": "RCEC (aurora_internal/aurora_cognitive_experience_chamber.py)",
+      "found": false,
+      "evidence": "Zero references to understanding_sediment/manifold_directory/pressure_ledger/classification identifiers. RCEC's own ActionInterface.interpret_expression is a locally-defined, separate interpreter for simulated-world action selection -- not SemanticMatcher, writes to none of the same stores."
+    },
+    {
+      "area": "Afterthought / reflective inspection / correction / backprojection modules",
+      "found": false,
+      "evidence": "aurora_reflective_readdressing.py's own docstring: 'No permanent belief, rule, or code change is made here' -- it reads UtteranceParser as a consumer, never writes to its tables. internalize_correction/apply_correction/_absorb_user_correction/needs_correction/run_backprojection_step individually checked: none reference the six selector-input identifiers."
+    },
+    {
+      "area": "Adaptive/learned manifold rewriting reaching _find_nc",
+      "found": "dead_write_path",
+      "evidence": "scripts/bridge_ledger_to_noncomps.py DOES write real consequence data (from aurora_state/pressure_experiences.jsonl, populated by the live PressureExperienceLedger) into each matching noncomp JSON file's development_tracking.history array. This is a genuine consequence-to-manifold-file write. However: (a) it is a manually-invoked, __main__-gated offline script, never called from any automatic boot/runtime path; (b) development_tracking is never read by _find_nc, ManifoldFieldMap, NoncompManifold.stream_slots, or entries_for_axis -- it has zero consumers anywhere in the codebase. A real write into a field nothing reads."
+    },
+    {
+      "area": "UnderstandingSedimentOverlay / PersistentWorthLedger / recall_confidence_boost",
+      "found": "downstream_only",
+      "evidence": "All three are genuine, real, consequence-fed persistent stores -- but every one of them is written or read AFTER match() has already fixed (constraint, dimension) for that call (aurora_reflexive_interpreter.py:911 runs before lines 930-970). None is ever consulted by UtteranceParser.parse() or _find_nc() for a FUTURE call's selection. This is the exact conservation-report finding re-confirmed, extended here to 6 additional subsystems with the same negative result."
+    }
+  ],
+  "same_input_history_canary_result": {
+    "script": "aurora_same_input_history_canary.py",
+    "test_input": "I need to protect my boundaries here",
+    "history_p": "5 repeated real interpret() calls on the test input itself (real consequence: rising worth history, real sediment deposits for its own key)",
+    "history_q": "5 repeated real interpret() calls on a different sentence landing on a different nc_name (real consequence for a different key)",
+    "result": {
+      "selection_inputs_identical": true,
+      "selected_coordinate_identical": true,
+      "downstream_worth_score_identical": true,
+      "downstream_field_region_identical": false,
+      "outcome": "A",
+      "note": "field_region differed (dense under History P vs mid under History Q) purely because of real, existing sediment-overlay accumulation for the test input's OWN slot -- demonstrating experiential modulation IS real and reaches downstream understanding state, while coordinate selection itself (constraint/dimension/nc_name) remained bit-for-bit identical under both histories, exactly as the selector's stateless signature predicts."
+    }
+  },
+  "causal_vs_representational_probe_result": {
+    "script": "aurora_causal_vs_representational_probe.py",
+    "candidate": "sub_law_c",
+    "classification": "CAUSAL_ONLY",
+    "criteria": {
+      "R1_differentiation": "MET -- 5/5 distinct numeric manifold states (rank-6 audit)",
+      "R2_independent_consequence": "MET -- _NONCOMP_CONSTRAINT_RUNTIME_EFFECTS differs by constraint, live-wired to response composition",
+      "R3_invariant_relation": "PARTIALLY -- topic_words (a real, code-computed, non-invented candidate) co-occurs with constraint variation and is read by _find_nc's own scoring",
+      "R4_persistence": "NOT MET -- topic_words is never stored/keyed/retrieved by any persistent structure; overlay/ledger key exclusively by (constraint, dimension)/nc_name",
+      "R5_functional_use": "MET within a single call (_find_nc's +0.5 topic-overlap term) -- not across episodes",
+      "R6_decoupling_mismatch": "NOT DEMONSTRATED -- recall_confidence_boost pre-filters to the current constraint's own axis and discards SediMemory's 'axis' field; a broader axis-preserving SediMemory query exists elsewhere (aurora.py's _build_established_strata_evidence) but nothing compares its recalled axes against the current turn's constraint"
+    }
+  },
+  "relation_to_object_promotion_finding": {
+    "found_elsewhere_in_codebase": true,
+    "location": "aurora_internal/constraint_genealogy.py:1182-1206, ConstraintLink",
+    "evidence": "ConstraintLink's own docstring: 'A promoted pair (or pair-of-pairs) that has proven reliably effective. Once promoted, it becomes a re-usable trace element.' Its parents field can hold ability ids OR link ids, and depth>1 exactly when a parent is itself a Link -- i.e. genealogy already has a real, existing, non-hypothetical mechanism where a promoted relation becomes an object that can itself be an endpoint of a later, higher-order relation.",
+    "caveat": "This is a genuine existing example of the general 'relation promoted to reusable object' pattern the directive's Part VI asks about -- but it lives entirely in genealogy's atom-pair space, is structurally and causally disconnected from sub_law_c / the manifold coordinate under primary investigation (per the prior system-wide conservation report's confirmed finding that ReflexiveInterpreter has zero data flow into genealogy), and does not by itself support any claim about the manifold's proposed depth-three space. Reported as a precedent pattern, not as evidence for depth-three."
+  },
+  "regression_and_negative_controls": {
+    "test_file": "tests/test_native_representational_selection.py",
+    "controls": [
+      "simple downstream causal effect alone does not pass R3/R4/R5",
+      "5 distinct values alone (R1) does not pass without R2-R5",
+      "persistence alone (hypothetically) would not pass without R1/R2/R5",
+      "an experimenter-supplied invariant is rejected unless code-grounded (topic_words was accepted only because _find_nc actually reads it)",
+      "sub_law_d remains capped at <=2 numeric states, not promoted",
+      "no test asserts the canary's Outcome A/C in advance without running the real code",
+      "probe module and canary module never mutate aurora_manifold_directory/ or aurora_state/"
+    ]
+  }
+}

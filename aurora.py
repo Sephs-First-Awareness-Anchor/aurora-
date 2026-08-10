@@ -4348,6 +4348,7 @@ class ConstraintFieldBalancer:
         Only injects for axes genuinely below ideal (gradient > threshold).
         """
         import hashlib as _hl
+        from aurora_evolution_stack import PressureVec, TraceItem
         gradient = self.field_gradient()
         for ax, g in gradient.items():
             if g < 0.005:   # only inject for meaningfully starved axes
@@ -4356,13 +4357,12 @@ class ConstraintFieldBalancer:
             if not ability:
                 continue
             try:
-                pv_before = {a: (g * 0.015 if a == ax else 0.0)
-                             for a in ("X", "T", "N", "B", "A")}
-                pv_after = {a: 0.0 for a in ("X", "T", "N", "B", "A")}
+                pv_before = PressureVec(**{a: (g * 0.015 if a == ax else 0.0)
+                                            for a in ("X", "T", "N", "B", "A")})
+                pv_after = PressureVec(**{a: 0.0 for a in ("X", "T", "N", "B", "A")})
                 genealogy.observe(
                     pressure_before=pv_before,
-                    trace=[{"ability": ability,
-                            "cost": 0.0003, "source": "field_balance"}],
+                    trace=[TraceItem(kind="ABILITY", id=ability)],
                     pressure_after=pv_after,
                     state_sig_before=_hl.md5(
                         f"bal_b_{ax}".encode()).hexdigest()[:8],
@@ -4370,7 +4370,7 @@ class ConstraintFieldBalancer:
                         f"bal_a_{ax}".encode()).hexdigest()[:8],
                     notes={"tag": "field_balance", "axis": ax,
                            "gradient": round(g, 4), "ema": round(self._ema[ax], 4)},
-                    difference_snapshot={},
+                    difference_snapshot=None,
                 )
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
@@ -12580,11 +12580,12 @@ def _boot_noncomp_manifold_runtime(systems: Dict[str, Any], *, verbose: bool = F
         systems["noncomp_manifold_directory"] = directory
         systems["noncomp_manifold_router"] = router
         band_pos = _sync_noncomp_runtime_band(systems)
+        _noncomp_state_dir = systems.get("state_dir")
         systems["noncomp_reflexive_interpreter"] = ReflexiveInterpreter(
             directory=directory,
             router=router,
             band_pos=band_pos,
-            state_dir=state_dir,
+            state_dir=str(_noncomp_state_dir) if _noncomp_state_dir else None,
         )
         systems["noncomp_runtime_status"] = {
             "available": True,
@@ -27154,6 +27155,31 @@ def boot_aurora(
     except Exception as _sedi_e:
         if verbose: print(f"  [L3.5] SediMemory unavailable: {_sedi_e}")
 
+    # Wire L3.5 → NonComp reflexive interpreter: recall_confidence_boost()
+    # already exists and is already exercised by tests (aurora_reflexive_
+    # interpreter.py's interpret()), but the interpreter boots long before
+    # SediMemory does (systems["noncomp_reflexive_interpreter"] is built in
+    # _boot_noncomp_manifold_runtime(), well before this L3.5 section), so
+    # __init__'s sedimemory= kwarg is always None in production and the
+    # recall-confidence coupling has never fired live. Same wiring pattern
+    # as the L3.5 -> L4/L5/L6 blocks below.
+    if systems.get('sedimemory') is not None and systems.get('noncomp_reflexive_interpreter') is not None:
+        try:
+            _ri_for_sedi = systems['noncomp_reflexive_interpreter']
+            if hasattr(_ri_for_sedi, 'connect_sedimemory'):
+                _ri_for_sedi.connect_sedimemory(systems['sedimemory'])
+                if verbose:
+                    print("  [L3.5 → NONCOMP] ReflexiveInterpreter wired to SediMemory for recall coupling")
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:noncomp_reflexive_interpreter_connect_sedimemory",
+                exc=_aurora_boundary_exc,
+                context={"function": "boot_aurora", "source_file": "aurora.py"},
+            )
+            pass
+
     # Contradiction Ledger — first-class contradiction tracking for Aurora's
     # truth system. Previously defined in aurora_ivm.py but never
     # instantiated anywhere in the boot sequence. The detection logic that
@@ -33266,6 +33292,20 @@ def _run_live_response_turn(
         'conscious_crest': dict(_dual_strata_runtime_out.get('conscious_crest') or {}),
         'processing_mode': str(_dual_strata_runtime_out.get('processing_mode', '') or ''),
         'overlay': dict(_dual_strata_runtime_out.get('overlay') or {}),
+        # AURORA DREAM SUBSTRATE... DIRECTIVE, Section 44: associate the
+        # final waking response with its originating representation on
+        # the SAME turn/output object that already carries noncomp_input/
+        # noncomp_output, rather than requiring every caller to know to
+        # reach into those sibling dicts themselves (the one existing
+        # caller that already does this manually is
+        # _run_simulation_live_response_bridge -- this is the same read,
+        # applied once here so it does not have to be repeated by every
+        # future consumer). Not a new interpretation event: purely a read
+        # of an already-computed field.
+        'representational_ref': (
+            dict(_noncomp_output_out or {}).get('representational_ref') or
+            dict(_noncomp_input_out or {}).get('representational_ref')
+        ),
     }
 
 
@@ -34186,6 +34226,19 @@ def _run_simulation_live_response_bridge(
         # a read of an existing field, not a new computation, and does not
         # change what any other caller of process_external_user_turn() sees.
         'dual_strata_snapshot': dict(result.get('conscious_frame') or {}),
+        # AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-BINDING
+        # DIRECTIVE: this turn's real ReflexiveInterpreter.interpret() call
+        # (inside process_external_user_turn's own reasoning pipeline)
+        # already computed a canonical RepresentationalRef and stamped it
+        # into noncomp_output_state/noncomp_input_state's
+        # representational_ref key -- another read of an already-computed
+        # field, not a new interpretation event. Output preferred (the
+        # turn's final interpretation state); falls back to input if the
+        # output guidance stage didn't run for some reason.
+        'representational_ref': (
+            dict(result.get('noncomp_output') or {}).get('representational_ref') or
+            dict(result.get('noncomp_input') or {}).get('representational_ref')
+        ),
     }
 
 

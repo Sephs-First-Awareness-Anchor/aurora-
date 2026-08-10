@@ -949,6 +949,14 @@ class NCStrainFilter:
             'source', 'module', 'action', 'outcome', 'timestamp',
             'user_text', 'response', 'fact', 'summary', 'claim',
             'note', 'anchor', 'topic', 'salient', 'intent',
+            # AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-
+            # BINDING DIRECTIVE: preserved as optional provenance only --
+            # never read, matched against, or used by resonance/strain
+            # logic anywhere in this class. SediMemory's own
+            # constraint/dimension/axis fields above are still derived
+            # entirely from _resonance()/CONSTRAINT_TO_AXIS, exactly as
+            # before; this key never substitutes for or influences them.
+            'representational_ref',
         ):
             if k in content and k not in sliced:
                 sliced[k] = content[k]

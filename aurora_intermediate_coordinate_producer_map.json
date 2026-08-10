@@ -1,0 +1,83 @@
+{
+  "_meta": {
+    "title": "Aurora Intermediate Coordinate Producer Map",
+    "generated_for": "AURORA DREAM SUBSTRATE... DIRECTIVE, Sections 57-64",
+    "scope": "M2,1 (3,125) and M2,2 (15,625) -- why sub_law_c/sub_law_d/col_law_c/col_law_d are not fully naturally produced in normal live operation.",
+    "sequencing": "Performed only after the Dream/developmental-loop work (Sections 1-56) was complete and its own tests passing, per Section 57's explicit ordering.",
+    "prior_established_findings_reconfirmed_not_repeated": "The AURORA NATIVE REPRESENTATIONAL SELECTION AND CAUSAL-TO-REPRESENTATIONAL TRANSITION FALSIFICATION DIRECTIVE (this session, commit c739089) already performed an exhaustive Parts II-IX audit and concluded: no native mechanism exists where consequence of a prior interpretation alters future coordinate selection; sub_law_c is CAUSAL_ONLY, not representational-selection-capable. This pass does not re-derive that conclusion from scratch -- it reconfirms it still holds after this directive's own additions, and specifically checks whether any NEW signal this pass introduced (crystal facets, rich fail stream, Dream substrate, WARP provenance field) could serve as a legitimate new producer."
+  },
+  "field_classification": [
+    {
+      "field": "nc_law_c",
+      "status": "NATIVELY_OBSERVED",
+      "producer": "ReflexiveInterpreter.interpret() via SemanticMatcher.match() -- resolved from the real input text on every turn.",
+      "unchanged_by_this_pass": true
+    },
+    {
+      "field": "nc_dim",
+      "status": "NATIVELY_OBSERVED",
+      "producer": "Same as nc_law_c.",
+      "unchanged_by_this_pass": true
+    },
+    {
+      "field": "nc_target",
+      "status": "INDEPENDENTLY_SELECTED",
+      "producer": "SemanticMatcher._find_nc() -- resolved when confidence/context permit (C1-level); left unresolved (D1 fallback) otherwise. Confirmed byte-identical to baseline 3433638 by this pass's own negative guard (tests/test_no_representational_selection_learning.py).",
+      "unchanged_by_this_pass": true
+    },
+    {
+      "field": "sub_law_c",
+      "status": "PINNED",
+      "producer": "ReflexiveInterpreter.interpret()'s live SlotCoord construction forces sub_law_c := nc_law_c (the same match's own constraint) -- an anchor/self pin, not an independent resolution. RepresentationalRef.as_pinned_anchor() makes this pin an explicit, separately-named operation rather than a silent default (established substrate directive, commit 3433638).",
+      "new_candidate_signals_checked_this_pass": [
+        {"candidate": "CrystalProcessingSystem facets (achievement/misstep/relief_event)", "result": "NO_PRODUCER -- facet content is a compact tag ('dimension:score' or 'axis@tick'), never a sub_law_c-shaped value; crystal.concept is a free-text label with no mapping to the 5-axis vocabulary."},
+        {"candidate": "FailPointLedger.rich_stream events", "result": "NO_PRODUCER -- FailStreamEvent has no sub_law_c/sub_law_d/col_law_c/col_law_d field anywhere; confirmed by grep across aurora_dream_trainer.py, aurora_dream_substrate.py, aurora_internal/aurora_understanding_contract.py -- zero references to these identifiers in any file this pass added or touched."},
+        {"candidate": "aurora.py:19718-19722 expression-time preferred_col_law_c/preferred_col_law_d", "result": "NOT_A_NEW_SIGNAL -- re-examined this pass; the single call site always passes m.nc_law_c/m.nc_dim (the same anchor pin, at expression time instead of interpretation time). Confirms the existing PINNED classification rather than contradicting it -- not independent evidence."}
+      ],
+      "unchanged_by_this_pass": true
+    },
+    {
+      "field": "sub_law_d",
+      "status": "PINNED",
+      "producer": "Same anchor pin as sub_law_c (forced to nc_dim).",
+      "new_candidate_signals_checked_this_pass": "Same as sub_law_c -- NO_PRODUCER found among this pass's additions.",
+      "unchanged_by_this_pass": true
+    },
+    {
+      "field": "col_law_c",
+      "status": "PINNED",
+      "producer": "Same anchor pin pattern (col := nc's own identity) at both interpretation time (ReflexiveInterpreter) and, per this pass's newly-examined aurora.py:19718-19722, at expression time.",
+      "unchanged_by_this_pass": true
+    },
+    {
+      "field": "col_law_d",
+      "status": "PINNED",
+      "producer": "Same as col_law_c.",
+      "unchanged_by_this_pass": true
+    }
+  ],
+  "systems_searched_for_a_legitimate_resolution_signal": [
+    {"system": "manifold physics", "result": "Provides the SPACE (78,125 real slots) but does not itself select which slot a live interpretation should occupy -- addressability, not selection (established prior finding, reconfirmed)."},
+    {"system": "pressure (X/T/N/B/A, DER, WARP, DPME)", "result": "NO_PRODUCER -- none of these quantities are keyed to, or vary systematically with, sub_law_c/sub_law_d/col_law_c/col_law_d in any code path found."},
+    {"system": "fail-stream (this pass's new RichFailStream)", "result": "NO_PRODUCER (confirmed above)."},
+    {"system": "Dream experiences (this pass's new DreamSubstrate + real dream episodes)", "result": "NO_PRODUCER -- Dream episodes (aurora_simulation_engine.py) operate on ConceptualResponse/ResponseConcept vocabulary, entirely disjoint from the 5-axis representational vocabulary. No dream-generated value was found convertible to a sub_law_c/sub_law_d/col_law_c/col_law_d coordinate without inventing a mapping -- which this pass does not do (Section 61's explicit prohibition on converting Dream metadata into a coordinate merely to make it happen)."},
+    {"system": "SediMemory / sediment", "result": "NO_PRODUCER -- confirmed by the prior established-substrate directive; SediMemory content passthrough carries representational_ref as an opaque string when present, never decomposes or produces its constituent fields."},
+    {"system": "consequence history / RCEC", "result": "NO_PRODUCER -- RCEC's EpisodeStep.representational_ref (from the live propagation directive, commit bb23b31) carries the ref forward but never resolves a previously-unresolved field; confirmed by tests/test_representational_unresolved_fields.py (prior directive) that sub_law_c/sub_law_d/col_law_c/col_law_d remain None through the full live→RCEC chain."},
+    {"system": "relation structures / genealogy / Evolution", "result": "NO_PRODUCER -- genealogy's PressureVec/ReliefRecord and Evolution's constraint labels operate on a different vocabulary (5-axis pressure, constraint names) with no mapping to the 7-field representational coordinate."},
+    {"system": "ConsciousLearner / OETS", "result": "NO_PRODUCER -- shards and OETS nodes key on rubric dimensions and concept words, not representational coordinates."},
+    {"system": "counterfactuals / reflective systems", "result": "NO_PRODUCER -- not found to reference these fields anywhere."},
+    {"system": "WARP", "result": "NO_PRODUCER -- WarpDemand.representational_ref (this session's own prior addition) is a pass-through provenance string, never decomposed or used to resolve a field, and explicitly documented as never read by _classify()/_route()."},
+    {"system": "pattern-recognition systems", "result": "No dedicated cross-representational pattern-recognition module was found that operates on the 7-field coordinate space at all -- the only consumers of RepresentationalRef are the ones this session's own three prior directives wired (ReflexiveInterpreter, UnderstandingSedimentOverlay, RCEC, WARP provenance, SediMemory passthrough)."}
+  ],
+  "independence_test_result": "No candidate signal reached the point of requiring a formal independence test (Section 60) -- none of the searched systems produced even a plausible candidate value for sub_law_c/sub_law_d/col_law_c/col_law_d in the first place.",
+  "conclusion": "NATIVE_INTERMEDIATE_RESOLUTION_MECHANISM_ABSENT",
+  "action_taken": "None. No mapping, lookup table, semantic assignment, reward table, or coordinate preference was invented. The absence is reported, not patched, per Section 63.",
+  "semantic_matcher_boundary": {
+    "claim": "SemanticMatcher.match(), _find_nc(), frame defaults, stance defaults, constraint rankings, and dimension rankings were not modified to force M2,1/M2,2 production.",
+    "verified_by": "tests/test_no_representational_selection_learning.py (byte-identical source comparison against baseline 3433638, carried into this pass unchanged) and tests/test_native_intermediate_resolution_audit.py's own identical check."
+  },
+  "d3_boundary": {
+    "claim": "No 390,625 (625x625) structure, no C3 cardinality, was created, labeled, or referenced anywhere in this pass.",
+    "verified_by": "tests/test_no_speculative_d3.py (extended this pass to also scan aurora_dream_substrate.py, aurora_dream_new_experience_canary.py, aurora_dream_trainer.py's RichFailStream addition, and the DreamGenealogyBridge/UnderstandingContract edits)."
+  }
+}

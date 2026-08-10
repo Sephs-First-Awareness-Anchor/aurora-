@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "title": "Aurora Dream Substrate Flow Map",
+    "generated_for": "AURORA DREAM SUBSTRATE... DIRECTIVE, Sections 11-21",
+    "module": "aurora_dream_substrate.py (new, read-only gathering layer)"
+  },
+  "conceptual_structure": {
+    "DreamSubstrate": ["fail_pressure_stream", "salient_fragments", "positive_fragments", "historical_recurrence", "unresolved_fail_load", "positive_opportunity_weight"]
+  },
+  "channels": [
+    {
+      "channel": "fail_pressure_stream",
+      "source": "FailPointLedger.rich_stream.ordered() (aurora_dream_trainer.py)",
+      "abstraction": "Already-abstracted FailStreamEvent shape -- no literal waking text.",
+      "classification": "PRESERVED (real events) / empty when none exist (never fabricated)"
+    },
+    {
+      "channel": "historical_recurrence",
+      "source": "Subset of fail_pressure_stream where recurrence_of is not None",
+      "abstraction": "Same shape as fail_pressure_stream -- identity is itself abstracted (topic/action_type/response_id), never a literal transcript.",
+      "classification": "INTENTIONALLY_ABSTRACTED -- available only when recurrence genuinely established (Section 9), never forces literal replay of the earlier event (Section 10)"
+    },
+    {
+      "channel": "salient_fragments / positive_fragments",
+      "source": "CrystalProcessingSystem.crystals[*].facets (aurora_dimensional_systems.py), specifically facets with role in {achievement, misstep, relief_event}, stamped by the EXISTING record_failpoint_update()/note_relief_event() methods",
+      "abstraction": "DreamFragment carries only: concept (crystal's own concept label), facet_role, salience_channel, confidence, content_tag (native compact string, e.g. 'dimension:score' or 'axis@tick'), last_accessed. No user_turns/assistant_turns/response_text ever exposed.",
+      "reused_not_invented": "This module does not create a new emotional/salience classifier -- it reads the crystal facet stamps Aurora's own architecture already produces.",
+      "classification": "INTENTIONALLY_ABSTRACTED"
+    },
+    {
+      "channel": "unresolved_fail_load / positive_opportunity_weight",
+      "source": "FailPointLedger.get_top_fails(5) -- the EXACT quantity that already drives flush_lessons_to_simulation()'s curriculum targeting",
+      "formula": "unresolved_fail_load = total_top_fail_score / (total_top_fail_score + 1)  [0,1) smooth saturation, no fabricated weighting]; positive_opportunity_weight = 1 - unresolved_fail_load",
+      "continuity": "Continuous, monotonic -- not a boolean switch. Verified by tests/test_low_fail_positive_gap_fill.py.",
+      "classification": "PRESERVED (derived entirely from an existing native measure)"
+    }
+  ],
+  "deliberately_not_wired": {
+    "claim": "This module is never imported by DreamTrainer.train_on_bundle, SimulationSession.run_episode, or DreamCurriculumQueue's prompt construction.",
+    "reason": "Per Repair Authority (Section 66), deciding how much weight abstracted-fragment material should carry relative to today's literal corpus-text seeding, or what a resulting Dream scenario should be built to teach, is an architecturally significant decision this pass does not make. The substrate is built real and tested; wiring it as the authoritative Dream seed is flagged as a follow-up architecture decision, not silently redesigned here.",
+    "verified_by": "tests/test_dream_source_abstraction.py::TestAuditProvenanceDoesNotBecomeAHiddenAnswerKey::test_substrate_gathering_module_is_never_imported_by_the_dream_generation_call_sites"
+  },
+  "read_only_guarantee": {
+    "claim": "gather_dream_substrate()/gather_salient_fragments() never mutate FailPointLedger, never call record_fail()/record_pre_outcome_event(), never fabricate a fail under low load.",
+    "verified_by": "tests/test_no_artificial_fail_generation.py"
+  },
+  "known_pre_existing_conflicts_with_directive_intent_left_unmodified": [
+    {
+      "finding": "DreamTrainer.train_on_bundle() seeds a dream's topic prompt directly from the live waking session's own turn buffer (aurora.py:_session_turn_buffer bridge, ~line 33083-33102) and from DIMENSION_CODE_LOGIC-derived code_hints blended into the same prompt text -- a genuine literal-replay and answer-key pattern.",
+      "finding_2": "aurora_daemon.py's _FORCE_SHARD_SEEDS/_run_force_shard_bridge injects hand-written 'correct understanding' sentences directly as UnderstandingShards with topic_resolution_status forced 'resolved', bypassing dream generation entirely.",
+      "classification": "CONFIRMED CODE FACT, NOT MODIFIED",
+      "reason_not_modified": "Both are long-standing, deliberately-authored training mechanisms wired into the daemon's real sleep loop. Removing or redesigning them requires deciding new pedagogical semantics ('Dream should learn only through unaided experience') -- exactly the kind of decision Section 66 reserves as a stop-and-report boundary, not a repair. Flagged here for a dedicated follow-up architecture decision."
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "_meta": {
+    "title": "Aurora System-Wide Representational Flow Map",
+    "generated_for": "AURORA SYSTEM-WIDE REPRESENTATIONAL CONSERVATION, PROPAGATION, AND EMERGENCE REPAIR DIRECTIVE",
+    "method": "Hand-curated from direct source reads and live code execution this session (file:line citations in each edge's 'evidence' field); not an auto-generated static-analysis dump. A snapshot as of this pass, not a live-updating tool.",
+    "canonical_geometries": {
+      "D1_25": "5 constraints x 5 measurement dimensions (aurora_closure_basis.py:371-395)",
+      "C1_125": "D1 x 5 target constraints (aurora_noncomp_layer_compiler.py:418-433)",
+      "D2_625": "D1 x D1 exact self-product (aurora_closure_basis.py:596-624)",
+      "SlotCoord_3125": "5 independent fields, static (aurora_constraint_manifold_router.py:286-301,378-386)",
+      "CandidateA_15625": "SlotCoord + sub_law_c, confirmed independent (rank-6 audit)",
+      "C2_78125": "125 NonComps x 625 ManifoldSlots (aurora_constraint_manifold_compiler.py)"
+    }
+  },
+  "nodes": [
+    {"id": "closure_basis", "file": "aurora_closure_basis.py", "role": "producer", "produces": ["D1_channel", "D2_interaction_slot"]},
+    {"id": "noncomp_layer_compiler", "file": "aurora_noncomp_layer_compiler.py", "role": "producer", "produces": ["C1_layer_slot"]},
+    {"id": "manifold_compiler", "file": "aurora_constraint_manifold_compiler.py", "role": "producer", "produces": ["ManifoldSlot(sub,col,nc_identity)"]},
+    {"id": "manifold_directory", "file": "aurora_manifold_directory_reader.py", "role": "store+reader", "produces": ["NoncompManifold", "IndexEntry"]},
+    {"id": "manifold_lookup", "file": "aurora_manifold_lookup.py", "role": "reducer", "produces": ["full_dict_but_reduced_by_every_caller"]},
+    {"id": "manifold_router", "file": "aurora_constraint_manifold_router.py", "role": "producer+router", "produces": ["SlotCoord_3125_static"]},
+    {"id": "cers_tensor_locator", "file": "aurora_internal/dual_strata/cers_tensor_locator.py", "role": "live_resolver", "produces": ["SlotCoord_live_reduced"]},
+    {"id": "reflexive_interpreter", "file": "aurora_reflexive_interpreter.py", "role": "consumer+producer", "consumes": ["ManifoldSlot via ManifoldFieldMap", "SlotCoord via own construction"], "produces": ["UnderstandingState"]},
+    {"id": "understanding_sediment", "file": "aurora_understanding_sediment.py", "role": "memory", "consumes": ["constraint,dimension"], "produces": ["overlay_delta", "worth_ledger"]},
+    {"id": "sedimemory", "file": "aurora_sedimemory.py", "role": "memory", "consumes": ["ConstraintVector (axis-only)"], "produces": ["SedimentFragment(constraint,dimension) via internal resonance, not caller-supplied"]},
+    {"id": "warp_protocol", "file": "aurora_warp_protocol.py", "role": "consumer", "consumes": ["Dict[str,float] axis/I-state profiles only", "formula_coefficient scalar"]},
+    {"id": "genealogy", "file": "aurora_internal/constraint_genealogy.py", "role": "consumer+ledger", "consumes": ["PressureVec", "TraceItem list", "DifferenceSnapshot"]},
+    {"id": "evolution_chamber", "file": "aurora_internal/aurora_evolution_chamber.py", "role": "consumer+producer", "consumes": ["ActionTrace", "IVMLattice pressure"], "produces": ["ReliefRecord via genealogy.observe()"]},
+    {"id": "rcec", "file": "aurora_internal/aurora_cognitive_experience_chamber.py", "role": "experience_engine", "consumes": ["EpisodeStep (entity/property based, no NC-dimension field)"]},
+    {"id": "dream_genealogy_bridge", "file": "aurora_internal/aurora_dream_genealogy_bridge.py", "role": "consumer", "consumes": ["5-axis pressure vectors + rubric-dimension strings only"]},
+    {"id": "behavior_actuation", "file": "aurora.py:_derive_noncomp_behavior_actuation", "role": "consumer", "consumes": ["constraint", "dimension", "is_understood", "field_region"], "produces": ["effect_set", "flag_set", "runtime_flags"]},
+    {"id": "response_composition", "file": "aurora.py:_apply_noncomp_output_guidance", "role": "consumer", "consumes": ["runtime_flags"], "produces": ["state.response_content/tone/confidence"]}
+  ],
+  "edges": [
+    {
+      "from": "closure_basis", "to": "noncomp_layer_compiler", "carries": "D1_channel (25)",
+      "classification": "preserved",
+      "evidence": "aurora_noncomp_layer_compiler.py:418-433 constructs one ConstraintNonCompLayer per target, 25 slots each"
+    },
+    {
+      "from": "closure_basis", "to": "manifold_compiler", "carries": "D1_channel x D1_channel (625, per-noncomp SUB x COL grid)",
+      "classification": "preserved",
+      "evidence": "aurora_constraint_manifold_compiler.py:401-505, exhaustive double loop over 25x25"
+    },
+    {
+      "from": "manifold_compiler", "to": "manifold_directory", "carries": "ManifoldSlot full schema (sub_law_c/d, col_law_c/d, evolution_grade, accountability_weight, cluster_pair, is_resonant, is_anchor)",
+      "classification": "preserved",
+      "evidence": "125 files x 625 slots on disk, every field present verbatim, spot-checked directly against real JSON"
+    },
+    {
+      "from": "manifold_directory", "to": "manifold_lookup", "carries": "full NonComp dict",
+      "classification": "summary_only",
+      "evidence": "aurora_manifold_lookup.py:53 load_noncomp() returns the full dict, but every real caller (aurora_warp_protocol.py:658-662, tensor_occupancy_warp_bridge.py:154-162, tensor_occupancy_hook.py:120-126) reduces it to a scalar/axis-profile/boolean before use. Consumer's actual job (coverage-gap cosine similarity) plausibly does not need the full per-slot body -- not classified as a bug."
+    },
+    {
+      "from": "manifold_lookup", "to": "warp_protocol", "carries": "formula_coefficient scalar only",
+      "classification": "summary_only",
+      "evidence": "aurora_warp_protocol.py:658-662, WarpGenerator._search_genealogy()"
+    },
+    {
+      "from": "manifold_router", "to": "cers_tensor_locator", "carries": "SlotCoord 5-field schema",
+      "classification": "pinned",
+      "evidence": "aurora_internal/dual_strata/cers_tensor_locator.py:132-137 -- resolve_pressure_coordinate() sets nc_dim=axis_to_dim.get(nc_law_c,...) and law_d=axis_to_dim.get(law_c,...); a hard, deterministic, fixed-table derivation with zero live-signal dependence. 2 of 5 fields are never independently live-chosen."
+    },
+    {
+      "from": "reflexive_interpreter", "to": "manifold_router", "carries": "SlotCoord constructed from (match.constraint, match.dimension)",
+      "classification": "pinned",
+      "evidence": "aurora_reflexive_interpreter.py:1004-1011 -- SlotCoord(match.constraint, match.constraint, match.dimension, match.constraint, match.dimension); target=nc_law_c=law_c all forced equal to the single resolved constraint. 5 nominal fields collapse to 2 independent values."
+    },
+    {
+      "from": "manifold_directory", "to": "reflexive_interpreter", "carries": "full ManifoldSlot grid via ManifoldFieldMap (all 625 slots streamed)",
+      "classification": "pinned",
+      "evidence": "aurora_reflexive_interpreter.py:728-741 streams all 625 slots into a 25x25 grid, but the only live query (:908-911) is accountability_at(match.constraint, match.dimension, match.constraint, 'OPERATOR') -- col is always forced equal to the row's own constraint, plus a fixed 'OPERATOR' dimension. Row (sub_law_c, sub_law_d) IS genuinely free and live-read; col never is."
+    },
+    {
+      "from": "reflexive_interpreter", "to": "understanding_sediment", "carries": "(constraint, dimension) via slot_key()",
+      "classification": "preserved",
+      "evidence": "aurora_understanding_sediment.py:80-90 slot_key() preserves both fields verbatim in the on-disk overlay JSON; live-confirmed by canary (aurora_representational_canary.py, boundary 6) that two experiences differing only in constraint retain distinct keys/slots/deltas after a fresh-instance retrieval"
+    },
+    {
+      "from": "reflexive_interpreter", "to": "sedimemory", "carries": "nothing (write direction)",
+      "classification": "unreachable",
+      "evidence": "ReflexiveInterpreter contains no call to SediMemory's ingest_event/ingest_envelope anywhere; it only reads via recall_confidence_boost (now live after this pass's repair, see repairs[0]) and only writes to understanding_sediment"
+    },
+    {
+      "from": "reflexive_interpreter", "to": "genealogy", "carries": "nothing",
+      "classification": "unreachable",
+      "evidence": "Exhaustive cross-reference of aurora_reflexive_interpreter.py / aurora_understanding_sediment.py against aurora_internal/constraint_genealogy.py, aurora_internal/aurora_evolution_chamber.py, and aurora_internal/aurora_cognitive_experience_chamber.py returns zero shared data-flow (only co-import in aurora.py). All 8 real genealogy.observe() call sites use PressureVec/TraceItem/DifferenceSnapshot derived from pressure-pipeline or dream-replay state, never from ReflexiveInterpreter output."
+    },
+    {
+      "from": "dream_genealogy_bridge", "to": "genealogy", "carries": "5-axis pressure + rubric-dimension strings",
+      "classification": "unreachable_by_schema",
+      "evidence": "aurora_internal/aurora_dream_genealogy_bridge.py:57-124 DreamEvidenceRecord/ExpressionWritebackHint -- axis-level only, no (constraint, NonCompDimension) field exists to carry the richer coordinate even if wiring existed"
+    },
+    {
+      "from": "reflexive_interpreter", "to": "behavior_actuation", "carries": "constraint, dimension, is_understood, field_region (full UnderstandingState.to_dict())",
+      "classification": "preserved",
+      "evidence": "aurora.py:15379-15471 _derive_noncomp_behavior_actuation() keys _NONCOMP_CONSTRAINT_RUNTIME_EFFECTS and _NONCOMP_DIMENSION_RUNTIME_FLAGS directly by the raw field values; dimension gets full 5-way differentiation (all 5 dims have distinct entries), constraint gets partial differentiation (T/B/A distinct, X/N both map to the empty set)"
+    },
+    {
+      "from": "behavior_actuation", "to": "response_composition", "carries": "runtime_flags (booleans derived from the above)",
+      "classification": "preserved",
+      "evidence": "aurora.py ~12805-12912 (_apply_noncomp_output_guidance, Site B) directly mutates state.response_content/response_tone/response_confidence from these flags -- fully traced to the outgoing turn text"
+    },
+    {
+      "from": "response_composition", "to": "final_articulation", "carries": "state.response_content (already influenced)",
+      "classification": "transformed",
+      "evidence": "aurora.py:21191 _finalize_articulation() arbitrates resp_A vs resp_B by content/confidence only, blind to UnderstandingState fields directly -- but those fields already shaped resp_A/resp_B upstream, so influence survives structurally even though the final arbiter doesn't re-read the source fields"
+    }
+  ],
+  "repairs": [
+    {
+      "id": "repair_1_sedimemory_boot_wiring",
+      "files": ["aurora_reflexive_interpreter.py", "aurora.py"],
+      "confirmed_loss": "recall_confidence_boost() always returned 0.0 in production because ReflexiveInterpreter's sedimemory kwarg could never be populated (SediMemory boots ~14,500 lines later in aurora.py's boot sequence than ReflexiveInterpreter does)",
+      "evidence_richer_value_already_existed": "recall_confidence_boost() and its test coverage (tests/test_reflexive_interpreter_deposition_integration.py::test_recall_boost_lifts_worth_score_for_resonant_memory) already existed and passed; SediMemory itself already boots successfully at aurora.py ~27144; five other systems (ConsciousnessEngine, DimensionalSystems, ExpressionPerceptionEngine, BehavioralIdentityEngine, SimulationEngine) already receive it via an identical post-boot connect_sedimemory(...) pattern",
+      "fix": "Added ReflexiveInterpreter.connect_sedimemory() setter; added one guarded wiring call in aurora.py's boot sequence immediately after SediMemory boots",
+      "tests": "tests/test_reflexive_interpreter_sedimemory_boot_wiring.py (4 tests)"
+    },
+    {
+      "id": "repair_2_field_balancer_genealogy_type_mismatch",
+      "files": ["aurora.py"],
+      "confirmed_loss": "ConstraintFieldBalancer._inject_to_genealogy() passed pressure_before/pressure_after as plain dicts and trace as plain dicts to genealogy.observe(), which requires PressureVec (calls .relief_from()) and List[TraceItem] (accesses .kind/.id) -- raised AttributeError on every call, silently swallowed by the surrounding try/except. The entire field-balance-to-genealogy relief mechanism never functioned in production.",
+      "evidence_richer_value_already_existed": "The exact X/T/N/B/A float values and the ability-id string being passed were already correct; PressureVec and TraceItem (re-exported from aurora_evolution_stack, identical class as aurora_internal.constraint_genealogy) were already used correctly at another genealogy.observe() call site in the same file (aurora.py ~17702-17728)",
+      "fix": "Wrapped the existing dict values in PressureVec(**...) and TraceItem(kind='ABILITY', id=...) at the call site",
+      "tests": "tests/test_field_balancer_genealogy_type_repair.py (3 tests, including a direct reproduction of the pre-repair AttributeError)"
+    }
+  ],
+  "unresolved_representational_boundaries": {
+    "confirmed_architectural_limits_not_repaired": [
+      "WARP's entire input contract is Dict[str,float] axis/I-state scalars -- no field exists anywhere in aurora_warp_protocol.py for a ManifoldSlot or SlotCoord. Fixing would require designing a new WARP input type, out of Repair Authority.",
+      "Genealogy, EvolutionaryChamber, and RCEC have zero data-flow connection to ReflexiveInterpreter/ManifoldFieldMap/UnderstandingState anywhere in the codebase -- confirmed by exhaustive cross-reference, not merely absence of a grep hit. Wiring them would require deciding what a cognitive-interpretation-derived PressureVec/TraceItem/EpisodeStep even means, which is designing a new cognitive operation, out of Repair Authority.",
+      "Dream/DREAMOP episode records and RCEC's EpisodeStep are schematically axis-level or entity/property-level respectively -- neither has a field for a (constraint, NonCompDimension) pair at all. Adding one would be inventing new representational physics."
+    ],
+    "underused_but_existing_capacity": [
+      "manifold_lookup.load_noncomp() already returns the full per-noncomp dict; every real caller voluntarily reduces it. Not repaired because no confirmed consumer need for the fuller shape was found -- flagged as capacity, not loss.",
+      "The live SlotCoord constructed inside ReflexiveInterpreter.interpret() (aurora_reflexive_interpreter.py:1004-1011) pins 3 of its 5 fields to a single resolved constraint; the static 3,125-slot RouteIndex this feeds into is fully capable of a richer coordinate, but nothing currently supplies one."
+    ],
+    "genuinely_unsupported_future_depth_hypotheses": [
+      "Depth-three (390,625) and either proposed C3 formula (30,517,578,125 recursive or 48,828,125 invariant-context) remain unsupported per the rank-6 and rank-6-successor audits -- not addressed further by this pass, per explicit doctrine boundary."
+    ]
+  }
+}

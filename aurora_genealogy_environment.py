@@ -49,6 +49,46 @@ This module is READ-ONLY and OBSERVATIONAL. It does not write to WARP, to
 aurora_internal.aurora_meaning_evolution, to Aurora625PressureMap, or to any
 genealogy state. It has no domain branches (no "if substrate == 'memory'"),
 and no hand-authored behavioral constants.
+
+PHASE 1.1 — EDGE-FIDELITY REPAIR (still fully observational)
+---------------------------------------------------------------------------
+Two real bugs from the first pass, found by re-reading this file against
+what it actually calls rather than what it was intended to do:
+
+1. FALSE-EDGE FABRICATION. The original `derive_environment_signature()`
+   built genealogical transitions from CONSECUTIVE ENTRIES in
+   `walk_link_sequence()`'s flat output list, not from real
+   `ConstraintLink.parents` edges. `walk_link_sequence()` is a post-order
+   DFS: for a branching DAG (any node with 2+ parents), two nodes that are
+   adjacent in the returned list are frequently siblings from independent
+   branches with no real edge between them at all. Treating list-adjacency
+   as an edge fabricated genealogical transitions that never happened.
+   Fixed by `_derive_edges()` below, which reads each walked node's real
+   `ConstraintLink.parents` directly and only ever pairs a node with an
+   ancestor that is actually one of its parents.
+2. ASCII SEPARATOR SILENT FAILURE. `_resolve_slots_from_root_slot()`
+   (aurora_closure_basis.py:743-763) only takes the "split on ASCII 'x'"
+   branch when `root_slot.count("x") == 1` -- i.e. exactly 2 atoms. The
+   first pass joined every genealogy with ASCII "x", so for any genealogy
+   with 3+ atoms (the common case: the 356-link shadow run's mean node
+   count was 3.96, i.e. usually 3+ transitions) `_resolve_slots_from_root_slot`
+   silently returned an EMPTY slot list, and `derive_lineage()` silently fell
+   back to its axis+requires-only path -- meaning the "full chained
+   root_slot" claim in the phase-1 report did not actually hold for most
+   real genealogies it was run against. Fixed by joining with the canonical
+   Unicode "×" `_resolve_slots_from_root_slot` checks FIRST, unconditionally,
+   for any chain length.
+
+Because `derive_lineage()`'s internal `_add()` helper
+(aurora_closure_basis.py:959-962) deduplicates by `slot_id`, its returned
+`ConstraintLineage` can never itself represent branch multiplicity or
+topology -- two transitions that resolve to the same slot collapse to one
+occurrence. That output is therefore renamed `closure_projection` here
+(instead of `lineage`) and documented as exactly that: a real, physics-
+grounded but slot-deduplicated reading of the edge-derived genealogy, not a
+faithful replay of it. The faithful, non-deduplicated reading is
+`edge_provenance` (every real edge, in traversal order, with full
+multiplicity) plus the new `structural_hash` derived from it.
 """
 from __future__ import annotations
 
@@ -131,7 +171,74 @@ def logger_from_links(links: Dict[str, Any]) -> Any:
 
 
 # ---------------------------------------------------------------------------
-# III. The derived environment signature
+# III. Real edges — derived from ConstraintLink.parents, never from
+#      neighboring entries in walk_link_sequence()'s flat traversal list
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class GenealogyEdge:
+    """One real genealogical transition, in the direction ancestor -> child."""
+    parent_link_id: Optional[str]   # None for a "self" edge (see edge_type)
+    child_link_id: str
+    parent_axis: str
+    child_axis: str
+    atom: str                       # f"NC:{parent_axis}>{child_axis}"
+    edge_type: str                  # "parent_child" | "self"
+
+
+def _derive_edges(logger: Any, sequence: List[Dict[str, Any]]) -> List[GenealogyEdge]:
+    """
+    Build the real transition list for a walked genealogy from
+    ConstraintLink.parents directly — NOT from adjacency in `sequence`.
+
+    For each walked node, every parent id that is itself a ConstraintLink
+    already present in `logger.links` (i.e. it was actually walked into by
+    walk_link_sequence, per that method's own "Ability ID or unknown --
+    leaf, not a Link" rule) becomes one real parent_child edge. A node whose
+    every parent is a non-Link leaf (a bare ability id, or a root-level
+    genealogy atom like "NC:N>N" — both invisible to walk_link_sequence)
+    contributes a single "self" edge instead of being paired with an
+    unrelated neighbor, so the axis it expresses is never silently dropped
+    and never silently fabricated into a false transition either.
+    """
+    node_ids = {node["link_id"] for node in sequence}
+    axis_by_id = {node["link_id"]: node["axis"] for node in sequence}
+    edges: List[GenealogyEdge] = []
+
+    for node in sequence:
+        link = logger.links.get(node["link_id"])
+        if link is None:
+            continue
+        real_parent_edges = 0
+        for parent_id in (link.parents or []):
+            parent_id = str(parent_id)
+            if parent_id in logger.links and parent_id in node_ids:
+                parent_axis = axis_by_id[parent_id]
+                child_axis = node["axis"]
+                edges.append(GenealogyEdge(
+                    parent_link_id=parent_id,
+                    child_link_id=node["link_id"],
+                    parent_axis=parent_axis,
+                    child_axis=child_axis,
+                    atom=f"NC:{parent_axis}>{child_axis}",
+                    edge_type="parent_child",
+                ))
+                real_parent_edges += 1
+        if real_parent_edges == 0:
+            axis = node["axis"]
+            edges.append(GenealogyEdge(
+                parent_link_id=None,
+                child_link_id=node["link_id"],
+                parent_axis=axis,
+                child_axis=axis,
+                atom=f"NC:{axis}>{axis}",
+                edge_type="self",
+            ))
+    return edges
+
+
+# ---------------------------------------------------------------------------
+# IV. The derived environment signature
 # ---------------------------------------------------------------------------
 
 @dataclass
@@ -141,50 +248,77 @@ class EnvironmentSignature:
 
     dimension_distribution: normalized weight (sums to 1.0) over the real
         POLARITY/MAGNITUDE/OPERATOR/COST/DIFFERENCE dimensions, derived from
-        the actual InteractionSlot.dim_a/dim_b of every genealogical
-        transition in G, weighted by that slot's own depth_score.
+        the actual InteractionSlot.dim_a/dim_b of every REAL genealogical
+        edge in G (see edge_provenance), weighted by that slot's own
+        depth_score.
     axis_distribution: normalized weight over X/T/N/B/A, from the relief
-        magnitude actually recorded on each ConstraintLink in G. Kept
-        separate from dimension_distribution per-directive (axis identity
-        and dimension configuration are not the same quantity and must not
-        be merged).
+        magnitude actually recorded on each ConstraintLink in G (node-level,
+        from walk_link_sequence — unaffected by the edge-fidelity repair).
+        Kept separate from dimension_distribution: axis identity and
+        dimension configuration are not the same quantity and must not be
+        merged.
     recursion_distribution: fraction of G's nodes at each of
         walk_link_sequence's existing 5 recursion buckets (0=SURFACE .. 4=CORE).
+        Node-level; unaffected by the edge-fidelity repair.
     istate_distribution: fraction of G's nodes resolving to each of the 10
-        existing AXIS_I_STATE-derived I-state keys (walk_link_sequence already
-        computes this per node; this is a direct tally, not a new mapping).
-    active_slots: InteractionSlot ids touched, IN TRAVERSAL ORDER. This is
-        what preserves order-sensitivity: two genealogies with identical
-        axis histograms but different recursive/parent topology will
-        general produce different active_slots sequences and therefore
-        different derived environments.
-    chained_root_slot: every touched genealogy atom joined with the same
-        "x" separator aurora_closure_basis._resolve_slots_from_root_slot
-        already parses, in traversal order — NOT collapsed to 2 atoms.
-    lineage: the real ConstraintLineage returned by derive_lineage() when fed
-        the full chained_root_slot (existing physics, richer input).
+        existing AXIS_I_STATE-derived I-state keys. Node-level; unaffected
+        by the edge-fidelity repair.
+    edge_provenance: every real GenealogyEdge actually used, in traversal
+        order, WITH multiplicity (repeated identical transitions are NOT
+        collapsed here — that only happens inside closure_projection, see
+        below). This is the non-lossy structural record.
+    active_slots: InteractionSlot ids touched by edge_provenance, in the
+        same order, one per edge (also with multiplicity).
+    chained_root_slot: every edge atom joined with the canonical Unicode
+        "×" separator aurora_closure_basis._resolve_slots_from_root_slot
+        checks first and unconditionally (no atom-count ambiguity, unlike
+        the ASCII "x" the phase-1 version used).
+    closure_projection: the real ConstraintLineage returned by
+        derive_lineage() when fed the full chained_root_slot. Because
+        derive_lineage()'s _add() helper deduplicates by slot_id, this is a
+        real, physics-grounded but SLOT-DEDUPLICATED reading — it cannot by
+        itself certify multiplicity or branch topology. Use edge_provenance
+        / structural_hash for that; use this for the existing closure-basis
+        grades (leverage_grade, formation_cost, viable_band_alignment,
+        energetic_footprint, ontological_status). Note also that
+        derive_lineage() independently unions in slots from its own
+        axis+requires resolution path (aurora_closure_basis.py:966)
+        regardless of root_slot content, so active_slots here can legally
+        contain MORE than just the atoms in edge_provenance — that broadening
+        is pre-existing derive_lineage() behavior, not something this module
+        adds, and is exactly why this field is named a "projection" rather
+        than claimed as a faithful replay of edge_provenance.
     provenance: ConstraintLink ids in traversal order (oldest ancestor first).
     node_count: number of ConstraintLink nodes actually walked.
     insufficient_genealogy: True if the supplied link_id resolved to no
         walkable ConstraintLink nodes (e.g. a bare ability leaf, or unknown
         id) -- in which case every distribution above is empty and callers
         must not treat this as a valid signature.
-    signature_hash: sha1 over (active_slots, provenance) -- identical for
-        genealogies that are structurally identical regardless of what the
-        underlying substrate happens to be named, since no name is ever
-        read by this module.
+    provenance_hash: sha1 over (active_slots, provenance) -- includes real
+        link ids, so it is sensitive to WHICH specific fossils produced this
+        genealogy, not just its shape. Two structurally-identical
+        genealogies with different underlying link ids will differ here.
+    structural_hash: sha1 over edge_provenance's (parent_axis, child_axis,
+        edge_type) tuples ONLY, in traversal order — no link ids, no
+        substrate name. Two genealogies with identical topology (same real
+        edges, same order) hash identically here regardless of what
+        anything is called or which specific fossils produced it; two
+        genealogies that only *look* the same in a flat linear walk but
+        have different real branching structure hash differently.
     """
     dimension_distribution: Dict[str, float] = field(default_factory=dict)
     axis_distribution: Dict[str, float] = field(default_factory=dict)
     recursion_distribution: Dict[str, float] = field(default_factory=dict)
     istate_distribution: Dict[str, float] = field(default_factory=dict)
+    edge_provenance: List[Dict[str, Any]] = field(default_factory=list)
     active_slots: List[str] = field(default_factory=list)
     chained_root_slot: str = ""
-    lineage: Optional[ConstraintLineage] = None
+    closure_projection: Optional[ConstraintLineage] = None
     provenance: List[str] = field(default_factory=list)
     node_count: int = 0
     insufficient_genealogy: bool = False
-    signature_hash: str = ""
+    provenance_hash: str = ""
+    structural_hash: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -192,13 +326,15 @@ class EnvironmentSignature:
             "axis_distribution": dict(self.axis_distribution),
             "recursion_distribution": dict(self.recursion_distribution),
             "istate_distribution": dict(self.istate_distribution),
+            "edge_provenance": [dict(e) for e in self.edge_provenance],
             "active_slots": list(self.active_slots),
             "chained_root_slot": self.chained_root_slot,
-            "lineage": self.lineage.to_dict() if self.lineage is not None else None,
+            "closure_projection": self.closure_projection.to_dict() if self.closure_projection is not None else None,
             "provenance": list(self.provenance),
             "node_count": self.node_count,
             "insufficient_genealogy": self.insufficient_genealogy,
-            "signature_hash": self.signature_hash,
+            "provenance_hash": self.provenance_hash,
+            "structural_hash": self.structural_hash,
         }
 
 
@@ -215,19 +351,20 @@ def _normalize(counts: Dict[str, float]) -> Dict[str, float]:
 def derive_environment_signature(logger: Any, link_id: str) -> EnvironmentSignature:
     """
     Derive the native representational environment for the genealogy rooted
-    at `link_id`, using `logger.walk_link_sequence(link_id)` (the existing
-    order-preserving full-DAG walker) as the sole source of ancestry.
+    at `link_id`. Node-level distributions (axis/recursion/i-state) come
+    from `logger.walk_link_sequence(link_id)` directly. Genealogical
+    transitions (dimension_distribution, active_slots, chained_root_slot,
+    closure_projection) come from the REAL ConstraintLink.parents edges
+    among those walked nodes (`_derive_edges`), never from adjacency in the
+    walked list.
     """
     sequence = logger.walk_link_sequence(link_id)
     if not sequence:
         return EnvironmentSignature(**_EMPTY_SIGNATURE_KWARGS)
 
-    dim_counts: Dict[str, float] = {name: 0.0 for name in _ALL_DIM_NAMES}
     axis_counts: Dict[str, float] = {a: 0.0 for a in AXES}
     rec_counts: Dict[str, float] = {k: 0.0 for k in _REC_KEYS}
     istate_counts: Dict[str, float] = {k: 0.0 for k in _ISTATE_KEYS}
-    active_slots: List[str] = []
-    atoms_in_order: List[str] = []
 
     for node in sequence:
         axis_counts[node["axis"]] = axis_counts.get(node["axis"], 0.0) + sum(
@@ -236,16 +373,16 @@ def derive_environment_signature(logger: Any, link_id: str) -> EnvironmentSignat
         rec_counts[_REC_KEYS[node["recursion_level"]]] += 1.0
         istate_counts[node["i_state"]] = istate_counts.get(node["i_state"], 0.0) + 1.0
 
-    # Consecutive genealogical transitions, in traversal order. A single-node
-    # genealogy still expresses itself through its own self-interaction slot.
-    axis_sequence = [node["axis"] for node in sequence]
-    pairs: List[Tuple[str, str]] = (
-        list(zip(axis_sequence, axis_sequence[1:])) if len(axis_sequence) > 1
-        else [(axis_sequence[0], axis_sequence[0])]
-    )
+    edges = _derive_edges(logger, sequence)
 
-    for (a, b) in pairs:
-        atom = f"NC:{a}>{b}"
+    dim_counts: Dict[str, float] = {name: 0.0 for name in _ALL_DIM_NAMES}
+    active_slots: List[str] = []
+    atoms_in_order: List[str] = []
+    edge_provenance: List[Dict[str, Any]] = []
+    structural_parts: List[str] = []
+
+    for edge in edges:
+        atom = edge.atom
         if not genealogy_atom_is_valid(atom):
             continue
         pair = genealogy_atom_to_channel_pair(atom)
@@ -263,15 +400,18 @@ def derive_environment_signature(logger: Any, link_id: str) -> EnvironmentSignat
         # through a genealogy-atom transition therefore ALWAYS has
         # dim_a=OPERATOR, dim_b=COST -- dimension_distribution below is
         # structurally 0.5/0.5 OPERATOR/COST (0 elsewhere) for ANY non-empty
-        # ConstraintLink genealogy, not a property of this specific DAG. The
-        # differentiating signal between genealogies lives in WHICH channels
-        # (active_slots / chained_root_slot) occupy those roles and in
-        # axis_distribution/istate_distribution/lineage, not in the abstract
-        # 5-dimension-name distribution. This is reported as-is rather than
-        # patched with an invented mapping from relief-sign/cost/stdev onto
-        # POLARITY/MAGNITUDE/DIFFERENCE, since aurora_closure_basis assigns
-        # IDENTICAL shift_cost_coeff/inertia/flip_threshold/i_state values to
-        # all 5 dimension-channels of a given constraint (verified:
+        # ConstraintLink genealogy, not a property of this specific DAG (this
+        # still holds true now that transitions are real edges rather than
+        # traversal-adjacent pairs -- the atom vocabulary itself is the
+        # ceiling, not how the atoms were chosen). The differentiating signal
+        # between genealogies lives in WHICH channels (active_slots /
+        # chained_root_slot / structural_hash) occupy those roles and in
+        # axis_distribution/istate_distribution/closure_projection, not in
+        # the abstract 5-dimension-name distribution. This is reported as-is
+        # rather than patched with an invented mapping from relief-sign/cost/
+        # stdev onto POLARITY/MAGNITUDE/DIFFERENCE, since aurora_closure_basis
+        # assigns IDENTICAL shift_cost_coeff/inertia/flip_threshold/i_state
+        # values to all 5 dimension-channels of a given constraint (verified:
         # _build_noncomp_channels(), aurora_closure_basis.py:371-395) -- no
         # existing physics currently differentiates those 3 dimensions at the
         # channel level, so any such mapping would be a new invented constant,
@@ -280,33 +420,45 @@ def derive_environment_signature(logger: Any, link_id: str) -> EnvironmentSignat
         dim_counts[_DIM_NAME_BY_ENUM[slot.dim_b]] += weight
         active_slots.append(slot.slot_id)
         atoms_in_order.append(atom)
+        edge_provenance.append({
+            "parent_link_id": edge.parent_link_id,
+            "child_link_id": edge.child_link_id,
+            "atom": atom,
+            "edge_type": edge.edge_type,
+            "slot_id": slot.slot_id,
+        })
+        structural_parts.append(f"{edge.parent_axis}>{edge.child_axis}:{edge.edge_type}")
 
-    chained_root_slot = "x".join(atoms_in_order)
+    chained_root_slot = "×".join(atoms_in_order)
     dominant_axis = max(axis_counts, key=lambda a: axis_counts[a]) if any(axis_counts.values()) else sequence[-1]["axis"]
     requires = tuple(a for a in AXES if axis_counts.get(a, 0.0) > 0.0) or (dominant_axis,)
 
-    lineage: Optional[ConstraintLineage]
+    closure_projection: Optional[ConstraintLineage]
     try:
-        lineage = derive_lineage(dominant_axis, requires, chained_root_slot)
+        closure_projection = derive_lineage(dominant_axis, requires, chained_root_slot)
     except Exception:
-        lineage = None
+        closure_projection = None
 
     provenance = [node["link_id"] for node in sequence]
-    sig_source = "|".join(active_slots) + "::" + "|".join(provenance)
-    signature_hash = hashlib.sha1(sig_source.encode("utf-8")).hexdigest()[:16]
+    provenance_source = "|".join(active_slots) + "::" + "|".join(provenance)
+    provenance_hash = hashlib.sha1(provenance_source.encode("utf-8")).hexdigest()[:16]
+    structural_source = "|".join(structural_parts)
+    structural_hash = hashlib.sha1(structural_source.encode("utf-8")).hexdigest()[:16]
 
     return EnvironmentSignature(
         dimension_distribution=_normalize(dim_counts),
         axis_distribution=_normalize(axis_counts),
         recursion_distribution=_normalize(rec_counts),
         istate_distribution=_normalize(istate_counts),
+        edge_provenance=edge_provenance,
         active_slots=active_slots,
         chained_root_slot=chained_root_slot,
-        lineage=lineage,
+        closure_projection=closure_projection,
         provenance=provenance,
         node_count=len(sequence),
         insufficient_genealogy=False,
-        signature_hash=signature_hash,
+        provenance_hash=provenance_hash,
+        structural_hash=structural_hash,
     )
 
 

@@ -1970,9 +1970,14 @@ class ConstraintGenealogyLogger:
         self._update_gradient_memory_from_relief(relief)
         self._update_causal_feedback(trace, relief)
 
-        # Merge difference_snapshot into notes (serialisable dict form)
+        # Merge difference_snapshot into notes (serialisable dict form).
+        # Type-contract guard: a caller passing a malformed difference_snapshot
+        # (e.g. {} instead of a real DifferenceSnapshot, or None-like non-None
+        # values) must not silently lose the entire relief observation to an
+        # AttributeError on .to_dict() -- treat anything without that method
+        # as equivalent to "no snapshot supplied" rather than raising.
         merged_notes: Dict[str, Any] = dict(notes or {})
-        if difference_snapshot is not None:
+        if difference_snapshot is not None and hasattr(difference_snapshot, "to_dict"):
             merged_notes["difference_snapshot"] = difference_snapshot.to_dict()
         if tolerance_meta:
             merged_notes["relief_tolerance"] = tolerance_meta
