@@ -610,6 +610,137 @@ class CodeEvolutionChamber:
         os.makedirs(self.output_dir, exist_ok=True)
         self._events_path = os.path.join(self.output_dir, "code_events.jsonl")
         self._summary_path = os.path.join(self.output_dir, "code_links.json")
+        self.restore_report: Dict[str, Any] = self._restore_persisted_state()
+
+    def _restore_persisted_state(self) -> Dict[str, Any]:
+        """
+        AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+        Phase 2: flush_files() already persists mutation lineage
+        ("lineage_nodes"/"lineage_children"), promoted links, pairing
+        statistics, and operator gradients to code_links.json -- but a
+        freshly constructed chamber previously always started with empty
+        in-memory state and never read that file back. That silently
+        broke automatic evolutionary parent acquisition across restart:
+        a generation-two proposal against a target with an accepted
+        generation-one ancestor from a PRIOR process would see no parent
+        at all, because _mutation_lineage was empty in the new process.
+
+        This does not guess or reconstruct ancestry -- it loads exactly
+        what was persisted. Malformed/incomplete records are skipped
+        individually (never silently substituted or repaired) so that
+        whatever valid historical evidence exists is still recovered
+        rather than the whole restore being abandoned over one bad entry.
+        Rejected mutations are restored on equal footing with accepted
+        ones -- restoration itself does not grant or revoke parentage;
+        that is still decided solely by observe_mutation()'s "accepted"
+        field on each restored record, exactly as it was when persisted.
+        """
+        report: Dict[str, Any] = {
+            "attempted": False, "loaded": False, "reason": "",
+            "restored_mutation_count": 0, "restored_link_count": 0,
+            "skipped_mutation_entries": 0, "skipped_link_entries": 0,
+        }
+        if not os.path.exists(self._summary_path):
+            report["reason"] = "no_persisted_file"
+            return report
+        report["attempted"] = True
+        try:
+            with open(self._summary_path, "r", encoding="utf-8") as fh:
+                payload = json.load(fh)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:_restore_persisted_state.read",
+                exc=_aurora_boundary_exc,
+                context={"function": "_restore_persisted_state", "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+            )
+            report["reason"] = f"unreadable_or_malformed_json: {_aurora_boundary_exc}"
+            return report
+        if not isinstance(payload, dict):
+            report["reason"] = "root_not_a_mapping"
+            return report
+
+        lineage_nodes = payload.get("lineage_nodes", {})
+        if isinstance(lineage_nodes, dict):
+            for mutation_id, rec in lineage_nodes.items():
+                if not isinstance(rec, dict) or not str(mutation_id).strip():
+                    report["skipped_mutation_entries"] += 1
+                    continue
+                self._mutation_lineage[str(mutation_id)] = dict(rec)
+                report["restored_mutation_count"] += 1
+
+        lineage_children = payload.get("lineage_children", {})
+        if isinstance(lineage_children, dict):
+            for parent_id, children in lineage_children.items():
+                if not isinstance(children, list):
+                    continue
+                self._lineage_children[str(parent_id)] = [str(c) for c in children if str(c).strip()]
+
+        links = payload.get("links", {})
+        if isinstance(links, dict):
+            for link_id, rec in links.items():
+                if not isinstance(rec, dict):
+                    report["skipped_link_entries"] += 1
+                    continue
+                try:
+                    parents_raw = rec.get("parents", [])
+                    self.links[str(link_id)] = CodeLink(
+                        link_id=str(rec.get("link_id", link_id)),
+                        parents=(str(parents_raw[0]), str(parents_raw[1])),
+                        dominant_axis=str(rec.get("dominant_axis", "")),
+                        semantic_lane=str(rec.get("semantic_lane", "")),
+                        generation=int(rec.get("generation", 1) or 1),
+                        support_count=int(rec.get("support_count", 0) or 0),
+                        accepted_count=int(rec.get("accepted_count", 0) or 0),
+                        acceptance_rate=float(rec.get("acceptance_rate", 0.0) or 0.0),
+                        mean_net_benefit=float(rec.get("mean_net_benefit", 0.0) or 0.0),
+                    )
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:_restore_persisted_state.link",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_restore_persisted_state", "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+                    )
+                    report["skipped_link_entries"] += 1
+
+        pair_counts = payload.get("pair_counts", {})
+        if isinstance(pair_counts, dict):
+            for key, count in pair_counts.items():
+                parts = str(key).split("|", 1)
+                if len(parts) == 2:
+                    self._pair_counts[(parts[0], parts[1])] = int(count or 0)
+
+        pair_stats = payload.get("pair_stats", {})
+        if isinstance(pair_stats, dict):
+            for key, stats in pair_stats.items():
+                parts = str(key).split("|", 1)
+                if len(parts) == 2 and isinstance(stats, dict):
+                    self._pair_stats[(parts[0], parts[1])] = {
+                        "total": float(stats.get("total", 0.0) or 0.0),
+                        "accepted": float(stats.get("accepted", 0.0) or 0.0),
+                        "net_sum": float(stats.get("net_sum", 0.0) or 0.0),
+                    }
+
+        gradients = payload.get("operator_gradients", {})
+        if isinstance(gradients, dict):
+            for axis, val in gradients.items():
+                if axis in self._operator_gradients:
+                    self._operator_gradients[axis] = float(val or 0.0)
+
+        summary = payload.get("summary", {})
+        if isinstance(summary, dict):
+            self.tick_count = int(summary.get("tick_count", self.tick_count) or 0)
+            self.relief_event_count = int(summary.get("relief_events", self.relief_event_count) or 0)
+            self.accepted_count = int(summary.get("accepted_count", self.accepted_count) or 0)
+            self.rejected_count = int(summary.get("rejected_count", self.rejected_count) or 0)
+            self.links_promoted = int(summary.get("links_promoted", self.links_promoted) or 0)
+
+        report["loaded"] = True
+        report["reason"] = "restored"
+        return report
 
     def snapshot(self, target_files: Optional[Sequence[str]] = None) -> CodePressureSnapshot:
         return self.evaluator.snapshot(target_files=target_files)
@@ -622,12 +753,29 @@ class CodeEvolutionChamber:
         parent_ids: Optional[Iterable[str]] = None,
         meta: Optional[Dict[str, Any]] = None,
         function_lineage: Optional[Any] = None,
+        exact_function_ids: Optional[Iterable[str]] = None,
+        requested_operation_ids: Optional[Iterable[str]] = None,
     ) -> CodeMutationTrace:
+        # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+        # Phase 3: exact_function_ids -- real UniversalFunctionLineage
+        # function IDs the caller already knows are affected -- lets
+        # ancestry acquisition target those operations precisely instead
+        # of every function that happens to share their file (target_files
+        # remains the coarse fallback scope, never removed).
+        # requested_operation_ids carries opaque operation-descriptor
+        # op_id/op_chain strings (e.g. from aurora_state/operation_descriptors.json)
+        # purely as recorded evidence -- this module never maps them onto
+        # UniversalFunctionLineage function IDs (no operational-homology
+        # formula is invented here); they are evidence a caller who
+        # already possesses that mapping can attach for its own future
+        # inspection.
         cset = _normalize_constraints(constraints_used)
         if not cset:
             cset = frozenset({"existence", "temporal"})
         tfiles = tuple(sorted({str(x).strip() for x in (target_files or []) if str(x).strip()}))
         explicit_parents = tuple(sorted({str(x).strip() for x in (parent_ids or []) if str(x).strip()}))
+        exact_fids = tuple(sorted({str(x).strip() for x in (exact_function_ids or []) if str(x).strip()}))
+        requested_op_ids = tuple(sorted({str(x).strip() for x in (requested_operation_ids or []) if str(x).strip()}))
 
         # AURORA BUILD 646 GENEALOGY-TO-EVOLUTION CLOSURE DIRECTIVE,
         # Requirement 2.2/2.3: when the caller can supply Aurora's real
@@ -650,6 +798,7 @@ class CodeEvolutionChamber:
                     mutation_lineage=self._mutation_lineage,
                     target_files=tfiles,
                     repo_root=self.repo_root,
+                    exact_function_ids=exact_fids,
                 )
                 if not explicit_parents:
                     parents = tuple(sorted(auto_parent_ids(acquired_ancestry, explicit_parents)))
@@ -702,6 +851,21 @@ class CodeEvolutionChamber:
             payload.setdefault("acquired_operational_ancestry", acquired_ancestry.to_dict())
         if lineage_pressure is not None:
             payload.setdefault("lineage_scoped_pressure", lineage_pressure)
+        # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+        # Phase 3: recorded regardless of whether function_lineage was
+        # supplied -- these are the requested-scope facts, independent of
+        # whether ancestry acquisition could run. "requested_target_files"
+        # intentionally mirrors target_files at proposal time (before any
+        # actual-vs-planned divergence, which Phase 4 reconciles once the
+        # real changed-file set is known post-application).
+        payload.setdefault("requested_target_files", list(tfiles))
+        payload.setdefault("requested_operation_ids", list(requested_op_ids))
+        payload.setdefault("exact_function_ids", list(exact_fids))
+        payload.setdefault(
+            "mutation_scope_kind",
+            "exact" if (acquired_ancestry is not None and acquired_ancestry.ancestry_scope == "exact")
+            else ("exact_unresolved" if exact_fids else "file_level_fallback"),
+        )
         return CodeMutationTrace(
             mutation_id=mutation_id,
             name=str(name),

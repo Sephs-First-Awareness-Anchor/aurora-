@@ -55,6 +55,13 @@ class AcquiredAncestry:
     previous_accepted_mutation_ids: List[str] = field(default_factory=list)
     previous_rejected_mutation_ids: List[str] = field(default_factory=list)
     ancestry_status: str = "unknown"  # "unknown" | "root_originating" | "resolved"
+    # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+    # Phase 3: whether resolved_function_ids came from caller-supplied
+    # exact UniversalFunctionLineage function IDs ("exact") or from
+    # expanding every function found in the target files ("file_level_fallback").
+    # This must stay an explicit, inspectable field rather than letting a
+    # coarse fallback masquerade as exact operation ancestry.
+    ancestry_scope: str = "file_level_fallback"  # "exact" | "file_level_fallback"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -67,6 +74,7 @@ class AcquiredAncestry:
             "previous_accepted_mutation_ids": list(self.previous_accepted_mutation_ids),
             "previous_rejected_mutation_ids": list(self.previous_rejected_mutation_ids),
             "ancestry_status": self.ancestry_status,
+            "ancestry_scope": self.ancestry_scope,
         }
 
 
@@ -102,6 +110,7 @@ def acquire_ancestry_for_target(
     target_files: Iterable[str],
     repo_root: str,
     descendant_sample_limit: int = 25,
+    exact_function_ids: Optional[Iterable[str]] = None,
 ) -> AcquiredAncestry:
     """
     Derive available evidence for a mutation targeting target_files
@@ -113,10 +122,31 @@ def acquire_ancestry_for_target(
     much weight to give it, whether to gate/block a mutation on it) is
     left to the caller, per this directive's Repair Authority boundary
     against deciding a new mutation pedagogy.
+
+    AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+    Phase 3: exact_function_ids lets a caller who already knows precisely
+    which UniversalFunctionLineage function(s) a mutation affects (not
+    "every function that happens to live in the same file") skip the
+    coarse whole-file expansion functions_in_files() otherwise performs.
+    This is never inferred here -- no function-name matching, no
+    operation-descriptor-to-function-id guessing, no operational-homology
+    formula. It is used only when the caller supplies it directly, and
+    only entries that actually resolve against function_lineage are kept
+    (an unresolvable ID is dropped, not fabricated into ancestry). When
+    absent, behavior is unchanged from before this phase: every function
+    in target_files is used, and ancestry_scope is explicitly marked
+    "file_level_fallback" rather than silently passing as exact.
     """
     result = AcquiredAncestry()
 
-    function_ids = functions_in_files(function_lineage, target_files, repo_root)
+    explicit_exact = sorted({str(f).strip() for f in (exact_function_ids or []) if str(f).strip()})
+    if explicit_exact and function_lineage is not None and hasattr(function_lineage, "all_functions"):
+        known = set(function_lineage.all_functions().keys())
+        function_ids = [fid for fid in explicit_exact if fid in known]
+        result.ancestry_scope = "exact"
+    else:
+        function_ids = functions_in_files(function_lineage, target_files, repo_root)
+        result.ancestry_scope = "file_level_fallback"
     result.resolved_function_ids = function_ids
 
     if function_ids and function_lineage is not None:

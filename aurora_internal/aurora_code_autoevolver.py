@@ -81,6 +81,22 @@ class CodeAutoEvolver:
         mtime_ns, size = self._file_stamp(path)
         return mtime_ns, size, int(len(operations or []))
 
+    def plan_operator(self, operator_key: str, target_files: Iterable[str]) -> List[str]:
+        """
+        AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+        Phase 4: a non-mutating preview of the files apply_operator() would
+        write for this operator/target combination. Reuses the same
+        _build_update_plan() apply_operator() itself calls first (it never
+        writes anything -- only apply_operator()'s write loop does), so
+        this is not a second planning implementation, only a public,
+        read-only view of the existing one. Callers use this to capture a
+        before-snapshot over the actual planned scope, not merely the
+        originally-supplied target_files, before any file is touched.
+        """
+        key = str(operator_key or "").strip().lower()
+        plan = self._build_update_plan(key, target_files)
+        return sorted(str(p) for p in dict(plan.get("updates", {}) or {}).keys())
+
     def apply_operator(self, operator_key: str, target_files: Iterable[str]) -> Dict[str, Any]:
         key = str(operator_key or "").strip().lower()
         started_at = time.time()
