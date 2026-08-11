@@ -626,8 +626,18 @@ class UniversalFunctionLineage:
         self._systems: Optional[Dict[str, Any]] = None
         if self.manifest_path.exists():
             self.load()
-        if auto_build and not self._functions:
-            self.rebuild()
+        if auto_build:
+            # AURORA BUILD 646 GENEALOGY-TO-EVOLUTION CLOSURE DIRECTIVE,
+            # Requirement 0.4 (Boot Authority): a persisted manifest is an
+            # optimization/cache, not truth independent of the source tree
+            # it describes. Previously this only rebuilt when NOTHING had
+            # loaded (self._functions empty) -- a successfully-loaded but
+            # stale manifest was silently exposed as authoritative for the
+            # rest of the process's lifetime. Now staleness itself also
+            # triggers a rebuild, so callers that ask for auto_build never
+            # receive stale ancestry as if it were current.
+            if not self._functions or not self.verify_source_freshness().get("source_current"):
+                self.rebuild()
 
     def _iter_files(self) -> Iterable[Path]:
         for path in self.repo_root.rglob("*.py"):
@@ -1205,7 +1215,77 @@ class UniversalFunctionLineage:
         except Exception:
             return False
 
-    def verify(self) -> Dict[str, Any]:
+    def verify_source_freshness(self) -> Dict[str, Any]:
+        """
+        AURORA BUILD 646 GENEALOGY-TO-EVOLUTION CLOSURE DIRECTIVE, Phase 0.
+
+        Determines whether the loaded/persisted manifest corresponds to the
+        CURRENT executable source tree, as distinct from internal graph
+        consistency (verify()'s original job). Reuses _scan_surfaces() --
+        the same first stage rebuild() already performs -- to obtain a
+        fresh, deterministic structural fingerprint (per-file source
+        digest, aggregated source_manifest_hash, and the current callable
+        inventory) without paying the cost of the full ancestry
+        reconstruction (call resolution, SCC clustering, generation
+        assignment) that rebuild() also does.
+
+        A manifest describing yesterday's organism must not be certified
+        merely because yesterday's family tree has no broken edges -- this
+        method is the source-correspondence half of that certification;
+        verify() combines it with the pre-existing internal-coherence half.
+        """
+        surfaces, file_hashes, parse_errors = self._scan_surfaces()
+        current_ids = set(surfaces.keys())
+        manifest_ids = set(self._functions.keys())
+
+        missing_from_manifest = sorted(current_ids - manifest_ids)
+        obsolete_in_manifest = sorted(manifest_ids - current_ids)
+
+        persisted_file_hashes = dict(self._manifest.get("file_hashes", {}) or {})
+        changed_files = sorted(
+            rel for rel, sha in file_hashes.items()
+            if persisted_file_hashes.get(rel) != sha
+        )
+        removed_files = sorted(set(persisted_file_hashes) - set(file_hashes))
+
+        digest = hashlib.sha256()
+        for rel, sha in sorted(file_hashes.items()):
+            digest.update(f"{rel}|{sha}\n".encode("utf-8"))
+        current_source_manifest_hash = digest.hexdigest()
+        persisted_source_manifest_hash = str(self._manifest.get("source_manifest_hash", "") or "")
+
+        # A changed function's parent relationships can shift only if its own
+        # source (source_hash) or the source of a file it depends on changed
+        # -- both are already covered by changed_files/current_source_manifest_hash
+        # above, since any structurally relevant edit changes the owning
+        # file's digest. No separate per-edge diff is needed to detect this.
+        hash_match = bool(persisted_source_manifest_hash) and current_source_manifest_hash == persisted_source_manifest_hash
+        source_current = (
+            not missing_from_manifest
+            and not obsolete_in_manifest
+            and not changed_files
+            and not removed_files
+            and hash_match
+        )
+        return {
+            "source_current": source_current,
+            "current_source_manifest_hash": current_source_manifest_hash,
+            "persisted_source_manifest_hash": persisted_source_manifest_hash,
+            "source_manifest_hash_matches": hash_match,
+            "current_function_count": len(current_ids),
+            "manifest_function_count": len(manifest_ids),
+            "missing_from_manifest_count": len(missing_from_manifest),
+            "obsolete_in_manifest_count": len(obsolete_in_manifest),
+            "changed_file_count": len(changed_files),
+            "removed_file_count": len(removed_files),
+            "scan_parse_errors": len(parse_errors),
+            "missing_from_manifest": missing_from_manifest[:50],
+            "obsolete_in_manifest": obsolete_in_manifest[:50],
+            "changed_files": changed_files[:50],
+            "removed_files": removed_files[:50],
+        }
+
+    def verify(self, *, check_freshness: bool = True) -> Dict[str, Any]:
         function_count = len(self._functions)
         missing_parents: List[Dict[str, str]] = []
         orphans: List[str] = []
@@ -1221,8 +1301,24 @@ class UniversalFunctionLineage:
                 if not path or path[0] != f"ROOT:{axis}" or path[-1] != fid:
                     bad_roots.append(fid)
                     break
-        return {
-            "valid": not missing_parents and not orphans and not bad_roots,
+        internally_coherent = not missing_parents and not orphans and not bad_roots
+
+        # AURORA BUILD 646 GENEALOGY-TO-EVOLUTION CLOSURE DIRECTIVE,
+        # Requirement 0.1/0.3: internal coherence alone is insufficient --
+        # a stale-but-coherent manifest must not verify as valid. Distinct
+        # diagnostic states: corrupt (internally_coherent=False), stale
+        # (source_current=False), valid (both True). "incomplete" (function_count
+        # == 0 / no manifest loaded) is already distinguishable via status()["available"].
+        freshness: Optional[Dict[str, Any]] = None
+        source_current = True
+        if check_freshness:
+            freshness = self.verify_source_freshness()
+            source_current = bool(freshness["source_current"])
+
+        result = {
+            "valid": internally_coherent and source_current,
+            "internally_coherent": internally_coherent,
+            "source_current": source_current,
             "function_count": function_count,
             "coverage_rate": 0.0 if function_count == 0 else (function_count - len(orphans)) / float(function_count),
             "missing_parent_count": len(missing_parents),
@@ -1232,6 +1328,9 @@ class UniversalFunctionLineage:
             "orphans": orphans[:50],
             "bad_root_paths": bad_roots[:50],
         }
+        if freshness is not None:
+            result["freshness"] = freshness
+        return result
 
     def status(self) -> Dict[str, Any]:
         summary = dict(self._manifest.get("summary", {}) or {})
