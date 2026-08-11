@@ -3171,7 +3171,43 @@ def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
     try:
         import py_compile
         from aurora_internal.aurora_code_autoevolver import CodeAutoEvolver
+        from aurora_internal.aurora_code_evolution_chamber import CodeEvolutionChamber
         autoevolver = CodeAutoEvolver(str(_BASE_DIR))
+
+        # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+        # Phase 1: this is the one authoritative consequence-grounded
+        # mutation transaction -- the same CodeEvolutionChamber.evaluate_mutation()
+        # AuroraRuntime.finalize_code_mutation() uses, not a second
+        # acceptance formula. Cached on systems['code_chamber'] so repeated
+        # daemon cycles within one process reuse the same in-memory
+        # lineage (Phase 2's restore-on-construct handles the cross-process
+        # / restart case). repo_root=_BASE_DIR with the chamber's own
+        # default output_dir resolution keeps this on the same
+        # aurora_runtime_output/code_evolution/code_links.json any
+        # AuroraRuntime instance against this same repo would also use.
+        chamber = systems.get("code_chamber")
+        if chamber is None:
+            chamber = CodeEvolutionChamber(repo_root=str(_BASE_DIR))
+            systems["code_chamber"] = chamber
+
+        # Non-mutating plan first (Phase 4's planning primitive) so the
+        # before-snapshot covers the actual planned scope rather than only
+        # the originally-supplied target -- relevant because op_key can be
+        # "native_surface_projection", whose real update set can extend
+        # beyond `target`.
+        try:
+            planned_files = autoevolver.plan_operator(op_key, [target])
+        except Exception as _plan_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:_run_code_mutation_cycle.plan",
+                exc=_plan_exc,
+                context={"function": "_run_code_mutation_cycle", "source_file": "aurora_daemon.py"},
+            )
+            planned_files = []
+        before_snapshot = chamber.snapshot(target_files=(planned_files or [target]))
+
         result = autoevolver.apply_operator(operator_key=op_key, target_files=[target])
         changed = list(result.get("changed_files", []) or [])
         backups = dict(result.get("backups", {}) or {})
@@ -3242,6 +3278,54 @@ def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
             if backups:
                 autoevolver.rollback(backups)
             return
+
+        # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+        # Phase 1: compile + import + QAO integrity are viability evidence
+        # only -- a mutation that merely runs is not yet fitness evidence
+        # (Requirement 6.1, Build 646). It must still clear the same
+        # measured-relief acceptance formula CodeEvolutionChamber applies
+        # everywhere else before it is treated as a genealogical descendant.
+        # Evaluation scope is the ACTUAL changed files, not just the
+        # originally-requested target, so a native_surface_projection that
+        # touched files beyond `target` gets real credit/debit for what it
+        # actually changed rather than an unmeasured file being silently
+        # ignored.
+        trace = chamber.propose_mutation(
+            name=f"daemon_{op_key}",
+            constraints_used=[],
+            target_files=changed,
+            function_lineage=systems.get("function_lineage"),
+        )
+        eval_result = chamber.evaluate_mutation(
+            trace=trace,
+            before=before_snapshot,
+            checks_passed=True,
+        )
+        if not bool(eval_result.get("accepted", False)):
+            _log(
+                f"  [MUTATE] {op_key} compiled and passed viability checks but "
+                f"did not clear consequence-grounded evaluation — rolling back."
+            )
+            if backups:
+                autoevolver.rollback(backups)
+            return
+
+        # Accepted: the resulting operation(s) must become visible to
+        # future genealogy queries immediately (Build 646 Requirement 7.1),
+        # exactly as AuroraRuntime.finalize_code_mutation() already does on
+        # acceptance.
+        function_lineage = systems.get("function_lineage")
+        if function_lineage is not None and hasattr(function_lineage, "rebuild"):
+            try:
+                function_lineage.rebuild()
+            except Exception as _fl_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:_run_code_mutation_cycle.lineage_refresh",
+                    exc=_fl_exc,
+                    context={"function": "_run_code_mutation_cycle", "source_file": "aurora_daemon.py"},
+                )
 
         # Immediately refresh gen-2 pool and assimilation so hub shows new count
         _run_assimilation_cycle(systems)

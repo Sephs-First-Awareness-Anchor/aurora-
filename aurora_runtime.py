@@ -90,6 +90,7 @@ import statistics
 import sys
 import threading
 import time
+import dataclasses
 import uuid
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
@@ -348,7 +349,20 @@ ReliefRecord              = _GEN["ReliefRecord"]
 ConstraintLink            = _GEN["ConstraintLink"]
 
 # — Code Evolution -------------------------------------------------------------
-_CEVO = _soft("aurora_code_evolution_stack", [
+# AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE: this soft
+# import previously named a module that has never existed in this repo
+# ("aurora_code_evolution_stack") -- CodeEvolutionChamber and its
+# companions have always actually lived in
+# aurora_internal.aurora_code_evolution_chamber (same module CodeAutoEvolver
+# below is correctly sourced from, via aurora_internal.aurora_code_autoevolver).
+# The wrong name meant _soft() silently returned {} and every name here
+# resolved to None, so `if CodeEvolutionChamber is not None:` at boot()
+# was always False -- AuroraRuntime.code_chamber was always None after a
+# normal boot, and stage_code_mutation()/finalize_code_mutation() always
+# raised "Code evolution chamber is not active." in production, even
+# though CodeEvolutionChamber itself was fully functional when constructed
+# directly (as this repo's own test suite does). Fixed to the real path.
+_CEVO = _soft("aurora_internal.aurora_code_evolution_chamber", [
     "CodeConstraintEvaluator", "CodeEvolutionChamber", "CodeEvolutionConfig",
     "CodeMutationTrace", "CodePressureSnapshot", "CodePressureVec",
 ])
@@ -1259,6 +1273,44 @@ def boot_stack(state_dir:  str = "aurora_state",
             context={"function": "boot_stack", "handler_line": 1082, "source_file": "aurora_runtime.py"},
         )
         _log("GEN    ConstraintGenealogyLogger", False, str(e))
+
+    # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+    # Phase 0: boot_stack() never constructed a UniversalFunctionLineage,
+    # so AuroraRuntime.stage_code_mutation()'s existing
+    # getattr(self.systems, "function_lineage", None) read always saw
+    # None and the evolutionary ancestry bridge never actually executed
+    # under this boot path -- only under aurora.py's separate boot_aurora()
+    # systems dict. Reuses the exact same UniversalFunctionLineage
+    # construction boot_aurora() already uses (repo_root=_HERE,
+    # auto_build=True, include_lambdas=True, persist=True) rather than
+    # inventing a second genealogy implementation. auto_build=True
+    # preserves the Build 646 source-freshness repair: a stale persisted
+    # manifest is rebuilt before being exposed as authoritative, here as
+    # everywhere else it is constructed.
+    try:
+        from aurora_internal.aurora_universal_function_lineage import UniversalFunctionLineage
+        systems.function_lineage = UniversalFunctionLineage(
+            repo_root=_HERE,
+            auto_build=True,
+            include_lambdas=True,
+            persist=True,
+        )
+        if systems.genealogy is not None:
+            systems.function_lineage.attach_genealogy(systems.genealogy)
+        _fl_status = systems.function_lineage.status()
+        _log("GEN    UniversalFunctionLineage", True,
+             f"functions={_fl_status.get('function_count', 0)} "
+             f"coverage={float(_fl_status.get('coverage_rate', 0.0)):.3f}")
+    except Exception as e:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_runtime.py:boot_stack.function_lineage",
+            exc=e,
+            context={"function": "boot_stack", "source_file": "aurora_runtime.py"},
+        )
+        systems.function_lineage = None
+        _log("GEN    UniversalFunctionLineage", False, str(e))
 
     # — Emergence Monitor: promoted genealogy links → operational capabilities —
     try:
@@ -6443,7 +6495,8 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
     def finalize_code_mutation(self,
                                mutation_id: str,
                                checks_passed: Optional[bool] = None,
-                               notes: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                               notes: Optional[Dict[str, Any]] = None,
+                               actual_target_files: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         if self.code_chamber is None:
             raise RuntimeError("Code evolution chamber is not active.")
         mid = str(mutation_id or "").strip()
@@ -6452,6 +6505,29 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
             raise KeyError(f"Unknown staged mutation id: {mid}")
         trace = pending["trace"]
         before = pending["before"]
+        # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+        # Phase 4: when a caller knows the files a mutation ACTUALLY
+        # changed (which can diverge from the originally-staged
+        # target_files -- e.g. native_surface_projection can touch modules
+        # beyond the one file it was nominally proposed against),
+        # reconcile trace.target_files to that real scope before
+        # evaluation. evaluate_mutation() snapshots "after" using
+        # trace.target_files, so leaving it as the stale originally-staged
+        # scope would let a mutation receive fitness credit for files it
+        # never actually measured, or silently miss a real regression in
+        # a file it did change. Only ever narrows/corrects to files the
+        # caller has verified were actually touched -- never widens
+        # evaluation scope beyond what was staged before the mutation.
+        if actual_target_files is not None:
+            reconciled = tuple(sorted({str(p).strip() for p in actual_target_files if str(p).strip()}))
+            if reconciled:
+                # CodeMutationTrace is frozen -- dataclasses.replace()
+                # builds a new instance rather than mutating in place, and
+                # the pending record is updated to point at it so every
+                # subsequent read (including this same call's
+                # evaluate_mutation() below) sees the reconciled scope.
+                trace = dataclasses.replace(trace, target_files=reconciled)
+                pending["trace"] = trace
         sim_gate = dict(pending.get("sim_gate", {}) or {})
         auto_ok, check_details = self._run_code_checks(getattr(trace, "target_files", tuple()))
         if checks_passed is None:
@@ -6584,12 +6660,33 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         targets = self._resolve_code_targets(target_files)
         if not targets:
             raise ValueError("No valid target files for code autoevolution.")
+
+        # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+        # Phase 4: a non-mutating plan first, so the before-snapshot (taken
+        # inside stage_code_mutation() below) covers the actual scope this
+        # operator is expected to touch -- not merely the caller-supplied
+        # targets. This matters concretely for native_surface_projection,
+        # whose real update set is derived from operation descriptors and
+        # can extend beyond target_files.
+        try:
+            planned_files = self._code_autoevolver.plan_operator(operator_key, targets)
+        except Exception as _plan_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:code_autoevolve_once.plan",
+                exc=_plan_exc,
+                context={"function": "code_autoevolve_once", "source_file": "aurora_runtime.py"},
+            )
+            planned_files = []
+        plan_scope = sorted({os.path.abspath(p) for p in (list(targets) + list(planned_files))})
+
         stage = self.stage_code_mutation(
             name=f"autoevolve_{str(operator_key).strip().lower()}",
             operator_key=operator_key,
-            target_files=targets,
+            target_files=plan_scope,
             constraints=None,
-            meta={"autoevolve": True, "dry_run": bool(dry_run)},
+            meta={"autoevolve": True, "dry_run": bool(dry_run), "requested_target_files": list(targets), "planned_scope": plan_scope},
         )
         mutation_id = str(stage.get("mutation_id", ""))
         apply_result: Dict[str, Any] = {"operator_key": operator_key, "change_count": 0, "changed_files": [], "backups": {}}
@@ -6603,17 +6700,51 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
             turns=turns,
             verbose=False,
         )
+
+        # Phase 4: reconcile the plan against what actually changed. A
+        # changed file outside plan_scope was never covered by the
+        # before-snapshot -- there is no valid pre-mutation measurement
+        # for it, so it must not silently receive fitness credit/debit.
+        # Per the directive: reject and roll back rather than fabricate a
+        # pre-change snapshot after the fact.
+        changed_files = list(apply_result.get("changed_files", []) or [])
+        changed_abs = {os.path.abspath(p) for p in changed_files}
+        plan_scope_set = set(plan_scope)
+        escaped = sorted(changed_abs - plan_scope_set)
+
         finalize_notes = {
             "autoevolve": True,
             "operator_key": operator_key,
             "apply_result": {k: v for k, v in apply_result.items() if k != "backups"},
             "timing_feedback": timing_feedback,
             "dry_run": bool(dry_run),
+            "planned_scope": plan_scope,
+            "escaped_plan_scope": escaped,
         }
-        final = self.finalize_code_mutation(mutation_id, notes=finalize_notes)
-        accepted = bool(final.get("accepted", False))
+
         rolled_back = False
-        if (not accepted) and (not dry_run):
+        if escaped and not dry_run:
+            backups = dict(apply_result.get("backups", {}) or {})
+            if backups:
+                self._code_autoevolver.rollback(backups)
+                rolled_back = True
+            # checks_passed=False forces rejection through the same
+            # evidence-grounded finalize path every other mutation uses --
+            # not a second acceptance formula -- while the notes preserve
+            # exactly why: valid before/after evidence was unavailable for
+            # files the plan did not anticipate.
+            final = self.finalize_code_mutation(mutation_id, checks_passed=False, notes=finalize_notes)
+        else:
+            # Normal path: reconcile evaluation to the files that ACTUALLY
+            # changed (a subset of, or equal to, plan_scope) so fitness
+            # measures real consequences, not merely the originally
+            # requested target.
+            final = self.finalize_code_mutation(
+                mutation_id, notes=finalize_notes,
+                actual_target_files=(changed_files or None),
+            )
+        accepted = bool(final.get("accepted", False))
+        if (not accepted) and (not dry_run) and (not rolled_back):
             backups = dict(apply_result.get("backups", {}) or {})
             if backups:
                 self._code_autoevolver.rollback(backups)
@@ -6627,6 +6758,8 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
             "mutation_id": mutation_id,
             "operator_key": str(operator_key),
             "targets": list(targets),
+            "planned_scope": plan_scope,
+            "escaped_plan_scope": escaped,
             "sim": sim,
             "final": final,
             "applied_changes": int(apply_result.get("change_count", 0) or 0),

@@ -111,13 +111,43 @@ class PressureExperienceLedger:
     and bridges the causal record into OETS concept nodes.
     """
 
-    _LOG_PATH = "aurora_state/pressure_experiences.jsonl"
+    _MAX_ENTRIES = 500
     _instance: Optional["PressureExperienceLedger"] = None
 
-    def __init__(self) -> None:
+    def __init__(self, state_dir: Optional[str] = None) -> None:
+        # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE,
+        # Phase 6: the log path was previously a hardcoded class attribute
+        # ("aurora_state/pressure_experiences.jsonl", always CWD-relative)
+        # and _buffer always started empty with no rehydration -- every
+        # fresh construction lost all prior causal history, including
+        # exactly the same-action/different-outcome conditionality
+        # outcome_variance()/conditioning_signal() exist to detect. Uses
+        # Aurora's existing active-state-dir mechanism
+        # (aurora_internal.aurora_state_context) when no explicit state_dir
+        # is supplied, falling back to "aurora_state" only when neither is
+        # set -- preserving the exact default every existing caller of
+        # PressureExperienceLedger.get() already relies on.
+        resolved_state_dir = str(state_dir or "").strip()
+        if not resolved_state_dir:
+            try:
+                from aurora_internal.aurora_state_context import get_active_state_dir
+                resolved_state_dir = str(get_active_state_dir() or "").strip()
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:__init__.active_state_dir",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "__init__", "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+                )
+                resolved_state_dir = ""
+        if not resolved_state_dir:
+            resolved_state_dir = "aurora_state"
+        self.state_dir = resolved_state_dir
+        self._log_path = os.path.join(self.state_dir, "pressure_experiences.jsonl")
         self._buffer: List[PressureExperience] = []
         try:
-            os.makedirs("aurora_state", exist_ok=True)
+            os.makedirs(self.state_dir, exist_ok=True)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -127,12 +157,82 @@ class PressureExperienceLedger:
                 context={"function": "__init__", "handler_line": 120, "source_file": "aurora_internal/aurora_pressure_ledger.py"},
             )
             pass
+        self._rehydrate_from_persisted_log()
+
+    def _rehydrate_from_persisted_log(self) -> None:
+        """
+        Restores a bounded recent history from the persisted JSONL so
+        recent()/outcome_variance()/conditioning_signal() retain
+        developmental continuity across a fresh construction -- loads
+        exactly what was persisted, in original order; a malformed line
+        is skipped individually rather than aborting the whole restore.
+        """
+        if not os.path.exists(self._log_path):
+            return
+        try:
+            with open(self._log_path, "r") as f:
+                lines = f.readlines()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:_rehydrate_from_persisted_log.read",
+                exc=_aurora_boundary_exc,
+                context={"function": "_rehydrate_from_persisted_log", "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+            )
+            return
+        restored: List[PressureExperience] = []
+        for line in lines[-self._MAX_ENTRIES:]:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                raw = json.loads(line)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:_rehydrate_from_persisted_log.parse",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_rehydrate_from_persisted_log", "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+                )
+                continue
+            if not isinstance(raw, dict):
+                continue
+            try:
+                restored.append(PressureExperience(
+                    experience_id=str(raw.get("experience_id", "") or ""),
+                    timestamp=float(raw.get("timestamp", 0.0) or 0.0),
+                    source=str(raw.get("source", "") or ""),
+                    anchor=str(raw.get("anchor", "") or ""),
+                    meaning=str(raw.get("meaning", "") or ""),
+                    pursuing=str(raw.get("pursuing", "") or ""),
+                    causal_action=str(raw.get("causal_action", "") or ""),
+                    consequence=dict(raw.get("consequence", {}) or {}),
+                    outcome=dict(raw.get("outcome", {}) or {}),
+                ))
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_pressure_ledger.py:_rehydrate_from_persisted_log.build",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_rehydrate_from_persisted_log", "source_file": "aurora_internal/aurora_pressure_ledger.py"},
+                )
+                continue
+        self._buffer = restored
 
     @classmethod
     def get(cls) -> "PressureExperienceLedger":
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
+
+    @classmethod
+    def reset_singleton_for_test(cls) -> None:
+        """Test-only: clears the process-wide singleton so the next get()
+        re-resolves the active state dir and re-rehydrates from disk."""
+        cls._instance = None
 
     # ------------------------------------------------------------------
     # Primary API
@@ -168,16 +268,16 @@ class PressureExperienceLedger:
         self._buffer.append(exp)
 
         # Persist immediately -- atomic append to JSONL (max 500 entries retained)
-        _MAX_ENTRIES = 500
+        _MAX_ENTRIES = self._MAX_ENTRIES
         try:
-            with open(self._LOG_PATH, "a") as f:
+            with open(self._log_path, "a") as f:
                 f.write(json.dumps(exp.to_dict()) + "\n")
             # Trim to last 500 entries if file is growing too large
             try:
-                with open(self._LOG_PATH, "r") as _rf:
+                with open(self._log_path, "r") as _rf:
                     _lines = _rf.readlines()
                 if len(_lines) > _MAX_ENTRIES:
-                    with open(self._LOG_PATH, "w") as _wf:
+                    with open(self._log_path, "w") as _wf:
                         _wf.writelines(_lines[-_MAX_ENTRIES:])
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
