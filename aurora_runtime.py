@@ -657,6 +657,15 @@ class StackSystems:
     # Checkpoint (optional)
     checkpoint:    Optional[Any] = None
 
+    # AURORA BUILD 646 GENEALOGY-TO-EVOLUTION CLOSURE DIRECTIVE: optional
+    # UniversalFunctionLineage reference, additive/backward-compatible
+    # (defaults to None, same as every other soft layer above). When
+    # attached, stage_code_mutation() passes it through to
+    # CodeEvolutionChamber.propose_mutation() so mutation proposals can
+    # acquire real operational ancestry instead of starting from bare
+    # generation-1 parentage.
+    function_lineage: Optional[Any] = None
+
     def has(self, name: str) -> bool:
         return getattr(self, name, None) is not None
 
@@ -6257,6 +6266,7 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
             target_files=targets,
             parent_ids=parent_ids or [],
             meta=payload,
+            function_lineage=getattr(self.systems, "function_lineage", None),
         )
         rec = {
             "mutation_id": str(trace.mutation_id),
@@ -6470,6 +6480,32 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         self._code_latest = dict(result or {})
         self._code_history.append(dict(result or {}))
         self._code_pending.pop(mid, None)
+
+        # AURORA BUILD 646 GENEALOGY-TO-EVOLUTION CLOSURE DIRECTIVE,
+        # Requirement 7.1 (Descendant Registration): an accepted mutation
+        # must become part of Aurora's operational genealogy, not merely
+        # live on as a mutation-history entry. No incremental update API
+        # exists on UniversalFunctionLineage (confirmed by audit) -- a
+        # full rebuild() is the only available mechanism, so it is used
+        # here, guarded to accepted mutations only (a rejected mutation's
+        # file changes are rolled back by this method's own caller AFTER
+        # finalize_code_mutation returns, so rebuilding on rejection would
+        # capture transient, soon-to-be-reverted state).
+        if bool(result.get("accepted", False)):
+            function_lineage = getattr(self.systems, "function_lineage", None)
+            if function_lineage is not None and hasattr(function_lineage, "rebuild"):
+                try:
+                    function_lineage.rebuild()
+                    result["function_lineage_refreshed"] = True
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_runtime.py:finalize_code_mutation.lineage_refresh",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "finalize_code_mutation", "source_file": "aurora_runtime.py"},
+                    )
+                    result["function_lineage_refreshed"] = False
         try:
             if self.steerer is not None:
                 self.steerer._register_function_ancestry(

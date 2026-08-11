@@ -621,12 +621,59 @@ class CodeEvolutionChamber:
         target_files: Iterable[str],
         parent_ids: Optional[Iterable[str]] = None,
         meta: Optional[Dict[str, Any]] = None,
+        function_lineage: Optional[Any] = None,
     ) -> CodeMutationTrace:
         cset = _normalize_constraints(constraints_used)
         if not cset:
             cset = frozenset({"existence", "temporal"})
         tfiles = tuple(sorted({str(x).strip() for x in (target_files or []) if str(x).strip()}))
-        parents = tuple(sorted({str(x).strip() for x in (parent_ids or []) if str(x).strip()}))
+        explicit_parents = tuple(sorted({str(x).strip() for x in (parent_ids or []) if str(x).strip()}))
+
+        # AURORA BUILD 646 GENEALOGY-TO-EVOLUTION CLOSURE DIRECTIVE,
+        # Requirement 2.2/2.3: when the caller can supply Aurora's real
+        # operational lineage (function_lineage) and did not explicitly
+        # supply parent_ids, acquire real evolutionary ancestry from prior
+        # ACCEPTED mutations against the same target rather than starting
+        # from a bare generation-1 proposal. Explicit parent_ids, when
+        # given, are never overridden. Absence of any prior evidence is
+        # left as-is (empty parents, generation 1) -- nothing is invented.
+        acquired_ancestry = None
+        lineage_pressure = None
+        parents = explicit_parents
+        if function_lineage is not None:
+            try:
+                from aurora_internal.aurora_evolutionary_ancestry_bridge import (
+                    acquire_ancestry_for_target, auto_parent_ids, lineage_scoped_pressure,
+                )
+                acquired_ancestry = acquire_ancestry_for_target(
+                    function_lineage=function_lineage,
+                    mutation_lineage=self._mutation_lineage,
+                    target_files=tfiles,
+                    repo_root=self.repo_root,
+                )
+                if not explicit_parents:
+                    parents = tuple(sorted(auto_parent_ids(acquired_ancestry, explicit_parents)))
+                # Requirement 4.1: repeated failure among the target's
+                # operational DESCENDANTS is scoped evidence too, not just
+                # exact-file rejections -- kept as its own decomposable
+                # evidence dict (Phase 9), never collapsed into a decision.
+                lineage_pressure = lineage_scoped_pressure(
+                    function_lineage=function_lineage,
+                    mutation_lineage=self._mutation_lineage,
+                    target_files=tfiles,
+                    repo_root=self.repo_root,
+                )
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_code_evolution_chamber.py:propose_mutation.ancestry",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "propose_mutation", "source_file": "aurora_internal/aurora_code_evolution_chamber.py"},
+                )
+                acquired_ancestry = None
+                lineage_pressure = None
+
         raw = f"{name}|{','.join(sorted(cset))}|{','.join(tfiles)}|{','.join(parents)}|{time.time_ns()}"
         mutation_id = "CMUT:" + hashlib.sha1(raw.encode("utf-8")).hexdigest()[:12]
         payload = dict(meta or {})
@@ -640,12 +687,21 @@ class CodeEvolutionChamber:
         payload.setdefault("constraint_combo_id", combo or "none")
         payload.setdefault("operation_lineage_id", lineage_id)
         payload.setdefault("parent_lineage_ids", list(parents))
+        payload.setdefault("explicit_parent_ids", list(explicit_parents))
         parent_gens = [
             int((self._mutation_lineage.get(pid, {}) or {}).get("generation", 1) or 1)
             for pid in parents
         ]
         generation = max(parent_gens) + 1 if parent_gens else 1
         payload.setdefault("lineage_generation", int(generation))
+        if acquired_ancestry is not None:
+            # Requirement 2.1: kept as a separate, richer view rather than
+            # collapsed into parent_ids -- operational ancestry, constraint
+            # signature, descendant fan-out, and rejected-attempt history
+            # all remain independently inspectable.
+            payload.setdefault("acquired_operational_ancestry", acquired_ancestry.to_dict())
+        if lineage_pressure is not None:
+            payload.setdefault("lineage_scoped_pressure", lineage_pressure)
         return CodeMutationTrace(
             mutation_id=mutation_id,
             name=str(name),
@@ -736,6 +792,13 @@ class CodeEvolutionChamber:
             "relief": relief.to_dict(),
             "timestamp": float(time.time()),
             "history": effective_history,
+            # AURORA BUILD 646 GENEALOGY-TO-EVOLUTION CLOSURE DIRECTIVE,
+            # Requirement 2.2: without this, acquire_ancestry_for_target()
+            # (aurora_internal/aurora_evolutionary_ancestry_bridge.py) has
+            # no way to find prior accepted/rejected mutations against the
+            # same target files -- additive field, does not change any
+            # existing consumer of this dict.
+            "target_files": list(getattr(trace, "target_files", tuple()) or tuple()),
         }
         self._mutation_lineage[str(trace.mutation_id)] = lineage_payload
         for pid in lineage_payload["parents"]:
