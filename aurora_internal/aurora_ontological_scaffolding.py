@@ -71,6 +71,14 @@ from collections import defaultdict, deque
 # ============================================================================
 
 from aurora_internal.aurora_noncomp_registry import AXIS_NC_DIM
+# FIX-A010 (Sunni & Cael, comprehension pressure test follow-up, build 650):
+# OntologicalWeb is the actual relation-typing surface and, until now, was
+# the only major comprehension subsystem NOT WarpCapable -- ExpressionPerceptionEngine
+# (representation discovery) and AuroraRecursiveCausalReasoningWaveform both
+# have a real gap-detection/trial/promotion pathway; relation-typing had none
+# at any layer. This import wires the SAME existing mixin onto this class.
+# Plumbing only -- see class docstring below for what is and is not decided here.
+from aurora_warp_protocol import WarpCapable, CoverageGap, WarpComponent
 
 from foundational_contract import (
     ExistenceMode, OntologicalClaim, OntologicalViolation, FoundationalContract
@@ -125,6 +133,76 @@ RELATION_DEPTH_WEIGHTS = {
 }
 
 
+# FIX-A010: bridges the already-canonical X/T/N/B/A axis definitions
+# (declared once in aurora_constraint_semantic_continuity.py: X=existence/
+# admissibility, T=continuity/causality, N=pressure/purpose/change,
+# B=boundary/structure, A=agency/selection/understanding) onto the
+# already-existing RelationType vocabulary, using each type's own authored
+# description comment above as the basis for which roots it occupies. This
+# is a translation between two ontologies that already exist in the
+# codebase, not a new interpretation of what any relation type means.
+# RELATED_TO is deliberately flat/undifferentiated -- it is the generic
+# catch-all, and staying weak on every axis is exactly why AxisCoverageChecker
+# should be able to register a persistent gap when live data carries a
+# strong signal RELATED_TO cannot structurally account for.
+RELATION_TYPE_AXIS_PROFILES: Dict["RelationType", Dict[str, float]] = {
+    RelationType.CAUSES:      {"X": 0.15, "T": 0.55, "N": 0.55, "B": 0.15, "A": 0.20},
+    RelationType.IMPLIES:     {"X": 0.15, "T": 0.30, "N": 0.50, "B": 0.55, "A": 0.20},
+    RelationType.PRECEDES:    {"X": 0.10, "T": 0.70, "N": 0.20, "B": 0.15, "A": 0.10},
+    RelationType.ENABLES:     {"X": 0.15, "T": 0.20, "N": 0.55, "B": 0.15, "A": 0.50},
+    RelationType.CONTRASTS:   {"X": 0.20, "T": 0.10, "N": 0.15, "B": 0.65, "A": 0.15},
+    RelationType.OPPOSITE_OF: {"X": 0.20, "T": 0.10, "N": 0.10, "B": 0.70, "A": 0.10},
+    RelationType.IS_A:        {"X": 0.55, "T": 0.10, "N": 0.10, "B": 0.50, "A": 0.10},
+    RelationType.HAS_A:       {"X": 0.50, "T": 0.10, "N": 0.15, "B": 0.45, "A": 0.10},
+    RelationType.PART_OF:     {"X": 0.50, "T": 0.10, "N": 0.15, "B": 0.50, "A": 0.10},
+    RelationType.INSTANCE_OF: {"X": 0.55, "T": 0.10, "N": 0.10, "B": 0.40, "A": 0.10},
+    RelationType.CONTEXT_OF:  {"X": 0.35, "T": 0.15, "N": 0.20, "B": 0.45, "A": 0.15},
+    RelationType.RELATED_TO:  {"X": 0.20, "T": 0.20, "N": 0.20, "B": 0.20, "A": 0.20},
+}
+
+# FIX-A011: how close a role-pair's axis signal must be (cosine) to an
+# existing relation type's profile to be SELECTED as that type, rather than
+# falling through to RELATED_TO + a registered WARP gap. Set below the
+# stricter COVERAGE_THRESHOLD (0.82, used elsewhere to decide whether a
+# wholly NEW type is warranted) because role-pair signals are coarse by
+# construction -- this bar only decides among the 12 types that already
+# exist, it never blocks new-type discovery.
+_RELATION_SELECTION_THRESHOLD = 0.70
+
+# FIX-A013: how many times a (signature, type) pairing must have been
+# selected before its failure rate is trusted enough to discount future
+# selection or escalate to WARP pressure -- guards against one unlucky
+# early reconciliation looking like a pattern.
+_SELECTION_FAILURE_MIN_USES = 3
+# FIX-A013: aggregated failure rate (failures / uses) for a (signature,
+# type) pairing above which it counts as a genuine recurring gap, not
+# noise -- deliberately below 1.0 since a pairing that's right most of the
+# time but wrong sometimes shouldn't need to be perfect to keep being used.
+_SELECTION_FAILURE_RATE_THRESHOLD = 0.5
+
+
+def _role_pair_axis_signal(r1: str, r2: str) -> Dict[str, float]:
+    """FIX-A010: the mechanical axis reading of a (role1, role2) pair for
+    coverage-checking purposes. Same X=entity/existence, A=agency/action,
+    B=boundary/distinction bridging RELATION_TYPE_AXIS_PROFILES already
+    uses -- not a new mapping, the same one applied to the input side
+    instead of the relation-type side.
+    """
+    weight = {"X": 0.2, "T": 0.2, "N": 0.2, "B": 0.2, "A": 0.2}
+    for role in (r1, r2):
+        if role == "noun":
+            weight["X"] += 0.25
+        elif role == "verb":
+            weight["A"] += 0.25
+            weight["N"] += 0.1
+        elif role == "adjective":
+            weight["B"] += 0.25
+        elif role == "adverb":
+            weight["N"] += 0.2
+    total = sum(weight.values()) or 1.0
+    return {k: v / total for k, v in weight.items()}
+
+
 # ============================================================================
 # SECTION 2: SEMANTIC NODE — Rich concept representation
 # ============================================================================
@@ -150,6 +228,14 @@ class SemanticRelation:
     confidence: float = 0.5   # 0-1 how confident Aurora is in this relation
     source_of_knowledge: str = "inferred"  # "seed", "inferred", "researched", "conversation"
     timestamp: float = field(default_factory=time.time)
+    # FIX-A013 (Sunni & Cael): which role-pair signature selected this
+    # relation's type, so a later reconciliation (FIX-A012) can attribute a
+    # failure back to the SELECTION PATTERN that produced it, not just this
+    # one relation -- letting failures aggregate across every entity pair
+    # that ever shared the same structural signature, which is the whole
+    # point: a gap in understanding shows up as a pattern across many
+    # different experiences, not as one bad relation.
+    selection_signature: str = ""
 
     def depth_contribution(self) -> float:
         """How much this relation contributes to ontological depth."""
@@ -578,7 +664,7 @@ class ScaffoldedTemplate:
 # SECTION 4: ONTOLOGICAL WEB — The relational graph of all concepts
 # ============================================================================
 
-class OntologicalWeb:
+class OntologicalWeb(WarpCapable):
     """
     The central knowledge graph connecting all of Aurora's concepts.
 
@@ -592,12 +678,25 @@ class OntologicalWeb:
       - Inference (Aurora detects patterns in co-occurrence)
       - Research (Aurora actively looks up definitions and relations)
       - Consolidation (periodic strengthening of connections)
+
+    FIX-A010: WarpCapable as of build 650. This gives relation-typing the
+    same gap-detection/trial/promotion organ ExpressionPerceptionEngine and
+    AuroraRecursiveCausalReasoningWaveform already have. What this DOES:
+    lets a persistent structural mismatch (live axis signal a generic
+    RELATED_TO/ENABLES fallback can't account for) register as a real WARP
+    gap and spawn a trial component. What this explicitly does NOT do:
+    decide what a new relation type means, author a verb->RelationType
+    lookup table, or pre-select which of the 12 existing types resolves a
+    gap. That stays undecided by this change -- WarpGenerator's existing
+    synthesis path handles it exactly as it does for every other
+    WarpCapable level, with zero special-casing added here.
     """
 
     MAX_NODES = 5000      # Maximum concepts in the web
     MAX_RELATIONS = 20000  # Maximum connections
 
     def __init__(self):
+        self._init_warp()
         self.nodes: Dict[str, SemanticNode] = {}
         self.relations: Dict[str, SemanticRelation] = {}
 
@@ -617,6 +716,69 @@ class OntologicalWeb:
         self.total_relations_created = 0
         self.total_research_cycles = 0
         self.total_consolidations = 0
+
+        # FIX-A010: trial relation-type components, keyed by component_id.
+        # Mechanical bookkeeping only -- what a trial IS (what axis profile,
+        # what parentage) comes from WarpGenerator via the base class, not
+        # authored here.
+        self._relation_trial_usage: Dict[str, Dict[str, int]] = {}
+        # FIX-A013: signature -> type_value -> {"uses","failures"}. Aggregates
+        # across every entity pair that has ever shared a given structural
+        # signature, so a recurring selection mistake shows up as a pattern
+        # the moment it recurs anywhere, not just on the entities that first
+        # revealed it.
+        self._selection_outcomes: Dict[str, Dict[str, Dict[str, int]]] = {}
+
+    # ================================================================
+    # WARP SURFACE (FIX-A010) — plumbing only, see class docstring
+    # ================================================================
+
+    def _warp_level_name(self) -> str:
+        return "ontological_relation_typing"
+
+    def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:
+        """Every currently-known relation type's axis profile, plus any
+        already-promoted trial types. Mechanical translation table (see
+        RELATION_TYPE_AXIS_PROFILES above) -- adds nothing beyond what's
+        already declared there.
+        """
+        profiles: Dict[str, Dict[str, float]] = {
+            f"RELTYPE:{rtype.value}": dict(profile)
+            for rtype, profile in RELATION_TYPE_AXIS_PROFILES.items()
+        }
+        for comp_id, comp in self._warp_promoted.items():
+            profiles[str(comp_id)] = dict(comp.axis_profile)
+        return profiles
+
+    def _integrate_warp(self, component: "WarpComponent") -> None:
+        """Register a new trial relation-type-shaped component. Records
+        that it exists and starts its usage counters at zero -- does not
+        assign it meaning or wire it into add_relation()'s type choice;
+        that connection is the next step, not this one.
+        """
+        self._relation_trial_usage[component.component_id] = {"uses": 0, "successes": 0}
+
+    def _score_trial(self, component: "WarpComponent") -> float:
+        """Mirrors AuroraRecursiveCausalReasoningWaveform._score_trial's own
+        shape: untested trials sit at a neutral floor rather than an
+        assumed pass or fail; scored trials move on observed usage/success
+        ratio only, once something downstream actually starts using them.
+        """
+        usage = self._relation_trial_usage.get(component.component_id) or {}
+        uses = max(0, int(usage.get("uses", 0) or 0))
+        if uses <= 0:
+            return 0.25
+        successes = max(0, int(usage.get("successes", 0) or 0))
+        return max(0.0, min(1.0, 0.35 + 0.55 * (successes / max(1, uses))))
+
+    def _dissolve_warp(self, component_id: str) -> None:
+        self._relation_trial_usage.pop(str(component_id), None)
+
+    def _warp_params(self, gap: "CoverageGap", parent_ids: List[str]) -> Dict[str, Any]:
+        return {
+            "source": str(getattr(gap, "source", "") or ""),
+            "parent_ids": list(parent_ids or []),
+        }
 
     # ================================================================
     # NODE MANAGEMENT
@@ -714,10 +876,19 @@ class OntologicalWeb:
                      relation_type: RelationType,
                      strength: float = 0.5,
                      confidence: float = 0.5,
-                     knowledge_source: str = "inferred") -> Optional[SemanticRelation]:
+                     knowledge_source: str = "inferred",
+                     selection_signature: str = "") -> Optional[SemanticRelation]:
         """
         Create a typed connection between two concepts.
         If both nodes exist, the relation is created and indexed.
+
+        selection_signature (FIX-A013): optional role-pair signature that
+        chose relation_type, if it came through _select_relation_type().
+        Stored so a later reconciliation can attribute a failure back to
+        the selection pattern, not just this one relation. Empty for
+        relations created any other way (seed data, apply_correction,
+        etc.) -- those simply aren't eligible for pattern-level feedback,
+        by design, not by omission.
         """
         if source not in self.nodes or target not in self.nodes:
             return None
@@ -742,6 +913,8 @@ class OntologicalWeb:
             # sourced relation stays "correction", it doesn't revert.
             if knowledge_source == "correction":
                 rel.source_of_knowledge = "correction"
+            if selection_signature and not rel.selection_signature:
+                rel.selection_signature = selection_signature
             # Directive NC2, ratified 2026-08-03 (Sunni & Cael): a
             # strengthen-only pass must still cascade through both
             # endpoints' depth/priority recalculation, or
@@ -761,7 +934,8 @@ class OntologicalWeb:
             relation_type=relation_type,
             strength=strength,
             confidence=confidence,
-            source_of_knowledge=knowledge_source
+            source_of_knowledge=knowledge_source,
+            selection_signature=selection_signature,
         )
 
         self.relations[rel_id] = relation
@@ -912,6 +1086,99 @@ class OntologicalWeb:
     # INFERENCE ENGINE — Detect implicit relations
     # ================================================================
 
+    def _select_relation_type(self, r1: str, r2: str, *, source: str) -> Tuple[RelationType, str]:
+        """FIX-A011/FIX-A013 (Sunni & Cael): nearest-fit selection over
+        RELATION_TYPE_AXIS_PROFILES, now discounted by accumulated
+        real-world failure for this exact (role-pair signature, type)
+        combination -- see register_selection_failure(). A type that keeps
+        getting contradicted for a given structural signature, across
+        however many different entity pairs that signature has ever shown
+        up on, becomes progressively less likely to be picked again for
+        that signature. This is aggregated evidence changing future
+        selection, not a hand-picked replacement rule: nothing here decides
+        what SHOULD be picked instead, only that this pairing has stopped
+        earning trust. Returns (chosen_type, signature) -- callers pass the
+        signature to add_relation() so a future failure can be attributed
+        back to this exact selection pattern.
+        """
+        from aurora_warp_protocol import AxisCoverageChecker
+        signature = "+".join(sorted((r1, r2)))
+        signal = _role_pair_axis_signal(r1, r2)
+        checker = AxisCoverageChecker({
+            f"RELTYPE:{rtype.value}": dict(profile)
+            for rtype, profile in RELATION_TYPE_AXIS_PROFILES.items()
+            if rtype is not RelationType.RELATED_TO
+        })
+        d15 = checker._ensure_full_dims(signal)
+        raw_scores = {cid: checker.cosine(profile, d15) for cid, profile in checker._components.items()}
+
+        outcomes = self._selection_outcomes.get(signature, {})
+        adjusted_scores: Dict[str, float] = {}
+        for cid, score in raw_scores.items():
+            type_value = cid.split("RELTYPE:", 1)[-1]
+            stats = outcomes.get(type_value, {})
+            uses = int(stats.get("uses", 0) or 0)
+            failures = int(stats.get("failures", 0) or 0)
+            if uses >= _SELECTION_FAILURE_MIN_USES:
+                failure_rate = failures / max(1, uses)
+                score = score * max(0.15, 1.0 - failure_rate)
+            adjusted_scores[cid] = score
+
+        best_id = max(adjusted_scores, key=lambda k: adjusted_scores[k]) if adjusted_scores else ""
+        best_score = adjusted_scores.get(best_id, 0.0)
+
+        if best_score >= _RELATION_SELECTION_THRESHOLD:
+            picked_value = best_id.split("RELTYPE:", 1)[-1]
+            for rtype in RelationType:
+                if rtype.value == picked_value:
+                    bucket = self._selection_outcomes.setdefault(signature, {}).setdefault(
+                        rtype.value, {"uses": 0, "failures": 0}
+                    )
+                    bucket["uses"] = int(bucket.get("uses", 0) or 0) + 1
+                    return rtype, signature
+
+        try:
+            self.check_and_extend(signal, source=source, tick=self.total_relations_created)
+        except Exception:
+            pass
+        return RelationType.RELATED_TO, signature
+
+    def register_selection_failure(self, relation: "SemanticRelation") -> None:
+        """FIX-A013: called when a reconciliation (FIX-A012) contradicts a
+        relation. Attributes the failure back to whatever (signature, type)
+        pattern selected it -- not to the specific entities involved -- so
+        the same underlying gap shows up as a pattern the moment it recurs
+        on a DIFFERENT entity pair, not just this one. When a pattern's
+        aggregated failure rate crosses the bar (and it has been tried
+        enough times to mean something), registers real WARP pressure on
+        that signature's own axis signal -- the same mechanism FIX-A010
+        already wired, just fed by lived outcome instead of a static
+        one-shot coverage check.
+        """
+        signature = str(getattr(relation, "selection_signature", "") or "")
+        type_value = str(getattr(relation.relation_type, "value", "") or "")
+        if not signature or not type_value:
+            return
+        bucket = self._selection_outcomes.setdefault(signature, {}).setdefault(
+            type_value, {"uses": 0, "failures": 0}
+        )
+        bucket["failures"] = int(bucket.get("failures", 0) or 0) + 1
+        uses = int(bucket.get("uses", 0) or 0)
+        failures = int(bucket.get("failures", 0) or 0)
+        if uses < _SELECTION_FAILURE_MIN_USES:
+            return
+        if (failures / max(1, uses)) < _SELECTION_FAILURE_RATE_THRESHOLD:
+            return
+        try:
+            r1, r2 = (signature.split("+", 1) + [""])[:2]
+            self.check_and_extend(
+                _role_pair_axis_signal(r1, r2),
+                source=f"register_selection_failure:{signature}:{type_value}",
+                tick=self.total_relations_created,
+            )
+        except Exception:
+            pass
+
     def infer_relations_from_context(self, words: List[str],
                                      context_tone: str = "neutral"):
         """
@@ -931,19 +1198,23 @@ class OntologicalWeb:
         # Reuses those same two proven patterns here, order-independent
         # (this loop's pairs are unordered, unlike the adjacency loop
         # below) -- no new relation types invented.
+        # FIX-A011 (Sunni & Cael): the hand-authored role-pair rule table
+        # that lived here (verb+noun -> ENABLES, adjective+noun -> CONTEXT_OF,
+        # everything else -> RELATED_TO, unconditionally) is replaced by
+        # _select_relation_type()'s nearest-fit selection over the same
+        # already-declared axis-profile table -- see that method's
+        # docstring. No pair-specific case is decided in this loop anymore.
         for i, w1 in enumerate(known):
             for w2 in known[i+1:]:
                 r1, r2 = self.nodes[w1].role, self.nodes[w2].role
-                if {r1, r2} == {"verb", "noun"}:
-                    rtype = RelationType.ENABLES
-                elif {r1, r2} == {"adjective", "noun"}:
-                    rtype = RelationType.CONTEXT_OF
-                else:
-                    rtype = RelationType.RELATED_TO
+                rtype, _rtype_sig = self._select_relation_type(
+                    r1, r2, source=f"infer_relations_from_context:{r1}+{r2}"
+                )
                 self.add_relation(
                     w1, w2, rtype,
                     strength=0.2, confidence=0.3,
-                    knowledge_source="co-occurrence"
+                    knowledge_source="co-occurrence",
+                    selection_signature=_rtype_sig,
                 )
 
         # Adjacent words in known list get stronger connections
@@ -952,20 +1223,17 @@ class OntologicalWeb:
             node1 = self.nodes[w1]
             node2 = self.nodes[w2]
 
-            # Verb + Noun → might be CAUSES or ENABLES
-            if node1.role == "verb" and node2.role == "noun":
-                self.add_relation(
-                    w1, w2, RelationType.ENABLES,
-                    strength=0.3, confidence=0.25,
-                    knowledge_source="adjacency"
+            # FIX-A011: adjacency also routes through the same selector now
+            # rather than only recognizing verb->noun / adjective->noun.
+            if node1.role in ("verb", "adjective") or node2.role in ("verb", "adjective") or node1.role != node2.role:
+                _adj_rtype, _adj_sig = self._select_relation_type(
+                    node1.role, node2.role, source=f"infer_relations_from_context:adjacency:{node1.role}+{node2.role}"
                 )
-
-            # Adjective + Noun → CONTEXT_OF
-            if node1.role == "adjective" and node2.role == "noun":
                 self.add_relation(
-                    w1, w2, RelationType.CONTEXT_OF,
-                    strength=0.35, confidence=0.3,
-                    knowledge_source="adjacency"
+                    w1, w2, _adj_rtype,
+                    strength=0.3, confidence=0.25,
+                    knowledge_source="adjacency",
+                    selection_signature=_adj_sig,
                 )
 
     def infer_taxonomy_from_definitions(self, word: str):

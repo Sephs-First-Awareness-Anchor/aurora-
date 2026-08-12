@@ -33309,6 +33309,57 @@ def _run_live_response_turn(
     }
 
 
+# FIX-A009 (Sunni & Cael, comprehension pressure test calibration follow-up,
+# build 650): the confidence pipeline had no check anywhere for whether the
+# text about to be delivered is itself new -- multiple scoring paths
+# (relation_alignment's noun-overlap check, _build_comprehension_response's
+# understanding_accuracy tempering) score WHETHER the response addresses the
+# current turn's relation, but none of them check WHETHER the response is
+# actually a recycled prior turn rather than a real answer. Confirmed directly:
+# a response that is byte-identical to a user turn from several exchanges ago
+# can still score high relation_alignment, because the recycled text happens
+# to share the current turn's nouns by coincidence of vocabulary, not because
+# it addresses anything new. This is a purely mechanical check -- "is this the
+# same text as something already said" -- not a judgment about what a GOOD
+# response looks like, so it stays a hard confidence cap, not a rewrite.
+def _delivered_text_echoes_prior_turn(text: str, systems: Dict[str, Any],
+                                       *, lookback: int = 6,
+                                       ratio_threshold: float = 0.92) -> Dict[str, Any]:
+    """Return {'echoed': True, 'matched_raw_text': ..., 'ratio': ...} if
+    `text` is a near-verbatim match of one of the last `lookback` prior
+    conversational turns' raw input. Returns {'echoed': False} otherwise,
+    including on any lookup failure -- silence, not a false positive, is the
+    safe failure mode for a confidence-capping check.
+    """
+    try:
+        clean = re.sub(r"\s+", " ", str(text or "")).strip().lower()
+        if len(clean) < 12:
+            return {"echoed": False}
+        rcrw = systems.get("recursive_causal_waveform") if isinstance(systems, dict) else None
+        cycles = list(getattr(rcrw, "_cycles", None) or [])
+        if not cycles:
+            return {"echoed": False}
+        # The current turn's own cycle is the most recent entry (appended by
+        # prepare_semantic_state during comprehension, before this response
+        # was generated) -- exclude it, then look back over prior turns only.
+        prior = cycles[:-1][-lookback:]
+        import difflib
+        for cyc in reversed(prior):
+            prior_raw = re.sub(r"\s+", " ", str(cyc.get("raw_input") or "")).strip().lower()
+            if len(prior_raw) < 12:
+                continue
+            ratio = difflib.SequenceMatcher(None, clean, prior_raw).ratio()
+            if ratio >= ratio_threshold:
+                return {
+                    "echoed": True,
+                    "matched_raw_text": cyc.get("raw_input", ""),
+                    "ratio": round(ratio, 4),
+                }
+        return {"echoed": False}
+    except Exception:
+        return {"echoed": False}
+
+
 def process_external_user_turn(
     systems: Dict[str, Any],
     user_text: str,
@@ -33541,6 +33592,23 @@ def process_external_user_turn(
         )
         if isinstance(result, dict) and runtime_contract:
             result["runtime_contract"] = dict(runtime_contract)
+        # FIX-A009: run the echo check before ANY downstream system
+        # (system_introspection, communication_emergence, recursive_causal_
+        # waveform, reflective_readdressing) reads resp_A.confidence below --
+        # all of them read it straight off this same object, so correcting it
+        # here once propagates everywhere it matters instead of requiring
+        # every consumer to duplicate the check.
+        if isinstance(result, dict):
+            _fa009_resp = result.get("resp_A")
+            _fa009_text = str(getattr(_fa009_resp, "content", "") or "")
+            if _fa009_resp is not None and _fa009_text:
+                _fa009_echo = _delivered_text_echoes_prior_turn(_fa009_text, systems)
+                if _fa009_echo.get("echoed"):
+                    try:
+                        _fa009_resp.confidence = min(float(getattr(_fa009_resp, "confidence", 0.0) or 0.0), 0.2)
+                    except Exception:
+                        pass
+                    result["echoed_prior_input"] = _fa009_echo
         if _si_episode_id and _si_bridge is not None and hasattr(_si_bridge, "finish_episode"):
             try:
                 _si_resp = result.get("resp_A") if isinstance(result, dict) else None
