@@ -4911,6 +4911,17 @@ class ExpressionPerceptionEngine(WarpCapable):
     """
 
     def __init__(self, contract: Optional[FoundationalContract] = None, state_dir: Optional[str] = None):
+        # FIX-A007 (Sunni & Cael, comprehension pressure test post-mortem):
+        # this class declares `class ExpressionPerceptionEngine(WarpCapable)`
+        # but never called WarpCapable._init_warp(), so _warp_trials/
+        # _warp_promoted never existed until observe_encoding()'s lazy
+        # `if not hasattr(self, "_warp_trials"): self._init_warp()` guard
+        # happened to fire first. Any caller that reached evaluate_warp_trials()
+        # (or warp_status(), representation_diagnostics()) before that lazy
+        # path ran crashed with AttributeError. Init here, unconditionally,
+        # like every other WarpCapable host (AuroraRecursiveCausalReasoningWaveform
+        # included) already does in its own __init__.
+        self._init_warp()
         self.contract = contract or FoundationalContract()
         self._state_dir = os.path.abspath(state_dir or os.path.join(os.path.dirname(os.path.abspath(__file__)), "aurora_state"))
         self._repr_state_path = os.path.join(self._state_dir, "representations.json")
