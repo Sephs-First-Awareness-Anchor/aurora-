@@ -234,6 +234,20 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    "startUiObservationSession" -> {
+                        AuroraService.startUiObservationSession()
+                        result.success(null)
+                    }
+                    "markUiTransition" -> {
+                        val transition = call.argument<String>("transition") ?: ""
+                        AuroraService.markUiTransition(transition)
+                        result.success(null)
+                    }
+                    "stopUiObservationSession" -> {
+                        AuroraService.stopUiObservationSession { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     else             -> result.notImplemented()
                 }
             }

@@ -207,6 +207,63 @@ class AuroraService : Service() {
                 catch (_: Exception) {}
             }
         }
+
+        // ── UI observation session journal (diagnostics) ──────────────────
+        // Sunni & Cael, "Autonomous Development Integrity" pass: a bounded,
+        // per-turn record of one conversational interaction -- timeline.jsonl
+        // + real screenshots at meaningful transitions -- built on top of
+        // ScreenObserverService's existing accessibility access rather than
+        // whole-device MediaProjection (which needs fresh per-session user
+        // consent and is far heavier than a diagnostic journal needs).
+
+        fun startUiObservationSession() {
+            scope?.launch {
+                try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr("start_ui_observation_session")
+                } catch (_: Exception) {}
+            }
+        }
+
+        /** Records this transition in the active session's timeline AND
+         * triggers a real screenshot capture for it (best-effort -- a
+         * ScreenObserverService instance may not be running if the user
+         * hasn't granted the accessibility permission, in which case the
+         * screenshot is silently skipped but the timeline event still
+         * lands). */
+        fun markUiTransition(transition: String) {
+            scope?.launch {
+                try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr(
+                            "record_ui_timeline_event",
+                            JSONObject().put("kind", "ui_transition").put("transition", transition).toString()
+                        )
+                } catch (_: Exception) {}
+            }
+            ScreenObserverService.captureScreenshot(transition)
+        }
+
+        /** Called by ScreenObserverService once a takeScreenshot() capture
+         * succeeds and has been encoded to PNG. */
+        fun provideUiScreenshot(pngBytes: ByteArray, transition: String) {
+            scope?.launch(Dispatchers.IO) {
+                try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr("record_ui_screenshot", pngBytes, transition)
+                } catch (_: Exception) {}
+            }
+        }
+
+        fun stopUiObservationSession(callback: (String) -> Unit) {
+            scope?.launch {
+                val json = try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr("stop_ui_observation_session").toString()
+                } catch (_: Exception) { "{}" }
+                withContext(Dispatchers.Main) { callback(json) }
+            }
+        }
     }
 
     // ── Hardware body sensors ─────────────────────────────────────────────────
@@ -392,17 +449,29 @@ class AuroraService : Service() {
             // covers genealogy, RCRW, Sensory Crystal, dimensional physics,
             // curiosity, and the Dream substrate -- systems that could previously
             // be silently None on a "ready" boot with no signal to Flutter at all.
+            //
+            // Sunni & Cael, "Autonomous Development Integrity" pass, blocker 6:
+            // record_boot_health() (not the bare getter) -- same live JSON
+            // payload, but also persists a durable last_boot_health.json record
+            // in the state directory with a timestamp and a boot_count. Needed
+            // because this exact code path also runs from BootCompletedReceiver
+            // after a device reboot, with NO Activity/UI running to receive this
+            // eventSink emission at all -- without a durable record, a degraded
+            // or fatal headless boot left literally no trace beyond an ephemeral
+            // Log.w, gone the moment logcat rotated. There was no way to answer
+            // "did she actually restart, and was she alive when she did" after
+            // the fact.
             var healthObj: JSONObject? = null
             if (!isError) {
                 try {
-                    val healthJson = bridge.callAttr("get_mobile_developmental_health").toString()
+                    val healthJson = bridge.callAttr("record_boot_health").toString()
                     healthObj = JSONObject(healthJson)
                     val overall = healthObj.optString("overall", "unknown")
                     if (overall != "healthy") {
                         Log.w(TAG, "Mobile developmental health: $overall — $healthJson")
                     }
                 } catch (e: Exception) {
-                    Log.w(TAG, "get_mobile_developmental_health failed: ${e.message}")
+                    Log.w(TAG, "record_boot_health failed: ${e.message}")
                 }
             }
 

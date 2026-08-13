@@ -111,3 +111,84 @@ def test_health_check_never_raises_on_none_systems(monkeypatch):
 
     payload = json.loads(bridge.get_mobile_developmental_health())
     assert payload["overall"] == "fatal"
+
+
+# ── record_boot_health(): durable boot record (Autonomous Development ─────
+# ── Integrity pass, blocker 6) ─────────────────────────────────────────────
+
+def test_record_boot_health_returns_the_same_payload_as_the_live_getter(monkeypatch, tmp_path):
+    systems = _full_systems()
+    systems["state_dir"] = str(tmp_path)
+    bridge = _bridge()
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    returned = json.loads(bridge.record_boot_health())
+    assert returned["overall"] == "healthy"
+
+
+def test_record_boot_health_persists_a_durable_record(monkeypatch, tmp_path):
+    """The exact gap this fixes: a headless BOOT_COMPLETED restart with no
+    Flutter UI running previously left NO trace beyond an ephemeral
+    Android Log.w. This must be readable later, independent of whether
+    anyone was watching logcat at the moment it happened."""
+    systems = _full_systems()
+    systems["genealogy"] = None
+    systems["state_dir"] = str(tmp_path)
+    bridge = _bridge()
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    bridge.record_boot_health()
+
+    record_path = tmp_path / "last_boot_health.json"
+    assert record_path.exists()
+    record = json.loads(record_path.read_text())
+    assert record["overall"] == "degraded"
+    assert "genealogy" in record["degraded_missing"]
+    assert isinstance(record["timestamp"], (int, float))
+    assert record["boot_count"] == 1
+
+
+def test_record_boot_health_increments_boot_count_across_restarts(monkeypatch, tmp_path):
+    systems = _full_systems()
+    systems["state_dir"] = str(tmp_path)
+    bridge = _bridge()
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    bridge.record_boot_health()
+    bridge.record_boot_health()
+    bridge.record_boot_health()
+
+    record = json.loads((tmp_path / "last_boot_health.json").read_text())
+    assert record["boot_count"] == 3, (
+        "boot_count must accumulate across restarts so a later inspection "
+        "can tell 'first boot ever' from 'she's restarted N times'"
+    )
+
+
+def test_record_boot_health_still_returns_payload_when_persistence_fails(monkeypatch, tmp_path):
+    """A read-only or missing state directory must never prevent the LIVE
+    health signal from reaching Flutter -- only the durable record is
+    allowed to silently fail."""
+    systems = _full_systems()
+    # A path that cannot be created as a directory (its parent is a file).
+    blocker_file = tmp_path / "not_a_directory"
+    blocker_file.write_text("x")
+    systems["state_dir"] = str(blocker_file / "nested")
+    bridge = _bridge()
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    returned = json.loads(bridge.record_boot_health())
+    assert returned["overall"] == "healthy", "the live payload must still be returned even if persistence fails"
+
+
+def test_record_boot_health_never_raises_on_none_systems(monkeypatch, tmp_path):
+    bridge = _bridge()
+    monkeypatch.setattr(bridge, "_systems", None, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", False, raising=False)
+
+    payload = json.loads(bridge.record_boot_health())
+    assert payload["overall"] == "fatal"
