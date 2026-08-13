@@ -482,6 +482,37 @@ class GenealogyConfig:
     SEMANTIC_PROMOTE_CONFIDENCE: float = 0.65
     SEMANTIC_PROMOTE_MIN_COUNT: int = 24
 
+    # Intact-representation inquiry is activation-bounded.  These are search
+    # budgets, not semantic thresholds: no candidate is declared correct and
+    # no pair receives promotion evidence merely because it was returned.
+    REPRESENTATION_COLLISION_CANDIDATES_PER_ITEM: int = 3
+    REPRESENTATION_COLLISION_MAX_PER_EVENT: int = 12
+    REPRESENTATION_COLLISION_SCAN_PER_ITEM: int = 64
+    REPRESENTATION_COLLISION_HISTORY_MAX: int = 2048
+    REPRESENTATION_RELATION_HISTORY_MAX: int = 16
+
+    # Cross-family ('RI:') complementary-gap inquiry -- native relevance
+    # retrieval bounded the same way exact-signature collision retrieval is
+    # bounded above. These signals rank whether a pair is worth testing;
+    # none of them supplies a concept label or declares success.
+    REPRESENTATION_GAP_CANDIDATES_PER_ITEM: int = 2
+    REPRESENTATION_GAP_MAX_PER_EVENT: int = 6
+    REPRESENTATION_RELEVANCE_BUCKET_SCAN: int = 24
+    REPRESENTATION_RELEVANCE_MAX_BUCKETS: int = 8
+
+    # Staged (RS:) inquiry-to-experiment anti-runaway safeguards. Discovery
+    # and staging remain evidence-inert regardless of these values; they
+    # only bound how often/how long a candidate may occupy a live
+    # consumer's trial slot before it must decay, expire, or go dormant.
+    REPRESENTATION_INQUIRY_STAGES_PER_CYCLE: int = 1
+    REPRESENTATION_INQUIRY_REFRACTORY_CYCLES: int = 8
+    REPRESENTATION_INQUIRY_MAX_ATTEMPTS: int = 4
+    REPRESENTATION_INQUIRY_STAGE_LIFETIME: int = 3
+    REPRESENTATION_INQUIRY_STAGE_HISTORY_MAX: int = 128
+    REPRESENTATION_INQUIRY_EXPERIMENT_HISTORY_MAX: int = 512
+    REPRESENTATION_INQUIRY_PRESSURE_DECAY: float = 0.01
+    REPRESENTATION_INQUIRY_UNHELPFUL_PRESSURE_REDUCTION: float = 0.35
+
     # Representation experiment manager (bounded auto-rescaling search).
     EXPERIMENTS_ENABLED: bool = True
     EXPERIMENT_WINDOW: int = 40
@@ -1204,6 +1235,14 @@ class ConstraintLink:
     # when a link is promoted (_register_link_ability below).
     topology_id: Optional[str] = None
     semantic_variant_id: Optional[str] = None
+    # Cross-generational representational recombination (Build 650 additive
+    # schema).  These fields preserve a second, relational reading alongside
+    # the existing X/T/N/B/A genealogy.  Historical links omit them and remain
+    # fully loadable; metadata is derived lazily when such a link is used as an
+    # intact operand.
+    constraint_basis: Optional[Dict[str, Any]] = None
+    representation_relation: Optional[Dict[str, Any]] = None
+    semantic_identity: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict:
         d = {
@@ -1226,7 +1265,32 @@ class ConstraintLink:
             d["topology_id"] = self.topology_id
         if self.semantic_variant_id is not None:
             d["semantic_variant_id"] = self.semantic_variant_id
+        if self.constraint_basis is not None:
+            d["constraint_basis"] = dict(self.constraint_basis)
+        if self.representation_relation is not None:
+            d["representation_relation"] = dict(self.representation_relation)
+        if self.semantic_identity is not None:
+            d["semantic_identity"] = dict(self.semantic_identity)
         return d
+
+    def current_semantic_value(self, key: str, default: Any = None) -> Any:
+        """Return this node's local semantic value, never an ancestor fossil.
+
+        Older persisted links have no ``semantic_identity`` field.  Their tag
+        order is nevertheless usable: ``_infer_tags`` appends inherited tags
+        first and the newly promoted node's local tags last.  Reverse lookup is
+        therefore the backward-compatible local-value rule.
+        """
+        field_name = str(key or "").rstrip(":")
+        identity = dict(self.semantic_identity or {})
+        if field_name in identity:
+            return identity[field_name]
+        prefix = f"{field_name}:"
+        for raw in reversed(list(self.tags or [])):
+            tag = str(raw)
+            if tag.startswith(prefix):
+                return tag[len(prefix):]
+        return default
 
     def base_cost(self) -> float:
         """Total mean operational cost across all five axes."""
@@ -1250,6 +1314,35 @@ class ConstraintLink:
         links to prefer at any given tick: lower live_score = more viable now.
         """
         return score_from_cost(self.base_cost(), snapshot)
+
+
+def constraint_link_from_dict(data: Dict[str, Any], fallback_id: str = "") -> ConstraintLink:
+    """Backward-compatible inverse of :meth:`ConstraintLink.to_dict`.
+
+    Keeping the additive schema parser beside the model prevents individual
+    boot paths from silently dropping intact-representation metadata.
+    """
+    rec = dict(data or {})
+    stats = dict(rec.get("stats", {}) or {})
+    lid = str(rec.get("id", fallback_id) or fallback_id)
+    return ConstraintLink(
+        id=lid,
+        parents=[str(x) for x in (rec.get("parents", []) or [])],
+        depth=int(rec.get("depth", 1) or 1),
+        created_at_tick=int(rec.get("created_at_tick", 0) or 0),
+        count=int(stats.get("count", 0) or 0),
+        mean_relief={a: float((stats.get("mean_relief", {}) or {}).get(a, 0.0)) for a in AXES},
+        mean_cost={a: float((stats.get("mean_cost", {}) or {}).get(a, 0.0)) for a in AXES},
+        mean_x_risk=float(stats.get("mean_x_risk", 0.0) or 0.0),
+        stdev_relief={a: float((stats.get("stdev_relief", {}) or {}).get(a, 0.0)) for a in AXES},
+        dominant_relief_axis=(str(rec.get("dominant_relief_axis")) if rec.get("dominant_relief_axis") is not None else None),
+        tags=[str(x) for x in (rec.get("tags", []) or [])],
+        topology_id=rec.get("topology_id"),
+        semantic_variant_id=rec.get("semantic_variant_id"),
+        constraint_basis=(dict(rec.get("constraint_basis") or {}) or None),
+        representation_relation=(dict(rec.get("representation_relation") or {}) or None),
+        semantic_identity=(dict(rec.get("semantic_identity") or {}) or None),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1781,6 +1874,40 @@ class ConstraintGenealogyLogger:
         self._coupling_events: int = 0
         self._persistent_pressure_root_ema: float = 0.0
 
+        # Parallel relational genealogy.  _coupling_roots deliberately keeps
+        # its existing constraint-composition aggregation; this registry is
+        # keyed by the ordered stable identities that actually co-activated.
+        self._representation_relations: Dict[str, Dict[str, Any]] = {}
+        self._representation_collisions: Dict[str, Dict[str, Any]] = {}
+        self._active_relation_context: Dict[str, Any] = {}
+        self._representation_index_cache: Dict[str, List[str]] = {}
+        self._representation_index_stamp: Optional[Tuple[int, int, int]] = None
+
+        # Native representational inquiry and experimentation (Sunni & Cael,
+        # reconstructed build-650-fixed-v5 extension). Cross-family relevance
+        # index cache, staged RS: experiments awaiting an actual ordered
+        # co-activation, per-consumer refractory tracking, and bounded
+        # completed-experiment history. All additive to the relational
+        # genealogy above -- no second promotion authority.
+        self._representation_relevance_cache: Dict[str, List[str]] = {}
+        self._representation_relevance_stamp: Optional[Tuple[int, int, int]] = None
+        self._representation_experiment_stages: Dict[str, Dict[str, Any]] = {}
+        self._representation_experiment_history: List[Dict[str, Any]] = []
+        # FIX (Sunni & Cael, Mobile/Multimodal directive Section XXI):
+        # _representation_inquiry_consumer_cycle stores the CONSUMER-CYCLE
+        # number (see _representation_inquiry_consumer_cycle_engagements
+        # below) at which a consumer last successfully staged an inquiry --
+        # NOT a genealogy tick_count, which previously made the refractory
+        # window depend on unrelated system-wide activity rather than how
+        # often the consumer itself was actually engaged.
+        self._representation_inquiry_consumer_cycle: Dict[str, int] = {}
+        # Monotonically increasing per-consumer engagement counter,
+        # incremented once per stage_representation_inquiry() call for that
+        # consumer regardless of whether staging succeeds. This IS the
+        # "actual consumer/RCRW cycle" unit the refractory interval measures.
+        self._representation_inquiry_consumer_cycle_engagements: Dict[str, int] = {}
+        self._last_representation_search: Dict[str, Any] = {}
+
         # Representation experiment tracking.
         self._issue_history: Deque[Dict[str, Any]] = deque(maxlen=2048)
         self._experiment_trials: List[Dict[str, Any]] = []
@@ -1999,6 +2126,62 @@ class ConstraintGenealogyLogger:
                 )
                 pass
 
+        # A representational discrepancy is pressure for inquiry, not proof of
+        # a relation.  Search only around operands active in this event (after
+        # the same lawful rewrite that can expose promoted links), retain a
+        # bounded set of divergent same-basis candidates, and do not forward
+        # any of them into PairStats or promotion unless they later genuinely
+        # co-activate in a trace.
+        _collision_trace = list(trace)
+        if self.cfg.TRACE_REWRITE_ON_PROMOTE and self._links_by_parents:
+            _collision_trace = self.rewrite_trace(_collision_trace)
+        _collision_candidates = self.representation_collision_candidates(
+            _collision_trace,
+            difference_snapshot=difference_snapshot,
+        )
+        _collision_ids = self._record_representation_collisions(_collision_candidates)
+        if _collision_candidates:
+            merged_notes["representation_collision_pressure"] = {
+                "count": len(_collision_candidates),
+                "max_pressure": max(float(c.get("pressure", 0.0) or 0.0) for c in _collision_candidates),
+                "candidates": [
+                    {
+                        "collision_id": str(c.get("collision_id", "")),
+                        "constraint_signature": str(c.get("constraint_signature", "0")),
+                        "representation_ids": list(c.get("representation_ids", []) or []),
+                        "generation_span": int(c.get("generation_span", 0) or 0),
+                        "pressure": float(c.get("pressure", 0.0) or 0.0),
+                        "evidence": dict(c.get("evidence", {}) or {}),
+                    }
+                    for c in _collision_candidates
+                ],
+            }
+
+        # Bounded cross-family ('RI:') complementary-gap discovery, mirroring
+        # the exact-signature collision discovery above around the same
+        # actually-active operands. Discovery remains evidence-inert.
+        _gap_candidates = self.representation_gap_candidates(
+            _collision_trace,
+            difference_snapshot=difference_snapshot,
+        )
+        if _gap_candidates:
+            self._record_representation_inquiries(_gap_candidates)
+
+        # A caller in the middle of completing a staged representation
+        # experiment (complete_representation_experiment) pre-populates
+        # _active_relation_context with experiment provenance before calling
+        # observe(); preserve that provenance here rather than clobbering it
+        # with this tick's own (likely empty, for a synthetic 2-item trace)
+        # collision discovery.
+        _prior_relation_context = dict(self._active_relation_context or {})
+        self._active_relation_context = {
+            "collision_ids": list(_collision_ids) or list(_prior_relation_context.get("collision_ids", []) or []),
+            "difference_values": self._difference_values_from_snapshot(difference_snapshot),
+            "active_concepts": list(_active_concepts),
+            "representation_inquiry_experiment": bool(_prior_relation_context.get("representation_inquiry_experiment", False)),
+            "representation_inquiry_stage_id": str(_prior_relation_context.get("representation_inquiry_stage_id", "") or ""),
+        }
+
         # --- Build record ---
         record = ReliefRecord(
             run_id=self.run_id,
@@ -2076,7 +2259,10 @@ class ConstraintGenealogyLogger:
 
         # --- Pair accumulation + promotion ---
         n_pairs_before = len(self._pair_stats)
-        rewritten = self._accumulate_pairs(trace, relief, cost_total, x_risk_total)
+        try:
+            rewritten = self._accumulate_pairs(trace, relief, cost_total, x_risk_total)
+        finally:
+            self._active_relation_context = {}
         if rewritten and self.cfg.TRACE_REWRITE_ON_PROMOTE:
             record.trace = rewritten
 
@@ -2179,6 +2365,12 @@ class ConstraintGenealogyLogger:
             "active_tolerance_slots": len(self._solution_tolerance),
             "coupling_events": int(self._coupling_events),
             "coupling_roots": len(self._coupling_roots),
+            "representation_relations": len(self._representation_relations),
+            "promoted_representation_relations": sum(
+                1 for rec in self._representation_relations.values()
+                if str(rec.get("status", "")) == "promoted"
+            ),
+            "unresolved_representation_collisions": len(self._representation_collisions),
             "persistent_pressure_root": self.cfg.PERSISTENT_PRESSURE_ROOT,
             "persistent_pressure_root_ema": round(float(self._persistent_pressure_root_ema), 11),
             "governor": self.governor.status(),
@@ -2324,6 +2516,8 @@ class ConstraintGenealogyLogger:
             "persistent_root_generation_observed": observed_gen,
             "persistent_root_accuracy_ok": accuracy_ok,
             "coupling_root_count": int(total_couplings),
+            "representation_relation_count": int(len(self._representation_relations)),
+            "representation_collision_count": int(len(self._representation_collisions)),
             "validation_evidence_min": int(evidence_min),
             "validation_considered_count": int(considered_couplings),
             "validation_pending_count": int(pending_couplings),
@@ -2730,6 +2924,1395 @@ class ConstraintGenealogyLogger:
             if axis in counts and exp_n > 0:
                 counts[axis] += int(exp_n)
         return counts
+
+    # ----------------------------------------------------------------
+    # INTERNAL/PUBLIC — intact representation identity + discrepancy inquiry
+    # ----------------------------------------------------------------
+
+    @staticmethod
+    def _last_tag_value(tags: Any, prefix: str, default: Any = None) -> Any:
+        wanted = str(prefix or "")
+        if wanted and not wanted.endswith(":"):
+            wanted += ":"
+        for raw in reversed(list(tags or [])):
+            tag = str(raw)
+            if tag.startswith(wanted):
+                return tag[len(wanted):]
+        return default
+
+    @staticmethod
+    def _json_clone(value: Any) -> Any:
+        """Return a JSON-safe detached copy of persisted relation metadata."""
+        try:
+            return json.loads(json.dumps(value, sort_keys=True))
+        except Exception:
+            return value
+
+    def _representation_kind(self, item_id: str) -> str:
+        return "LINK" if str(item_id) in self.links or str(item_id).startswith("L:") else "ABILITY"
+
+    def _semantic_identity_for_item(self, item_id: str) -> Dict[str, Any]:
+        """Resolve the current/local semantic surface for one stable identity.
+
+        Ancestral tags remain on the fossil record.  Reverse tag lookup (or an
+        explicit ``semantic_identity`` on new links) prevents those fossils
+        from impersonating the present node's local meaning.
+        """
+        iid = str(item_id)
+        link = self.links.get(iid)
+        ability = self.abilities.get(iid)
+        raw_identity: Dict[str, Any] = {}
+        tags: Any = ()
+
+        if link is not None:
+            raw_identity.update(dict(getattr(link, "semantic_identity", None) or {}))
+            tags = list(getattr(link, "tags", []) or [])
+        elif ability is not None:
+            tags = tuple(getattr(ability, "effect_tags", ()) or ())
+
+        text_fields = (
+            "origin_signature", "operator_action", "purpose_lane",
+            "generation_role", "dominant_constraint", "dominant_dimension",
+            "ontological_status", "operation_lineage", "root_slot",
+        )
+        numeric_fields = (
+            "operator_grade", "purpose_grade", "overall_grade",
+            "depth_score", "leverage_grade", "viable_band_alignment",
+            "energetic_footprint",
+        )
+        int_fields = ("generation", "complexity_axes", "complexity_slots")
+
+        for field_name in text_fields:
+            if field_name not in raw_identity:
+                value = self._last_tag_value(tags, field_name)
+                if value is not None:
+                    raw_identity[field_name] = str(value)
+        for field_name in numeric_fields:
+            if field_name not in raw_identity:
+                value = self._last_tag_value(tags, field_name)
+                if value is not None:
+                    try:
+                        raw_identity[field_name] = float(value)
+                    except (TypeError, ValueError):
+                        pass
+        for field_name in int_fields:
+            if field_name not in raw_identity:
+                value = self._last_tag_value(tags, field_name)
+                if value is not None:
+                    try:
+                        raw_identity[field_name] = int(float(value))
+                    except (TypeError, ValueError):
+                        pass
+
+        if link is not None:
+            raw_identity.setdefault("dominant_relief_axis", str(link.dominant_relief_axis or "X"))
+            if link.topology_id is not None:
+                raw_identity.setdefault("topology_id", link.topology_id)
+            if link.semantic_variant_id is not None:
+                raw_identity.setdefault("semantic_variant_id", link.semantic_variant_id)
+        elif ability is not None:
+            raw_identity.setdefault("dominant_axis", str(ability.axis or "X"))
+            if ability.topology_id is not None:
+                raw_identity.setdefault("topology_id", ability.topology_id)
+            if ability.semantic_variant_id is not None:
+                raw_identity.setdefault("semantic_variant_id", ability.semantic_variant_id)
+
+        raw_identity.setdefault("status", "active")
+        return raw_identity
+
+    def _constraint_basis_for_item(self, item_id: str) -> Dict[str, Any]:
+        iid = str(item_id)
+        link = self.links.get(iid)
+        if link is not None and isinstance(link.constraint_basis, dict) and link.constraint_basis:
+            stored = self._json_clone(link.constraint_basis)
+            stored.setdefault("signature", self._canonical_coupling_signature(dict(stored.get("counts", {}) or {})))
+            return stored
+
+        kind = self._representation_kind(iid)
+        counts = self._axis_counts_from_item(
+            TraceItem(kind=kind, id=iid), memo={}, seen=set()
+        )
+        identity = self._semantic_identity_for_item(iid)
+        basis: Dict[str, Any] = {
+            "counts": {a: int(counts.get(a, 0) or 0) for a in AXES},
+            "signature": self._canonical_coupling_signature(counts),
+        }
+        declared = str(identity.get("origin_signature", "") or "").strip()
+        if declared:
+            declared = self._canonical_signature_text(declared)
+            if declared != "0":
+                basis["semantic_origin_signature"] = declared
+        return basis
+
+    def _collision_signature_for_item(self, item_id: str) -> str:
+        basis = self._constraint_basis_for_item(item_id)
+        if self._representation_kind(item_id) == "ABILITY":
+            declared = str(basis.get("semantic_origin_signature", "") or "")
+            if declared and declared != "0":
+                return declared
+        return str(basis.get("signature", "0") or "0")
+
+    def representation_is_eligible(self, item_id: str) -> bool:
+        """A descendant never invalidates an ancestor.
+
+        Only an explicit local status can disqualify a stored representation;
+        historical records without such a status remain active.
+        """
+        iid = str(item_id)
+        if iid not in self.links and iid not in self.abilities:
+            return False
+        status = str(self._semantic_identity_for_item(iid).get("status", "active") or "active").strip().lower()
+        return status not in {
+            "invalid", "invalidated", "quarantined", "corrupt", "corrupted",
+            "superseded", "disqualified",
+        }
+
+    def representation_descendants(self, item_id: str) -> List[str]:
+        iid = str(item_id)
+        children: Dict[str, List[str]] = defaultdict(list)
+        for link in self.links.values():
+            for parent in (link.parents or []):
+                children[str(parent)].append(str(link.id))
+        descendants = set()
+        pending = list(children.get(iid, []))
+        while pending:
+            child_id = pending.pop()
+            if child_id in descendants or child_id == iid:
+                continue
+            descendants.add(child_id)
+            pending.extend(children.get(child_id, []))
+        return sorted(descendants)
+
+    def _operational_effect_for_item(self, item_id: str) -> Dict[str, Any]:
+        iid = str(item_id)
+        identity = self._semantic_identity_for_item(iid)
+        link = self.links.get(iid)
+        if link is not None:
+            return {
+                "dominant_axis": str(link.dominant_relief_axis or "X"),
+                "mean_relief": {a: float(link.mean_relief.get(a, 0.0) or 0.0) for a in AXES},
+                "mean_cost": {a: float(link.mean_cost.get(a, 0.0) or 0.0) for a in AXES},
+                "mean_x_risk": float(link.mean_x_risk or 0.0),
+                "evidence_count": int(link.count or 0),
+                "purpose_lane": str(identity.get("purpose_lane", "") or ""),
+                "operator_action": str(identity.get("operator_action", "") or ""),
+            }
+
+        ability = self.abilities.get(iid)
+        if ability is None:
+            return {}
+        metadata_prefixes = (
+            "origin_", "root_slot:", "operation_lineage:", "seed_lineage:",
+            "operator_action:", "purpose_lane:", "operator_grade:",
+            "purpose_grade:", "overall_grade:", "complexity_", "generation:",
+            "generation_role:", "energetic_footprint:", "depth_score:",
+            "leverage_grade:", "viable_band_alignment:", "formation_cost:",
+            "dominant_constraint:", "dominant_dimension:", "ontological_status:",
+        )
+        effect_tags = [
+            str(tag) for tag in (ability.effect_tags or ())
+            if not any(str(tag).startswith(prefix) for prefix in metadata_prefixes)
+        ]
+        return {
+            "dominant_axis": str(ability.axis or "X"),
+            "cost": {a: float(ability.cost.get(a, 0.0) or 0.0) for a in AXES},
+            "risk": {a: float(ability.risk.get(a, 0.0) or 0.0) for a in AXES},
+            "effect_tags": sorted(set(effect_tags)),
+            "purpose_lane": str(identity.get("purpose_lane", "") or ""),
+            "operator_action": str(identity.get("operator_action", "") or ""),
+        }
+
+    @staticmethod
+    def _normalized_vector_distance(left: Dict[str, Any], right: Dict[str, Any]) -> float:
+        keys = set(left.keys()) | set(right.keys())
+        if not keys:
+            return 0.0
+        delta = sum(abs(float(left.get(k, 0.0) or 0.0) - float(right.get(k, 0.0) or 0.0)) for k in keys)
+        scale = sum(abs(float(left.get(k, 0.0) or 0.0)) + abs(float(right.get(k, 0.0) or 0.0)) for k in keys)
+        return float(delta / scale) if scale > 0.0 else 0.0
+
+    def _representation_discrepancy(self, left_id: str, right_id: str) -> Optional[Dict[str, Any]]:
+        left = self._operational_effect_for_item(left_id)
+        right = self._operational_effect_for_item(right_id)
+        if not left or not right:
+            return None
+
+        evidence: Dict[str, Any] = {}
+        score = 0.0
+        for field_name in ("dominant_axis", "purpose_lane", "operator_action"):
+            lv = str(left.get(field_name, "") or "")
+            rv = str(right.get(field_name, "") or "")
+            if lv and rv and lv != rv:
+                evidence[field_name] = {"left": lv, "right": rv}
+                score += 1.0
+
+        for field_name in ("mean_relief", "mean_cost", "cost", "risk"):
+            lv = left.get(field_name)
+            rv = right.get(field_name)
+            if isinstance(lv, dict) and isinstance(rv, dict):
+                distance = self._normalized_vector_distance(lv, rv)
+                if distance > 0.0:
+                    evidence[f"{field_name}_distance"] = round(float(distance), 9)
+                    score += distance
+
+        ltags = set(str(x) for x in (left.get("effect_tags", []) or []))
+        rtags = set(str(x) for x in (right.get("effect_tags", []) or []))
+        if ltags or rtags:
+            union = ltags | rtags
+            tag_distance = float(len(ltags ^ rtags) / float(max(1, len(union))))
+            if tag_distance > 0.0:
+                evidence["effect_tag_distance"] = round(tag_distance, 9)
+                score += tag_distance
+
+        if score <= 0.0:
+            return None
+        return {
+            "score": round(float(score), 9),
+            "evidence": evidence,
+            "left_effect": left,
+            "right_effect": right,
+        }
+
+    def _representation_index(self, active_ids: Optional[List[str]] = None) -> Dict[str, List[str]]:
+        stamp = (len(self.links), len(self.abilities), len(self._pair_stats))
+        if self._representation_index_stamp != stamp:
+            # Every surviving promoted link and persisted ability remains
+            # reachable.  Per-item scan/candidate budgets below bound the
+            # work, so reachability does not require prior PairStats activity
+            # and does not become a Cartesian cross.
+            observed_ids = set(self.links.keys()) | set(self.abilities.keys())
+            activity: Dict[str, Tuple[int, int]] = defaultdict(lambda: (0, 0))
+            for (left_id, right_id), pair_stats in self._pair_stats.items():
+                observed_ids.add(str(left_id))
+                observed_ids.add(str(right_id))
+                for iid in (str(left_id), str(right_id)):
+                    prev_tick, prev_count = activity[iid]
+                    activity[iid] = (
+                        max(int(prev_tick), int(pair_stats.last_seen_tick or 0)),
+                        max(int(prev_count), int(pair_stats.count or 0)),
+                    )
+            for iid, link in self.links.items():
+                prev_tick, prev_count = activity[str(iid)]
+                activity[str(iid)] = (
+                    max(int(prev_tick), int(link.created_at_tick or 0)),
+                    max(int(prev_count), int(link.count or 0)),
+                )
+            index: Dict[str, List[str]] = defaultdict(list)
+            for iid in sorted(observed_ids):
+                if self.representation_is_eligible(iid):
+                    index[self._collision_signature_for_item(iid)].append(iid)
+            for bucket in index.values():
+                bucket.sort(key=lambda iid: (-activity[iid][0], -activity[iid][1], iid))
+            self._representation_index_cache = dict(index)
+            self._representation_index_stamp = stamp
+
+        index = {sig: list(ids) for sig, ids in self._representation_index_cache.items()}
+        for iid in list(active_ids or []):
+            iid = str(iid)
+            if not self.representation_is_eligible(iid):
+                continue
+            sig = self._collision_signature_for_item(iid)
+            bucket = index.setdefault(sig, [])
+            if iid not in bucket:
+                bucket.append(iid)
+        return index
+
+    @staticmethod
+    def _difference_values_from_snapshot(snapshot: Any) -> Dict[str, float]:
+        if snapshot is None:
+            return {}
+        try:
+            raw = snapshot.to_dict() if hasattr(snapshot, "to_dict") else snapshot
+            values = dict((raw or {}).get("values", {}) or {}) if isinstance(raw, dict) else {}
+            return {a: float(values.get(a, 0.0) or 0.0) for a in AXES}
+        except Exception:
+            return {}
+
+    def representation_collision_candidates(
+        self,
+        active_items: List[TraceItem],
+        difference_snapshot: Optional[DifferenceSnapshot] = None,
+        max_candidates: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """Return bounded unresolved distinctions around active operands.
+
+        This method never calls ``PairStats.update`` or ``_try_promote``.  It
+        exposes pressure for later lived/dream/counterfactual inquiry without
+        pretending the proposed pair has already acted together.
+        """
+        active_ids = list(dict.fromkeys(str(item.id) for item in (active_items or [])))
+        if not active_ids:
+            return []
+        per_item = max(0, int(getattr(self.cfg, "REPRESENTATION_COLLISION_CANDIDATES_PER_ITEM", 3) or 0))
+        event_limit = max(0, int(
+            max_candidates
+            if max_candidates is not None
+            else getattr(self.cfg, "REPRESENTATION_COLLISION_MAX_PER_EVENT", 12)
+        ))
+        if per_item <= 0 or event_limit <= 0:
+            return []
+
+        index = self._representation_index(active_ids)
+        difference_values = self._difference_values_from_snapshot(difference_snapshot)
+        difference_pressure = sum(abs(v) for v in difference_values.values())
+        found: List[Dict[str, Any]] = []
+        seen_pairs = set()
+
+        for active_id in active_ids:
+            if not self.representation_is_eligible(active_id):
+                continue
+            signature = self._collision_signature_for_item(active_id)
+            ranked: List[Tuple[float, int, str, Dict[str, Any]]] = []
+            all_counterparts = [iid for iid in index.get(signature, []) if iid != active_id]
+            scan_budget = max(
+                per_item,
+                int(getattr(self.cfg, "REPRESENTATION_COLLISION_SCAN_PER_ITEM", 64) or 64),
+            )
+            if len(all_counterparts) > scan_budget:
+                # Keep a salient half and rotate through the remainder by tick.
+                # Thus work per event is bounded without making old, valid
+                # representations permanently unreachable.
+                head_count = max(1, scan_budget // 2)
+                head = all_counterparts[:head_count]
+                tail = all_counterparts[head_count:]
+                rotating_count = scan_budget - len(head)
+                seed = int(hashlib.sha1(active_id.encode()).hexdigest()[:8], 16)
+                start = (int(self.tick_count) + seed) % len(tail)
+                rotated = tail[start:] + tail[:start]
+                all_counterparts = head + rotated[:rotating_count]
+
+            for counterpart_id in all_counterparts:
+                if counterpart_id == active_id or not self.representation_is_eligible(counterpart_id):
+                    continue
+                pair = tuple(sorted((active_id, counterpart_id)))
+                if pair in seen_pairs:
+                    continue
+                discrepancy = self._representation_discrepancy(active_id, counterpart_id)
+                if discrepancy is None:
+                    continue
+                counterpart = self.links.get(counterpart_id)
+                evidence_count = int(counterpart.count or 0) if counterpart is not None else 0
+                pressure = float(discrepancy["score"]) * (1.0 + difference_pressure)
+                ranked.append((pressure, evidence_count, counterpart_id, discrepancy))
+
+            ranked.sort(key=lambda row: (-row[0], -row[1], row[2]))
+            for pressure, _count, counterpart_id, discrepancy in ranked[:per_item]:
+                pair = tuple(sorted((active_id, counterpart_id)))
+                if pair in seen_pairs:
+                    continue
+                seen_pairs.add(pair)
+                collision_raw = f"{signature}|{pair[0]}|{pair[1]}"
+                collision_id = "RC:" + hashlib.sha1(collision_raw.encode()).hexdigest()[:16]
+                left_gen = self._generation_of_item(active_id)
+                right_gen = self._generation_of_item(counterpart_id)
+                found.append({
+                    "collision_id": collision_id,
+                    "status": "unresolved",
+                    "constraint_signature": signature,
+                    "active_representation_id": active_id,
+                    "counterpart_representation_id": counterpart_id,
+                    "representation_ids": list(pair),
+                    "generation_span": abs(int(left_gen) - int(right_gen)),
+                    "discrepancy_score": float(discrepancy["score"]),
+                    "pressure": round(float(pressure), 9),
+                    "difference_values": difference_values,
+                    "evidence": discrepancy["evidence"],
+                    "observed_effects": {
+                        active_id: discrepancy["left_effect"],
+                        counterpart_id: discrepancy["right_effect"],
+                    },
+                })
+                if len(found) >= event_limit:
+                    return found
+        return found
+
+    def _record_representation_collisions(self, candidates: List[Dict[str, Any]]) -> List[str]:
+        touched: List[str] = []
+        for candidate in list(candidates or []):
+            collision_id = str(candidate.get("collision_id", "") or "")
+            if not collision_id:
+                continue
+            current = self._representation_collisions.get(collision_id)
+            if current is None:
+                current = self._json_clone(candidate)
+                current["first_tick"] = int(self.tick_count)
+                current["observation_count"] = 0
+                self._representation_collisions[collision_id] = current
+            current["last_tick"] = int(self.tick_count)
+            current["observation_count"] = int(current.get("observation_count", 0) or 0) + 1
+            current["max_pressure"] = max(
+                float(current.get("max_pressure", 0.0) or 0.0),
+                float(candidate.get("pressure", 0.0) or 0.0),
+            )
+            current["latest"] = self._json_clone(candidate)
+            # A genuine fresh recurrence of the same structural pressure is
+            # new evidence the discrepancy persists -- it revives a dormant
+            # inquiry back to unresolved rather than leaving it permanently
+            # taboo after one unhelpful trial (Sunni & Cael: "a rejected
+            # candidate remains evidence, not a taboo").
+            if str(current.get("status", "")) == "dormant":
+                current["status"] = "unresolved"
+            touched.append(collision_id)
+            self._promotion_stats["representation_collisions_detected"] += 1
+
+        max_history = max(1, int(getattr(self.cfg, "REPRESENTATION_COLLISION_HISTORY_MAX", 2048) or 2048))
+        if len(self._representation_collisions) > max_history:
+            removable = sorted(
+                self._representation_collisions.items(),
+                key=lambda kv: (
+                    int(kv[1].get("observation_count", 0) or 0),
+                    float(kv[1].get("max_pressure", 0.0) or 0.0),
+                    int(kv[1].get("last_tick", 0) or 0),
+                ),
+            )
+            for collision_id, _rec in removable[:len(self._representation_collisions) - max_history]:
+                self._representation_collisions.pop(collision_id, None)
+        return touched
+
+    def _decayed_inquiry_pressure(self, record: Dict[str, Any], now_tick: int) -> float:
+        """FIX (Sunni & Cael, Mobile/Multimodal directive Section XXI):
+        REPRESENTATION_INQUIRY_PRESSURE_DECAY previously existed as a
+        config field with no reader anywhere -- unresolved inquiry pressure
+        never actually decayed. This decays only the ACTIVE URGENCY used
+        for ranking/selection at query time; it never mutates the stored
+        'max_pressure' evidence field itself (that stays the historical
+        high-water mark). A fresh recurrence of the same discrepancy
+        updates 'last_tick'/'max_pressure' via _record_representation_collisions,
+        which naturally restores decayed pressure without any special case
+        here -- exactly the 'recurring discrepancy may restore pressure
+        through fresh evidence' requirement.
+        """
+        base = float(record.get("max_pressure", record.get("pressure", 0.0)) or 0.0)
+        # NOTE: deliberately NOT "record.get(...) or now_tick" -- a
+        # legitimate last_tick of 0 (the very first tick) is falsy in
+        # Python and would be wrongly replaced by now_tick, always
+        # producing elapsed=0 and silently disabling decay for anything
+        # first observed at tick 0.
+        raw_last_tick = record.get("last_tick", now_tick)
+        last_tick = int(raw_last_tick) if raw_last_tick is not None else int(now_tick)
+        elapsed = max(0, int(now_tick) - last_tick)
+        rate = max(0.0, min(1.0, float(getattr(self.cfg, "REPRESENTATION_INQUIRY_PRESSURE_DECAY", 0.01) or 0.0)))
+        if rate <= 0.0 or elapsed <= 0:
+            return base
+        return base * ((1.0 - rate) ** elapsed)
+
+    def pending_representation_inquiries(self, limit: int = 12) -> List[Dict[str, Any]]:
+        """Bounded pressure queue for reflective/dream/counterfactual consumers.
+
+        Reading the queue is inert: it neither executes a cross nor contributes
+        promotion evidence.  A candidate must still co-activate through an
+        admissible runtime path before ``_update_representation_relation`` sees
+        it.
+        """
+        cap = max(0, int(limit or 0))
+        if cap <= 0:
+            return []
+        now_tick = int(self.tick_count)
+        decayed: Dict[str, float] = {
+            str(rec.get("collision_id", "")): self._decayed_inquiry_pressure(rec, now_tick)
+            for rec in self._representation_collisions.values()
+        }
+        ranked = sorted(
+            self._representation_collisions.values(),
+            key=lambda rec: (
+                -decayed.get(str(rec.get("collision_id", "")), 0.0),
+                -int(rec.get("observation_count", 0) or 0),
+                -int(rec.get("last_tick", 0) or 0),
+                str(rec.get("collision_id", "")),
+            ),
+        )
+        out: List[Dict[str, Any]] = []
+        for rec in ranked[:cap]:
+            clone = self._json_clone(rec)
+            clone["decayed_pressure"] = round(decayed.get(str(rec.get("collision_id", "")), 0.0), 9)
+            out.append(clone)
+        return out
+
+    # ========================================================================
+    # NATIVE REPRESENTATIONAL INQUIRY AND EXPERIMENTATION (Sunni & Cael)
+    #
+    # Reconstructed from Codex's reported build-650-fixed-v5 extension: closes
+    # the gap between unresolved representational pressure -- both the
+    # exact-signature collision pressure above (RC:) and the cross-family
+    # complementary-gap pressure below (RI:) -- and an admissible relational
+    # experiment. Candidate discovery and staging (RS:) remain evidence-inert
+    # throughout. Only a completed, ordered, actual co-activation reaches
+    # PairStats, routed through the SAME observe() -> _accumulate_pairs() ->
+    # PairStats.update() -> _update_representation_relation() -> _try_promote()
+    # chain every other trace observation already uses. _try_promote() remains
+    # the sole promotion authority; no second promotion engine is added here.
+    # ========================================================================
+
+    def representation_ancestors(self, item_id: str, limit: int = 64) -> List[str]:
+        """Bounded walk up ConstraintLink.parents. A valid ancestor stays
+        reachable no matter how many descendant generations now exist --
+        descended-from is never treated as obsolete."""
+        iid = str(item_id)
+        cap = max(0, int(limit or 0))
+        if cap <= 0:
+            return []
+        ancestors: List[str] = []
+        seen = {iid}
+        pending = list(getattr(self.links.get(iid), "parents", []) or [])
+        while pending and len(ancestors) < cap:
+            parent_id = str(pending.pop(0))
+            if parent_id in seen:
+                continue
+            seen.add(parent_id)
+            ancestors.append(parent_id)
+            if len(ancestors) >= cap:
+                break
+            parent_link = self.links.get(parent_id)
+            if parent_link is not None:
+                pending.extend(str(p) for p in (parent_link.parents or []))
+        return ancestors
+
+    def _relevance_features_for_item(self, item_id: str) -> List[str]:
+        """Native, fossil-safe relevance-bucket keys for cross-family
+        retrieval: purpose lane, operator action, dominant axis, a bounded
+        number of non-metadata effect tags, and lineage anchors. These are
+        Aurora-owned signals about whether a pair may be worth testing --
+        never a semantic label and never an answer."""
+        iid = str(item_id)
+        identity = self._semantic_identity_for_item(iid)
+        effect = self._operational_effect_for_item(iid)
+        features: List[str] = []
+        purpose_lane = str(identity.get("purpose_lane", "") or "")
+        if purpose_lane:
+            features.append(f"lane:{purpose_lane}")
+        operator_action = str(identity.get("operator_action", "") or "")
+        if operator_action:
+            features.append(f"operator:{operator_action}")
+        dominant_axis = str(effect.get("dominant_axis", "") or "")
+        if dominant_axis:
+            features.append(f"axis:{dominant_axis}")
+        for tag in list(effect.get("effect_tags", []) or [])[:4]:
+            features.append(f"tag:{tag}")
+        for ancestor_id in self.representation_ancestors(iid, limit=4):
+            features.append(f"lineage:{ancestor_id}")
+        return features
+
+    def _representation_relevance_index(self) -> Dict[str, List[str]]:
+        """Bucketed relevance index over every eligible representation,
+        cached by a cheap population stamp (mirrors _representation_index).
+        Buckets group by shared native feature, not shared constraint
+        signature -- this is what makes cross-family retrieval possible
+        without an exhaustive Cartesian scan."""
+        stamp = (len(self.links), len(self.abilities), len(self._pair_stats))
+        if self._representation_relevance_stamp == stamp:
+            return self._representation_relevance_cache
+        index: Dict[str, List[str]] = defaultdict(list)
+        for iid in sorted(set(self.links.keys()) | set(self.abilities.keys())):
+            if not self.representation_is_eligible(iid):
+                continue
+            for feature in self._relevance_features_for_item(iid):
+                index[feature].append(iid)
+        self._representation_relevance_cache = dict(index)
+        self._representation_relevance_stamp = stamp
+        return self._representation_relevance_cache
+
+    def _representation_relevance_evidence(self, left_id: str, right_id: str) -> Optional[Dict[str, Any]]:
+        """Aurora-owned relevance evidence for a CROSS-FAMILY pair: shared
+        purpose lane/operator/axis, lineage relation, and operational
+        discrepancy. Ranks whether the pair is worth testing; assigns no
+        meaning and no expected label."""
+        left = self._operational_effect_for_item(left_id)
+        right = self._operational_effect_for_item(right_id)
+        if not left or not right:
+            return None
+        left_identity = self._semantic_identity_for_item(left_id)
+        right_identity = self._semantic_identity_for_item(right_id)
+
+        evidence: Dict[str, Any] = {}
+        score = 0.0
+
+        shared_lane = str(left_identity.get("purpose_lane", "") or "")
+        if shared_lane and shared_lane == str(right_identity.get("purpose_lane", "") or ""):
+            evidence["shared_purpose_lane"] = shared_lane
+            score += 1.0
+        shared_operator = str(left_identity.get("operator_action", "") or "")
+        if shared_operator and shared_operator == str(right_identity.get("operator_action", "") or ""):
+            evidence["shared_operator_action"] = shared_operator
+            score += 1.0
+        shared_axis = str(left.get("dominant_axis", "") or "")
+        if shared_axis and shared_axis == str(right.get("dominant_axis", "") or ""):
+            evidence["shared_operational_axis"] = shared_axis
+            score += 0.5
+
+        left_ancestors = set(self.representation_ancestors(left_id, limit=64))
+        right_ancestors = set(self.representation_ancestors(right_id, limit=64))
+        if right_id in left_ancestors or left_id in right_ancestors:
+            evidence["lineage_relation"] = "ancestor_or_descendant"
+            score += 1.0
+
+        discrepancy: Dict[str, Any] = {}
+        for field_name in ("mean_relief", "mean_cost", "cost", "risk"):
+            lv = left.get(field_name)
+            rv = right.get(field_name)
+            if isinstance(lv, dict) and isinstance(rv, dict):
+                distance = self._normalized_vector_distance(lv, rv)
+                if distance > 0.0:
+                    discrepancy[f"{field_name}_distance"] = round(float(distance), 9)
+        ltags = set(str(x) for x in (left.get("effect_tags", []) or []))
+        rtags = set(str(x) for x in (right.get("effect_tags", []) or []))
+        if ltags or rtags:
+            union = ltags | rtags
+            tag_distance = float(len(ltags ^ rtags) / float(max(1, len(union))))
+            if tag_distance > 0.0:
+                discrepancy["effect_tag_distance"] = round(tag_distance, 9)
+        if str(left.get("dominant_axis", "") or "") != str(right.get("dominant_axis", "") or ""):
+            discrepancy["dominant_axis"] = {
+                "left": str(left.get("dominant_axis", "") or ""),
+                "right": str(right.get("dominant_axis", "") or ""),
+            }
+        if discrepancy:
+            evidence["operational_discrepancy"] = discrepancy
+            score += 0.25 * len(discrepancy)
+
+        if score <= 0.0:
+            return None
+        return {"score": round(float(score), 9), "evidence": evidence, "left_effect": left, "right_effect": right}
+
+    def representation_gap_candidates(
+        self,
+        active_items: List[TraceItem],
+        difference_snapshot: Optional[DifferenceSnapshot] = None,
+        max_candidates: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """Bounded cross-family ('RI:') inquiry candidates: representations
+        with DIFFERENT primitive constraint signatures that Aurora-owned
+        relevance evidence suggests may be worth an admissible relational
+        experiment. Mirrors representation_collision_candidates()'s evidence
+        boundary exactly -- never calls PairStats.update or _try_promote.
+        """
+        active_ids = list(dict.fromkeys(str(item.id) for item in (active_items or [])))
+        self._last_representation_search = {
+            "bounded": True, "scanned": 0, "returned": 0, "active_count": len(active_ids),
+        }
+        if not active_ids:
+            return []
+        per_item = max(0, int(getattr(self.cfg, "REPRESENTATION_GAP_CANDIDATES_PER_ITEM", 2) or 0))
+        event_limit = max(0, int(
+            max_candidates
+            if max_candidates is not None
+            else getattr(self.cfg, "REPRESENTATION_GAP_MAX_PER_EVENT", 6)
+        ))
+        if per_item <= 0 or event_limit <= 0:
+            return []
+
+        bucket_scan = max(1, int(getattr(self.cfg, "REPRESENTATION_RELEVANCE_BUCKET_SCAN", 24) or 24))
+        max_buckets = max(1, int(getattr(self.cfg, "REPRESENTATION_RELEVANCE_MAX_BUCKETS", 8) or 8))
+        relevance_index = self._representation_relevance_index()
+        difference_values = self._difference_values_from_snapshot(difference_snapshot)
+        difference_pressure = sum(abs(v) for v in difference_values.values())
+
+        found: List[Dict[str, Any]] = []
+        seen_pairs = set()
+        total_scanned = 0
+
+        for active_id in active_ids:
+            if not self.representation_is_eligible(active_id):
+                continue
+            active_signature = self._collision_signature_for_item(active_id)
+            features = self._relevance_features_for_item(active_id)[:max_buckets]
+            scanned_ids: List[str] = []
+            scanned_seen: set = set()
+            for feature in features:
+                bucket = relevance_index.get(feature, [])
+                total_scanned += min(len(bucket), bucket_scan)
+                for counterpart_id in bucket[:bucket_scan]:
+                    if counterpart_id in scanned_seen:
+                        continue
+                    scanned_seen.add(counterpart_id)
+                    scanned_ids.append(counterpart_id)
+
+            ranked: List[Tuple[float, int, str, Dict[str, Any]]] = []
+            for counterpart_id in scanned_ids:
+                if counterpart_id == active_id or not self.representation_is_eligible(counterpart_id):
+                    continue
+                counterpart_signature = self._collision_signature_for_item(counterpart_id)
+                if counterpart_signature == active_signature:
+                    continue  # same-family belongs to the exact-collision path above
+                pair = tuple(sorted((active_id, counterpart_id)))
+                if pair in seen_pairs:
+                    continue
+                relevance = self._representation_relevance_evidence(active_id, counterpart_id)
+                if relevance is None:
+                    continue
+                counterpart = self.links.get(counterpart_id)
+                evidence_count = int(counterpart.count or 0) if counterpart is not None else 0
+                pressure = float(relevance["score"]) * (1.0 + difference_pressure)
+                ranked.append((pressure, evidence_count, counterpart_id, relevance))
+
+            ranked.sort(key=lambda row: (-row[0], -row[1], row[2]))
+            for pressure, _count, counterpart_id, relevance in ranked[:per_item]:
+                pair = tuple(sorted((active_id, counterpart_id)))
+                if pair in seen_pairs:
+                    continue
+                seen_pairs.add(pair)
+                counterpart_signature = self._collision_signature_for_item(counterpart_id)
+                raw = f"gap|{active_id}|{counterpart_id}"
+                inquiry_id = "RI:" + hashlib.sha1(raw.encode()).hexdigest()[:16]
+                left_gen = self._generation_of_item(active_id)
+                right_gen = self._generation_of_item(counterpart_id)
+                merged_counts = self._merged_axis_counts_for_pair((active_id, counterpart_id))
+                found.append({
+                    "inquiry_id": inquiry_id,
+                    "inquiry_class": "complementary_gap",
+                    "status": "unresolved",
+                    "active_representation_id": active_id,
+                    "counterpart_representation_id": counterpart_id,
+                    "operand_ids": [active_id, counterpart_id],
+                    "representation_ids": [active_id, counterpart_id],
+                    "constraint_signatures": [active_signature, counterpart_signature],
+                    "merged_constraint_basis": {
+                        "signature": self._canonical_coupling_signature(merged_counts),
+                        "counts": {a: int(merged_counts.get(a, 0) or 0) for a in AXES},
+                    },
+                    "generation_span": abs(int(left_gen) - int(right_gen)),
+                    "relevance_score": float(relevance["score"]),
+                    "pressure": round(float(pressure), 9),
+                    "difference_values": difference_values,
+                    "evidence": relevance["evidence"],
+                    "observed_effects": {
+                        active_id: relevance["left_effect"],
+                        counterpart_id: relevance["right_effect"],
+                    },
+                })
+                if len(found) >= event_limit:
+                    self._last_representation_search = {
+                        "bounded": True, "scanned": int(total_scanned),
+                        "returned": len(found), "active_count": len(active_ids),
+                    }
+                    return found
+
+        self._last_representation_search = {
+            "bounded": True, "scanned": int(total_scanned),
+            "returned": len(found), "active_count": len(active_ids),
+        }
+        return found
+
+    def _record_representation_inquiries(self, candidates: List[Dict[str, Any]]) -> List[str]:
+        """Generalizes _record_representation_collisions to also accept
+        cross-family ('RI:') gap candidates, sharing the same bounded
+        pending-inquiry store so both classes compete for the same staging
+        and refractory budget. Recording remains evidence-inert -- it never
+        touches PairStats or _try_promote."""
+        normalized: List[Dict[str, Any]] = []
+        for candidate in list(candidates or []):
+            cand = dict(candidate)
+            existing_id = str(cand.get("collision_id", "") or cand.get("inquiry_id", "") or "")
+            cand["collision_id"] = existing_id
+            cand.setdefault("inquiry_id", existing_id)
+            cand.setdefault("inquiry_class", "constraint_collision")
+            normalized.append(cand)
+        return self._record_representation_collisions(normalized)
+
+    def _relational_axis_profile(self, operands: List[Dict[str, Any]]) -> Dict[str, float]:
+        """Operand-level relational axis profile for RCRW trial scoring:
+        derived from primitive constraint basis plus lived operational
+        effects of the intact parents -- not a new semantic layer, just the
+        same X/T/N/B/A surface already used elsewhere, read from both sides
+        of the pair instead of one wavelet."""
+        combined = {a: 0.0 for a in AXES}
+        for operand in operands:
+            basis_counts = dict((operand.get("constraint_basis", {}) or {}).get("counts", {}) or {})
+            effect = dict(operand.get("operational_effect", {}) or {})
+            relief = dict(effect.get("mean_relief", {}) or {})
+            for a in AXES:
+                combined[a] += float(basis_counts.get(a, 0) or 0) + abs(float(relief.get(a, 0.0) or 0.0)) * 100.0
+        total = sum(combined.values()) or 1.0
+        return {a: round(combined[a] / total, 6) for a in AXES}
+
+    def _expire_stale_representation_stages(self) -> List[str]:
+        """FIX (Sunni & Cael, Mobile/Multimodal directive Section XXI):
+        REPRESENTATION_INQUIRY_STAGE_LIFETIME previously set an
+        'expires_at_tick' field on every stage that nothing ever read --
+        stages never actually expired, so a stage abandoned by its
+        consumer stayed 'active' (and its inquiry stuck at status
+        'staged', unable to be restaged) forever. This makes expiration
+        real: an expired RS: stage stops occupying active-stage state,
+        admits no evidence (it is simply removed, never completed), and
+        its inquiry reverts to 'unresolved' so a genuine future recurrence
+        can stage it again -- expiration is a lapse, not a taboo.
+        """
+        if not self._representation_experiment_stages:
+            return []
+        now_tick = int(self.tick_count)
+        expired_ids = [
+            stage_id for stage_id, stage in self._representation_experiment_stages.items()
+            if int(stage.get("expires_at_tick", 0) or 0) <= now_tick
+        ]
+        for stage_id in expired_ids:
+            stage = self._representation_experiment_stages.pop(stage_id, None)
+            if stage is None:
+                continue
+            inquiry_id = str(stage.get("inquiry_id", ""))
+            stored = self._representation_collisions.get(inquiry_id)
+            if stored is not None and str(stored.get("status", "")) == "staged":
+                stored["status"] = "unresolved"
+            self._record_representation_experiment_history(
+                stage,
+                {
+                    "stage_id": stage_id,
+                    "status": "expired",
+                    "evidence_admitted": False,
+                    "consumer": str(stage.get("consumer", "")),
+                },
+            )
+        return expired_ids
+
+    def stage_representation_inquiry(
+        self,
+        consumer: str,
+        context: Optional[Dict[str, Any]] = None,
+        *,
+        inquiry_id: str = "",
+        limit: int = 1,
+    ) -> List[Dict[str, Any]]:
+        """Create bounded RS: stages from pending inquiries for a named live
+        consumer. Staging is evidence-inert: it never updates PairStats,
+        never creates a genealogy observation, never calls _try_promote,
+        and never fabricates co-activation. Anti-runaway: per-consumer
+        refractory interval, bounded attempts without a new observation,
+        bounded stage lifetime and history.
+
+        FIX (Sunni & Cael, Mobile/Multimodal directive Section XXI/XXII):
+        - Stage expiration is now actually enforced (_expire_stale_representation_stages),
+          called first so a stale stage never blocks a fresh one and never
+          lingers as phantom active-stage state.
+        - Refractory now measures actual per-consumer ENGAGEMENT CYCLES
+          (how many times THIS consumer has called this method), not
+          genealogy's system-wide tick_count -- a consumer that is rarely
+          engaged no longer gets an arbitrary refractory window purely
+          because unrelated system activity advanced the tick counter.
+        - An inquiry already carrying a live (unexpired) stage is skipped,
+          preventing duplicate concurrent stages for the same inquiry.
+        """
+        cap = max(0, int(limit or 0))
+        if cap <= 0:
+            return []
+        consumer = str(consumer or "")
+        now_tick = int(self.tick_count)
+
+        self._expire_stale_representation_stages()
+
+        cycle = int(self._representation_inquiry_consumer_cycle_engagements.get(consumer, 0) or 0) + 1
+        self._representation_inquiry_consumer_cycle_engagements[consumer] = cycle
+
+        refractory = int(getattr(self.cfg, "REPRESENTATION_INQUIRY_REFRACTORY_CYCLES", 8) or 0)
+        last_staged_cycle = int(self._representation_inquiry_consumer_cycle.get(consumer, -(10 ** 9)))
+        if refractory > 0 and (cycle - last_staged_cycle) < refractory:
+            return []
+
+        live_inquiry_ids = {
+            str(s.get("inquiry_id", "")) for s in self._representation_experiment_stages.values()
+        }
+
+        if inquiry_id:
+            pool = [self._representation_collisions[inquiry_id]] if inquiry_id in self._representation_collisions else []
+        else:
+            pool = self.pending_representation_inquiries(limit=max(cap * 4, cap))
+
+        max_attempts = int(getattr(self.cfg, "REPRESENTATION_INQUIRY_MAX_ATTEMPTS", 4) or 0)
+        staged: List[Dict[str, Any]] = []
+        for record in pool:
+            rec_id = str(record.get("collision_id") or record.get("inquiry_id") or "")
+            if not rec_id:
+                continue
+            if rec_id in live_inquiry_ids:
+                continue  # already has an unexpired active stage -- no duplicates
+            stored = self._representation_collisions.get(rec_id)
+            if stored is None:
+                continue
+            if str(stored.get("status", "unresolved")) == "dormant":
+                continue
+            attempts = int(stored.get("attempts", 0) or 0)
+            if max_attempts > 0 and attempts >= max_attempts:
+                continue
+            latest = stored.get("latest", stored)
+            operand_ids = [str(x) for x in list(latest.get("operand_ids") or latest.get("representation_ids") or [])]
+            if len(operand_ids) != 2:
+                continue
+            if not all(self.representation_is_eligible(oid) for oid in operand_ids):
+                continue
+
+            raw = f"stage|{consumer}|{rec_id}|{now_tick}|{len(self._representation_experiment_stages)}"
+            stage_id = "RS:" + hashlib.sha1(raw.encode()).hexdigest()[:16]
+            operands = [self._representation_parent_ref(oid) for oid in operand_ids]
+            merged_counts = self._merged_axis_counts_for_pair((operand_ids[0], operand_ids[1]))
+            stage = {
+                "stage_id": stage_id,
+                "inquiry_id": rec_id,
+                "inquiry_class": str(latest.get("inquiry_class", "constraint_collision") or "constraint_collision"),
+                "consumer": consumer,
+                "operand_ids": list(operand_ids),
+                "operands": operands,
+                "constraint_basis": {
+                    "signature": self._canonical_coupling_signature(merged_counts),
+                    "counts": {a: int(merged_counts.get(a, 0) or 0) for a in AXES},
+                },
+                "relational_axis_profile": self._relational_axis_profile(operands),
+                "selection_evidence": self._json_clone(dict(latest.get("evidence", {}) or {})),
+                "context": dict(context or {}),
+                "staged_at_tick": now_tick,
+                "expires_at_tick": now_tick + max(1, int(getattr(self.cfg, "REPRESENTATION_INQUIRY_STAGE_LIFETIME", 3) or 3)),
+                "actual_coactivation_required": True,
+                "evidence_admitted": False,
+                "status": "staged",
+            }
+            self._representation_experiment_stages[stage_id] = stage
+            stored["attempts"] = attempts + 1
+            stored["status"] = "staged"
+            staged.append(self._json_clone(stage))
+            self._representation_inquiry_consumer_cycle[consumer] = cycle
+            if len(staged) >= cap:
+                break
+
+        history_cap = max(1, int(getattr(self.cfg, "REPRESENTATION_INQUIRY_STAGE_HISTORY_MAX", 128) or 128))
+        if len(self._representation_experiment_stages) > history_cap:
+            keep_ids = {s["stage_id"] for s in staged}
+            removable = sorted(
+                self._representation_experiment_stages.items(),
+                key=lambda kv: int(kv[1].get("staged_at_tick", 0) or 0),
+            )
+            for sid, _rec in removable:
+                if len(self._representation_experiment_stages) <= history_cap:
+                    break
+                if sid in keep_ids:
+                    continue
+                self._representation_experiment_stages.pop(sid, None)
+
+        return staged
+
+    def _record_representation_experiment_history(
+        self,
+        stage: Dict[str, Any],
+        result: Dict[str, Any],
+        experiment_record: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        record = {
+            "stage_id": str(stage.get("stage_id", "")),
+            "inquiry_id": str(stage.get("inquiry_id", "")),
+            "consumer": str(stage.get("consumer", "")),
+            "operand_ids": list(stage.get("operand_ids", []) or []),
+            "status": str(result.get("status", "")),
+            "evidence_admitted": bool(result.get("evidence_admitted", False)),
+            "tick": int(self.tick_count),
+        }
+        if experiment_record:
+            record["outcome"] = experiment_record.get("outcome")
+        self._representation_experiment_history.append(record)
+        cap = max(1, int(getattr(self.cfg, "REPRESENTATION_INQUIRY_EXPERIMENT_HISTORY_MAX", 512) or 512))
+        if len(self._representation_experiment_history) > cap:
+            self._representation_experiment_history = self._representation_experiment_history[-cap:]
+
+    def complete_representation_experiment(
+        self,
+        stage_id: str,
+        *,
+        consumer: str,
+        coactivated_ids: List[str],
+        pressure_before: Dict[str, float],
+        pressure_after: Dict[str, float],
+        outcome: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Admit evidence ONLY when the exact staged consumer, stage, and
+        ORDERED operand IDs actually co-activated. A genuine co-activation
+        is routed through the SAME ordinary observe() -> _accumulate_pairs()
+        -> PairStats.update() -> _update_representation_relation() ->
+        _try_promote() chain every other trace observation already uses --
+        no second promotion authority, no feature-specific threshold.
+
+        A rejected (wrong order/consumer/no-coactivation) completion attempt
+        does NOT consume the stage -- a later, correctly-ordered completion
+        of the same stage remains possible.
+        """
+        outcome = dict(outcome or {})
+        # FIX (Sunni & Cael, Section XXI): sweep expired stages first so a
+        # stage whose lifetime has lapsed cannot be completed as if it were
+        # still live -- it is correctly reported as unknown.
+        self._expire_stale_representation_stages()
+        stage = self._representation_experiment_stages.get(str(stage_id))
+        base_result: Dict[str, Any] = {
+            "stage_id": str(stage_id),
+            "consumer": str(consumer),
+            "evidence_admitted": False,
+            "actual_coactivation": bool(outcome.get("actual_coactivation", False)),
+        }
+        if stage is None:
+            base_result["status"] = "unknown_stage"
+            return base_result
+
+        ordered_ok = (
+            str(stage.get("consumer", "")) == str(consumer)
+            and [str(x) for x in list(coactivated_ids or [])] == list(stage.get("operand_ids", []))
+            and bool(outcome.get("actual_coactivation", False))
+        )
+        if not ordered_ok:
+            base_result["status"] = "rejected_order_or_consumer_mismatch"
+            self._record_representation_experiment_history(stage, base_result)
+            return base_result
+
+        # A genuine co-activation attempt is happening now -- the stage's
+        # purpose is fulfilled either way (helpful or not), so it is
+        # consumed here rather than on the earlier peek.
+        self._representation_experiment_stages.pop(str(stage_id), None)
+
+        left_id, right_id = str(stage["operand_ids"][0]), str(stage["operand_ids"][1])
+        left_kind = self._representation_kind(left_id)
+        right_kind = self._representation_kind(right_id)
+        trace = [TraceItem(kind=left_kind, id=left_id), TraceItem(kind=right_kind, id=right_id)]
+
+        before_vec = PressureVec(**{a: float(pressure_before.get(a, 0.0) or 0.0) for a in AXES})
+        after_vec = PressureVec(**{a: float(pressure_after.get(a, 0.0) or 0.0) for a in AXES})
+
+        inquiry_id = str(stage.get("inquiry_id", ""))
+        self._active_relation_context = {
+            "collision_ids": [inquiry_id] if inquiry_id else [],
+            "difference_values": {},
+            "active_concepts": [],
+            "representation_inquiry_experiment": True,
+            "representation_inquiry_stage_id": str(stage_id),
+        }
+        try:
+            relief_record = self.observe(
+                before_vec, trace, after_vec,
+                notes={"representation_inquiry": {"stage_id": str(stage_id), "consumer": str(consumer)}},
+            )
+        finally:
+            self._active_relation_context = {}
+
+        pair_key = (left_id, right_id)
+        helpful = relief_record is not None
+
+        experiment_record = {
+            "stage_id": str(stage_id),
+            "inquiry_id": inquiry_id,
+            "consumer": str(consumer),
+            "operand_ids": [left_id, right_id],
+            "outcome": self._json_clone(outcome),
+            "helpful": bool(helpful),
+            "tick": int(self.tick_count),
+        }
+
+        stored = self._representation_collisions.get(inquiry_id)
+        if helpful:
+            base_result["status"] = "helpful"
+            base_result["evidence_admitted"] = True
+            base_result["actual_coactivation"] = True
+            promoted_id = str(self._links_by_parents.get(pair_key, "") or "")
+            if promoted_id:
+                base_result["promoted_link_id"] = promoted_id
+            if stored is not None:
+                stored["status"] = "unresolved"
+                stored["attempts"] = 0
+        else:
+            base_result["status"] = "unhelpful"
+            base_result["evidence_admitted"] = False
+            if stored is not None:
+                stored["status"] = "dormant"
+                reduction = max(0.0, min(1.0, float(
+                    getattr(self.cfg, "REPRESENTATION_INQUIRY_UNHELPFUL_PRESSURE_REDUCTION", 0.35) or 0.35
+                )))
+                stored["max_pressure"] = max(
+                    0.0, float(stored.get("max_pressure", 0.0) or 0.0) * (1.0 - reduction),
+                )
+
+        self._record_representation_experiment_history(stage, base_result, experiment_record)
+        return base_result
+
+    def representation_experiment_status(self) -> Dict[str, Any]:
+        """Bounded, read-only diagnostics surface: active stages, recent
+        completed-experiment history, and the most recent bounded-search
+        stats -- for instrumentation, not for a second promotion path."""
+        return {
+            "active_stages": len(self._representation_experiment_stages),
+            "stage_ids": sorted(self._representation_experiment_stages.keys()),
+            "experiment_history_count": len(self._representation_experiment_history),
+            "recent_experiments": [
+                self._json_clone(rec) for rec in self._representation_experiment_history[-16:]
+            ],
+            "consumer_cycles": dict(self._representation_inquiry_consumer_cycle),
+            "last_search": dict(self._last_representation_search or {}),
+        }
+
+    def _representation_parent_ref(self, item_id: str) -> Dict[str, Any]:
+        iid = str(item_id)
+        return {
+            "representation_id": iid,
+            "kind": self._representation_kind(iid),
+            "generation": int(self._generation_of_item(iid)),
+            "depth": int(self._item_depth(iid)),
+            "participated_as": "intact_representation",
+            "constraint_basis": self._constraint_basis_for_item(iid),
+            "semantic_identity": self._semantic_identity_for_item(iid),
+            "operational_effect": self._operational_effect_for_item(iid),
+            "eligible": bool(self.representation_is_eligible(iid)),
+        }
+
+    def representation_record(self, item_id: str) -> Optional[Dict[str, Any]]:
+        """Return the machine-addressable intact representation surface.
+
+        Constraint composition and relational provenance are deliberately
+        separate fields.  Historical links are described lazily from their
+        existing DAG and tags; no migration or renaming is required.
+        """
+        iid = str(item_id)
+        if iid not in self.links and iid not in self.abilities:
+            return None
+        link = self.links.get(iid)
+        record = self._representation_parent_ref(iid)
+        record["parent_ids"] = list(link.parents or []) if link is not None else []
+        record["descendant_ids"] = self.representation_descendants(iid)
+        record["representation_relation"] = self._json_clone(
+            getattr(link, "representation_relation", None)
+        ) if link is not None and getattr(link, "representation_relation", None) else None
+        return record
+
+    @staticmethod
+    def _representation_relation_id(left_id: str, right_id: str) -> str:
+        raw = f"intact::{left_id}->{right_id}"
+        return "RR:" + hashlib.sha1(raw.encode()).hexdigest()[:16]
+
+    def representation_relation_for_pair(self, left_id: str, right_id: str) -> Optional[Dict[str, Any]]:
+        rec = self._representation_relations.get(self._representation_relation_id(str(left_id), str(right_id)))
+        return self._json_clone(rec) if rec is not None else None
+
+    def _update_representation_relation(
+        self,
+        key: Tuple[str, str],
+        ps: PairStats,
+        relief: PressureVec,
+        cost_total: Dict[str, float],
+        x_risk: float,
+    ) -> Dict[str, Any]:
+        left_id, right_id = str(key[0]), str(key[1])
+        relation_id = self._representation_relation_id(left_id, right_id)
+        counts = self._merged_axis_counts_for_pair((left_id, right_id))
+        signature = self._canonical_coupling_signature(counts)
+        left_gen = self._generation_of_item(left_id)
+        right_gen = self._generation_of_item(right_id)
+        child_gen = int(_bred_child_generation(left_gen, right_gen))
+        context = dict(self._active_relation_context or {})
+        collision_ids: List[str] = []
+        for raw_collision_id in (context.get("collision_ids", []) or []):
+            collision_id = str(raw_collision_id or "")
+            collision = self._representation_collisions.get(collision_id, {})
+            latest = collision.get("latest", collision) if isinstance(collision, dict) else {}
+            represented = {
+                str(x) for x in (latest.get("representation_ids", []) or [])
+                if str(x)
+            } if isinstance(latest, dict) else set()
+            if collision_id and ({left_id, right_id} & represented):
+                collision_ids.append(collision_id)
+        difference_values = {
+            a: float((context.get("difference_values", {}) or {}).get(a, 0.0) or 0.0)
+            for a in AXES
+        }
+        rate = max(0.001, min(0.5, float(getattr(self.cfg, "COUPLING_EMA_RATE", 0.08))))
+        relief_now = {a: float(getattr(relief, a, 0.0) or 0.0) for a in AXES}
+        relief_mag = max(0.0, float(relief.sum_positive_relief()))
+
+        rec = self._representation_relations.get(relation_id)
+        if rec is None:
+            rec = {
+                "schema_version": 1,
+                "relation_id": relation_id,
+                "mode": "intact_operands",
+                "parent_ids": [left_id, right_id],
+                "parents": [self._representation_parent_ref(left_id), self._representation_parent_ref(right_id)],
+                "constraint_basis": {
+                    "signature": signature,
+                    "counts": {a: int(counts.get(a, 0) or 0) for a in AXES},
+                },
+                "counts": {a: int(counts.get(a, 0) or 0) for a in AXES},
+                "signature": signature,
+                "semantic": self._semantic_coupling_label(counts),
+                "status": "candidate",
+                "count": 0,
+                "first_tick": int(self.tick_count),
+                "last_tick": int(self.tick_count),
+                "generation_span": abs(int(left_gen) - int(right_gen)),
+                "parent_generations": [int(left_gen), int(right_gen)],
+                "last_generation": child_gen,
+                "min_generation": child_gen,
+                "max_generation": child_gen,
+                "last_generation_role": _generation_role_name(child_gen),
+                "breeding_score": float(_breeding_pair_score(left_gen, right_gen)),
+                "effect_ema": 0.0,
+                "semantic_lane_ema": {},
+                "semantic_confidence": 0.0,
+                "semantic_version": 0,
+                "semantic_translation": "",
+                "collision_refs": [],
+                "consequence_history": [],
+                "difference": {
+                    "observation_count": 0,
+                    "sum": {a: 0.0 for a in AXES},
+                    "abs_sum": {a: 0.0 for a in AXES},
+                    "last": {a: 0.0 for a in AXES},
+                },
+            }
+            self._representation_relations[relation_id] = rec
+
+        rec["parents"] = [self._representation_parent_ref(left_id), self._representation_parent_ref(right_id)]
+        rec["count"] = max(int(rec.get("count", 0) or 0) + 1, int(ps.count or 0))
+        rec["last_tick"] = int(self.tick_count)
+        rec["effect_ema"] = ((1.0 - rate) * float(rec.get("effect_ema", 0.0) or 0.0)) + (rate * relief_mag)
+        rec["mean_relief"] = {a: float(ps.mean_relief().get(a, 0.0) or 0.0) for a in AXES}
+        rec["mean_positive_relief"] = {a: float(ps.mean_pos_relief().get(a, 0.0) or 0.0) for a in AXES}
+        rec["stdev_relief"] = {a: float(ps.stdev_relief().get(a, 0.0) or 0.0) for a in AXES}
+        rec["mean_cost"] = {a: float(ps.mean_cost().get(a, 0.0) or 0.0) for a in AXES}
+        rec["mean_x_risk"] = float(ps.mean_x_risk_val())
+        consequence = {
+            "tick": int(self.tick_count),
+            "relief": relief_now,
+            "cost": {a: float(cost_total.get(a, 0.0) or 0.0) for a in AXES},
+            "x_risk": float(x_risk or 0.0),
+            "dominant_relief_axis": relief.dominant_positive_axis(),
+        }
+        rec["last_consequence"] = consequence
+
+        diff_rec = dict(rec.get("difference", {}) or {})
+        if any(abs(v) > 0.0 for v in difference_values.values()):
+            diff_rec["observation_count"] = int(diff_rec.get("observation_count", 0) or 0) + 1
+            diff_sum = dict(diff_rec.get("sum", {}) or {})
+            diff_abs = dict(diff_rec.get("abs_sum", {}) or {})
+            for axis in AXES:
+                value = float(difference_values.get(axis, 0.0) or 0.0)
+                diff_sum[axis] = float(diff_sum.get(axis, 0.0) or 0.0) + value
+                diff_abs[axis] = float(diff_abs.get(axis, 0.0) or 0.0) + abs(value)
+            diff_rec["sum"] = diff_sum
+            diff_rec["abs_sum"] = diff_abs
+            diff_rec["last"] = dict(difference_values)
+        rec["difference"] = diff_rec
+
+        if collision_ids:
+            refs = list(dict.fromkeys(list(rec.get("collision_refs", []) or []) + collision_ids))
+            rec["collision_refs"] = refs[-32:]
+        rec["trigger"] = {
+            "actual_coactivation": True,
+            "difference_present": bool(any(abs(v) > 0.0 for v in difference_values.values())),
+            "collision_refs": list(rec.get("collision_refs", []) or []),
+            "active_concepts": list(context.get("active_concepts", []) or [])[:16],
+        }
+        consequence_history = list(rec.get("consequence_history", []) or [])
+        consequence_history.append({
+            **self._json_clone(consequence),
+            "difference": dict(difference_values),
+            "trigger": self._json_clone(rec["trigger"]),
+        })
+        history_cap = max(
+            1,
+            int(getattr(self.cfg, "REPRESENTATION_RELATION_HISTORY_MAX", 16) or 16),
+        )
+        rec["consequence_history"] = consequence_history[-history_cap:]
+        rec["admissibility"] = {
+            "state": "pending_existing_genealogy_gates" if rec.get("status") != "promoted" else "promoted",
+            "evidence_count": int(ps.count or 0),
+        }
+
+        # Relational semantic evidence (Sunni & Cael): actual intact
+        # co-activation through a completed representation experiment
+        # supplements -- never replaces -- the primitive-axis semantic
+        # route below. No pair-to-word table, external model, or expected
+        # concept is ever consulted; this only counts real observations.
+        is_experiment = bool(context.get("representation_inquiry_experiment", False))
+        relational_evidence = dict(rec.get("relational_evidence", {}) or {})
+        relational_evidence["actual_experiment_count"] = int(
+            relational_evidence.get("actual_experiment_count", 0) or 0
+        ) + (1 if is_experiment else 0)
+        rec["relational_evidence"] = relational_evidence
+        semantic_sources = dict(rec.get("semantic_sources", {}) or {})
+        semantic_sources["answer_key"] = False
+        semantic_sources["intact_relation_observations"] = int(
+            semantic_sources.get("intact_relation_observations", 0) or 0
+        ) + (1 if is_experiment else 0)
+        semantic_sources.setdefault("primitive_grounding", True)
+        rec["semantic_sources"] = semantic_sources
+
+        self._update_semantic_translation(rec, max(0.01, min(0.5, float(getattr(self.cfg, "SEMANTIC_EMA_RATE", 0.10)))))
+        return rec
+
+    def _promoted_relation_metadata(
+        self,
+        key: Tuple[str, str],
+        ps: PairStats,
+        link_id: str,
+        dominant_axis: str,
+        lineage_grade: Dict[str, Any],
+    ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+        relation_id = self._representation_relation_id(str(key[0]), str(key[1]))
+        rec = self._representation_relations.get(relation_id)
+        if rec is None:
+            # _try_promote is normally reached through _accumulate_pairs, which
+            # creates the record first.  This fallback keeps direct diagnostic
+            # calls safe without inventing an observation.
+            counts = self._merged_axis_counts_for_pair(key)
+            rec = {
+                "schema_version": 1,
+                "relation_id": relation_id,
+                "mode": "intact_operands",
+                "parent_ids": [str(key[0]), str(key[1])],
+                "parents": [self._representation_parent_ref(str(key[0])), self._representation_parent_ref(str(key[1]))],
+                "constraint_basis": {
+                    "signature": self._canonical_coupling_signature(counts),
+                    "counts": {a: int(counts.get(a, 0) or 0) for a in AXES},
+                },
+                "count": int(ps.count or 0),
+                "status": "candidate",
+                "collision_refs": [],
+                "difference": {"observation_count": 0, "sum": {a: 0.0 for a in AXES}, "abs_sum": {a: 0.0 for a in AXES}, "last": {a: 0.0 for a in AXES}},
+            }
+            self._representation_relations[relation_id] = rec
+
+        rec["status"] = "promoted"
+        rec["promoted_link_id"] = str(link_id)
+        rec["promotion_tick"] = int(self.tick_count)
+        rec["admissibility"] = {
+            "state": "promoted",
+            "authority": "existing_genealogy_gates",
+            "evidence_count": int(ps.count or 0),
+        }
+        rec["result_semantic_identity"] = {
+            "origin_signature": str(lineage_grade.get("origin_signature", "0") or "0"),
+            "operator_action": str(lineage_grade.get("operator_action", "cross_constraint_operation") or "cross_constraint_operation"),
+            "purpose_lane": str(lineage_grade.get("purpose_lane", "meaning") or "meaning"),
+            "generation": int(lineage_grade.get("generation", 1) or 1),
+            "generation_role": str(lineage_grade.get("generation_role", "PRIMARY") or "PRIMARY"),
+            "dominant_relief_axis": str(dominant_axis or "X"),
+            "ontological_status": str(lineage_grade.get("ontological_status", "derivative_offspring") or "derivative_offspring"),
+            "status": "active",
+        }
+
+        basis = self._json_clone(rec.get("constraint_basis", {}))
+        relation_snapshot = {
+            "schema_version": 1,
+            "relation_id": relation_id,
+            "mode": "intact_operands",
+            "parent_ids": list(rec.get("parent_ids", []) or []),
+            "parents": self._json_clone(rec.get("parents", []) or []),
+            "trigger": self._json_clone(rec.get("trigger", {}) or {}),
+            "evidence": {
+                "count": int(ps.count or 0),
+                "mean_relief": self._json_clone(rec.get("mean_relief", {}) or {}),
+                "mean_positive_relief": self._json_clone(rec.get("mean_positive_relief", {}) or {}),
+                "mean_cost": self._json_clone(rec.get("mean_cost", {}) or {}),
+                "mean_x_risk": float(rec.get("mean_x_risk", 0.0) or 0.0),
+                "difference": self._json_clone(rec.get("difference", {}) or {}),
+                "consequence_history": self._json_clone(rec.get("consequence_history", []) or []),
+                "admissibility": self._json_clone(rec.get("admissibility", {}) or {}),
+            },
+            "semantic_interpretation": {
+                "translation": str(rec.get("semantic_translation", "") or ""),
+                "confidence": float(rec.get("semantic_confidence", 0.0) or 0.0),
+                "version": int(rec.get("semantic_version", 0) or 0),
+                "lane_ema": self._json_clone(rec.get("semantic_lane_ema", {}) or {}),
+            },
+        }
+        semantic_identity = self._json_clone(rec["result_semantic_identity"])
+        return basis, relation_snapshot, semantic_identity
 
     def _canonical_signature_text(self, signature: str) -> str:
         return self._canonical_coupling_signature(self._counts_from_signature(signature))
@@ -3684,7 +5267,7 @@ class ConstraintGenealogyLogger:
         risk["X"] = max(0.0, float(getattr(link, "mean_x_risk", 0.0) or 0.0))
 
         tags = list(getattr(link, "tags", []) or [])
-        tags.extend(["derived_link", "composite"])
+        tags.extend(["derived_link", "composite", f"representation_of:{link.id}"])
         dedup_tags = tuple(dict.fromkeys([str(t) for t in tags if t]))
 
         link_id = str(getattr(link, "id", "?"))
@@ -5398,9 +6981,11 @@ class ConstraintGenealogyLogger:
 
             if key not in self._pair_stats:
                 self._pair_stats[key] = PairStats(left_id=left.id, right_id=right.id)
+                self._representation_index_stamp = None
 
             ps = self._pair_stats[key]
             ps.update(relief, cost_total, x_risk, self.tick_count)
+            self._update_representation_relation(key, ps, relief, cost_total, x_risk)
 
             # Already promoted?
             if key in self._links_by_parents:
@@ -5416,6 +7001,7 @@ class ConstraintGenealogyLogger:
                     continue
                 self.links[link.id] = link
                 self._links_by_parents[key] = link.id
+                self._representation_index_stamp = None
                 self.links_promoted += 1
                 self._promotion_stats["promoted"] += 1
                 self._last_promotion_tick = self.tick_count
@@ -5907,6 +7493,14 @@ class ConstraintGenealogyLogger:
                 )
                 pass
 
+        constraint_basis, representation_relation, semantic_identity = self._promoted_relation_metadata(
+            key=key,
+            ps=ps,
+            link_id=link_id,
+            dominant_axis=dom_axis,
+            lineage_grade=lineage_grade,
+        )
+
         return ConstraintLink(
             id=link_id,
             parents=list(key),
@@ -5919,6 +7513,9 @@ class ConstraintGenealogyLogger:
             mean_x_risk=mx_risk,
             dominant_relief_axis=dom_axis,
             tags=tags,
+            constraint_basis=constraint_basis,
+            representation_relation=representation_relation,
+            semantic_identity=semantic_identity,
         )
     def _generation_of_item(self, item_id: str, seen: Optional[set] = None) -> int:
         iid = str(item_id)
@@ -6232,12 +7829,24 @@ class ConstraintGenealogyLogger:
     def _write_couplings_file(self) -> None:
         path = os.path.join(self.output_dir, self.cfg.COUPLINGS_FILE)
         payload = {
+            "representation_schema_version": 2,
             "persistent_pressure_root": str(self.cfg.PERSISTENT_PRESSURE_ROOT),
             "persistent_pressure_root_ema": float(self._persistent_pressure_root_ema),
             "coupling_events": int(self._coupling_events),
             "roots": self._coupling_roots,
             "origin_counts": dict(self._coupling_origin_counts),
+            "representation_relations": self._representation_relations,
+            "representation_collisions": self._representation_collisions,
             "experiments": {"trials": list(self._experiment_trials[-256:]), "adoptions": list(self._experiment_adoptions[-128:])},
+            # Additive (schema v2): native representational inquiry and
+            # experimentation runtime state (Sunni & Cael). Old couplings.json
+            # files without this key load normally with empty runtime state --
+            # no destructive migration, no change to any field above.
+            "representation_inquiry_runtime": {
+                "active_stages": dict(self._representation_experiment_stages),
+                "history": list(self._representation_experiment_history[-512:]),
+                "consumer_cycles": dict(self._representation_inquiry_consumer_cycle),
+            },
         }
         from pathlib import Path
         atomic_write_json(Path(path), payload, indent=2)

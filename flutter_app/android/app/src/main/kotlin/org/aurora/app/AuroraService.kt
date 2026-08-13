@@ -95,6 +95,20 @@ class AuroraService : Service() {
             }
         }
 
+        // Section VI/VII (Sunni & Cael): the parallel, nonsemantic auditory
+        // path. pcmBytes is little-endian 16-bit mono PCM from
+        // MainActivity's AudioRecord capture loop -- never text, never a
+        // transcript, entirely independent of SpeechRecognizer/STT.
+        fun provideAudioObservationRaw(pcmBytes: ByteArray, sampleRate: Int) {
+            scope?.launch(Dispatchers.IO) {
+                try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("provide_audio_observation_raw", pcmBytes, sampleRate)
+                } catch (_: Exception) {}
+            }
+        }
+
         fun provideScreenObservation(payloadJson: String) {
             scope?.launch(Dispatchers.IO) {
                 try {
@@ -278,6 +292,19 @@ class AuroraService : Service() {
         scope!!.launch { pollAxisState() }
     }
 
+    // Section XXV (Sunni & Cael): process continuity. Explicit START_STICKY
+    // so the system restarts this service (with a null Intent) after it is
+    // killed for memory pressure -- Aurora's developmental continuity
+    // (curiosity cycles, self-monitor heartbeat, sensory bridges) must not
+    // silently stop just because Android reclaimed the process. onCreate()
+    // already performs the one-time setup (startForeground/bootPython/
+    // pollers); onStartCommand fires on every startService()/
+    // startForegroundService() call including the system's post-kill
+    // restart, so it must stay idempotent and must NOT repeat that setup.
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return Service.START_STICKY
+    }
+
     private suspend fun pollAxisState() {
         // Keeps the face live independent of conversation turns — axis state
         // already drifts continuously in the background (aurora_bridge.py's
@@ -357,10 +384,35 @@ class AuroraService : Service() {
 
             // Python returns "error: <msg>" on boot failure; treat anything else as ready.
             val isError = status.startsWith("error")
-            val json = JSONObject()
+
+            // Section XXIII/XXIV (Sunni & Cael): the plain error/ready split above
+            // only reflects the original 6-system boot check (language_field,
+            // identity_field, consciousness, sedimemory, lattice,
+            // geological_baseline). get_mobile_developmental_health() additionally
+            // covers genealogy, RCRW, Sensory Crystal, dimensional physics,
+            // curiosity, and the Dream substrate -- systems that could previously
+            // be silently None on a "ready" boot with no signal to Flutter at all.
+            var healthObj: JSONObject? = null
+            if (!isError) {
+                try {
+                    val healthJson = bridge.callAttr("get_mobile_developmental_health").toString()
+                    healthObj = JSONObject(healthJson)
+                    val overall = healthObj.optString("overall", "unknown")
+                    if (overall != "healthy") {
+                        Log.w(TAG, "Mobile developmental health: $overall — $healthJson")
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "get_mobile_developmental_health failed: ${e.message}")
+                }
+            }
+
+            val jsonBuilder = JSONObject()
                 .put("type", if (isError) "error" else "ready")
                 .put("text", status)
-                .toString()
+            if (healthObj != null) {
+                jsonBuilder.put("health", healthObj)
+            }
+            val json = jsonBuilder.toString()
             bootEvent = json
             withContext(Dispatchers.Main) { eventSink?.success(json) }
 

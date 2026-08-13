@@ -19,6 +19,7 @@ from aurora_internal.constraint_genealogy import (
     PressureVec,
     ReliefRecord,
     ConstraintLink,
+    constraint_link_from_dict,
     PairStats,
     GenealogyDilationGovernor,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "PressureVec",
     "ReliefRecord",
     "ConstraintLink",
+    "constraint_link_from_dict",
     "PairStats",
     "GenealogyDilationGovernor",
 ]

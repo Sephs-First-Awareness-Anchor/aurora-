@@ -18,7 +18,7 @@ Every derived operation declares its canonical X/T/N/B/A ancestry.  The final
 turn meaning therefore remains traceable to the five roots rather than becoming
 an unrelated intent label or a bag of topic words.
 
-Authors: Sunni (Sir) Morningstar and Ceph
+Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 from __future__ import annotations
 
@@ -198,6 +198,92 @@ def _unknown_role(wh: str, *, wh_is_subject: bool, relation: str) -> str:
     return "truth"
 
 
+# FIX-A008 (Sunni & Cael, comprehension pressure test post-mortem, build 650):
+# the pre-existing sentence-boundary split below (re.split on . ! ?) is the
+# ONLY clause-separation this module ever did. A single sentence carrying
+# multiple relational claims -- "Devlin fixed the scooter because he wanted
+# me to trust him again", "the workshop never trusted him, I did, and the
+# scooter has nothing to do with it" -- never hit that split, so the whole
+# clause after the first verb collapsed into one opaque `obj` string and
+# every claim past the first was invisible to X/T/N/B/A and to
+# OntologicalWeb.add_relation() downstream. This extends the SAME
+# segment-then-recurse convention the sentence-boundary split already uses
+# to the boundaries *within* one sentence: a subordinator ("because",
+# "since", "although", "though", "even though", "while", "whereas"), a
+# comma immediately before a coordinator ("and"/"but"/"so"/"yet") where a
+# verb actually follows, an em-dash/double-hyphen, or a semicolon. This is
+# heuristic, not a real syntactic parser -- it will not catch every
+# clause boundary (asyndetic comma splices with no conjunction are left
+# alone deliberately, to avoid false-splitting plain noun lists like
+# "trust, respect, and connection"). It is strictly better than the prior
+# single-triple-per-sentence behavior, not a claim of complete coverage.
+_CLAUSE_SUBORDINATORS: Tuple[str, ...] = (
+    "even though", "because", "since", "although", "though", "while", "whereas",
+)
+_CLAUSE_COORDINATORS: Tuple[str, ...] = ("and", "but", "so", "yet")
+_CLAUSE_HARD_MARKERS: Tuple[str, ...] = (" -- ", " \u2014 ", "; ")
+
+
+def _split_intra_sentence_clauses(raw: str) -> List[str]:
+    """Split ONE sentence-terminal segment into its component clauses.
+
+    Returns [raw] unchanged when no confident clause boundary is found --
+    silence, not a guess, is the correct output when the heuristics don't
+    clear their bar.
+    """
+    text = str(raw or "").strip()
+    if not text:
+        return [text]
+
+    # Em-dash / double-hyphen / semicolon: unambiguous clause breaks.
+    for hard_marker in _CLAUSE_HARD_MARKERS:
+        if hard_marker in text:
+            parts = [p.strip() for p in text.split(hard_marker) if p.strip()]
+            if len(parts) > 1:
+                out: List[str] = []
+                for part in parts:
+                    out.extend(_split_intra_sentence_clauses(part))
+                return out
+
+    lower = text.lower()
+
+    # Comma + coordinator: only a real clause break if a verb follows the
+    # coordinator (so "trust, respect, and connection" stays one clause,
+    # but "he fixed it, and that's why I trust him" splits in two).
+    for coord in _CLAUSE_COORDINATORS:
+        marker = f", {coord} "
+        idx = lower.find(marker)
+        if idx > 0:
+            head = text[:idx].strip()
+            tail = text[idx + len(marker):].strip()
+            if head and tail and any(_looks_verb(t) for t in _tokens(tail)):
+                out = _split_intra_sentence_clauses(head)
+                out.extend(_split_intra_sentence_clauses(tail))
+                return out
+
+    # Subordinator, clause-initial or mid-sentence: split at the word and
+    # drop it -- the remainder on each side parses as an ordinary
+    # declarative on its own. Only split when both sides independently
+    # look like a real clause (each has its own verb); otherwise leave the
+    # sentence intact rather than mis-splitting a noun phrase.
+    for subordinator in sorted(_CLAUSE_SUBORDINATORS, key=len, reverse=True):
+        pattern = r"(?:^|,\s*|\s)" + r"\s+".join(re.escape(t) for t in subordinator.split()) + r"\s+"
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if match and match.start() > 0:
+            head = text[:match.start()].rstrip(", ").strip()
+            tail = text[match.end():].strip()
+            if (
+                head and tail
+                and any(_looks_verb(t) for t in _tokens(head))
+                and any(_looks_verb(t) for t in _tokens(tail))
+            ):
+                out = _split_intra_sentence_clauses(head)
+                out.extend(_split_intra_sentence_clauses(tail))
+                return out
+
+    return [text]
+
+
 @dataclass
 class RelationalForm:
     raw_text: str = ""
@@ -250,6 +336,12 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
     # as one conversational configuration instead of stuffing both sentences
     # into the object slot.
     segments = [seg.strip() for seg in re.split(r"(?<=[.!?])\s+", raw) if seg.strip()]
+    if len(segments) == 1:
+        # FIX-A008: a single sentence-terminal segment can still carry
+        # multiple relational claims (see _split_intra_sentence_clauses
+        # docstring). Only expand into the multi-clause path when a real
+        # boundary was found -- one clause back means nothing changes.
+        segments = _split_intra_sentence_clauses(segments[0])
     if len(segments) > 1:
         parsed_segments = [extract_relational_form(seg, parsed={}) for seg in segments]
         active_index = next((i for i in range(len(parsed_segments) - 1, -1, -1) if parsed_segments[i].get("question")), len(parsed_segments) - 1)

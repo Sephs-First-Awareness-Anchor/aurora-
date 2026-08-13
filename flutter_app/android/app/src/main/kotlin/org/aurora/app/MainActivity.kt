@@ -7,9 +7,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Process
 import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -43,6 +47,8 @@ class MainActivity : FlutterActivity() {
         const val EVENTS      = "org.aurora.app/events"
         const val PERM_REQUEST = 1001
         const val FRAME_INTERVAL_MS = 1_000L  // 1 FPS is ample for Aurora's visual loop
+        const val AMBIENT_AUDIO_SAMPLE_RATE = 16_000  // Hz -- ample for the DSP features computed Python-side
+        const val AUDIO_PUSH_INTERVAL_MS = 1_000L      // bounded push rate (Section XXVIII battery discipline)
     }
 
     @Volatile private var pendingSummon = false
@@ -106,6 +112,27 @@ class MainActivity : FlutterActivity() {
     private val cameraExecutor = Executors.newSingleThreadExecutor()
     private var cameraProvider: ProcessCameraProvider? = null
     private var lastFrameMs = 0L
+
+    // ── Ambient audio (Section VI/VII, Sunni & Cael: Aurora must be able to
+    // hear without requiring speech recognition) ───────────────────────────
+    // This is a PARALLEL, independent capture path from SpeechRecognizer
+    // above -- it never transcribes, never competes for STT's result
+    // callback, and keeps running (subject to the same lifecycle) whether
+    // or not a speech-recognition session is simultaneously active.
+    //
+    // NOTE (verification required, cannot be confirmed without a physical
+    // device/build): some Android OEMs restrict concurrent AudioRecord +
+    // SpeechRecognizer access to the microphone, or duck one when the
+    // other is active. This implementation assumes concurrent access is
+    // permitted (the common case on stock AOSP-derived builds); if a
+    // device rejects it, AudioRecord.getState() will report
+    // STATE_UNINITIALIZED and startAmbientAudioCapture() below no-ops
+    // safely rather than crashing -- but the actual behavior needs
+    // confirming on real hardware, not assumed from this source alone.
+    private val audioExecutor = Executors.newSingleThreadExecutor()
+    private var audioRecord: AudioRecord? = null
+    @Volatile private var audioCaptureRunning = false
+    private var lastAudioPushMs = 0L
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -226,6 +253,13 @@ class MainActivity : FlutterActivity() {
                 == PackageManager.PERMISSION_GRANTED) {
             startCameraCapture()
         }
+        // Start the PARALLEL ambient-audio path immediately if permission is
+        // already granted -- independent of whether/when SpeechRecognizer
+        // sessions happen (Section VI/VII).
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED) {
+            startAmbientAudioCapture()
+        }
     }
 
     // ── Permissions ───────────────────────────────────────────────────────────
@@ -258,6 +292,7 @@ class MainActivity : FlutterActivity() {
                     JSONObject().put("source","permission").put("type","microphone").put("granted",true).toString()
                 )
             }
+            startAmbientAudioCapture()
         }
         if (granted(Manifest.permission.CAMERA)) startCameraCapture()
     }
@@ -389,6 +424,95 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    // ── Ambient audio (Section VI/VII) ──────────────────────────────────────
+    //
+    // Bounded, low-rate raw-PCM capture -- mirrors the camera path's
+    // FRAME_INTERVAL_MS throttling in spirit (Section XXVIII: no constant
+    // maximum-frequency sampling). Chunks are read continuously off the
+    // mic (AudioRecord itself blocks on read()), but only pushed to Python
+    // at AUDIO_PUSH_INTERVAL_MS, so the DSP/Chaquopy cost stays bounded
+    // even though the underlying hardware stream is continuous.
+    private fun startAmbientAudioCapture() {
+        if (audioCaptureRunning) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) return
+
+        val sampleRate = AMBIENT_AUDIO_SAMPLE_RATE
+        val minBufferBytes = AudioRecord.getMinBufferSize(
+            sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
+        )
+        if (minBufferBytes <= 0) {
+            Log.w(TAG, "ambient audio: device does not support the requested format")
+            return
+        }
+        val bufferBytes = minBufferBytes * 2
+
+        @Suppress("MissingPermission")  // checked above
+        fun tryCreate(source: Int): AudioRecord? = try {
+            val candidate = AudioRecord(
+                source, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferBytes,
+            )
+            if (candidate.state == AudioRecord.STATE_INITIALIZED) candidate else {
+                candidate.release()
+                null
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "ambient audio: AudioRecord(source=$source) failed: ${e.message}")
+            null
+        }
+
+        // UNPROCESSED gives the rawest signal (no AGC/noise-suppression
+        // coloring the features below) but isn't guaranteed available on
+        // every device; MIC is the universal fallback.
+        val record = tryCreate(MediaRecorder.AudioSource.UNPROCESSED)
+            ?: tryCreate(MediaRecorder.AudioSource.MIC)
+
+        if (record == null) {
+            Log.w(TAG, "ambient audio: AudioRecord failed to initialize on this device -- capture unavailable")
+            return
+        }
+
+        audioRecord = record
+        audioCaptureRunning = true
+        record.startRecording()
+
+        audioExecutor.execute {
+            Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
+            val chunk = ShortArray(bufferBytes / 2)
+            while (audioCaptureRunning) {
+                val rec = audioRecord ?: break
+                val read = try {
+                    rec.read(chunk, 0, chunk.size)
+                } catch (e: Exception) {
+                    Log.w(TAG, "ambient audio read failed: ${e.message}")
+                    break
+                }
+                if (read <= 0) continue
+
+                val now = System.currentTimeMillis()
+                if (now - lastAudioPushMs < AUDIO_PUSH_INTERVAL_MS) continue
+                lastAudioPushMs = now
+
+                // Pack the read samples into little-endian 16-bit PCM bytes --
+                // matches provide_audio_observation_raw()'s expected format
+                // exactly (numpy.frombuffer(..., dtype="<i2")).
+                val bytes = ByteArray(read * 2)
+                val bb = ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                for (i in 0 until read) bb.putShort(chunk[i])
+                AuroraService.provideAudioObservationRaw(bytes, sampleRate)
+            }
+        }
+    }
+
+    private fun stopAmbientAudioCapture() {
+        audioCaptureRunning = false
+        try {
+            audioRecord?.stop()
+        } catch (_: Exception) {}
+        audioRecord?.release()
+        audioRecord = null
+    }
+
     // ── Service / overlay helpers ─────────────────────────────────────────────
 
     private fun startAuroraService() {
@@ -429,6 +553,8 @@ class MainActivity : FlutterActivity() {
         super.onDestroy()
         cameraProvider?.unbindAll()
         cameraExecutor.shutdown()
+        stopAmbientAudioCapture()
+        audioExecutor.shutdown()
         speechRecognizer?.destroy()
         speechRecognizer = null
         tts?.shutdown()

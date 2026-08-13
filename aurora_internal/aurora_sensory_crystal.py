@@ -717,14 +717,23 @@ class SensoryClusterFacet:
                         fac_map = axis_map.get(self.domain, {})
                         axis = fac_map.get(self.facet, axis_map.get(self.domain, {}).get(self.facet, "N"))
                         drive_value = _clamp01(node.fitness)
+                        # Sunni & Cael (Multimodal Representational Autonomy):
+                        # preserve the fields the evolutionary consumer needs
+                        # to attribute this pressure back to the exact
+                        # sensory representation that produced it -- stage
+                        # and session breadth were previously dropped here,
+                        # even though the node already carries them.
                         evidence = {
                             "ts": _time.time(),
                             "event": "sensory_promotion",
                             "domain": self.domain,
                             "facet": self.facet,
                             "node_id": node.node_id,
+                            "modality": self.domain,
+                            "stage": node.stage,
                             "mutation_name": f"sensory.{self.domain}.{self.facet}",
                             "spacing": axis,
+                            "constraint_axes": {axis: drive_value},
                             "pressure_profile": {
                                 "total_confidence": round(node.fitness, 3),
                                 "links": len(node.cross_modal_links),
@@ -733,7 +742,11 @@ class SensoryClusterFacet:
                             "axis_drive": {axis: drive_value},
                             "notes": {
                                 "confidence": round(node.fitness, 3),
+                                "fitness": round(node.fitness, 3),
                                 "usage": node.usage_count,
+                                "session_count": node.session_count,
+                                "maturity": round(node.maturity, 3),
+                                "cross_modal_links": list(node.cross_modal_links[:8]),
                             },
                         }
                         self._evolution_hook(evidence)
@@ -1742,6 +1755,19 @@ class AuroraSensoryCrystal:
 
 TRAIT_ID = "aurora_sensory_crystal_v1"
 
+# Sunni & Cael: the canonical set of sensory AbilityProfile IDs
+# ensure_sensory_crystal_lineage() registers into the live genealogy.
+# Named here (module level) rather than only as inline dict keys inside
+# that function so callers/tests can verify registration without
+# duplicating the literal ID list.
+SENSORY_ABILITY_IDS = (
+    "N:SENSORY_INTAKE",
+    "B:SENSORY_CLUSTER",
+    "A:SENSORY_PROMOTE",
+    "N:SENSORY_CROSS_MODAL",
+    "T:SENSORY_DISTILL",
+)
+
 def _make_lineage_trait_spec() -> Optional[Any]:
     """
     Build the LineageTraitSpec for the sensory crystal abilities.
@@ -2007,40 +2033,53 @@ def ensure_sensory_crystal_lineage(systems: Dict[str, Any],
 
     Returns True if newly materialized, False if already present.
     """
+    # Trait materialization and live genealogy ability registration are
+    # separate responsibilities (Sunni & Cael). A persisted trait directory
+    # from a prior boot means the ONE-TIME on-disk materialization step can
+    # be skipped -- it does NOT mean the freshly-constructed in-memory
+    # ConstraintGenealogyLogger for THIS process already has the sensory
+    # AbilityProfiles registered. Every restart gets a new logger instance;
+    # the injection loop below must run every time, gated only by its own
+    # per-ability idempotency check, never by trait-directory existence.
     trait_dir = Path(state_dir) / "ability_lineages" / TRAIT_ID
-    if trait_dir.exists():
+    already_materialized = trait_dir.exists()
+    result = False
+
+    if already_materialized:
         if verbose:
-            logger.info("[SensoryCrystal] Lineage trait already materialized — skipping.")
-        return False
-
-    spec = _make_lineage_trait_spec()
-    if spec is None:
-        logger.warning("[SensoryCrystal] Lineage machinery not available — "
-                       "crystal will run without genealogy registration.")
-        return False
-
-    try:
-        registry = systems.get("lineage_trait_registry")
-        if registry is None:
+            logger.info("[SensoryCrystal] Lineage trait already materialized — "
+                        "skipping re-materialization, still registering live abilities.")
+    else:
+        spec = _make_lineage_trait_spec()
+        if spec is None:
+            logger.warning("[SensoryCrystal] Lineage machinery not available — "
+                           "crystal will run without genealogy registration.")
+        else:
             try:
-                from aurora_internal.aurora_lineage_bound_traits import (
-                    LineageBoundTraitRegistry,
-                )
-                registry = LineageBoundTraitRegistry(
-                    storage_dir=str(Path(state_dir) / "ability_lineages")
-                )
-            except ImportError:
-                logger.warning("[SensoryCrystal] LineageBoundTraitRegistry not found.")
-                return False
+                registry = systems.get("lineage_trait_registry")
+                if registry is None:
+                    try:
+                        from aurora_internal.aurora_lineage_bound_traits import (
+                            LineageBoundTraitRegistry,
+                        )
+                        registry = LineageBoundTraitRegistry(
+                            storage_dir=str(Path(state_dir) / "ability_lineages")
+                        )
+                    except ImportError:
+                        logger.warning("[SensoryCrystal] LineageBoundTraitRegistry not found.")
+                        registry = None
 
-        result = registry.materialize(spec)
-        if verbose or result:
-            logger.info("[SensoryCrystal] Lineage trait materialized: %s", TRAIT_ID)
-    except Exception as exc:
-        logger.warning("[SensoryCrystal] Lineage materialization failed: %s", exc)
-        return False
+                if registry is not None:
+                    result = registry.materialize(spec)
+                    if verbose or result:
+                        logger.info("[SensoryCrystal] Lineage trait materialized: %s", TRAIT_ID)
+            except Exception as exc:
+                logger.warning("[SensoryCrystal] Lineage materialization failed: %s", exc)
 
     # ── Genealogy AbilityProfile injection ────────────────────────────────────
+    # Always attempted, regardless of trait materialization state -- the
+    # per-ability "not in genealogy.abilities" check below is what makes
+    # this idempotent, not an early return above.
     # Register sensory crystal operations as first-class AbilityProfile entries
     # in the live ConstraintGenealogyLogger.  Without this the genealogy cannot
     # form causal ancestry chains that trace back to these operations.

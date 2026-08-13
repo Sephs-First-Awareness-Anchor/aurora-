@@ -96,6 +96,16 @@ _MAX_WAVELETS_PER_CYCLE = 18
 _MAX_HISTORY_LINES = 1200
 _EPS = 1e-9
 
+# FIX-A012: same stopword set relation_alignment() already filters on
+# (aurora_internal/aurora_constraint_semantic_continuity.py) -- reused here
+# rather than re-declared, so entity-overlap checking stays consistent
+# across both modules.
+_DETERMINER_STOPWORDS = {
+    "a", "an", "the", "this", "that", "these", "those", "some", "any",
+    "each", "every", "my", "your", "his", "her", "its", "our", "their",
+    "i", "me", "you", "he", "him", "she", "it", "we", "us", "they", "them",
+}
+
 
 def _clone(value: Any) -> Any:
     try:
@@ -349,8 +359,174 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
                 cycle["receiver_disturbance"] = _clone(event)
                 if cycle.get("status") == "emitted":
                     cycle["status"] = "reentered"
+                    # FIX-A012 (Sunni & Cael): recognizing a disturbance
+                    # happened is not the same as revisiting what it
+                    # disturbed -- this was the exact gap: the flag went up,
+                    # nothing ever read it. Attempt reconciliation now,
+                    # while we still have the cycle in hand.
+                    self._reconcile_disturbed_cycle(cycle, raw_text, systems=systems)
                 self._persist()
         return event
+
+    def _reconcile_disturbed_cycle(self, cycle: MutableMapping[str, Any],
+                                    disturbance_text: str,
+                                    *, systems: Optional[Mapping[str, Any]] = None) -> None:
+        """FIX-A012: decides ONLY whether a disturbance mechanically
+        conflicts with a prior cycle -- shared entities (same token-overlap
+        check relation_alignment already uses elsewhere) plus an explicit
+        negation/correction signal (RelationalForm.negated, or one of a
+        small set of correction words). It never decides WHAT the
+        resolution is: the actual revision runs through
+        derive_constraint_semantic_state, the SAME derivation every
+        ordinary turn already uses, fed the prior claim and the new
+        disturbance together as two clauses (the same multi-clause shape
+        FIX-A008 already produces for an ordinary multi-claim sentence)
+        instead of inventing a new resolution mechanism here.
+        """
+        try:
+            import re as _re
+            from aurora_internal.aurora_constraint_semantic_continuity import (
+                extract_relational_form, derive_constraint_semantic_state,
+            )
+            prior_form = dict(
+                cycle.get("effective_interpretation")
+                or dict(cycle.get("initial_semantic_state") or {}).get("relational_form")
+                or {}
+            )
+            if not prior_form:
+                return
+            disturbance_form = extract_relational_form(disturbance_text)
+
+            def _entity_tokens(form: Mapping[str, Any]) -> set:
+                toks: set = set()
+                # FIX-A012: scan clauses too, not just the top-level
+                # subject/obj/complement -- the active/primary clause
+                # selection (existing convention, unchanged here) can
+                # promote a LESS entity-relevant clause to the top level
+                # while the entities we actually need to check live in a
+                # secondary clause (confirmed directly: turn 7's own parse
+                # promotes "the scooter has nothing to do with it" to
+                # top-level while "the workshop never trusted him" sits in
+                # `clauses`). Checking clauses too is reading data this
+                # module already produces, not adding a new extraction path.
+                forms_to_scan = [form] + list(form.get("clauses") or [])
+                for f in forms_to_scan:
+                    for slot in ("subject", "obj", "complement"):
+                        value = str(f.get(slot, "") or "").lower()
+                        toks.update(t for t in _re.findall(r"[a-z][a-z0-9']+", value)
+                                    if t not in _DETERMINER_STOPWORDS)
+                return toks
+
+            prior_tokens = _entity_tokens(prior_form)
+            disturbance_tokens = _entity_tokens(disturbance_form)
+            overlap = prior_tokens & disturbance_tokens
+            negation_signal = bool(disturbance_form.get("negated")) or bool(
+                _re.search(r"\b(actually|no|never|wrong|not true|nothing to do)\b",
+                           str(disturbance_text or "").lower())
+            )
+            if not overlap or not negation_signal:
+                return  # no mechanical evidence of conflict -- leave the cycle alone
+
+            combined = dict(prior_form)
+            combined["clauses"] = list(prior_form.get("clauses") or []) + [dict(disturbance_form)]
+            revised = derive_constraint_semantic_state(
+                combined, axis_activation={}, genealogy=self.genealogy,
+            )
+            revised_form = dict(revised.get("relational_form") or {})
+
+            cycle.setdefault("reconciliation_log", []).append({
+                "disturbance_text": _safe_text(disturbance_text),
+                "previous_effective_interpretation": dict(cycle.get("effective_interpretation") or {}),
+                "revised_effective_interpretation": dict(revised_form),
+                "overlap_entities": sorted(overlap),
+                "reconciled_at": time.time(),
+            })
+            if revised_form:
+                cycle["effective_interpretation"] = revised_form
+            cycle["status"] = "reconciled"
+
+            # Propagate to OntologicalWeb: decay the specific prior relation(s)
+            # between the disturbed entities, rather than letting the graph
+            # keep carrying a claim that was just directly contradicted.
+            # Decays strength/confidence -- does not delete the relation or
+            # assign it a new type; that stays FIX-A011's job, next time
+            # these entities co-occur again.
+            web = None
+            if isinstance(systems, Mapping):
+                perception = systems.get("perception")
+                oets = getattr(perception, "oets", None)
+                web = getattr(oets, "web", None)
+            if web is not None and hasattr(web, "get_relation_between"):
+                entities = sorted(overlap)
+                for i, a in enumerate(entities):
+                    for b in entities[i + 1:]:
+                        rel = web.get_relation_between(a, b)
+                        if rel is not None:
+                            rel.strength = max(0.0, float(rel.strength or 0.0) * 0.3)
+                            rel.confidence = max(0.0, float(rel.confidence or 0.0) * 0.3)
+                            # FIX-A013: attribute this failure back to the
+                            # (signature, type) pattern that selected it, so
+                            # the same underlying gap registers as a pattern
+                            # the moment it recurs on ANY other entity pair
+                            # sharing that structural signature -- not just
+                            # decaying this one relation and forgetting why.
+                            if hasattr(web, "register_selection_failure"):
+                                try:
+                                    web.register_selection_failure(rel)
+                                except Exception:
+                                    pass
+            self._persist()
+        except Exception:
+            pass
+
+    def _maybe_stage_representation_inquiry(self, axes: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
+        """Native inquiry-to-experiment consumer (Sunni & Cael, reconstructed
+        build-650-fixed-v5 extension). Ask genealogy for at most one
+        admissible pending representational inquiry (exact-signature 'RC:'
+        or cross-family 'RI:') and stage it for THIS already-occurring
+        cycle. An unresolved inquiry never starts a cycle by itself -- this
+        is only ever reached because prepare_semantic_state() is already
+        running one for its own, unrelated reason."""
+        genealogy = self.genealogy
+        if genealogy is None or not hasattr(genealogy, "stage_representation_inquiry"):
+            return None
+        try:
+            staged = genealogy.stage_representation_inquiry(
+                "recursive_causal_waveform",
+                {"axis_activation": dict(axes or {})},
+                limit=1,
+            )
+        except Exception:
+            return None
+        return dict(staged[0]) if staged else None
+
+    def _representation_inquiry_wavelet(self, stage: Mapping[str, Any]) -> CausalWavelet:
+        """Build the trial wavelet carrying intact operand state and merged
+        primitive grounding for a staged representational inquiry. No
+        semantic answer is attached -- only the same X/T/N/B/A surface and
+        provenance every other wavelet already carries."""
+        profile = dict(stage.get("relational_axis_profile") or {})
+        return CausalWavelet(
+            wavelet_id="RIW:" + _stable_hash({
+                "stage": str(stage.get("stage_id", "")), "t": time.time_ns(),
+            }, 14),
+            primitive="recursive_backprojection",
+            roots=list(_ROOT_PRIMITIVES["recursive_backprojection"]["roots"]),
+            amplitude=_clip(0.10 + 0.5 * sum(float(profile.get(ax, 0.0) or 0.0) for ax in AXES), 0.0, 1.0),
+            phase=0.0,
+            polarity=1,
+            target="representation_relation",
+            source="representation_inquiry",
+            evidence={
+                "stage_id": str(stage.get("stage_id", "")),
+                "inquiry_id": str(stage.get("inquiry_id", "")),
+                "operand_states": _clone(list(stage.get("operands", []) or [])),
+                "constraint_basis": _clone(dict(stage.get("constraint_basis", {}) or {})),
+                "relational_axis_profile": _clone(profile),
+            },
+            parent_ids=list(stage.get("operand_ids", []) or []),
+            status="transient",
+        )
 
     def prepare_semantic_state(
         self,
@@ -376,6 +552,9 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
             referent_map=referent_map,
             claim_resolution=claim_resolution,
         )
+        representation_stage = self._maybe_stage_representation_inquiry(axes)
+        if representation_stage is not None:
+            wavelets = list(wavelets) + [self._representation_inquiry_wavelet(representation_stage)]
         interference = self._interfere(axes, wavelets)
         effective_form, reconstruction = self._backproject(
             provisional,
@@ -416,6 +595,7 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
             genealogy_trace=self._cycle_genealogy(wavelets, revised),
             status="understood",
         ).to_dict()
+        cycle["representation_experiment"] = representation_stage
         self._active_cycle = cycle
         self._cycles.append(cycle)
         self._cycles = self._cycles[-_MAX_CYCLES:]
@@ -485,12 +665,57 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
         self._pending_response_cycle_id = str(cycle.get("cycle_id", "") or "")
         self._update_wavelet_evidence(cycle, alignment)
         self._confess_gap_if_needed(cycle, alignment)
+        self._complete_representation_experiment_for_cycle(cycle, alignment)
         promoted, dissolved = self.evaluate_warp_trials()
         cycle["warp_evaluation"] = {"promoted": promoted, "dissolved": dissolved}
         self._publish_completion(cycle)
         self._append_history(cycle)
         self._persist()
         return _clone(cycle)
+
+    def _complete_representation_experiment_for_cycle(
+        self, cycle: MutableMapping[str, Any], alignment: Mapping[str, Any],
+    ) -> None:
+        """If this cycle staged a representational inquiry, this is the
+        real response-bearing completion that lets genealogy verify actual
+        ordered co-activation. Before/after pressure is derived from the
+        cycle's own initial completeness and this cycle's resulting
+        coherence/retrospective confidence -- no separate scoring channel,
+        no answer about what the relation means."""
+        stage = dict(cycle.get("representation_experiment") or {})
+        if not stage or not stage.get("stage_id"):
+            return
+        genealogy = self.genealogy
+        if genealogy is None or not hasattr(genealogy, "complete_representation_experiment"):
+            return
+        initial = dict(cycle.get("initial_semantic_state") or {})
+        completeness_before = max(0.0, min(1.0, float(initial.get("completeness", 0.0) or 0.0)))
+        coherence = float(cycle.get("interference", {}).get("coherence", 0.0) or 0.0)
+        retrospective_confidence = float(
+            cycle.get("global_understanding", {}).get("retrospective_confidence", 0.0) or 0.0
+        )
+        pressure_before = {a: (1.0 - completeness_before) for a in AXES}
+        pressure_after = {
+            a: max(0.0, (1.0 - completeness_before) * (1.0 - max(0.0, min(1.0, retrospective_confidence))))
+            for a in AXES
+        }
+        try:
+            result = genealogy.complete_representation_experiment(
+                str(stage.get("stage_id", "")),
+                consumer="recursive_causal_waveform",
+                coactivated_ids=list(stage.get("operand_ids", []) or []),
+                pressure_before=pressure_before,
+                pressure_after=pressure_after,
+                outcome={
+                    "actual_coactivation": True,
+                    "response_alignment": _clone(dict(alignment or {})),
+                    "coherence": round(coherence, 6),
+                    "retrospective_confidence": round(retrospective_confidence, 6),
+                },
+            )
+        except Exception:
+            return
+        cycle["representation_experiment_result"] = result
 
     # ------------------------------------------------------------------
     # Construction

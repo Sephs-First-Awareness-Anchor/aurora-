@@ -274,7 +274,7 @@ def _boot(out_dir: str, run_id: str, cfg_overrides: Optional[Dict[str, Any]] = N
         links_path = os.path.join(out_dir, getattr(genealogy.cfg, "LINKS_FILE", "links.json"))
         if os.path.exists(links_path):
             import json
-            from aurora_internal.constraint_genealogy import ConstraintLink, AXES
+            from aurora_internal.constraint_genealogy import constraint_link_from_dict
             with open(links_path, "r", encoding="utf-8") as fh:
                 raw_links = json.load(fh) or {}
             links_loaded = {}
@@ -283,20 +283,7 @@ def _boot(out_dir: str, run_id: str, cfg_overrides: Optional[Dict[str, Any]] = N
             for lid, rec in (raw_links or {}).items():
                 if not isinstance(rec, dict):
                     continue
-                stats = rec.get("stats", {}) or {}
-                link = ConstraintLink(
-                    id=str(rec.get("id", lid)),
-                    parents=[str(x) for x in (rec.get("parents", []) or [])],
-                    depth=int(rec.get("depth", 1) or 1),
-                    created_at_tick=int(rec.get("created_at_tick", 0) or 0),
-                    count=int(stats.get("count", 0) or 0),
-                    mean_relief={a: float((stats.get("mean_relief", {}) or {}).get(a, 0.0)) for a in AXES},
-                    mean_cost={a: float((stats.get("mean_cost", {}) or {}).get(a, 0.0)) for a in AXES},
-                    mean_x_risk=float(stats.get("mean_x_risk", 0.0) or 0.0),
-                    stdev_relief={a: float((stats.get("stdev_relief", {}) or {}).get(a, 0.0)) for a in AXES},
-                    dominant_relief_axis=(str(rec.get("dominant_relief_axis")) if rec.get("dominant_relief_axis") is not None else None),
-                    tags=[str(x) for x in (rec.get("tags", []) or [])],
-                )
+                link = constraint_link_from_dict(rec, fallback_id=str(lid))
                 links_loaded[link.id] = link
                 if len(link.parents) == 2:
                     links_by_parents[(link.parents[0], link.parents[1])] = link.id
@@ -331,6 +318,61 @@ def _boot(out_dir: str, run_id: str, cfg_overrides: Optional[Dict[str, Any]] = N
             context={"function": "_boot", "handler_line": 303, "source_file": "run_chain.py"},
         )
         restored_links = 0
+    try:
+        import json
+        couplings_path = os.path.join(out_dir, getattr(genealogy.cfg, "COUPLINGS_FILE", "couplings.json"))
+        if os.path.exists(couplings_path):
+            with open(couplings_path, "r", encoding="utf-8") as fh:
+                raw_couplings = json.load(fh) or {}
+            roots = raw_couplings.get("roots", {}) if isinstance(raw_couplings, dict) else {}
+            origins = raw_couplings.get("origin_counts", {}) if isinstance(raw_couplings, dict) else {}
+            relations = raw_couplings.get("representation_relations", {}) if isinstance(raw_couplings, dict) else {}
+            collisions = raw_couplings.get("representation_collisions", {}) if isinstance(raw_couplings, dict) else {}
+            if isinstance(roots, dict):
+                genealogy._coupling_roots = {str(k): dict(v) for k, v in roots.items() if isinstance(v, dict)}
+            if isinstance(origins, dict):
+                genealogy._coupling_origin_counts.update({str(k): int(v or 0) for k, v in origins.items()})
+            if isinstance(relations, dict):
+                genealogy._representation_relations = {str(k): dict(v) for k, v in relations.items() if isinstance(v, dict)}
+            if isinstance(collisions, dict):
+                genealogy._representation_collisions = {str(k): dict(v) for k, v in collisions.items() if isinstance(v, dict)}
+            genealogy._coupling_events = int(raw_couplings.get("coupling_events", 0) or 0)
+            genealogy._persistent_pressure_root_ema = float(raw_couplings.get("persistent_pressure_root_ema", 0.0) or 0.0)
+            # Additive (schema v2): native representational inquiry and
+            # experimentation runtime state (Sunni & Cael). Missing key on
+            # older couplings.json files is a no-op -- logger already
+            # initializes empty defaults for all of these.
+            inquiry_runtime = raw_couplings.get("representation_inquiry_runtime", {}) if isinstance(raw_couplings, dict) else {}
+            if isinstance(inquiry_runtime, dict):
+                active_stages = inquiry_runtime.get("active_stages", {})
+                if isinstance(active_stages, dict):
+                    genealogy._representation_experiment_stages = {
+                        str(k): dict(v) for k, v in active_stages.items() if isinstance(v, dict)
+                    }
+                history = inquiry_runtime.get("history", [])
+                if isinstance(history, list):
+                    genealogy._representation_experiment_history = [
+                        dict(h) for h in history if isinstance(h, dict)
+                    ]
+                # FIX (Sunni & Cael, Section XXI): renamed from "consumer_ticks"
+                # -- this stores per-consumer engagement CYCLE counts, not
+                # genealogy tick_count. Read the old key too so a
+                # pre-rename couplings.json still restores without loss.
+                consumer_cycles = inquiry_runtime.get(
+                    "consumer_cycles", inquiry_runtime.get("consumer_ticks", {})
+                )
+                if isinstance(consumer_cycles, dict):
+                    genealogy._representation_inquiry_consumer_cycle = {
+                        str(k): int(v or 0) for k, v in consumer_cycles.items()
+                    }
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:run_chain.py:restore_couplings",
+            exc=_aurora_boundary_exc,
+            context={"function": "_boot", "source_file": "run_chain.py"},
+        )
     if hasattr(genealogy, "restore_pair_stats"):
         try:
             restored_pairs = int(genealogy.restore_pair_stats() or 0)

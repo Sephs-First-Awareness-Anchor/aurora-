@@ -135,24 +135,9 @@ def link_from_dict(d: Dict[str, Any]) -> "ConstraintLink":
     aurora_state/genealogy/links.json) back into a ConstraintLink. Pure
     parsing of an already-defined on-disk schema, not new genealogy physics.
     """
-    from aurora_internal.constraint_genealogy import ConstraintLink
+    from aurora_internal.constraint_genealogy import constraint_link_from_dict
 
-    stats = d.get("stats") or {}
-    return ConstraintLink(
-        id=d["id"],
-        parents=list(d.get("parents") or []),
-        depth=int(d.get("depth", 1) or 1),
-        created_at_tick=int(d.get("created_at_tick", 0) or 0),
-        count=int(stats.get("count", 0) or 0),
-        mean_relief=dict(stats.get("mean_relief") or {}),
-        mean_cost=dict(stats.get("mean_cost") or {}),
-        mean_x_risk=float(stats.get("mean_x_risk", 0.0) or 0.0),
-        stdev_relief=dict(stats.get("stdev_relief") or {}),
-        dominant_relief_axis=d.get("dominant_relief_axis"),
-        tags=list(d.get("tags") or []),
-        topology_id=d.get("topology_id"),
-        semantic_variant_id=d.get("semantic_variant_id"),
-    )
+    return constraint_link_from_dict(d, fallback_id=str(d.get("id", "")))
 
 
 def logger_from_links(links: Dict[str, Any]) -> Any:
