@@ -479,6 +479,55 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
         except Exception:
             pass
 
+    def _maybe_stage_representation_inquiry(self, axes: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
+        """Native inquiry-to-experiment consumer (Sunni & Cael, reconstructed
+        build-650-fixed-v5 extension). Ask genealogy for at most one
+        admissible pending representational inquiry (exact-signature 'RC:'
+        or cross-family 'RI:') and stage it for THIS already-occurring
+        cycle. An unresolved inquiry never starts a cycle by itself -- this
+        is only ever reached because prepare_semantic_state() is already
+        running one for its own, unrelated reason."""
+        genealogy = self.genealogy
+        if genealogy is None or not hasattr(genealogy, "stage_representation_inquiry"):
+            return None
+        try:
+            staged = genealogy.stage_representation_inquiry(
+                "recursive_causal_waveform",
+                {"axis_activation": dict(axes or {})},
+                limit=1,
+            )
+        except Exception:
+            return None
+        return dict(staged[0]) if staged else None
+
+    def _representation_inquiry_wavelet(self, stage: Mapping[str, Any]) -> CausalWavelet:
+        """Build the trial wavelet carrying intact operand state and merged
+        primitive grounding for a staged representational inquiry. No
+        semantic answer is attached -- only the same X/T/N/B/A surface and
+        provenance every other wavelet already carries."""
+        profile = dict(stage.get("relational_axis_profile") or {})
+        return CausalWavelet(
+            wavelet_id="RIW:" + _stable_hash({
+                "stage": str(stage.get("stage_id", "")), "t": time.time_ns(),
+            }, 14),
+            primitive="recursive_backprojection",
+            roots=list(_ROOT_PRIMITIVES["recursive_backprojection"]["roots"]),
+            amplitude=_clip(0.10 + 0.5 * sum(float(profile.get(ax, 0.0) or 0.0) for ax in AXES), 0.0, 1.0),
+            phase=0.0,
+            polarity=1,
+            target="representation_relation",
+            source="representation_inquiry",
+            evidence={
+                "stage_id": str(stage.get("stage_id", "")),
+                "inquiry_id": str(stage.get("inquiry_id", "")),
+                "operand_states": _clone(list(stage.get("operands", []) or [])),
+                "constraint_basis": _clone(dict(stage.get("constraint_basis", {}) or {})),
+                "relational_axis_profile": _clone(profile),
+            },
+            parent_ids=list(stage.get("operand_ids", []) or []),
+            status="transient",
+        )
+
     def prepare_semantic_state(
         self,
         semantic_state: Mapping[str, Any],
@@ -503,6 +552,9 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
             referent_map=referent_map,
             claim_resolution=claim_resolution,
         )
+        representation_stage = self._maybe_stage_representation_inquiry(axes)
+        if representation_stage is not None:
+            wavelets = list(wavelets) + [self._representation_inquiry_wavelet(representation_stage)]
         interference = self._interfere(axes, wavelets)
         effective_form, reconstruction = self._backproject(
             provisional,
@@ -543,6 +595,7 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
             genealogy_trace=self._cycle_genealogy(wavelets, revised),
             status="understood",
         ).to_dict()
+        cycle["representation_experiment"] = representation_stage
         self._active_cycle = cycle
         self._cycles.append(cycle)
         self._cycles = self._cycles[-_MAX_CYCLES:]
@@ -612,12 +665,57 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
         self._pending_response_cycle_id = str(cycle.get("cycle_id", "") or "")
         self._update_wavelet_evidence(cycle, alignment)
         self._confess_gap_if_needed(cycle, alignment)
+        self._complete_representation_experiment_for_cycle(cycle, alignment)
         promoted, dissolved = self.evaluate_warp_trials()
         cycle["warp_evaluation"] = {"promoted": promoted, "dissolved": dissolved}
         self._publish_completion(cycle)
         self._append_history(cycle)
         self._persist()
         return _clone(cycle)
+
+    def _complete_representation_experiment_for_cycle(
+        self, cycle: MutableMapping[str, Any], alignment: Mapping[str, Any],
+    ) -> None:
+        """If this cycle staged a representational inquiry, this is the
+        real response-bearing completion that lets genealogy verify actual
+        ordered co-activation. Before/after pressure is derived from the
+        cycle's own initial completeness and this cycle's resulting
+        coherence/retrospective confidence -- no separate scoring channel,
+        no answer about what the relation means."""
+        stage = dict(cycle.get("representation_experiment") or {})
+        if not stage or not stage.get("stage_id"):
+            return
+        genealogy = self.genealogy
+        if genealogy is None or not hasattr(genealogy, "complete_representation_experiment"):
+            return
+        initial = dict(cycle.get("initial_semantic_state") or {})
+        completeness_before = max(0.0, min(1.0, float(initial.get("completeness", 0.0) or 0.0)))
+        coherence = float(cycle.get("interference", {}).get("coherence", 0.0) or 0.0)
+        retrospective_confidence = float(
+            cycle.get("global_understanding", {}).get("retrospective_confidence", 0.0) or 0.0
+        )
+        pressure_before = {a: (1.0 - completeness_before) for a in AXES}
+        pressure_after = {
+            a: max(0.0, (1.0 - completeness_before) * (1.0 - max(0.0, min(1.0, retrospective_confidence))))
+            for a in AXES
+        }
+        try:
+            result = genealogy.complete_representation_experiment(
+                str(stage.get("stage_id", "")),
+                consumer="recursive_causal_waveform",
+                coactivated_ids=list(stage.get("operand_ids", []) or []),
+                pressure_before=pressure_before,
+                pressure_after=pressure_after,
+                outcome={
+                    "actual_coactivation": True,
+                    "response_alignment": _clone(dict(alignment or {})),
+                    "coherence": round(coherence, 6),
+                    "retrospective_confidence": round(retrospective_confidence, 6),
+                },
+            )
+        except Exception:
+            return
+        cycle["representation_experiment_result"] = result
 
     # ------------------------------------------------------------------
     # Construction

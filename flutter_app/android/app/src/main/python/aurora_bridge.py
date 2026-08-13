@@ -161,6 +161,12 @@ _last_screen_visual_data: dict = {}
 _last_camera_observation: dict = {}
 _last_camera_frame_gray          = None  # grayscale numpy array for motion detection
 
+# Section XXIII/XXIV: whether start_dream_substrate() completed its boot
+# call without raising. No live handle is stored back into `systems` by
+# that function, so this flag is the only signal get_mobile_developmental_
+# health() has for the dream substrate's boot-time status.
+_dream_substrate_boot_ok = False
+
 # ── Room / Hub state ──────────────────────────────────────────────────────────
 # Aurora's room is her inner control panel — notes, observations, and intentions
 # written by her daemon and room operator thread.  On Android, the room state
@@ -1397,6 +1403,7 @@ def _start_curiosity_engine(systems: dict) -> None:
     structures when understanding deepens.  The thread is a daemon so
     it never blocks app shutdown.
     """
+    global _dream_substrate_boot_ok
     try:
         from aurora_curiosity_engine import (  # type: ignore
             CuriosityEngine,
@@ -1439,8 +1446,10 @@ def _start_curiosity_engine(systems: dict) -> None:
             start_dream_substrate,
         )
         start_dream_substrate(systems, cycle_interval_s=600.0)
+        _dream_substrate_boot_ok = True
         log.info("Quantum dream substrate started (600 s cycles)")
     except Exception as exc:
+        _dream_substrate_boot_ok = False
         log.warning("Quantum dream substrate unavailable: %s", exc)
 
 
@@ -1465,6 +1474,75 @@ def _validate_boot(systems: dict) -> tuple:
     fatal    = [k for k in _BOOT_FATAL_SYSTEMS    if not systems.get(k)]
     degraded = [k for k in _BOOT_DEGRADED_SYSTEMS if not systems.get(k)]
     return fatal, degraded
+
+
+# Section XXIII/XXIV (Sunni & Cael, Mobile/Multimodal Representational
+# Autonomy directive): _validate_boot()/_BOOT_FATAL_SYSTEMS/_BOOT_DEGRADED_SYSTEMS
+# above only ever checked 6 systems total (language_field, identity_field,
+# consciousness, sedimemory, lattice, geological_baseline) -- confirmed
+# directly, not assumed: genealogy, RCRW, Sensory Crystal, curiosity,
+# Dream substrate, the evolutionary chamber, and DPS/dimensional were never
+# checked at all. A boot where all of those were silently None would still
+# report plain "ready". This does not replace _validate_boot() (which still
+# gates whether background threads start at all) -- it is a broader,
+# READ-ONLY diagnostic surface for the mobile health screen, classifying
+# every major developmental organ as fatal / degraded / optional.
+_MOBILE_HEALTH_FATAL = ("language_field", "identity_field", "consciousness")
+_MOBILE_HEALTH_DEGRADED = (
+    "sedimemory", "lattice", "geological_baseline",
+    "genealogy", "recursive_causal_waveform", "sensory_crystal", "dimensional",
+)
+_MOBILE_HEALTH_OPTIONAL_SYSTEMS_KEYS = ("hardware", "sensory_integration")
+
+
+def get_mobile_developmental_health() -> str:
+    """Bounded, machine-readable developmental health snapshot for the
+    Flutter Hub. Distinguishes "Aurora alive" from "Aurora alive but
+    developmentally degraded" -- the app must never silently report full
+    readiness when major architecture failed to initialize.
+
+    Returns a JSON string (matches the existing get_axis_state()-style
+    plain-JSON-string bridge convention) shaped:
+      {
+        "overall": "healthy" | "degraded" | "fatal",
+        "fatal_missing": [...],
+        "degraded_missing": [...],
+        "optional_status": {"curiosity": bool, "dream_substrate": bool,
+                             "evolutionary_chamber": bool,
+                             "sensory_bridges": bool},
+      }
+    """
+    import json as _json
+    systems = _systems or {}
+
+    fatal_missing = [k for k in _MOBILE_HEALTH_FATAL if not systems.get(k)]
+    degraded_missing = [k for k in _MOBILE_HEALTH_DEGRADED if not systems.get(k)]
+
+    optional_status = {
+        "curiosity": bool(systems.get("_curiosity_engine")),
+        # No live handle is stored back into `systems` by
+        # start_dream_substrate() -- confirmed by direct read of its call
+        # site above. This can only report "attempted at boot without a
+        # raised exception", not "currently running"; that distinction is
+        # stated in the field name itself rather than papered over.
+        "dream_substrate_boot_attempted": bool(_dream_substrate_boot_ok),
+        "evolutionary_chamber": bool(systems.get("chamber") or systems.get("code_evolution_chamber")),
+        "sensory_bridges": any(bool(systems.get(k)) for k in _MOBILE_HEALTH_OPTIONAL_SYSTEMS_KEYS),
+    }
+
+    if fatal_missing:
+        overall = "fatal"
+    elif degraded_missing or not all(optional_status.values()):
+        overall = "degraded"
+    else:
+        overall = "healthy"
+
+    return _json.dumps({
+        "overall": overall,
+        "fatal_missing": fatal_missing,
+        "degraded_missing": degraded_missing,
+        "optional_status": optional_status,
+    })
 
 
 def initialize(state_dir: str = "") -> str:
@@ -8566,6 +8644,118 @@ def set_state(state: str) -> None:
     pass  # state is managed by Flutter/Kotlin; Python side is stateless here
 
 
+def _rgb_to_hue_degrees(rgb_float):
+    """Vectorized RGB (0-1 float, ...,3) -> hue in degrees [0,360). Standard
+    HSV hue formula, no external cv2/colorsys dependency (matches this
+    module's existing numpy-only fallback posture)."""
+    import numpy as _np
+    r, g, b = rgb_float[..., 0], rgb_float[..., 1], rgb_float[..., 2]
+    mx = _np.max(rgb_float, axis=-1)
+    mn = _np.min(rgb_float, axis=-1)
+    delta = mx - mn
+    hue = _np.zeros_like(mx)
+    safe_delta = _np.where(delta <= 1e-6, 1.0, delta)  # avoid /0; result masked out below
+
+    is_r = (mx == r) & (delta > 1e-6)
+    is_g = (mx == g) & (delta > 1e-6)
+    is_b = (mx == b) & (delta > 1e-6)
+
+    hue = _np.where(is_r, 60.0 * (((g - b) / safe_delta) % 6.0), hue)
+    hue = _np.where(is_g, 60.0 * (((b - r) / safe_delta) + 2.0), hue)
+    hue = _np.where(is_b, 60.0 * (((r - g) / safe_delta) + 4.0), hue)
+    return hue % 360.0, delta  # delta doubles as a saturation-ish weight (0 for greys)
+
+
+def _extract_richer_visual_features(rgb_uint8, gray, motion_magnitude: float) -> dict:
+    """Section VIII (Sunni & Cael, Mobile/Multimodal Representational
+    Autonomy directive): real, bounded, non-cv2 features for the
+    dimensions the 57-d Sensory Crystal visual adapter
+    (visual_dict_to_crystal_57d) actually reads -- hue HISTOGRAM (not a
+    single categorical dominant_hue string), edge density, dominant
+    gradient orientation, left-right symmetry, a shape-complexity proxy,
+    and real-valued motion magnitude (not just a boolean).
+
+    Deliberately NOT attempted here: object/face detection (needs a real
+    detector -- ML Kit/cv2 DNN -- not a numpy proxy that would just be
+    noise pretending to be a count) and true depth (`depth_variation`
+    stays 0.0; no depth sensor data is available on this capture path).
+    Both are left at their existing empty/zero defaults and reported as
+    absent, not faked.
+    """
+    import numpy as _np
+
+    rgb_float = rgb_uint8.astype(_np.float32) / 255.0
+    h, w = rgb_float.shape[:2]
+
+    # Hue histogram [24 bins, 15 degrees each] weighted by saturation so
+    # greys/near-greys (delta~0, hue undefined) don't pollute the
+    # histogram with a spurious hue=0 spike.
+    hue_deg, sat_weight = _rgb_to_hue_degrees(rgb_float)
+    bins = _np.clip((hue_deg / 15.0).astype(_np.int32), 0, 23)
+    hist = _np.zeros(24, dtype=_np.float64)
+    flat_bins = bins.reshape(-1)
+    flat_weight = sat_weight.reshape(-1)
+    _np.add.at(hist, flat_bins, flat_weight)
+    hist_total = float(_np.sum(hist))
+    hsv_histogram = (hist / hist_total).tolist() if hist_total > 1e-6 else [0.0] * 24
+
+    # Edge density + dominant orientation via simple finite-difference
+    # gradients (a lightweight Sobel-equivalent, no cv2 dependency).
+    gy, gx = _np.gradient(gray)
+    grad_mag = _np.sqrt(gx ** 2 + gy ** 2)
+    edge_threshold = 0.12
+    edge_density = float(_np.mean(grad_mag > edge_threshold))
+    # Circular mean of gradient orientation, weighted by magnitude,
+    # normalized from [-pi, pi] into [0, 1].
+    total_mag = float(_np.sum(grad_mag))
+    if total_mag > 1e-6:
+        mean_sin = float(_np.sum(_np.sin(_np.arctan2(gy, gx)) * grad_mag) / total_mag)
+        mean_cos = float(_np.sum(_np.cos(_np.arctan2(gy, gx)) * grad_mag) / total_mag)
+        orientation = (float(_np.arctan2(mean_sin, mean_cos)) + _np.pi) / (2.0 * _np.pi)
+    else:
+        orientation = 0.0
+
+    # Left-right mirror symmetry: correlation between the frame and its
+    # horizontal flip, mapped from [-1,1] to [0,1].
+    mirrored = gray[:, ::-1]
+    a = gray - _np.mean(gray)
+    b = mirrored - _np.mean(mirrored)
+    denom = float(_np.sqrt(_np.sum(a ** 2) * _np.sum(b ** 2)))
+    if denom > 1e-6:
+        corr = float(_np.sum(a * b) / denom)  # in [-1, 1]
+        symmetry = float(_np.clip((corr + 1.0) / 2.0, 0.0, 1.0))
+    else:
+        symmetry = 0.5  # a flat/uniform frame is trivially "symmetric" but uninformative
+
+    # Shape-complexity proxy: variance of edge density across a coarse
+    # block grid -- a visually simple/uniform frame has low block-to-block
+    # edge variance; a cluttered frame has high variance. This is a
+    # texture-variance proxy, not a real shape/contour count.
+    block = 8
+    bh, bw = max(1, h // block), max(1, w // block)
+    block_density = _np.zeros((block, block), dtype=_np.float32)
+    for by in range(block):
+        for bx in range(block):
+            patch = grad_mag[by * bh:(by + 1) * bh, bx * bw:(bx + 1) * bw]
+            block_density[by, bx] = float(_np.mean(patch > edge_threshold)) if patch.size else 0.0
+    shape_complexity = float(_np.clip(_np.std(block_density) * 4.0, 0.0, 1.0))
+
+    return {
+        "hsv_histogram": [round(float(v), 4) for v in hsv_histogram],
+        "edge_density": round(edge_density, 4),
+        "orientation": round(orientation, 4),
+        "symmetry_score": round(symmetry, 4),
+        "symmetry": round(symmetry, 4),
+        "shape_complexity": round(shape_complexity, 4),
+        "motion_magnitude": round(_clamp01_local(motion_magnitude), 4),
+        "depth_variation": 0.0,  # honestly absent -- no depth data available on this path
+    }
+
+
+def _clamp01_local(v: float) -> float:
+    return max(0.0, min(1.0, float(v)))
+
+
 def provide_camera_frame(jpeg_bytes) -> None:
     """
     Called from Kotlin (AuroraService.provideCameraFrame) to push a CameraX
@@ -8595,9 +8785,10 @@ def provide_camera_frame(jpeg_bytes) -> None:
 
         # Motion: mean absolute difference from previous frame
         motion = False
+        motion_diff = 0.0
         if _last_camera_frame_gray is not None and _last_camera_frame_gray.shape == gray.shape:
-            diff = float(_np.mean(_np.abs(gray.astype(_np.float32) - _last_camera_frame_gray)))
-            motion = diff > 0.04
+            motion_diff = float(_np.mean(_np.abs(gray.astype(_np.float32) - _last_camera_frame_gray)))
+            motion = motion_diff > 0.04
         _last_camera_frame_gray = gray
 
         # Dominant hue from a small center crop (avoids border noise)
@@ -8616,6 +8807,23 @@ def provide_camera_frame(jpeg_bytes) -> None:
         else:
             dominant_hue = "dark"
 
+        # Section VIII (Sunni & Cael): real, bounded feature richness for
+        # the dimensions visual_dict_to_crystal_57d() actually reads --
+        # previously only brightness+motion_detected ever reached the
+        # crystal because "features" didn't exist on this observation at
+        # all (dominant_hue is a categorical string, not the hue histogram
+        # the adapter looks for). dominant_hue is KEPT for backward
+        # compatibility with existing readers (aurora_bridge.py itself,
+        # aurora_sensory_fallback.py) -- it is now supplementary metadata,
+        # not the only color signal available.
+        try:
+            richer_features = _extract_richer_visual_features(
+                rgb, gray, motion_magnitude=motion_diff / 0.30,
+            )
+        except Exception as _feat_exc:
+            log.debug("richer visual feature extraction failed: %s", _feat_exc)
+            richer_features = {}
+
         _last_camera_observation = {
             "brightness":     round(brightness, 3),
             "motion_detected": motion,
@@ -8623,6 +8831,7 @@ def provide_camera_frame(jpeg_bytes) -> None:
             "objects":        [],
             "faces":          [],
             "confidence":     0.65,
+            "features":       richer_features,
         }
     except Exception as exc:
         # Primary (native / cv2-shim) path failed — fall back to pure numpy+PIL
@@ -8635,6 +8844,144 @@ def provide_camera_frame(jpeg_bytes) -> None:
             _last_camera_frame_gray = _gray
         except Exception as exc2:
             log.warning("provide_camera_frame fallback also failed: %s", exc2)
+
+
+def _estimate_pitch_autocorr(samples, sample_rate: int):
+    """Simple time-domain autocorrelation pitch estimate, bounded to the
+    80-1000 Hz range (covers speech/most ambient tonal sound). Returns
+    (pitch_hz_or_None, harmonicity_0_to_1) -- harmonicity is the normalized
+    strength of the autocorrelation peak, a crude but real "how tonal vs.
+    noisy is this" signal, not a placeholder value."""
+    import numpy as _np
+    n = len(samples)
+    if n < 256:
+        return None, 0.0
+    min_lag = max(1, int(sample_rate / 1000.0))   # 1000 Hz upper bound
+    max_lag = min(n - 1, int(sample_rate / 80.0))  # 80 Hz lower bound
+    if max_lag <= min_lag:
+        return None, 0.0
+    windowed = samples * _np.hanning(n)
+    corr = _np.correlate(windowed, windowed, mode="full")[n - 1:]
+    zero_lag = corr[0]
+    if zero_lag <= 1e-9:
+        return None, 0.0
+    segment = corr[min_lag:max_lag]
+    if segment.size == 0:
+        return None, 0.0
+    peak_idx = int(_np.argmax(segment)) + min_lag
+    peak_val = float(corr[peak_idx])
+    harmonicity = max(0.0, min(1.0, peak_val / zero_lag))
+    if harmonicity < 0.15:
+        return None, harmonicity  # too noisy for a confident pitch estimate
+    pitch_hz = float(sample_rate) / float(peak_idx)
+    return pitch_hz, harmonicity
+
+
+def _classify_ambient_activity(rms_db: float, zcr: float, centroid_hz: float, harmonicity: float) -> str:
+    """Coarse, non-semantic activity label from purely acoustic features --
+    NOT speech recognition, NOT a language model. Matches the existing
+    provide_audio_observation() activity vocabulary. Thresholds are
+    deliberately loose descriptive buckets, not a trained classifier."""
+    if rms_db < -50.0:
+        return "silence"
+    if harmonicity >= 0.55 and 80.0 <= centroid_hz <= 1200.0 and zcr < 0.25:
+        return "speech"
+    if harmonicity >= 0.45 and centroid_hz > 200.0:
+        return "music"
+    if zcr > 0.35:
+        return "noise"
+    return "ambient"
+
+
+# Rolling previous-frame spectrum for spectral flux -- module-level state is
+# appropriate here (mirrors _last_audio_observation/_last_camera_frame_gray
+# above): one physical microphone, one continuous ambient stream.
+_last_audio_spectrum = None
+
+
+def provide_audio_observation_raw(pcm_bytes, sample_rate: int = 16000) -> None:
+    """
+    Section VI/VII (Sunni & Cael, Mobile/Multimodal Representational
+    Autonomy directive): the PARALLEL, nonsemantic auditory path. Called
+    from Kotlin's own AudioRecord capture loop -- NOT from SpeechRecognizer,
+    NOT a substitute for STT, and this function performs no transcription.
+    Aurora must be able to hear without requiring speech recognition;
+    speech happening to be present in the signal produces auditory
+    features here exactly like any other sound would, in parallel with
+    (never instead of) whatever semantic language path also fires.
+
+    pcm_bytes:   little-endian 16-bit mono PCM, as produced by
+                 android.media.AudioRecord with ENCODING_PCM_16BIT.
+    sample_rate: the capture sample rate Kotlin configured AudioRecord with.
+
+    Computes real, bounded features (RMS/dB, zero-crossing rate, spectral
+    centroid/bandwidth/rolloff/flux, a simple autocorrelation pitch
+    estimate, and a harmonicity proxy) and forwards them through the
+    existing provide_audio_observation() so every downstream consumer
+    (Sensory Crystal's 20-dim adapter) sees one consistent observation
+    shape regardless of which capture path produced it.
+
+    Onset density and chroma are NOT computed here -- onset density needs
+    cross-frame novelty history and chroma needs a constant-Q/chroma
+    filterbank; both are real additional work, not implemented in this
+    pass, and are reported as absent rather than faked.
+    """
+    global _last_audio_spectrum
+    import numpy as _np
+    try:
+        raw = bytes(pcm_bytes)
+        if len(raw) < 4:
+            return
+        samples = _np.frombuffer(raw, dtype="<i2").astype(_np.float32) / 32768.0
+        if samples.size < 32:
+            return
+
+        rms = float(_np.sqrt(_np.mean(samples ** 2)))
+        rms_db = 20.0 * _np.log10(max(rms, 1e-6))
+        signs = _np.sign(samples)
+        signs[signs == 0] = 1.0
+        zcr = float(_np.mean(_np.abs(_np.diff(signs)) > 0))
+
+        window = samples * _np.hanning(samples.size)
+        spectrum = _np.abs(_np.fft.rfft(window))
+        freqs = _np.fft.rfftfreq(samples.size, d=1.0 / float(sample_rate))
+        total_energy = float(_np.sum(spectrum))
+        if total_energy > 1e-9:
+            centroid = float(_np.sum(freqs * spectrum) / total_energy)
+            bandwidth = float(_np.sqrt(_np.sum(((freqs - centroid) ** 2) * spectrum) / total_energy))
+            cumulative = _np.cumsum(spectrum)
+            rolloff_idx = int(_np.searchsorted(cumulative, 0.85 * cumulative[-1]))
+            rolloff = float(freqs[min(rolloff_idx, len(freqs) - 1)])
+        else:
+            centroid = 0.0
+            bandwidth = 0.0
+            rolloff = 0.0
+
+        flux = 0.0
+        if _last_audio_spectrum is not None and _last_audio_spectrum.shape == spectrum.shape:
+            diff = spectrum - _last_audio_spectrum
+            flux = float(_np.sqrt(_np.mean(_np.clip(diff, 0.0, None) ** 2)))
+        _last_audio_spectrum = spectrum
+
+        pitch_hz, harmonicity = _estimate_pitch_autocorr(samples, sample_rate)
+        activity = _classify_ambient_activity(rms_db, zcr, centroid, harmonicity)
+
+        extras = {
+            "zero_crossing_rate": round(zcr, 4),
+            "spectral_centroid": round(centroid, 2),
+            "spectral_bandwidth": round(bandwidth, 2),
+            "spectral_rolloff": round(rolloff, 2),
+            "spectral_flux": round(flux, 6),
+            "harmonicity": round(harmonicity, 4),
+            "source": "raw_pcm",
+        }
+        if pitch_hz is not None:
+            extras["pitch_hz"] = round(pitch_hz, 2)
+
+        confidence = 0.45 + 0.30 * harmonicity
+        provide_audio_observation(activity, rms_db, confidence, **extras)
+    except Exception as exc:
+        log.warning("provide_audio_observation_raw: %s", exc)
 
 
 def provide_audio_observation(

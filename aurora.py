@@ -28249,6 +28249,33 @@ def boot_aurora(
                 _hw.sensory_crystal = systems["sensory_crystal"]
             if _dce_obj is not None and hasattr(_dce_obj, "register_sensory_crystal"):
                 _dce_obj.register_sensory_crystal(systems["sensory_crystal"])
+            # Sunni & Cael (Multimodal Representational Autonomy): a promoted
+            # sensory representation is legitimate evidence for Aurora's
+            # EXISTING evolutionary chamber -- the hook definition
+            # (AuroraSensoryCrystal.register_evolution_hook) has existed
+            # since Sensory Crystal was written, but nothing ever called it,
+            # so no sensory promotion could ever become evolutionary
+            # pressure. Route through the chamber's own external-evidence
+            # ingestion (observe_external_evidence), the same bridge dream
+            # and code evidence already use -- no second promotion/evolution
+            # engine is created here. Sensory-Crystal-internal promotion
+            # remains a necessary but not sufficient condition: this only
+            # supplies pressure to the SAME evidence/relief/threshold gates
+            # every other evolutionary observation must already clear.
+            _chamber_for_sensory = systems.get('chamber')
+            if _chamber_for_sensory is not None and hasattr(_chamber_for_sensory, 'observe_external_evidence'):
+                def _sensory_promotion_hook(evidence: dict, _chamber=_chamber_for_sensory) -> None:
+                    try:
+                        _chamber.observe_external_evidence(evidence)
+                    except Exception as _sph_e:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora.py:_sensory_promotion_hook",
+                            exc=_sph_e,
+                            context={"function": "_sensory_promotion_hook", "source_file": "aurora.py"},
+                        )
+                systems["sensory_crystal"].register_evolution_hook(_sensory_promotion_hook)
             if verbose:
                 sc = systems["sensory_crystal"]
                 total_nodes = sum(len(f._nodes) for f in list(sc._audio.values()) + list(sc._visual.values()))

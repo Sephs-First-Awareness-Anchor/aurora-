@@ -337,7 +337,7 @@ EnergyBudget        = _EVOC["EnergyBudget"]
 _GEN = _require("aurora_evolution_stack", [
     "ConstraintGenealogyLogger", "GenealogyConfig", "ChainSummaryPrinter",
     "AbilityProfile", "TraceItem", "PressureVec", "ReliefRecord",
-    "ConstraintLink", "PairStats", "GenealogyDilationGovernor",
+    "ConstraintLink", "constraint_link_from_dict", "PairStats", "GenealogyDilationGovernor",
 ])
 ConstraintGenealogyLogger = _GEN["ConstraintGenealogyLogger"]
 GenealogyConfig           = _GEN["GenealogyConfig"]
@@ -347,6 +347,7 @@ TraceItem                 = _GEN["TraceItem"]
 PressureVec               = _GEN["PressureVec"]
 ReliefRecord              = _GEN["ReliefRecord"]
 ConstraintLink            = _GEN["ConstraintLink"]
+constraint_link_from_dict = _GEN["constraint_link_from_dict"]
 
 # — Code Evolution -------------------------------------------------------------
 # AURORA BUILD 648 EVOLUTIONARY INFRASTRUCTURE CLOSURE DIRECTIVE: this soft
@@ -788,20 +789,7 @@ def _restore_genealogy_state(
             for lid, rec in (raw or {}).items():
                 if not isinstance(rec, dict):
                     continue
-                stats = rec.get("stats", {}) or {}
-                link = ConstraintLink(
-                    id=str(rec.get("id", lid)),
-                    parents=[str(x) for x in (rec.get("parents", []) or [])],
-                    depth=int(rec.get("depth", 1) or 1),
-                    created_at_tick=int(rec.get("created_at_tick", 0) or 0),
-                    count=int(stats.get("count", 0) or 0),
-                    mean_relief={a: float((stats.get("mean_relief", {}) or {}).get(a, 0.0)) for a in AXES},
-                    mean_cost={a: float((stats.get("mean_cost", {}) or {}).get(a, 0.0)) for a in AXES},
-                    mean_x_risk=float(stats.get("mean_x_risk", 0.0) or 0.0),
-                    stdev_relief={a: float((stats.get("stdev_relief", {}) or {}).get(a, 0.0)) for a in AXES},
-                    dominant_relief_axis=(str(rec.get("dominant_relief_axis")) if rec.get("dominant_relief_axis") is not None else None),
-                    tags=[str(x) for x in (rec.get("tags", []) or [])],
-                )
+                link = constraint_link_from_dict(rec, fallback_id=str(lid))
                 links_loaded[link.id] = link
                 if len(link.parents) == 2:
                     links_by_parents[(link.parents[0], link.parents[1])] = link.id
@@ -855,6 +843,16 @@ def _restore_genealogy_state(
                 logger._coupling_roots = {str(k): dict(v) for k, v in roots.items() if isinstance(v, dict)}
             if isinstance(origin_counts, dict):
                 logger._coupling_origin_counts = defaultdict(int, {str(k): int(v or 0) for k, v in origin_counts.items()})
+            relations = raw.get("representation_relations", {}) if isinstance(raw, dict) else {}
+            collisions = raw.get("representation_collisions", {}) if isinstance(raw, dict) else {}
+            if isinstance(relations, dict):
+                logger._representation_relations = {
+                    str(k): dict(v) for k, v in relations.items() if isinstance(v, dict)
+                }
+            if isinstance(collisions, dict):
+                logger._representation_collisions = {
+                    str(k): dict(v) for k, v in collisions.items() if isinstance(v, dict)
+                }
             logger._coupling_events = int(raw.get("coupling_events", 0) or 0)
             logger._persistent_pressure_root_ema = float(raw.get("persistent_pressure_root_ema", 0.0) or 0.0)
             experiments = raw.get("experiments", {}) if isinstance(raw, dict) else {}
@@ -865,6 +863,34 @@ def _restore_genealogy_state(
                     logger._experiment_trials = [dict(t) for t in trials if isinstance(t, dict)]
                 if isinstance(adoptions, list):
                     logger._experiment_adoptions = [dict(a) for a in adoptions if isinstance(a, dict)]
+            # Additive (schema v2): native representational inquiry and
+            # experimentation runtime state (Sunni & Cael). Absent in older
+            # couplings.json files -- logger already initializes empty
+            # defaults for all of these in __init__, so a missing key here
+            # is simply a no-op, not an error.
+            inquiry_runtime = raw.get("representation_inquiry_runtime", {}) if isinstance(raw, dict) else {}
+            if isinstance(inquiry_runtime, dict):
+                active_stages = inquiry_runtime.get("active_stages", {})
+                if isinstance(active_stages, dict):
+                    logger._representation_experiment_stages = {
+                        str(k): dict(v) for k, v in active_stages.items() if isinstance(v, dict)
+                    }
+                history = inquiry_runtime.get("history", [])
+                if isinstance(history, list):
+                    logger._representation_experiment_history = [
+                        dict(h) for h in history if isinstance(h, dict)
+                    ]
+                # FIX (Sunni & Cael, Section XXI): renamed from "consumer_ticks"
+                # -- this stores per-consumer engagement CYCLE counts, not
+                # genealogy tick_count. Read the old key too so a
+                # pre-rename couplings.json still restores without loss.
+                consumer_cycles = inquiry_runtime.get(
+                    "consumer_cycles", inquiry_runtime.get("consumer_ticks", {})
+                )
+                if isinstance(consumer_cycles, dict):
+                    logger._representation_inquiry_consumer_cycle = {
+                        str(k): int(v or 0) for k, v in consumer_cycles.items()
+                    }
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -1470,22 +1496,29 @@ class ChainSimBridge:
         return ActionTrace(name=trace.name, constraints_used=trace.constraints_used, meta=meta)
 
     def _link_tag_value(self, link: ConstraintLink, prefix: str, cast=str, default=None):
-        tags = list(getattr(link, "tags", []) or [])
-        for t in tags:
-            s = str(t)
-            if s.startswith(prefix):
-                raw = s[len(prefix):]
-                try:
-                    return cast(raw)
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_runtime.py:1222",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_link_tag_value", "handler_line": 1222, "source_file": "aurora_runtime.py"},
-                    )
-                    return default
+        missing = object()
+        resolver = getattr(link, "current_semantic_value", None)
+        if callable(resolver):
+            raw = resolver(str(prefix or "").rstrip(":"), missing)
+        else:
+            raw = missing
+            for tag in reversed(list(getattr(link, "tags", []) or [])):
+                text = str(tag)
+                if text.startswith(prefix):
+                    raw = text[len(prefix):]
+                    break
+        if raw is not missing:
+            try:
+                return cast(raw)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_runtime.py:1222",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_link_tag_value", "handler_line": 1222, "source_file": "aurora_runtime.py"},
+                )
+                return default
         return default
 
     def _lineage_operation_priority(self, link: ConstraintLink) -> float:

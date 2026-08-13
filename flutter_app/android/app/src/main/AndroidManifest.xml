@@ -27,6 +27,9 @@
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Section XXV (Sunni & Cael): process continuity across device reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:label="@string/app_name"
         android:name="${applicationName}"
@@ -77,6 +80,20 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/screen_observer_service" />
         </service>
+
+        <!-- Section XXV (Sunni & Cael): restart Aurora's foreground service
+             after a device reboot so developmental continuity (curiosity
+             cycles, self-monitor heartbeat, sensory bridges) does not
+             silently end until a human happens to reopen the app. -->
+        <receiver
+            android:name=".BootCompletedReceiver"
+            android:exported="false"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <meta-data
             android:name="flutterEmbedding"
