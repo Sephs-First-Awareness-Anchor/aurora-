@@ -203,6 +203,27 @@ def _node_axis_evidence_sample(node: "SensoryNode") -> Dict[str, float]:
     }
 
 
+def _sensory_structured_state(node: "SensoryNode") -> Dict[str, Any]:
+    """The representation's full live state, for AbilityProfile.
+    structured_state (Sunni & Cael, Build 656+ follow-up: "put the sensory
+    node's structured live state directly onto its intact representational
+    surface so RCRW sees more than an AbilityProfile proxy"). Everything
+    here was previously only reachable via the transient genealogy.
+    observe() notes payload of whichever tick_citizen_participation() call
+    happened to run last -- not part of the STANDING operand surface
+    representation_record()/staged inquiry operands/RCRW actually read."""
+    return {
+        "centroid": list(node.centroid),
+        "fitness": round(node.fitness, 4),
+        "usage_count": node.usage_count,
+        "session_count": node.session_count,
+        "cross_modal_links": list(node.cross_modal_links),
+        "maturity": round(node.maturity, 4),
+        "axis_evidence": dict(node.axis_evidence),
+        "axis_evidence_samples": node.axis_evidence_samples,
+    }
+
+
 def _update_axis_evidence(node: "SensoryNode") -> Optional[str]:
     """Fold one tick's sample into the node's running axis-evidence EMA
     and return a newly-earned dominant axis, or None if evidence doesn't
@@ -1010,6 +1031,7 @@ class SensoryClusterFacet:
                 requires=(axis,),
                 cost=_axis_weighted_cost(axis),
                 risk={a: 0.0 for a in ("X", "T", "N", "B", "A")},
+                structured_state=_sensory_structured_state(node),
                 effect_tags=(
                     "sensory_representation",
                     f"sensory_domain:{self.domain}",
@@ -1117,14 +1139,7 @@ class SensoryClusterFacet:
             # maturity) every time it has genuinely moved, so a later
             # lookup of genealogy.abilities[citizen_ability_id] sees the
             # representation as it is now, not as it was at birth.
-            live_state = {
-                "centroid": list(node.centroid),
-                "fitness": round(node.fitness, 4),
-                "usage_count": node.usage_count,
-                "session_count": node.session_count,
-                "cross_modal_links": list(node.cross_modal_links),
-                "maturity": round(node.maturity, 4),
-            }
+            live_state = _sensory_structured_state(node)
             # Sunni & Cael (Build 656+ follow-up, "the mechanism to
             # establish that herself as she encounters them"): fold this
             # tick's own state into the node's running axis-evidence EMA.
@@ -1160,6 +1175,7 @@ class SensoryClusterFacet:
                     requires=(new_axis,),
                     cost=_axis_weighted_cost(new_axis),
                     effect_tags=refreshed_tags,
+                    structured_state=_sensory_structured_state(node),
                     notes=(
                         f"Sensory representation: domain={self.domain} facet={self.facet} "
                         f"node_id={node.node_id} fitness={live_state['fitness']:.3f} "
@@ -1170,6 +1186,16 @@ class SensoryClusterFacet:
                         "perceptual concept, and its tags say so."
                     ),
                 )
+                # Sunni & Cael: this ability was just replaced in place --
+                # the entry count genealogy's relevance-index cache stamps
+                # against didn't change, so without this the cache would
+                # keep the representation filed under its stale collision
+                # signature. Confirmed by direct reproduction: a citizen
+                # earns axis B, representation_record() correctly reports
+                # B, but the relevance index still had it under axis:T and
+                # was absent from axis:B until this call was added.
+                if hasattr(self._genealogy_ref, "mark_representation_index_dirty"):
+                    self._genealogy_ref.mark_representation_index_dirty()
             try:
                 self._genealogy_ref.observe(
                     pressure_before=p_before,
@@ -1731,11 +1757,39 @@ class AuroraSensoryCrystal:
             if node.stage in {"concept", "promoted"}:
                 self._inject_semantic_to_dps(node, count_use=count_use)
 
+    def _effective_axis_for_node(self, domain: str, facet_name: str, node_id: str) -> str:
+        """The axis future perception of THIS SPECIFIC representation
+        should use (Sunni & Cael, "the remaining missing circuit"): her own
+        learned axis for this exact node if one has been earned, the
+        facet-level category prior otherwise. Without this, a sensory
+        citizen could earn axis B through tick_citizen_participation() and
+        have representation_record() correctly report B, while every NEW
+        observation of that same representation kept landing back on the
+        facet's static prior via DPS routing -- what she learned about a
+        representation never fed back into how the next encounter with it
+        was perceived. Confirmed directly before this fix: genealogy said
+        B, the next DPS-routed observation still stamped T.
+
+        node_id may be "" (no specific match, e.g. a brand-new candidate
+        still below the promotion gate) -- falls back to the facet prior,
+        exactly as before this method existed.
+        """
+        if node_id and self._genealogy_ref is not None:
+            facet_map = self._audio if domain == "audio" else self._visual
+            facet = facet_map.get(facet_name)
+            node = facet._nodes.get(node_id) if facet is not None else None
+            if node is not None and node.citizen_ability_id:
+                ability = self._genealogy_ref.abilities.get(node.citizen_ability_id)
+                if ability is not None:
+                    return str(ability.axis)
+        return _facet_axis(domain, facet_name)
+
     def _dps_route_observation(
         self,
         domain:     str,
         facet_name: str,
         confidence: float,
+        node_id:    str = "",
     ) -> None:
         """
         Route a live sensory observation into the unified DPS crystal registry.
@@ -1756,11 +1810,14 @@ class AuroraSensoryCrystal:
                 confidence=confidence,
             )
             crystal.use()
-            # Stamp constraint_signature from the facet's dominant axis --
-            # SENSORY_FACET_AXIS (module-level), the same table genealogy/
-            # evolution/citizenship use, so DPS and genealogy never disagree
-            # about which axis a given sensory representation lives on.
-            axis = _facet_axis(domain, facet_name)
+            # Stamp constraint_signature from this representation's
+            # EFFECTIVE axis -- her own learned axis for this specific
+            # matched node if she has earned one, the SENSORY_FACET_AXIS
+            # category prior otherwise. Ancestry stays separate: the prior
+            # itself (SENSORY_FACET_AXIS) is never rewritten by this --
+            # only which axis THIS observation's pressure is stamped
+            # against changes.
+            axis = self._effective_axis_for_node(domain, facet_name, node_id)
             sig = crystal.constraint_signature or {}
             old = sig.get(axis, confidence)
             sig[axis] = round(old * 0.85 + confidence * 0.15, 4)
@@ -1805,7 +1862,7 @@ class AuroraSensoryCrystal:
             vec = _extract_audio_facet(audio_20d, name)
             audio_hits[name] = facet.observe(vec, self._session_id, audio_conf)
             if audio_hits[name] is not None:
-                self._dps_route_observation("audio", name, audio_conf)
+                self._dps_route_observation("audio", name, audio_conf, node_id=audio_hits[name])
 
         # Route to visual facets
         visual_hits: Dict[str, Optional[str]] = {}
@@ -1813,7 +1870,7 @@ class AuroraSensoryCrystal:
             vec = _extract_visual_facet(vision_57d, name)
             visual_hits[name] = facet.observe(vec, self._session_id, visual_conf)
             if visual_hits[name] is not None:
-                self._dps_route_observation("visual", name, visual_conf)
+                self._dps_route_observation("visual", name, visual_conf, node_id=visual_hits[name])
 
         # Check pairing lanes for co-occurrence
         sem_hits: Dict[str, Optional[str]] = {}
