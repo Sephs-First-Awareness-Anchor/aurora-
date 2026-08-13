@@ -28276,6 +28276,15 @@ def boot_aurora(
                             context={"function": "_sensory_promotion_hook", "source_file": "aurora.py"},
                         )
                 systems["sensory_crystal"].register_evolution_hook(_sensory_promotion_hook)
+            # Sunni & Cael (Build 654): give the crystal a live genealogy
+            # reference so a promoted sensory representation can be granted
+            # representational citizenship (its own RepresentationalRef and
+            # a durable, honestly-tagged genealogy AbilityProfile) instead
+            # of only ever feeding the evolutionary chamber's pressure
+            # pulse above and then going permanently inert.
+            _genealogy_for_sensory = systems.get('genealogy')
+            if _genealogy_for_sensory is not None:
+                systems["sensory_crystal"].register_genealogy(_genealogy_for_sensory)
             if verbose:
                 sc = systems["sensory_crystal"]
                 total_nodes = sum(len(f._nodes) for f in list(sc._audio.values()) + list(sc._visual.values()))
