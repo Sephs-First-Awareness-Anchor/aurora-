@@ -40,7 +40,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Deque, Dict, FrozenSet, List, Optional, Tuple
+from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Tuple
 
 # ---------------------------------------------------------------------------
 # IMPORTS FROM AURORA STACK
@@ -490,6 +490,13 @@ class GenealogyConfig:
     REPRESENTATION_COLLISION_SCAN_PER_ITEM: int = 64
     REPRESENTATION_COLLISION_HISTORY_MAX: int = 2048
     REPRESENTATION_RELATION_HISTORY_MAX: int = 16
+
+    # Cross-system activity registry (Sunni & Cael): bounded rolling window
+    # of (tick, trace_item_ids) entries recorded on every observe() call,
+    # regardless of whether that call qualified as a relief event -- the
+    # substrate a future consequence-derived representation profile needs
+    # to distinguish genuine isolation from coincidental co-activation.
+    ACTIVITY_LOG_MAXLEN: int = 500
 
     # Cross-family ('RI:') complementary-gap inquiry -- native relevance
     # retrieval bounded the same way exact-signature collision retrieval is
@@ -1919,6 +1926,32 @@ class ConstraintGenealogyLogger:
         # even when the counts don't.
         self._representation_index_dirty_counter: int = 0
 
+        # Cross-system activity registry (Sunni & Cael: "design the activity
+        # registry first" -- the substrate a future consequence-derived
+        # representation profile needs to tell genuine isolation from
+        # coincidental co-activation, rather than crediting every active
+        # representation for everything that happened). genealogy.observe()
+        # is already the single convergence point roughly a dozen distinct
+        # subsystems funnel evidence through (sensory citizenship, dream/code
+        # evidence, grammar engine, dimensional systems, pipeline modulation,
+        # tool mind, evolution chamber...) -- confirmed by direct grep across
+        # the codebase before writing this, not assumed. One shared
+        # ConstraintGenealogyLogger instance per Aurora process means
+        # recording activity here sees cross-subsystem co-activation for
+        # free, without instrumenting each call site separately.
+        #
+        # Honest limitation, stated up front: this registry only sees
+        # activity that reaches genealogy.observe(). Anything that never
+        # calls it -- pure language generation with no constraint evidence,
+        # DPS-only activity that never logs a relief tick, etc. -- is
+        # invisible here. "Isolated" from this registry's perspective means
+        # "isolated among genealogy-observed activity," not "isolated in
+        # absolute terms." A future consequence-profile mechanism consuming
+        # this must not overclaim beyond what it actually measures.
+        self._activity_log: Deque[Tuple[int, Tuple[str, ...]]] = deque(
+            maxlen=int(getattr(self.cfg, "ACTIVITY_LOG_MAXLEN", 500) or 500)
+        )
+
         # Native representational inquiry and experimentation (Sunni & Cael,
         # reconstructed build-650-fixed-v5 extension). Cross-family relevance
         # index cache, staged RS: experiments awaiting an actual ordered
@@ -2056,6 +2089,13 @@ class ConstraintGenealogyLogger:
         """
         self.tick_count += 1
         self._latest_pressure = pressure_after
+
+        # Sunni & Cael: record activity BEFORE the relief filter below can
+        # return early -- a representation being co-active this tick is
+        # true regardless of whether the tick happened to register as a
+        # relief event. Isolation confidence needs to see everything that
+        # touched genealogy, not only what cleared the noise filter.
+        self._record_activity(trace)
 
         raw_relief = pressure_after.relief_from(pressure_before)
         dominant_axis_hint = raw_relief.dominant_positive_axis() or "X"
@@ -3217,6 +3257,68 @@ class ConstraintGenealogyLogger:
             "left_effect": left,
             "right_effect": right,
         }
+
+    # ------------------------------------------------------------------
+    # Cross-system activity registry (Sunni & Cael)
+    # ------------------------------------------------------------------
+    def _record_activity(self, trace: List[TraceItem]) -> None:
+        """Append one (tick, participating_ids) entry. Called from every
+        observe() call, before the relief noise filter -- co-activation is
+        a fact about what happened, not about whether it happened to
+        register as a relief event."""
+        ids = tuple(dict.fromkeys(str(item.id) for item in (trace or []) if str(item.id)))
+        if not ids:
+            return
+        self._activity_log.append((int(self.tick_count), ids))
+
+    def activity_in_window(
+        self,
+        as_of_tick: int,
+        window: int = 3,
+        exclude_ids: Optional[Iterable[str]] = None,
+    ) -> Dict[str, int]:
+        """How many distinct observe() calls each id appeared in, over
+        ticks (as_of_tick - window, as_of_tick] inclusive of as_of_tick.
+        Backward-looking only -- isolation at the moment of participation
+        can only be judged from what already happened, not what hasn't yet.
+
+        Returns a dict of {representation_id: appearance_count}, excluding
+        any id in exclude_ids (typically the representation being judged,
+        so it doesn't count as evidence against its own isolation).
+        """
+        excluded = {str(x) for x in (exclude_ids or ())}
+        lo = int(as_of_tick) - max(0, int(window))
+        counts: Dict[str, int] = defaultdict(int)
+        for tick, ids in self._activity_log:
+            if tick < lo or tick > as_of_tick:
+                continue
+            for iid in ids:
+                if iid not in excluded:
+                    counts[iid] += 1
+        return dict(counts)
+
+    def isolation_confidence(
+        self,
+        item_id: str,
+        as_of_tick: int,
+        window: int = 3,
+    ) -> float:
+        """1.0 when nothing else genealogy-observed was active in the
+        window around as_of_tick; decays toward 0.0 as more DISTINCT other
+        representations co-occurred (count of appearances matters less than
+        breadth -- one other id appearing three times is still "one other
+        thing going on," not three).
+
+        Stated honestly, not just in the class-level docstring: this can
+        only see activity that reached observe(). A representation judged
+        "isolated" here may not have been isolated in Aurora's full
+        cognition -- only among what genealogy itself was told about.
+        """
+        others = self.activity_in_window(as_of_tick, window=window, exclude_ids=(str(item_id),))
+        distinct_others = len(others)
+        if distinct_others == 0:
+            return 1.0
+        return max(0.0, 1.0 / (1.0 + distinct_others))
 
     def mark_representation_index_dirty(self) -> None:
         """Call this whenever an EXISTING links/abilities entry is replaced
