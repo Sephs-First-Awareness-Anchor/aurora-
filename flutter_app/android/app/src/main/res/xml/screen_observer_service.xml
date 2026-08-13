@@ -2,10 +2,11 @@
 <!-- Sunni & Cael, "Autonomous Development Integrity" pass: canTakeScreenshot
      extends this service's existing accessibility access (window-content
      retrieval) to real pixels via AccessibilityService.takeScreenshot()
-     (API 30+) -- the UI observation session journal's screenshot capture,
-     bounded and on-demand rather than continuous recording. Ignored by
-     the platform below API 30; ScreenObserverService.captureScreenshot()
-     already no-ops on older devices via its own SDK_INT guard. -->
+     (API 30+), for the UI observation session journal's screenshot
+     capture, bounded and on-demand rather than continuous recording.
+     Ignored by the platform below API 30; ScreenObserverService.
+     captureScreenshot() already no-ops on older devices via its own
+     SDK_INT guard. -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewClicked|typeViewFocused|typeViewTextChanged|typeViewScrolled"
     android:accessibilityFeedbackType="feedbackGeneric"
