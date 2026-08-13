@@ -110,13 +110,26 @@ SESSION_BREADTH_CAP = 10.0
 # =============================================================================
 # REPRESENTATIONAL CITIZENSHIP  —  Sunni & Cael, Build 654
 # =============================================================================
-# A promoted SensoryNode's primary (domain, facet) axis, shared by the
-# citizenship path below and the pre-existing evolution-hook evidence dict
-# in tick_advanced_promotion() -- one source of truth instead of two
-# independently-maintained copies.
-SENSORY_FACET_AXIS: Dict[str, Dict[str, str]] = {
-    "audio":  {"tone": "N", "timbre": "N", "rhythm": "N"},
-    "visual": {"hue": "B", "shape": "B", "motion": "T"},
+# A promoted SensoryNode's primary axis. Facet names are unique across
+# domains (tone/timbre/rhythm are audio-only, hue/shape/motion are
+# visual-only), so this is keyed on facet alone -- matching, and now the
+# single source of truth for, AuroraSensoryCrystal's pre-existing
+# _dps_route_observation() axis stamping (previously a separate, silently
+# disagreeing table: tone/timbre/rhythm all defaulted to N and hue/shape/
+# motion were B/B/T there, while DPS routing independently held T/B/N/X/B/A
+# with its own stated per-facet reasoning below -- confirmed by direct grep,
+# not assumed. Reconciled onto the DPS table because it carries actual
+# reasoning per facet; the other was an unexamined copy with no rationale
+# of its own). One table now feeds genealogy/evolution/citizenship AND DPS
+# routing, so the same sensory representation cannot hold two different
+# primitive axis identities depending on which subsystem is asked.
+SENSORY_FACET_AXIS: Dict[str, str] = {
+    "tone":   "T",   # temporal / tonal coherence
+    "timbre": "B",   # boundary / textural edge
+    "rhythm": "N",   # energy / onset pattern
+    "hue":    "X",   # existence / colour identity
+    "shape":  "B",   # boundary / form
+    "motion": "A",   # agency / movement
 }
 
 # RepresentationalRef.nc_dim requires one of DIM_NAMES = (POLARITY,
@@ -134,7 +147,7 @@ SENSORY_FACET_DIM_NAME: Dict[str, str] = {
 
 
 def _facet_axis(domain: str, facet: str) -> str:
-    return SENSORY_FACET_AXIS.get(domain, {}).get(facet, "N")
+    return SENSORY_FACET_AXIS.get(facet, "N")
 
 
 def _facet_dim_name(facet: str) -> str:
@@ -916,6 +929,7 @@ class SensoryClusterFacet:
                     f"sensory_node_id:{node.node_id}",
                     f"sensory_modality:{self.domain}",
                     f"representational_ref:{ref.encode()}",
+                    f"sensory_fitness:{node.fitness:.3f}",
                 ),
                 notes=(
                     f"Sensory representation: domain={self.domain} facet={self.facet} "
@@ -930,6 +944,30 @@ class SensoryClusterFacet:
         node.citizen_ability_id = aid
         node._last_citizen_fitness = node.fitness
         return aid
+
+    def migrate_legacy_citizens(self) -> int:
+        """Backfill citizenship for nodes promoted before this facet ever
+        had a genealogy reference (Sunni & Cael, Build 656 follow-up):
+        register_genealogy() only wires the reference -- a node promoted in
+        an earlier session, loaded back from persisted state with
+        stage="promoted" and citizen_ability_id=None, would otherwise stay
+        permanently stranded, since tick_advanced_promotion() (the only
+        other call site for grant_representational_citizenship) never
+        fires again for a node that already reached "promoted". Confirmed
+        against this build's own shipped sensory state, not hypothetical:
+        loading it and calling register_genealogy() alone left every
+        already-promoted node at citizen_ability_id=None with zero sensory
+        citizen abilities registered. Idempotent -- grant_representational_
+        citizenship() already skips nodes that already have a citizen id.
+        Returns the number of nodes migrated this call."""
+        if self._genealogy_ref is None:
+            return 0
+        migrated = 0
+        for node in self._nodes.values():
+            if node.stage == "promoted" and not node.citizen_ability_id:
+                if self.grant_representational_citizenship(node) is not None:
+                    migrated += 1
+        return migrated
 
     def tick_citizen_participation(self) -> int:
         """Ongoing consequence-observation for already-promoted citizens
@@ -949,7 +987,8 @@ class SensoryClusterFacet:
         """
         if self._genealogy_ref is None:
             return 0
-        from aurora_internal.constraint_genealogy import PressureVec, TraceItem
+        import dataclasses
+        from aurora_internal.constraint_genealogy import AbilityProfile, PressureVec, TraceItem
         reported = 0
         for node in self._nodes.values():
             if node.stage != "promoted" or not node.citizen_ability_id:
@@ -967,6 +1006,44 @@ class SensoryClusterFacet:
             after_val = _clamp01(1.0 - node.fitness)
             p_before = PressureVec(**{a: (before_val if a == axis else 0.0) for a in ("X", "T", "N", "B", "A")})
             p_after = PressureVec(**{a: (after_val if a == axis else 0.0) for a in ("X", "T", "N", "B", "A")})
+            # Sunni & Cael (Build 656 follow-up): the ability created by
+            # grant_representational_citizenship() carried a snapshot of the
+            # node's state at the MOMENT of promotion -- fitness, usage,
+            # cross_modal_links -- and, being a frozen dataclass, never
+            # changed again even as the live node kept learning. That was
+            # confirmed directly: raise a node's fitness after citizenship,
+            # run this method, and the ability's own fields were unchanged.
+            # Replace it here with the node's CURRENT state (centroid,
+            # fitness, usage_count, session_count, cross_modal_links,
+            # maturity) every time it has genuinely moved, so a later
+            # lookup of genealogy.abilities[citizen_ability_id] sees the
+            # representation as it is now, not as it was at birth.
+            live_state = {
+                "centroid": list(node.centroid),
+                "fitness": round(node.fitness, 4),
+                "usage_count": node.usage_count,
+                "session_count": node.session_count,
+                "cross_modal_links": list(node.cross_modal_links),
+                "maturity": round(node.maturity, 4),
+            }
+            existing = self._genealogy_ref.abilities.get(node.citizen_ability_id)
+            if existing is not None:
+                refreshed_tags = tuple(
+                    t for t in existing.effect_tags if not t.startswith("sensory_fitness:")
+                ) + (f"sensory_fitness:{live_state['fitness']:.3f}",)
+                self._genealogy_ref.abilities[node.citizen_ability_id] = dataclasses.replace(
+                    existing,
+                    effect_tags=refreshed_tags,
+                    notes=(
+                        f"Sensory representation: domain={self.domain} facet={self.facet} "
+                        f"node_id={node.node_id} fitness={live_state['fitness']:.3f} "
+                        f"usage={live_state['usage_count']} session={live_state['session_count']} "
+                        f"cross_modal_links={len(live_state['cross_modal_links'])} "
+                        f"maturity={live_state['maturity']:.3f}. "
+                        "Not a code mutation -- this ability's origin is a promoted "
+                        "perceptual concept, and its tags say so."
+                    ),
+                )
             try:
                 self._genealogy_ref.observe(
                     pressure_before=p_before,
@@ -978,6 +1055,7 @@ class SensoryClusterFacet:
                         "facet": self.facet,
                         "node_id": node.node_id,
                         "fitness_delta": round(delta, 4),
+                        "live_state": live_state,
                     },
                 )
                 node._last_citizen_fitness = node.fitness
@@ -1337,16 +1415,32 @@ class AuroraSensoryCrystal:
         for facet in self._visual.values():
             facet._evolution_hook = hook
 
-    def register_genealogy(self, genealogy: Any) -> None:
+    def register_genealogy(self, genealogy: Any) -> int:
         """Give every facet a reference to live genealogy so promoted nodes
         can be granted representational citizenship (Sunni & Cael, Build
         654) and so already-promoted citizens can report ongoing activity
-        via tick_citizen_participation()."""
+        via tick_citizen_participation().
+
+        Also backfills citizenship for any node that was already
+        "promoted" before genealogy was ever wired -- e.g. loaded from
+        persisted state at boot, before this method's first call this
+        process. Without this, those nodes stay permanently stranded:
+        nothing else ever re-visits an already-"promoted" node. Confirmed
+        against this build's own shipped sensory state (real persisted
+        promoted audio nodes with citizen_ability_id=None until this
+        backfill runs). Returns the number of nodes migrated.
+        """
         self._genealogy_ref = genealogy
         for facet in self._audio.values():
             facet._genealogy_ref = genealogy
         for facet in self._visual.values():
             facet._genealogy_ref = genealogy
+        migrated = 0
+        for facet in self._audio.values():
+            migrated += facet.migrate_legacy_citizens()
+        for facet in self._visual.values():
+            migrated += facet.migrate_legacy_citizens()
+        return migrated
 
     def tick_citizen_participation(self) -> int:
         """Bounded, per-session consequence-observation pass across every
@@ -1510,17 +1604,6 @@ class AuroraSensoryCrystal:
             if node.stage in {"concept", "promoted"}:
                 self._inject_semantic_to_dps(node, count_use=count_use)
 
-    # Axis affinity for each sensory facet — maps observation domain to the
-    # constraint axis that governs it.
-    _FACET_AXIS: Dict[str, str] = {
-        "tone":   "T",   # temporal / tonal coherence
-        "timbre": "B",   # boundary / textural edge
-        "rhythm": "N",   # energy / onset pattern
-        "hue":    "X",   # existence / colour identity
-        "shape":  "B",   # boundary / form
-        "motion": "A",   # agency / movement
-    }
-
     def _dps_route_observation(
         self,
         domain:     str,
@@ -1546,8 +1629,11 @@ class AuroraSensoryCrystal:
                 confidence=confidence,
             )
             crystal.use()
-            # Stamp constraint_signature from the facet's dominant axis
-            axis = self._FACET_AXIS.get(facet_name, "N")
+            # Stamp constraint_signature from the facet's dominant axis --
+            # SENSORY_FACET_AXIS (module-level), the same table genealogy/
+            # evolution/citizenship use, so DPS and genealogy never disagree
+            # about which axis a given sensory representation lives on.
+            axis = _facet_axis(domain, facet_name)
             sig = crystal.constraint_signature or {}
             old = sig.get(axis, confidence)
             sig[axis] = round(old * 0.85 + confidence * 0.15, 4)

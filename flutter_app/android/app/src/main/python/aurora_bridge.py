@@ -2807,27 +2807,67 @@ def _sample_ambient_perception(systems: dict) -> None:
             # Normalize to the keys audio_dict_to_crystal_20d() expects.
             # The raw dict uses activity/rms_db; the crystal function expects
             # category/rms/volume and a features sub-dict.
+            #
+            # Sunni & Cael (Build 656 follow-up): confirmed real bug --
+            # provide_audio_observation_raw() (the actual DSP path) forwards
+            # measured features under zero_crossing_rate/spectral_centroid/
+            # spectral_bandwidth/spectral_rolloff/harmonicity/pitch_hz, but
+            # this block's zcr/harmonicity below were UNCONDITIONAL
+            # category-keyword heuristics (clobbering any real measurement
+            # regardless of whether one existed), and the old carry-over
+            # loop checked for "pitch"/"centroid"/"bandwidth" -- names the
+            # DSP path never produces -- while never checking "spectral_
+            # rolloff" or "harmonicity" at all. Reproduced directly: feeding
+            # zcr=.1234, centroid=1234Hz, bandwidth=456Hz, rolloff=2345Hz,
+            # harmonicity=.67, pitch=440Hz through provide_audio_
+            # observation_raw() and then reading what this function built
+            # showed centroid/bandwidth/rolloff/pitch silently absent and
+            # zcr/harmonicity replaced by the heuristic guess. Real
+            # measurements, once present, now always win; the heuristic is
+            # a genuine fallback (used only for the JSON-file polling path,
+            # which has no DSP measurements to offer), not an override.
             _rms_norm = max(0.0, min(1.0, (_rms + 60.0) / 40.0))
+            _has_real_zcr = "zero_crossing_rate" in _audio_source
+            _has_real_harm = "harmonicity" in _audio_source
             _raw_audio = {
                 "category": _act,
                 "rms":      _rms_norm,
                 "volume":   _rms_norm,
                 "features": {
                     "rms": _rms_norm,
-                    "zcr": 0.35 if _act in ("speech", "singing") else 0.08,
+                    "zcr": (
+                        float(_audio_source["zero_crossing_rate"]) if _has_real_zcr
+                        else (0.35 if _act in ("speech", "singing") else 0.08)
+                    ),
                     "harmonicity": (
-                        0.80 if _act == "music"
-                        else 0.72 if _act == "singing"
-                        else 0.45 if _act == "speech"
-                        else 0.10
+                        float(_audio_source["harmonicity"]) if _has_real_harm
+                        else (0.80 if _act == "music"
+                              else 0.72 if _act == "singing"
+                              else 0.45 if _act == "speech"
+                              else 0.10)
                     ),
                 },
             }
-            # Carry over any rich feature fields the source dict already has
-            for _fk in ("pitch", "centroid", "bandwidth", "onset_density",
-                        "spectral_flux", "chroma"):
-                if _fk in _audio_source:
-                    _raw_audio["features"][_fk] = _audio_source[_fk]
+            # Carry over every rich feature field the DSP path actually
+            # produces (aurora_bridge.provide_audio_observation_raw's own
+            # `extras` dict), aliased to the shorter names audio_dict_to_
+            # crystal_20d()'s _pull() already tries first -- and also under
+            # their raw names, since _pull() accepts both.
+            _rich_key_map = {
+                "zero_crossing_rate": "zcr",
+                "spectral_centroid":  "centroid",
+                "spectral_bandwidth": "bandwidth",
+                "spectral_rolloff":   "rolloff",
+                "spectral_flux":      "spectral_flux",
+                "harmonicity":        "harmonicity",
+                "pitch_hz":           "pitch",
+                "onset_density":      "onset_density",
+                "chroma":             "chroma",
+            }
+            for _src_key, _dst_key in _rich_key_map.items():
+                if _src_key in _audio_source and _audio_source[_src_key] is not None:
+                    _raw_audio["features"][_dst_key] = _audio_source[_src_key]
+                    _raw_audio["features"][_src_key] = _audio_source[_src_key]
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
