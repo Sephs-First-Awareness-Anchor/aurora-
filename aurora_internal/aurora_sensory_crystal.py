@@ -150,6 +150,83 @@ def _facet_axis(domain: str, facet: str) -> str:
     return SENSORY_FACET_AXIS.get(facet, "N")
 
 
+# =============================================================================
+# LEARNED AXIS PARTICIPATION  —  Sunni & Cael, Build 656+ follow-up
+# =============================================================================
+# SENSORY_FACET_AXIS assigns every node on a facet the SAME starting axis,
+# by category, before she has encountered a single instance of it. That is
+# a reasonable prior (see its own stated rationale above), not a permanent
+# verdict. What follows lets an individual representation's own
+# encountered evidence override that prior for ITSELF -- other nodes on
+# the same facet remain free to end up on a different axis if their own
+# evidence points elsewhere.
+AXIS_EVIDENCE_EMA_RATE    = 0.15   # matches EMA_ALPHA's smoothing elsewhere
+AXIS_EVIDENCE_MIN_SAMPLES = 5      # don't reassign from a couple of ticks
+AXIS_EVIDENCE_MARGIN      = 0.12   # dominant axis must clearly lead, not barely
+
+_AXES5: Tuple[str, ...] = ("X", "T", "N", "B", "A")
+
+
+SENSORY_CITIZEN_COST_BASE = 0.0006
+
+
+def _axis_weighted_cost(axis: str, cost_base: float = SENSORY_CITIZEN_COST_BASE) -> Dict[str, float]:
+    """Shared cost-shaping formula for a sensory citizen ability, used both
+    at initial grant and whenever learned axis evidence reassigns which
+    axis is primary -- same shape, different axis, one definition."""
+    return {a: (cost_base * (1.4 if a == axis else 0.6)) for a in _AXES5}
+
+
+def _node_axis_evidence_sample(node: "SensoryNode") -> Dict[str, float]:
+    """One tick's raw 5-axis evidence sample, built entirely from
+    quantities the node already tracks about its own encountered history
+    -- no new instrumentation, no fabricated signal:
+
+      X (existence/admissibility): confidence -- how certain her sense of
+         this representation's own reality is.
+      T (temporal/momentum):       session_count, normalized -- how much
+         this representation has recurred and persisted across her
+         sessions over time, not just within one.
+      N (energy):                  usage_count, normalized -- how much raw
+         activation it has actually drawn.
+      B (boundary/integration):    len(cross_modal_links) -- how much
+         cross-modal binding work it participates in.
+      A (agency):                  fitness -- how much self-directed
+         standing it has already earned toward its own promotion.
+    """
+    return {
+        "X": _clamp01(node.confidence),
+        "T": _clamp01(node.session_count / SESSION_BREADTH_CAP),
+        "N": _clamp01(node.usage_count / USAGE_NORM_CAP),
+        "B": _clamp01(len(node.cross_modal_links) / 4.0),
+        "A": _clamp01(node.fitness),
+    }
+
+
+def _update_axis_evidence(node: "SensoryNode") -> Optional[str]:
+    """Fold one tick's sample into the node's running axis-evidence EMA
+    and return a newly-earned dominant axis, or None if evidence doesn't
+    yet clearly support moving off the current one. Never called more than
+    once per tick_citizen_participation() call -- this is real encounter
+    evidence, not a per-sample flood."""
+    sample = _node_axis_evidence_sample(node)
+    ev = dict(node.axis_evidence) if node.axis_evidence else {a: 0.0 for a in _AXES5}
+    for a in _AXES5:
+        prev = ev.get(a, 0.0)
+        ev[a] = prev + AXIS_EVIDENCE_EMA_RATE * (sample[a] - prev)
+    node.axis_evidence = ev
+    node.axis_evidence_samples += 1
+
+    if node.axis_evidence_samples < AXIS_EVIDENCE_MIN_SAMPLES:
+        return None
+    ranked = sorted(ev.items(), key=lambda kv: kv[1], reverse=True)
+    dominant_axis, dominant_val = ranked[0]
+    runner_up_val = ranked[1][1] if len(ranked) > 1 else 0.0
+    if dominant_val - runner_up_val < AXIS_EVIDENCE_MARGIN:
+        return None
+    return dominant_axis
+
+
 def _facet_dim_name(facet: str) -> str:
     return SENSORY_FACET_DIM_NAME.get(facet, "OPERATOR")
 
@@ -563,6 +640,16 @@ class SensoryNode:
     representational_ref:  Optional[str] = None
     citizen_ability_id:    Optional[str] = None
 
+    # Learned axis participation (Sunni & Cael, Build 656+ follow-up):
+    # SENSORY_FACET_AXIS assigns a STARTING axis by facet category (a
+    # design choice, stated as such at its own definition) -- this is the
+    # representation establishing which axis it actually loads on, for
+    # itself, from what she has actually encountered of it, one tick at a
+    # time. Persisted (unlike _last_citizen_fitness below) because the
+    # entire point is that it accumulates across sessions, not within one.
+    axis_evidence:         Dict[str, float] = field(default_factory=dict)
+    axis_evidence_samples: int = 0
+
     # Bookkeeping only, never persisted: the fitness value last reported to
     # genealogy via tick_citizen_participation(), so that method can tell
     # whether this node has done anything new since its last consequence
@@ -629,6 +716,8 @@ class SensoryNode:
             wisdom_structure_bias     = d.get("wisdom_structure_bias",     0.0),
             representational_ref      = d.get("representational_ref",     None),
             citizen_ability_id        = d.get("citizen_ability_id",       None),
+            axis_evidence             = dict(d.get("axis_evidence", {}) or {}),
+            axis_evidence_samples     = d.get("axis_evidence_samples",   0),
         )
         node._last_session = d.get("_last_session", "")
         return node
@@ -915,12 +1004,11 @@ class SensoryClusterFacet:
         if aid not in genealogy.abilities:
             from aurora_internal.constraint_genealogy import AbilityProfile
             axis = _facet_axis(self.domain, self.facet)
-            cost_base = 0.0006
             genealogy.abilities[aid] = AbilityProfile(
                 id=aid,
                 axis=axis,
                 requires=(axis,),
-                cost={a: (cost_base * (1.4 if a == axis else 0.6)) for a in ("X", "T", "N", "B", "A")},
+                cost=_axis_weighted_cost(axis),
                 risk={a: 0.0 for a in ("X", "T", "N", "B", "A")},
                 effect_tags=(
                     "sensory_representation",
@@ -930,6 +1018,11 @@ class SensoryClusterFacet:
                     f"sensory_modality:{self.domain}",
                     f"representational_ref:{ref.encode()}",
                     f"sensory_fitness:{node.fitness:.3f}",
+                    # The category-level starting prior, permanently
+                    # recorded for the audit trail -- kept even if a later
+                    # learned_axis: tag (tick_citizen_participation) moves
+                    # the ability's own live .axis field elsewhere.
+                    f"initial_axis:{axis}",
                 ),
                 notes=(
                     f"Sensory representation: domain={self.domain} facet={self.facet} "
@@ -996,7 +1089,13 @@ class SensoryClusterFacet:
             delta = node.fitness - node._last_citizen_fitness
             if abs(delta) < 1e-6:
                 continue
-            axis = _facet_axis(self.domain, self.facet)
+            existing = self._genealogy_ref.abilities.get(node.citizen_ability_id)
+            # The axis pressure is logged against is the representation's
+            # CURRENT axis -- its own learned axis if evidence has already
+            # earned one (see _update_axis_evidence below), the facet-level
+            # starting prior otherwise. Never silently recomputed from the
+            # facet alone once she has evidence of her own about it.
+            axis = existing.axis if existing is not None else _facet_axis(self.domain, self.facet)
             # Real, derived-from-actual-state pressure: unresolved
             # confidence is the "before" pressure on this node's axis;
             # relief is however much fitness improved this tick. A fitness
@@ -1004,8 +1103,8 @@ class SensoryClusterFacet:
             # instead of falling -- never clamped away or hidden.
             before_val = _clamp01(1.0 - node._last_citizen_fitness)
             after_val = _clamp01(1.0 - node.fitness)
-            p_before = PressureVec(**{a: (before_val if a == axis else 0.0) for a in ("X", "T", "N", "B", "A")})
-            p_after = PressureVec(**{a: (after_val if a == axis else 0.0) for a in ("X", "T", "N", "B", "A")})
+            p_before = PressureVec(**{a: (before_val if a == axis else 0.0) for a in _AXES5})
+            p_after = PressureVec(**{a: (after_val if a == axis else 0.0) for a in _AXES5})
             # Sunni & Cael (Build 656 follow-up): the ability created by
             # grant_representational_citizenship() carried a snapshot of the
             # node's state at the MOMENT of promotion -- fitness, usage,
@@ -1026,13 +1125,40 @@ class SensoryClusterFacet:
                 "cross_modal_links": list(node.cross_modal_links),
                 "maturity": round(node.maturity, 4),
             }
-            existing = self._genealogy_ref.abilities.get(node.citizen_ability_id)
+            # Sunni & Cael (Build 656+ follow-up, "the mechanism to
+            # establish that herself as she encounters them"): fold this
+            # tick's own state into the node's running axis-evidence EMA.
+            # A representation whose actually-encountered history clearly
+            # favors a different axis than SENSORY_FACET_AXIS's category
+            # prior earns a reassignment for ITSELF -- other nodes on the
+            # same facet are untouched and may end up differently, or not
+            # at all, depending on their OWN evidence.
+            learned_axis = _update_axis_evidence(node)
+            new_axis = learned_axis if (learned_axis is not None and learned_axis != axis) else axis
+            starting_prior = _facet_axis(self.domain, self.facet)
             if existing is not None:
                 refreshed_tags = tuple(
-                    t for t in existing.effect_tags if not t.startswith("sensory_fitness:")
+                    t for t in existing.effect_tags
+                    if not t.startswith("sensory_fitness:") and not t.startswith("learned_axis:")
                 ) + (f"sensory_fitness:{live_state['fitness']:.3f}",)
+                if new_axis != starting_prior:
+                    # Sticky, not just this-tick: the tag reflects "does the
+                    # CURRENT axis differ from the original category prior",
+                    # not "did it change on THIS tick" -- otherwise it would
+                    # vanish again the moment a later tick reconfirms the
+                    # same already-learned axis instead of moving further.
+                    refreshed_tags = refreshed_tags + (f"learned_axis:{new_axis}",)
+                if new_axis != axis:
+                    logger.info(
+                        "[SensoryCrystal/%s/%s] %s: axis %s->%s (own encountered evidence, %d samples)",
+                        self.domain, self.facet, node.node_id[:8], axis, new_axis,
+                        node.axis_evidence_samples,
+                    )
                 self._genealogy_ref.abilities[node.citizen_ability_id] = dataclasses.replace(
                     existing,
+                    axis=new_axis,
+                    requires=(new_axis,),
+                    cost=_axis_weighted_cost(new_axis),
                     effect_tags=refreshed_tags,
                     notes=(
                         f"Sensory representation: domain={self.domain} facet={self.facet} "
@@ -1056,6 +1182,7 @@ class SensoryClusterFacet:
                         "node_id": node.node_id,
                         "fitness_delta": round(delta, 4),
                         "live_state": live_state,
+                        "axis_evidence": dict(node.axis_evidence),
                     },
                 )
                 node._last_citizen_fitness = node.fitness
