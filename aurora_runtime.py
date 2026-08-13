@@ -750,6 +750,7 @@ def _restore_genealogy_state(
                     risk={a: float((rec.get("risk", {}) or {}).get(a, 0.0)) for a in AXES},
                     effect_tags=tuple(rec.get("effect_tags", [])),
                     notes=str(rec.get("notes", "")),
+                    structured_state=(dict(rec["structured_state"]) if isinstance(rec.get("structured_state"), dict) else None),
                 )
             if loaded:
                 logger.abilities = loaded

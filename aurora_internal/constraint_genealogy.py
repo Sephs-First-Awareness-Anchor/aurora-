@@ -570,6 +570,17 @@ class AbilityProfile:
     # populating a link's refs, they flow through to the ability for free.
     topology_id: Optional[str] = None
     semantic_variant_id: Optional[str] = None
+    # Sunni & Cael (Build 656+ follow-up): a generic, domain-agnostic
+    # extension point for a subsystem that wants an ability's INTACT
+    # OPERAND SURFACE (representation_record(), staged inquiry operands,
+    # relation pairs -- everywhere _representation_parent_ref() is used)
+    # to carry more than dominant_axis/cost/risk/effect_tags. Deliberately
+    # untyped/opaque here -- genealogy does not know or care what a
+    # sensory representation's centroid is; it just carries whatever
+    # structured state the ability's own creator considers part of what
+    # this representation actually is, and surfaces it generically for
+    # ANY ability, not only sensory ones.
+    structured_state: Optional[Dict[str, Any]] = None
 
     def x_risk(self) -> float:
         """Return the X (existence admissibility) risk component."""
@@ -611,6 +622,8 @@ class AbilityProfile:
             d["topology_id"] = self.topology_id
         if self.semantic_variant_id is not None:
             d["semantic_variant_id"] = self.semantic_variant_id
+        if self.structured_state is not None:
+            d["structured_state"] = dict(self.structured_state)
         return d
 
 
@@ -908,6 +921,17 @@ def _augment_ability_profile_with_origin(ap: AbilityProfile) -> AbilityProfile:
         risk={a: float(ap.risk.get(a, 0.0)) for a in AXES},
         effect_tags=dedup_tags,
         notes=notes,
+        # Sunni & Cael: this function's own docstring promises "adds new
+        # physics tags without removing any existing ones" -- confirmed it
+        # was NOT keeping that promise for these three fields, silently
+        # dropping them on every call (including the one
+        # _restore_genealogy_state() makes automatically after loading
+        # persisted abilities from disk). topology_id/semantic_variant_id
+        # predate this fix; structured_state is the field this round's
+        # sensory live-state work depends on surviving a normalize pass.
+        topology_id=ap.topology_id,
+        semantic_variant_id=ap.semantic_variant_id,
+        structured_state=(dict(ap.structured_state) if ap.structured_state is not None else None),
     )
 
 
@@ -1881,7 +1905,19 @@ class ConstraintGenealogyLogger:
         self._representation_collisions: Dict[str, Dict[str, Any]] = {}
         self._active_relation_context: Dict[str, Any] = {}
         self._representation_index_cache: Dict[str, List[str]] = {}
-        self._representation_index_stamp: Optional[Tuple[int, int, int]] = None
+        self._representation_index_stamp: Optional[Tuple[int, int, int, int]] = None
+        # Sunni & Cael: (len(links), len(abilities), len(pair_stats)) alone
+        # cannot detect an EXISTING ability being replaced in place with
+        # different content (e.g. a learned axis reassignment) -- the count
+        # doesn't change, so the cache never rebuilt and kept indexing the
+        # representation under its stale collision signature. Confirmed by
+        # direct reproduction: a sensory citizen earns axis B,
+        # representation_record() correctly reports B, but the relevance
+        # index still had it filed under axis:T and was absent from axis:B.
+        # Any in-place content mutation of an existing links/abilities entry
+        # must call mark_representation_index_dirty() so the stamp changes
+        # even when the counts don't.
+        self._representation_index_dirty_counter: int = 0
 
         # Native representational inquiry and experimentation (Sunni & Cael,
         # reconstructed build-650-fixed-v5 extension). Cross-family relevance
@@ -3113,7 +3149,7 @@ class ConstraintGenealogyLogger:
             str(tag) for tag in (ability.effect_tags or ())
             if not any(str(tag).startswith(prefix) for prefix in metadata_prefixes)
         ]
-        return {
+        effect: Dict[str, Any] = {
             "dominant_axis": str(ability.axis or "X"),
             "cost": {a: float(ability.cost.get(a, 0.0) or 0.0) for a in AXES},
             "risk": {a: float(ability.risk.get(a, 0.0) or 0.0) for a in AXES},
@@ -3121,6 +3157,15 @@ class ConstraintGenealogyLogger:
             "purpose_lane": str(identity.get("purpose_lane", "") or ""),
             "operator_action": str(identity.get("operator_action", "") or ""),
         }
+        # Sunni & Cael (Build 656+ follow-up): whatever structured state
+        # the ability's own creator attached (see AbilityProfile.
+        # structured_state) rides on the STANDING intact operand surface
+        # -- not only the transient genealogy.observe() notes payload of
+        # whichever tick happened to touch it last. Generic on purpose:
+        # genealogy doesn't interpret these keys, it just carries them.
+        if ability.structured_state:
+            effect["structured_state"] = dict(ability.structured_state)
+        return effect
 
     @staticmethod
     def _normalized_vector_distance(left: Dict[str, Any], right: Dict[str, Any]) -> float:
@@ -3173,8 +3218,21 @@ class ConstraintGenealogyLogger:
             "right_effect": right,
         }
 
+    def mark_representation_index_dirty(self) -> None:
+        """Call this whenever an EXISTING links/abilities entry is replaced
+        in place with content that could change its collision signature
+        (axis, semantic_origin_signature, effect_tags, etc.) -- e.g. a
+        learned axis reassignment. len(links)/len(abilities)/len(pair_stats)
+        alone cannot see an in-place content swap; this makes it visible to
+        _representation_index()'s cache stamp so a stale bucket assignment
+        cannot outlive the mutation that invalidated it."""
+        self._representation_index_dirty_counter += 1
+
     def _representation_index(self, active_ids: Optional[List[str]] = None) -> Dict[str, List[str]]:
-        stamp = (len(self.links), len(self.abilities), len(self._pair_stats))
+        stamp = (
+            len(self.links), len(self.abilities), len(self._pair_stats),
+            self._representation_index_dirty_counter,
+        )
         if self._representation_index_stamp != stamp:
             # Every surviving promoted link and persisted ability remains
             # reachable.  Per-item scan/candidate budgets below bound the
@@ -5986,6 +6044,11 @@ class ConstraintGenealogyLogger:
                 ),
             ))
             self.abilities[matched_ability_id] = updated
+            # Same in-place-replace class of bug as the sensory citizen
+            # axis reassignment case: the ability count is unchanged, so
+            # without this the relevance index cache would not notice this
+            # entry's tags/signature-relevant content just changed.
+            self.mark_representation_index_dirty()
             self._experiment_trials.append({
                 "tick": int(self.tick_count),
                 "trigger_mode": "manual_code_assimilation",
