@@ -60,6 +60,7 @@ from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import gzip
+import hashlib
 import json
 import logging
 import math
@@ -71,6 +72,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from aurora_constraint_unit_adapter import build_constraint_profile
+from aurora_representational_address import RepresentationalRef
 
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")
 
@@ -104,6 +106,60 @@ DEFAULT_CANDIDATE_CAP         = 80
 
 USAGE_NORM_CAP      = 50.0
 SESSION_BREADTH_CAP = 10.0
+
+# =============================================================================
+# REPRESENTATIONAL CITIZENSHIP  —  Sunni & Cael, Build 654
+# =============================================================================
+# A promoted SensoryNode's primary (domain, facet) axis, shared by the
+# citizenship path below and the pre-existing evolution-hook evidence dict
+# in tick_advanced_promotion() -- one source of truth instead of two
+# independently-maintained copies.
+SENSORY_FACET_AXIS: Dict[str, Dict[str, str]] = {
+    "audio":  {"tone": "N", "timbre": "N", "rhythm": "N"},
+    "visual": {"hue": "B", "shape": "B", "motion": "T"},
+}
+
+# RepresentationalRef.nc_dim requires one of DIM_NAMES = (POLARITY,
+# MAGNITUDE, OPERATOR, COST, DIFFERENCE). No prior code assigns sensory
+# facets a position on that ladder, so this mapping is a stated design
+# choice, not a rediscovered fact: tone/hue carry a categorical quality
+# (OPERATOR); timbre/shape carry the distinguishing structure that lets one
+# node be told apart from a neighboring one (DIFFERENCE); rhythm/motion
+# carry temporal/intensity extent (MAGNITUDE).
+SENSORY_FACET_DIM_NAME: Dict[str, str] = {
+    "tone": "OPERATOR", "hue": "OPERATOR",
+    "timbre": "DIFFERENCE", "shape": "DIFFERENCE",
+    "rhythm": "MAGNITUDE", "motion": "MAGNITUDE",
+}
+
+
+def _facet_axis(domain: str, facet: str) -> str:
+    return SENSORY_FACET_AXIS.get(domain, {}).get(facet, "N")
+
+
+def _facet_dim_name(facet: str) -> str:
+    return SENSORY_FACET_DIM_NAME.get(facet, "OPERATOR")
+
+
+def sensory_representational_ref(domain: str, facet: str) -> RepresentationalRef:
+    """D1-level RepresentationalRef for a sensory (domain, facet) axis --
+    shared identity ground every node on that facet resolves against.
+    Only nc_law_c/nc_dim are ever independently determined here; nc_target
+    is left unresolved because no NonComp-target context exists for a
+    sensory facet (see aurora_representational_address's doctrine: leave
+    unresolved rather than guess)."""
+    return RepresentationalRef.for_d1(constraint=_facet_axis(domain, facet), dimension=_facet_dim_name(facet))
+
+
+def sensory_citizen_ability_id(domain: str, facet: str, node_id: str) -> str:
+    """Stable (idempotent, re-derivable) genealogy AbilityProfile id for a
+    specific sensory representation. Unlike register_code_evolution_outcome's
+    mutation_id (time-hashed, unique per *event*), this is a pure function
+    of the node's own identity -- the same node always resolves to the same
+    ability id, so it can be looked up again later, not just created once."""
+    axis = _facet_axis(domain, facet)
+    digest = hashlib.sha1(f"{domain}:{facet}:{node_id}".encode()).hexdigest()[:16]
+    return f"{axis}:SENSORY_REPR_{digest}"
 
 # Maturity formula weights (match maturity.py in Agora / aurora standards)
 WEIGHT_STABILITY   = 0.55
@@ -486,6 +542,20 @@ class SensoryNode:
     wisdom_tone_bias:      float = 0.0
     wisdom_structure_bias: float = 0.0
 
+    # Representational citizenship (Sunni & Cael, Build 654): set once, at
+    # the concept->promoted transition, by
+    # SensoryClusterFacet.grant_representational_citizenship(). None before
+    # that -- a node's mere existence as a concept does not entitle it to
+    # an address; independence (fitness + cross-modal grounding) does.
+    representational_ref:  Optional[str] = None
+    citizen_ability_id:    Optional[str] = None
+
+    # Bookkeeping only, never persisted: the fitness value last reported to
+    # genealogy via tick_citizen_participation(), so that method can tell
+    # whether this node has done anything new since its last consequence
+    # tick without re-reporting stale activity every cycle.
+    _last_citizen_fitness: float = field(default=0.0, repr=False, compare=False)
+
     _last_session: str = field(default="", repr=False, compare=False)
 
     def update_centroid(self, obs: List[float]) -> None:
@@ -544,6 +614,8 @@ class SensoryNode:
             cross_modal_links         = d.get("cross_modal_links",         []),
             wisdom_tone_bias          = d.get("wisdom_tone_bias",          0.0),
             wisdom_structure_bias     = d.get("wisdom_structure_bias",     0.0),
+            representational_ref      = d.get("representational_ref",     None),
+            citizen_ability_id        = d.get("citizen_ability_id",       None),
         )
         node._last_session = d.get("_last_session", "")
         return node
@@ -581,6 +653,18 @@ class SensoryClusterFacet:
         # Called when a node advances to "promoted" — set by AuroraSensoryCrystal
         # to inject promoted concepts into the DPS quasi-crystal ladder.
         self.promotion_hook: Optional[Any] = None
+        # Sunni & Cael (Build 654 fix): tick_advanced_promotion() below reads
+        # self._evolution_hook unconditionally -- this was never initialized
+        # here, so any facet driven straight from AuroraSensoryCrystal.boot()
+        # (never routed through register_evolution_hook, which set the
+        # attribute only on the crystal object, never on child facets) raised
+        # AttributeError the moment a node actually reached the promotion
+        # gate. Confirmed via direct reproduction, not just code reading.
+        self._evolution_hook: Optional[Callable[[Dict[str, Any]], None]] = None
+        # Genealogy reference for representational citizenship (Build 654):
+        # set by AuroraSensoryCrystal.register_genealogy(), mirroring
+        # promotion_hook/_evolution_hook's per-facet wiring pattern.
+        self._genealogy_ref: Optional[Any] = None
 
     # B-axis: sensory.cluster
     def observe(self, vec: List[float], session_id: str,
@@ -710,12 +794,7 @@ class SensoryClusterFacet:
                         logger.debug("[SensoryCrystal] promotion_hook error: %s", _ph_e)
                 if self._evolution_hook is not None:
                     try:
-                        axis_map = {
-                            "audio": {"tone": "N", "timbre": "N", "rhythm": "N"},
-                            "visual": {"hue": "B", "shape": "B", "motion": "T"},
-                        }
-                        fac_map = axis_map.get(self.domain, {})
-                        axis = fac_map.get(self.facet, axis_map.get(self.domain, {}).get(self.facet, "N"))
+                        axis = _facet_axis(self.domain, self.facet)
                         drive_value = _clamp01(node.fitness)
                         # Sunni & Cael (Multimodal Representational Autonomy):
                         # preserve the fields the evolutionary consumer needs
@@ -759,7 +838,160 @@ class SensoryClusterFacet:
                             context={"function": "tick_advanced_promotion", "handler_line": 704, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
                         )
                         logger.debug("[SensoryCrystal] evolution_hook error: %s", _ev_e)
+                # Sunni & Cael (Build 654): promotion crossing this gate is
+                # exactly the independence threshold the citizenship model
+                # names -- fitness high enough, usage deep enough, and a
+                # cross-modal link already earned. Grant the node its own
+                # address and durable genealogy identity here, alongside
+                # (not instead of) the evolutionary-pressure evidence above,
+                # which remains the chamber's own separate concern.
+                if self._genealogy_ref is not None:
+                    try:
+                        self.grant_representational_citizenship(node)
+                    except Exception as _cit_e:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:grant_citizenship",
+                            exc=_cit_e,
+                            context={"function": "tick_advanced_promotion", "handler_line": 846, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+                        )
+                        logger.debug("[SensoryCrystal] citizenship grant error: %s", _cit_e)
         return out
+
+    # ------------------------------------------------------------------
+    # Representational citizenship (Sunni & Cael, Build 654)
+    # ------------------------------------------------------------------
+    def grant_representational_citizenship(self, node: "SensoryNode") -> Optional[str]:
+        """Give a promoted sensory representation the four capabilities
+        that make it a citizen of the genealogy/Difference/inquiry/RCRW/
+        evolution economy, rather than raw material that only ever feeds
+        someone else's promotion:
+
+          1. Self-addressability  -- a RepresentationalRef of its own.
+          2. Durable, re-derivable genealogy identity -- a stable
+             AbilityProfile id (sensory_citizen_ability_id), not the
+             one-shot time-hashed id register_code_evolution_outcome()
+             produces for dream/code evidence.
+          3. Ancestral/modal grounding, honestly tagged -- "sensory_
+             representation", never "code_evolution": nothing about this
+             ability's provenance is disguised.
+          4. Eligibility to interact with other representations --
+             registering it directly into genealogy.abilities makes it
+             reachable by every OTHER active item's
+             representation_collision_candidates()/representation_gap_
+             candidates() search (both scan the full abilities/links
+             registry, seeded only by the caller's own active items --
+             confirmed by reading _representation_index()).
+
+        Idempotent: a node that already has a citizen_ability_id is
+        returned unchanged. Does not touch the pre-existing evolution-hook
+        evidence path (self._evolution_hook) -- that remains the chamber's
+        separate pressure-pulse mechanism; this is genealogy identity.
+        """
+        if node.citizen_ability_id and node.citizen_ability_id in getattr(self._genealogy_ref, "abilities", {}):
+            return node.citizen_ability_id
+
+        genealogy = self._genealogy_ref
+        if genealogy is None:
+            return None
+
+        ref = sensory_representational_ref(self.domain, self.facet)
+        aid = sensory_citizen_ability_id(self.domain, self.facet, node.node_id)
+
+        if aid not in genealogy.abilities:
+            from aurora_internal.constraint_genealogy import AbilityProfile
+            axis = _facet_axis(self.domain, self.facet)
+            cost_base = 0.0006
+            genealogy.abilities[aid] = AbilityProfile(
+                id=aid,
+                axis=axis,
+                requires=(axis,),
+                cost={a: (cost_base * (1.4 if a == axis else 0.6)) for a in ("X", "T", "N", "B", "A")},
+                risk={a: 0.0 for a in ("X", "T", "N", "B", "A")},
+                effect_tags=(
+                    "sensory_representation",
+                    f"sensory_domain:{self.domain}",
+                    f"sensory_facet:{self.facet}",
+                    f"sensory_node_id:{node.node_id}",
+                    f"sensory_modality:{self.domain}",
+                    f"representational_ref:{ref.encode()}",
+                ),
+                notes=(
+                    f"Sensory representation: domain={self.domain} facet={self.facet} "
+                    f"node_id={node.node_id} fitness={node.fitness:.3f} "
+                    f"cross_modal_links={len(node.cross_modal_links)}. "
+                    "Not a code mutation -- this ability's origin is a promoted "
+                    "perceptual concept, and its tags say so."
+                ),
+            )
+
+        node.representational_ref = ref.encode()
+        node.citizen_ability_id = aid
+        node._last_citizen_fitness = node.fitness
+        return aid
+
+    def tick_citizen_participation(self) -> int:
+        """Ongoing consequence-observation for already-promoted citizens
+        (Sunni & Cael, Build 654): without this, a promoted node's genealogy
+        ability is registered once and then never touched again -- reachable
+        as a passive counterpart when something ELSE searches, but never an
+        active seed that can trigger a collision/gap search itself, and
+        never visible to PairStats/RCRW co-activation. Called once per
+        AuroraSensoryCrystal.end_session() (bounded: at most one genealogy
+        observation per promoted node per session, not per raw sample).
+
+        Only reports nodes whose fitness has genuinely moved since their
+        last citizen tick -- an idle promoted node produces no consequence
+        and is not re-reported merely because a session ended.
+
+        Returns the number of nodes reported this tick.
+        """
+        if self._genealogy_ref is None:
+            return 0
+        from aurora_internal.constraint_genealogy import PressureVec, TraceItem
+        reported = 0
+        for node in self._nodes.values():
+            if node.stage != "promoted" or not node.citizen_ability_id:
+                continue
+            delta = node.fitness - node._last_citizen_fitness
+            if abs(delta) < 1e-6:
+                continue
+            axis = _facet_axis(self.domain, self.facet)
+            # Real, derived-from-actual-state pressure: unresolved
+            # confidence is the "before" pressure on this node's axis;
+            # relief is however much fitness improved this tick. A fitness
+            # regression (delta < 0) is expressed as pressure rising
+            # instead of falling -- never clamped away or hidden.
+            before_val = _clamp01(1.0 - node._last_citizen_fitness)
+            after_val = _clamp01(1.0 - node.fitness)
+            p_before = PressureVec(**{a: (before_val if a == axis else 0.0) for a in ("X", "T", "N", "B", "A")})
+            p_after = PressureVec(**{a: (after_val if a == axis else 0.0) for a in ("X", "T", "N", "B", "A")})
+            try:
+                self._genealogy_ref.observe(
+                    pressure_before=p_before,
+                    trace=[TraceItem(kind="ABILITY", id=node.citizen_ability_id)],
+                    pressure_after=p_after,
+                    notes={
+                        "source": "sensory_citizen_participation",
+                        "domain": self.domain,
+                        "facet": self.facet,
+                        "node_id": node.node_id,
+                        "fitness_delta": round(delta, 4),
+                    },
+                )
+                node._last_citizen_fitness = node.fitness
+                reported += 1
+            except Exception as _tick_e:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:tick_citizen_participation",
+                    exc=_tick_e,
+                    context={"function": "tick_citizen_participation", "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+                )
+                logger.debug("[SensoryCrystal] citizen participation tick error: %s", _tick_e)
+        return reported
 
     # Maturity
     def compute_maturity(self) -> float:
@@ -1000,6 +1232,10 @@ class AuroraSensoryCrystal:
         # ladder (BASE → COMPOSITE → FULL_CONCEPT → QUASI).
         self._dps_ref: Optional[Any] = None
         self._evolution_hook: Optional[Callable[[Dict[str, Any]], None]] = None
+        # Genealogy reference (Build 654) — set via register_genealogy(),
+        # propagated to every child facet so grant_representational_
+        # citizenship()/tick_citizen_participation() can reach it.
+        self._genealogy_ref: Optional[Any] = None
 
     # ------------------------------------------------------------------
     # Boot  —  Operation: sensory.crystal_boot (X, T)
@@ -1082,8 +1318,48 @@ class AuroraSensoryCrystal:
                     len(self._audio) + len(self._visual))
 
     def register_evolution_hook(self, hook: Callable[[Dict[str, Any]], None]) -> None:
-        """Register a hook that receives evidence dicts for chamber input."""
+        """Register a hook that receives evidence dicts for chamber input.
+
+        Sunni & Cael (Build 654 fix): previously this only set
+        self._evolution_hook on the crystal object itself -- every child
+        SensoryClusterFacet's OWN _evolution_hook (the attribute
+        tick_advanced_promotion() actually reads) stayed unset, so a hook
+        registered through this documented API never reached the code that
+        calls it. Confirmed via direct reproduction: a fresh facet raised
+        AttributeError the moment a node reached the promotion gate,
+        regardless of whether this method had ever been called. Now
+        propagates to every audio/visual facet, matching the pattern
+        wire_dimensional() already uses for promotion_hook.
+        """
         self._evolution_hook = hook
+        for facet in self._audio.values():
+            facet._evolution_hook = hook
+        for facet in self._visual.values():
+            facet._evolution_hook = hook
+
+    def register_genealogy(self, genealogy: Any) -> None:
+        """Give every facet a reference to live genealogy so promoted nodes
+        can be granted representational citizenship (Sunni & Cael, Build
+        654) and so already-promoted citizens can report ongoing activity
+        via tick_citizen_participation()."""
+        self._genealogy_ref = genealogy
+        for facet in self._audio.values():
+            facet._genealogy_ref = genealogy
+        for facet in self._visual.values():
+            facet._genealogy_ref = genealogy
+
+    def tick_citizen_participation(self) -> int:
+        """Bounded, per-session consequence-observation pass across every
+        facet's already-promoted citizens (Sunni & Cael, Build 654). Call
+        alongside end_session()'s existing promotion ticks -- NOT per raw
+        sample, which would flood genealogy with per-frame observations.
+        Returns the total number of nodes reported this pass."""
+        total = 0
+        for facet in self._audio.values():
+            total += facet.tick_citizen_participation()
+        for facet in self._visual.values():
+            total += facet.tick_citizen_participation()
+        return total
 
     def _ensure_node_name(self, domain: str, facet_name: str, node: "SensoryNode") -> None:
         if str(getattr(node, "name", "") or "").strip():
@@ -1577,6 +1853,14 @@ class AuroraSensoryCrystal:
             facet.end_session(wisdom)
         for facet in self._visual.values():
             facet.end_session(wisdom)
+
+        # Representational citizenship (Sunni & Cael, Build 654): report
+        # ongoing activity for already-promoted citizens once per session,
+        # after this session's own promotion ticks above so a node
+        # promoted THIS session already has a citizen_ability_id to report
+        # against next time, and any node promoted in a PRIOR session gets
+        # its consequence tick now.
+        self.tick_citizen_participation()
 
         # Semantic middle plane
         self._tick_semantic_promotion()
