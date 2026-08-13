@@ -751,6 +751,7 @@ def _restore_genealogy_state(
                     effect_tags=tuple(rec.get("effect_tags", [])),
                     notes=str(rec.get("notes", "")),
                     structured_state=(dict(rec["structured_state"]) if isinstance(rec.get("structured_state"), dict) else None),
+                    consequence_profile=(dict(rec["consequence_profile"]) if isinstance(rec.get("consequence_profile"), dict) else None),
                 )
             if loaded:
                 logger.abilities = loaded
