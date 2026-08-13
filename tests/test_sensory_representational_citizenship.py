@@ -85,7 +85,7 @@ def test_sensory_representational_ref_is_d1_level_and_stable():
     ref = sensory_representational_ref("visual", "hue")
     assert isinstance(ref, RepresentationalRef)
     assert ref.level() == "D1_25"
-    assert ref.nc_law_c == "B"  # hue's mapped axis
+    assert ref.nc_law_c == "X"  # hue's mapped axis (unified with DPS routing)
     # Same (domain, facet) always resolves to the same ref -- addressable,
     # not regenerated arbitrarily each call.
     assert ref.encode() == sensory_representational_ref("visual", "hue").encode()
