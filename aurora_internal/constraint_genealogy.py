@@ -38,9 +38,9 @@ import math
 import os
 import time
 from collections import defaultdict, deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
-from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Tuple
+from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 # ---------------------------------------------------------------------------
 # IMPORTS FROM AURORA STACK
@@ -517,6 +517,22 @@ class GenealogyConfig:
     REPRESENTATION_INQUIRY_STAGE_LIFETIME: int = 3
     REPRESENTATION_INQUIRY_STAGE_HISTORY_MAX: int = 128
     REPRESENTATION_INQUIRY_EXPERIMENT_HISTORY_MAX: int = 512
+
+    # Consequence-derived representational self-governance (Sunni & Cael,
+    # "the architecture pass"): genealogy's own confidence-weighted, bounded
+    # EMA of the REAL measured 5-axis relief a representation was actually
+    # present for -- built on top of the activity registry above, applied
+    # uniformly to abilities AND links, not sensory-scoped.
+    CONSEQUENCE_EMA_RATE: float = 0.12
+    CONSEQUENCE_MIN_SAMPLES_FOR_CONFIDENCE: int = 5
+    CONSEQUENCE_MIN_DISTINCT_CONTEXTS_FOR_CONFIDENCE: int = 3
+    CONSEQUENCE_DISTINCT_CONTEXT_CAP: int = 32
+    CONSEQUENCE_ISOLATION_WINDOW: int = 3
+    # A completed staged representational experiment (complete_representation_
+    # experiment(), controlled-participation evidence) is the strongest
+    # evidence tier -- always attributed at full weight, never discounted by
+    # isolation_confidence's crowded-context conservatism.
+    CONSEQUENCE_STAGED_EXPERIMENT_WEIGHT: float = 1.0
     REPRESENTATION_INQUIRY_PRESSURE_DECAY: float = 0.01
     REPRESENTATION_INQUIRY_UNHELPFUL_PRESSURE_REDUCTION: float = 0.35
 
@@ -588,6 +604,50 @@ class AbilityProfile:
     # this representation actually is, and surfaces it generically for
     # ANY ability, not only sensory ones.
     structured_state: Optional[Dict[str, Any]] = None
+    # Sunni & Cael ("the architecture pass"): genuine consequence-derived
+    # representational self-governance, NOT the sensory citizenship
+    # developmental-proxy scalar-axis learner (confidence/usage/session/
+    # cross-modal/fitness -> a single axis label). That mechanism stays
+    # exactly as it is -- it is a legitimate, independently useful bridge,
+    # and this field does not replace or govern it.
+    #
+    # This is genealogy's OWN measurement: a confidence-weighted, bounded
+    # EMA of the REAL, MEASURED 5-axis relief this representation was
+    # actually present for, attributed via _attribute_consequence() every
+    # time observe() logs a genuine relief event. Deliberately NOT generic/
+    # opaque like structured_state above -- genealogy computes this field
+    # itself, from its own physics, so it owns the shape:
+    #   effect: Dict[X,T,N,B,A]   confidence-weighted bounded EMA of
+    #                             attributed relief (genealogy's measured
+    #                             read of what this representation DOES,
+    #                             as distinct from axis/cost/risk, which
+    #                             is what it was DECLARED/born with)
+    #   samples: int              attributed updates so far
+    #   distinct_contexts: int    distinct co-activation signatures seen
+    #                             (bounded; see CONSEQUENCE_DISTINCT_
+    #                             CONTEXT_CAP) -- "recurrence across
+    #                             differing contexts", not just volume
+    #   confidence: float         0..1, requires BOTH sample volume and
+    #                             context diversity -- a representation
+    #                             that only ever fires alongside the same
+    #                             one other thing never reaches high
+    #                             confidence no matter how many times it
+    #                             fires
+    #   last_tick / last_weight / evidence_tier: transparency into the
+    #                             most recent update (tier is
+    #                             "staged_experiment" | "isolated" |
+    #                             "co_activated")
+    #   discrepancy: float        normalized distance between the
+    #                             ancestral axis prior (100% mass on
+    #                             .axis) and the measured effect -- the
+    #                             literal Difference between what this
+    #                             representation was assumed to do and
+    #                             what it has actually been observed to
+    #                             do. This is what makes ancestry and
+    #                             experience two separate, comparable
+    #                             things instead of one overwriting the
+    #                             other.
+    consequence_profile: Optional[Dict[str, Any]] = None
 
     def x_risk(self) -> float:
         """Return the X (existence admissibility) risk component."""
@@ -631,6 +691,8 @@ class AbilityProfile:
             d["semantic_variant_id"] = self.semantic_variant_id
         if self.structured_state is not None:
             d["structured_state"] = dict(self.structured_state)
+        if self.consequence_profile is not None:
+            d["consequence_profile"] = dict(self.consequence_profile)
         return d
 
 
@@ -939,6 +1001,13 @@ def _augment_ability_profile_with_origin(ap: AbilityProfile) -> AbilityProfile:
         topology_id=ap.topology_id,
         semantic_variant_id=ap.semantic_variant_id,
         structured_state=(dict(ap.structured_state) if ap.structured_state is not None else None),
+        # Sunni & Cael: same field-dropping bug class this function's own
+        # comment above already documents having been caught for
+        # structured_state/topology_id/semantic_variant_id -- consequence_
+        # profile must not be silently dropped by this reconstruction
+        # either, or every restart/normalize pass would erase genealogy's
+        # own measured effect history the moment it happened to run.
+        consequence_profile=(dict(ap.consequence_profile) if ap.consequence_profile is not None else None),
     )
 
 
@@ -1274,6 +1343,19 @@ class ConstraintLink:
     constraint_basis: Optional[Dict[str, Any]] = None
     representation_relation: Optional[Dict[str, Any]] = None
     semantic_identity: Optional[Dict[str, Any]] = None
+    # Sunni & Cael ("the architecture pass", full genealogy -- not sensory-
+    # scoped): mean_relief/stdev_relief above are a ONE-TIME snapshot taken
+    # from PairStats at the moment this link was promoted (see
+    # _register_link_ability); nothing updates them afterward. That is the
+    # exact same frozen-fossil problem sensory citizenship found and fixed
+    # for abilities, just never noticed here because links don't get
+    # re-observed as often. consequence_profile is the same live,
+    # continuously-updated field AbilityProfile now carries (see its
+    # docstring for the full field shape) -- applied symmetrically to
+    # links because this is genealogy's own physics, not a sensory-
+    # specific mechanism, and a promoted link is exactly as much a
+    # representation as the ability that composed it.
+    consequence_profile: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict:
         d = {
@@ -1302,6 +1384,8 @@ class ConstraintLink:
             d["representation_relation"] = dict(self.representation_relation)
         if self.semantic_identity is not None:
             d["semantic_identity"] = dict(self.semantic_identity)
+        if self.consequence_profile is not None:
+            d["consequence_profile"] = dict(self.consequence_profile)
         return d
 
     def current_semantic_value(self, key: str, default: Any = None) -> Any:
@@ -1373,6 +1457,7 @@ def constraint_link_from_dict(data: Dict[str, Any], fallback_id: str = "") -> Co
         constraint_basis=(dict(rec.get("constraint_basis") or {}) or None),
         representation_relation=(dict(rec.get("representation_relation") or {}) or None),
         semantic_identity=(dict(rec.get("semantic_identity") or {}) or None),
+        consequence_profile=(dict(rec["consequence_profile"]) if isinstance(rec.get("consequence_profile"), dict) else None),
     )
 
 
@@ -1952,6 +2037,21 @@ class ConstraintGenealogyLogger:
             maxlen=int(getattr(self.cfg, "ACTIVITY_LOG_MAXLEN", 500) or 500)
         )
 
+        # Consequence-derived representational self-governance (Sunni &
+        # Cael, "the architecture pass"): per-representation set of DISTINCT
+        # co-activation signatures seen so far, used to require recurrence
+        # ACROSS DIFFERING CONTEXTS (not just volume) before a representation's
+        # consequence_profile earns real confidence. Deliberately ephemeral,
+        # like _activity_log above, and for the same reason: this is
+        # evidence-gathering bookkeeping, not the profile conclusion itself
+        # (that conclusion lives on the persisted AbilityProfile/ConstraintLink).
+        # Honest limitation: NOT persisted across a restart, so the small
+        # persisted distinct_contexts COUNT can undercount slightly less
+        # after a restart than a never-restarted run would show (a context
+        # seen before the restart may be re-counted as "new" once) -- a
+        # bounded, stated conservatism, not a fabricated certainty.
+        self._consequence_contexts_seen: Dict[str, Set[FrozenSet[str]]] = defaultdict(set)
+
         # Native representational inquiry and experimentation (Sunni & Cael,
         # reconstructed build-650-fixed-v5 extension). Cross-family relevance
         # index cache, staged RS: experiments awaiting an actual ordered
@@ -2361,6 +2461,14 @@ class ConstraintGenealogyLogger:
         # --- Pair accumulation + promotion ---
         n_pairs_before = len(self._pair_stats)
         try:
+            # Sunni & Cael ("the architecture pass"): attribute this tick's
+            # REAL measured relief to every representation that was active
+            # for it, before _active_relation_context (which carries the
+            # staged-experiment provenance _attribute_consequence reads for
+            # its top evidence tier) is cleared below. Placed after the
+            # noise filter above -- there is no consequence to attribute on
+            # a tick that didn't qualify as a genuine relief event.
+            self._attribute_consequence(trace, relief, self.tick_count)
             rewritten = self._accumulate_pairs(trace, relief, cost_total, x_risk_total)
         finally:
             self._active_relation_context = {}
@@ -3189,7 +3297,7 @@ class ConstraintGenealogyLogger:
         identity = self._semantic_identity_for_item(iid)
         link = self.links.get(iid)
         if link is not None:
-            return {
+            link_effect: Dict[str, Any] = {
                 "dominant_axis": str(link.dominant_relief_axis or "X"),
                 "mean_relief": {a: float(link.mean_relief.get(a, 0.0) or 0.0) for a in AXES},
                 "mean_cost": {a: float(link.mean_cost.get(a, 0.0) or 0.0) for a in AXES},
@@ -3198,6 +3306,17 @@ class ConstraintGenealogyLogger:
                 "purpose_lane": str(identity.get("purpose_lane", "") or ""),
                 "operator_action": str(identity.get("operator_action", "") or ""),
             }
+            # Sunni & Cael ("the architecture pass"): mean_relief above is a
+            # one-time snapshot frozen at promotion (see ConstraintLink.
+            # consequence_profile's docstring); this is genealogy's live,
+            # continuously-updated measured-effect field, surfaced the same
+            # way for links as for abilities below so cross-family
+            # relevance evidence sees genuine measured divergence for
+            # EITHER representation kind, not abilities only.
+            if link.consequence_profile and link.consequence_profile.get("effect"):
+                link_effect["consequence_effect"] = dict(link.consequence_profile["effect"])
+                link_effect["consequence_confidence"] = float(link.consequence_profile.get("confidence", 0.0) or 0.0)
+            return link_effect
 
         ability = self.abilities.get(iid)
         if ability is None:
@@ -3230,6 +3349,12 @@ class ConstraintGenealogyLogger:
         # genealogy doesn't interpret these keys, it just carries them.
         if ability.structured_state:
             effect["structured_state"] = dict(ability.structured_state)
+        # Sunni & Cael ("the architecture pass"): genealogy's own measured
+        # consequence profile, distinct from the declared cost/risk/axis
+        # above -- see AbilityProfile.consequence_profile's docstring.
+        if ability.consequence_profile and ability.consequence_profile.get("effect"):
+            effect["consequence_effect"] = dict(ability.consequence_profile["effect"])
+            effect["consequence_confidence"] = float(ability.consequence_profile.get("confidence", 0.0) or 0.0)
         return effect
 
     @staticmethod
@@ -3256,7 +3381,15 @@ class ConstraintGenealogyLogger:
                 evidence[field_name] = {"left": lv, "right": rv}
                 score += 1.0
 
-        for field_name in ("mean_relief", "mean_cost", "cost", "risk"):
+        # Sunni & Cael ("the architecture pass"): consequence_effect is
+        # genealogy's own MEASURED read of what each side actually does
+        # (see AbilityProfile/ConstraintLink.consequence_profile) -- real
+        # divergence here is exactly what makes "two representations from
+        # the same family diverging" or "a cross-family pair whose
+        # measured effects disagree" investigable, closing the loop back
+        # into representational inquiry rather than only comparing
+        # declared/ancestral cost and risk.
+        for field_name in ("mean_relief", "mean_cost", "cost", "risk", "consequence_effect"):
             lv = left.get(field_name)
             rv = right.get(field_name)
             if isinstance(lv, dict) and isinstance(rv, dict):
@@ -3344,6 +3477,171 @@ class ConstraintGenealogyLogger:
         if distinct_others == 0:
             return 1.0
         return max(0.0, 1.0 / (1.0 + distinct_others))
+
+    def _attribute_consequence(self, trace: List[TraceItem], relief: PressureVec, tick: int) -> None:
+        """Genealogy's own consequence-derived representational self-
+        governance (Sunni & Cael, "the architecture pass"). Distinct from
+        sensory citizenship's axis_evidence proxy learner (confidence/
+        usage/session/cross-modal/fitness -> a scalar axis label), which
+        is untouched and continues to govern .axis reassignment exactly as
+        before. This is a SEPARATE field: genealogy's own measured read of
+        what a representation actually did, in Aurora's own physics.
+
+        Called only for ticks that already qualified as a real relief
+        event (observe()'s noise filter has already passed) -- there is no
+        "consequence" to attribute on a tick where nothing measurably
+        changed. Applies uniformly to every trace item, ability or link
+        alike: this is genealogy's own machinery, not sensory-scoped.
+
+        Evidence weight/tier, cheapest and most legible to most
+        privileged:
+          - "staged_experiment": this observe() call originated from
+            complete_representation_experiment() (self._active_relation_
+            context["representation_inquiry_experiment"] is True) --
+            controlled-participation evidence, the strongest tier,
+            attributed at CONSEQUENCE_STAGED_EXPERIMENT_WEIGHT regardless
+            of how crowded the tick looked to the activity registry.
+          - otherwise, the activity registry's isolation_confidence() for
+            this id at this tick: 1.0 when naturally isolated, decaying as
+            more distinct OTHER representations were also active this
+            tick. Crowded co-activation still contributes evidence, just
+            heavily discounted -- conservative rather than falsely
+            attributing sole causality.
+
+        Each representation's own bounded EMA (rate * weight) update means
+        a single crowded tick barely moves the profile, while a repeated,
+        clean, isolated (or staged) signal moves it meaningfully --
+        "confidence proportional to isolation/consistency."
+
+        distinct_contexts tracks how many DIFFERENT co-activation
+        signatures (the OTHER ids active alongside this one, or empty for
+        truly isolated) this representation has been measured under.
+        confidence requires BOTH sample volume AND context diversity: a
+        representation that only ever fires alongside the exact same one
+        other thing never earns high confidence no matter how many times
+        it fires -- "recurrence across differing contexts."
+
+        discrepancy is the normalized distance between the ancestral axis
+        prior (100% mass on the representation's declared .axis /
+        dominant_relief_axis) and the measured effect -- the literal
+        Difference between what a representation was assumed to do and
+        what it has actually been observed to do. This is what feeds
+        cross-family relevance evidence (_operational_effect_for_item /
+        _representation_relevance_evidence) so that genuinely diverging
+        measured effects between representations become investigable,
+        closing the loop back into representational inquiry.
+        """
+        ids = tuple(dict.fromkeys(str(item.id) for item in (trace or []) if str(item.id)))
+        if not ids:
+            return
+        relief_dict = relief.to_dict()
+        staged = bool(self._active_relation_context.get("representation_inquiry_experiment", False))
+        staged_weight = float(getattr(self.cfg, "CONSEQUENCE_STAGED_EXPERIMENT_WEIGHT", 1.0) or 1.0)
+        window = max(0, int(getattr(self.cfg, "CONSEQUENCE_ISOLATION_WINDOW", 3) or 3))
+        ema_rate = max(0.0, min(1.0, float(getattr(self.cfg, "CONSEQUENCE_EMA_RATE", 0.12) or 0.12)))
+        min_samples = max(1, int(getattr(self.cfg, "CONSEQUENCE_MIN_SAMPLES_FOR_CONFIDENCE", 5) or 5))
+        min_contexts = max(1, int(getattr(self.cfg, "CONSEQUENCE_MIN_DISTINCT_CONTEXTS_FOR_CONFIDENCE", 3) or 3))
+        context_cap = max(1, int(getattr(self.cfg, "CONSEQUENCE_DISTINCT_CONTEXT_CAP", 32) or 32))
+
+        for item_id in ids:
+            if item_id in self.abilities:
+                target_kind = "ability"
+                existing_ab_or_link: Any = self.abilities[item_id]
+                declared_axis = str(existing_ab_or_link.axis or "X")
+            elif item_id in self.links:
+                target_kind = "link"
+                existing_ab_or_link = self.links[item_id]
+                declared_axis = str(existing_ab_or_link.dominant_relief_axis or "X")
+            else:
+                continue
+
+            if staged:
+                tier, weight = "staged_experiment", staged_weight
+            else:
+                conf = self.isolation_confidence(item_id, tick, window=window)
+                others_now = tuple(sorted(x for x in ids if x != item_id))
+                tier = "isolated" if not others_now else "co_activated"
+                weight = conf
+            if weight <= 0.0:
+                continue
+
+            prior_profile = dict(existing_ab_or_link.consequence_profile or {})
+            effect = dict(prior_profile.get("effect") or {a: 0.0 for a in AXES})
+            for a in AXES:
+                observed = float(relief_dict.get(a, 0.0) or 0.0)
+                prior_val = float(effect.get(a, 0.0) or 0.0)
+                effect[a] = prior_val + (ema_rate * weight) * (observed - prior_val)
+
+            others_sig = frozenset(x for x in ids if x != item_id)
+            contexts = self._consequence_contexts_seen[item_id]
+            if others_sig not in contexts and len(contexts) < context_cap:
+                contexts.add(others_sig)
+            distinct_contexts = len(contexts)
+            samples = int(prior_profile.get("samples", 0) or 0) + 1
+
+            # Sunni & Cael: confidence has two independent paths, matching
+            # the evidence hierarchy directly rather than flattening it
+            # into one blended number. Isolated/staged evidence carries no
+            # attribution ambiguity by construction -- there is no OTHER
+            # co-active representation it could be mistaken for -- so
+            # accumulated CLEAN weight alone can earn full confidence.
+            # Ambiguous (co_activated) evidence DOES carry that risk (the
+            # effect might really belong to whichever else was active), so
+            # it additionally needs "recurrence across differing contexts"
+            # -- volume with the SAME one other thing repeating stays
+            # capped, exactly guarding against a spurious pair-specific
+            # correlation being mistaken for this representation's own
+            # effect. Reproduced directly: without this split, repeated
+            # PURE isolation (distinct_contexts stuck at 1, since "alone"
+            # is always the same context) was scored LOWER confidence than
+            # a handful of crowded, ever-different-partner co-activations
+            # -- exactly backwards from the intended hierarchy, where
+            # isolated evidence outranks any co-activated evidence.
+            clean_weight = float(prior_profile.get("weighted_evidence_clean", 0.0) or 0.0)
+            total_weight = float(prior_profile.get("weighted_evidence_total", 0.0) or 0.0)
+            total_weight += weight
+            if tier in ("isolated", "staged_experiment"):
+                clean_weight += weight
+
+            # Sunni & Cael: compare DIRECTION, not raw magnitude -- expected
+            # is a unit-mass indicator (100% on the declared axis), so effect
+            # must be normalized to its own proportional shares first, or a
+            # representation whose measured effect is PERFECTLY concentrated
+            # on its declared axis would still show large "discrepancy"
+            # merely because the raw EMA magnitude (bounded by how much
+            # relief was actually observed) is smaller than 1.0. Reproduced
+            # directly: an ability declared axis B, observed relief only
+            # ever on B, still scored ~0.83 discrepancy before this fix.
+            effect_total = sum(abs(v) for v in effect.values())
+            normalized_effect = (
+                {a: abs(effect.get(a, 0.0)) / effect_total for a in AXES}
+                if effect_total > 0.0
+                else {a: 0.0 for a in AXES}
+            )
+            expected = {a: (1.0 if a == declared_axis else 0.0) for a in AXES}
+            discrepancy = self._normalized_vector_distance(expected, normalized_effect)
+            confidence = max(
+                min(1.0, clean_weight / float(min_samples)),
+                min(1.0, total_weight / float(min_samples)) * min(1.0, distinct_contexts / float(min_contexts)),
+            )
+
+            new_profile = {
+                "effect": effect,
+                "samples": samples,
+                "distinct_contexts": distinct_contexts,
+                "weighted_evidence_clean": round(float(clean_weight), 9),
+                "weighted_evidence_total": round(float(total_weight), 9),
+                "confidence": round(float(confidence), 9),
+                "last_tick": int(tick),
+                "last_weight": round(float(weight), 9),
+                "evidence_tier": tier,
+                "discrepancy": round(float(discrepancy), 9),
+            }
+            if target_kind == "ability":
+                self.abilities[item_id] = replace(existing_ab_or_link, consequence_profile=new_profile)
+            else:
+                self.links[item_id] = replace(existing_ab_or_link, consequence_profile=new_profile)
+            self.mark_representation_index_dirty()
 
     def mark_representation_index_dirty(self) -> None:
         """Call this whenever an EXISTING links/abilities entry is replaced
@@ -3734,7 +4032,15 @@ class ConstraintGenealogyLogger:
             score += 1.0
 
         discrepancy: Dict[str, Any] = {}
-        for field_name in ("mean_relief", "mean_cost", "cost", "risk"):
+        # Sunni & Cael ("the architecture pass"): consequence_effect is
+        # genealogy's own MEASURED read of what each side actually does
+        # (see AbilityProfile/ConstraintLink.consequence_profile) -- real
+        # divergence here is exactly what makes "two representations from
+        # the same family diverging" or "a cross-family pair whose
+        # measured effects disagree" investigable, closing the loop back
+        # into representational inquiry rather than only comparing
+        # declared/ancestral cost and risk.
+        for field_name in ("mean_relief", "mean_cost", "cost", "risk", "consequence_effect"):
             lv = left.get(field_name)
             rv = right.get(field_name)
             if isinstance(lv, dict) and isinstance(rv, dict):
