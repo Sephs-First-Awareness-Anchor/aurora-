@@ -1959,7 +1959,20 @@ class ConstraintGenealogyLogger:
         # completed-experiment history. All additive to the relational
         # genealogy above -- no second promotion authority.
         self._representation_relevance_cache: Dict[str, List[str]] = {}
-        self._representation_relevance_stamp: Optional[Tuple[int, int, int]] = None
+        # Sunni & Cael: this stamp must include the SAME dirty counter as
+        # _representation_index() (see comment above _representation_index_
+        # dirty_counter). Confirmed by direct reproduction: a sensory citizen
+        # earns axis B via tick_citizen_participation(), which calls
+        # mark_representation_index_dirty(), and _representation_index()
+        # correctly rebuilds -- but this index, stamped only on
+        # (len(links), len(abilities), len(pair_stats)) with no dirty term,
+        # kept the ability filed under its stale axis:T bucket and absent
+        # from axis:B, because an in-place ability replacement changes none
+        # of those three counts. Cross-family relevance retrieval
+        # (representation_gap_candidates()) was therefore searching against
+        # yesterday's operational identity after the representation itself
+        # had changed.
+        self._representation_relevance_stamp: Optional[Tuple[int, int, int, int]] = None
         self._representation_experiment_stages: Dict[str, Dict[str, Any]] = {}
         self._representation_experiment_history: List[Dict[str, Any]] = []
         # FIX (Sunni & Cael, Mobile/Multimodal directive Section XXI):
@@ -2090,13 +2103,6 @@ class ConstraintGenealogyLogger:
         self.tick_count += 1
         self._latest_pressure = pressure_after
 
-        # Sunni & Cael: record activity BEFORE the relief filter below can
-        # return early -- a representation being co-active this tick is
-        # true regardless of whether the tick happened to register as a
-        # relief event. Isolation confidence needs to see everything that
-        # touched genealogy, not only what cleared the noise filter.
-        self._record_activity(trace)
-
         raw_relief = pressure_after.relief_from(pressure_before)
         dominant_axis_hint = raw_relief.dominant_positive_axis() or "X"
         relief, tolerance_meta = self._apply_relief_tolerance(
@@ -2104,6 +2110,25 @@ class ConstraintGenealogyLogger:
             relief=raw_relief,
             dominant_axis=dominant_axis_hint,
         )
+
+        # Sunni & Cael: record activity BEFORE the relief filter below can
+        # return early -- a representation being co-active this tick is
+        # true regardless of whether the tick happened to register as a
+        # relief event. Isolation confidence needs to see everything that
+        # touched genealogy, not only what cleared the noise filter.
+        #
+        # Placed AFTER pressure_after.relief_from(pressure_before) above,
+        # not before it: a caller passing malformed plain-dict pressure
+        # vectors must still see that original AttributeError first (the
+        # documented, tested type contract -- see
+        # test_field_balancer_genealogy_type_repair.py /
+        # test_genealogy_difference_producer_observatory.py), not a less
+        # informative one from this registry reading trace[i].id off a
+        # dict. Confirmed by direct reproduction: with this call any
+        # earlier, both of those pinned tests broke, replacing "relief_from"
+        # in the raised AttributeError with "'dict' object has no attribute
+        # 'id'".
+        self._record_activity(trace)
 
         # --- Noise filter ---
         if not self._is_relief_event(relief):
@@ -3658,7 +3683,10 @@ class ConstraintGenealogyLogger:
         Buckets group by shared native feature, not shared constraint
         signature -- this is what makes cross-family retrieval possible
         without an exhaustive Cartesian scan."""
-        stamp = (len(self.links), len(self.abilities), len(self._pair_stats))
+        stamp = (
+            len(self.links), len(self.abilities), len(self._pair_stats),
+            self._representation_index_dirty_counter,
+        )
         if self._representation_relevance_stamp == stamp:
             return self._representation_relevance_cache
         index: Dict[str, List[str]] = defaultdict(list)

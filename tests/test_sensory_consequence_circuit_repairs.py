@@ -65,7 +65,15 @@ def _drive_to_learned_axis(facet, node):
 
 # ── 1. Cache invalidation ───────────────────────────────────────────────────
 
-def test_relevance_index_reflects_learned_axis_not_stale_signature(tmp_path):
+def test_exact_collision_index_reflects_learned_axis_not_stale_signature(tmp_path):
+    """Covers _representation_index() (the exact primitive-signature
+    collision index), NOT _representation_relevance_index() (the
+    cross-family native-relevance index) -- despite this test's original
+    name claiming the latter. They are two separate caches with two
+    separate stamps; see
+    test_cross_family_relevance_index_reflects_learned_axis_not_stale_bucket
+    below for the one that actually exercises the relevance index, which
+    had its own, independently-confirmed instance of this same bug."""
     genealogy = _fresh_genealogy(tmp_path)
     facet = SensoryClusterFacet("audio", "tone")
     node = _drifting_node()
@@ -90,6 +98,56 @@ def test_relevance_index_reflects_learned_axis_not_stale_signature(tmp_path):
     assert node.citizen_ability_id in index_after.get(sig_b_now, []), (
         "relevance index must reflect the representation's CURRENT "
         "operational axis after an in-place learned reassignment"
+    )
+
+
+def test_cross_family_relevance_index_reflects_learned_axis_not_stale_bucket(tmp_path):
+    """_representation_relevance_index() -- the cross-family native-
+    relevance index that representation_gap_candidates() actually searches
+    -- had its OWN, separate cache stamped only on
+    (len(links), len(abilities), len(pair_stats)), with no reference to
+    _representation_index_dirty_counter at all. mark_representation_index_
+    dirty() only ever invalidated _representation_index(), the exact-
+    collision index, never this one.
+
+    Reproduced directly: a sensory citizen earns axis B via
+    tick_citizen_participation() (which does call
+    mark_representation_index_dirty() -- the counter genuinely climbs), yet
+    _representation_relevance_index() kept the ability filed under its
+    stale axis:T bucket and absent from axis:B, because an in-place ability
+    replacement changes none of the three counts this cache's own stamp
+    was built from. Aurora's cross-family inquiry search
+    (representation_gap_candidates()) could therefore still see yesterday's
+    operational identity after the representation itself had changed."""
+    genealogy = _fresh_genealogy(tmp_path)
+    facet = SensoryClusterFacet("audio", "tone")
+    node = _drifting_node()
+    facet._nodes[node.node_id] = node
+    facet._genealogy_ref = genealogy
+    facet.grant_representational_citizenship(node)
+
+    relevance_before = genealogy._representation_relevance_index()
+    aid = node.citizen_ability_id
+    assert aid in relevance_before.get("axis:T", []), (
+        "fixture sanity check: citizen must start out bucketed under its "
+        "facet-prior axis"
+    )
+
+    _drive_to_learned_axis(facet, node)
+    ability = genealogy.abilities[aid]
+    assert ability.axis == "B", "fixture must actually earn a new axis for this test to mean anything"
+    assert genealogy._representation_index_dirty_counter > 0, (
+        "sanity check: the learned-axis path must have marked the index dirty"
+    )
+
+    relevance_after = genealogy._representation_relevance_index()
+    assert aid in relevance_after.get("axis:B", []), (
+        "cross-family relevance index must reflect the representation's "
+        "CURRENT operational axis after an in-place learned reassignment"
+    )
+    assert aid not in relevance_after.get("axis:T", []), (
+        "cross-family relevance index must not keep the representation "
+        "filed under its stale, pre-learning axis bucket"
     )
 
 
@@ -121,6 +179,33 @@ def test_mark_representation_index_dirty_forces_a_rebuild(tmp_path):
     genealogy.mark_representation_index_dirty()
     genealogy._representation_index([node.citizen_ability_id])
     assert genealogy._representation_index_stamp != stamp_before
+
+
+def test_mark_representation_index_dirty_also_forces_relevance_index_rebuild(tmp_path):
+    """Same proof as above, for _representation_relevance_index(). Both
+    caches share the single _representation_index_dirty_counter -- one
+    dirty call must invalidate both, since a caller has no way to know in
+    advance which index a downstream query will consult."""
+    genealogy = _fresh_genealogy(tmp_path)
+    facet = SensoryClusterFacet("audio", "tone")
+    node = _drifting_node()
+    facet._nodes[node.node_id] = node
+    facet._genealogy_ref = genealogy
+    facet.grant_representational_citizenship(node)
+
+    genealogy._representation_relevance_index()
+    stamp_before = genealogy._representation_relevance_stamp
+
+    import dataclasses
+    existing = genealogy.abilities[node.citizen_ability_id]
+    genealogy.abilities[node.citizen_ability_id] = dataclasses.replace(existing, axis="A")
+
+    assert genealogy._representation_relevance_stamp == stamp_before, (
+        "sanity check: the stamp must NOT change from the replace alone"
+    )
+    genealogy.mark_representation_index_dirty()
+    genealogy._representation_relevance_index()
+    assert genealogy._representation_relevance_stamp != stamp_before
 
 
 # ── 2. Learned axis feeds back into future DPS routing for that node ───────
