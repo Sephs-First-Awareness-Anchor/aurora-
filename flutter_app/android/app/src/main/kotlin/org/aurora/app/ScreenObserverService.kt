@@ -29,10 +29,23 @@ class ScreenObserverService : AccessibilityService() {
          * session journal (see AuroraService.markUiTransition). A no-op
          * (not an error) when this accessibility service isn't currently
          * running (permission not granted) or the device is below API 30 --
-         * the timeline event itself still lands either way. */
-        fun captureScreenshot(transition: String) {
-            val svc = instance ?: return
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+         * the timeline event itself still lands either way.
+         *
+         * Sunni & Cael, review follow-up: takeScreenshot() is inherently
+         * asynchronous (its own callback API), and the original version
+         * gave the caller no way to know when the capture -- and the
+         * Python-side record_ui_screenshot() write it triggers -- actually
+         * finished. markUiTransition() below needs that signal to avoid
+         * calling stop_ui_observation_session() while a screenshot is
+         * still mid-flight. onDone() fires exactly once on every exit path:
+         * the two early no-op returns, both takeScreenshot() callback
+         * branches, and the synchronous-throw catch block. */
+        fun captureScreenshot(transition: String, onDone: () -> Unit = {}) {
+            val svc = instance
+            if (svc == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                onDone()
+                return
+            }
             try {
                 svc.takeScreenshot(
                     Display.DEFAULT_DISPLAY,
@@ -52,20 +65,25 @@ class ScreenObserverService : AccessibilityService() {
                                 if (softBitmap != null) {
                                     val stream = ByteArrayOutputStream()
                                     softBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                                    AuroraService.provideUiScreenshot(stream.toByteArray(), transition)
+                                    AuroraService.provideUiScreenshot(stream.toByteArray(), transition, onDone)
                                     softBitmap.recycle()
+                                } else {
+                                    onDone()
                                 }
                             } catch (e: Exception) {
                                 Log.w(TAG, "screenshot processing error: ${e.message}")
+                                onDone()
                             }
                         }
                         override fun onFailure(errorCode: Int) {
                             Log.w(TAG, "takeScreenshot failed: errorCode=$errorCode")
+                            onDone()
                         }
                     }
                 )
             } catch (e: Exception) {
                 Log.w(TAG, "takeScreenshot error: ${e.message}")
+                onDone()
             }
         }
     }

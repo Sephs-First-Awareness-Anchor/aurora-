@@ -3686,6 +3686,19 @@ class ConstraintGenealogyLogger:
         for covered in relation_targets.values():
             covered_ids.update(covered)
         joint_discount = 1.0 if len(ids) <= 1 else (1.0 / float(len(ids)))
+        # Sunni & Cael: caught in review -- when a trace's pairs match MORE
+        # THAN ONE promoted relation (e.g. a 3-item trace where A+B, B+C,
+        # and A+C have all separately been promoted), the loop below used
+        # to credit EACH relation independently at its own full weight,
+        # attributing 1.5x (or, for a staged experiment, 3x) a single
+        # relief event across the matched links -- reintroducing exactly
+        # the double-crediting this mechanism exists to prevent, just one
+        # level up (links instead of abilities). Reproduced directly: a
+        # 3-item isolated trace with all three pairs promoted summed to
+        # 1.5 total weight across the three links for ONE relief event.
+        # Fixed the same way individual over-counting is handled above:
+        # divide by how many relations are claiming a share of this tick.
+        relation_discount = 1.0 if len(relation_targets) <= 1 else (1.0 / float(len(relation_targets)))
 
         def _apply(target_kind: str, target_id: str, existing_obj: Any, weight: float, tier: str, others_sig_ids: Iterable[str]) -> None:
             if weight <= 0.0:
@@ -3788,12 +3801,12 @@ class ConstraintGenealogyLogger:
             if existing_link is None:
                 continue
             if staged:
-                tier, weight = "staged_experiment", staged_weight
+                tier, weight = "staged_experiment", staged_weight * relation_discount
             else:
                 outside = self.activity_in_window(tick, window=window, exclude_ids=covered)
                 distinct_outside = len(outside)
                 tier = "isolated" if distinct_outside == 0 else "co_activated"
-                weight = 1.0 if distinct_outside == 0 else max(0.0, 1.0 / (1.0 + distinct_outside))
+                weight = (1.0 if distinct_outside == 0 else max(0.0, 1.0 / (1.0 + distinct_outside))) * relation_discount
             others_sig_ids = tuple(sorted(x for x in ids if x not in covered))
             _apply("link", relation_id, existing_link, weight, tier, others_sig_ids)
 

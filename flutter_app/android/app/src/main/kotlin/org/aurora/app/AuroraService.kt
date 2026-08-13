@@ -52,9 +52,22 @@ class AuroraService : Service() {
         private var scope: CoroutineScope? = null
 
         fun sendMessage(text: String, callback: (String) -> Unit) {
+            // Sunni & Cael, review follow-up: the UI observation journal's
+            // timeline previously only ever recorded 3 of the 5 promised
+            // stages (input_submitted / response_available /
+            // response_rendered, all from the Flutter side) -- "Aurora
+            // receives" and "Python processing begins" never landed
+            // anywhere, because nothing on the native side called
+            // markUiTransition() for them. This is the actual boundary
+            // where the Kotlin service receives the dispatched message
+            // (entry of this function) and where Python processing
+            // actually starts (immediately before handle_message()).
+            markUiTransition("aurora_receives")
             scope?.launch {
                 val py     = Python.getInstance()
                 val bridge = py.getModule("aurora_bridge")
+
+                markUiTransition("python_processing_begins")
 
                 val reply = try {
                     bridge.callAttr("handle_message", text).toString()
@@ -230,9 +243,28 @@ class AuroraService : Service() {
          * ScreenObserverService instance may not be running if the user
          * hasn't granted the accessibility permission, in which case the
          * screenshot is silently skipped but the timeline event still
-         * lands). */
-        fun markUiTransition(transition: String) {
-            scope?.launch {
+         * lands).
+         *
+         * Sunni & Cael, review follow-up: caught in review -- the original
+         * version fired the timeline write and the screenshot capture and
+         * returned immediately, with no way for a caller to know either
+         * had actually finished. Flutter's stopUiObservationSession() call
+         * right after the final 'response_rendered' transition could then
+         * run before that transition's own screenshot had been captured
+         * and written, truncating the session it was meant to close out
+         * cleanly. onDone() now only fires once BOTH the timeline write
+         * and the screenshot chain (which itself only completes once
+         * ScreenObserverService.captureScreenshot's onDone fires --
+         * itself threaded through to the Python record_ui_screenshot()
+         * call) have finished, so a caller that awaits it can safely stop
+         * the session right after. */
+        fun markUiTransition(transition: String, onDone: () -> Unit = {}) {
+            val remaining = java.util.concurrent.atomic.AtomicInteger(2)
+            val finishOne: () -> Unit = {
+                if (remaining.decrementAndGet() == 0) onDone()
+            }
+
+            val timelineJob = scope?.launch {
                 try {
                     Python.getInstance().getModule("aurora_bridge")
                         .callAttr(
@@ -240,19 +272,26 @@ class AuroraService : Service() {
                             JSONObject().put("kind", "ui_transition").put("transition", transition).toString()
                         )
                 } catch (_: Exception) {}
+                finishOne()
             }
-            ScreenObserverService.captureScreenshot(transition)
+            if (timelineJob == null) finishOne()
+
+            ScreenObserverService.captureScreenshot(transition, finishOne)
         }
 
         /** Called by ScreenObserverService once a takeScreenshot() capture
-         * succeeds and has been encoded to PNG. */
-        fun provideUiScreenshot(pngBytes: ByteArray, transition: String) {
-            scope?.launch(Dispatchers.IO) {
+         * succeeds and has been encoded to PNG. onDone fires once the
+         * Python-side record_ui_screenshot() call has been attempted
+         * (success or failure) -- see markUiTransition above. */
+        fun provideUiScreenshot(pngBytes: ByteArray, transition: String, onDone: () -> Unit = {}) {
+            val job = scope?.launch(Dispatchers.IO) {
                 try {
                     Python.getInstance().getModule("aurora_bridge")
                         .callAttr("record_ui_screenshot", pngBytes, transition)
                 } catch (_: Exception) {}
+                onDone()
             }
+            if (job == null) onDone()
         }
 
         fun stopUiObservationSession(callback: (String) -> Unit) {

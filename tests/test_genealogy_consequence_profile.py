@@ -577,6 +577,52 @@ def test_individual_isolated_trace_is_unaffected_by_the_relation_logic(tmp_path)
     assert genealogy.abilities["X:A"].consequence_profile["last_weight"] == 1.0
 
 
+def test_overlapping_promoted_relations_do_not_each_get_full_credit(tmp_path):
+    """Real bug caught in review (chatgpt-codex-connector, PR #149): when a
+    trace's pairs match MORE THAN ONE promoted relation -- e.g. a 3-item
+    trace where A+B, B+C, and A+C have all separately been promoted into
+    links -- the relation loop credited EACH matched link independently at
+    its own full weight, summing to 1.5x (isolated) or 3x (staged) a
+    single relief event. Reproduced directly before this fix: three links
+    each scored last_weight=0.5 for one isolated tick, summing to 1.5.
+    Fixed by dividing by how many relations are claiming a share."""
+    genealogy = _fresh_genealogy(tmp_path)
+    for aid in ("A", "B", "C"):
+        _seed_ability(genealogy, aid, axis="X")
+    for lid, parents in (("L:AB", ("A", "B")), ("L:BC", ("B", "C")), ("L:AC", ("A", "C"))):
+        _seed_link(genealogy, lid, axis="X", parents=list(parents))
+        for i in range(len(parents)):
+            for j in range(len(parents)):
+                if i != j:
+                    genealogy._links_by_parents[(parents[i], parents[j])] = lid
+
+    _observe_relief_on(genealogy, "A", "B", "C", relief_axis="B", relief_amount=0.3)
+
+    total_weight = sum(
+        genealogy.links[lid].consequence_profile["last_weight"]
+        for lid in ("L:AB", "L:BC", "L:AC")
+    )
+    assert total_weight <= 1.0001, (
+        "the combined weight credited across all matched relations for a "
+        "SINGLE relief event must not exceed 1.0"
+    )
+
+
+def test_single_matched_relation_is_unaffected_by_the_overlap_discount(tmp_path):
+    """Sanity boundary: the common case (exactly one promoted relation
+    matches) must be unaffected by the multi-relation discount -- it only
+    applies when len(relation_targets) > 1."""
+    genealogy = _fresh_genealogy(tmp_path)
+    _seed_ability(genealogy, "X:R")
+    _seed_ability(genealogy, "X:S")
+    _seed_link(genealogy, "L:rs", axis="X", parents=["X:R", "X:S"])
+    genealogy._links_by_parents[("X:R", "X:S")] = "L:rs"
+
+    for _ in range(8):
+        _observe_relief_on(genealogy, "X:R", "X:S", relief_axis="B", relief_amount=0.2)
+    assert genealogy.links["L:rs"].consequence_profile["last_weight"] == 1.0
+
+
 # ── Real sensory citizenship integration ────────────────────────────────────
 
 def test_sensory_citizen_participation_does_not_feed_the_consequence_learner(tmp_path):

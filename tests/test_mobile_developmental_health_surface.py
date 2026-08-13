@@ -192,3 +192,23 @@ def test_record_boot_health_never_raises_on_none_systems(monkeypatch, tmp_path):
 
     payload = json.loads(bridge.record_boot_health())
     assert payload["overall"] == "fatal"
+
+
+def test_record_boot_health_never_raises_when_cwd_is_gone(monkeypatch):
+    # Caught via a real (order-dependent) test-suite failure: with no
+    # _systems state_dir configured, record_boot_health() fell back to
+    # os.getcwd() -- which itself raises FileNotFoundError when the
+    # process's current working directory has been deleted out from
+    # under it. That escaped every try/except in the function and broke
+    # its one explicit contract: never raise, always return the live
+    # health payload.
+    bridge = _bridge()
+    monkeypatch.setattr(bridge, "_systems", None, raising=False)
+
+    def _raise_getcwd():
+        raise FileNotFoundError("[Errno 2] No such file or directory")
+
+    monkeypatch.setattr(bridge.os, "getcwd", _raise_getcwd)
+
+    payload = json.loads(bridge.record_boot_health())
+    assert payload["overall"] in ("healthy", "degraded", "fatal")

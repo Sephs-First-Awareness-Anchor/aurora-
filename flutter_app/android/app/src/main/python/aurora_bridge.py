@@ -157,6 +157,16 @@ _last_screen_visual_data: dict = {}
 # frame-to-frame motion detection the same way _last_camera_frame_gray does
 # for the camera path below.
 _last_ui_screenshot_gray = None
+# Sunni & Cael: how long a real screenshot's measured brightness/motion
+# stays authoritative before provide_screen_observation() degrades back to
+# the synthetic default. Caught in review: without ANY expiry, a
+# measurement from Aurora's own UI session kept being applied to
+# accessibility events from a completely different app, or long after the
+# session that took it had ended -- confidently wrong is worse than
+# honestly approximate. One conversational turn's worth of async native
+# work (screenshot capture + Python round trip) comfortably fits inside
+# this window without the measurement going stale mid-turn.
+UI_SCREENSHOT_MEASUREMENT_MAX_AGE_S = 15.0
 
 # Sunni & Cael, "Autonomous Development Integrity" pass: UI observation
 # session journal. ScreenObserverService already keeps structured NOTES
@@ -1601,7 +1611,18 @@ def record_boot_health() -> str:
     except Exception:
         return payload_json
 
-    state_dir = str((_systems or {}).get("state_dir") or os.getcwd() or "aurora_state")
+    # Sunni & Cael, review follow-up: caught by a real test failure -- if
+    # the process's own current working directory has been deleted out
+    # from under it (a real, if rare, condition -- not just a test
+    # artifact), os.getcwd() itself raises FileNotFoundError, which
+    # would have escaped every try/except below it and broken this
+    # function's one explicit promise: never raise, always return the
+    # live health payload.
+    try:
+        _cwd = os.getcwd()
+    except OSError:
+        _cwd = None
+    state_dir = str((_systems or {}).get("state_dir") or _cwd or "aurora_state")
     record_path = os.path.join(state_dir, "last_boot_health.json")
 
     prior_boot_count = 0
@@ -9135,7 +9156,47 @@ def provide_audio_observation(
 
 
 def _ui_observation_state_dir() -> str:
-    return str((_systems or {}).get("state_dir") or os.getcwd() or "aurora_state")
+    # Same os.getcwd() guard as record_boot_health() above -- a deleted
+    # CWD must degrade to the "aurora_state" fallback, not raise.
+    try:
+        _cwd = os.getcwd()
+    except OSError:
+        _cwd = None
+    return str((_systems or {}).get("state_dir") or _cwd or "aurora_state")
+
+
+def _finalize_ui_observation_session(session: dict, *, overlapped: bool = False) -> dict:
+    """Write session_manifest.json for one UI observation session dict and
+    return the manifest. Shared by stop_ui_observation_session() (the
+    normal end-of-turn close) and start_ui_observation_session()'s
+    overlap guard below (an abnormal close forced by a new turn starting
+    before the previous one finished) -- either way, a session that was
+    ever opened always ends up with a manifest on disk, never silently
+    orphaned mid-directory with no record of how it ended."""
+    import json as _json
+    import time as _time
+
+    session_dir = session["dir"]
+    screenshots_dir = os.path.join(session_dir, "screenshots")
+    screenshot_count = 0
+    if os.path.isdir(screenshots_dir):
+        screenshot_count = len([f for f in os.listdir(screenshots_dir) if f.lower().endswith(".png")])
+
+    started_at = float(session.get("started_at", _time.time()) or _time.time())
+    ended_at = _time.time()
+    manifest = {
+        "session_id": os.path.basename(session_dir),
+        "started_at": started_at,
+        "ended_at": ended_at,
+        "duration_s": round(ended_at - started_at, 4),
+        "event_count": int(session.get("seq", 0) or 0),
+        "screenshot_count": screenshot_count,
+        "overlapped_by_next_session": bool(overlapped),
+    }
+    manifest_path = os.path.join(session_dir, "session_manifest.json")
+    with open(manifest_path, "w", encoding="utf-8") as fh:
+        _json.dump(manifest, fh)
+    return manifest
 
 
 def start_ui_observation_session() -> str:
@@ -9161,6 +9222,28 @@ def start_ui_observation_session() -> str:
     global _ui_observation_session
     try:
         import time as _time
+
+        # Sunni & Cael, review follow-up: the Flutter send button and
+        # TextField have no "disabled while sending" guard (confirmed
+        # directly against home_screen.dart's _InputBar -- no `enabled:`
+        # tied to a sending-state flag), and the wake-word path can also
+        # fire a second _sendMessage() via a delayed callback while a
+        # prior turn is still in flight. Two overlapping turns would
+        # otherwise silently clobber this one process-global session: the
+        # first session's directory would keep existing on disk but never
+        # receive a manifest, its tail events instead landing in the
+        # second session's timeline. This does not give the two turns
+        # fully isolated event streams (that needs a session token
+        # threaded through every Dart/Kotlin/Python call site, a larger
+        # change than this journal's current ambient-global design), but
+        # it does guarantee the previous session is never silently lost --
+        # closing it out with its own honestly-labeled manifest before the
+        # new one opens.
+        if _ui_observation_session.get("dir"):
+            try:
+                _finalize_ui_observation_session(_ui_observation_session, overlapped=True)
+            except Exception as exc:
+                log.warning("start_ui_observation_session: overlap close failed: %s", exc)
 
         base = os.path.join(_ui_observation_state_dir(), "ui_observation")
         session_id = f"session_{_time.time():.6f}".replace(".", "_")
@@ -9278,6 +9361,7 @@ def _extract_ui_screenshot_features(png_bytes: bytes) -> dict:
     global _last_ui_screenshot_gray, _last_screen_visual_data
     try:
         import io as _io
+        import time as _time
         import numpy as _np
         from PIL import Image as _Image
 
@@ -9298,6 +9382,17 @@ def _extract_ui_screenshot_features(png_bytes: bytes) -> dict:
         _last_screen_visual_data["motion_detected"] = motion
         _last_screen_visual_data["dark_ui"] = brightness < 0.35
         _last_screen_visual_data["measured_from_pixels"] = True
+        # Sunni & Cael: caught in review -- without a freshness check, this
+        # measurement stayed authoritative FOREVER, including for later
+        # accessibility events from a completely different app (a UI
+        # observation session is specifically about Aurora's OWN interface,
+        # never checked against here) or long after the journal session
+        # that took it had ended. provide_screen_observation() below now
+        # only trusts this measurement within UI_SCREENSHOT_MEASUREMENT_
+        # MAX_AGE_S of being taken -- a stale measurement degrades back to
+        # the honest synthetic default instead of confidently misreporting
+        # a different moment/context's pixels as the current one.
+        _last_screen_visual_data["measured_at"] = _time.time()
 
         return {
             "brightness": round(brightness, 3),
@@ -9319,33 +9414,13 @@ def stop_ui_observation_session() -> str:
     plain-JSON-string bridge convention every other getter in this module
     uses."""
     global _ui_observation_session
+    import json as _json
+
     session = _ui_observation_session
     if not session.get("dir"):
         return "{}"
     try:
-        import json as _json
-        import time as _time
-
-        session_dir = session["dir"]
-        screenshots_dir = os.path.join(session_dir, "screenshots")
-        screenshot_count = 0
-        if os.path.isdir(screenshots_dir):
-            screenshot_count = len([f for f in os.listdir(screenshots_dir) if f.lower().endswith(".png")])
-
-        started_at = float(session.get("started_at", _time.time()) or _time.time())
-        ended_at = _time.time()
-        manifest = {
-            "session_id": os.path.basename(session_dir),
-            "started_at": started_at,
-            "ended_at": ended_at,
-            "duration_s": round(ended_at - started_at, 4),
-            "event_count": int(session.get("seq", 0) or 0),
-            "screenshot_count": screenshot_count,
-        }
-        manifest_path = os.path.join(session_dir, "session_manifest.json")
-        with open(manifest_path, "w", encoding="utf-8") as fh:
-            _json.dump(manifest, fh)
-
+        manifest = _finalize_ui_observation_session(session, overlapped=False)
         _ui_observation_session = {}
         return _json.dumps(manifest)
     except Exception as exc:
@@ -9403,11 +9478,22 @@ def provide_screen_observation(payload_json: str) -> None:
         # "brightness" field at all -- this always fell back to the 0.5
         # default, and has_motion below was inferred from the event TYPE,
         # never from actual pixels. When a real UI screenshot has been
-        # measured recently (record_ui_screenshot -> _extract_ui_screenshot_
+        # measured RECENTLY (record_ui_screenshot -> _extract_ui_screenshot_
         # features), prefer that MEASURED value over the synthetic
-        # fallback; only degrade to the constant default when no
-        # screenshot measurement exists yet for this session.
-        _measured = _last_screen_visual_data if (_last_screen_visual_data or {}).get("measured_from_pixels") else {}
+        # fallback; degrade to the constant default when no screenshot
+        # measurement exists yet, OR the most recent one is stale (caught
+        # in review: without this age check, a screenshot from Aurora's own
+        # UI session kept being applied to accessibility events from a
+        # completely different app, or long after the session that took it
+        # had ended -- confidently wrong is worse than honestly
+        # approximate).
+        _candidate = _last_screen_visual_data or {}
+        _measured_age = _time.time() - float(_candidate.get("measured_at", 0.0) or 0.0)
+        _measured = (
+            _candidate
+            if _candidate.get("measured_from_pixels") and _measured_age <= UI_SCREENSHOT_MEASUREMENT_MAX_AGE_S
+            else {}
+        )
         if _measured:
             brightness = float(_measured.get("brightness", 0.5) or 0.5)
         else:
@@ -9435,6 +9521,20 @@ def provide_screen_observation(payload_json: str) -> None:
             "text_density":     text_density,
             "is_self_surface":  is_own_app,
             "measured_from_pixels": bool(_measured),
+            # Sunni & Cael: carry the ORIGINAL measurement timestamp
+            # forward, not a fresh one -- this dict overwrites
+            # _last_screen_visual_data on every call (see below), and the
+            # freshness check above reads measured_at from THAT global.
+            # Stamping "now" here instead would silently reset the age
+            # clock on every accessibility event, so a measurement could
+            # never actually expire as long as events kept arriving --
+            # exactly the bug the freshness check exists to prevent, just
+            # introduced one call site downstream. Caught here before
+            # shipping (not by review): the very first attempt at this fix
+            # dropped this field entirely, which broke it the OTHER way --
+            # every measurement expired after exactly one call, since
+            # "measured_at" defaulted to 0.0 and looked infinitely old.
+            "measured_at":      (_measured.get("measured_at") if _measured else None),
         }
 
         observation = {

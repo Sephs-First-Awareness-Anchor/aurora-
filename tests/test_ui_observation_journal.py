@@ -70,6 +70,32 @@ def test_each_session_gets_its_own_directory(bridge, tmp_path, monkeypatch):
     assert dir_a != dir_b
 
 
+def test_starting_a_session_while_one_is_active_closes_the_previous_one_out(bridge, tmp_path, monkeypatch):
+    # Sunni & Cael, review follow-up: nothing in the Flutter UI (no
+    # `enabled:` guard on the send button/TextField, plus a wake-word path
+    # that can re-fire _sendMessage() via a delayed callback) prevents a
+    # second turn from starting a new session before the first one calls
+    # stop_ui_observation_session(). The first session's directory must
+    # never be left on disk with no manifest at all.
+    monkeypatch.setattr(bridge, "_systems", {"state_dir": str(tmp_path)}, raising=False)
+    dir_a = bridge.start_ui_observation_session()
+    bridge.record_ui_timeline_event(json.dumps({"kind": "input_submitted"}))
+    dir_b = bridge.start_ui_observation_session()
+
+    assert dir_a != dir_b
+    manifest_a_path = os.path.join(dir_a, "session_manifest.json")
+    assert os.path.exists(manifest_a_path)
+    with open(manifest_a_path, encoding="utf-8") as fh:
+        manifest_a = json.load(fh)
+    assert manifest_a["event_count"] == 1
+    assert manifest_a["overlapped_by_next_session"] is True
+
+    # The second session is unaffected -- fresh, empty, not yet overlapped.
+    assert not os.path.exists(os.path.join(dir_b, "session_manifest.json"))
+    manifest_b = json.loads(bridge.stop_ui_observation_session())
+    assert manifest_b["overlapped_by_next_session"] is False
+
+
 # ── Timeline events ──────────────────────────────────────────────────────
 
 def test_record_timeline_event_appends_jsonl_with_seq_and_timestamp(bridge, tmp_path, monkeypatch):
@@ -199,6 +225,57 @@ def test_provide_screen_observation_prefers_measured_brightness_over_synthetic_d
     assert bridge._last_screen_visual_data["brightness"] > 0.9
     assert bridge._last_screen_visual_data["measured_from_pixels"] is True
     assert bridge._last_screen_visual_data["confidence"] == 0.90
+
+
+def test_measurement_survives_repeated_observation_calls_without_expiring(bridge, tmp_path, monkeypatch):
+    """Real bug caught in review (chatgpt-codex-connector, PR #149) and a
+    second, self-inflicted one caught while fixing it: the first fix
+    attempt made provide_screen_observation()'s own screen_visual dict
+    (which OVERWRITES _last_screen_visual_data on every call) drop
+    measured_at entirely, so the very NEXT accessibility event -- even one
+    millisecond later -- saw a missing timestamp, computed an effectively
+    infinite age, and treated a brand-new measurement as already stale.
+    Multiple back-to-back accessibility events after ONE screenshot must
+    all still see the measured (not synthetic) values."""
+    monkeypatch.setattr(bridge, "_systems", {"state_dir": str(tmp_path)}, raising=False)
+    bridge.start_ui_observation_session()
+    bridge.record_ui_screenshot(_png_bytes(_solid((250, 250, 250))), "frame")
+
+    payload = json.dumps({
+        "source": "android_accessibility", "observed_at": 0.0,
+        "package": "org.aurora.app", "class": "x", "event_type": "window_state_changed",
+        "visible_text": [], "action_surface": "phone_screen",
+    })
+    for _ in range(5):
+        bridge.provide_screen_observation(payload)
+        assert bridge._last_screen_visual_data["measured_from_pixels"] is True
+        assert bridge._last_screen_visual_data["brightness"] > 0.9
+
+
+def test_stale_measurement_degrades_to_synthetic_default(bridge, tmp_path, monkeypatch):
+    """The actual freshness fix: once a measurement is older than
+    UI_SCREENSHOT_MEASUREMENT_MAX_AGE_S, it must stop being trusted --
+    prevents a screenshot from Aurora's own UI session being silently
+    applied to a later accessibility event from a different app or a
+    long-dead session."""
+    monkeypatch.setattr(bridge, "_systems", {"state_dir": str(tmp_path)}, raising=False)
+    bridge.start_ui_observation_session()
+    bridge.record_ui_screenshot(_png_bytes(_solid((250, 250, 250))), "frame")
+    assert bridge._last_screen_visual_data["measured_from_pixels"] is True
+
+    # Simulate the measurement having aged past the freshness window.
+    bridge._last_screen_visual_data["measured_at"] = (
+        __import__("time").time() - bridge.UI_SCREENSHOT_MEASUREMENT_MAX_AGE_S - 1.0
+    )
+
+    payload = json.dumps({
+        "source": "android_accessibility", "observed_at": 0.0,
+        "package": "com.other.app", "class": "x", "event_type": "window_state_changed",
+        "visible_text": [], "action_surface": "phone_screen",
+    })
+    bridge.provide_screen_observation(payload)
+    assert bridge._last_screen_visual_data["brightness"] == 0.5
+    assert bridge._last_screen_visual_data["measured_from_pixels"] is False
 
 
 def test_provide_screen_observation_falls_back_to_synthetic_default_with_no_screenshot(bridge, tmp_path, monkeypatch):
