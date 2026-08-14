@@ -52,9 +52,22 @@ class AuroraService : Service() {
         private var scope: CoroutineScope? = null
 
         fun sendMessage(text: String, callback: (String) -> Unit) {
+            // Sunni & Cael, review follow-up: the UI observation journal's
+            // timeline previously only ever recorded 3 of the 5 promised
+            // stages (input_submitted / response_available /
+            // response_rendered, all from the Flutter side) -- "Aurora
+            // receives" and "Python processing begins" never landed
+            // anywhere, because nothing on the native side called
+            // markUiTransition() for them. This is the actual boundary
+            // where the Kotlin service receives the dispatched message
+            // (entry of this function) and where Python processing
+            // actually starts (immediately before handle_message()).
+            markUiTransition("aurora_receives")
             scope?.launch {
                 val py     = Python.getInstance()
                 val bridge = py.getModule("aurora_bridge")
+
+                markUiTransition("python_processing_begins")
 
                 val reply = try {
                     bridge.callAttr("handle_message", text).toString()
@@ -205,6 +218,89 @@ class AuroraService : Service() {
             scope?.launch {
                 try { Python.getInstance().getModule("aurora_bridge").callAttr(fn) }
                 catch (_: Exception) {}
+            }
+        }
+
+        // ── UI observation session journal (diagnostics) ──────────────────
+        // Sunni & Cael, "Autonomous Development Integrity" pass: a bounded,
+        // per-turn record of one conversational interaction -- timeline.jsonl
+        // + real screenshots at meaningful transitions -- built on top of
+        // ScreenObserverService's existing accessibility access rather than
+        // whole-device MediaProjection (which needs fresh per-session user
+        // consent and is far heavier than a diagnostic journal needs).
+
+        fun startUiObservationSession() {
+            scope?.launch {
+                try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr("start_ui_observation_session")
+                } catch (_: Exception) {}
+            }
+        }
+
+        /** Records this transition in the active session's timeline AND
+         * triggers a real screenshot capture for it (best-effort -- a
+         * ScreenObserverService instance may not be running if the user
+         * hasn't granted the accessibility permission, in which case the
+         * screenshot is silently skipped but the timeline event still
+         * lands).
+         *
+         * Sunni & Cael, review follow-up: caught in review -- the original
+         * version fired the timeline write and the screenshot capture and
+         * returned immediately, with no way for a caller to know either
+         * had actually finished. Flutter's stopUiObservationSession() call
+         * right after the final 'response_rendered' transition could then
+         * run before that transition's own screenshot had been captured
+         * and written, truncating the session it was meant to close out
+         * cleanly. onDone() now only fires once BOTH the timeline write
+         * and the screenshot chain (which itself only completes once
+         * ScreenObserverService.captureScreenshot's onDone fires --
+         * itself threaded through to the Python record_ui_screenshot()
+         * call) have finished, so a caller that awaits it can safely stop
+         * the session right after. */
+        fun markUiTransition(transition: String, onDone: () -> Unit = {}) {
+            val remaining = java.util.concurrent.atomic.AtomicInteger(2)
+            val finishOne: () -> Unit = {
+                if (remaining.decrementAndGet() == 0) onDone()
+            }
+
+            val timelineJob = scope?.launch {
+                try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr(
+                            "record_ui_timeline_event",
+                            JSONObject().put("kind", "ui_transition").put("transition", transition).toString()
+                        )
+                } catch (_: Exception) {}
+                finishOne()
+            }
+            if (timelineJob == null) finishOne()
+
+            ScreenObserverService.captureScreenshot(transition, finishOne)
+        }
+
+        /** Called by ScreenObserverService once a takeScreenshot() capture
+         * succeeds and has been encoded to PNG. onDone fires once the
+         * Python-side record_ui_screenshot() call has been attempted
+         * (success or failure) -- see markUiTransition above. */
+        fun provideUiScreenshot(pngBytes: ByteArray, transition: String, onDone: () -> Unit = {}) {
+            val job = scope?.launch(Dispatchers.IO) {
+                try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr("record_ui_screenshot", pngBytes, transition)
+                } catch (_: Exception) {}
+                onDone()
+            }
+            if (job == null) onDone()
+        }
+
+        fun stopUiObservationSession(callback: (String) -> Unit) {
+            scope?.launch {
+                val json = try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr("stop_ui_observation_session").toString()
+                } catch (_: Exception) { "{}" }
+                withContext(Dispatchers.Main) { callback(json) }
             }
         }
     }
@@ -392,17 +488,29 @@ class AuroraService : Service() {
             // covers genealogy, RCRW, Sensory Crystal, dimensional physics,
             // curiosity, and the Dream substrate -- systems that could previously
             // be silently None on a "ready" boot with no signal to Flutter at all.
+            //
+            // Sunni & Cael, "Autonomous Development Integrity" pass, blocker 6:
+            // record_boot_health() (not the bare getter) -- same live JSON
+            // payload, but also persists a durable last_boot_health.json record
+            // in the state directory with a timestamp and a boot_count. Needed
+            // because this exact code path also runs from BootCompletedReceiver
+            // after a device reboot, with NO Activity/UI running to receive this
+            // eventSink emission at all -- without a durable record, a degraded
+            // or fatal headless boot left literally no trace beyond an ephemeral
+            // Log.w, gone the moment logcat rotated. There was no way to answer
+            // "did she actually restart, and was she alive when she did" after
+            // the fact.
             var healthObj: JSONObject? = null
             if (!isError) {
                 try {
-                    val healthJson = bridge.callAttr("get_mobile_developmental_health").toString()
+                    val healthJson = bridge.callAttr("record_boot_health").toString()
                     healthObj = JSONObject(healthJson)
                     val overall = healthObj.optString("overall", "unknown")
                     if (overall != "healthy") {
                         Log.w(TAG, "Mobile developmental health: $overall — $healthJson")
                     }
                 } catch (e: Exception) {
-                    Log.w(TAG, "get_mobile_developmental_health failed: ${e.message}")
+                    Log.w(TAG, "record_boot_health failed: ${e.message}")
                 }
             }
 

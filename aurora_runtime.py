@@ -752,6 +752,7 @@ def _restore_genealogy_state(
                     notes=str(rec.get("notes", "")),
                     structured_state=(dict(rec["structured_state"]) if isinstance(rec.get("structured_state"), dict) else None),
                     consequence_profile=(dict(rec["consequence_profile"]) if isinstance(rec.get("consequence_profile"), dict) else None),
+                    origin_axis=(str(rec["origin_axis"]) if rec.get("origin_axis") is not None else None),
                 )
             if loaded:
                 logger.abilities = loaded
@@ -946,6 +947,27 @@ def _restore_genealogy_state(
 
     if verbose:
         print(f"  [RESTORE] Genealogy: abilities={restored['abilities']} links={restored['links']} events={restored['events']}")
+
+    # Sunni & Cael, "Autonomous Development Integrity" pass, blocker 4:
+    # rebuild consequence-profile context-diversity bookkeeping from what
+    # abilities/links just loaded from disk already carry, so a restarted
+    # process doesn't re-treat already-seen co-activation contexts as
+    # novel. Must run after BOTH abilities and links are loaded above.
+    if hasattr(logger, "rehydrate_consequence_contexts"):
+        try:
+            n_rehydrated = logger.rehydrate_consequence_contexts()
+            restored["consequence_contexts"] = n_rehydrated
+            if verbose and n_rehydrated > 0:
+                print(f"  [RESTORE] Consequence contexts: {n_rehydrated} representations rehydrated")
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:_restore_genealogy_state:consequence_contexts",
+                exc=_aurora_boundary_exc,
+                context={"function": "_restore_genealogy_state", "source_file": "aurora_runtime.py"},
+            )
+            pass
 
     # Restore pair stats — K_MIN accumulation across runs.
     # Must happen after links are restored so already-promoted pairs are excluded.

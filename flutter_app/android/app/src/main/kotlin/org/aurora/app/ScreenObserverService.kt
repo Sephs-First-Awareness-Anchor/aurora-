@@ -1,12 +1,102 @@
 package org.aurora.app
 
 import android.accessibilityservice.AccessibilityService
+import android.graphics.Bitmap
+import android.os.Build
+import android.util.Log
+import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import java.io.ByteArrayOutputStream
 import org.json.JSONArray
 import org.json.JSONObject
 
 class ScreenObserverService : AccessibilityService() {
+
+    companion object {
+        private const val TAG = "ScreenObserverService"
+
+        // Sunni & Cael, "Autonomous Development Integrity" pass: this
+        // service already has the harder piece of screen sensing in place
+        // (accessibility access + window-content retrieval). API 30's
+        // AccessibilityService.takeScreenshot() extends that same access to
+        // real pixels, without whole-device MediaProjection's per-session
+        // consent requirement -- appropriate for a bounded, per-turn
+        // diagnostic journal rather than continuous screen recording.
+        @Volatile private var instance: ScreenObserverService? = null
+
+        /** Best-effort real screenshot capture for the UI observation
+         * session journal (see AuroraService.markUiTransition). A no-op
+         * (not an error) when this accessibility service isn't currently
+         * running (permission not granted) or the device is below API 30 --
+         * the timeline event itself still lands either way.
+         *
+         * Sunni & Cael, review follow-up: takeScreenshot() is inherently
+         * asynchronous (its own callback API), and the original version
+         * gave the caller no way to know when the capture -- and the
+         * Python-side record_ui_screenshot() write it triggers -- actually
+         * finished. markUiTransition() below needs that signal to avoid
+         * calling stop_ui_observation_session() while a screenshot is
+         * still mid-flight. onDone() fires exactly once on every exit path:
+         * the two early no-op returns, both takeScreenshot() callback
+         * branches, and the synchronous-throw catch block. */
+        fun captureScreenshot(transition: String, onDone: () -> Unit = {}) {
+            val svc = instance
+            if (svc == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                onDone()
+                return
+            }
+            try {
+                svc.takeScreenshot(
+                    Display.DEFAULT_DISPLAY,
+                    svc.mainExecutor,
+                    object : AccessibilityService.TakeScreenshotCallback {
+                        override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
+                            try {
+                                val hwBitmap = Bitmap.wrapHardwareBuffer(
+                                    result.hardwareBuffer, result.colorSpace
+                                )
+                                // Hardware bitmaps can't be compressed directly on
+                                // every OEM/driver combination -- copy to a normal
+                                // software bitmap first, same pattern used for
+                                // camera frames elsewhere in this app.
+                                val softBitmap = hwBitmap?.copy(Bitmap.Config.ARGB_8888, false)
+                                result.hardwareBuffer.close()
+                                if (softBitmap != null) {
+                                    val stream = ByteArrayOutputStream()
+                                    softBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                                    AuroraService.provideUiScreenshot(stream.toByteArray(), transition, onDone)
+                                    softBitmap.recycle()
+                                } else {
+                                    onDone()
+                                }
+                            } catch (e: Exception) {
+                                Log.w(TAG, "screenshot processing error: ${e.message}")
+                                onDone()
+                            }
+                        }
+                        override fun onFailure(errorCode: Int) {
+                            Log.w(TAG, "takeScreenshot failed: errorCode=$errorCode")
+                            onDone()
+                        }
+                    }
+                )
+            } catch (e: Exception) {
+                Log.w(TAG, "takeScreenshot error: ${e.message}")
+                onDone()
+            }
+        }
+    }
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        instance = this
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (instance == this) instance = null
+    }
 
     private var lastEventMs = 0L
 

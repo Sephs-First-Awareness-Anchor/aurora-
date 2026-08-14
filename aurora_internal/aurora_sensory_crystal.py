@@ -1028,6 +1028,17 @@ class SensoryClusterFacet:
             genealogy.abilities[aid] = AbilityProfile(
                 id=aid,
                 axis=axis,
+                # Sunni & Cael, "Autonomous Development Integrity" pass,
+                # blocker 5: this is the ability's actual birth moment --
+                # this construction doesn't route through
+                # _augment_ability_profile_with_origin, so origin_axis must
+                # be stamped explicitly here or it would default to None
+                # and only get backfilled (incorrectly, from whatever .axis
+                # happens to be by then) the first time something ELSE
+                # calls that function on it. The existing "initial_axis:"
+                # effect_tag below records the same fact informally; this
+                # is the structural, typed version of it.
+                origin_axis=axis,
                 requires=(axis,),
                 cost=_axis_weighted_cost(axis),
                 risk={a: 0.0 for a in ("X", "T", "N", "B", "A")},
@@ -1118,11 +1129,20 @@ class SensoryClusterFacet:
             # starting prior otherwise. Never silently recomputed from the
             # facet alone once she has evidence of her own about it.
             axis = existing.axis if existing is not None else _facet_axis(self.domain, self.facet)
-            # Real, derived-from-actual-state pressure: unresolved
-            # confidence is the "before" pressure on this node's axis;
-            # relief is however much fitness improved this tick. A fitness
-            # regression (delta < 0) is expressed as pressure rising
-            # instead of falling -- never clamped away or hidden.
+            # Sunni & Cael: this pressure is SYNTHETIC, derived from the
+            # node's own self-assessed fitness metric, not from a measured
+            # world/environment outcome -- unresolved confidence is the
+            # "before" pressure on this node's axis; relief is however much
+            # fitness improved this tick. A fitness regression (delta < 0)
+            # is expressed as pressure rising instead of falling -- never
+            # clamped away or hidden. Legitimate for what it always fed
+            # (relief-event bookkeeping, PairStats/RCRW co-activation, the
+            # axis_evidence developmental-proxy learner below), but it must
+            # NOT be credited to consequence_profile as if it were a
+            # measured world consequence -- that would let a representation
+            # improve its own confidence score by improving its own
+            # confidence score. See the "synthetic_self_assessment" notes
+            # flag on the observe() call below.
             before_val = _clamp01(1.0 - node._last_citizen_fitness)
             after_val = _clamp01(1.0 - node.fitness)
             p_before = PressureVec(**{a: (before_val if a == axis else 0.0) for a in _AXES5})
@@ -1209,6 +1229,16 @@ class SensoryClusterFacet:
                         "fitness_delta": round(delta, 4),
                         "live_state": live_state,
                         "axis_evidence": dict(node.axis_evidence),
+                        # Sunni & Cael: this tick's pressure is derived from
+                        # the node's OWN fitness self-assessment, not a
+                        # measured world outcome -- _attribute_consequence()
+                        # must not credit it to consequence_profile as if
+                        # Aurora's physics had actually changed. Everything
+                        # ELSE this observation feeds (relief bookkeeping,
+                        # PairStats, the axis_evidence proxy learner) is
+                        # unaffected; this flag is read by exactly one
+                        # place.
+                        "synthetic_self_assessment": True,
                     },
                 )
                 node._last_citizen_fitness = node.fitness

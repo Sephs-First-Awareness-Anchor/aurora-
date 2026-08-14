@@ -134,10 +134,31 @@ class _HomeScreenState extends State<HomeScreen>
                 });
               }
             case 'ready':
+              // Sunni & Cael, "Autonomous Development Integrity" pass,
+              // blocker 6: record_boot_health()'s "overall" status
+              // (healthy/degraded/fatal) now reaches this far -- must not
+              // be silently dropped in favor of an unconditional "online"
+              // the way it was before. A boot with major developmental
+              // systems missing (genealogy/RCRW/Sensory Crystal/
+              // dimensional physics/curiosity/Dream substrate) still
+              // reports "ready" at the language-field level (that check
+              // is separate, see get_mobile_developmental_health()'s
+              // docstring) -- this is what makes THAT distinction visible
+              // to whoever is actually watching the app, not just to
+              // adb logcat.
+              final healthOverall = event['healthOverall'] as String?;
+              final healthDegraded = healthOverall != null && healthOverall != 'healthy';
               if (mounted) {
-                setState(() { _aiReady = true; _statusTxt = 'Listening…'; });
+                setState(() {
+                  _aiReady = true;
+                  _statusTxt = healthDegraded
+                      ? 'Listening… (developmental health: $healthOverall)'
+                      : 'Listening…';
+                });
               }
-              _speak('Aurora is online.');
+              _speak(healthDegraded
+                  ? 'Aurora is online, but some developmental systems are $healthOverall.'
+                  : 'Aurora is online.');
             case 'proactive':
               // Curiosity session completed — Aurora reports back unprompted.
               if (mounted && text.isNotEmpty) {
@@ -320,6 +341,15 @@ class _HomeScreenState extends State<HomeScreen>
     _textCtrl.clear();
     AuroraBridge.stopListening();
 
+    // Sunni & Cael, UI observation session journal: bound one durable,
+    // reconstructable record (timeline.jsonl + real screenshots) to
+    // exactly this conversational turn -- input submitted through
+    // response rendered -- rather than recording continuously. A failure
+    // anywhere in this journaling path must never block the actual
+    // conversation turn, so every call here is fire-and-forget.
+    unawaited(AuroraBridge.startUiObservationSession());
+    unawaited(AuroraBridge.markUiTransition('input_submitted'));
+
     setState(() {
       _listening = false;
       _msgs.add(ChatMsg(text, isUser: true));
@@ -329,6 +359,8 @@ class _HomeScreenState extends State<HomeScreen>
 
     final reply = await AuroraBridge.sendMessage(text);
     if (!mounted) return;
+
+    unawaited(AuroraBridge.markUiTransition('response_available'));
 
     setState(() {
       if (reply.isNotEmpty) _msgs.add(ChatMsg(reply, isUser: false));
@@ -345,6 +377,16 @@ class _HomeScreenState extends State<HomeScreen>
       _startListening();
     }
     _resetConversationWindow();
+
+    // Give the frame that just rendered the reply a beat to actually
+    // paint before the "response_rendered" screenshot, then close the
+    // session -- matches the requested timeline shape (input -> Aurora
+    // receives -> Python processing begins -> response available ->
+    // Flutter displays it) end to end.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await AuroraBridge.markUiTransition('response_rendered');
+      unawaited(AuroraBridge.stopUiObservationSession());
+    });
   }
 
   void _scrollToBottom() {

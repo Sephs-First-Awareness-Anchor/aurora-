@@ -234,6 +234,27 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    "startUiObservationSession" -> {
+                        AuroraService.startUiObservationSession()
+                        result.success(null)
+                    }
+                    "markUiTransition" -> {
+                        val transition = call.argument<String>("transition") ?: ""
+                        // Sunni & Cael, review follow-up: wait for the
+                        // timeline write AND screenshot capture to actually
+                        // finish before resolving, so a Dart-side `await`
+                        // on this call (see home_screen.dart's
+                        // 'response_rendered' transition) is a real
+                        // guarantee, not just a MethodChannel round trip.
+                        AuroraService.markUiTransition(transition) {
+                            runOnUiThread { result.success(null) }
+                        }
+                    }
+                    "stopUiObservationSession" -> {
+                        AuroraService.stopUiObservationSession { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     else             -> result.notImplemented()
                 }
             }

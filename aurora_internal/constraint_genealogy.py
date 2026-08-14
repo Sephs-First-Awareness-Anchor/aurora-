@@ -575,7 +575,7 @@ class AbilityProfile:
     across ALL five axes — because that is the entire point.
     """
     id: str                                    # e.g. "B:ENCAPSULATE"
-    axis: str                                  # primary axis (X/T/N/B/A)
+    axis: str                                  # primary axis (X/T/N/B/A) -- CURRENT operational identity, mutable via dataclasses.replace() (e.g. a learned axis reassignment)
     requires: Tuple[str, ...]                  # axes that must be non-collapsed
     cost: Dict[str, float]                     # 5-axis operation cost
     risk: Dict[str, float]                     # axes where failure risk is nonzero
@@ -648,6 +648,33 @@ class AbilityProfile:
     #                             things instead of one overwriting the
     #                             other.
     consequence_profile: Optional[Dict[str, Any]] = None
+    # Sunni & Cael, "Autonomous Development Integrity" pass, blocker 5:
+    # IMMUTABLE ancestral grounding, structurally distinct from every
+    # mutable field above it. Set exactly once, at the moment this ability
+    # is actually born (either directly at the one construction site that
+    # doesn't route through _augment_ability_profile_with_origin --
+    # aurora_sensory_crystal.py's grant_representational_citizenship --
+    # or lazily, the first time a raw AbilityProfile passes through
+    # _augment_ability_profile_with_origin, which stamps it from whatever
+    # .axis was at that exact moment and never touches it again on any
+    # later pass). Every subsequent dataclasses.replace() call that
+    # changes .axis (a learned reassignment, a code-mutation acceptance)
+    # leaves origin_axis untouched automatically -- frozen-dataclass
+    # replace() only overrides fields you explicitly pass, and nothing
+    # after birth ever passes this one.
+    #
+    # This formalizes what the codebase already reached for informally:
+    # sensory citizenship's effect_tags already carry an ad-hoc
+    # "initial_axis:{axis}" string for exactly this purpose ("kept even
+    # if a later learned_axis: tag moves the ability's own live .axis
+    # field elsewhere"). That worked, but as an unstructured tag string
+    # with no schema, nothing stopped a future tag-refresh pass from
+    # dropping it by accident. origin_axis makes the same guarantee a
+    # first-class, typed contract instead.
+    #
+    # See ability_provenance_view() below for the explicit, queryable
+    # ancestral-vs-operational split this field exists to make possible.
+    origin_axis: Optional[str] = None
 
     def x_risk(self) -> float:
         """Return the X (existence admissibility) risk component."""
@@ -693,7 +720,41 @@ class AbilityProfile:
             d["structured_state"] = dict(self.structured_state)
         if self.consequence_profile is not None:
             d["consequence_profile"] = dict(self.consequence_profile)
+        if self.origin_axis is not None:
+            d["origin_axis"] = self.origin_axis
         return d
+
+    def ability_provenance_view(self) -> Dict[str, Any]:
+        """Sunni & Cael, "Autonomous Development Integrity" pass, blocker 5:
+        the explicit, structural split between IMMUTABLE ancestral
+        grounding (what this representation was BORN as -- never changes)
+        and MUTABLE operational/proxy state (what it currently does, and
+        what it has learned) -- so a caller never has to reconstruct that
+        distinction from field-mutation history it may not know about.
+
+        "ancestral" never changes after birth. "operational" is everything
+        that can legitimately move as this representation participates,
+        learns, or is re-observed. origin_axis falls back to the current
+        .axis for abilities that predate this field (persisted before this
+        pass) -- an honest degrade, not a fabricated birth record.
+        """
+        return {
+            "ancestral": {
+                "id": self.id,
+                "origin_axis": self.origin_axis if self.origin_axis is not None else self.axis,
+                "topology_id": self.topology_id,
+                "semantic_variant_id": self.semantic_variant_id,
+            },
+            "operational": {
+                "axis": self.axis,
+                "requires": list(self.requires),
+                "cost": dict(self.cost),
+                "risk": dict(self.risk),
+                "effect_tags": list(self.effect_tags),
+                "structured_state": (dict(self.structured_state) if self.structured_state is not None else None),
+                "consequence_profile": (dict(self.consequence_profile) if self.consequence_profile is not None else None),
+            },
+        }
 
 
 def _canonical_axis_token(raw: str) -> Optional[str]:
@@ -937,7 +998,18 @@ def _augment_ability_profile_with_origin(ap: AbilityProfile) -> AbilityProfile:
     Adds new physics tags without removing any existing ones.
     """
     import hashlib as _hashlib
-    origin     = _derive_operation_origin(ap.id, ap.axis, ap.requires, ap.effect_tags)
+    # Sunni & Cael, "Autonomous Development Integrity" pass, blocker 5:
+    # derive origin/lineage from the BIRTH axis, not whatever .axis
+    # happens to be right now -- otherwise a learned axis reassignment
+    # followed by a restart (which re-runs this function via
+    # normalize_ability_origins()) would silently recompute ancestry from
+    # the CURRENT axis, letting experience quietly overwrite ancestry on
+    # every restart. birth_axis is ap.origin_axis if this ability has
+    # already been through this function once before (or was born
+    # elsewhere with it explicitly set); otherwise this IS the birth
+    # moment, so ap.axis right now genuinely is the birth axis.
+    birth_axis = ap.origin_axis if ap.origin_axis is not None else ap.axis
+    origin     = _derive_operation_origin(ap.id, birth_axis, ap.requires, ap.effect_tags)
     counts     = _lineage_counts_from_signature(origin["signature"])
     generation = _lineage_generation_from_counts(counts)
     grading    = _lineage_grade_payload(
@@ -1008,6 +1080,12 @@ def _augment_ability_profile_with_origin(ap: AbilityProfile) -> AbilityProfile:
         # either, or every restart/normalize pass would erase genealogy's
         # own measured effect history the moment it happened to run.
         consequence_profile=(dict(ap.consequence_profile) if ap.consequence_profile is not None else None),
+        # Sunni & Cael, blocker 5: stamp origin_axis from birth_axis (which
+        # is ap.origin_axis when already set, or ap.axis when this really
+        # is the birth pass) -- this is the ONE place that's allowed to
+        # SET this field; every other caller only ever carries it forward
+        # unchanged via dataclasses.replace().
+        origin_axis=birth_axis,
     )
 
 
@@ -2468,7 +2546,7 @@ class ConstraintGenealogyLogger:
             # its top evidence tier) is cleared below. Placed after the
             # noise filter above -- there is no consequence to attribute on
             # a tick that didn't qualify as a genuine relief event.
-            self._attribute_consequence(trace, relief, self.tick_count)
+            self._attribute_consequence(trace, relief, self.tick_count, notes=merged_notes)
             rewritten = self._accumulate_pairs(trace, relief, cost_total, x_risk_total)
         finally:
             self._active_relation_context = {}
@@ -3394,6 +3472,20 @@ class ConstraintGenealogyLogger:
             rv = right.get(field_name)
             if isinstance(lv, dict) and isinstance(rv, dict):
                 distance = self._normalized_vector_distance(lv, rv)
+                if field_name == "consequence_effect":
+                    # Sunni & Cael, "Autonomous Development Integrity" pass,
+                    # blocker 3: consequence_effect is MEASURED, not
+                    # declared -- a profile built from a single crowded
+                    # sample and a profile built from dozens of isolated
+                    # ones can show the identical distance number. Weight
+                    # by the WEAKER side's confidence so weak evidence
+                    # cannot masquerade as established behavior; declared
+                    # fields (mean_relief/mean_cost/cost/risk) carry no
+                    # such uncertainty and are left unweighted.
+                    distance *= min(
+                        float(left.get("consequence_confidence", 0.0) or 0.0),
+                        float(right.get("consequence_confidence", 0.0) or 0.0),
+                    )
                 if distance > 0.0:
                     evidence[f"{field_name}_distance"] = round(float(distance), 9)
                     score += distance
@@ -3478,7 +3570,13 @@ class ConstraintGenealogyLogger:
             return 1.0
         return max(0.0, 1.0 / (1.0 + distinct_others))
 
-    def _attribute_consequence(self, trace: List[TraceItem], relief: PressureVec, tick: int) -> None:
+    def _attribute_consequence(
+        self,
+        trace: List[TraceItem],
+        relief: PressureVec,
+        tick: int,
+        notes: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """Genealogy's own consequence-derived representational self-
         governance (Sunni & Cael, "the architecture pass"). Distinct from
         sensory citizenship's axis_evidence proxy learner (confidence/
@@ -3492,6 +3590,18 @@ class ConstraintGenealogyLogger:
         "consequence" to attribute on a tick where nothing measurably
         changed. Applies uniformly to every trace item, ability or link
         alike: this is genealogy's own machinery, not sensory-scoped.
+
+        notes["synthetic_self_assessment"] (Sunni & Cael, "Autonomous
+        Development Integrity" pass): sensory citizenship's
+        tick_citizen_participation() constructs its pressure from a node's
+        OWN fitness self-assessment, not a measured world/environment
+        outcome -- crediting that to consequence_profile would let a
+        representation improve its own confidence score by improving its
+        own confidence score, exactly the thing this mechanism exists to
+        avoid. Any observe() call tagged this way is skipped here entirely
+        while continuing to feed everything else it always fed (relief
+        bookkeeping, PairStats, the axis_evidence proxy learner) completely
+        unaffected -- this flag is read in exactly this one place.
 
         Evidence weight/tier, cheapest and most legible to most
         privileged:
@@ -3530,7 +3640,27 @@ class ConstraintGenealogyLogger:
         _representation_relevance_evidence) so that genuinely diverging
         measured effects between representations become investigable,
         closing the loop back into representational inquiry.
+
+        Sunni & Cael, "Autonomous Development Integrity" pass, blocker 2:
+        when a trace has MORE THAN ONE item, the evidence is ambiguous
+        between "R alone caused this," "S alone caused this," and "R+S
+        jointly caused this." The old behavior gave BOTH R and S full
+        individual credit (each discounted only by ordinary crowding),
+        which double-spends a single relief measurement as if each
+        operand had independently produced the ENTIRE observed effect.
+        Fixed: if a promoted ConstraintLink already unifies a co-active
+        pair (_links_by_parents), that pair's share of this tick's
+        evidence goes to the LINK's own consequence_profile instead of to
+        R and S individually -- the relation is exactly what "R+S jointly"
+        already means as a representation in this codebase, not a new
+        concept. Any trace items NOT covered by a promoted relation still
+        get individual attribution, but discounted by 1/len(ids) when
+        len(ids) > 1 -- "unless individual contribution is actually
+        isolated," and being one of several co-active, unrelated items in
+        the SAME trace is not isolation.
         """
+        if bool((notes or {}).get("synthetic_self_assessment", False)):
+            return
         ids = tuple(dict.fromkeys(str(item.id) for item in (trace or []) if str(item.id)))
         if not ids:
             return
@@ -3543,37 +3673,48 @@ class ConstraintGenealogyLogger:
         min_contexts = max(1, int(getattr(self.cfg, "CONSEQUENCE_MIN_DISTINCT_CONTEXTS_FOR_CONFIDENCE", 3) or 3))
         context_cap = max(1, int(getattr(self.cfg, "CONSEQUENCE_DISTINCT_CONTEXT_CAP", 32) or 32))
 
-        for item_id in ids:
-            if item_id in self.abilities:
-                target_kind = "ability"
-                existing_ab_or_link: Any = self.abilities[item_id]
-                declared_axis = str(existing_ab_or_link.axis or "X")
-            elif item_id in self.links:
-                target_kind = "link"
-                existing_ab_or_link = self.links[item_id]
-                declared_axis = str(existing_ab_or_link.dominant_relief_axis or "X")
-            else:
-                continue
+        # Relation-preference: find any promoted link that already unifies
+        # two (or more, via overlapping pairs) of this trace's own ids.
+        relation_targets: Dict[str, Set[str]] = {}
+        if len(ids) > 1:
+            for i, left in enumerate(ids):
+                for right in ids[i + 1:]:
+                    lid = self._links_by_parents.get((left, right)) or self._links_by_parents.get((right, left))
+                    if lid and lid in self.links:
+                        relation_targets.setdefault(lid, set()).update({left, right})
+        covered_ids: Set[str] = set()
+        for covered in relation_targets.values():
+            covered_ids.update(covered)
+        joint_discount = 1.0 if len(ids) <= 1 else (1.0 / float(len(ids)))
+        # Sunni & Cael: caught in review -- when a trace's pairs match MORE
+        # THAN ONE promoted relation (e.g. a 3-item trace where A+B, B+C,
+        # and A+C have all separately been promoted), the loop below used
+        # to credit EACH relation independently at its own full weight,
+        # attributing 1.5x (or, for a staged experiment, 3x) a single
+        # relief event across the matched links -- reintroducing exactly
+        # the double-crediting this mechanism exists to prevent, just one
+        # level up (links instead of abilities). Reproduced directly: a
+        # 3-item isolated trace with all three pairs promoted summed to
+        # 1.5 total weight across the three links for ONE relief event.
+        # Fixed the same way individual over-counting is handled above:
+        # divide by how many relations are claiming a share of this tick.
+        relation_discount = 1.0 if len(relation_targets) <= 1 else (1.0 / float(len(relation_targets)))
 
-            if staged:
-                tier, weight = "staged_experiment", staged_weight
-            else:
-                conf = self.isolation_confidence(item_id, tick, window=window)
-                others_now = tuple(sorted(x for x in ids if x != item_id))
-                tier = "isolated" if not others_now else "co_activated"
-                weight = conf
+        def _apply(target_kind: str, target_id: str, existing_obj: Any, weight: float, tier: str, others_sig_ids: Iterable[str]) -> None:
             if weight <= 0.0:
-                continue
-
-            prior_profile = dict(existing_ab_or_link.consequence_profile or {})
+                return
+            declared_axis = str(
+                existing_obj.axis if target_kind == "ability" else (existing_obj.dominant_relief_axis or "X")
+            )
+            prior_profile = dict(existing_obj.consequence_profile or {})
             effect = dict(prior_profile.get("effect") or {a: 0.0 for a in AXES})
             for a in AXES:
                 observed = float(relief_dict.get(a, 0.0) or 0.0)
                 prior_val = float(effect.get(a, 0.0) or 0.0)
                 effect[a] = prior_val + (ema_rate * weight) * (observed - prior_val)
 
-            others_sig = frozenset(x for x in ids if x != item_id)
-            contexts = self._consequence_contexts_seen[item_id]
+            others_sig = frozenset(others_sig_ids)
+            contexts = self._consequence_contexts_seen[target_id]
             if others_sig not in contexts and len(contexts) < context_cap:
                 contexts.add(others_sig)
             distinct_contexts = len(contexts)
@@ -3629,6 +3770,16 @@ class ConstraintGenealogyLogger:
                 "effect": effect,
                 "samples": samples,
                 "distinct_contexts": distinct_contexts,
+                # Sunni & Cael, "Autonomous Development Integrity" pass,
+                # blocker 4: _consequence_contexts_seen was previously
+                # in-memory-only, so distinct_contexts reset to whatever a
+                # fresh process happened to rebuild after a restart --
+                # already-seen contexts could be re-counted as "new."
+                # Persisting the actual signatures alongside the rest of
+                # this profile (bounded by the same context_cap the
+                # in-memory set already respects) lets a restore rebuild
+                # the exact same dedup set, not just the count.
+                "context_signatures": [sorted(sig) for sig in contexts],
                 "weighted_evidence_clean": round(float(clean_weight), 9),
                 "weighted_evidence_total": round(float(total_weight), 9),
                 "confidence": round(float(confidence), 9),
@@ -3638,10 +3789,78 @@ class ConstraintGenealogyLogger:
                 "discrepancy": round(float(discrepancy), 9),
             }
             if target_kind == "ability":
-                self.abilities[item_id] = replace(existing_ab_or_link, consequence_profile=new_profile)
+                self.abilities[target_id] = replace(existing_obj, consequence_profile=new_profile)
             else:
-                self.links[item_id] = replace(existing_ab_or_link, consequence_profile=new_profile)
+                self.links[target_id] = replace(existing_obj, consequence_profile=new_profile)
             self.mark_representation_index_dirty()
+
+        # Relations first: the pair's evidence goes to the promoted link
+        # that already represents "R+S jointly," not to R and S separately.
+        for relation_id, covered in relation_targets.items():
+            existing_link = self.links.get(relation_id)
+            if existing_link is None:
+                continue
+            if staged:
+                tier, weight = "staged_experiment", staged_weight * relation_discount
+            else:
+                outside = self.activity_in_window(tick, window=window, exclude_ids=covered)
+                distinct_outside = len(outside)
+                tier = "isolated" if distinct_outside == 0 else "co_activated"
+                weight = (1.0 if distinct_outside == 0 else max(0.0, 1.0 / (1.0 + distinct_outside))) * relation_discount
+            others_sig_ids = tuple(sorted(x for x in ids if x not in covered))
+            _apply("link", relation_id, existing_link, weight, tier, others_sig_ids)
+
+        # Any trace items not absorbed by a relation still get individual
+        # attribution, jointly discounted when genuinely ambiguous.
+        for item_id in ids:
+            if item_id in covered_ids:
+                continue
+            if item_id in self.abilities:
+                target_kind = "ability"
+                existing_ab_or_link: Any = self.abilities[item_id]
+            elif item_id in self.links:
+                target_kind = "link"
+                existing_ab_or_link = self.links[item_id]
+            else:
+                continue
+
+            if staged:
+                tier, weight = "staged_experiment", staged_weight
+            else:
+                conf = self.isolation_confidence(item_id, tick, window=window)
+                others_now = tuple(sorted(x for x in ids if x != item_id))
+                tier = "isolated" if not others_now else "co_activated"
+                weight = conf * joint_discount
+            others_sig_ids = tuple(sorted(x for x in ids if x != item_id))
+            _apply(target_kind, item_id, existing_ab_or_link, weight, tier, others_sig_ids)
+
+    def rehydrate_consequence_contexts(self) -> int:
+        """Sunni & Cael, "Autonomous Development Integrity" pass, blocker 4:
+        rebuild the in-memory _consequence_contexts_seen dedup set from
+        whatever consequence_profile["context_signatures"] each currently-
+        loaded ability/link already carries. Call this once after
+        self.abilities/self.links have both been populated from disk (see
+        aurora_runtime.py's _restore_genealogy_state) -- without it, a
+        restarted process would re-treat already-seen co-activation
+        contexts as novel, silently inflating distinct_contexts and thus
+        confidence beyond what the accumulated evidence actually supports.
+        Returns the number of representations rehydrated."""
+        rehydrated = 0
+        for store in (self.abilities, self.links):
+            for item_id, obj in store.items():
+                profile = getattr(obj, "consequence_profile", None)
+                if not profile:
+                    continue
+                sigs = profile.get("context_signatures")
+                if not isinstance(sigs, list):
+                    continue
+                contexts = self._consequence_contexts_seen[str(item_id)]
+                for sig in sigs:
+                    if isinstance(sig, list):
+                        contexts.add(frozenset(str(x) for x in sig))
+                if sigs:
+                    rehydrated += 1
+        return rehydrated
 
     def mark_representation_index_dirty(self) -> None:
         """Call this whenever an EXISTING links/abilities entry is replaced
@@ -4045,6 +4264,15 @@ class ConstraintGenealogyLogger:
             rv = right.get(field_name)
             if isinstance(lv, dict) and isinstance(rv, dict):
                 distance = self._normalized_vector_distance(lv, rv)
+                if field_name == "consequence_effect":
+                    # See the matching comment in _representation_discrepancy:
+                    # weight by the weaker side's confidence so a single
+                    # crowded sample can't score identically to an
+                    # established, well-evidenced profile.
+                    distance *= min(
+                        float(left.get("consequence_confidence", 0.0) or 0.0),
+                        float(right.get("consequence_confidence", 0.0) or 0.0),
+                    )
                 if distance > 0.0:
                     discrepancy[f"{field_name}_distance"] = round(float(distance), 9)
         ltags = set(str(x) for x in (left.get("effect_tags", []) or []))
@@ -4061,7 +4289,19 @@ class ConstraintGenealogyLogger:
             }
         if discrepancy:
             evidence["operational_discrepancy"] = discrepancy
-            score += 0.25 * len(discrepancy)
+            # Sunni & Cael, blocker 3: every OTHER discrepancy signal here
+            # is a flat per-signal count (0.25 each) because they're all
+            # presence/absence facts about DECLARED state. consequence_
+            # effect_distance is different -- it's a continuous, already
+            # confidence-weighted MEASUREMENT (see the loop above), so it
+            # contributes its own magnitude directly instead of being
+            # flattened to the same fixed 0.25 a single low-confidence
+            # sample would otherwise get, identical to a well-established
+            # profile's.
+            flat_keys = [k for k in discrepancy if k != "consequence_effect_distance"]
+            score += 0.25 * len(flat_keys)
+            if "consequence_effect_distance" in discrepancy:
+                score += float(discrepancy["consequence_effect_distance"])
 
         if score <= 0.0:
             return None

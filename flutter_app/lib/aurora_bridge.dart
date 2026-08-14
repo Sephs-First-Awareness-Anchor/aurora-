@@ -25,6 +25,16 @@ class AuroraBridge {
     final textMatch     = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
     final errorMatch    = RegExp(r'"error"\s*:\s*(\d+)').firstMatch(json);
     final summaryMatch  = RegExp(r'"summary"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    // Sunni & Cael, "Autonomous Development Integrity" pass, blocker 6:
+    // AuroraService.kt's boot event nests record_boot_health()'s payload
+    // under "health" on every "ready"/"error" event -- {"overall":
+    // "healthy"|"degraded"|"fatal", "fatal_missing":[...],
+    // "degraded_missing":[...], ...}. Previously never extracted here, so
+    // it reached this file and went no further: the app could (and did)
+    // say "Aurora is online" even when major developmental systems were
+    // silently missing. "overall" is a key name unique to this payload
+    // shape elsewhere in the bridge, so a flat (non-nested) match is safe.
+    final healthOverallMatch = RegExp(r'"overall"\s*:\s*"([^"]*)"').firstMatch(json);
     return {
       'source':    sourceMatch?.group(1) ?? 'aurora',
       'type':      typeMatch?.group(1)   ?? 'unknown',
@@ -39,6 +49,8 @@ class AuroraBridge {
       'N': _parseDouble(json, 'N'),
       'B': _parseDouble(json, 'B'),
       'A': _parseDouble(json, 'A'),
+      // Developmental health — present on type=="ready"/"error" boot events.
+      'healthOverall': healthOverallMatch?.group(1),
     };
   }
 
@@ -213,4 +225,28 @@ class AuroraBridge {
 
   static Future<String> triggerEvoCycle({int ticks = 20}) async =>
       await _channel.invokeMethod<String>('triggerEvoCycle', {'ticks': ticks}) ?? '{}';
+
+  // ── UI observation session journal (diagnostics) ──────────────────────────
+  // A bounded, per-turn record of one conversational interaction --
+  // timeline.jsonl + real screenshots at meaningful transitions -- so a
+  // reported UI problem can be reconstructed afterward instead of
+  // re-described from memory. See aurora_bridge.py's start/record/stop_ui_
+  // observation_* functions and ScreenObserverService.kt's screenshot
+  // capture for the native side of this.
+
+  static Future<void> startUiObservationSession() =>
+      _channel.invokeMethod('startUiObservationSession');
+
+  /// Marks a named transition (e.g. "input_submitted", "response_rendered")
+  /// in the active session's timeline and triggers a real screenshot capture
+  /// for it. Safe to call with no session active -- becomes a no-op on the
+  /// Python side.
+  static Future<void> markUiTransition(String transition) =>
+      _channel.invokeMethod('markUiTransition', {'transition': transition});
+
+  /// Closes the active session and returns its manifest JSON (raw string --
+  /// no dart:convert dependency in this bridge, same convention as
+  /// startGauntlet/getGauntletStatus above).
+  static Future<String> stopUiObservationSession() async =>
+      await _channel.invokeMethod<String>('stopUiObservationSession') ?? '{}';
 }
