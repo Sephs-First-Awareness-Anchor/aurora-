@@ -64,6 +64,15 @@ class TurnUnderstandingState:
     session_continuity: float = 0.0
     belief_tension: float = 0.0
 
+    # Build 694 step 12 (Subsurface Presence and Evidence Scout spec,
+    # section 15): accepted Subsurface EvidenceBinding dicts for THIS
+    # turn, ingested right after interpreted-turn emission -- before
+    # DOWN2 belief runs, not only in the late pre-expression harvest.
+    # Populated by aurora._ingest_current_turn_scout_evidence(); DOWN2
+    # belief/DOWN1 information (Build 694 step 13) structurally consume
+    # it from here.
+    current_turn_scout_evidence: List[Dict[str, Any]] = field(default_factory=list)
+
     # ----------------------------------------------------------------
     # Stage 3 -- Purpose (N axis)
     # Cost/energy: value pressure moves belief to directed purpose.

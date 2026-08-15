@@ -11222,24 +11222,32 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                 )
                 pass
 
-        # ── 2. Non-blocking Scout dispatch (spec step 10) ────────────────────
+        # ── 2. Non-blocking evidence_need publication (Build 694 step 9) ─────
         # Replaces the old synchronous queue-write-then-poll-and-sleep loop
         # (up to 35s for use_researcher=True) entirely. Surface fires the
         # request and moves on in the same call -- it never learns the
-        # answer this turn; a later turn's harvest (step 9) is the only
-        # path evidence takes back to Surface.
+        # answer this turn; a later turn's harvest (step 9 of the prior
+        # build) is the only path evidence takes back to Surface.
+        #
+        # Build 694 step 9 further reverses part of the prior build's step
+        # 10: Surface no longer dispatches a ScoutRequest itself (that
+        # meant holding scouting.broker/contracts knowledge directly).
+        # It now only publishes an evidence_need event on the same
+        # turn_open/interpreted_turn channel -- Subsurface (via
+        # integrate_evidence_need_event(), subsurface_presence.py) is the
+        # sole owner of turning a described need into an actual dispatch.
         try:
-            from aurora_internal.scouting.broker import dispatch_scout_request
-            from aurora_internal.scouting.contracts import ScoutRequest
+            from aurora_internal.dual_strata.subsurface_presence import write_evidence_need
             turn_id = str((systems or {}).get("_current_turn_id", "") or "") or "no_live_turn"
-            dispatch_scout_request(_sd, ScoutRequest(
+            write_evidence_need(
+                _sd,
                 turn_id=turn_id,
                 request_kind="knowledge_gap",
                 inquiry=str(topic or ""),
                 evidence_needed=str(topic or ""),
                 priority=0.75 if use_researcher else 0.4,
                 ttl_s=45.0 if use_researcher else max(5.0, float(timeout or 20.0)),
-            ))
+            )
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -11248,7 +11256,7 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                 exc=_aurora_boundary_exc,
                 context={"function": "_try_poedex_lookup", "source_file": "aurora.py"},
             )
-            pass  # dispatch failure must never block or fail this call
+            pass  # publication failure must never block or fail this call
 
         return ''
     except Exception as _aurora_boundary_exc:
@@ -20429,6 +20437,19 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                 context={"function": "_chain_down2_belief", "handler_line": 16002, "source_file": "aurora.py"},
             )
             pass
+    # Build 694 step 13 (spec section 22): last of the "internal
+    # resolution first" fallback stages -- only reached when pressure-
+    # experience, SediMemory recall, and the grounded fallback above all
+    # had their chance and still produced nothing. Structurally consumes
+    # state.pipeline_state["subsurface_response_evidence"] (Build 694
+    # step 12's early ingestion, structured by
+    # _structure_current_turn_scout_evidence); this is the mechanism that
+    # lets a turn like "hey aurora" resolve through Aurora's own
+    # generation once Subsurface evidence supports acknowledge/
+    # remain_conversationally_present, instead of falling through to
+    # generic abstention.
+    if not state.response_content:
+        _apply_subsurface_response_evidence(systems, state)
     # D2.1 (Directive D2, ratified 2026-07-17): the mid-chain terminal-gap
     # abstain formerly fired right here, before the campaign-verified
     # composer voice (resp_B / SentenceComposer) had been computed at all --
@@ -21650,6 +21671,19 @@ def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str,
         response_gap = 1.0 - response_confidence
         response_fit_pressure = response_gap if (interpretation_adequate and ambiguity_not_blocking) else 0.0
 
+        # Build 694 step 14 (spec section 16): _ingest_current_turn_scout_evidence()
+        # reads this back to decide whether this turn qualifies for the
+        # small opportunistic same-turn evidence window -- stored here,
+        # not recomputed there, so the two can never drift apart on what
+        # counts as "elevated." Build 694 step 15's abstention-rescue
+        # eligibility gate reads interpretation_adequate/interpreted_meaning
+        # the same way, for the same reason.
+        if not isinstance(state.pipeline_state, dict):
+            state.pipeline_state = {}
+        state.pipeline_state["response_fit_pressure"] = response_fit_pressure
+        state.pipeline_state["interpretation_adequate"] = interpretation_adequate
+        state.pipeline_state["interpreted_meaning"] = interpreted_meaning
+
         from aurora_internal.dual_strata.subsurface_presence import write_interpreted_turn
         write_interpreted_turn(
             systems.get("state_dir"),
@@ -21675,12 +21709,12 @@ def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str,
         )
 
 
-def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> list:
-    """
-    Subsurface Presence and Evidence Scout spec, step 9: the ONE point
-    where Surface is allowed to see Scout-derived evidence at all --
-    called right before expression, after belief/information have
-    already built the response draft. Reads through
+def _read_accepted_scout_bindings(systems: dict, *, turn_id: str) -> list:
+    """Shared by both current-turn evidence entry points below (the
+    early ingestion step 12 adds, and the late pre-expression harvest
+    step 9 of the prior build added) -- one read-and-filter
+    implementation so they can never quietly diverge on what "accepted
+    evidence for this turn" means. Reads through
     subsurface_scout_bridge.read_bindings_for_turn(), never
     ScoutBroker.poll_reports() directly (spec section 11: Surface must
     never read raw scout_results) -- what comes back here is already
@@ -21691,14 +21725,7 @@ def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> li
     Only "accepted" bindings are kept -- read_bindings_for_turn() can
     also return "rejected"/"stale" bindings recorded under this same
     turn_id (e.g. a report that came back weak or contradicted for this
-    very turn), and those must never reach expression at all.
-
-    Additive only: the result is available context Surface MAY draw on
-    (currently: passed alongside dominant_emotion into the expression
-    composer's assembly_data) -- it never substitutes for or overrides
-    state.response_content, which belief/information already finished
-    building before this ever runs.
-    """
+    very turn), and those must never reach either caller at all."""
     try:
         from aurora_internal.scouting.subsurface_scout_bridge import read_bindings_for_turn
         bindings = read_bindings_for_turn(systems.get("state_dir"), turn_id)
@@ -21706,11 +21733,473 @@ def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> li
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(), module=__name__,
-            operation="exception_handler:aurora.py:_harvest_scout_evidence_for_expression",
+            operation="exception_handler:aurora.py:_read_accepted_scout_bindings",
             exc=_aurora_boundary_exc,
-            context={"function": "_harvest_scout_evidence_for_expression", "source_file": "aurora.py"},
+            context={"function": "_read_accepted_scout_bindings", "source_file": "aurora.py"},
         )
         return []
+
+
+# Build 694 step 14 (spec section 16): "Suggested total per-turn Scout
+# rescue budget: ~4 seconds. Make this configurable. Do not permanently
+# encode 4 seconds as cognitive doctrine." SCOUT_RESCUE_BUDGET_S overrides
+# it; SCOUT_OPPORTUNISTIC_WAIT_S overrides the smaller opportunistic-
+# window default below. Both are tuning values, not semantic rules --
+# same posture as subsurface_presence.response_fit_dispatch_threshold().
+_DEFAULT_SCOUT_RESCUE_BUDGET_S = 4.0
+_DEFAULT_OPPORTUNISTIC_WAIT_S = 1.5
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None or not str(raw).strip():
+        return default
+    try:
+        return max(0.0, float(raw))
+    except (TypeError, ValueError):
+        return default
+
+
+def _scout_rescue_budget_total_s() -> float:
+    return _env_float("SCOUT_RESCUE_BUDGET_S", _DEFAULT_SCOUT_RESCUE_BUDGET_S)
+
+
+def _opportunistic_wait_s() -> float:
+    return _env_float("SCOUT_OPPORTUNISTIC_WAIT_S", _DEFAULT_OPPORTUNISTIC_WAIT_S)
+
+
+def _scout_rescue_budget_remaining(systems: dict, turn_id: str) -> float:
+    """Build 694 steps 14+15 share ONE per-turn budget (spec section 16's
+    single ~4s total, not 4s per tier) -- Build 694 step 14's opportunistic
+    wait and step 15's abstention-rescue wait both draw against this same
+    tracker, keyed fresh on each new turn_id so a prior turn's spent
+    budget never leaks into the next one."""
+    tracker = systems.setdefault("_scout_rescue_budget", {})
+    if tracker.get("turn_id") != turn_id:
+        tracker["turn_id"] = turn_id
+        tracker["remaining_s"] = _scout_rescue_budget_total_s()
+    return float(tracker.get("remaining_s", 0.0) or 0.0)
+
+
+def _scout_rescue_budget_spend(systems: dict, turn_id: str, elapsed_s: float) -> None:
+    tracker = systems.setdefault("_scout_rescue_budget", {})
+    if tracker.get("turn_id") == turn_id:
+        tracker["remaining_s"] = max(0.0, float(tracker.get("remaining_s", 0.0) or 0.0) - max(0.0, elapsed_s))
+
+
+def _get_presence_metrics(systems: dict) -> Any:
+    """Build 694 step 17 (spec section 30): one PresenceMetrics instance
+    per systems dict, lazily created and cached under
+    systems["_presence_metrics"]. role="surface_pipeline", deliberately
+    distinct from aurora_surface_daemon.py's own role="surface" instance
+    (that module is a thin desktop-only external dispatcher with its own
+    separate recorder; _run_reasoning_pipeline is the canonical pipeline
+    every platform's turns actually flow through, Android included, so
+    giving it a distinct role keeps the two recorders' snapshots from
+    overwriting each other under the same role key in
+    presence_metrics.json)."""
+    metrics = systems.get("_presence_metrics")
+    if metrics is None:
+        from aurora_internal.dual_strata.presence_metrics import PresenceMetrics
+        metrics = PresenceMetrics(systems.get("state_dir"), role="surface_pipeline")
+        systems["_presence_metrics"] = metrics
+    return metrics
+
+
+def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: str) -> list:
+    """
+    Build 694 step 12 (Subsurface Presence and Evidence Scout spec,
+    section 15): "Move the primary current-turn evidence intake
+    earlier." Called from _run_reasoning_pipeline() right after
+    _emit_interpreted_turn_packet() and BEFORE _chain_down2_belief() --
+    the spec's own required order is emit-interpreted-turn ->
+    Subsurface-evaluates-pressure -> Scout-if-warranted -> Subsurface-
+    integrates -> Surface-ingests, all ahead of DOWN2 belief, so
+    accepted evidence can shape the actual response decision rather than
+    only its final expression style.
+
+    Build 694 step 14 (spec section 16, "bounded same-turn evidence
+    window"): if nothing has arrived yet AND this turn's
+    response_fit_pressure (stashed onto state.pipeline_state by
+    _emit_interpreted_turn_packet, immediately before this call) clears
+    the same threshold Trigger A dispatch uses, this is not a "normal
+    well-resolved turn" (tier 1: 0 additional wait, the plain non-
+    blocking read below already covers it) -- it is tier 2, "elevated
+    response-fit pressure: small opportunistic evidence window."
+    wait_for_current_turn_binding() briefly suspends (never performs
+    retrieval itself -- Subsurface/the Scout worker do that on their own
+    thread/process) for up to _opportunistic_wait_s(), charged against
+    this turn's shared _scout_rescue_budget_remaining() so Build 694 step
+    15's later abstention-rescue wait never exceeds the combined ~4s
+    total. Tier 3 ("imminent generic abstention: use remaining bounded
+    rescue window") is step 15's own call site, at the articulation
+    boundary this function never reaches.
+
+    The late pre-expression harvest (_harvest_scout_evidence_for_expression,
+    below) is retained as a secondary mechanism per the spec's own
+    instruction -- it must simply no longer be the ONLY current-turn use
+    of Scout evidence.
+    """
+    accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+
+    if not accepted:
+        try:
+            pressure = float((state.pipeline_state or {}).get("response_fit_pressure", 0.0) or 0.0)
+            from aurora_internal.dual_strata.subsurface_presence import response_fit_dispatch_threshold
+            if pressure >= response_fit_dispatch_threshold():
+                budget = _scout_rescue_budget_remaining(systems, turn_id)
+                window = min(_opportunistic_wait_s(), budget)
+                if window > 0:
+                    from aurora_internal.scouting.subsurface_scout_bridge import wait_for_current_turn_binding
+                    started = time.time()
+                    wait_for_current_turn_binding(
+                        systems.get("state_dir"), turn_id=turn_id,
+                        request_kind="response_fit", timeout=window,
+                    )
+                    wait_elapsed_ms = (time.time() - started) * 1000.0
+                    _scout_rescue_budget_spend(systems, turn_id, wait_elapsed_ms / 1000.0)
+                    accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+                    metrics = _get_presence_metrics(systems)
+                    metrics.record_same_turn_wait_ms(wait_elapsed_ms)
+                    metrics.record_same_turn_binding_used(bool(accepted))
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora.py:_ingest_current_turn_scout_evidence:opportunistic_wait",
+                exc=_aurora_boundary_exc,
+                context={"function": "_ingest_current_turn_scout_evidence", "source_file": "aurora.py"},
+            )
+
+    try:
+        state.current_turn_scout_evidence = accepted
+        _structure_current_turn_scout_evidence(state, accepted)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_ingest_current_turn_scout_evidence",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ingest_current_turn_scout_evidence", "source_file": "aurora.py"},
+        )
+    return accepted
+
+
+def _structure_current_turn_scout_evidence(state: Any, accepted_bindings: list) -> None:
+    """
+    Build 694 step 13 (spec section 22/23): split the raw accepted
+    EvidenceBinding dicts by request_kind into the two structured
+    pipeline_state fields the spec names explicitly:
+
+      state.pipeline_state["subsurface_response_evidence"]
+          response_fit bindings -- response_relationships, fit_rationales,
+          contradictions, a support magnitude, and binding_id, for
+          downstream response formation to weigh (spec section 22:
+          "Aurora must still determine ... her wording ... The
+          EvidenceBinding must never directly assign
+          state.response_content" -- this field is read-only input to a
+          decision, never a text source).
+
+      state.pipeline_state["external_grounding_evidence"]
+          knowledge_gap bindings -- evidence_items, provenance, a
+          confidence magnitude, and binding_id, kept provisional (spec
+          section 23: "Do not write external evidence directly into OETS
+          as durable truth merely because a Scout returned it. ... The
+          Scout supplies evidence. Aurora develops understanding.").
+          Active reconsideration of interpretation using this field is
+          intentionally out of scope for this pass -- no existing hook
+          re-runs the upward interpretation pass mid-turn, and adding one
+          would mix an unrelated architecture change into step 13.
+
+    self_diagnostic bindings never reach here at all (accepted_bindings
+    is already scoped to a single live turn_id by
+    _read_accepted_scout_bindings/read_bindings_for_turn, and
+    self_diagnostic requests are never dispatched against a live turn_id
+    -- see aurora_daemon._maybe_research_recurring_issue).
+    """
+    response_evidence = []
+    grounding_evidence = []
+    for binding in accepted_bindings:
+        if not isinstance(binding, dict):
+            continue
+        kind = str(binding.get("request_kind", "") or "")
+        if kind == "response_fit":
+            response_evidence.append({
+                "binding_id": binding.get("binding_id"),
+                "response_relationships": list(binding.get("response_relationships") or []),
+                "fit_rationales": list(binding.get("fit_rationales") or []),
+                "contradictions": list(binding.get("contradictions") or []),
+                "support": float(binding.get("strength", 0.0) or 0.0),
+            })
+        elif kind == "knowledge_gap":
+            grounding_evidence.append({
+                "binding_id": binding.get("binding_id"),
+                "evidence_items": list(binding.get("evidence_items") or []),
+                "provenance": list(binding.get("provenance") or []),
+                "confidence": float(binding.get("strength", 0.0) or 0.0),
+            })
+
+    if not isinstance(state.pipeline_state, dict):
+        state.pipeline_state = {}
+    state.pipeline_state["subsurface_response_evidence"] = response_evidence
+    state.pipeline_state["external_grounding_evidence"] = grounding_evidence
+
+
+# Build 694 step 13 (spec section 22): the acceptance floor below which
+# response-fit evidence is too weak to justify Aurora generating content
+# she would not otherwise have formed. A tuning value, not a semantic
+# rule -- kept separate from _ACCEPTANCE_THRESHOLD in
+# subsurface_scout_bridge.py, which governs whether a report becomes a
+# binding at all; this one governs whether an already-accepted binding
+# is strong enough to actually steer generation.
+_RESPONSE_EVIDENCE_SUPPORT_FLOOR = 0.3
+
+# Build 694 step 13: first-person framing claims, one per named response-
+# relationship category (contracts.RESPONSE_RELATIONSHIP_KINDS) -- these
+# are the CORE CLAIM handed to _render_runtime_intent, which does
+# Aurora's own wording/rendering (same machinery every other fallback
+# stage in _chain_down2_belief already uses). Never the Scout's retrieved
+# text itself -- the evidence only selects WHICH claim applies, never
+# supplies the words.
+_RESPONSE_RELATIONSHIP_CORE_CLAIMS = {
+    "acknowledge": "I want to acknowledge what you just said",
+    "continue_exploration": "I'd like to keep exploring this together",
+    "explain": "let me offer what understanding I have of this",
+    "answer_directly": "here is a direct answer, as far as I can tell",
+    "invite_continuation": "I'd like to hear more about what you mean",
+    "challenge": "something about this feels worth examining more closely",
+    "reassure": "this doesn't need to be something to worry about",
+    "clarify": "I want to make sure I understand what you mean",
+    "remain_conversationally_present": "I'm here with you in this conversation",
+}
+
+
+def _apply_subsurface_response_evidence(systems: dict, state: Any) -> bool:
+    """
+    Build 694 step 13 (spec section 22): "Then make downstream response
+    formation consume it [subsurface_response_evidence]." Called from
+    _chain_down2_belief() as one more `if not state.response_content`
+    fallback stage -- same position and shape as the pressure-experience/
+    SediMemory/grounded-fallback stages immediately above it, so it only
+    ever fires when Aurora's own internal machinery hasn't already
+    produced content (spec section 20: internal resolution is always
+    tried first).
+
+    Picks the strongest-supported response_relationships entry from
+    state.pipeline_state["subsurface_response_evidence"] (Build 694 step
+    13's own structuring, above) and, if its support clears
+    _RESPONSE_EVIDENCE_SUPPORT_FLOOR, generates content through
+    _render_runtime_intent from a category-specific core claim (never
+    from the Scout's own retrieved text) -- "Aurora must still determine
+    ... her wording" (spec section 22). Returns True iff it supplied
+    content, so the acceptance-example case ("hey aurora" resolved via
+    acknowledge/remain_conversationally_present evidence rather than a
+    generic abstention) has a direct signal to test against.
+    """
+    if state.response_content:
+        return False
+    raw_evidence = (state.pipeline_state or {}).get("subsurface_response_evidence")
+    evidence = [e for e in raw_evidence if isinstance(e, dict)] if isinstance(raw_evidence, list) else []
+    if not evidence:
+        return False
+
+    best = max(evidence, key=lambda e: float(e.get("support", 0.0) or 0.0))
+    support = float(best.get("support", 0.0) or 0.0)
+    if support < _RESPONSE_EVIDENCE_SUPPORT_FLOOR:
+        return False
+
+    relationship = next(
+        (r for r in list(best.get("response_relationships") or []) if r in _RESPONSE_RELATIONSHIP_CORE_CLAIMS),
+        None,
+    )
+    if relationship is None:
+        return False
+
+    try:
+        rendered = _render_runtime_intent(
+            systems,
+            _RESPONSE_RELATIONSHIP_CORE_CLAIMS[relationship],
+            emotion_tone="attentive",
+            certainty=support,
+            supporting_concepts=list(state.salient_concepts or [])[:3],
+        )
+        if not rendered:
+            return False
+        state.response_content = rendered
+        state.response_tone = "attentive"
+        state.response_confidence = max(state.response_confidence, support)
+        state.response_src = "subsurface_response_evidence"
+        _record_response_revision(state, "chain_down2_subsurface_response_evidence", "", 0.0)
+        return True
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_apply_subsurface_response_evidence",
+            exc=_aurora_boundary_exc,
+            context={"function": "_apply_subsurface_response_evidence", "source_file": "aurora.py"},
+        )
+        return False
+
+
+def _attempt_abstention_rescue(
+    user_text: str, systems: dict, state: Any, *,
+    turn_id: str, auto_search_enabled: bool = True, use_search: bool = False,
+) -> bool:
+    """
+    Build 694 step 15 (spec section 21: "Add One Abstention-Rescue
+    Retry"). Called from _run_reasoning_pipeline() immediately after
+    _enforce_emission_discipline() -- the SINGLE EMISSION CHOKEPOINT --
+    decides Aurora's final response for this turn. Spec section 20:
+    generic admissibility is a terminal state, reached only after
+    resolution has genuinely been attempted, not the first reaction to
+    unresolved pressure.
+
+    Trigger B (spec section 9): "If Aurora is about to produce
+    constraint_abstain despite having formed a viable interpretation,
+    that is itself strong evidence that response resolution failed...
+    dispatch [a response-fit Scout] immediately." Shares
+    dispatch_response_fit_scout() with Trigger A (Build 694 step 10) --
+    the two triggers can never diverge into different ScoutRequest
+    shapes -- and ScoutBroker's own one-response-fit-per-turn dedup means
+    calling it here is a no-op if Trigger A already dispatched for this
+    turn, never a duplicate request.
+
+    Eligibility gate: only when interpretation was viable this turn
+    (state.pipeline_state["interpretation_adequate"], stashed by
+    _emit_interpreted_turn_packet) -- an inadequate interpretation is
+    never externally resolvable by a response-fit Scout, which only ever
+    helps once Aurora already understands the input (spec section 8: "It
+    [the Scout] is not allowed to solve interpretation for her.").
+
+    Waits out whatever remains of this turn's shared ~4s Scout rescue
+    budget (Build 694 step 14) -- "use remaining bounded rescue window,"
+    not a fresh window of its own.
+
+    On evidence arriving, reruns ONLY response formation -- DOWN2 belief
+    -> DOWN1 information -> re-enforce emission discipline -- never
+    DOWN5/DOWN4/DOWN3 understanding/meaning/purpose (already ran once
+    this turn and are not repeated: "preserve the post-purpose state
+    required for response formation," spec section 21 point 1) and never
+    memory admission, user-observation recording, turn counting,
+    genealogy, or consequence records: none of those have run yet at
+    this point in _run_reasoning_pipeline (they all happen downstream of
+    the emission chokepoint), so simply not re-entering the whole turn
+    is what keeps this rescue from duplicating any of them, satisfying
+    spec section 21's "do not" list without needing separate guards
+    against each one individually.
+
+    systems["_scout_retry_done"] is the turn-scoped guard spec section
+    21 asks for by name -- keyed per turn_id (not a bare bool) so a
+    caller that reuses one `systems` dict across turns in one process
+    (desktop's daemon loop does) can never have a stale guard from a
+    prior turn suppress this turn's own one legitimate attempt. Marked
+    BEFORE the retry runs, not after, so a rescue that itself raises can
+    never be attempted twice.
+
+    Returns True iff the rescue actually replaced the abstention with
+    real content.
+    """
+    if str(getattr(state, "response_src", "") or "") not in ("constraint_abstain", "constraint_abstain_seek"):
+        return False
+
+    # Build 694 step 17: this IS an abstention -- recorded once, before
+    # any gate/eligibility check below decides whether a rescue is even
+    # attempted, so abstain_before_scout counts every abstention this
+    # function ever sees, matching spec section 30's before/after pair.
+    metrics = _get_presence_metrics(systems)
+    metrics.record_abstain_before_scout()
+
+    retry_guard = systems.setdefault("_scout_retry_done", {})
+    if retry_guard.get(turn_id):
+        metrics.record_abstain_after_scout()
+        return False
+    retry_guard[turn_id] = True
+
+    if not bool((state.pipeline_state or {}).get("interpretation_adequate", False)):
+        metrics.record_abstain_after_scout()
+        return False
+
+    metrics.record_abstain_rescue_attempted()
+    try:
+        from aurora_internal.dual_strata.subsurface_presence import dispatch_response_fit_scout
+        dispatch_response_fit_scout(
+            systems.get("state_dir"), turn_id=turn_id,
+            interpreted_meaning=str((state.pipeline_state or {}).get("interpreted_meaning", "") or ""),
+            inferred_purpose=str(getattr(state, "intent", "") or ""),
+            representation_refs=list(state.salient_concepts or [])[:16],
+            priority=0.9,
+            dispatch_reason="trigger_b_abstention_rescue",
+            metrics=metrics,
+        )
+
+        budget = _scout_rescue_budget_remaining(systems, turn_id)
+        if budget > 0:
+            from aurora_internal.scouting.subsurface_scout_bridge import wait_for_current_turn_binding
+            started = time.time()
+            wait_for_current_turn_binding(
+                systems.get("state_dir"), turn_id=turn_id,
+                request_kind="response_fit", timeout=budget,
+            )
+            wait_elapsed_ms = (time.time() - started) * 1000.0
+            metrics.record_same_turn_wait_ms(wait_elapsed_ms)
+            _scout_rescue_budget_spend(systems, turn_id, wait_elapsed_ms / 1000.0)
+
+        accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+        metrics.record_same_turn_binding_used(bool(accepted))
+        if not accepted:
+            metrics.record_abstain_after_scout()
+            return False
+        state.current_turn_scout_evidence = accepted
+        _structure_current_turn_scout_evidence(state, accepted)
+
+        state.response_content = ""
+        state.response_tone = "neutral"
+        state.response_confidence = 0.5
+        state.response_src = "chain"
+        _chain_down2_belief(
+            user_text, systems, state,
+            auto_search_enabled=auto_search_enabled, use_search=use_search,
+        )
+        _skip_post = bool(systems.pop("_skip_response_postprocessing_once", False))
+        _chain_down1_information(
+            user_text, systems, state, use_search=use_search, skip_postprocessing=_skip_post,
+        )
+        _enforce_emission_discipline(user_text, systems, state)
+        rescued = str(getattr(state, "response_src", "") or "") not in ("constraint_abstain", "constraint_abstain_seek")
+        if rescued:
+            metrics.record_abstain_rescue_succeeded()
+        else:
+            metrics.record_abstain_after_scout()
+        return rescued
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_attempt_abstention_rescue",
+            exc=_aurora_boundary_exc,
+            context={"function": "_attempt_abstention_rescue", "source_file": "aurora.py"},
+        )
+        metrics.record_abstain_after_scout()
+        return False
+
+
+def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> list:
+    """
+    Subsurface Presence and Evidence Scout spec, step 9: the secondary
+    point where Surface sees Scout-derived evidence -- called right
+    before expression, after belief/information have already built the
+    response draft. Build 694 step 12 moved the PRIMARY current-turn
+    intake earlier (_ingest_current_turn_scout_evidence, above, runs
+    before DOWN2 belief); this late harvest remains useful because more
+    evidence may have arrived during DOWN2/DOWN1 (e.g. the bounded
+    same-turn wait Build 694 step 14 adds), and because it still informs
+    expression style even when nothing arrived in time to shape the
+    actual response decision.
+
+    Additive only: the result is available context Surface MAY draw on
+    (currently: passed alongside dominant_emotion into the expression
+    composer's assembly_data) -- it never substitutes for or overrides
+    state.response_content, which belief/information already finished
+    building before this ever runs.
+    """
+    return _read_accepted_scout_bindings(systems, turn_id=turn_id)
 
 
 def _run_reasoning_pipeline(
@@ -22227,6 +22716,13 @@ def _run_reasoning_pipeline(
     # -> meaning -> purpose all complete), not only after belief/
     # information refine it into a finished response.
     _emit_interpreted_turn_packet(systems, state, session_id=session_id, turn_tick=turn_tick)
+
+    # Build 694 step 12 (spec section 15): primary current-turn evidence
+    # intake, ahead of DOWN2 belief -- see _ingest_current_turn_scout_evidence's
+    # own docstring for why this is deliberately non-blocking on its own.
+    _ingest_current_turn_scout_evidence(
+        systems, state, turn_id=str(systems.get("_current_turn_id", "") or ""),
+    )
 
     _chain_down2_belief(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled,
                             use_search=use_search)
@@ -22815,6 +23311,20 @@ def _run_reasoning_pipeline(
     # the turn falls through to the honest abstain + active seek. Nothing outputs
     # without passing this gate.
     _enforce_emission_discipline(user_text, systems, state)
+
+    # Build 694 step 15 (spec section 20/21): generic admissibility is a
+    # terminal state, not the first reaction -- if Aurora just chose
+    # constraint_abstain, give Subsurface exactly one final evidence
+    # acquisition attempt before accepting that outcome. See
+    # _attempt_abstention_rescue's own docstring for the full eligibility
+    # gate, budget accounting, and why re-running only response formation
+    # here can never duplicate memory admission/turn counting/genealogy/
+    # consequence recording.
+    _attempt_abstention_rescue(
+        user_text, systems, state,
+        turn_id=str(systems.get("_current_turn_id", "") or ""),
+        auto_search_enabled=auto_search_enabled, use_search=use_search,
+    )
 
     # Meaning validation through the interaction surface: a taught concept USED in
     # this (substantive) turn earns resonance toward crystallisation, so emit() can
@@ -33496,6 +34006,36 @@ def process_external_user_turn(
     if selected_mode is None:
         return {}
 
+    # Aurora Build 694, steps 1-2: process_external_user_turn() is THE
+    # canonical entry point for a genuine external interactive turn --
+    # it must own turn identity and the turn-open publication itself,
+    # not depend on a caller to have already set
+    # systems["_current_turn_id"] first. Confirmed directly against
+    # source: aurora_surface_daemon.py (the desktop daemon path) sets it
+    # before calling this function, but the Android app calls this
+    # function through aurora_bridge.handle_message() and never goes
+    # through aurora_surface_daemon.py at all -- every downstream Scout
+    # dispatch and presence event on Android was seeing "no_live_turn"
+    # or drifting turn identities as a result.
+    #
+    # If _current_turn_id is ALREADY set (the desktop daemon path, or a
+    # defensive case of true reentrancy despite the existing
+    # _live_turn_depth guard below), adopt it as-is rather than
+    # overwriting it -- this is what "nested simulations and
+    # noninteractive sensory pulses must not overwrite the active
+    # interactive turn ID" requires. Only a caller that set nothing at
+    # all (Android) gets a freshly minted one, cleared back to its prior
+    # value in the function's existing finally: block below so it never
+    # leaks into unrelated later calls on the same systems dict.
+    _prior_current_turn_id = systems.get("_current_turn_id")
+    _owns_current_turn_id = not bool(_prior_current_turn_id)
+    if _owns_current_turn_id:
+        import uuid as _turn_id_uuid
+        turn_id = f"turn_{_turn_id_uuid.uuid4().hex}"
+        systems["_current_turn_id"] = turn_id
+    else:
+        turn_id = str(_prior_current_turn_id)
+
     user_text = _normalize_identity_followup_text(user_text, systems)
 
     # ---- PRESENT-FRAME SNAPSHOT — freeze sensory state at turn boundary ----
@@ -33520,6 +34060,41 @@ def process_external_user_turn(
             context={"function": "process_external_user_turn", "handler_line": 24757, "source_file": "aurora.py"},
         )
         pass
+
+    # Aurora Build 694, step 2: the canonical turn-open publication now
+    # happens HERE, immediately after canonical turn identity is
+    # established and before any substantive reasoning runs -- not in
+    # aurora_surface_daemon.py, which only the desktop daemon path
+    # executes. This is what makes "the Android app must produce the
+    # same live Subsurface turn-open event as the daemon path" (spec
+    # acceptance requirement) true: both paths now funnel through this
+    # exact call. aurora_surface_daemon.py's own write_turn_open() call
+    # is removed as part of this same change (see that file) rather than
+    # left to double-publish and rely on turn_id dedup downstream.
+    try:
+        from aurora_internal.dual_strata.subsurface_presence import write_turn_open as _write_turn_open_canonical
+        import os as _turn_open_os
+        _turn_open_state_dir = str(
+            systems.get("state_dir") or systems.get("_state_dir") or
+            _turn_open_os.path.join(_turn_open_os.path.dirname(__file__), "aurora_state")
+        )
+        _write_turn_open_canonical(
+            _turn_open_state_dir,
+            turn_id=turn_id,
+            raw_input=user_text,
+            session_id=str(session_id or source_label or "") or None,
+            source_label=str(source_label or "external_user_turn"),
+            sensory_ref=str(systems.get("_present_frame_snapshot", {}).get("ref", "") or "") or None
+                if isinstance(systems.get("_present_frame_snapshot"), dict) else None,
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:process_external_user_turn:turn_open",
+            exc=_aurora_boundary_exc,
+            context={"function": "process_external_user_turn", "source_file": "aurora.py"},
+        )
+        pass  # a failed presence publish must never fail or delay the real turn
 
     had_pipeline_source = "_pipeline_source" in systems
     previous_pipeline_source = systems.get("_pipeline_source")
@@ -33885,6 +34460,17 @@ def process_external_user_turn(
             systems["_pipeline_source"] = previous_pipeline_source
         else:
             systems.pop("_pipeline_source", None)
+        # Build 694 step 1: restore/clear canonical turn identity --
+        # only the call that actually minted a fresh turn_id (nobody had
+        # set one yet, e.g. the Android path) clears it back to its
+        # prior value; a call that adopted an already-set turn_id (the
+        # desktop daemon path, which manages its own turn_id lifecycle)
+        # leaves it untouched for that caller to continue managing.
+        if _owns_current_turn_id:
+            if _prior_current_turn_id is None:
+                systems.pop("_current_turn_id", None)
+            else:
+                systems["_current_turn_id"] = _prior_current_turn_id
 
 
 def _run_surface_queued_turn(

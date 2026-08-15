@@ -8430,28 +8430,46 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
         _log(f"  [CONTINUITY] Integrated {len(packets)} surface packet(s) into subsurface continuity.")
 
 
+def _integrate_turn_open_event(event: Dict[str, Any]) -> None:
+    """Thin delegation to the shared implementation (Build 694 step 4:
+    aurora_internal.dual_strata.subsurface_presence.integrate_turn_open_event),
+    kept as a same-named wrapper so this daemon-side call site and the
+    dedicated SubsurfacePresenceRuntime never drift apart on what
+    "integrating a turn_open event" means -- one implementation, two
+    callers."""
+    from aurora_internal.dual_strata.subsurface_presence import integrate_turn_open_event
+    integrate_turn_open_event(_STATE_DIR, event)
+
+
+def _integrate_interpreted_turn_event(event: Dict[str, Any]) -> None:
+    """Thin delegation -- see _integrate_turn_open_event's docstring."""
+    from aurora_internal.dual_strata.subsurface_presence import integrate_interpreted_turn_event
+    integrate_interpreted_turn_event(_STATE_DIR, event)
+
+
 def _consume_subsurface_turn_events(systems: Dict[str, Any]) -> None:
     """
-    Subsurface Presence and Evidence Scout spec, section 5A/13: consume
-    turn_open events Surface deposited (write_turn_open(), called the
-    instant Surface accepts a turn, BEFORE the response pipeline runs)
-    and publish an updated presence frame reflecting the live turn_id.
+    Subsurface Presence and Evidence Scout spec, section 5A/13 + Build
+    694 step 3: consume every pending Surface->Subsurface turn event
+    (write_turn_open()/write_interpreted_turn(), both landing on the
+    same subsurface_turn_events.json channel) and integrate each one
+    into the live presence frame, dispatched explicitly by event
+    "kind" -- never collapsed to just the batch's last entry.
 
     Distinct from _consume_surface_continuity_feed() above, which
     integrates what Surface absorbed AFTER a turn completed -- this is
     the layer underneath that: proof Subsurface knew a turn was
-    happening while Surface was still answering it, not only afterward.
+    happening, and knew how Aurora interpreted it, WHILE Surface was
+    still answering it, not only afterward.
 
-    Deliberately minimal for now: crest/active_pressure/evidence_bindings
-    stay empty until the EvidenceBinding integration (spec step 8) and
-    deeper Subsurface state access land -- this function's job is only
-    to make the live turn_id visible, not to front-run later steps.
+    "evidence_need" (step 9) and "turn_outcome" fall through the
+    unmatched-kind branch for now -- neither has a producer yet at this
+    point in the implementation order, so there is nothing to integrate
+    until those steps land; adding a real handler now would be
+    fabricating behavior for an event nothing emits.
     """
     try:
-        from aurora_internal.dual_strata.subsurface_presence import (
-            read_and_clear_turn_events,
-            write_presence_frame,
-        )
+        from aurora_internal.dual_strata.subsurface_presence import read_and_clear_turn_events
         events = read_and_clear_turn_events(_STATE_DIR)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -8465,24 +8483,33 @@ def _consume_subsurface_turn_events(systems: Dict[str, Any]) -> None:
     if not events:
         return
 
-    latest = events[-1]
-    try:
-        write_presence_frame(
-            _STATE_DIR,
-            turn_id=str(latest.get("turn_id", "") or ""),
-            continuity_summary=f"turn open: {str(latest.get('raw_input', ''))[:120]}",
-        )
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:_consume_subsurface_turn_events:write",
-            exc=_aurora_boundary_exc,
-            context={"function": "_consume_subsurface_turn_events", "source_file": "aurora_daemon.py"},
-        )
-        return
+    integrated_kinds: List[str] = []
+    last_turn_id = ""
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        kind = str(event.get("kind", "") or "")
+        try:
+            if kind == "turn_open":
+                _integrate_turn_open_event(event)
+            elif kind == "interpreted_turn":
+                _integrate_interpreted_turn_event(event)
+            else:
+                continue  # evidence_need/turn_outcome: no integration yet, see docstring
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:_consume_subsurface_turn_events:integrate",
+                exc=_aurora_boundary_exc,
+                context={"function": "_consume_subsurface_turn_events", "source_file": "aurora_daemon.py", "kind": kind},
+            )
+            continue  # one bad event must never block the rest of the batch
+        integrated_kinds.append(kind)
+        last_turn_id = str(event.get("turn_id", "") or "") or last_turn_id
 
-    _log(f"  [PRESENCE] Turn {latest.get('turn_id', '')!r} known to Subsurface before Surface completed it.")
+    if integrated_kinds:
+        _log(f"  [PRESENCE] Turn {last_turn_id!r}: integrated {integrated_kinds} into live presence.")
 
 
 def _consume_scout_evidence(systems: Dict[str, Any]) -> None:
@@ -8936,6 +8963,28 @@ def run(systems: Dict[str, Any]) -> None:
     # must survive a slow synchronous call inside the main loop below, so
     # it runs on its own thread rather than at the bottom of the loop body.
     _start_subsurface_heartbeat_thread()
+
+    # Build 694 step 4: presence processing must not be gated behind
+    # this loop's own 15-30s governor.recommended_sleep() cadence either
+    # -- the SAME problem the heartbeat thread above solves for pure
+    # liveness, but for actual turn-event/Scout-evidence integration.
+    # Runs as an ADDITIONAL fast (~150ms) path alongside this loop's
+    # existing _consume_subsurface_turn_events()/_consume_scout_evidence()
+    # calls below, which stay in place unchanged as a redundant slow
+    # backstop -- double-processing the same batch is harmless (re-
+    # integrating an already-integrated event just rewrites the presence
+    # frame with the same values) and safer than removing proven-working
+    # main-loop behavior to avoid it.
+    try:
+        from aurora_internal.dual_strata.subsurface_presence_runtime import start_subsurface_presence_runtime
+        start_subsurface_presence_runtime(systems, state_dir=_STATE_DIR)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:run:start_presence_runtime",
+            exc=_aurora_boundary_exc,
+            context={"function": "run", "source_file": "aurora_daemon.py"},
+        )
 
     # Enable proactive reach-out — Aurora should speak up on her own when she
     # has something to say (identity field pressure, novel sensory events, etc.)

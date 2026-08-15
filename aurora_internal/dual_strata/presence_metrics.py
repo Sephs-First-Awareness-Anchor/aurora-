@@ -22,7 +22,7 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 import json
 import time
-from collections import deque
+from collections import Counter, deque
 from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Optional
@@ -68,6 +68,28 @@ class PresenceMetrics:
         self._surface_direct_retrieval_count = 0
         self._subsurface_direct_retrieval_count = 0
 
+        # Build 694 step 17 (spec section 30) additions -- everything the
+        # prior build's baseline instrumentation (above) didn't already
+        # cover, needed to empirically answer "did Subsurface become more
+        # present?" and "did generic admissibility decrease because
+        # unresolved pressure is now acted upon?"
+        self._turn_open_latency_ms: deque = deque(maxlen=_MAX_SAMPLES)
+        self._interpreted_turn_latency_ms: deque = deque(maxlen=_MAX_SAMPLES)
+        self._presence_processing_latency_ms: deque = deque(maxlen=_MAX_SAMPLES)
+        self._presence_event_queue_depth = 0
+        self._response_fit_pressure: deque = deque(maxlen=_MAX_SAMPLES)
+        self._knowledge_gap_pressure: deque = deque(maxlen=_MAX_SAMPLES)
+        self._scout_dispatch_reason: Counter = Counter()
+        self._scout_request_kind: Counter = Counter()
+        self._scout_backend: Counter = Counter()
+        self._same_turn_wait_ms: deque = deque(maxlen=_MAX_SAMPLES)
+        self._same_turn_binding_used_count = 0
+        self._same_turn_binding_unused_count = 0
+        self._abstain_before_scout_count = 0
+        self._abstain_after_scout_count = 0
+        self._abstain_rescue_attempted_count = 0
+        self._abstain_rescue_succeeded_count = 0
+
     # ── Recorders (each is a single, cheap, lock-protected append) ─────────
 
     def record_surface_turn_latency_ms(self, ms: float) -> None:
@@ -112,6 +134,89 @@ class PresenceMetrics:
         with self._lock:
             self._subsurface_direct_retrieval_count += 1
 
+    # ── Build 694 step 17 recorders ─────────────────────────────────────
+
+    def record_turn_open_latency_ms(self, ms: float) -> None:
+        """Time between Surface writing a turn_open event (event's own
+        created_at) and Subsurface integrating it -- the direct measure
+        of "does Subsurface know a live turn is happening promptly," spec
+        section 30's first empirical question."""
+        with self._lock:
+            self._turn_open_latency_ms.append(float(ms))
+
+    def record_interpreted_turn_latency_ms(self, ms: float) -> None:
+        with self._lock:
+            self._interpreted_turn_latency_ms.append(float(ms))
+
+    def record_presence_processing_latency_ms(self, ms: float) -> None:
+        """One SubsurfacePresenceRuntime.tick() cycle's own wall-clock
+        cost -- distinct from subsurface_main_loop_block_ms (the SLOW
+        daemon-loop backstop's per-iteration cost, prior build)."""
+        with self._lock:
+            self._presence_processing_latency_ms.append(float(ms))
+
+    def set_presence_event_queue_depth(self, n: int) -> None:
+        with self._lock:
+            self._presence_event_queue_depth = max(0, int(n))
+
+    def record_response_fit_pressure(self, value: float) -> None:
+        with self._lock:
+            self._response_fit_pressure.append(max(0.0, min(1.0, float(value))))
+
+    def record_knowledge_gap_pressure(self, value: float) -> None:
+        with self._lock:
+            self._knowledge_gap_pressure.append(max(0.0, min(1.0, float(value))))
+
+    def record_scout_dispatch_reason(self, reason: str) -> None:
+        """spec section 30's scout_dispatch_reason -- e.g.
+        "trigger_a_pressure", "trigger_b_abstention_rescue",
+        "evidence_need_knowledge_gap", "self_diagnostic"."""
+        with self._lock:
+            self._scout_dispatch_reason[str(reason or "unspecified")] += 1
+
+    def record_scout_request_kind(self, request_kind: str) -> None:
+        with self._lock:
+            self._scout_request_kind[str(request_kind or "unspecified")] += 1
+
+    def record_scout_backend(self, backend_name: str) -> None:
+        with self._lock:
+            self._scout_backend[str(backend_name or "none")] += 1
+
+    def record_same_turn_wait_ms(self, ms: float) -> None:
+        with self._lock:
+            self._same_turn_wait_ms.append(float(ms))
+
+    def record_same_turn_binding_used(self, used: bool) -> None:
+        """spec section 30's same_turn_binding_used -- whether a bounded
+        same-turn wait (Build 694 step 14/15) actually produced evidence
+        response formation used, not merely whether a wait happened."""
+        with self._lock:
+            if used:
+                self._same_turn_binding_used_count += 1
+            else:
+                self._same_turn_binding_unused_count += 1
+
+    def record_abstain_before_scout(self) -> None:
+        """The emission chokepoint reached constraint_abstain BEFORE any
+        rescue was attempted -- the raw count spec section 30 asks for to
+        answer "did generic admissibility decrease" against, over time."""
+        with self._lock:
+            self._abstain_before_scout_count += 1
+
+    def record_abstain_after_scout(self) -> None:
+        """The turn's FINAL outcome was still an abstention, after
+        whatever rescue attempt (if any) ran."""
+        with self._lock:
+            self._abstain_after_scout_count += 1
+
+    def record_abstain_rescue_attempted(self) -> None:
+        with self._lock:
+            self._abstain_rescue_attempted_count += 1
+
+    def record_abstain_rescue_succeeded(self) -> None:
+        with self._lock:
+            self._abstain_rescue_succeeded_count += 1
+
     # ── Snapshot ─────────────────────────────────────────────────────────
 
     def snapshot(self, systems: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -152,6 +257,22 @@ class PresenceMetrics:
             active_count = self._scout_active_count
             surface_retrieval = self._surface_direct_retrieval_count
             subsurface_retrieval = self._subsurface_direct_retrieval_count
+            turn_open_latency = list(self._turn_open_latency_ms)
+            interpreted_turn_latency = list(self._interpreted_turn_latency_ms)
+            presence_processing_latency = list(self._presence_processing_latency_ms)
+            presence_event_queue_depth = self._presence_event_queue_depth
+            response_fit_pressure = list(self._response_fit_pressure)
+            knowledge_gap_pressure = list(self._knowledge_gap_pressure)
+            scout_dispatch_reason = dict(self._scout_dispatch_reason)
+            scout_request_kind = dict(self._scout_request_kind)
+            scout_backend = dict(self._scout_backend)
+            same_turn_wait = list(self._same_turn_wait_ms)
+            same_turn_binding_used = self._same_turn_binding_used_count
+            same_turn_binding_unused = self._same_turn_binding_unused_count
+            abstain_before_scout = self._abstain_before_scout_count
+            abstain_after_scout = self._abstain_after_scout_count
+            abstain_rescue_attempted = self._abstain_rescue_attempted_count
+            abstain_rescue_succeeded = self._abstain_rescue_succeeded_count
 
         return {
             "captured_at": time.time(),
@@ -191,6 +312,57 @@ class PresenceMetrics:
             "scout_active_count": active_count,
             "surface_direct_retrieval_count": surface_retrieval,
             "subsurface_direct_retrieval_count": subsurface_retrieval,
+
+            # Build 694 step 17 (spec section 30) additions.
+            "turn_open_latency_ms": {
+                "count": len(turn_open_latency),
+                "p50": round(_percentile(turn_open_latency, 50), 2),
+                "p95": round(_percentile(turn_open_latency, 95), 2),
+            },
+            "interpreted_turn_latency_ms": {
+                "count": len(interpreted_turn_latency),
+                "p50": round(_percentile(interpreted_turn_latency, 50), 2),
+                "p95": round(_percentile(interpreted_turn_latency, 95), 2),
+            },
+            "presence_processing_latency_ms": {
+                "count": len(presence_processing_latency),
+                "p50": round(_percentile(presence_processing_latency, 50), 2),
+                "p95": round(_percentile(presence_processing_latency, 95), 2),
+            },
+            "presence_event_queue_depth": presence_event_queue_depth,
+            "response_fit_pressure": {
+                "count": len(response_fit_pressure),
+                "p50": round(_percentile(response_fit_pressure, 50), 4),
+                "max": round(max(response_fit_pressure), 4) if response_fit_pressure else 0.0,
+            },
+            "knowledge_gap_pressure": {
+                "count": len(knowledge_gap_pressure),
+                "p50": round(_percentile(knowledge_gap_pressure, 50), 4),
+                "max": round(max(knowledge_gap_pressure), 4) if knowledge_gap_pressure else 0.0,
+            },
+            "scout_dispatch_reason": scout_dispatch_reason,
+            "scout_request_kind": scout_request_kind,
+            "scout_backend": scout_backend,
+            # binding_integration_ms is the spec's own literal field name
+            # for exactly what scout_integration_ms (above, prior build)
+            # already measures -- exposed under both keys rather than
+            # tracked twice, so a consumer reading either name sees the
+            # same underlying counter.
+            "binding_integration_ms": {
+                "count": len(scout_integration),
+                "p50": round(_percentile(scout_integration, 50), 2),
+            },
+            "same_turn_wait_ms": {
+                "count": len(same_turn_wait),
+                "p50": round(_percentile(same_turn_wait, 50), 2),
+                "p95": round(_percentile(same_turn_wait, 95), 2),
+            },
+            "same_turn_binding_used_count": same_turn_binding_used,
+            "same_turn_binding_unused_count": same_turn_binding_unused,
+            "abstain_before_scout_count": abstain_before_scout,
+            "abstain_after_scout_count": abstain_after_scout,
+            "abstain_rescue_attempted_count": abstain_rescue_attempted,
+            "abstain_rescue_succeeded_count": abstain_rescue_succeeded,
         }
 
     def write_snapshot(self, systems: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
