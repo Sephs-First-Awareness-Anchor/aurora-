@@ -184,26 +184,15 @@ async function archiveProject() {
   render();
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        messages: [{ role: "user", content:
-`Write a 2-4 sentence archive summary for a completed project. Dense, factual, no fluff, no bullets, no preamble — just the summary.
-
-Project: "${p.name}"
-Objective: ${p.objective || "not recorded"}
-Current state at close: ${p.currentState || "not recorded"}
-Sessions: ${(p.sessionLog||[]).length}
-Completed tasks: ${(p.tasks||[]).filter(t=>t.done).map(t=>t.text).join("; ")||"none"}
-Open at close: ${(p.tasks||[]).filter(t=>!t.done).map(t=>t.text).join("; ")||"none"}`
-        }]
-      })
-    });
-    const json = await res.json();
-    const summary = json.content?.find(b => b.type === "text")?.text || "Project completed.";
+    // Build 711: archive continuity is summarized locally. External AI
+    // summarization is forbidden by Aurora's architecture.
+    const completed = (p.tasks||[]).filter(t=>t.done).map(t=>t.text);
+    const open = (p.tasks||[]).filter(t=>!t.done).map(t=>t.text);
+    const summary = [
+      `Objective: ${p.objective || "not recorded"}.`,
+      `State at close: ${p.currentState || "not recorded"}.`,
+      `Sessions: ${(p.sessionLog||[]).length}; completed: ${completed.join("; ") || "none"}; open: ${open.join("; ") || "none"}.`
+    ].join(" ");
     const archived = { ...p, closedDate: today(), summary };
     const next = { active: null, completed: [archived, ...(STATE.completed||[])] };
     AI_WORKING = false;

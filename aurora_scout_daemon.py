@@ -1,55 +1,17 @@
-#!/usr/bin/env python3
 """
-aurora_scout_daemon.py
+Aurora model-free Evidence Scout worker (Build 711).
 
-Lightweight, disposable Evidence Scout worker (Subsurface Presence and
-Evidence Scout spec, section 9). Deliberately the smallest possible
-process: request -> retrieve -> normalize evidence -> report, nothing
-else.
+The worker is deliberately non-cognitive:
+    request -> retrieve raw observations -> normalize/provenance -> report
 
-Explicitly does NOT call boot_aurora() and does NOT import aurora.py or
-aurora_daemon.py. Both pull in genealogy, Dream, the consciousness
-engine, SediMemory, DCE, CERS, working memory, sensory systems, and
-Aurora's identity state as part of their own module-level/boot-time
-setup -- importing either module at all would already violate this
-worker's "no full Aurora instance" contract, even without ever calling
-boot_aurora() itself. Given the captured runtime's survival-mode memory
-pressure (spec section 9), that import cost alone is the thing to
-avoid, not just the boot call.
-
-Aurora Build 694, step 6: state_dir is threaded explicitly through
-every function in this file (run() -> _retrieve_and_normalize() ->
-ScoutBroker/backends), rather than any of them reading the module-level
-_STATE_DIR constant directly. That constant now exists ONLY as run()'s
-default when no caller supplies one (desktop usage: `python3
-aurora_scout_daemon.py` with no arguments). Android's writable
-application state directory is not the repository's default
-aurora_state path -- a worker that silently fell back to the module-
-relative default would read/write ScoutRequests and results in the
-wrong place entirely on that platform.
-
-Aurora Build 694, step 7: retrieval itself now goes through
-aurora_internal.scouting.backends.ScoutBackend -- this worker used to
-have exactly one retrieval path hardcoded in (check whether
-aurora_room.py is running via `pgrep`, then talk to its Poedex queue),
-which made it structurally unusable on Android (no pgrep target ever
-exists there). _retrieve_and_normalize() now tries each available
-backend in a caller-configurable chain (default:
-[PoedexRoomBackend, LocalLessonsBackend] -- resolve_backend_chain()),
-using the first one that produces evidence. Both default backends work
-with zero external configuration, which is what makes Android capable
-out of the box: PoedexRoomBackend.is_available() just reports False
-there, and LocalLessonsBackend (Aurora's own persisted bound-lesson
-corpus, poedex_lessons.json) never depended on a Room process at all.
-
-The Scout is a courier, not cortex (spec section 4): it sends Aurora's
-own interpreted framing of the gap as context, never asks the external
-source to reinterpret the raw user utterance, and never drafts a
-response -- ScoutReport (contracts.py) has no field that could hold one.
+It never calls a language model, never classifies response relationships, never
+infers user intent, never explains why a response fits, and never drafts text for
+Aurora. Subsurface/Aurora owns every interpretive step after retrieval.
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
+import json
 import os
 import sys
 import time
@@ -63,45 +25,7 @@ sys.path.insert(0, str(_BASE_DIR))
 
 from aurora_internal.scouting.backends import ScoutBackend, resolve_backend_chain
 from aurora_internal.scouting.broker import ScoutBroker
-from aurora_internal.scouting.contracts import ScoutRequest, ScoutReport, RESPONSE_RELATIONSHIP_KINDS
-
-# Build 694 step 10, spec section 13: "response_fit" reports must stop
-# being hardwired to response_relationships=["explain"] for every
-# result. Keyword-matched against the retrieved evidence text -- this
-# genuinely varies with what a backend's text actually says, rather than
-# fabricating variety the evidence doesn't support. Kept here (not in
-# backends.py) because it's how the WORKER turns generic retrieved text
-# into a categorized report, independent of which backend produced that
-# text.
-_RESPONSE_FIT_KEYWORDS: dict = {
-    "acknowledge": ["greeting", "hello", "hi there", "welcomed", "acknowledg"],
-    "continue_exploration": ["explore further", "keep exploring", "continue the topic", "follow up on"],
-    "explain": ["because", "the reason is", "due to", "explanation"],
-    "answer_directly": ["is defined as", "refers to", "the answer is", "means that"],
-    "invite_continuation": ["ask a follow-up", "what would you like", "tell me more", "invite further"],
-    "challenge": ["however", "contradicts", "on the other hand", "challenges"],
-    "reassure": ["reassur", "it's okay", "no need to worry", "that's normal"],
-    "clarify": ["clarify", "ambiguous", "unclear", "which do you mean"],
-    "remain_conversationally_present": ["remain present", "stay engaged", "conversationally present", "simple acknowledgment"],
-}
-
-
-def _categorize_response_relationships(evidence_text: str) -> List[Any]:
-    """Returns (category, matched_keyword) pairs, in
-    RESPONSE_RELATIONSHIP_KINDS order, so fit_rationales can cite the
-    actual textual signal behind each reported category. Empty when
-    nothing in the evidence text matched any category -- the caller
-    falls back to ["explain"] only in that genuinely-uninformative case,
-    not for every result regardless of content."""
-    lowered = evidence_text.lower()
-    matches: List[Any] = []
-    for category in RESPONSE_RELATIONSHIP_KINDS:
-        for keyword in _RESPONSE_FIT_KEYWORDS.get(category, []):
-            if keyword in lowered:
-                matches.append((category, keyword))
-                break
-    return matches
-
+from aurora_internal.scouting.contracts import ScoutRequest, ScoutReport
 
 def _retrieve_and_normalize(
     request: ScoutRequest, *, state_dir: Any, backends: Optional[List[ScoutBackend]] = None,
@@ -110,9 +34,10 @@ def _retrieve_and_normalize(
     job of this worker, in one function so it's independently testable
     without the claim/submit loop around it.
 
-    backends defaults to resolve_backend_chain() (spec step 7:
-    [PoedexRoomBackend, LocalLessonsBackend] unless configured
-    otherwise) -- tried in order, first one to produce non-empty text
+    backends defaults to resolve_backend_chain() (Build 711 model-free
+    default chain: public_human_dialogue, local_human_dialogue,
+    public_web, local_lessons -- unless configured otherwise) -- tried
+    in order, first one to produce non-empty text
     wins. Every backend returns raw text, never a ScoutReport itself, so
     normalization (truncation, evidence_items shape, provenance,
     confidence) is identical regardless of which backend answered."""
@@ -161,42 +86,34 @@ def _retrieve_and_normalize(
         )
 
     text = raw_result[: max(1, int(request.max_result_chars or 1200))]
-    evidence_items = [{"text": text, "source": source_name}]
+    evidence_items = [{
+        "text": text,
+        "source": source_name,
+        "kind": "response_exemplars" if request.request_kind == "response_fit" else "retrieved_evidence",
+        "emittable": False,
+    }]
 
+    # Deliberately no response_relationships / fit classification here.
+    # A non-cognitive retrieval worker has no authority to decide those.
     if request.request_kind == "response_fit":
-        # Spec section 13: structured investigation of which response
-        # relationships fit, not a single hardwired category.
-        matches = _categorize_response_relationships(text)
-        if matches:
-            response_relationships = [c for c, _kw in matches][: max(1, int(request.max_evidence_items or 5))]
-            fit_rationales = [
-                f"{category}: evidence text contains '{keyword}', suggesting this response "
-                f"relationship fits Aurora's interpreted state"
-                for category, keyword in matches
-            ]
-        else:
-            # Deliberately conservative fallback: "explain" is the least
-            # presumptive category to report when nothing in the
-            # retrieved text supports a more specific one -- never a
-            # guess like "answer_directly" just because evidence came
-            # back at all.
-            response_relationships = ["explain"]
-            fit_rationales = [
-                "external evidence retrieved and available to inform, not dictate, the response -- "
-                "no more specific response relationship was identifiable in the retrieved text"
-            ]
+        note = "raw response-fit observations retrieved; interpretation reserved to Aurora"
+    elif request.request_kind == "knowledge_gap":
+        note = "raw grounding evidence retrieved; interpretation reserved to Aurora"
     else:
-        response_relationships = ["explain"]
-        fit_rationales = ["external evidence retrieved and available to inform, not dictate, the response"]
+        note = "raw evidence retrieved; interpretation reserved to Aurora"
 
     return ScoutReport(
         request_id=request.request_id,
         turn_id=request.turn_id,
         request_kind=request.request_kind,
+        inquiry=request.inquiry,
+        evidence_needed=request.evidence_needed,
+        interpreted_input=request.interpreted_input,
         status="ok",
-        evidence_items=evidence_items[: int(request.max_evidence_items or 5)],
-        response_relationships=response_relationships,
-        fit_rationales=fit_rationales,
+        evidence_items=evidence_items,
+        response_relationships=[],
+        fit_rationales=[note],
+        contradictions=[],
         provenance=[source_name],
         confidence=0.55,
         elapsed_ms=elapsed_ms,

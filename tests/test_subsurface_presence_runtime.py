@@ -95,7 +95,7 @@ def test_runtime_consumes_scout_reports_and_folds_accepted_evidence(tmp_path):
     broker.reports_dir.mkdir(parents=True, exist_ok=True)
     report = ScoutReport(
         request_id="r1", turn_id="t1", status="ok",
-        evidence_items=[{"text": "some evidence"}], response_relationships=["explain"], confidence=0.9,
+        evidence_items=[{"text": "some evidence"}], confidence=0.9,
     )
     (broker.reports_dir / "r1.json").write_text(__import__("json").dumps(report.to_dict()), encoding="utf-8")
 
@@ -103,7 +103,10 @@ def test_runtime_consumes_scout_reports_and_folds_accepted_evidence(tmp_path):
     result = rt.tick()
     assert len(result["accepted_bindings"]) == 1
     frame = sp.read_presence_frame(tmp_path)
-    assert frame["response_fit_pressure"] < 0.8
+    assert frame["response_fit_pressure"] == 0.8  # evidence arrival is not understanding
+    from aurora_internal.scouting.subsurface_scout_bridge import read_bindings_for_turn
+    bindings = read_bindings_for_turn(tmp_path, "t1")
+    assert bindings and bindings[-1]["status"] == "accepted"
 
 
 def test_on_binding_change_callback_fires_only_when_something_is_accepted(tmp_path):

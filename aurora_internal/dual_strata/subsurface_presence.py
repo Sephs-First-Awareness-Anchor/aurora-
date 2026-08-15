@@ -38,6 +38,8 @@ import json
 import os
 import time
 import uuid
+import threading
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -45,6 +47,41 @@ _TURN_EVENTS_FILENAME = "subsurface_turn_events.json"
 _PRESENCE_FRAME_FILENAME = "subsurface_presence_frame.json"
 _HEARTBEAT_FILENAME = "subsurface_heartbeat.json"
 _MAX_TURN_EVENTS = 20
+_EVENT_THREAD_LOCK = threading.RLock()
+
+
+@contextmanager
+def _turn_event_lock(state_dir: Any):
+    """Serialize the turn-event read/modify/write transaction.
+
+    Atomic replace prevents torn JSON but not lost updates. Android uses
+    multiple threads and desktop may use separate processes, so combine an
+    in-process RLock with a best-effort POSIX flock on a companion lockfile.
+    """
+    root = _resolve(state_dir)
+    root.mkdir(parents=True, exist_ok=True)
+    lock_path = root / (_TURN_EVENTS_FILENAME + ".lock")
+    with _EVENT_THREAD_LOCK:
+        handle = None
+        try:
+            handle = lock_path.open("a+")
+            try:
+                import fcntl
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            except Exception:
+                pass
+            yield
+        finally:
+            if handle is not None:
+                try:
+                    import fcntl
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+                except Exception:
+                    pass
+                try:
+                    handle.close()
+                except Exception:
+                    pass
 
 
 def _resolve(state_dir: Any) -> Path:
@@ -65,23 +102,24 @@ def _append_turn_event(state_dir: Any, event: Dict[str, Any], *, caller: str) ->
     root = _resolve(state_dir)
     path = root / _TURN_EVENTS_FILENAME
     try:
-        existing: List[Dict[str, Any]] = []
-        if path.exists():
-            try:
-                raw = json.loads(path.read_text(encoding="utf-8"))
-                if isinstance(raw, list):
-                    existing = raw
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(), module=__name__,
-                    operation=f"exception_handler:aurora_internal/dual_strata/subsurface_presence.py:{caller}:read",
-                    exc=_aurora_boundary_exc,
-                    context={"function": caller, "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
-                )
-                existing = []
-        existing.append(event)
-        existing = existing[-_MAX_TURN_EVENTS:]
-        _atomic_write(path, existing)
+        with _turn_event_lock(state_dir):
+            existing: List[Dict[str, Any]] = []
+            if path.exists():
+                try:
+                    raw = json.loads(path.read_text(encoding="utf-8"))
+                    if isinstance(raw, list):
+                        existing = raw
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(), module=__name__,
+                        operation=f"exception_handler:aurora_internal/dual_strata/subsurface_presence.py:{caller}:read",
+                        exc=_aurora_boundary_exc,
+                        context={"function": caller, "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+                    )
+                    existing = []
+            existing.append(event)
+            existing = existing[-_MAX_TURN_EVENTS:]
+            _atomic_write(path, existing)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(), module=__name__,
@@ -222,48 +260,49 @@ def write_evidence_need(
 
 
 def read_and_clear_turn_events(state_dir: Any) -> List[Dict[str, Any]]:
-    """Subsurface calls this each loop cycle. Returns unconsumed turn_open
-    (and interpreted_turn, once InterpretedTurnPacket lands) events and
-    marks them consumed -- same read-and-clear contract as
-    surface_continuity_feed.read_and_clear_continuity_packets()."""
+    """Return all unconsumed events and mark exactly that transaction consumed.
+
+    The lock is shared with producers so an interpreted_turn appended while
+    Subsurface consumes turn_open cannot be overwritten by the consumer's
+    older copy of the file.
+    """
     root = _resolve(state_dir)
     path = root / _TURN_EVENTS_FILENAME
     if not path.exists():
         return []
-
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(raw, list):
-            return []
+        with _turn_event_lock(state_dir):
+            if not path.exists():
+                return []
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(raw, list):
+                    return []
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:read_and_clear_turn_events:read",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "read_and_clear_turn_events", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+                )
+                return []
+            pending = [e for e in raw if isinstance(e, dict) and not bool(e.get("consumed", False))]
+            if not pending:
+                return []
+            pending_ids = {str(e.get("event_id", "")) for e in pending}
+            for e in raw:
+                if isinstance(e, dict) and str(e.get("event_id", "")) in pending_ids:
+                    e["consumed"] = True
+            _atomic_write(path, raw[-_MAX_TURN_EVENTS:])
+            return pending
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(), module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:read_and_clear_turn_events:read",
+            operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:read_and_clear_turn_events:transaction",
             exc=_aurora_boundary_exc,
             context={"function": "read_and_clear_turn_events", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
         )
         return []
-
-    pending = [e for e in raw if isinstance(e, dict) and not bool(e.get("consumed", False))]
-    if not pending:
-        return []
-
-    for e in raw:
-        if isinstance(e, dict) and not bool(e.get("consumed", False)):
-            e["consumed"] = True
-
-    raw = raw[-_MAX_TURN_EVENTS:]
-    try:
-        _atomic_write(path, raw)
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(), module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:read_and_clear_turn_events:write",
-            exc=_aurora_boundary_exc,
-            context={"function": "read_and_clear_turn_events", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
-        )
-
-    return pending
 
 
 # ── B/C. Presence frame (Subsurface -> Surface, event-driven) ──────────────
@@ -304,6 +343,9 @@ def write_presence_frame(
     unresolved_ambiguity: Any = _UNSET,
     knowledge_gaps: Any = _UNSET,
     representation_refs: Any = _UNSET,
+    surface_guidance: Any = _UNSET,
+    intuition_signals: Any = _UNSET,
+    live_cognition: Any = _UNSET,
 ) -> Dict[str, Any]:
     """Subsurface calls this whenever turn state or Scout evidence
     actually changes -- NOT on a fixed interval. Deliberately not the
@@ -382,6 +424,9 @@ def write_presence_frame(
         "unresolved_ambiguity": [str(a) for a in list(merged(unresolved_ambiguity, "unresolved_ambiguity", []) or [])][:12],
         "knowledge_gaps": [str(g) for g in list(merged(knowledge_gaps, "knowledge_gaps", []) or [])][:8],
         "representation_refs": [str(r) for r in list(merged(representation_refs, "representation_refs", []) or [])][:16],
+        "surface_guidance": str(merged(surface_guidance, "surface_guidance", "") or "")[:400],
+        "intuition_signals": list(merged(intuition_signals, "intuition_signals", []) or [])[:8],
+        "live_cognition": dict(merged(live_cognition, "live_cognition", {}) or {}),
     }
 
     try:
@@ -436,18 +481,20 @@ def response_fit_dispatch_threshold() -> float:
 
 
 def _response_fit_inquiry(interpreted_meaning: str, inferred_purpose: str) -> str:
-    """Spec section 14's own template: Aurora's interpretation is handed
-    over as authoritative context, and the Scout is told explicitly not
-    to reinterpret the speaker or draft a response on Aurora's behalf."""
+    """Form a retrieval-only response-fit inquiry from Aurora's own state.
+
+    The Scout is not asked what the input means, what operation fits, or why.
+    It is asked only to retrieve observed conversational specimens comparable
+    to the interpreted state Aurora already produced.
+    """
     return (
-        f"Aurora currently interprets the conversational state as: {interpreted_meaning}\n"
-        f"Aurora's inferred purpose is: {inferred_purpose}\n\n"
-        "Investigate what response relationships commonly and appropriately "
-        "follow from this interpreted conversational state. Return evidence "
-        "about: which response operations fit; why they fit; meaningful "
-        "alternatives; what would make each inappropriate.\n\n"
-        "Do not reinterpret the original speaker. Do not produce a final "
-        "response for Aurora. Do not impersonate Aurora."
+        f"Aurora interpreted state: {interpreted_meaning}\n"
+        f"Aurora inferred purpose: {inferred_purpose}\n\n"
+        "Retrieve observed conversation exchanges with inputs comparable to "
+        "this already-interpreted state. Return the observed input and the "
+        "observed next response with source/provenance. Do not classify the "
+        "response, infer intent, explain fit, recommend an operation, summarize "
+        "a conclusion, or draft a response for Aurora."
     )
 
 

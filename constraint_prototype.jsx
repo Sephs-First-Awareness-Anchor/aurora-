@@ -241,19 +241,9 @@ export default function ConstraintPrototype() {
         content: m.rawJson || m.text,
       }));
 
-      const res  = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 800,
-          system: SYSTEM,
-          messages: [...history, { role: "user", content: txt }],
-        }),
-      });
-
-      const data = await res.json();
-      const raw  = data.content?.find(b => b.type === "text")?.text || "{}";
+      // Build 711: external AI analysis is forbidden. Keep this legacy
+      // prototype on its deterministic local fallback path.
+      const raw = "{}";
 
       let a;
       try { a = JSON.parse(raw.replace(/```json|```/g, "").trim()); }

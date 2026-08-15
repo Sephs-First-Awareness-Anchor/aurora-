@@ -11191,6 +11191,20 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
         from pathlib import Path as _P
         _sd = _P(str((systems or {}).get("state_dir") or (_P(__file__).parent / "aurora_state")))
 
+        # ── 0. Current-turn provisional Scout grounding ─────────────────────
+        # External evidence is usable for reconsideration this turn without
+        # becoming durable semantic truth. It is keyed by the exact turn and
+        # normalized target, then discarded when the turn ends.
+        _turn_id = str((systems or {}).get("_current_turn_id", "") or "")
+        _topic_key = _normalize_poedex_concept(topic)
+        _prov_all = (systems or {}).get("_provisional_scout_grounding", {})
+        _prov_turn = _prov_all.get(_turn_id, {}) if isinstance(_prov_all, dict) else {}
+        _prov = _prov_turn.get(_topic_key) if isinstance(_prov_turn, dict) else None
+        if isinstance(_prov, dict):
+            _prov_text = str(_prov.get("text", "") or "").strip()
+            if _prov_text:
+                return _prov_text[:1200]
+
         # ── 1. Bound lessons (instant, no room needed) ───────────────────────
         _lessons_path = _sd / "poedex_lessons.json"
         if _lessons_path.exists():
@@ -11243,11 +11257,18 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                 _sd,
                 turn_id=turn_id,
                 request_kind="knowledge_gap",
+                target=str(topic or ""),
                 inquiry=str(topic or ""),
                 evidence_needed=str(topic or ""),
                 priority=0.75 if use_researcher else 0.4,
                 ttl_s=45.0 if use_researcher else max(5.0, float(timeout or 20.0)),
             )
+            if turn_id != "no_live_turn":
+                _gap_map = (systems or {}).setdefault("_current_turn_knowledge_gaps", {})
+                _gaps = _gap_map.setdefault(turn_id, [])
+                _gap_key = _normalize_poedex_concept(topic)
+                if _gap_key and _gap_key not in _gaps:
+                    _gaps.append(_gap_key)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -19601,7 +19622,23 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
         try:
             with directory.open(nc_name) as m:
                 # Dynamic Channel Resonance
-                env_p = {"pressure": systems.get("dimensional").get_constraint_aggregate()} if systems.get("dimensional") else {}
+                env_p = {"pressure": systems.get("dimensional").get_constraint_aggregate()} if systems.get("dimensional") else {"pressure": {}}
+                # Build 711: response Scouts only return specimens. Aurora's
+                # own projection of those specimens may exert turn-local
+                # pressure on manifold selection. Use deviation from the
+                # uniform 0.2 baseline, so observations bias rather than
+                # replace Aurora's existing constraint field.
+                _obs_prof = dict((getattr(state, "pipeline_state", {}) or {}).get("scout_response_observation_profile") or {})
+                _obs_axes = dict(_obs_prof.get("axis_profile") or {})
+                _obs_fit = max(0.0, min(1.0, float(_obs_prof.get("fit_strength", 0.0) or 0.0)))
+                if _obs_axes and _obs_fit >= _RESPONSE_OBSERVATION_FIT_FLOOR:
+                    _pressure = dict(env_p.get("pressure") or {})
+                    _blend = min(_RESPONSE_OBSERVATION_BLEND_MAX, 0.12 + 0.20 * _obs_fit)
+                    for _ax in ("X", "T", "N", "B", "A"):
+                        _base = float(_pressure.get(_ax, 0.0) or 0.0)
+                        _observed_delta = float(_obs_axes.get(_ax, 0.2) or 0.2) - 0.2
+                        _pressure[_ax] = _base + (_observed_delta * _blend)
+                    env_p["pressure"] = _pressure
                 ranked_channels = m.map_environmental_pressure(env_p)
                 if not ranked_channels:
                     # Fallback to anchor word only; do not emit manifold labels.
@@ -20449,7 +20486,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
     # remain_conversationally_present, instead of falling through to
     # generic abstention.
     if not state.response_content:
-        _apply_subsurface_response_evidence(systems, state)
+        _apply_subsurface_response_evidence(systems, state, user_text)
     # D2.1 (Directive D2, ratified 2026-07-17): the mid-chain terminal-gap
     # abstain formerly fired right here, before the campaign-verified
     # composer voice (resp_B / SentenceComposer) had been computed at all --
@@ -21806,73 +21843,129 @@ def _get_presence_metrics(systems: dict) -> Any:
     return metrics
 
 
-def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: str) -> list:
+def _ingest_live_subsurface_presence(
+    systems: dict, state: Any, *, turn_id: str, phase: str, wait_s: float = 0.0,
+) -> Optional[Dict[str, Any]]:
+    """Let Surface consume the current live Subsurface frame.
+
+    On Android this first gives the in-process PresenceRuntime a tiny chance
+    to integrate the phase event; desktop falls back to the same file-backed
+    frame. Only pressure/guidance/context enters Surface, never response text.
     """
-    Build 694 step 12 (Subsurface Presence and Evidence Scout spec,
-    section 15): "Move the primary current-turn evidence intake
-    earlier." Called from _run_reasoning_pipeline() right after
-    _emit_interpreted_turn_packet() and BEFORE _chain_down2_belief() --
-    the spec's own required order is emit-interpreted-turn ->
-    Subsurface-evaluates-pressure -> Scout-if-warranted -> Subsurface-
-    integrates -> Surface-ingests, all ahead of DOWN2 belief, so
-    accepted evidence can shape the actual response decision rather than
-    only its final expression style.
+    try:
+        runtime = systems.get("_presence_runtime")
+        frame = None
+        if runtime is not None and hasattr(runtime, "wait_for_turn_phase") and wait_s > 0:
+            frame = runtime.wait_for_turn_phase(turn_id, phase, timeout=wait_s)
+        if not isinstance(frame, dict):
+            from aurora_internal.dual_strata.subsurface_presence import read_presence_frame
+            frame = read_presence_frame(systems.get("state_dir"))
+        if not isinstance(frame, dict) or str(frame.get("turn_id", "") or "") != str(turn_id or ""):
+            return None
+        if not isinstance(state.pipeline_state, dict):
+            state.pipeline_state = {}
+        state.pipeline_state["subsurface_presence_frame"] = dict(frame)
+        guidance = str(frame.get("surface_guidance", "") or "")
+        if guidance:
+            state.pipeline_state["subsurface_surface_guidance"] = guidance
+        pressure = frame.get("active_pressure")
+        if isinstance(pressure, dict):
+            state.pipeline_state["subsurface_active_pressure"] = dict(pressure)
+        tensions = list(frame.get("unresolved_tensions", []) or [])
+        if tensions:
+            state.pipeline_state["subsurface_unresolved_tensions"] = tensions
+        intuitions = list(frame.get("intuition_signals", []) or [])
+        if intuitions:
+            state.pipeline_state["subsurface_intuition_signals_live"] = intuitions
+        crest = frame.get("crest")
+        if isinstance(crest, dict):
+            state.pipeline_state["subsurface_live_crest"] = dict(crest)
+            axis = str(crest.get("axis", "") or "")
+            intensity = float(crest.get("intensity", 0.0) or 0.0)
+            # Live Subsurface can fill an absent/weak orientation but cannot
+            # overwrite a strong axis Surface has already derived this turn.
+            if axis in ("X", "T", "N", "B", "A") and intensity >= 0.4 and not state.dominant_axis:
+                state.dominant_axis = axis
+        return frame
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_ingest_live_subsurface_presence",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ingest_live_subsurface_presence", "source_file": "aurora.py"},
+        )
+        return None
 
-    Build 694 step 14 (spec section 16, "bounded same-turn evidence
-    window"): if nothing has arrived yet AND this turn's
-    response_fit_pressure (stashed onto state.pipeline_state by
-    _emit_interpreted_turn_packet, immediately before this call) clears
-    the same threshold Trigger A dispatch uses, this is not a "normal
-    well-resolved turn" (tier 1: 0 additional wait, the plain non-
-    blocking read below already covers it) -- it is tier 2, "elevated
-    response-fit pressure: small opportunistic evidence window."
-    wait_for_current_turn_binding() briefly suspends (never performs
-    retrieval itself -- Subsurface/the Scout worker do that on their own
-    thread/process) for up to _opportunistic_wait_s(), charged against
-    this turn's shared _scout_rescue_budget_remaining() so Build 694 step
-    15's later abstention-rescue wait never exceeds the combined ~4s
-    total. Tier 3 ("imminent generic abstention: use remaining bounded
-    rescue window") is step 15's own call site, at the articulation
-    boundary this function never reaches.
 
-    The late pre-expression harvest (_harvest_scout_evidence_for_expression,
-    below) is retained as a secondary mechanism per the spec's own
-    instruction -- it must simply no longer be the ONLY current-turn use
-    of Scout evidence.
+def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: str) -> list:
+    """Ingest Subsurface-accepted evidence before belief/information.
+
+    Build 711 completion: knowledge-gap evidence now gets the same bounded
+    same-turn opportunity as response-fit evidence. Surface never retrieves or
+    reads raw ScoutReports; it only waits for Subsurface EvidenceBindings.
     """
     accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
 
-    if not accepted:
-        try:
-            pressure = float((state.pipeline_state or {}).get("response_fit_pressure", 0.0) or 0.0)
-            from aurora_internal.dual_strata.subsurface_presence import response_fit_dispatch_threshold
-            if pressure >= response_fit_dispatch_threshold():
-                budget = _scout_rescue_budget_remaining(systems, turn_id)
-                window = min(_opportunistic_wait_s(), budget)
-                if window > 0:
-                    from aurora_internal.scouting.subsurface_scout_bridge import wait_for_current_turn_binding
-                    started = time.time()
-                    wait_for_current_turn_binding(
-                        systems.get("state_dir"), turn_id=turn_id,
-                        request_kind="response_fit", timeout=window,
-                    )
-                    wait_elapsed_ms = (time.time() - started) * 1000.0
-                    _scout_rescue_budget_spend(systems, turn_id, wait_elapsed_ms / 1000.0)
-                    accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
-                    metrics = _get_presence_metrics(systems)
-                    metrics.record_same_turn_wait_ms(wait_elapsed_ms)
-                    metrics.record_same_turn_binding_used(bool(accepted))
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(), module=__name__,
-                operation="exception_handler:aurora.py:_ingest_current_turn_scout_evidence:opportunistic_wait",
-                exc=_aurora_boundary_exc,
-                context={"function": "_ingest_current_turn_scout_evidence", "source_file": "aurora.py"},
-            )
+    try:
+        from aurora_internal.scouting.subsurface_scout_bridge import wait_for_current_turn_binding
+        metrics = _get_presence_metrics(systems)
+        gaps_by_turn = systems.get("_current_turn_knowledge_gaps", {})
+        requested_gaps = list(gaps_by_turn.get(turn_id, []) or []) if isinstance(gaps_by_turn, dict) else []
+        has_knowledge = any(isinstance(b, dict) and b.get("request_kind") == "knowledge_gap" for b in accepted)
+        has_response_fit = any(isinstance(b, dict) and b.get("request_kind") == "response_fit" for b in accepted)
+
+        # Knowledge is upstream of response fit. If Aurora explicitly exposed a
+        # lexical/semantic gap this turn, let that evidence arrive first.
+        if requested_gaps and not has_knowledge:
+            budget = _scout_rescue_budget_remaining(systems, turn_id)
+            window = min(_opportunistic_wait_s(), budget)
+            if window > 0:
+                started = time.time()
+                wait_for_current_turn_binding(
+                    systems.get("state_dir"), turn_id=turn_id,
+                    request_kind="knowledge_gap", timeout=window,
+                )
+                elapsed_ms = (time.time() - started) * 1000.0
+                _scout_rescue_budget_spend(systems, turn_id, elapsed_ms / 1000.0)
+                accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+                metrics.record_same_turn_wait_ms(elapsed_ms)
+                metrics.record_same_turn_binding_used(any(
+                    isinstance(b, dict) and b.get("request_kind") == "knowledge_gap" for b in accepted
+                ))
+                has_response_fit = any(isinstance(b, dict) and b.get("request_kind") == "response_fit" for b in accepted)
+
+        # Only once interpretation is viable does response-fit acquisition make
+        # sense. Preserve the existing proactive threshold and shared budget.
+        pressure = float((state.pipeline_state or {}).get("response_fit_pressure", 0.0) or 0.0)
+        from aurora_internal.dual_strata.subsurface_presence import response_fit_dispatch_threshold
+        if not has_response_fit and pressure >= response_fit_dispatch_threshold():
+            budget = _scout_rescue_budget_remaining(systems, turn_id)
+            window = min(_opportunistic_wait_s(), budget)
+            if window > 0:
+                started = time.time()
+                wait_for_current_turn_binding(
+                    systems.get("state_dir"), turn_id=turn_id,
+                    request_kind="response_fit", timeout=window,
+                )
+                elapsed_ms = (time.time() - started) * 1000.0
+                _scout_rescue_budget_spend(systems, turn_id, elapsed_ms / 1000.0)
+                accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+                metrics.record_same_turn_wait_ms(elapsed_ms)
+                metrics.record_same_turn_binding_used(any(
+                    isinstance(b, dict) and b.get("request_kind") == "response_fit" for b in accepted
+                ))
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_ingest_current_turn_scout_evidence:bounded_wait",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ingest_current_turn_scout_evidence", "source_file": "aurora.py"},
+        )
 
     try:
         state.current_turn_scout_evidence = accepted
         _structure_current_turn_scout_evidence(state, accepted)
+        _install_provisional_scout_grounding(systems, state, turn_id=turn_id)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(), module=__name__,
@@ -21890,13 +21983,11 @@ def _structure_current_turn_scout_evidence(state: Any, accepted_bindings: list) 
     pipeline_state fields the spec names explicitly:
 
       state.pipeline_state["subsurface_response_evidence"]
-          response_fit bindings -- response_relationships, fit_rationales,
-          contradictions, a support magnitude, and binding_id, for
-          downstream response formation to weigh (spec section 22:
-          "Aurora must still determine ... her wording ... The
-          EvidenceBinding must never directly assign
-          state.response_content" -- this field is read-only input to a
-          decision, never a text source).
+          response_fit bindings -- raw observed dialogue specimens,
+          provenance, support magnitude, and binding_id. Scout-authored
+          relationship labels/rationales are discarded. Aurora projects
+          and compares the observations through her own constraint and
+          grammar machinery before they can affect response formation.
 
       state.pipeline_state["external_grounding_evidence"]
           knowledge_gap bindings -- evidence_items, provenance, a
@@ -21904,10 +21995,10 @@ def _structure_current_turn_scout_evidence(state: Any, accepted_bindings: list) 
           section 23: "Do not write external evidence directly into OETS
           as durable truth merely because a Scout returned it. ... The
           Scout supplies evidence. Aurora develops understanding.").
-          Active reconsideration of interpretation using this field is
-          intentionally out of scope for this pass -- no existing hook
-          re-runs the upward interpretation pass mid-turn, and adding one
-          would mix an unrelated architecture change into step 13.
+          Accepted grounding evidence can trigger one bounded
+          understanding -> meaning -> purpose reconsideration in the same
+          turn, without replaying memory admission, genealogy, or the lived
+          interaction itself.
 
     self_diagnostic bindings never reach here at all (accepted_bindings
     is already scoped to a single live turn_id by
@@ -21922,16 +22013,24 @@ def _structure_current_turn_scout_evidence(state: Any, accepted_bindings: list) 
             continue
         kind = str(binding.get("request_kind", "") or "")
         if kind == "response_fit":
+            # Build 711 model-free boundary: Surface receives only the raw
+            # Subsurface-accepted observations and provenance. Any legacy
+            # response_relationships/fit labels from old persisted reports are
+            # deliberately ignored. Aurora will project and compare the
+            # observations herself below.
             response_evidence.append({
                 "binding_id": binding.get("binding_id"),
-                "response_relationships": list(binding.get("response_relationships") or []),
-                "fit_rationales": list(binding.get("fit_rationales") or []),
-                "contradictions": list(binding.get("contradictions") or []),
+                "interpreted_input": str(binding.get("interpreted_input") or ""),
+                "inquiry": str(binding.get("inquiry") or ""),
+                "evidence_items": list(binding.get("evidence_items") or []),
+                "provenance": list(binding.get("provenance") or []),
                 "support": float(binding.get("strength", 0.0) or 0.0),
             })
         elif kind == "knowledge_gap":
             grounding_evidence.append({
                 "binding_id": binding.get("binding_id"),
+                "target": str(binding.get("evidence_needed") or binding.get("interpreted_input") or binding.get("inquiry") or ""),
+                "inquiry": str(binding.get("inquiry") or ""),
                 "evidence_items": list(binding.get("evidence_items") or []),
                 "provenance": list(binding.get("provenance") or []),
                 "confidence": float(binding.get("strength", 0.0) or 0.0),
@@ -21943,91 +22042,287 @@ def _structure_current_turn_scout_evidence(state: Any, accepted_bindings: list) 
     state.pipeline_state["external_grounding_evidence"] = grounding_evidence
 
 
-# Build 694 step 13 (spec section 22): the acceptance floor below which
-# response-fit evidence is too weak to justify Aurora generating content
-# she would not otherwise have formed. A tuning value, not a semantic
-# rule -- kept separate from _ACCEPTANCE_THRESHOLD in
-# subsurface_scout_bridge.py, which governs whether a report becomes a
-# binding at all; this one governs whether an already-accepted binding
-# is strong enough to actually steer generation.
-_RESPONSE_EVIDENCE_SUPPORT_FLOOR = 0.3
+def _install_provisional_scout_grounding(systems: dict, state: Any, *, turn_id: str) -> int:
+    """Expose accepted knowledge evidence to this turn's lookup path only.
 
-# Build 694 step 13: first-person framing claims, one per named response-
-# relationship category (contracts.RESPONSE_RELATIONSHIP_KINDS) -- these
-# are the CORE CLAIM handed to _render_runtime_intent, which does
-# Aurora's own wording/rendering (same machinery every other fallback
-# stage in _chain_down2_belief already uses). Never the Scout's retrieved
-# text itself -- the evidence only selects WHICH claim applies, never
-# supplies the words.
-_RESPONSE_RELATIONSHIP_CORE_CLAIMS = {
-    "acknowledge": "I want to acknowledge what you just said",
-    "continue_exploration": "I'd like to keep exploring this together",
-    "explain": "let me offer what understanding I have of this",
-    "answer_directly": "here is a direct answer, as far as I can tell",
-    "invite_continuation": "I'd like to hear more about what you mean",
-    "challenge": "something about this feels worth examining more closely",
-    "reassure": "this doesn't need to be something to worry about",
-    "clarify": "I want to make sure I understand what you mean",
-    "remain_conversationally_present": "I'm here with you in this conversation",
-}
-
-
-def _apply_subsurface_response_evidence(systems: dict, state: Any) -> bool:
+    Nothing here writes OETS, WorkingMemory, or durable semantic state. The
+    map exists solely so a one-time interpretation re-entry can ask the same
+    unresolved lookup again and receive Subsurface-accepted evidence.
     """
-    Build 694 step 13 (spec section 22): "Then make downstream response
-    formation consume it [subsurface_response_evidence]." Called from
-    _chain_down2_belief() as one more `if not state.response_content`
-    fallback stage -- same position and shape as the pressure-experience/
-    SediMemory/grounded-fallback stages immediately above it, so it only
-    ever fires when Aurora's own internal machinery hasn't already
-    produced content (spec section 20: internal resolution is always
-    tried first).
+    entries = list((state.pipeline_state or {}).get("external_grounding_evidence") or [])
+    if not entries:
+        return 0
+    all_turns = systems.setdefault("_provisional_scout_grounding", {})
+    turn_map = all_turns.setdefault(str(turn_id or ""), {})
+    installed = 0
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        target = _normalize_poedex_concept(str(entry.get("target") or entry.get("inquiry") or ""))
+        if not target:
+            continue
+        texts = []
+        for item in list(entry.get("evidence_items") or []):
+            if isinstance(item, dict):
+                text = str(item.get("text", "") or "").strip()
+            else:
+                text = str(item or "").strip()
+            if text:
+                texts.append(text)
+        if not texts:
+            continue
+        turn_map[target] = {
+            "text": " ".join(texts)[:1600],
+            "confidence": float(entry.get("confidence", 0.0) or 0.0),
+            "provenance": list(entry.get("provenance") or []),
+            "binding_id": entry.get("binding_id"),
+        }
+        installed += 1
+    return installed
 
-    Picks the strongest-supported response_relationships entry from
-    state.pipeline_state["subsurface_response_evidence"] (Build 694 step
-    13's own structuring, above) and, if its support clears
-    _RESPONSE_EVIDENCE_SUPPORT_FLOOR, generates content through
-    _render_runtime_intent from a category-specific core claim (never
-    from the Scout's own retrieved text) -- "Aurora must still determine
-    ... her wording" (spec section 22). Returns True iff it supplied
-    content, so the acceptance-example case ("hey aurora" resolved via
-    acknowledge/remain_conversationally_present evidence rather than a
-    generic abstention) has a direct signal to test against.
+
+def _reconsider_interpretation_from_scout_grounding(
+    user_text: str, systems: dict, state: Any, *, turn_id: str, session_id: str, turn_tick: int,
+    auto_search_enabled: bool, use_search: bool, raw_evidence: Optional[list] = None,
+) -> bool:
+    """Re-enter only understanding -> meaning -> purpose once.
+
+    This is the missing knowledge-Scout return path. It does not replay the
+    user turn, memory admission, genealogy, or consequence accounting. It
+    simply lets the already-active turn reconsider its interpretation using
+    provisional Subsurface-accepted grounding evidence, then republishes the
+    interpreted state so response-fit pressure can be evaluated on the repaired
+    interpretation.
+    """
+    if not str(turn_id or ""):
+        return False
+    done = systems.setdefault("_grounding_reentry_done", {})
+    if done.get(turn_id):
+        return False
+    grounding = list((state.pipeline_state or {}).get("external_grounding_evidence") or [])
+    if not grounding:
+        return False
+    done[turn_id] = True
+
+    # Preserve the evidence fields across stage functions, but remove an early
+    # draft that was formed from the unresolved interpretation. Response
+    # formation proper (DOWN2/DOWN1) has not run yet at this call site.
+    state.response_content = ""
+    state.response_confidence = 0.0
+    try:
+        state.response_src = None
+    except Exception:
+        pass
+    try:
+        _chain_down5_understanding(user_text, systems, state, auto_search_enabled=auto_search_enabled)
+        _capture_waveform_deposit(state, "understanding_reentry", systems)
+        _chain_down4_meaning(user_text, systems, state, auto_search_enabled=auto_search_enabled)
+        _capture_waveform_deposit(state, "meaning_reentry", systems)
+        _chain_down3_purpose(
+            user_text, systems, state, auto_search_enabled=auto_search_enabled,
+            use_search=use_search, raw_evidence=raw_evidence or [],
+        )
+        _capture_waveform_deposit(state, "purpose_reentry", systems)
+        if isinstance(state.pipeline_state, dict):
+            state.pipeline_state["knowledge_scout_interpretation_reentry"] = True
+        _emit_interpreted_turn_packet(systems, state, session_id=session_id, turn_tick=turn_tick)
+        return True
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_reconsider_interpretation_from_scout_grounding",
+            exc=_aurora_boundary_exc,
+            context={"function": "_reconsider_interpretation_from_scout_grounding", "source_file": "aurora.py"},
+        )
+        return False
+
+
+# Build 711 model-free response-evidence boundary. The Scout never classifies
+# response type. Aurora herself compares retrieved input/response specimens in
+# X/T/N/B/A space and derives a turn-local response-pressure profile. This
+# profile may bias Aurora's own manifold generation, but no retrieved response
+# text is ever emitted or converted into a canned core claim.
+_RESPONSE_OBSERVATION_FIT_FLOOR = 0.28
+_RESPONSE_OBSERVATION_BLEND_MAX = 0.32
+
+
+def _extract_response_fit_observations(evidence_entries: list) -> list:
+    """Recover raw observed input/response specimens from Scout evidence.
+
+    LocalDialogueCorpusBackend uses an intentionally plain textual wire shape
+    so the Scout itself performs no structuring. Parsing that retrieval envelope
+    here is Aurora-side cognition. Generic/non-dialogue evidence is ignored for
+    response-fit rather than treated as if it were a conversational example.
+    """
+    observations = []
+    for entry in list(evidence_entries or []):
+        if not isinstance(entry, dict):
+            continue
+        binding_support = max(0.0, min(1.0, float(entry.get("support", 0.0) or 0.0)))
+        for item in list(entry.get("evidence_items") or []):
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("kind", "") or "") != "response_exemplars":
+                continue
+            blob = str(item.get("text", "") or "")
+            if not blob:
+                continue
+            chunks = re.split(r"\n---\n|(?=\nEXEMPLAR\s+\d+\s*\|)", blob)
+            for chunk in chunks:
+                in_match = re.search(
+                    r"observed_input:\s*(.*?)(?=\nobserved_response:|\Z)",
+                    chunk, flags=re.IGNORECASE | re.DOTALL,
+                )
+                out_match = re.search(
+                    r"observed_response:\s*(.*)\Z",
+                    chunk, flags=re.IGNORECASE | re.DOTALL,
+                )
+                if not (in_match and out_match):
+                    continue
+                observed_input = in_match.group(1).strip()
+                observed_response = out_match.group(1).strip()
+                if not (observed_input and observed_response):
+                    continue
+                score_match = re.search(r"retrieval_score=([0-9.]+)", chunk)
+                retrieval_score = 0.5
+                if score_match:
+                    try:
+                        retrieval_score = max(0.0, min(1.0, float(score_match.group(1))))
+                    except Exception:
+                        retrieval_score = 0.5
+                observations.append({
+                    "observed_input": observed_input[:600],
+                    "observed_response": observed_response[:900],
+                    "retrieval_score": retrieval_score,
+                    "binding_support": binding_support,
+                    "source": str(item.get("source", "") or ""),
+                })
+    return observations[:12]
+
+
+def _derive_response_fit_observation_profile(systems: dict, state: Any) -> dict:
+    """Aurora-side interpretation of raw response specimens.
+
+    For each retrieved pair Aurora independently projects both the observed
+    input and observed response through her own constraint projector. The fit
+    weight is based on similarity between Aurora's *current interpreted state*
+    and the observed input in X/T/N/B/A space, multiplied by retrieval quality.
+    The result is a response-axis pressure profile and structural observations.
+
+    No response category, wording, or conclusion crosses the Scout boundary.
+    """
+    evidence = list((state.pipeline_state or {}).get("subsurface_response_evidence") or [])
+    observations = _extract_response_fit_observations(evidence)
+    if not observations:
+        return {}
+
+    interpreted = ""
+    for entry in evidence:
+        if isinstance(entry, dict) and str(entry.get("interpreted_input") or "").strip():
+            interpreted = str(entry.get("interpreted_input") or "").strip()
+            break
+    if not interpreted:
+        interpreted = str((state.parsed or {}).get("meaning") or (state.parsed or {}).get("topic") or "").strip()
+    if not interpreted:
+        interpreted = str(getattr(state, "intent", "") or "").strip()
+    current_axes = _project_utterance_axes(interpreted, systems) if interpreted else dict(getattr(state, "axis_activation", {}) or {})
+    current_axes = {ax: float(current_axes.get(ax, 0.2) or 0.0) for ax in ("X", "T", "N", "B", "A")}
+
+    weighted = {ax: 0.0 for ax in ("X", "T", "N", "B", "A")}
+    total_weight = 0.0
+    fit_values = []
+    role_patterns = []
+    response_lengths = []
+
+    grammar = systems.get("grammar_engine")
+    tagger = getattr(grammar, "_tagger", None) if grammar is not None else None
+
+    for obs in observations:
+        input_axes = _project_utterance_axes(obs["observed_input"], systems)
+        response_axes = _project_utterance_axes(obs["observed_response"], systems)
+        distance = sum(
+            abs(float(current_axes.get(ax, 0.2)) - float(input_axes.get(ax, 0.2)))
+            for ax in ("X", "T", "N", "B", "A")
+        ) / 5.0
+        constraint_fit = max(0.0, min(1.0, 1.0 - distance))
+        weight = constraint_fit * max(0.05, float(obs.get("retrieval_score", 0.0) or 0.0))
+        weight *= max(0.25, float(obs.get("binding_support", 0.0) or 0.0))
+        if weight <= 0.0:
+            continue
+        fit_values.append(constraint_fit)
+        total_weight += weight
+        for ax in weighted:
+            weighted[ax] += float(response_axes.get(ax, 0.2) or 0.0) * weight
+        response_lengths.append(len(str(obs["observed_response"]).split()))
+        if tagger is not None and hasattr(tagger, "extract_pattern"):
+            try:
+                pattern = tagger.extract_pattern(obs["observed_response"])
+                if pattern:
+                    role_patterns.append([
+                        str(getattr(role, "value", role)) for role in pattern
+                    ])
+            except Exception:
+                pass
+
+    if total_weight <= 0.0:
+        return {}
+    axis_profile = {ax: round(weighted[ax] / total_weight, 4) for ax in weighted}
+    fit_strength = round(sum(fit_values) / max(1, len(fit_values)), 4)
+    return {
+        "axis_profile": axis_profile,
+        "fit_strength": fit_strength,
+        "specimen_count": len(fit_values),
+        "role_patterns": role_patterns[:8],
+        "response_length_mean": round(sum(response_lengths) / max(1, len(response_lengths)), 2) if response_lengths else 0.0,
+        "source_bindings": [str(e.get("binding_id") or "") for e in evidence if isinstance(e, dict)],
+        # Raw observed language intentionally omitted from this derived profile.
+        "provisional": True,
+    }
+
+
+def _apply_subsurface_response_evidence(systems: dict, state: Any, user_text: str = "") -> bool:
+    """Let Aurora use retrieved response specimens without outsourcing cognition.
+
+    This function only runs after Aurora's ordinary internal response paths have
+    failed. Aurora derives a constraint-space profile from the specimens, then
+    asks her existing manifold generator to try again under that turn-local
+    observational pressure. There is no response label map and no externally
+    supplied core claim.
     """
     if state.response_content:
         return False
-    raw_evidence = (state.pipeline_state or {}).get("subsurface_response_evidence")
-    evidence = [e for e in raw_evidence if isinstance(e, dict)] if isinstance(raw_evidence, list) else []
-    if not evidence:
+    profile = _derive_response_fit_observation_profile(systems, state)
+    if not profile:
         return False
-
-    best = max(evidence, key=lambda e: float(e.get("support", 0.0) or 0.0))
-    support = float(best.get("support", 0.0) or 0.0)
-    if support < _RESPONSE_EVIDENCE_SUPPORT_FLOOR:
-        return False
-
-    relationship = next(
-        (r for r in list(best.get("response_relationships") or []) if r in _RESPONSE_RELATIONSHIP_CORE_CLAIMS),
-        None,
-    )
-    if relationship is None:
+    if not isinstance(state.pipeline_state, dict):
+        state.pipeline_state = {}
+    state.pipeline_state["scout_response_observation_profile"] = profile
+    if float(profile.get("fit_strength", 0.0) or 0.0) < _RESPONSE_OBSERVATION_FIT_FLOOR:
         return False
 
     try:
-        rendered = _render_runtime_intent(
-            systems,
-            _RESPONSE_RELATIONSHIP_CORE_CLAIMS[relationship],
-            emotion_tone="attentive",
-            certainty=support,
-            supporting_concepts=list(state.salient_concepts or [])[:3],
+        generated, tone, confidence = _generate_from_manifold(
+            systems, str(user_text or ""), state,
         )
-        if not rendered:
+        generated = str(generated or "").strip()
+        if not generated:
             return False
-        state.response_content = rendered
-        state.response_tone = "attentive"
-        state.response_confidence = max(state.response_confidence, support)
-        state.response_src = "subsurface_response_evidence"
-        _record_response_revision(state, "chain_down2_subsurface_response_evidence", "", 0.0)
+        # Do not accept a generation that simply reproduces a retrieved
+        # response specimen. The evidence is non-emittable even after Aurora
+        # has projected it into constraint space.
+        for entry in list((state.pipeline_state or {}).get("subsurface_response_evidence") or []):
+            for obs in _extract_response_fit_observations([entry]):
+                exemplar = str(obs.get("observed_response") or "").strip().lower()
+                if exemplar and generated.lower() == exemplar:
+                    return False
+        state.response_content = generated
+        state.response_tone = str(tone or "attentive")
+        state.response_confidence = max(
+            float(getattr(state, "response_confidence", 0.0) or 0.0),
+            min(0.82, max(0.42, float(confidence or 0.0) * float(profile.get("fit_strength", 0.0) or 0.0))),
+        )
+        state.response_src = "aurora_response_observation_recompute"
+        _record_response_revision(state, "chain_down2_aurora_response_observation_recompute", "", 0.0)
         return True
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -22261,6 +22556,12 @@ def _run_reasoning_pipeline(
         # so storing the reference here means later reads see the fully
         # populated turn -- no separate refresh needed downstream.
         systems["_active_turn_state"] = state
+
+    _live_turn_id = str(systems.get("_current_turn_id", "") or "")
+    if _live_turn_id:
+        _ingest_live_subsurface_presence(
+            systems, state, turn_id=_live_turn_id, phase="turn_open", wait_s=0.20,
+        )
 
     try:
         _umeta2 = dict(systems.pop("_utterance_meta", {}) or {})
@@ -22716,13 +23017,31 @@ def _run_reasoning_pipeline(
     # -> meaning -> purpose all complete), not only after belief/
     # information refine it into a finished response.
     _emit_interpreted_turn_packet(systems, state, session_id=session_id, turn_tick=turn_tick)
+    _turn_id_live = str(systems.get("_current_turn_id", "") or "")
+    if _turn_id_live:
+        _ingest_live_subsurface_presence(
+            systems, state, turn_id=_turn_id_live, phase="interpreted", wait_s=0.25,
+        )
 
     # Build 694 step 12 (spec section 15): primary current-turn evidence
     # intake, ahead of DOWN2 belief -- see _ingest_current_turn_scout_evidence's
     # own docstring for why this is deliberately non-blocking on its own.
     _ingest_current_turn_scout_evidence(
-        systems, state, turn_id=str(systems.get("_current_turn_id", "") or ""),
+        systems, state, turn_id=_turn_id_live,
     )
+    if _turn_id_live and _reconsider_interpretation_from_scout_grounding(
+        _rr_subject_text, systems, state, turn_id=_turn_id_live,
+        session_id=session_id, turn_tick=turn_tick,
+        auto_search_enabled=auto_search_enabled, use_search=use_search,
+        raw_evidence=raw_evidence or [],
+    ):
+        # Re-entry may transform a knowledge problem into a response-fit
+        # problem. Give Subsurface the repaired interpretation and ingest any
+        # resulting response-fit evidence before belief generation.
+        _ingest_live_subsurface_presence(
+            systems, state, turn_id=_turn_id_live, phase="interpreted", wait_s=0.25,
+        )
+        _ingest_current_turn_scout_evidence(systems, state, turn_id=_turn_id_live)
 
     _chain_down2_belief(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled,
                             use_search=use_search)
@@ -22732,6 +23051,11 @@ def _run_reasoning_pipeline(
     _capture_waveform_deposit(state, "information", systems)
     _preserve_literal_response = bool(systems.pop("_preserve_literal_response_once", False))
     _skip_surface_expression = bool(systems.pop("_skip_surface_expression_once", False))
+
+    if _turn_id_live:
+        _ingest_live_subsurface_presence(
+            systems, state, turn_id=_turn_id_live, phase="evidence", wait_s=0.0,
+        )
 
     # Subsurface Presence and Evidence Scout spec, step 9: harvest
     # whatever Subsurface has already accepted as evidence for THIS
@@ -24884,33 +25208,9 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         if continuity_answer:
             return continuity_answer
 
-    # ---- UNIVERSAL GREETING INTERCEPT — fires before any intent-specific dispatch ----
-    # "hey aurora", "hi", "hello", etc. classified as 'statement', 'wellbeing_query',
-    # or 'general' — intercept all of them here and respond from live axis/emotional state.
-    # "how are you" / "how are you doing" are wellbeing queries, not greetings.
-    # They must NOT be intercepted here \u2014 let them reach _chain_down5_understanding.
-    _GREETING_DETECT_UNIVERSAL = re.compile(
-        r'^(hey|hi+|hello|howdy|yo|greetings?|what\s*[\u2019\']?s\s*up|'
-        r'how\s*[\u2019\']?s\s+it\s+going|'
-        r'good\s+(morning|afternoon|evening|night))\b',
-        re.IGNORECASE,
-    )
-    if _GREETING_DETECT_UNIVERSAL.match(_raw_user_text.strip()):
-        _active_topic = str(getattr(working_memory, 'current_topic', '') or '').strip() if working_memory else ''
-        _greet_rendered, _greet_emotion, _greet_conf = _render_live_greeting(
-            systems,
-            conversation_memory=conversation_memory,
-            working_memory=working_memory,
-            emotion_hint=str(_der_emotional_state.get('dominant', 'warm') or 'warm'),
-            active_topic=_active_topic,
-        )
-        _sensory_curiosity = ""
-        _greet_words = re.findall(r"[a-z']+", _raw_user_text.lower())
-        if len(_greet_words) <= 3:
-            _sensory_curiosity = _render_live_sensory_curiosity(systems)
-        if _sensory_curiosity and _sensory_curiosity.lower() not in _greet_rendered.lower():
-            _greet_rendered = f"{_greet_rendered} {_sensory_curiosity}".strip()
-        return (_greet_rendered, 'warm', _greet_conf)
+    # Greetings intentionally have no universal hardcoded intercept.
+    # They proceed through Aurora's normal interpretation/response machinery so
+    # the live Subsurface + Scout path remains observable and developmental.
 
     # ---- VISUAL OBJECT TEACHING INTERCEPT ----
     # Detects "this is X" / "that's X" / "this object is X" type utterances and
@@ -34460,6 +34760,17 @@ def process_external_user_turn(
             systems["_pipeline_source"] = previous_pipeline_source
         else:
             systems.pop("_pipeline_source", None)
+        # Current-turn Scout grounding is intentionally ephemeral. Remove
+        # it after the lived turn so external evidence cannot silently become
+        # durable semantic state or bleed into a later conversation turn.
+        try:
+            for _k in ("_provisional_scout_grounding", "_current_turn_knowledge_gaps", "_grounding_reentry_done"):
+                _m = systems.get(_k)
+                if isinstance(_m, dict):
+                    _m.pop(str(turn_id), None)
+        except Exception:
+            pass
+
         # Build 694 step 1: restore/clear canonical turn identity --
         # only the call that actually minted a fresh turn_id (nobody had
         # set one yet, e.g. the Android path) clears it back to its

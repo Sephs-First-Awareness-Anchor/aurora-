@@ -27,7 +27,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from aurora_internal.dual_strata import subsurface_presence as sp
 from aurora_internal.scouting.broker import ScoutBroker
-from aurora_internal.scouting.contracts import RESPONSE_RELATIONSHIP_KINDS
 import aurora_scout_daemon as sd
 
 
@@ -127,10 +126,12 @@ def test_dispatch_response_fit_scout_builds_the_section_14_inquiry_template(tmp_
     )
     broker = ScoutBroker(tmp_path)
     raw = json.loads(list(broker.pending_dir.glob("*.json"))[0].read_text(encoding="utf-8"))
-    assert "Aurora currently interprets the conversational state as: a friendly social approach" in raw["inquiry"]
-    assert "Aurora's inferred purpose is: greet" in raw["inquiry"]
-    assert "Do not reinterpret the original speaker" in raw["inquiry"]
-    assert "Do not produce a final response for Aurora" in raw["inquiry"]
+    assert "Aurora interpreted state: a friendly social approach" in raw["inquiry"]
+    assert "Aurora inferred purpose: greet" in raw["inquiry"]
+    assert "Retrieve observed conversation exchanges" in raw["inquiry"]
+    assert "Do not classify the response" in raw["inquiry"]
+    assert "infer intent" in raw["inquiry"]
+    assert "draft a response for Aurora" in raw["inquiry"]
 
 
 def test_dispatch_response_fit_scout_never_raises_on_broker_failure(tmp_path, monkeypatch):
@@ -141,36 +142,40 @@ def test_dispatch_response_fit_scout_never_raises_on_broker_failure(tmp_path, mo
     assert result is None
 
 
-# ── Scout worker: request-kind-aware categorization (spec section 13) ──────
+# ── Scout worker: evidence only; Aurora owns categorization ───────────────
 
-def test_response_fit_report_contains_response_relationships(tmp_path):
+def test_response_fit_report_contains_raw_evidence_but_no_response_labels(tmp_path):
     from aurora_internal.scouting.backends import TestBackend
     from aurora_internal.scouting.contracts import ScoutRequest
     backend = TestBackend(canned_result=(
-        "This greeting can be met with a simple acknowledgment, or the "
-        "conversation can invite further follow up on what the user meant."
+        "observed_input: hello\nobserved_response: hey, good to hear from you"
     ))
     req = ScoutRequest(turn_id="t1", request_kind="response_fit", inquiry="q")
     report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[backend])
     assert report.status == "ok"
-    assert report.response_relationships != ["explain"]
-    assert all(r in RESPONSE_RELATIONSHIP_KINDS for r in report.response_relationships)
-    assert len(report.fit_rationales) == len(report.response_relationships)
+    assert report.evidence_items
+    assert report.response_relationships == []
+    assert report.fit_rationales == []
+    assert report.contradictions == []
+    assert report.evidence_items[0]["emittable"] is False
 
 
-def test_response_fit_report_falls_back_to_explain_when_no_signal_found(tmp_path):
+def test_response_fit_report_never_falls_back_to_a_scout_invented_category(tmp_path):
     from aurora_internal.scouting.backends import TestBackend
     from aurora_internal.scouting.contracts import ScoutRequest
-    backend = TestBackend(canned_result="zzz qqq wwww")  # no keyword matches any category
+    backend = TestBackend(canned_result="zzz qqq wwww")
     req = ScoutRequest(turn_id="t1", request_kind="response_fit", inquiry="q")
     report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[backend])
-    assert report.response_relationships == ["explain"]
+    assert report.response_relationships == []
+    assert report.fit_rationales == []
 
 
-def test_non_response_fit_reports_are_unaffected_by_the_new_categorization(tmp_path):
+def test_knowledge_gap_reports_are_also_evidence_only(tmp_path):
     from aurora_internal.scouting.backends import TestBackend
     from aurora_internal.scouting.contracts import ScoutRequest
     backend = TestBackend(canned_result="a guitar chord is three or more notes played together")
     req = ScoutRequest(turn_id="t1", request_kind="knowledge_gap", inquiry="q")
     report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[backend])
-    assert report.response_relationships == ["explain"]
+    assert report.response_relationships == []
+    assert report.fit_rationales == []
+    assert report.evidence_items

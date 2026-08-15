@@ -1,21 +1,14 @@
-"""
-Scout request/report contracts (Subsurface Presence and Evidence Scout
-spec, sections 7-8). Plain, JSON-serializable dataclasses -- the wire
-format between Subsurface/Surface (which formulate ScoutRequests) and
-the Scout worker (which produces ScoutReports).
+"""Scout request/report contracts for Aurora's model-free evidence Scouts.
 
-Two hard architectural boundaries encoded directly in these shapes,
-not left to convention:
+A Scout is a retrieval limb only. It may carry an Aurora-formulated inquiry to
+a retrieval source and return raw, provenance-bearing observations. It may not
+interpret the user, classify response operations, explain response fit, decide
+what Aurora should believe, or draft a response.
 
-- ScoutRequest.interpreted_input is what a response-fit Scout receives
-  as authoritative input -- never the raw user utterance. A Scout
-  reinterpreting raw text on Aurora's behalf is exactly what section 4
-  forbids.
-- ScoutReport has NO final_response field, on purpose. It cannot
-  represent "the answer Aurora should give" even accidentally -- only
-  response_relationships (named categories: acknowledge, explain,
-  clarify, etc.) and fit_rationales, which are evidence ABOUT response
-  fit, not a drafted response.
+The legacy response_relationships / fit_rationales / contradictions fields stay
+in ScoutReport only so older persisted reports can still be deserialized. The
+contract forcibly clears them in __post_init__; no live Scout can use those
+fields as a covert cognitive channel.
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
@@ -25,8 +18,7 @@ import uuid
 from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, List, Optional
 
-# spec section 8: named response-relationship categories a Scout may
-# report evidence about -- never a drafted response itself.
+# Legacy wire compatibility only. Scouts are prohibited from populating these.
 RESPONSE_RELATIONSHIP_KINDS = (
     "acknowledge",
     "continue_exploration",
@@ -84,7 +76,15 @@ class ScoutReport:
     # research, never scoped to a live user turn) without needing to
     # still hold the request itself, which is long gone by report time.
     request_kind: str = "response_fit"
+    # Echo the originating inquiry metadata through the report so
+    # Subsurface can bind knowledge evidence to the exact unresolved
+    # target without reopening Scout request storage.
+    inquiry: str = ""
+    evidence_needed: str = ""
+    interpreted_input: str = ""
     evidence_items: List[Dict[str, Any]] = field(default_factory=list)
+    # Legacy-only fields. __post_init__ clears them unconditionally so
+    # interpretation cannot cross the Scout boundary.
     response_relationships: List[str] = field(default_factory=list)
     fit_rationales: List[str] = field(default_factory=list)
     contradictions: List[str] = field(default_factory=list)
@@ -106,9 +106,12 @@ class ScoutReport:
                 item["emittable"] = False
             cleaned.append(item)
         self.evidence_items = cleaned
-        self.response_relationships = [
-            r for r in self.response_relationships if r in RESPONSE_RELATIONSHIP_KINDS
-        ]
+        # Hard architectural prohibition: a retrieval worker cannot pass an
+        # interpretation disguised as report metadata. Older persisted payloads
+        # deserialize safely, but their semantic labels are discarded.
+        self.response_relationships = []
+        self.fit_rationales = []
+        self.contradictions = []
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

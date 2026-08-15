@@ -221,9 +221,16 @@ def test_scout_worker_uses_runtime_state_dir(tmp_path):
 
 
 def test_mobile_scout_backend_does_not_require_room():
-    from aurora_internal.scouting.backends import resolve_backend_chain, PoedexRoomBackend
+    # Aurora Build 711: the desktop-only PoedexRoomBackend (subprocess
+    # pgrep for aurora_room.py) was removed outright, not merely made
+    # optional -- the model-free default chain (public_human_dialogue,
+    # local_human_dialogue, public_web, local_lessons) has no member
+    # that depends on a second desktop process at all, so this
+    # invariant now holds by construction rather than by a runtime
+    # is_available() check against a specific removed class.
+    from aurora_internal.scouting.backends import resolve_backend_chain, DEFAULT_BACKEND_NAMES
+    assert "poedex_room" not in DEFAULT_BACKEND_NAMES
     chain = resolve_backend_chain()
-    assert not any(isinstance(b, PoedexRoomBackend) and b.is_available() for b in chain)
     assert any(b.is_available() for b in chain)  # LocalLessonsBackend, zero-config
 
 
@@ -394,35 +401,41 @@ def test_case1_greeting_resolves_via_response_fit_evidence_not_a_canned_rule(tmp
     # "hey aurora" -- sufficient evidence that Aurora's own interpretation
     # represents a friendly social approach. Expected: no canned greeting
     # rule, no generic "I'm not sure," an appropriate response generated
-    # from Aurora's own pipeline (_render_runtime_intent).
+    # from Aurora's own pipeline (_generate_from_manifold), never the
+    # Scout's retrieved specimen text verbatim (Build 711: the Scout
+    # returns raw observed_input/observed_response specimens only --
+    # Aurora projects and compares them herself, she never receives a
+    # Scout-authored response_relationships label).
     from aurora_internal.scouting.backends import TestBackend
-    backend = TestBackend(canned_result="This greeting can be met with a simple acknowledgment.")
+    backend = TestBackend(canned_result=(
+        "EXEMPLAR 1 | retrieval_score=0.90 | source=x\n"
+        "observed_input: hey there\n"
+        "observed_response: Hello, good to see you."
+    ))
     req = ScoutRequest(turn_id="t1", request_kind="response_fit", inquiry="q",
                         interpreted_input="a friendly social approach")
     report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[backend])
     assert report.status == "ok"
-    assert "acknowledge" in report.response_relationships
+    assert report.response_relationships == []  # Scout never classifies fit
 
     binding = evaluate_report(report, current_turn_id="t1")
     state = TurnUnderstandingState()
     state.pipeline_state["subsurface_response_evidence"] = [{
         "binding_id": binding.binding_id,
-        "response_relationships": binding.response_relationships,
-        "fit_rationales": binding.fit_rationales,
-        "contradictions": binding.contradictions,
+        "interpreted_input": "a friendly social approach",
+        "evidence_items": binding.evidence_items,
+        "provenance": binding.provenance,
         "support": binding.strength,
     }]
-    captured = {}
 
-    def _fake_render(systems, claim, **k):
-        captured["claim"] = claim
-        return "Hey! Good to hear from you."
-
-    monkeypatch.setattr(aurora, "_render_runtime_intent", _fake_render)
-    fired = aurora._apply_subsurface_response_evidence({}, state)
+    monkeypatch.setattr(
+        aurora, "_generate_from_manifold",
+        lambda systems, text, st: ("Hey! Good to hear from you.", "attentive", 0.7),
+    )
+    fired = aurora._apply_subsurface_response_evidence({}, state, "hey aurora")
     assert fired is True
     assert state.response_content == "Hey! Good to hear from you."
-    assert captured["claim"] != "hey aurora"  # never the raw input verbatim
+    assert state.response_content != "Hello, good to see you."  # never the exemplar verbatim
     assert state.response_content != "I'm not sure."
 
 
@@ -451,22 +464,33 @@ def test_case2_knowledge_gap_evidence_reaches_surface_without_forcing_admissibil
 
 
 def test_case3_response_fit_evidence_never_becomes_a_copied_final_response(tmp_path, monkeypatch):
-    # Aurora understands the input but lacks a supported response
-    # relationship. Fake response-fit Scout supplies acknowledge +
-    # remain_conversationally_present with rationales. Expected: Aurora
-    # generates her own wording; external text is never copied as
-    # final_response.
+    # Aurora has raw retrieved response specimens. Build 711: the Scout
+    # never supplies a response_relationships label -- Aurora derives her
+    # own constraint-space profile from the specimens and asks her own
+    # manifold generator to produce wording; the retrieved specimen text
+    # is never copied as the final response.
     state = TurnUnderstandingState()
+    scout_text = "EXTERNAL SCOUT TEXT THAT MUST NEVER APPEAR VERBATIM"
     state.pipeline_state["subsurface_response_evidence"] = [{
         "binding_id": "b1",
-        "response_relationships": ["acknowledge", "remain_conversationally_present"],
-        "fit_rationales": ["strongly supported by retrieved evidence"],
-        "contradictions": [],
+        "interpreted_input": "a friendly social approach",
+        "evidence_items": [{
+            "kind": "response_exemplars",
+            "source": "public_human_dialogue",
+            "text": (
+                "EXEMPLAR 1 | retrieval_score=0.90 | source=x\n"
+                "observed_input: hey there\n"
+                f"observed_response: {scout_text}"
+            ),
+        }],
+        "provenance": ["public_human_dialogue"],
         "support": 0.8,
     }]
-    scout_text = "EXTERNAL SCOUT TEXT THAT MUST NEVER APPEAR VERBATIM"
-    monkeypatch.setattr(aurora, "_render_runtime_intent", lambda systems, claim, **k: "I'm glad you reached out.")
-    aurora._apply_subsurface_response_evidence({}, state)
+    monkeypatch.setattr(
+        aurora, "_generate_from_manifold",
+        lambda systems, text, st: ("I'm glad you reached out.", "attentive", 0.7),
+    )
+    aurora._apply_subsurface_response_evidence({}, state, "hey aurora")
     assert scout_text not in state.response_content
     assert state.response_content == "I'm glad you reached out."
 
