@@ -35,6 +35,7 @@ from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import json
+import os
 import time
 import uuid
 from pathlib import Path
@@ -405,6 +406,98 @@ def write_presence_frame(
 # consumers can never quietly drift apart on what "integrating an event"
 # actually means.
 
+# ── Automatic response-fit Scout dispatch (Build 694 step 10) ──────────────
+#
+# Spec section 8: "Subsurface must own automatic dispatch." Section 9:
+# two complementary triggers, deliberately not one magic threshold --
+#   Trigger A (wired into integrate_interpreted_turn_event() below):
+#     graduated proactive pressure, checked the instant Subsurface
+#     integrates an interpreted_turn event.
+#   Trigger B: abstention rescue -- lives in aurora.py's articulation
+#     path (Build 694 step 15), and calls the SAME
+#     dispatch_response_fit_scout() helper below so the two triggers can
+#     never quietly diverge into two different ScoutRequest shapes.
+#
+# Configurable, not a buried constant (section 9's own instruction) --
+# SCOUT_RESPONSE_FIT_THRESHOLD overrides the suggested initial tuning
+# value of 0.55.
+
+_DEFAULT_RESPONSE_FIT_THRESHOLD = 0.55
+
+
+def response_fit_dispatch_threshold() -> float:
+    raw = os.environ.get("SCOUT_RESPONSE_FIT_THRESHOLD")
+    if raw is None or not str(raw).strip():
+        return _DEFAULT_RESPONSE_FIT_THRESHOLD
+    try:
+        return max(0.0, min(1.0, float(raw)))
+    except (TypeError, ValueError):
+        return _DEFAULT_RESPONSE_FIT_THRESHOLD
+
+
+def _response_fit_inquiry(interpreted_meaning: str, inferred_purpose: str) -> str:
+    """Spec section 14's own template: Aurora's interpretation is handed
+    over as authoritative context, and the Scout is told explicitly not
+    to reinterpret the speaker or draft a response on Aurora's behalf."""
+    return (
+        f"Aurora currently interprets the conversational state as: {interpreted_meaning}\n"
+        f"Aurora's inferred purpose is: {inferred_purpose}\n\n"
+        "Investigate what response relationships commonly and appropriately "
+        "follow from this interpreted conversational state. Return evidence "
+        "about: which response operations fit; why they fit; meaningful "
+        "alternatives; what would make each inappropriate.\n\n"
+        "Do not reinterpret the original speaker. Do not produce a final "
+        "response for Aurora. Do not impersonate Aurora."
+    )
+
+
+def dispatch_response_fit_scout(
+    state_dir: Any,
+    *,
+    turn_id: str,
+    interpreted_meaning: str = "",
+    inferred_purpose: str = "",
+    representation_refs: Optional[List[str]] = None,
+    priority: float = 0.6,
+    ttl_s: float = 30.0,
+) -> Optional[str]:
+    """The one place a response_fit ScoutRequest actually gets built,
+    shared by both triggers (section 9) so they can never quietly diverge
+    on request shape. ScoutBroker.dispatch() already caps this at one
+    response_fit request per turn_id (broker.py's own dedup), so calling
+    this twice for the same turn -- Trigger A now, Trigger B later at the
+    abstention boundary -- safely collapses onto the same in-flight
+    request rather than producing two.
+
+    Local/lazy imports for the same reason integrate_evidence_need_event()
+    above uses them: this is Subsurface's OWN dispatch (spec section 8 --
+    "Subsurface must own automatic dispatch"), not a Surface-originated
+    need, so it goes straight through dispatch_scout_request() rather
+    than the evidence_need event channel (that channel exists for
+    Surface to describe a need across the boundary; this call never
+    crosses that boundary at all)."""
+    try:
+        from aurora_internal.scouting.broker import dispatch_scout_request
+        from aurora_internal.scouting.contracts import ScoutRequest
+        return dispatch_scout_request(state_dir, ScoutRequest(
+            turn_id=str(turn_id or ""),
+            request_kind="response_fit",
+            interpreted_input=str(interpreted_meaning or ""),
+            inquiry=_response_fit_inquiry(str(interpreted_meaning or ""), str(inferred_purpose or "")),
+            representation_refs=list(representation_refs or []),
+            priority=max(0.0, min(1.0, float(priority or 0.6))),
+            ttl_s=max(1.0, float(ttl_s or 30.0)),
+        ))
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:dispatch_response_fit_scout",
+            exc=_aurora_boundary_exc,
+            context={"function": "dispatch_response_fit_scout", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+        )
+        return None
+
+
 def integrate_turn_open_event(state_dir: Any, event: Dict[str, Any]) -> None:
     """A turn_open event only ever tells Subsurface that SOMETHING is
     happening now -- it must not stomp interpretation fields an
@@ -441,6 +534,32 @@ def integrate_interpreted_turn_event(state_dir: Any, event: Dict[str, Any]) -> N
         response_fit_pressure=float(event.get("response_fit_pressure", 0.0) or 0.0),
         continuity_summary=(str(event.get("interpreted_meaning", "") or "")[:120] or None),
     )
+
+    # Build 694 step 10, Trigger A (spec section 9): graduated proactive
+    # dispatch the instant integration sees meaningfully elevated
+    # response_fit_pressure. response_fit_pressure is already 0.0 unless
+    # interpretation was adequate AND ambiguity wasn't blocking (spec
+    # section 8's hard gate -- see aurora._emit_interpreted_turn_packet's
+    # own formula), so a plain threshold check on the pressure value
+    # already implements the full gate, not just its graduated half.
+    try:
+        pressure = float(event.get("response_fit_pressure", 0.0) or 0.0)
+        if pressure >= response_fit_dispatch_threshold():
+            dispatch_response_fit_scout(
+                state_dir,
+                turn_id=str(event.get("turn_id", "") or ""),
+                interpreted_meaning=str(event.get("interpreted_meaning", "") or ""),
+                inferred_purpose=str(event.get("inferred_purpose", "") or ""),
+                representation_refs=list(event.get("representation_refs", []) or []),
+                priority=pressure,
+            )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:integrate_interpreted_turn_event:trigger_a",
+            exc=_aurora_boundary_exc,
+            context={"function": "integrate_interpreted_turn_event", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+        )
 
 
 def integrate_evidence_need_event(state_dir: Any, event: Dict[str, Any]) -> Optional[str]:

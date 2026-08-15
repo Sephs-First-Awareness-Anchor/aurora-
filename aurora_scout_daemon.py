@@ -63,7 +63,44 @@ sys.path.insert(0, str(_BASE_DIR))
 
 from aurora_internal.scouting.backends import ScoutBackend, resolve_backend_chain
 from aurora_internal.scouting.broker import ScoutBroker
-from aurora_internal.scouting.contracts import ScoutRequest, ScoutReport
+from aurora_internal.scouting.contracts import ScoutRequest, ScoutReport, RESPONSE_RELATIONSHIP_KINDS
+
+# Build 694 step 10, spec section 13: "response_fit" reports must stop
+# being hardwired to response_relationships=["explain"] for every
+# result. Keyword-matched against the retrieved evidence text -- this
+# genuinely varies with what a backend's text actually says, rather than
+# fabricating variety the evidence doesn't support. Kept here (not in
+# backends.py) because it's how the WORKER turns generic retrieved text
+# into a categorized report, independent of which backend produced that
+# text.
+_RESPONSE_FIT_KEYWORDS: dict = {
+    "acknowledge": ["greeting", "hello", "hi there", "welcomed", "acknowledg"],
+    "continue_exploration": ["explore further", "keep exploring", "continue the topic", "follow up on"],
+    "explain": ["because", "the reason is", "due to", "explanation"],
+    "answer_directly": ["is defined as", "refers to", "the answer is", "means that"],
+    "invite_continuation": ["ask a follow-up", "what would you like", "tell me more", "invite further"],
+    "challenge": ["however", "contradicts", "on the other hand", "challenges"],
+    "reassure": ["reassur", "it's okay", "no need to worry", "that's normal"],
+    "clarify": ["clarify", "ambiguous", "unclear", "which do you mean"],
+    "remain_conversationally_present": ["remain present", "stay engaged", "conversationally present", "simple acknowledgment"],
+}
+
+
+def _categorize_response_relationships(evidence_text: str) -> List[Any]:
+    """Returns (category, matched_keyword) pairs, in
+    RESPONSE_RELATIONSHIP_KINDS order, so fit_rationales can cite the
+    actual textual signal behind each reported category. Empty when
+    nothing in the evidence text matched any category -- the caller
+    falls back to ["explain"] only in that genuinely-uninformative case,
+    not for every result regardless of content."""
+    lowered = evidence_text.lower()
+    matches: List[Any] = []
+    for category in RESPONSE_RELATIONSHIP_KINDS:
+        for keyword in _RESPONSE_FIT_KEYWORDS.get(category, []):
+            if keyword in lowered:
+                matches.append((category, keyword))
+                break
+    return matches
 
 
 def _retrieve_and_normalize(
@@ -126,18 +163,40 @@ def _retrieve_and_normalize(
     text = raw_result[: max(1, int(request.max_result_chars or 1200))]
     evidence_items = [{"text": text, "source": source_name}]
 
-    # Deliberately conservative: "explain" is the least presumptive
-    # relationship category a Scout can report when it can't confidently
-    # characterize a more specific one -- it never guesses at
-    # something like "answer_directly" just because evidence came back.
+    if request.request_kind == "response_fit":
+        # Spec section 13: structured investigation of which response
+        # relationships fit, not a single hardwired category.
+        matches = _categorize_response_relationships(text)
+        if matches:
+            response_relationships = [c for c, _kw in matches][: max(1, int(request.max_evidence_items or 5))]
+            fit_rationales = [
+                f"{category}: evidence text contains '{keyword}', suggesting this response "
+                f"relationship fits Aurora's interpreted state"
+                for category, keyword in matches
+            ]
+        else:
+            # Deliberately conservative fallback: "explain" is the least
+            # presumptive category to report when nothing in the
+            # retrieved text supports a more specific one -- never a
+            # guess like "answer_directly" just because evidence came
+            # back at all.
+            response_relationships = ["explain"]
+            fit_rationales = [
+                "external evidence retrieved and available to inform, not dictate, the response -- "
+                "no more specific response relationship was identifiable in the retrieved text"
+            ]
+    else:
+        response_relationships = ["explain"]
+        fit_rationales = ["external evidence retrieved and available to inform, not dictate, the response"]
+
     return ScoutReport(
         request_id=request.request_id,
         turn_id=request.turn_id,
         request_kind=request.request_kind,
         status="ok",
         evidence_items=evidence_items[: int(request.max_evidence_items or 5)],
-        response_relationships=["explain"],
-        fit_rationales=["external evidence retrieved and available to inform, not dictate, the response"],
+        response_relationships=response_relationships,
+        fit_rationales=fit_rationales,
         provenance=[source_name],
         confidence=0.55,
         elapsed_ms=elapsed_ms,
