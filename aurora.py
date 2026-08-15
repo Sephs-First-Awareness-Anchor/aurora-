@@ -20437,6 +20437,19 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                 context={"function": "_chain_down2_belief", "handler_line": 16002, "source_file": "aurora.py"},
             )
             pass
+    # Build 694 step 13 (spec section 22): last of the "internal
+    # resolution first" fallback stages -- only reached when pressure-
+    # experience, SediMemory recall, and the grounded fallback above all
+    # had their chance and still produced nothing. Structurally consumes
+    # state.pipeline_state["subsurface_response_evidence"] (Build 694
+    # step 12's early ingestion, structured by
+    # _structure_current_turn_scout_evidence); this is the mechanism that
+    # lets a turn like "hey aurora" resolve through Aurora's own
+    # generation once Subsurface evidence supports acknowledge/
+    # remain_conversationally_present, instead of falling through to
+    # generic abstention.
+    if not state.response_content:
+        _apply_subsurface_response_evidence(systems, state)
     # D2.1 (Directive D2, ratified 2026-07-17): the mid-chain terminal-gap
     # abstain formerly fired right here, before the campaign-verified
     # composer voice (resp_B / SentenceComposer) had been computed at all --
@@ -21746,6 +21759,7 @@ def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: s
     accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
     try:
         state.current_turn_scout_evidence = accepted
+        _structure_current_turn_scout_evidence(state, accepted)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(), module=__name__,
@@ -21754,6 +21768,162 @@ def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: s
             context={"function": "_ingest_current_turn_scout_evidence", "source_file": "aurora.py"},
         )
     return accepted
+
+
+def _structure_current_turn_scout_evidence(state: Any, accepted_bindings: list) -> None:
+    """
+    Build 694 step 13 (spec section 22/23): split the raw accepted
+    EvidenceBinding dicts by request_kind into the two structured
+    pipeline_state fields the spec names explicitly:
+
+      state.pipeline_state["subsurface_response_evidence"]
+          response_fit bindings -- response_relationships, fit_rationales,
+          contradictions, a support magnitude, and binding_id, for
+          downstream response formation to weigh (spec section 22:
+          "Aurora must still determine ... her wording ... The
+          EvidenceBinding must never directly assign
+          state.response_content" -- this field is read-only input to a
+          decision, never a text source).
+
+      state.pipeline_state["external_grounding_evidence"]
+          knowledge_gap bindings -- evidence_items, provenance, a
+          confidence magnitude, and binding_id, kept provisional (spec
+          section 23: "Do not write external evidence directly into OETS
+          as durable truth merely because a Scout returned it. ... The
+          Scout supplies evidence. Aurora develops understanding.").
+          Active reconsideration of interpretation using this field is
+          intentionally out of scope for this pass -- no existing hook
+          re-runs the upward interpretation pass mid-turn, and adding one
+          would mix an unrelated architecture change into step 13.
+
+    self_diagnostic bindings never reach here at all (accepted_bindings
+    is already scoped to a single live turn_id by
+    _read_accepted_scout_bindings/read_bindings_for_turn, and
+    self_diagnostic requests are never dispatched against a live turn_id
+    -- see aurora_daemon._maybe_research_recurring_issue).
+    """
+    response_evidence = []
+    grounding_evidence = []
+    for binding in accepted_bindings:
+        if not isinstance(binding, dict):
+            continue
+        kind = str(binding.get("request_kind", "") or "")
+        if kind == "response_fit":
+            response_evidence.append({
+                "binding_id": binding.get("binding_id"),
+                "response_relationships": list(binding.get("response_relationships") or []),
+                "fit_rationales": list(binding.get("fit_rationales") or []),
+                "contradictions": list(binding.get("contradictions") or []),
+                "support": float(binding.get("strength", 0.0) or 0.0),
+            })
+        elif kind == "knowledge_gap":
+            grounding_evidence.append({
+                "binding_id": binding.get("binding_id"),
+                "evidence_items": list(binding.get("evidence_items") or []),
+                "provenance": list(binding.get("provenance") or []),
+                "confidence": float(binding.get("strength", 0.0) or 0.0),
+            })
+
+    if not isinstance(state.pipeline_state, dict):
+        state.pipeline_state = {}
+    state.pipeline_state["subsurface_response_evidence"] = response_evidence
+    state.pipeline_state["external_grounding_evidence"] = grounding_evidence
+
+
+# Build 694 step 13 (spec section 22): the acceptance floor below which
+# response-fit evidence is too weak to justify Aurora generating content
+# she would not otherwise have formed. A tuning value, not a semantic
+# rule -- kept separate from _ACCEPTANCE_THRESHOLD in
+# subsurface_scout_bridge.py, which governs whether a report becomes a
+# binding at all; this one governs whether an already-accepted binding
+# is strong enough to actually steer generation.
+_RESPONSE_EVIDENCE_SUPPORT_FLOOR = 0.3
+
+# Build 694 step 13: first-person framing claims, one per named response-
+# relationship category (contracts.RESPONSE_RELATIONSHIP_KINDS) -- these
+# are the CORE CLAIM handed to _render_runtime_intent, which does
+# Aurora's own wording/rendering (same machinery every other fallback
+# stage in _chain_down2_belief already uses). Never the Scout's retrieved
+# text itself -- the evidence only selects WHICH claim applies, never
+# supplies the words.
+_RESPONSE_RELATIONSHIP_CORE_CLAIMS = {
+    "acknowledge": "I want to acknowledge what you just said",
+    "continue_exploration": "I'd like to keep exploring this together",
+    "explain": "let me offer what understanding I have of this",
+    "answer_directly": "here is a direct answer, as far as I can tell",
+    "invite_continuation": "I'd like to hear more about what you mean",
+    "challenge": "something about this feels worth examining more closely",
+    "reassure": "this doesn't need to be something to worry about",
+    "clarify": "I want to make sure I understand what you mean",
+    "remain_conversationally_present": "I'm here with you in this conversation",
+}
+
+
+def _apply_subsurface_response_evidence(systems: dict, state: Any) -> bool:
+    """
+    Build 694 step 13 (spec section 22): "Then make downstream response
+    formation consume it [subsurface_response_evidence]." Called from
+    _chain_down2_belief() as one more `if not state.response_content`
+    fallback stage -- same position and shape as the pressure-experience/
+    SediMemory/grounded-fallback stages immediately above it, so it only
+    ever fires when Aurora's own internal machinery hasn't already
+    produced content (spec section 20: internal resolution is always
+    tried first).
+
+    Picks the strongest-supported response_relationships entry from
+    state.pipeline_state["subsurface_response_evidence"] (Build 694 step
+    13's own structuring, above) and, if its support clears
+    _RESPONSE_EVIDENCE_SUPPORT_FLOOR, generates content through
+    _render_runtime_intent from a category-specific core claim (never
+    from the Scout's own retrieved text) -- "Aurora must still determine
+    ... her wording" (spec section 22). Returns True iff it supplied
+    content, so the acceptance-example case ("hey aurora" resolved via
+    acknowledge/remain_conversationally_present evidence rather than a
+    generic abstention) has a direct signal to test against.
+    """
+    if state.response_content:
+        return False
+    raw_evidence = (state.pipeline_state or {}).get("subsurface_response_evidence")
+    evidence = [e for e in raw_evidence if isinstance(e, dict)] if isinstance(raw_evidence, list) else []
+    if not evidence:
+        return False
+
+    best = max(evidence, key=lambda e: float(e.get("support", 0.0) or 0.0))
+    support = float(best.get("support", 0.0) or 0.0)
+    if support < _RESPONSE_EVIDENCE_SUPPORT_FLOOR:
+        return False
+
+    relationship = next(
+        (r for r in list(best.get("response_relationships") or []) if r in _RESPONSE_RELATIONSHIP_CORE_CLAIMS),
+        None,
+    )
+    if relationship is None:
+        return False
+
+    try:
+        rendered = _render_runtime_intent(
+            systems,
+            _RESPONSE_RELATIONSHIP_CORE_CLAIMS[relationship],
+            emotion_tone="attentive",
+            certainty=support,
+            supporting_concepts=list(state.salient_concepts or [])[:3],
+        )
+        if not rendered:
+            return False
+        state.response_content = rendered
+        state.response_tone = "attentive"
+        state.response_confidence = max(state.response_confidence, support)
+        state.response_src = "subsurface_response_evidence"
+        _record_response_revision(state, "chain_down2_subsurface_response_evidence", "", 0.0)
+        return True
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_apply_subsurface_response_evidence",
+            exc=_aurora_boundary_exc,
+            context={"function": "_apply_subsurface_response_evidence", "source_file": "aurora.py"},
+        )
+        return False
 
 
 def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> list:
