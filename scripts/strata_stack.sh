@@ -136,12 +136,14 @@ stop_stack() {
   stop_by_pidfile "hub"
   stop_by_pidfile "surface"
   stop_by_pidfile "subsurface"
+  stop_by_pidfile "scout"
 
   # Clean up older/manual launches too so a restart yields one coherent stack.
   stop_by_pattern "aurora_surface_daemon.py"
   stop_by_pattern "aurora_subsurface_daemon.py"
   stop_by_pattern "aurora_hub.py"
   stop_by_pattern "aurora_room.py"
+  stop_by_pattern "aurora_scout_daemon.py"
 
   # Compress state at rest — rotate logs then pack cold dirs to .cz archives.
   echo "[strata-stack] compressing aurora state..."
@@ -187,6 +189,13 @@ start_stack() {
   else
     launch_component "room" "$SCRIPT_DIR/run_room.sh"
   fi
+  sleep 1
+  # Build 694 step 16 (spec section 26): the Scout worker is an actual
+  # stack component now, not something assumed to be running just
+  # because aurora_scout_daemon.py exists on disk -- no systemd service
+  # variant exists for it (unlike subsurface/surface/hub/room above), so
+  # it always launches via the pidfile-tracked path.
+  launch_component "scout" "$SCRIPT_DIR/run_scout_worker.sh"
   echo "[strata-stack] logs: $LOG_DIR"
 }
 
@@ -225,6 +234,7 @@ show_status() {
   status_component "surface"
   status_component "hub"
   status_component "room"
+  status_component "scout"
   echo "[strata-stack] logs: $LOG_DIR"
 }
 
