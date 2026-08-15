@@ -15,11 +15,9 @@ become usable evidence just by existing. This module decides:
                   before the report came back?
     consistency   does the report contradict itself (report.contradictions)?
     strength      report.confidence, as reported by the Scout.
-    pressure_relief   how much of response_fit_pressure this evidence,
-                  if accepted, actually earns the right to relieve --
-                  never more than relevance * consistency * strength,
-                  and (Build 694 step 11, spec section 12) always 0.0
-                  for anything but a "response_fit" report. A
+    pressure_relief   always 0.0 at retrieval time in Build 711. A Scout
+                  returning evidence is not evidence that Aurora has
+                  understood or resolved the response-fit pressure. A
                   knowledge_gap report becomes provisional semantic
                   evidence instead -- Aurora reconsiders interpretation
                   with it, it never mechanically subtracts from
@@ -80,6 +78,9 @@ class EvidenceBinding:
     turn_id: str
     status: str  # "accepted" | "rejected" | "stale"
     request_kind: str = "response_fit"
+    inquiry: str = ""
+    evidence_needed: str = ""
+    interpreted_input: str = ""
     relevance: float = 0.0
     consistency: float = 0.0
     strength: float = 0.0
@@ -106,6 +107,9 @@ def evaluate_report(report: ScoutReport, *, current_turn_id: str = "") -> Eviden
         request_id=report.request_id,
         turn_id=report.turn_id,
         request_kind=report.request_kind,
+        inquiry=str(getattr(report, "inquiry", "") or ""),
+        evidence_needed=str(getattr(report, "evidence_needed", "") or ""),
+        interpreted_input=str(getattr(report, "interpreted_input", "") or ""),
         response_relationships=list(report.response_relationships),
         fit_rationales=list(report.fit_rationales),
         contradictions=list(report.contradictions),
@@ -147,19 +151,12 @@ def evaluate_report(report: ScoutReport, *, current_turn_id: str = "") -> Eviden
         status = "accepted"
         rejected_reason = None
 
-    # Build 694 step 11 (spec section 12): "Current EvidenceBinding
-    # evaluation must stop treating every accepted Scout report as
-    # generic response-fit pressure relief." Only a response_fit report
-    # may ever relieve response_fit_pressure -- a knowledge_gap report,
-    # even when accepted, becomes provisional semantic evidence Aurora
-    # must reconsider interpretation with (consume_scout_reports() folds
-    # it into evidence_bindings either way; it just never subtracts from
-    # the pressure number itself). A self_diagnostic report must affect
-    # neither live-turn pressure automatically, at all -- structurally
-    # excluded here rather than relying on its turn_id happening not to
-    # match the live turn.
-    can_relieve_response_fit_pressure = report.request_kind == "response_fit"
-    pressure_relief = combined if (status == "accepted" and can_relieve_response_fit_pressure) else 0.0
+    # Build 711 model-free invariant: retrieval evidence never gets to
+    # declare a response-fit problem resolved. A Scout only returns raw
+    # observations. Until Aurora herself evaluates/uses those observations,
+    # response_fit_pressure remains her unresolved pressure. This prevents
+    # "the courier came back" from being mistaken for "Aurora understood."
+    pressure_relief = 0.0
 
     return EvidenceBinding(
         status=status,

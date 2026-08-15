@@ -599,7 +599,31 @@ class _FacePainter extends CustomPainter {
       return;
     }
 
-    _drawMouthLens(canvas, faceCenter, refSize, shape);
+    _drawRestingMouth(canvas, faceCenter, refSize, shape, pulse);
+  }
+
+  /// Sunni: "people wear their expression on their face even when they
+  /// aren't through words." Before this, the resting mouth was a fully
+  /// static shape between axis snapshots -- it only ever moved when a new
+  /// axis reading arrived (~1/s, and the underlying state itself only
+  /// drifts every ~12-20s while idle), while the glow behind it already
+  /// breathes continuously via [pulse] (see _glowEnergy). A breathing
+  /// glow wrapped around a perfectly motionless line is what reads as
+  /// flat/dead rather than merely calm. This gives the resting mouth the
+  /// same continuous pulse the glow already uses, as a small thickness
+  /// breath (~±11%) -- she visibly breathes even at rest, not just
+  /// mid-sentence, without disturbing the axis-driven expression shape
+  /// itself.
+  void _drawRestingMouth(Canvas canvas, Offset center, double refSize, _MouthShape shape, double pulseValue) {
+    final breath = 1.0 + 0.22 * (pulseValue.clamp(0.0, 1.0) - 0.5);
+    final breathingShape = _MouthShape(
+      shape.widthScale,
+      math.max(shape.thickness * breath, 0.03),
+      shape.leftLift,
+      shape.rightLift,
+      shape.rotation,
+    );
+    _drawMouthLens(canvas, center, refSize, breathingShape);
   }
 
   /// Articulated talking mouth: the same lens shape the resting mouth

@@ -78,7 +78,8 @@ def test_retrieve_and_normalize_reports_no_evidence_when_no_backend_is_available
     req = ScoutRequest(turn_id="t1", inquiry="what is a guitar chord")
     report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[unavailable])
     assert report.status == "no_evidence"
-    assert report.fit_rationales  # honest, not silent
+    assert report.fit_rationales == []  # retrieval worker must not invent reasons
+    assert report.response_relationships == []
 
 
 def test_retrieve_and_normalize_produces_evidence_when_a_backend_answers(tmp_path):
@@ -97,7 +98,8 @@ def test_retrieve_and_normalize_produces_evidence_when_a_backend_answers(tmp_pat
     assert report.evidence_items
     assert "guitar chord" in report.evidence_items[0]["text"]
     assert report.evidence_items[0]["emittable"] is False
-    assert report.response_relationships == ["explain"]
+    assert report.response_relationships == []
+    assert report.fit_rationales == []
     assert report.confidence > 0.0
     assert report.provenance == ["test"]
     assert "final_response" not in report.to_dict()

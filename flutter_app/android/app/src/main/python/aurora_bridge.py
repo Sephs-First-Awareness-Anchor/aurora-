@@ -150,9 +150,19 @@ _BOOT_FATAL_SYSTEMS: tuple = (
     "consciousness",    # DCE assembly — ThoughtBraid → ProtoLanguage
 )
 _BOOT_DEGRADED_SYSTEMS: tuple = (
-    "sedimemory",           # long-term geological memory
-    "lattice",              # IVM toroidal field dynamics
-    "geological_baseline",  # wave-particle duality, geo resistance gate
+    "sedimemory",            # long-term geological memory
+    "lattice",               # IVM toroidal field dynamics
+    # "_geological_baseline", not "geological_baseline" -- boot_aurora()
+    # stores it under the leading-underscore key (see the matching fix
+    # and comment on _MOBILE_HEALTH_DEGRADED below). The un-prefixed key
+    # was never populated by anything, so this check reported every
+    # single boot as degraded regardless of whether GeologicalBaseline
+    # actually came online -- confirmed live via aurora_bridge.initialize()
+    # against a real aurora_state: it logged "Boot DEGRADED:
+    # 'geological_baseline' is None" and returned "ready:degraded:
+    # geological_baseline" even though _geological_baseline was truthy
+    # in the same systems dict.
+    "_geological_baseline",  # wave-particle duality, geo resistance gate
 )
 
 _last_screen_observation: dict = {}
@@ -1522,7 +1532,16 @@ def _validate_boot(systems: dict) -> tuple:
 # every major developmental organ as fatal / degraded / optional.
 _MOBILE_HEALTH_FATAL = ("language_field", "identity_field", "consciousness")
 _MOBILE_HEALTH_DEGRADED = (
-    "sedimemory", "lattice", "geological_baseline",
+    # "_geological_baseline", not "geological_baseline" -- confirmed
+    # directly against aurora.py's own boot_aurora(), which stores it
+    # under the leading-underscore key (systems['_geological_baseline']
+    # = _gb). The un-prefixed key was never populated by anything, so
+    # this check reported every single boot as "degraded" regardless of
+    # whether GeologicalBaseline actually came online -- caught by
+    # comparing this tuple against a real boot_aurora() systems dict,
+    # not just the mocked fixtures in test_mobile_developmental_health_
+    # surface.py, which had reproduced the same wrong key name.
+    "sedimemory", "lattice", "_geological_baseline",
     "genealogy", "recursive_causal_waveform", "sensory_crystal", "dimensional",
 )
 _MOBILE_HEALTH_OPTIONAL_SYSTEMS_KEYS = ("hardware", "sensory_integration")
@@ -1552,7 +1571,17 @@ def get_mobile_developmental_health() -> str:
     degraded_missing = [k for k in _MOBILE_HEALTH_DEGRADED if not systems.get(k)]
 
     optional_status = {
-        "curiosity": bool(systems.get("_curiosity_engine")),
+        # aurora.py never stores anything under "_curiosity_engine" --
+        # there is no CuriosityEngine instance in the live systems dict
+        # at all (aurora_curiosity_engine.py's CuriosityEngine class is
+        # never imported by boot_aurora()). Aurora's actual live
+        # autonomous-inquiry/curiosity system is the AutonomyEngine
+        # boot_aurora() stores under systems['autonomy'] (tracks
+        # level/inquiry budget -- exactly what "curiosity" here is
+        # meant to report on) -- confirmed directly against a real
+        # boot_aurora() systems dict, not just this file's own mocked
+        # test fixtures, which had reproduced the same wrong key name.
+        "curiosity": bool(systems.get("autonomy")),
         # No live handle is stored back into `systems` by
         # start_dream_substrate() -- confirmed by direct read of its call
         # site above. This can only report "attempted at boot without a

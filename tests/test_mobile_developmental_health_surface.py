@@ -25,10 +25,10 @@ def _full_systems():
     """A systems dict with every checked key present and truthy."""
     return {
         "language_field": object(), "identity_field": object(), "consciousness": object(),
-        "sedimemory": object(), "lattice": object(), "geological_baseline": object(),
+        "sedimemory": object(), "lattice": object(), "_geological_baseline": object(),
         "genealogy": object(), "recursive_causal_waveform": object(),
         "sensory_crystal": object(), "dimensional": object(),
-        "_curiosity_engine": object(), "chamber": object(),
+        "autonomy": object(), "chamber": object(),
         "hardware": object(),
     }
 
@@ -81,7 +81,7 @@ def test_missing_genealogy_is_reported_degraded_not_silently_healthy(monkeypatch
 
 def test_missing_curiosity_and_dream_substrate_downgrade_overall_status(monkeypatch):
     systems = _full_systems()
-    del systems["_curiosity_engine"]
+    del systems["autonomy"]
     bridge = _bridge()
     monkeypatch.setattr(bridge, "_systems", systems, raising=False)
     monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", False, raising=False)

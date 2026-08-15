@@ -1243,16 +1243,38 @@ def _mobile_make_call(number: str = "", systems: Optional[Dict[str, Any]] = None
     return ToolResult("mobile_make_call", "", False, err or "call failed")
 
 
+_EXTERNAL_AI_PACKAGES = frozenset({
+    "com.openai.chatgpt",
+    "com.anthropic.claude",
+    "com.google.android.apps.bard",
+})
+
+_EXTERNAL_AI_HOST_SUFFIXES = (
+    "chatgpt.com",
+    "openai.com",
+    "anthropic.com",
+    "claude.ai",
+    "gemini.google.com",
+    "ai.google.dev",
+    "aistudio.google.com",
+)
+
+def _external_ai_package_forbidden(package: str) -> bool:
+    return str(package or "").strip().lower() in _EXTERNAL_AI_PACKAGES
+
+def _external_ai_url_forbidden(url: str) -> bool:
+    try:
+        host = (urllib.parse.urlparse(str(url or "")).hostname or "").lower().rstrip(".")
+    except Exception:
+        return False
+    return any(host == suffix or host.endswith("." + suffix) for suffix in _EXTERNAL_AI_HOST_SUFFIXES)
+
 _APP_NAME_MAP: Dict[str, str] = {
     # Your installed apps
     "spotify":          "com.spotify.music",
     "facebook":         "com.facebook.katana",
     "tiktok":           "com.zhiliaoapp.musically",
     "grindr":           "com.grindr.client",
-    "chatgpt":          "com.openai.chatgpt",
-    "chat gpt":         "com.openai.chatgpt",
-    "claude":           "com.anthropic.claude",
-    "gemini":           "com.google.android.apps.bard",
     "chrome":           "com.android.chrome",
     "google chrome":    "com.android.chrome",
     "snapchat":         "com.snapchat.android",
@@ -1355,6 +1377,11 @@ def _mobile_launch_app(package: str = "", systems: Optional[Dict[str, Any]] = No
     if not package:
         return ToolResult("mobile_launch_app", "", False, "app name or package required")
     resolved = _resolve_app_package(package)
+    if _external_ai_package_forbidden(resolved or package):
+        return ToolResult(
+            "mobile_launch_app", "", False,
+            "external_ai_model_use_forbidden_by_architecture",
+        )
     if _is_chaquopy_android():
         if not resolved:
             return ToolResult("mobile_launch_app", "", False, f"unknown app: '{package}'")
@@ -1397,6 +1424,11 @@ def _mobile_open_url(url: str = "", systems: Optional[Dict[str, Any]] = None, **
     """Open a URL in Android's default browser or associated app."""
     if not url:
         return ToolResult("mobile_open_url", "", False, "URL required")
+    if _external_ai_url_forbidden(url):
+        return ToolResult(
+            "mobile_open_url", "", False,
+            "external_ai_model_use_forbidden_by_architecture",
+        )
     if _is_chaquopy_android():
         try:
             ok, msg = _chaquopy_open_url(url)
@@ -2005,6 +2037,11 @@ def _desktop_open_url(url: str = "", headed: bool = True, systems: Optional[Dict
     """Open a URL in the browser (visible window). Supports any website."""
     if not url:
         return ToolResult("desktop_open_url", "", False, "no URL provided")
+    if _external_ai_url_forbidden(url):
+        return ToolResult(
+            "desktop_open_url", "", False,
+            "external_ai_model_use_forbidden_by_architecture",
+        )
     try:
         from aurora_desktop_agent import get_agent
         result = get_agent().open_url(url, headed=bool(headed))
@@ -2046,6 +2083,18 @@ def _desktop_browser_action(action: str = "", target: str = "", text: str = "", 
     try:
         from aurora_desktop_agent import get_agent
         agent = get_agent()
+        # Build 711 hard boundary: once the browser is on an external AI
+        # service, Aurora may not read, type, click, or otherwise interact
+        # with that service as a surrogate cognitive/model tool.
+        try:
+            current_url = agent.current_url()
+        except Exception:
+            current_url = ""
+        if action != "url" and _external_ai_url_forbidden(current_url):
+            return ToolResult(
+                "desktop_browser_action", "", False,
+                "external_ai_model_use_forbidden_by_architecture",
+            )
         if action == "click":
             r = agent.click(target)
         elif action == "type":
