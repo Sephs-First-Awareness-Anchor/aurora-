@@ -177,6 +177,49 @@ def write_interpreted_turn(
     return event_id
 
 
+def write_evidence_need(
+    state_dir: Any,
+    *,
+    turn_id: str,
+    request_kind: str = "knowledge_gap",
+    target: str = "",
+    inquiry: str = "",
+    evidence_needed: str = "",
+    representation_refs: Optional[List[str]] = None,
+    priority: float = 0.5,
+    max_result_chars: int = 1200,
+    ttl_s: float = 30.0,
+) -> str:
+    """Surface calls this whenever it needs external evidence -- knowledge
+    gaps (spec section 6/10) and response-fit pressure (section 10/11)
+    alike -- instead of dispatching a ScoutRequest itself (Build 694 step
+    9 reverses that part of Build 675 step 10's design). Surface no
+    longer holds a ScoutBroker or imports dispatch_scout_request() at
+    all: it only ever describes the need. Subsurface (via
+    integrate_evidence_need_event() below) is the sole owner of turning
+    a described need into an actual dispatched ScoutRequest -- the same
+    turn_open/interpreted_turn channel just gains a third event kind.
+    Returns the event_id."""
+    event_id = uuid.uuid4().hex
+    event: Dict[str, Any] = {
+        "event_id": event_id,
+        "kind": "evidence_need",
+        "turn_id": str(turn_id or ""),
+        "created_at": time.time(),
+        "request_kind": str(request_kind or "knowledge_gap"),
+        "target": str(target or "")[:120],
+        "inquiry": str(inquiry or "")[:500],
+        "evidence_needed": str(evidence_needed or "")[:500],
+        "representation_refs": [str(r) for r in list(representation_refs or [])][:16],
+        "priority": round(max(0.0, min(1.0, float(priority or 0.0))), 4),
+        "max_result_chars": max(1, int(max_result_chars or 1200)),
+        "ttl_s": max(1.0, float(ttl_s or 30.0)),
+        "consumed": False,
+    }
+    _append_turn_event(state_dir, event, caller="write_evidence_need")
+    return event_id
+
+
 def read_and_clear_turn_events(state_dir: Any) -> List[Dict[str, Any]]:
     """Subsurface calls this each loop cycle. Returns unconsumed turn_open
     (and interpreted_turn, once InterpretedTurnPacket lands) events and
@@ -400,11 +443,48 @@ def integrate_interpreted_turn_event(state_dir: Any, event: Dict[str, Any]) -> N
     )
 
 
+def integrate_evidence_need_event(state_dir: Any, event: Dict[str, Any]) -> Optional[str]:
+    """Build 694 step 9: the sole conversion point from "Surface described
+    a need" to "a ScoutRequest actually got dispatched." Local/lazy
+    imports (not module-level) because this is the one function in this
+    module that reaches into aurora_internal.scouting -- keeping that
+    reach as narrow and visible as possible, and avoiding paying that
+    import cost for every other event kind this module integrates.
+
+    Failure here must never propagate into the turn-events consumption
+    loop (a dispatch failure is not fatal to presence-frame integration
+    generally) -- caught and swallowed the same way every other write in
+    this module already treats its own I/O failures."""
+    try:
+        from aurora_internal.scouting.broker import dispatch_scout_request
+        from aurora_internal.scouting.contracts import ScoutRequest
+        dispatch_scout_request(state_dir, ScoutRequest(
+            turn_id=str(event.get("turn_id", "") or ""),
+            request_kind=str(event.get("request_kind", "") or "knowledge_gap"),
+            interpreted_input=str(event.get("target", "") or ""),
+            inquiry=str(event.get("inquiry", "") or ""),
+            evidence_needed=str(event.get("evidence_needed", "") or ""),
+            representation_refs=list(event.get("representation_refs", []) or []),
+            priority=float(event.get("priority", 0.5) or 0.5),
+            max_result_chars=int(event.get("max_result_chars", 1200) or 1200),
+            ttl_s=float(event.get("ttl_s", 30.0) or 30.0),
+        ))
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:integrate_evidence_need_event",
+            exc=_aurora_boundary_exc,
+            context={"function": "integrate_evidence_need_event", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+        )
+        return None
+    return "evidence_need"
+
+
 def integrate_turn_event(state_dir: Any, event: Dict[str, Any]) -> Optional[str]:
     """Dispatch one event by kind (Build 694 step 3's required shape).
     Returns the kind actually integrated, or None if this event's kind
-    has no handler yet (evidence_need/turn_outcome -- neither has a
-    producer at this point in the implementation order)."""
+    has no handler yet (turn_outcome has no producer at this point in
+    the implementation order)."""
     if not isinstance(event, dict):
         return None
     kind = str(event.get("kind", "") or "")
@@ -414,6 +494,8 @@ def integrate_turn_event(state_dir: Any, event: Dict[str, Any]) -> Optional[str]
     if kind == "interpreted_turn":
         integrate_interpreted_turn_event(state_dir, event)
         return kind
+    if kind == "evidence_need":
+        return integrate_evidence_need_event(state_dir, event)
     return None
 
 

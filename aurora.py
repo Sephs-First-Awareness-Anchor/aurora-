@@ -11222,24 +11222,32 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                 )
                 pass
 
-        # ── 2. Non-blocking Scout dispatch (spec step 10) ────────────────────
+        # ── 2. Non-blocking evidence_need publication (Build 694 step 9) ─────
         # Replaces the old synchronous queue-write-then-poll-and-sleep loop
         # (up to 35s for use_researcher=True) entirely. Surface fires the
         # request and moves on in the same call -- it never learns the
-        # answer this turn; a later turn's harvest (step 9) is the only
-        # path evidence takes back to Surface.
+        # answer this turn; a later turn's harvest (step 9 of the prior
+        # build) is the only path evidence takes back to Surface.
+        #
+        # Build 694 step 9 further reverses part of the prior build's step
+        # 10: Surface no longer dispatches a ScoutRequest itself (that
+        # meant holding scouting.broker/contracts knowledge directly).
+        # It now only publishes an evidence_need event on the same
+        # turn_open/interpreted_turn channel -- Subsurface (via
+        # integrate_evidence_need_event(), subsurface_presence.py) is the
+        # sole owner of turning a described need into an actual dispatch.
         try:
-            from aurora_internal.scouting.broker import dispatch_scout_request
-            from aurora_internal.scouting.contracts import ScoutRequest
+            from aurora_internal.dual_strata.subsurface_presence import write_evidence_need
             turn_id = str((systems or {}).get("_current_turn_id", "") or "") or "no_live_turn"
-            dispatch_scout_request(_sd, ScoutRequest(
+            write_evidence_need(
+                _sd,
                 turn_id=turn_id,
                 request_kind="knowledge_gap",
                 inquiry=str(topic or ""),
                 evidence_needed=str(topic or ""),
                 priority=0.75 if use_researcher else 0.4,
                 ttl_s=45.0 if use_researcher else max(5.0, float(timeout or 20.0)),
-            ))
+            )
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -11248,7 +11256,7 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                 exc=_aurora_boundary_exc,
                 context={"function": "_try_poedex_lookup", "source_file": "aurora.py"},
             )
-            pass  # dispatch failure must never block or fail this call
+            pass  # publication failure must never block or fail this call
 
         return ''
     except Exception as _aurora_boundary_exc:

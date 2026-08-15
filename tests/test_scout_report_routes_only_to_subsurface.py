@@ -21,12 +21,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Surface-side modules: may dispatch() (spec step 10 -- Surface fires a
-# ScoutRequest via the free-function dispatch_scout_request(), which
-# lives in aurora_internal.scouting.broker alongside the ScoutBroker
-# class it wraps) but must never hold a ScoutBroker instance or call
+# Surface-side modules: must never hold a ScoutBroker instance or call
 # .poll_reports() -- that instance would also expose .claim_next()/
-# .submit_report(), none of which Surface may ever touch.
+# .submit_report(), none of which Surface may ever touch. Build 694 step
+# 9 tightens this further than the prior build's step 10: Surface no
+# longer even dispatches a ScoutRequest itself (dispatch_scout_request()
+# included) -- it only publishes an evidence_need event via
+# subsurface_presence.write_evidence_need(); Subsurface owns the actual
+# dispatch from there (integrate_evidence_need_event()).
 _SURFACE_MODULES = ["aurora_surface_daemon.py", "aurora.py"]
 
 # The one module allowed to actually poll ScoutBroker for reports.
@@ -74,15 +76,27 @@ def _poll_reports_call_sites(tree: ast.Module) -> list:
 
 
 def test_surface_modules_never_import_scout_broker_class():
-    # Surface MAY import from aurora_internal.scouting.broker (step 10:
-    # dispatch_scout_request(), a thin dispatch-only free function) but
-    # must never import the ScoutBroker class itself -- holding an
+    # Must never import the ScoutBroker class itself -- holding an
     # instance would also hand Surface .poll_reports()/.claim_next()/
     # .submit_report(), none of which it may ever call.
     for rel in _SURFACE_MODULES:
         tree = _parse(os.path.join(_REPO_ROOT, rel))
         imported_symbols = _imported_symbols(tree)
         assert "ScoutBroker" not in imported_symbols, f"{rel} must never import the ScoutBroker class"
+
+
+def test_surface_modules_never_import_anything_from_scouting_broker():
+    # Build 694 step 9: Surface no longer reaches into
+    # aurora_internal.scouting.broker AT ALL (not even the thin
+    # dispatch_scout_request() free function) -- it only ever describes
+    # a need via subsurface_presence.write_evidence_need(). Subsurface is
+    # the sole module that imports scouting.broker to actually dispatch.
+    for rel in _SURFACE_MODULES:
+        tree = _parse(os.path.join(_REPO_ROOT, rel))
+        imported_modules = _imported_names(tree)
+        assert "aurora_internal.scouting.broker" not in imported_modules, (
+            f"{rel} must never import aurora_internal.scouting.broker directly"
+        )
 
 
 def test_surface_modules_never_call_poll_reports():
@@ -130,15 +144,28 @@ def test_aurora_daemon_wires_the_subsurface_bridge_not_the_broker_directly():
     assert "ScoutBroker" not in imported_symbols
 
 
-def test_aurora_dispatches_scout_requests_via_the_thin_free_function():
-    # Positive coverage for spec step 10: aurora.py IS allowed to reach
-    # dispatch_scout_request() (imported inside _try_poedex_lookup) --
-    # this is the other half of the boundary the tests above enforce
-    # negatively. A dynamic import check (not just source text) proves
-    # the real module actually exports the name aurora.py expects.
-    from aurora_internal.scouting.broker import dispatch_scout_request
-    assert callable(dispatch_scout_request)
+def test_aurora_publishes_evidence_need_via_subsurface_presence():
+    # Positive coverage for Build 694 step 9: aurora.py IS allowed to
+    # reach subsurface_presence.write_evidence_need() (imported inside
+    # _try_poedex_lookup) -- this is the other half of the boundary the
+    # tests above enforce negatively. A dynamic import check (not just
+    # source text) proves the real module actually exports the name
+    # aurora.py expects.
+    from aurora_internal.dual_strata.subsurface_presence import write_evidence_need
+    assert callable(write_evidence_need)
 
+    tree = _parse(os.path.join(_REPO_ROOT, "aurora.py"))
+    found = any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "aurora_internal.dual_strata.subsurface_presence"
+        and any(alias.name == "write_evidence_need" for alias in node.names)
+        for node in ast.walk(tree)
+    )
+    assert found, "aurora.py should publish evidence needs via subsurface_presence.write_evidence_need()"
+
+
+def test_aurora_no_longer_imports_dispatch_scout_request_directly():
+    # Negative coverage: the old direct-dispatch path this replaces.
     tree = _parse(os.path.join(_REPO_ROOT, "aurora.py"))
     found = any(
         isinstance(node, ast.ImportFrom)
@@ -146,4 +173,4 @@ def test_aurora_dispatches_scout_requests_via_the_thin_free_function():
         and any(alias.name == "dispatch_scout_request" for alias in node.names)
         for node in ast.walk(tree)
     )
-    assert found, "aurora.py should dispatch Scout requests via dispatch_scout_request()"
+    assert not found, "aurora.py must not import dispatch_scout_request directly anymore (Build 694 step 9)"
