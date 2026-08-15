@@ -231,6 +231,70 @@ def read_bindings_for_turn(state_dir: Any, turn_id: str) -> List[Dict[str, Any]]
     return list(store.get(str(turn_id or ""), []))
 
 
+# spec section 17's own poll-interval framing: "so this does not require
+# wasteful high-frequency filesystem polling." SubsurfacePresenceRuntime
+# (subsurface_presence_runtime.py, build 694 step 4) already polls turn
+# events/Scout reports at this exact cadence as this architecture's
+# established presence granularity -- reusing it here, rather than
+# picking a tighter interval, keeps this wait no more "wasteful" than
+# presence processing already is everywhere else in this codebase.
+_DEFAULT_WAIT_POLL_INTERVAL_S = 0.15
+
+
+def wait_for_current_turn_binding(
+    state_dir: Any,
+    *,
+    turn_id: str,
+    request_kind: Optional[str] = None,
+    timeout: float,
+    poll_interval_s: float = _DEFAULT_WAIT_POLL_INTERVAL_S,
+) -> Optional[Dict[str, Any]]:
+    """
+    Build 694 step 14 (spec section 17): "Surface must never poll
+    scout_reports directly... Provide a wait primitive such as
+    wait_for_current_turn_binding(turn_id, request_kind, timeout). This
+    waits for an accepted Subsurface EvidenceBinding." The path stays
+    ScoutReport -> Subsurface evaluation -> EvidenceBinding -> Surface,
+    never ScoutReport -> Surface directly -- this reads exclusively
+    through read_bindings_for_turn() (spec section 11), the exact same
+    call _harvest_scout_evidence_for_expression()/
+    _ingest_current_turn_scout_evidence() in aurora.py already use, so a
+    waiting caller and a non-waiting caller can never see a different
+    notion of "accepted evidence for this turn."
+
+    Bounded and file-backed by construction -- correct whether or not a
+    fast SubsurfacePresenceRuntime happens to be running in this process
+    (tests, and any deployment that hasn't started one), and across
+    separate desktop processes (spec section 17's explicit file-backed-
+    fallback allowance), not only in-process. A future optimization could
+    additionally wire SubsurfacePresenceRuntime.on_binding_change (already
+    an extension point built for this) for a faster in-process wake; this
+    bounded poll remains correct either way and is deliberately kept as
+    the sole implementation for now rather than adding two code paths
+    that could quietly drift.
+
+    Returns the first matching accepted binding dict, or None once
+    `timeout` elapses with nothing landing. `timeout=0` (or a non-
+    positive value) checks once and returns immediately -- callers
+    implementing spec section 16's "normal well-resolved turn: 0
+    additional wait" tier should simply not call this at all rather than
+    rely on that as a code path, but it degrades safely if they do.
+    """
+    deadline = time.time() + max(0.0, float(timeout or 0.0))
+    interval = max(0.01, float(poll_interval_s or _DEFAULT_WAIT_POLL_INTERVAL_S))
+    while True:
+        for binding in read_bindings_for_turn(state_dir, turn_id):
+            if not isinstance(binding, dict) or binding.get("status") != "accepted":
+                continue
+            if request_kind and binding.get("request_kind") != request_kind:
+                continue
+            return binding
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            return None
+        time.sleep(min(interval, remaining))
+
+
 def consume_scout_reports(state_dir: Any, *, broker: Optional[ScoutBroker] = None) -> List[EvidenceBinding]:
     """Subsurface's main loop calls this once per cycle (mirrors
     _consume_subsurface_turn_events in aurora_daemon.py). Drains every

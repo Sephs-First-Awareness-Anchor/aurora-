@@ -21671,6 +21671,15 @@ def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str,
         response_gap = 1.0 - response_confidence
         response_fit_pressure = response_gap if (interpretation_adequate and ambiguity_not_blocking) else 0.0
 
+        # Build 694 step 14 (spec section 16): _ingest_current_turn_scout_evidence()
+        # reads this back to decide whether this turn qualifies for the
+        # small opportunistic same-turn evidence window -- stored here,
+        # not recomputed there, so the two can never drift apart on what
+        # counts as "elevated."
+        if not isinstance(state.pipeline_state, dict):
+            state.pipeline_state = {}
+        state.pipeline_state["response_fit_pressure"] = response_fit_pressure
+
         from aurora_internal.dual_strata.subsurface_presence import write_interpreted_turn
         write_interpreted_turn(
             systems.get("state_dir"),
@@ -21727,6 +21736,53 @@ def _read_accepted_scout_bindings(systems: dict, *, turn_id: str) -> list:
         return []
 
 
+# Build 694 step 14 (spec section 16): "Suggested total per-turn Scout
+# rescue budget: ~4 seconds. Make this configurable. Do not permanently
+# encode 4 seconds as cognitive doctrine." SCOUT_RESCUE_BUDGET_S overrides
+# it; SCOUT_OPPORTUNISTIC_WAIT_S overrides the smaller opportunistic-
+# window default below. Both are tuning values, not semantic rules --
+# same posture as subsurface_presence.response_fit_dispatch_threshold().
+_DEFAULT_SCOUT_RESCUE_BUDGET_S = 4.0
+_DEFAULT_OPPORTUNISTIC_WAIT_S = 1.5
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None or not str(raw).strip():
+        return default
+    try:
+        return max(0.0, float(raw))
+    except (TypeError, ValueError):
+        return default
+
+
+def _scout_rescue_budget_total_s() -> float:
+    return _env_float("SCOUT_RESCUE_BUDGET_S", _DEFAULT_SCOUT_RESCUE_BUDGET_S)
+
+
+def _opportunistic_wait_s() -> float:
+    return _env_float("SCOUT_OPPORTUNISTIC_WAIT_S", _DEFAULT_OPPORTUNISTIC_WAIT_S)
+
+
+def _scout_rescue_budget_remaining(systems: dict, turn_id: str) -> float:
+    """Build 694 steps 14+15 share ONE per-turn budget (spec section 16's
+    single ~4s total, not 4s per tier) -- Build 694 step 14's opportunistic
+    wait and step 15's abstention-rescue wait both draw against this same
+    tracker, keyed fresh on each new turn_id so a prior turn's spent
+    budget never leaks into the next one."""
+    tracker = systems.setdefault("_scout_rescue_budget", {})
+    if tracker.get("turn_id") != turn_id:
+        tracker["turn_id"] = turn_id
+        tracker["remaining_s"] = _scout_rescue_budget_total_s()
+    return float(tracker.get("remaining_s", 0.0) or 0.0)
+
+
+def _scout_rescue_budget_spend(systems: dict, turn_id: str, elapsed_s: float) -> None:
+    tracker = systems.setdefault("_scout_rescue_budget", {})
+    if tracker.get("turn_id") == turn_id:
+        tracker["remaining_s"] = max(0.0, float(tracker.get("remaining_s", 0.0) or 0.0) - max(0.0, elapsed_s))
+
+
 def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: str) -> list:
     """
     Build 694 step 12 (Subsurface Presence and Evidence Scout spec,
@@ -21739,17 +21795,22 @@ def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: s
     accepted evidence can shape the actual response decision rather than
     only its final expression style.
 
-    Deliberately non-blocking here, same as every other point Surface
-    touches Scout machinery -- a same-turn ScoutRequest dispatched only
-    moments ago (in _emit_interpreted_turn_packet's own Trigger A, or an
-    evidence_need published earlier this turn) has usually not
-    round-tripped through the worker yet, so this call alone will often
-    find nothing. What it establishes is the pipeline POSITION and the
-    state.current_turn_scout_evidence field DOWN2 belief/DOWN1
-    information structurally consume (Build 694 step 13) -- Build 694
-    step 14's bounded same-turn wait is what gives a struggling turn a
-    real chance to have evidence actually land here before this point
-    runs.
+    Build 694 step 14 (spec section 16, "bounded same-turn evidence
+    window"): if nothing has arrived yet AND this turn's
+    response_fit_pressure (stashed onto state.pipeline_state by
+    _emit_interpreted_turn_packet, immediately before this call) clears
+    the same threshold Trigger A dispatch uses, this is not a "normal
+    well-resolved turn" (tier 1: 0 additional wait, the plain non-
+    blocking read below already covers it) -- it is tier 2, "elevated
+    response-fit pressure: small opportunistic evidence window."
+    wait_for_current_turn_binding() briefly suspends (never performs
+    retrieval itself -- Subsurface/the Scout worker do that on their own
+    thread/process) for up to _opportunistic_wait_s(), charged against
+    this turn's shared _scout_rescue_budget_remaining() so Build 694 step
+    15's later abstention-rescue wait never exceeds the combined ~4s
+    total. Tier 3 ("imminent generic abstention: use remaining bounded
+    rescue window") is step 15's own call site, at the articulation
+    boundary this function never reaches.
 
     The late pre-expression harvest (_harvest_scout_evidence_for_expression,
     below) is retained as a secondary mechanism per the spec's own
@@ -21757,6 +21818,31 @@ def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: s
     of Scout evidence.
     """
     accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+
+    if not accepted:
+        try:
+            pressure = float((state.pipeline_state or {}).get("response_fit_pressure", 0.0) or 0.0)
+            from aurora_internal.dual_strata.subsurface_presence import response_fit_dispatch_threshold
+            if pressure >= response_fit_dispatch_threshold():
+                budget = _scout_rescue_budget_remaining(systems, turn_id)
+                window = min(_opportunistic_wait_s(), budget)
+                if window > 0:
+                    from aurora_internal.scouting.subsurface_scout_bridge import wait_for_current_turn_binding
+                    started = time.time()
+                    wait_for_current_turn_binding(
+                        systems.get("state_dir"), turn_id=turn_id,
+                        request_kind="response_fit", timeout=window,
+                    )
+                    _scout_rescue_budget_spend(systems, turn_id, time.time() - started)
+                    accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora.py:_ingest_current_turn_scout_evidence:opportunistic_wait",
+                exc=_aurora_boundary_exc,
+                context={"function": "_ingest_current_turn_scout_evidence", "source_file": "aurora.py"},
+            )
+
     try:
         state.current_turn_scout_evidence = accepted
         _structure_current_turn_scout_evidence(state, accepted)
