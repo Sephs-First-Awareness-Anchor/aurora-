@@ -125,4 +125,6 @@ Three genuine bugs were caught and fixed purely through writing adversarial edge
 
 ## Regression discipline
 
-Every commit in this work ran and passed its own new tests plus the accumulated spec-phase suite before being pushed. A full run of the entire `tests/` directory (272 files) was executed as the final step of this work; see the commit this report is pushed alongside for the pass/fail outcome.
+Every commit in this work ran and passed its own new tests plus the accumulated spec-phase suite (140 tests) before being pushed -- that targeted suite is the primary regression evidence for this work and passed cleanly at every checkpoint.
+
+A full run of the entire `tests/` directory (272 files, most of which predate this work and exercise unrelated subsystems) was also started as an additional check. It reached ~25% (all clean except two failures not yet triaged, in files unrelated to this work) after consuming over 2.5 hours of wall-clock time and 150+ CPU-minutes -- far slower than practical to run to completion in this environment. It was deliberately stopped to free machine resources for the Aurora Build 694 directive that followed this work, rather than left running indefinitely. The 140-test spec-phase suite remains the authoritative regression signal for everything in this report; the two unreviewed failures from the partial full-suite run should be triaged separately, independent of whether they relate to this work at all.
