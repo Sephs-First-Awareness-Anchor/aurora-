@@ -318,9 +318,13 @@ class _FacePainter extends CustomPainter {
         Paint()..color = Colors.black,
       );
       if (spec.highlight) {
+        // A glare -- a reflected catch-light tucked into the upper-left
+        // corner of an otherwise solid eye -- not an iris/pupil, so it
+        // stays small, fully opaque, and off-center rather than a second
+        // centered dot that could read as a colored eye center.
         canvas.drawCircle(
-          Offset(-rw * 0.28, -rh * 0.32), rw * 0.30,
-          Paint()..color = Colors.white.withOpacity(0.85),
+          Offset(-rw * 0.38, -rh * 0.42), rw * 0.20,
+          Paint()..color = Colors.white,
         );
       }
     }
