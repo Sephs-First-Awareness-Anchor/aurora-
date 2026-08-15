@@ -21627,7 +21627,15 @@ def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str,
         unresolved_ambiguity = [str(k) for k, v in pronoun_resolution.items() if not v]
 
         belief_tension = max(0.0, min(1.0, float(getattr(state, "belief_tension", 0.0) or 0.0)))
-        interpretation_confidence = 1.0 - belief_tension
+        # Rounded here, not just at display time (write_interpreted_turn()
+        # rounds independently for its own event dict) -- a raw float
+        # subtraction like 1.0 - 0.55 can land a hair under 0.45
+        # (0.44999999999999996), which would silently fail the >= 0.45
+        # gate below even though the "true" value is exactly the
+        # threshold. Rounding before the comparison keeps the gate
+        # consistent with what a caller reading interpretation_confidence
+        # back out actually sees.
+        interpretation_confidence = round(1.0 - belief_tension, 4)
         response_confidence = max(0.0, min(1.0, float(getattr(state, "response_confidence", 0.5) or 0.5)))
 
         axis_activation = state.axis_activation if isinstance(state.axis_activation, dict) else {}
