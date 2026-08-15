@@ -21675,10 +21675,14 @@ def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str,
         # reads this back to decide whether this turn qualifies for the
         # small opportunistic same-turn evidence window -- stored here,
         # not recomputed there, so the two can never drift apart on what
-        # counts as "elevated."
+        # counts as "elevated." Build 694 step 15's abstention-rescue
+        # eligibility gate reads interpretation_adequate/interpreted_meaning
+        # the same way, for the same reason.
         if not isinstance(state.pipeline_state, dict):
             state.pipeline_state = {}
         state.pipeline_state["response_fit_pressure"] = response_fit_pressure
+        state.pipeline_state["interpretation_adequate"] = interpretation_adequate
+        state.pipeline_state["interpreted_meaning"] = interpreted_meaning
 
         from aurora_internal.dual_strata.subsurface_presence import write_interpreted_turn
         write_interpreted_turn(
@@ -22008,6 +22012,125 @@ def _apply_subsurface_response_evidence(systems: dict, state: Any) -> bool:
             operation="exception_handler:aurora.py:_apply_subsurface_response_evidence",
             exc=_aurora_boundary_exc,
             context={"function": "_apply_subsurface_response_evidence", "source_file": "aurora.py"},
+        )
+        return False
+
+
+def _attempt_abstention_rescue(
+    user_text: str, systems: dict, state: Any, *,
+    turn_id: str, auto_search_enabled: bool = True, use_search: bool = False,
+) -> bool:
+    """
+    Build 694 step 15 (spec section 21: "Add One Abstention-Rescue
+    Retry"). Called from _run_reasoning_pipeline() immediately after
+    _enforce_emission_discipline() -- the SINGLE EMISSION CHOKEPOINT --
+    decides Aurora's final response for this turn. Spec section 20:
+    generic admissibility is a terminal state, reached only after
+    resolution has genuinely been attempted, not the first reaction to
+    unresolved pressure.
+
+    Trigger B (spec section 9): "If Aurora is about to produce
+    constraint_abstain despite having formed a viable interpretation,
+    that is itself strong evidence that response resolution failed...
+    dispatch [a response-fit Scout] immediately." Shares
+    dispatch_response_fit_scout() with Trigger A (Build 694 step 10) --
+    the two triggers can never diverge into different ScoutRequest
+    shapes -- and ScoutBroker's own one-response-fit-per-turn dedup means
+    calling it here is a no-op if Trigger A already dispatched for this
+    turn, never a duplicate request.
+
+    Eligibility gate: only when interpretation was viable this turn
+    (state.pipeline_state["interpretation_adequate"], stashed by
+    _emit_interpreted_turn_packet) -- an inadequate interpretation is
+    never externally resolvable by a response-fit Scout, which only ever
+    helps once Aurora already understands the input (spec section 8: "It
+    [the Scout] is not allowed to solve interpretation for her.").
+
+    Waits out whatever remains of this turn's shared ~4s Scout rescue
+    budget (Build 694 step 14) -- "use remaining bounded rescue window,"
+    not a fresh window of its own.
+
+    On evidence arriving, reruns ONLY response formation -- DOWN2 belief
+    -> DOWN1 information -> re-enforce emission discipline -- never
+    DOWN5/DOWN4/DOWN3 understanding/meaning/purpose (already ran once
+    this turn and are not repeated: "preserve the post-purpose state
+    required for response formation," spec section 21 point 1) and never
+    memory admission, user-observation recording, turn counting,
+    genealogy, or consequence records: none of those have run yet at
+    this point in _run_reasoning_pipeline (they all happen downstream of
+    the emission chokepoint), so simply not re-entering the whole turn
+    is what keeps this rescue from duplicating any of them, satisfying
+    spec section 21's "do not" list without needing separate guards
+    against each one individually.
+
+    systems["_scout_retry_done"] is the turn-scoped guard spec section
+    21 asks for by name -- keyed per turn_id (not a bare bool) so a
+    caller that reuses one `systems` dict across turns in one process
+    (desktop's daemon loop does) can never have a stale guard from a
+    prior turn suppress this turn's own one legitimate attempt. Marked
+    BEFORE the retry runs, not after, so a rescue that itself raises can
+    never be attempted twice.
+
+    Returns True iff the rescue actually replaced the abstention with
+    real content.
+    """
+    if str(getattr(state, "response_src", "") or "") not in ("constraint_abstain", "constraint_abstain_seek"):
+        return False
+
+    retry_guard = systems.setdefault("_scout_retry_done", {})
+    if retry_guard.get(turn_id):
+        return False
+    retry_guard[turn_id] = True
+
+    if not bool((state.pipeline_state or {}).get("interpretation_adequate", False)):
+        return False
+
+    try:
+        from aurora_internal.dual_strata.subsurface_presence import dispatch_response_fit_scout
+        dispatch_response_fit_scout(
+            systems.get("state_dir"), turn_id=turn_id,
+            interpreted_meaning=str((state.pipeline_state or {}).get("interpreted_meaning", "") or ""),
+            inferred_purpose=str(getattr(state, "intent", "") or ""),
+            representation_refs=list(state.salient_concepts or [])[:16],
+            priority=0.9,
+        )
+
+        budget = _scout_rescue_budget_remaining(systems, turn_id)
+        if budget > 0:
+            from aurora_internal.scouting.subsurface_scout_bridge import wait_for_current_turn_binding
+            started = time.time()
+            wait_for_current_turn_binding(
+                systems.get("state_dir"), turn_id=turn_id,
+                request_kind="response_fit", timeout=budget,
+            )
+            _scout_rescue_budget_spend(systems, turn_id, time.time() - started)
+
+        accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+        if not accepted:
+            return False
+        state.current_turn_scout_evidence = accepted
+        _structure_current_turn_scout_evidence(state, accepted)
+
+        state.response_content = ""
+        state.response_tone = "neutral"
+        state.response_confidence = 0.5
+        state.response_src = "chain"
+        _chain_down2_belief(
+            user_text, systems, state,
+            auto_search_enabled=auto_search_enabled, use_search=use_search,
+        )
+        _skip_post = bool(systems.pop("_skip_response_postprocessing_once", False))
+        _chain_down1_information(
+            user_text, systems, state, use_search=use_search, skip_postprocessing=_skip_post,
+        )
+        _enforce_emission_discipline(user_text, systems, state)
+        return str(getattr(state, "response_src", "") or "") not in ("constraint_abstain", "constraint_abstain_seek")
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_attempt_abstention_rescue",
+            exc=_aurora_boundary_exc,
+            context={"function": "_attempt_abstention_rescue", "source_file": "aurora.py"},
         )
         return False
 
@@ -23143,6 +23266,20 @@ def _run_reasoning_pipeline(
     # the turn falls through to the honest abstain + active seek. Nothing outputs
     # without passing this gate.
     _enforce_emission_discipline(user_text, systems, state)
+
+    # Build 694 step 15 (spec section 20/21): generic admissibility is a
+    # terminal state, not the first reaction -- if Aurora just chose
+    # constraint_abstain, give Subsurface exactly one final evidence
+    # acquisition attempt before accepting that outcome. See
+    # _attempt_abstention_rescue's own docstring for the full eligibility
+    # gate, budget accounting, and why re-running only response formation
+    # here can never duplicate memory admission/turn counting/genealogy/
+    # consequence recording.
+    _attempt_abstention_rescue(
+        user_text, systems, state,
+        turn_id=str(systems.get("_current_turn_id", "") or ""),
+        auto_search_enabled=auto_search_enabled, use_search=use_search,
+    )
 
     # Meaning validation through the interaction surface: a taught concept USED in
     # this (substantive) turn earns resonance toward crystallisation, so emit() can
