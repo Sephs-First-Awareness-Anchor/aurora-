@@ -72,7 +72,7 @@ def test_emit_interpreted_turn_packet_writes_a_real_event(tmp_path):
     state = _state_with(
         intent="informational",
         salient_concepts=["weather", "forecast"],
-        referent_map={"it": "the weather"},
+        referent_map={"referent_map": {"it": "the weather"}},
         belief_tension=0.2,
         response_confidence=0.4,
         axis_activation={"X": 0.5, "T": 0.3},
@@ -112,7 +112,7 @@ def test_response_fit_pressure_high_when_interpretation_adequate_and_response_co
     state = _state_with(
         belief_tension=0.1,       # interpretation_confidence = 0.9, adequate
         response_confidence=0.1,  # very low -- big response gap
-        referent_map={},          # no unresolved ambiguity
+        referent_map={},          # no nested referent_map -- no unresolved ambiguity
     )
     aurora._emit_interpreted_turn_packet(systems, state, session_id="s1", turn_tick=1)
     e = sp.read_and_clear_turn_events(tmp_path)[0]
@@ -140,12 +140,48 @@ def test_response_fit_pressure_zero_when_ambiguity_is_blocking(tmp_path):
     state = _state_with(
         belief_tension=0.1,        # interpretation confidence adequate on its own
         response_confidence=0.05,  # response confidence very low
-        referent_map={"it": ""},   # but an unresolved referent blocks interpretation
+        # An unresolved pronoun inside the NESTED referent_map (the real
+        # schema -- WorkingMemory.resolve_referents() wraps the actual
+        # pronoun->resolution map under a "referent_map" key of its own,
+        # alongside topic/entities/search_query/confidence/source) blocks
+        # interpretation.
+        referent_map={"referent_map": {"it": ""}},
     )
     aurora._emit_interpreted_turn_packet(systems, state, session_id="s1", turn_tick=1)
     e = sp.read_and_clear_turn_events(tmp_path)[0]
     assert e["unresolved_ambiguity"] == ["it"]
     assert e["response_fit_pressure"] == 0.0
+
+
+def test_referent_extraction_ignores_working_memorys_own_compound_keys(tmp_path):
+    # Sunni & Cael, caught by a live smoke test: state.referent_map is
+    # WorkingMemory.resolve_referents()'s full return shape -- topic/
+    # entities/search_query/confidence/source PLUS a nested "referent_map"
+    # key that is the actual pronoun->resolution map -- not a flat
+    # {word: resolution} dict itself. An earlier version read the outer
+    # dict's own keys, so "confidence" and "source" (always falsy at
+    # their zero/empty defaults) showed up as fake "unresolved ambiguity"
+    # on every single turn, silently zeroing response_fit_pressure almost
+    # always. This is the real shape resolve_referents() actually returns.
+    systems = {"state_dir": str(tmp_path), "_current_turn_id": "t1"}
+    state = _state_with(
+        belief_tension=0.0,
+        response_confidence=0.2,
+        referent_map={
+            "topic": "guitar",
+            "entities": ["guitar", "chord"],
+            "search_query": "guitar chord",
+            "referent_map": {},   # no pronouns detected in this turn at all
+            "confidence": 0.0,
+            "source": "",
+        },
+    )
+    aurora._emit_interpreted_turn_packet(systems, state, session_id="s1", turn_tick=1)
+    e = sp.read_and_clear_turn_events(tmp_path)[0]
+    assert e["resolved_referents"] == []
+    assert e["unresolved_ambiguity"] == []
+    # No blocking ambiguity and adequate interpretation -> pressure holds.
+    assert e["response_fit_pressure"] == 0.8
 
 
 def test_emit_interpreted_turn_packet_never_raises_on_malformed_state(tmp_path):

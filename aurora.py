@@ -21711,9 +21711,21 @@ def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str,
 
         current_topic = str(state.salient_concepts[0]) if state.salient_concepts else ""
 
-        referent_map = state.referent_map if isinstance(state.referent_map, dict) else {}
-        resolved_referents = [str(k) for k, v in referent_map.items() if v]
-        unresolved_ambiguity = [str(k) for k, v in referent_map.items() if not v]
+        # Sunni & Cael, caught by live smoke test: state.referent_map is NOT
+        # a {referent_word: resolution} mapping -- it's a fixed-schema
+        # compound dict (WorkingMemory.resolve_referents()'s return shape:
+        # topic/entities/search_query/confidence/source, PLUS a nested
+        # "referent_map" key that IS the actual pronoun -> resolution map).
+        # Reading the outer dict's own keys as "referents" produced
+        # nonsense (e.g. "confidence" and "source" showing up as
+        # "unresolved ambiguity" on every single turn, which silently
+        # zeroed response_fit_pressure below almost always). The nested
+        # map is the real signal.
+        belief_referents = state.referent_map if isinstance(state.referent_map, dict) else {}
+        pronoun_resolution = belief_referents.get("referent_map")
+        pronoun_resolution = pronoun_resolution if isinstance(pronoun_resolution, dict) else {}
+        resolved_referents = [str(k) for k, v in pronoun_resolution.items() if v]
+        unresolved_ambiguity = [str(k) for k, v in pronoun_resolution.items() if not v]
 
         belief_tension = max(0.0, min(1.0, float(getattr(state, "belief_tension", 0.0) or 0.0)))
         interpretation_confidence = 1.0 - belief_tension
