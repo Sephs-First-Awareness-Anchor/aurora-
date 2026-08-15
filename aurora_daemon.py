@@ -8236,6 +8236,96 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
         _log(f"  [CONTINUITY] Integrated {len(packets)} surface packet(s) into subsurface continuity.")
 
 
+def _consume_subsurface_turn_events(systems: Dict[str, Any]) -> None:
+    """
+    Subsurface Presence and Evidence Scout spec, section 5A/13: consume
+    turn_open events Surface deposited (write_turn_open(), called the
+    instant Surface accepts a turn, BEFORE the response pipeline runs)
+    and publish an updated presence frame reflecting the live turn_id.
+
+    Distinct from _consume_surface_continuity_feed() above, which
+    integrates what Surface absorbed AFTER a turn completed -- this is
+    the layer underneath that: proof Subsurface knew a turn was
+    happening while Surface was still answering it, not only afterward.
+
+    Deliberately minimal for now: crest/active_pressure/evidence_bindings
+    stay empty until the EvidenceBinding integration (spec step 8) and
+    deeper Subsurface state access land -- this function's job is only
+    to make the live turn_id visible, not to front-run later steps.
+    """
+    try:
+        from aurora_internal.dual_strata.subsurface_presence import (
+            read_and_clear_turn_events,
+            write_presence_frame,
+        )
+        events = read_and_clear_turn_events(_STATE_DIR)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:_consume_subsurface_turn_events:read",
+            exc=_aurora_boundary_exc,
+            context={"function": "_consume_subsurface_turn_events", "source_file": "aurora_daemon.py"},
+        )
+        return
+    if not events:
+        return
+
+    latest = events[-1]
+    try:
+        write_presence_frame(
+            _STATE_DIR,
+            turn_id=str(latest.get("turn_id", "") or ""),
+            continuity_summary=f"turn open: {str(latest.get('raw_input', ''))[:120]}",
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:_consume_subsurface_turn_events:write",
+            exc=_aurora_boundary_exc,
+            context={"function": "_consume_subsurface_turn_events", "source_file": "aurora_daemon.py"},
+        )
+        return
+
+    _log(f"  [PRESENCE] Turn {latest.get('turn_id', '')!r} known to Subsurface before Surface completed it.")
+
+
+def _start_subsurface_heartbeat_thread() -> None:
+    """
+    Subsurface Presence and Evidence Scout spec, section 20 acceptance
+    criterion: "Long retrieval does not stop Subsurface heartbeat/
+    presence updates." A heartbeat written only at the bottom of the
+    main while-loop would still freeze for the duration of any
+    synchronous blocking call inside that loop (e.g.
+    _maybe_research_recurring_issue()'s 18s Poedex call, before step 11
+    replaces it with async Scout dispatch) -- the loop simply wouldn't
+    reach that line until the blocking call returns. A dedicated thread,
+    independent of whatever the main loop happens to be doing, is what
+    actually proves the process itself is alive during a slow retrieval,
+    not just that one particular iteration finished.
+    """
+    import threading as _threading_heartbeat
+
+    def _beat() -> None:
+        from aurora_internal.dual_strata.subsurface_presence import write_heartbeat
+        while True:
+            try:
+                write_heartbeat(_STATE_DIR)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:_start_subsurface_heartbeat_thread:_beat",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_start_subsurface_heartbeat_thread", "source_file": "aurora_daemon.py"},
+                )
+            time.sleep(1.0)
+
+    _thread = _threading_heartbeat.Thread(target=_beat, name="subsurface-heartbeat", daemon=True)
+    _thread.start()
+
+
 def _run_pressure_routing(systems: Dict[str, Any]) -> None:
     """
     Run the pressure adapter first so axis_stats and evolver hints reflect the
@@ -8612,6 +8702,11 @@ def run(systems: Dict[str, Any]) -> None:
     governor = RuntimeConstraintGovernor(str(_STATE_DIR))
     systems["_runtime_governor_status"] = governor.status()
 
+    # Subsurface Presence and Evidence Scout spec, section 20: heartbeat
+    # must survive a slow synchronous call inside the main loop below, so
+    # it runs on its own thread rather than at the bottom of the loop body.
+    _start_subsurface_heartbeat_thread()
+
     # Enable proactive reach-out — Aurora should speak up on her own when she
     # has something to say (identity field pressure, novel sensory events, etc.)
     # Subsurface never owns outward communication (same delegation the
@@ -8897,6 +8992,11 @@ def run(systems: Dict[str, Any]) -> None:
         # This is the architectural handoff: every present moment Surface gathered
         # gets integrated into Subsurface continuity here, every cycle.
         _consume_surface_continuity_feed(systems)
+
+        # Live presence: know a turn is happening NOW, not only after
+        # Surface has already answered it (Subsurface Presence and
+        # Evidence Scout spec, section 5A).
+        _consume_subsurface_turn_events(systems)
 
         # Grammar motif training — fires when the SIC has no promoted sentence
         # patterns, which means the emergent expression path produces word salad.
