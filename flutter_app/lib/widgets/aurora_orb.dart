@@ -8,9 +8,11 @@
 // idle state landing on a plain filled circle — the state she spends
 // most of her idle time in was also the one that read as just a dot
 // instead of a face. Both eyes and mouth are now a pure function of live
-// axis state (X/T/N/B/A), and the mouth's openness pulses in sync with
-// speech (the same word-boundary pulse home_screen.dart already drives
-// TTS with) so it visibly moves while she talks instead of sitting static.
+// axis state (X/T/N/B/A). While speaking, the resting mouth is replaced
+// by an articulated open/close mouth (see _drawTalkingMouth) driven by
+// the same word-boundary pulse home_screen.dart already drives TTS
+// with -- real jaw motion, not the resting shape breathing bigger and
+// smaller.
 import 'package:flutter/material.dart';
 
 enum OrbState { dormant, listening, thinking, speaking }
@@ -367,23 +369,33 @@ class _FacePainter extends CustomPainter {
     _drawEye(canvas, Offset(faceCenter.dx - eyeSpacing, eyeY), refSize, face.leftEye);
     _drawEye(canvas, Offset(faceCenter.dx + eyeSpacing, eyeY), refSize, face.rightEye);
 
-    // While speaking, the pulse (already kicked to 1.0 on each TTS word
-    // boundary, see home_screen.dart's _kickPulse) opens the mouth wider
-    // in sync with speech instead of it sitting static.
-    final speakOpen = speaking ? (1.0 + pulse * 0.9) : 1.0;
+    // Sunni: "her mouth should ... operate like a mouth" -- real talking
+    // is jaw motion (mostly a height change, revealing the inside), not
+    // the whole resting shape breathing bigger and smaller. While
+    // speaking, the resting expression's mouth is replaced by an
+    // articulated open/close mouth driven by pulse (already kicked to
+    // 1.0 on each TTS word boundary, see home_screen.dart's
+    // _kickPulse, and decaying between words) -- width and rotation
+    // still carry the expression's character (a smirk stays tilted,
+    // "tired" stays narrower), but openness is what actually animates.
+    if (speaking) {
+      _drawTalkingMouth(canvas, faceCenter, refSize, shape, pulse);
+      return;
+    }
+
     final paint = Paint()..color = Colors.black;
 
     if (shape.kind == _ShapeKind.colon) {
       final dotR = refSize * 0.32;
-      final gap = refSize * 0.9 * speakOpen;
+      final gap = refSize * 0.9;
       canvas.drawCircle(Offset(faceCenter.dx, faceCenter.dy - gap / 2), dotR, paint);
       canvas.drawCircle(Offset(faceCenter.dx, faceCenter.dy + gap / 2), dotR, paint);
       return;
     }
 
     if (shape.kind == _ShapeKind.line) {
-      final mw = refSize * shape.widthScale * speakOpen;
-      final curveDepth = refSize * shape.curve * speakOpen;
+      final mw = refSize * shape.widthScale;
+      final curveDepth = refSize * shape.curve;
       canvas.save();
       canvas.translate(faceCenter.dx, faceCenter.dy);
       canvas.rotate(shape.rotation);
@@ -403,7 +415,7 @@ class _FacePainter extends CustomPainter {
     }
 
     final rw = refSize * shape.widthScale;
-    final rh = refSize * shape.heightScale * speakOpen;
+    final rh = refSize * shape.heightScale;
     canvas.save();
     canvas.translate(faceCenter.dx, faceCenter.dy);
     canvas.rotate(shape.rotation);
@@ -412,6 +424,46 @@ class _FacePainter extends CustomPainter {
       Radius.circular((rw < rh ? rw : rh) / 2), // fully rounded ends -> stadium/dot shape
     );
     canvas.drawRRect(rrect, paint);
+    canvas.restore();
+  }
+
+  /// Articulated talking mouth: a black stadium shape whose HEIGHT
+  /// interpolates from a near-closed sliver up to a wide-open cavity as
+  /// [openAmount] (the word-boundary pulse, 0..1) rises, with a white
+  /// interior revealed once it opens enough to read as inside-the-mouth
+  /// rather than a second glare. Width/rotation come from the resting
+  /// expression's mouth so a smirk still reads as a smirk mid-sentence.
+  void _drawTalkingMouth(Canvas canvas, Offset center, double refSize, _MouthShape shape, double openAmount) {
+    final open = openAmount.clamp(0.0, 1.0).toDouble();
+    final baseWidthScale = shape.kind == _ShapeKind.colon ? 1.3 : shape.widthScale;
+    final w = refSize * baseWidthScale.clamp(0.9, 3.2).toDouble();
+    final rotation = shape.kind == _ShapeKind.line ? shape.rotation : 0.0;
+
+    final closedH = refSize * 0.16;
+    final openH = refSize * 0.95;
+    final h = closedH + (openH - closedH) * open;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotation);
+
+    final outer = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset.zero, width: w, height: h),
+      Radius.circular((w < h ? w : h) / 2),
+    );
+    canvas.drawRRect(outer, Paint()..color = Colors.black);
+
+    if (open > 0.12) {
+      final innerW = w - refSize * 0.30;
+      final innerH = h - refSize * 0.16;
+      if (innerW > 1 && innerH > 1) {
+        final inner = RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset.zero, width: innerW, height: innerH),
+          Radius.circular((innerW < innerH ? innerW : innerH) / 2),
+        );
+        canvas.drawRRect(inner, Paint()..color = Colors.white.withOpacity(open));
+      }
+    }
     canvas.restore();
   }
 
