@@ -8291,6 +8291,42 @@ def _consume_subsurface_turn_events(systems: Dict[str, Any]) -> None:
     _log(f"  [PRESENCE] Turn {latest.get('turn_id', '')!r} known to Subsurface before Surface completed it.")
 
 
+def _consume_scout_evidence(systems: Dict[str, Any]) -> None:
+    """
+    Subsurface Presence and Evidence Scout spec, section 11: Subsurface
+    is the ONLY consumer of ScoutBroker.poll_reports() in the whole
+    process. This function exists so that call site is singular and
+    grep-able -- nothing in aurora_surface_daemon.py or aurora.py may
+    import ScoutBroker at all.
+
+    All evaluation (relevance/consistency/strength/pressure-relief,
+    stale-turn discounting) lives in subsurface_scout_bridge.py, which
+    is independently unit-tested; this wrapper only owns catching
+    import/runtime failures so a broken Scout pipeline can never take
+    the main daemon loop down with it (spec section 17: "Scout failure
+    must never block Aurora").
+    """
+    try:
+        from aurora_internal.scouting.subsurface_scout_bridge import consume_scout_reports
+        bindings = consume_scout_reports(_STATE_DIR)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:_consume_scout_evidence",
+            exc=_aurora_boundary_exc,
+            context={"function": "_consume_scout_evidence", "source_file": "aurora_daemon.py"},
+        )
+        return
+
+    if not bindings:
+        return
+
+    accepted = sum(1 for b in bindings if b.status == "accepted")
+    if accepted:
+        _log(f"  [SCOUT] {accepted}/{len(bindings)} evidence binding(s) accepted into current presence.")
+
+
 def _start_subsurface_heartbeat_thread() -> None:
     """
     Subsurface Presence and Evidence Scout spec, section 20 acceptance
@@ -8997,6 +9033,13 @@ def run(systems: Dict[str, Any]) -> None:
         # Surface has already answered it (Subsurface Presence and
         # Evidence Scout spec, section 5A).
         _consume_subsurface_turn_events(systems)
+
+        # Evidence Scout reports: the ONLY point in the process where a
+        # ScoutReport is consumed (spec section 11) -- evaluated into
+        # EvidenceBinding objects and, only if still relevant to the
+        # turn Subsurface currently considers live, folded into the
+        # presence frame's response_fit_pressure.
+        _consume_scout_evidence(systems)
 
         # Grammar motif training — fires when the SIC has no promoted sentence
         # patterns, which means the emergent expression path produces word salad.

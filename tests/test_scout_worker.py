@@ -22,14 +22,17 @@ def test_importing_scout_daemon_never_pulls_in_aurora_or_aurora_daemon():
     # constructs genealogy/Dream/consciousness-engine/etc. state), so
     # this has to hold at IMPORT time, not just "boot_aurora() is never
     # called."
+    # Deliberately checks only what importing THIS module newly pulls in,
+    # not global sys.modules -- other test files in the same pytest
+    # session legitimately import aurora.py/aurora_daemon.py for their
+    # own reasons, and that prior import must not make this test flaky
+    # or order-dependent.
     before = set(sys.modules.keys())
     import aurora_scout_daemon  # noqa: F401
     after = set(sys.modules.keys())
     newly_imported = after - before
     assert "aurora" not in newly_imported
     assert "aurora_daemon" not in newly_imported
-    assert "aurora" not in sys.modules
-    assert "aurora_daemon" not in sys.modules
 
 
 def test_scout_report_from_worker_never_has_a_final_response_field():
