@@ -11159,45 +11159,37 @@ def _absorb_definition_into_self_model(
 def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                        use_researcher: bool = False) -> str:
     """
-    Consult Aurora's Poedex for a topic.
+    Consult Aurora's Poedex for a topic -- non-blocking (Subsurface
+    Presence and Evidence Scout spec, step 10).
 
-    1. Checks poedex_lessons.json for a bound lesson matching the topic (instant).
-    2. If the room appears to be running, submits to the queue and waits:
-       - use_researcher=False (default): cat="define", internal Observer, timeout=1.5s
-       - use_researcher=True:            cat="external", Researcher GPT-4o, timeout=8s
-         Use this when Aurora is about to decline — the extra wait is worth it.
+    1. Checks poedex_lessons.json for a bound lesson matching the topic
+       (instant, a local file read -- not a "wait", out of scope for
+       step 10's retrieval-latency guarantee).
+    2. Otherwise dispatches a knowledge_gap ScoutRequest for this topic
+       (fire-and-forget, spec section 11: Surface may dispatch(), never
+       poll_reports()) and returns immediately.
 
-    Returns the result string (≤600 chars), or '' if nothing is found.
+    This function used to block Surface synchronously for up to 35s
+    waiting on a live Poedex/Room response when use_researcher=True --
+    exactly the retrieval latency spec sections 9/15 forbid freezing
+    Surface with. Every one of this function's ~13 call sites in
+    aurora.py already treats '' as a legitimate "nothing found" result
+    (most already write `_try_poedex_lookup(...) or ""`), so returning
+    '' immediately for anything not already a bound lesson is a safe
+    behavioral narrowing, not a new failure mode callers need to learn
+    to handle.
+
+    Evidence dispatched this way can only surface on a LATER turn, once
+    Subsurface has evaluated the resulting ScoutReport (steps 7-8) and
+    Surface has harvested it before expression (step 9,
+    systems['_current_turn_scout_evidence']) -- never synchronously,
+    same call, the way the old blocking wait made it look.
+
+    Returns the result string (≤600 chars) from a bound lesson, or ''.
     """
     try:
-        import time as _t
         from pathlib import Path as _P
         _sd = _P(str((systems or {}).get("state_dir") or (_P(__file__).parent / "aurora_state")))
-
-        # ── 0. Direct callable (daemon registered systems['poedex']) ─────────
-        # When the daemon has wired _poedex_ask into systems, use it directly
-        # — no filesystem queue overhead, correct per-request file isolation.
-        _poedex_direct = systems.get('poedex') if isinstance(systems, dict) else None
-        if _poedex_direct is not None and callable(_poedex_direct):
-            try:
-                _direct_cat = "researcher" if use_researcher else "define"
-                _direct_to  = (35.0 if use_researcher else timeout)
-                _direct_res = _poedex_direct(topic, cat=_direct_cat, lane="self",
-                                             timeout=_direct_to)
-                if _direct_res:
-                    if use_researcher:
-                        _digest_research_text(str(_direct_res), systems, source_text=topic, source="poedex")
-                    return str(_direct_res)
-                # If researcher returned nothing, fall through to bound lessons
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:9436",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_try_poedex_lookup", "handler_line": 9436, "source_file": "aurora.py"},
-                )
-                pass  # fall through to file-based path
 
         # ── 1. Bound lessons (instant, no room needed) ───────────────────────
         _lessons_path = _sd / "poedex_lessons.json"
@@ -11230,127 +11222,34 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                 )
                 pass
 
-        # ── 2. Queue-based lookup (only if room is likely running) ───────────
-        _queue_dir  = _sd / "poedex_queue"
-        _result_dir = _sd / "poedex_results"
-
-        # Room is likely running if the result directory has been touched recently
-        # (fallback: check the legacy result file)
-        _room_likely_up = False
-        if _result_dir.exists():
-            try:
-                _age = _t.time() - _result_dir.stat().st_mtime
-                _room_likely_up = _age < 300
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:9474",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_try_poedex_lookup", "handler_line": 9474, "source_file": "aurora.py"},
-                )
-                pass
-        if not _room_likely_up:
-            _legacy_result = _sd / "poedex_query_result.json"
-            if _legacy_result.exists():
-                try:
-                    _age = _t.time() - _legacy_result.stat().st_mtime
-                    _room_likely_up = _age < 300
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:9482",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_try_poedex_lookup", "handler_line": 9482, "source_file": "aurora.py"},
-                    )
-                    pass
-
-        if not _room_likely_up:
-            return ''
-
-        # Per-request files — no single-slot race condition
-        _cat     = "external" if use_researcher else "define"
-        _poll_to = 35.0 if use_researcher else timeout   # match daemon's researcher ceiling
-        import os as _os
-        qid = f"poe_{_t.time():.4f}_{_os.getpid()}"
+        # ── 2. Non-blocking Scout dispatch (spec step 10) ────────────────────
+        # Replaces the old synchronous queue-write-then-poll-and-sleep loop
+        # (up to 35s for use_researcher=True) entirely. Surface fires the
+        # request and moves on in the same call -- it never learns the
+        # answer this turn; a later turn's harvest (step 9) is the only
+        # path evidence takes back to Surface.
         try:
-            _queue_dir.mkdir(parents=True, exist_ok=True)
-            _result_dir.mkdir(parents=True, exist_ok=True)
+            from aurora_internal.scouting.broker import dispatch_scout_request
+            from aurora_internal.scouting.contracts import ScoutRequest
+            turn_id = str((systems or {}).get("_current_turn_id", "") or "") or "no_live_turn"
+            dispatch_scout_request(_sd, ScoutRequest(
+                turn_id=turn_id,
+                request_kind="knowledge_gap",
+                inquiry=str(topic or ""),
+                evidence_needed=str(topic or ""),
+                priority=0.75 if use_researcher else 0.4,
+                ttl_s=45.0 if use_researcher else max(5.0, float(timeout or 20.0)),
+            ))
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
                 module=__name__,
-                operation="exception_handler:aurora.py:9496",
+                operation="exception_handler:aurora.py:_try_poedex_lookup:dispatch",
                 exc=_aurora_boundary_exc,
-                context={"function": "_try_poedex_lookup", "handler_line": 9496, "source_file": "aurora.py"},
+                context={"function": "_try_poedex_lookup", "source_file": "aurora.py"},
             )
-            return ''
-        _query_path  = _queue_dir  / f"{qid}.json"
-        _result_path = _result_dir / f"{qid}.json"
-        _query_path.write_text(json.dumps({
-            "id":        qid,
-            "question":  topic,
-            "cat":       _cat,
-            "lane":      "self",
-            "status":    "pending",
-            "submitted": _t.time(),
-        }, indent=2))
+            pass  # dispatch failure must never block or fail this call
 
-        deadline = _t.time() + _poll_to
-        while _t.time() < deadline:
-            _t.sleep(0.3)
-            if _result_path.exists():
-                try:
-                    _r = json.loads(_result_path.read_text() or '{}')
-                    if _r.get('id') == qid and _r.get('status') == 'done':
-                        _txt = str(_r.get('result', '') or '').strip()
-                        try: _result_path.unlink(missing_ok=True)
-                        except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:9518",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_try_poedex_lookup", "handler_line": 9518, "source_file": "aurora.py"},
-                            )
-                            pass
-                        try: _query_path.unlink(missing_ok=True)
-                        except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:9520",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_try_poedex_lookup", "handler_line": 9520, "source_file": "aurora.py"},
-                            )
-                            pass
-                        if _txt and len(_txt) > 20:
-                            if use_researcher:
-                                _digest_research_text(_txt, systems, source_text=topic, source="poedex")
-                            return _txt
-                        return ''
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:9522",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_try_poedex_lookup", "handler_line": 9522, "source_file": "aurora.py"},
-                    )
-                    pass
-
-        # Timeout — remove the dangling query file
-        try: _query_path.unlink(missing_ok=True)
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9527",
-                exc=_aurora_boundary_exc,
-                context={"function": "_try_poedex_lookup", "handler_line": 9527, "source_file": "aurora.py"},
-            )
-            pass
         return ''
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(

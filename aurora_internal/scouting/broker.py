@@ -51,6 +51,18 @@ def _resolve(state_dir: Any) -> Path:
     return Path(__file__).resolve().parents[2] / "aurora_state"
 
 
+def dispatch_scout_request(state_dir: Any, request: ScoutRequest) -> Optional[str]:
+    """Thin free-function wrapper around ScoutBroker.dispatch(), for
+    callers -- specifically Surface (spec step 10) -- that should be
+    able to enqueue a ScoutRequest without ever holding a ScoutBroker
+    instance at all. Holding the instance would also hand them
+    .poll_reports()/.claim_next()/.submit_report(), none of which
+    Surface may ever call (spec section 11) -- importing only this
+    function keeps that structurally true, not just a matter of
+    caller discipline."""
+    return ScoutBroker(state_dir).dispatch(request)
+
+
 class ScoutBroker:
     def __init__(
         self,

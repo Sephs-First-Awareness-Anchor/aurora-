@@ -21,7 +21,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Surface-side modules: must never import the Scout broker at all.
+# Surface-side modules: may dispatch() (spec step 10 -- Surface fires a
+# ScoutRequest via the free-function dispatch_scout_request(), which
+# lives in aurora_internal.scouting.broker alongside the ScoutBroker
+# class it wraps) but must never hold a ScoutBroker instance or call
+# .poll_reports() -- that instance would also expose .claim_next()/
+# .submit_report(), none of which Surface may ever touch.
 _SURFACE_MODULES = ["aurora_surface_daemon.py", "aurora.py"]
 
 # The one module allowed to actually poll ScoutBroker for reports.
@@ -68,16 +73,16 @@ def _poll_reports_call_sites(tree: ast.Module) -> list:
     ]
 
 
-def test_surface_modules_never_import_scout_broker():
+def test_surface_modules_never_import_scout_broker_class():
+    # Surface MAY import from aurora_internal.scouting.broker (step 10:
+    # dispatch_scout_request(), a thin dispatch-only free function) but
+    # must never import the ScoutBroker class itself -- holding an
+    # instance would also hand Surface .poll_reports()/.claim_next()/
+    # .submit_report(), none of which it may ever call.
     for rel in _SURFACE_MODULES:
         tree = _parse(os.path.join(_REPO_ROOT, rel))
-        imported_modules = _imported_names(tree)
         imported_symbols = _imported_symbols(tree)
-        assert "aurora_internal.scouting.broker" not in imported_modules, (
-            f"{rel} must never import from the Scout broker module -- only "
-            f"{_SUBSURFACE_CONSUMER} (via aurora_daemon.py) may poll scout reports"
-        )
-        assert "ScoutBroker" not in imported_symbols, f"{rel} must never import ScoutBroker"
+        assert "ScoutBroker" not in imported_symbols, f"{rel} must never import the ScoutBroker class"
 
 
 def test_surface_modules_never_call_poll_reports():
@@ -115,3 +120,22 @@ def test_aurora_daemon_wires_the_subsurface_bridge_not_the_broker_directly():
     assert "consume_scout_reports" in imported_symbols
     assert "aurora_internal.scouting.broker" not in imported_modules
     assert "ScoutBroker" not in imported_symbols
+
+
+def test_aurora_dispatches_scout_requests_via_the_thin_free_function():
+    # Positive coverage for spec step 10: aurora.py IS allowed to reach
+    # dispatch_scout_request() (imported inside _try_poedex_lookup) --
+    # this is the other half of the boundary the tests above enforce
+    # negatively. A dynamic import check (not just source text) proves
+    # the real module actually exports the name aurora.py expects.
+    from aurora_internal.scouting.broker import dispatch_scout_request
+    assert callable(dispatch_scout_request)
+
+    tree = _parse(os.path.join(_REPO_ROOT, "aurora.py"))
+    found = any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "aurora_internal.scouting.broker"
+        and any(alias.name == "dispatch_scout_request" for alias in node.names)
+        for node in ast.walk(tree)
+    )
+    assert found, "aurora.py should dispatch Scout requests via dispatch_scout_request()"
