@@ -19,6 +19,8 @@ from aurora_internal.dual_strata.sensory_snapshot_channel import (
     write_surface_snapshot,
 )
 from aurora_internal.dual_strata.surface_continuity_feed import write_continuity_packet
+from aurora_internal.dual_strata.subsurface_presence import write_turn_open
+from aurora_internal.dual_strata.presence_metrics import PresenceMetrics
 
 
 _BASE_DIR = Path(__file__).parent
@@ -29,6 +31,12 @@ _STATUS_FILE = _STATE_DIR / "surface_daemon_status.json"
 _LOG_FILE = _STATE_DIR / "surface_daemon.log"
 _SNAPSHOT_FILE = _STATE_DIR / "dual_strata_snapshot.json"
 _PROJECTION_FILE = _STATE_DIR / "subsurface_projection.json"
+
+# Subsurface Presence and Evidence Scout spec, Step 1/2: one recorder for
+# this whole process (Surface is single-process, single-loop -- see the
+# `while True` turn loop below), reused across turns rather than
+# reconstructed per turn.
+_presence_metrics = PresenceMetrics(_STATE_DIR, role="surface")
 
 
 def _surface_mic_live(systems: Dict[str, Any]) -> bool:
@@ -865,6 +873,28 @@ def run() -> None:
             continue
 
         _write_json(_STATUS_FILE, _build_status(state_name="processing", active_turn=turn))
+
+        # Subsurface Presence and Evidence Scout spec, section 5A: tell
+        # Subsurface a turn is happening NOW, before the response
+        # pipeline runs -- not a Scout trigger, purely a presence signal.
+        # Must never block or fail the actual turn: write_turn_open()
+        # already swallows its own I/O errors, so no try/except needed
+        # around this specific call beyond the broader turn try below.
+        write_turn_open(
+            _STATE_DIR,
+            turn_id=str(turn.get("id", "") or ""),
+            raw_input=str(turn.get("content", "") or ""),
+            session_id=str(turn.get("session_id", "surface_daemon") or "surface_daemon"),
+        )
+        # Ephemeral per-turn handoff (same pattern as _subsurface_projection/
+        # _sedi_surface_frags below): lets _run_reasoning_pipeline()'s
+        # InterpretedTurnPacket (spec section 5B) correlate back to THIS
+        # turn_open event without threading a new turn_id parameter through
+        # process_external_user_turn() -> _run_live_response_turn() ->
+        # _run_reasoning_pipeline()'s existing call chain.
+        systems["_current_turn_id"] = str(turn.get("id", "") or "")
+        _turn_started_at = time.time()
+
         try:
             systems["_subsurface_projection"] = _read_json(_PROJECTION_FILE, {})
 
@@ -897,6 +927,7 @@ def run() -> None:
                 run_periodic_maintenance=bool(turn.get("run_periodic_maintenance", True)),
                 mode_name=str(turn.get("mode_name", "BOUNDED") or "BOUNDED"),
             )
+            _presence_metrics.record_surface_turn_latency_ms((time.time() - _turn_started_at) * 1000.0)
             payload = _result_payload(turn, result)
             snapshot = _read_json(_SNAPSHOT_FILE, {})
             _write_surface_snapshot(

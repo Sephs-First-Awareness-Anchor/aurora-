@@ -11159,45 +11159,37 @@ def _absorb_definition_into_self_model(
 def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                        use_researcher: bool = False) -> str:
     """
-    Consult Aurora's Poedex for a topic.
+    Consult Aurora's Poedex for a topic -- non-blocking (Subsurface
+    Presence and Evidence Scout spec, step 10).
 
-    1. Checks poedex_lessons.json for a bound lesson matching the topic (instant).
-    2. If the room appears to be running, submits to the queue and waits:
-       - use_researcher=False (default): cat="define", internal Observer, timeout=1.5s
-       - use_researcher=True:            cat="external", Researcher GPT-4o, timeout=8s
-         Use this when Aurora is about to decline — the extra wait is worth it.
+    1. Checks poedex_lessons.json for a bound lesson matching the topic
+       (instant, a local file read -- not a "wait", out of scope for
+       step 10's retrieval-latency guarantee).
+    2. Otherwise dispatches a knowledge_gap ScoutRequest for this topic
+       (fire-and-forget, spec section 11: Surface may dispatch(), never
+       poll_reports()) and returns immediately.
 
-    Returns the result string (≤600 chars), or '' if nothing is found.
+    This function used to block Surface synchronously for up to 35s
+    waiting on a live Poedex/Room response when use_researcher=True --
+    exactly the retrieval latency spec sections 9/15 forbid freezing
+    Surface with. Every one of this function's ~13 call sites in
+    aurora.py already treats '' as a legitimate "nothing found" result
+    (most already write `_try_poedex_lookup(...) or ""`), so returning
+    '' immediately for anything not already a bound lesson is a safe
+    behavioral narrowing, not a new failure mode callers need to learn
+    to handle.
+
+    Evidence dispatched this way can only surface on a LATER turn, once
+    Subsurface has evaluated the resulting ScoutReport (steps 7-8) and
+    Surface has harvested it before expression (step 9,
+    systems['_current_turn_scout_evidence']) -- never synchronously,
+    same call, the way the old blocking wait made it look.
+
+    Returns the result string (≤600 chars) from a bound lesson, or ''.
     """
     try:
-        import time as _t
         from pathlib import Path as _P
         _sd = _P(str((systems or {}).get("state_dir") or (_P(__file__).parent / "aurora_state")))
-
-        # ── 0. Direct callable (daemon registered systems['poedex']) ─────────
-        # When the daemon has wired _poedex_ask into systems, use it directly
-        # — no filesystem queue overhead, correct per-request file isolation.
-        _poedex_direct = systems.get('poedex') if isinstance(systems, dict) else None
-        if _poedex_direct is not None and callable(_poedex_direct):
-            try:
-                _direct_cat = "researcher" if use_researcher else "define"
-                _direct_to  = (35.0 if use_researcher else timeout)
-                _direct_res = _poedex_direct(topic, cat=_direct_cat, lane="self",
-                                             timeout=_direct_to)
-                if _direct_res:
-                    if use_researcher:
-                        _digest_research_text(str(_direct_res), systems, source_text=topic, source="poedex")
-                    return str(_direct_res)
-                # If researcher returned nothing, fall through to bound lessons
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:9436",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_try_poedex_lookup", "handler_line": 9436, "source_file": "aurora.py"},
-                )
-                pass  # fall through to file-based path
 
         # ── 1. Bound lessons (instant, no room needed) ───────────────────────
         _lessons_path = _sd / "poedex_lessons.json"
@@ -11230,127 +11222,34 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
                 )
                 pass
 
-        # ── 2. Queue-based lookup (only if room is likely running) ───────────
-        _queue_dir  = _sd / "poedex_queue"
-        _result_dir = _sd / "poedex_results"
-
-        # Room is likely running if the result directory has been touched recently
-        # (fallback: check the legacy result file)
-        _room_likely_up = False
-        if _result_dir.exists():
-            try:
-                _age = _t.time() - _result_dir.stat().st_mtime
-                _room_likely_up = _age < 300
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora.py:9474",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_try_poedex_lookup", "handler_line": 9474, "source_file": "aurora.py"},
-                )
-                pass
-        if not _room_likely_up:
-            _legacy_result = _sd / "poedex_query_result.json"
-            if _legacy_result.exists():
-                try:
-                    _age = _t.time() - _legacy_result.stat().st_mtime
-                    _room_likely_up = _age < 300
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:9482",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_try_poedex_lookup", "handler_line": 9482, "source_file": "aurora.py"},
-                    )
-                    pass
-
-        if not _room_likely_up:
-            return ''
-
-        # Per-request files — no single-slot race condition
-        _cat     = "external" if use_researcher else "define"
-        _poll_to = 35.0 if use_researcher else timeout   # match daemon's researcher ceiling
-        import os as _os
-        qid = f"poe_{_t.time():.4f}_{_os.getpid()}"
+        # ── 2. Non-blocking Scout dispatch (spec step 10) ────────────────────
+        # Replaces the old synchronous queue-write-then-poll-and-sleep loop
+        # (up to 35s for use_researcher=True) entirely. Surface fires the
+        # request and moves on in the same call -- it never learns the
+        # answer this turn; a later turn's harvest (step 9) is the only
+        # path evidence takes back to Surface.
         try:
-            _queue_dir.mkdir(parents=True, exist_ok=True)
-            _result_dir.mkdir(parents=True, exist_ok=True)
+            from aurora_internal.scouting.broker import dispatch_scout_request
+            from aurora_internal.scouting.contracts import ScoutRequest
+            turn_id = str((systems or {}).get("_current_turn_id", "") or "") or "no_live_turn"
+            dispatch_scout_request(_sd, ScoutRequest(
+                turn_id=turn_id,
+                request_kind="knowledge_gap",
+                inquiry=str(topic or ""),
+                evidence_needed=str(topic or ""),
+                priority=0.75 if use_researcher else 0.4,
+                ttl_s=45.0 if use_researcher else max(5.0, float(timeout or 20.0)),
+            ))
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
                 module=__name__,
-                operation="exception_handler:aurora.py:9496",
+                operation="exception_handler:aurora.py:_try_poedex_lookup:dispatch",
                 exc=_aurora_boundary_exc,
-                context={"function": "_try_poedex_lookup", "handler_line": 9496, "source_file": "aurora.py"},
+                context={"function": "_try_poedex_lookup", "source_file": "aurora.py"},
             )
-            return ''
-        _query_path  = _queue_dir  / f"{qid}.json"
-        _result_path = _result_dir / f"{qid}.json"
-        _query_path.write_text(json.dumps({
-            "id":        qid,
-            "question":  topic,
-            "cat":       _cat,
-            "lane":      "self",
-            "status":    "pending",
-            "submitted": _t.time(),
-        }, indent=2))
+            pass  # dispatch failure must never block or fail this call
 
-        deadline = _t.time() + _poll_to
-        while _t.time() < deadline:
-            _t.sleep(0.3)
-            if _result_path.exists():
-                try:
-                    _r = json.loads(_result_path.read_text() or '{}')
-                    if _r.get('id') == qid and _r.get('status') == 'done':
-                        _txt = str(_r.get('result', '') or '').strip()
-                        try: _result_path.unlink(missing_ok=True)
-                        except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:9518",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_try_poedex_lookup", "handler_line": 9518, "source_file": "aurora.py"},
-                            )
-                            pass
-                        try: _query_path.unlink(missing_ok=True)
-                        except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:aurora.py:9520",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "_try_poedex_lookup", "handler_line": 9520, "source_file": "aurora.py"},
-                            )
-                            pass
-                        if _txt and len(_txt) > 20:
-                            if use_researcher:
-                                _digest_research_text(_txt, systems, source_text=topic, source="poedex")
-                            return _txt
-                        return ''
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora.py:9522",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_try_poedex_lookup", "handler_line": 9522, "source_file": "aurora.py"},
-                    )
-                    pass
-
-        # Timeout — remove the dangling query file
-        try: _query_path.unlink(missing_ok=True)
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:9527",
-                exc=_aurora_boundary_exc,
-                context={"function": "_try_poedex_lookup", "handler_line": 9527, "source_file": "aurora.py"},
-            )
-            pass
         return ''
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -21670,6 +21569,150 @@ def _apply_reflective_readdressing_to_state(
             pass
 
 
+def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str, turn_tick: int) -> None:
+    """
+    Subsurface Presence and Evidence Scout spec, section 5B: called from
+    _run_reasoning_pipeline() right after _chain_down3_purpose(). At this
+    point Aurora has been through understanding -> meaning -> purpose
+    (both the upward pass at the top of the pipeline and this downward
+    pass), but belief/information have not yet run -- so this packet
+    genuinely captures "how well she understood the input" BEFORE "how
+    she'll respond" gets decided, which is exactly the comparison
+    ResponseFitPressure (section 6) needs.
+
+    Field provenance, since TurnUnderstandingState doesn't carry 1:1
+    named fields for everything the spec asks for -- each is the closest
+    real signal already computed by this point, not a fabricated value:
+      interpreted_meaning   <- dominant_meaning_form / salient_concepts
+      inferred_purpose      <- state.intent (down3_purpose's own output)
+      resolved_referents    <- state.referent_map (up2_belief, upward pass)
+      unresolved_ambiguity  <- referent_map entries with no resolution
+      interpretation_confidence <- 1 - belief_tension (up2_belief)
+      response_confidence   <- state.response_confidence (pre-belief/
+                                information refinement -- a genuinely
+                                EARLY estimate, which is the point)
+      dominant_constraints  <- state.axis_activation
+      representation_refs   <- state.salient_concepts (concept labels;
+                                TurnUnderstandingState does not yet carry
+                                canonical RepresentationalRef addressing)
+      knowledge_gaps        <- state.learned_hints
+
+    Never allowed to affect the actual turn: any failure here is caught
+    and swallowed, same as the write functions it calls.
+    """
+    try:
+        turn_id = str(systems.get("_current_turn_id", "") or "") or f"{session_id}:{turn_tick}"
+
+        dominant_form = state.dominant_meaning_form if isinstance(state.dominant_meaning_form, dict) else {}
+        interpreted_meaning = str(dominant_form.get("text") or dominant_form.get("summary") or "")
+        if not interpreted_meaning and state.salient_concepts:
+            interpreted_meaning = ", ".join(str(c) for c in state.salient_concepts[:6])
+
+        current_topic = str(state.salient_concepts[0]) if state.salient_concepts else ""
+
+        # Sunni & Cael, caught by live smoke test: state.referent_map is NOT
+        # a {referent_word: resolution} mapping -- it's a fixed-schema
+        # compound dict (WorkingMemory.resolve_referents()'s return shape:
+        # topic/entities/search_query/confidence/source, PLUS a nested
+        # "referent_map" key that IS the actual pronoun -> resolution map).
+        # Reading the outer dict's own keys as "referents" produced
+        # nonsense (e.g. "confidence" and "source" showing up as
+        # "unresolved ambiguity" on every single turn, which silently
+        # zeroed response_fit_pressure below almost always). The nested
+        # map is the real signal.
+        belief_referents = state.referent_map if isinstance(state.referent_map, dict) else {}
+        pronoun_resolution = belief_referents.get("referent_map")
+        pronoun_resolution = pronoun_resolution if isinstance(pronoun_resolution, dict) else {}
+        resolved_referents = [str(k) for k, v in pronoun_resolution.items() if v]
+        unresolved_ambiguity = [str(k) for k, v in pronoun_resolution.items() if not v]
+
+        belief_tension = max(0.0, min(1.0, float(getattr(state, "belief_tension", 0.0) or 0.0)))
+        # Rounded here, not just at display time (write_interpreted_turn()
+        # rounds independently for its own event dict) -- a raw float
+        # subtraction like 1.0 - 0.55 can land a hair under 0.45
+        # (0.44999999999999996), which would silently fail the >= 0.45
+        # gate below even though the "true" value is exactly the
+        # threshold. Rounding before the comparison keeps the gate
+        # consistent with what a caller reading interpretation_confidence
+        # back out actually sees.
+        interpretation_confidence = round(1.0 - belief_tension, 4)
+        response_confidence = max(0.0, min(1.0, float(getattr(state, "response_confidence", 0.5) or 0.5)))
+
+        axis_activation = state.axis_activation if isinstance(state.axis_activation, dict) else {}
+
+        # ResponseFitPressure (spec section 6): "interpretation adequate +
+        # response relation inadequate" -- a continuous magnitude, not a
+        # boolean gate, so a later Scout broker (spec step 5) can weigh it
+        # against other signals rather than a hardcoded threshold owning
+        # the whole decision.
+        interpretation_adequate = interpretation_confidence >= 0.45
+        ambiguity_not_blocking = len(unresolved_ambiguity) == 0
+        response_gap = 1.0 - response_confidence
+        response_fit_pressure = response_gap if (interpretation_adequate and ambiguity_not_blocking) else 0.0
+
+        from aurora_internal.dual_strata.subsurface_presence import write_interpreted_turn
+        write_interpreted_turn(
+            systems.get("state_dir"),
+            turn_id=turn_id,
+            interpreted_meaning=interpreted_meaning,
+            inferred_purpose=str(getattr(state, "intent", "") or ""),
+            current_topic=current_topic,
+            resolved_referents=resolved_referents,
+            unresolved_ambiguity=unresolved_ambiguity,
+            interpretation_confidence=interpretation_confidence,
+            response_confidence=response_confidence,
+            dominant_constraints=axis_activation,
+            representation_refs=list(state.salient_concepts or [])[:16],
+            knowledge_gaps=list(getattr(state, "learned_hints", None) or [])[:8],
+            response_fit_pressure=response_fit_pressure,
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_emit_interpreted_turn_packet",
+            exc=_aurora_boundary_exc,
+            context={"function": "_emit_interpreted_turn_packet", "source_file": "aurora.py"},
+        )
+
+
+def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> list:
+    """
+    Subsurface Presence and Evidence Scout spec, step 9: the ONE point
+    where Surface is allowed to see Scout-derived evidence at all --
+    called right before expression, after belief/information have
+    already built the response draft. Reads through
+    subsurface_scout_bridge.read_bindings_for_turn(), never
+    ScoutBroker.poll_reports() directly (spec section 11: Surface must
+    never read raw scout_results) -- what comes back here is already
+    Subsurface-evaluated EvidenceBinding data for THIS turn_id only, and
+    already excludes any final_response field structurally (spec
+    section 8/ScoutReport.__post_init__).
+
+    Only "accepted" bindings are kept -- read_bindings_for_turn() can
+    also return "rejected"/"stale" bindings recorded under this same
+    turn_id (e.g. a report that came back weak or contradicted for this
+    very turn), and those must never reach expression at all.
+
+    Additive only: the result is available context Surface MAY draw on
+    (currently: passed alongside dominant_emotion into the expression
+    composer's assembly_data) -- it never substitutes for or overrides
+    state.response_content, which belief/information already finished
+    building before this ever runs.
+    """
+    try:
+        from aurora_internal.scouting.subsurface_scout_bridge import read_bindings_for_turn
+        bindings = read_bindings_for_turn(systems.get("state_dir"), turn_id)
+        return [b for b in bindings if isinstance(b, dict) and b.get("status") == "accepted"]
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_harvest_scout_evidence_for_expression",
+            exc=_aurora_boundary_exc,
+            context={"function": "_harvest_scout_evidence_for_expression", "source_file": "aurora.py"},
+        )
+        return []
+
+
 def _run_reasoning_pipeline(
     systems: dict,
     user_text: str,
@@ -22178,6 +22221,13 @@ def _run_reasoning_pipeline(
     _chain_down3_purpose(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled,
                         use_search=use_search, raw_evidence=raw_evidence or [])
     _capture_waveform_deposit(state, "purpose", systems)
+
+    # Subsurface Presence and Evidence Scout spec, section 5B: Subsurface
+    # gets Aurora's interpretation the moment it's formed (understanding
+    # -> meaning -> purpose all complete), not only after belief/
+    # information refine it into a finished response.
+    _emit_interpreted_turn_packet(systems, state, session_id=session_id, turn_tick=turn_tick)
+
     _chain_down2_belief(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled,
                             use_search=use_search)
     _capture_waveform_deposit(state, "belief", systems)
@@ -22186,6 +22236,14 @@ def _run_reasoning_pipeline(
     _capture_waveform_deposit(state, "information", systems)
     _preserve_literal_response = bool(systems.pop("_preserve_literal_response_once", False))
     _skip_surface_expression = bool(systems.pop("_skip_surface_expression_once", False))
+
+    # Subsurface Presence and Evidence Scout spec, step 9: harvest
+    # whatever Subsurface has already accepted as evidence for THIS
+    # turn, right before expression -- draft content is finished by now,
+    # so this can only inform how it's expressed, never what was decided.
+    systems["_current_turn_scout_evidence"] = _harvest_scout_evidence_for_expression(
+        systems, turn_id=str(systems.get("_current_turn_id", "") or ""),
+    )
 
     if not _preserve_literal_response:
         try:
@@ -22219,6 +22277,11 @@ def _run_reasoning_pipeline(
                             raw_expression=_resp_draft,
                             assembly_data={
                                 'dominant_emotion': str(getattr(state, 'response_tone', 'neutral') or 'neutral'),
+                                # Scout spec step 9: additive context only --
+                                # already Subsurface-accepted for this turn,
+                                # never a drafted response (contracts.py
+                                # structurally excludes final_response).
+                                'scout_evidence': systems.get('_current_turn_scout_evidence', []),
                             },
                         )
                         _evo_text_a5 = str(_evo_out_a5.get('final_text', '') or '')
