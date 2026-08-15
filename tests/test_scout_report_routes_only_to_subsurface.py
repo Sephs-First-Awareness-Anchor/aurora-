@@ -113,12 +113,20 @@ def test_subsurface_bridge_is_the_only_module_calling_broker_poll_reports():
 
 
 def test_aurora_daemon_wires_the_subsurface_bridge_not_the_broker_directly():
+    # aurora_daemon.py IS allowed to import dispatch_scout_request from
+    # aurora_internal.scouting.broker (spec step 11: Subsurface's own
+    # recurring-issue self-diagnostic research dispatches a ScoutRequest,
+    # same as Surface does in step 10 -- broker.py's own docstring says
+    # "Surface/Subsurface -> dispatch()"). What it must never do is hold
+    # a ScoutBroker instance directly for polling -- consume_scout_reports()
+    # in the bridge remains the sole poll_reports() call site (proven by
+    # test_subsurface_bridge_is_the_only_module_calling_broker_poll_reports
+    # above, which scans the whole repo, not just this one file).
     tree = _parse(os.path.join(_REPO_ROOT, "aurora_daemon.py"))
     imported_modules = _imported_names(tree)
     imported_symbols = _imported_symbols(tree)
     assert "aurora_internal.scouting.subsurface_scout_bridge" in imported_modules
     assert "consume_scout_reports" in imported_symbols
-    assert "aurora_internal.scouting.broker" not in imported_modules
     assert "ScoutBroker" not in imported_symbols
 
 

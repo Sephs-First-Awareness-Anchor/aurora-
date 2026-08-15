@@ -39,7 +39,7 @@ RESPONSE_RELATIONSHIP_KINDS = (
     "remain_conversationally_present",
 )
 
-REQUEST_KINDS = ("response_fit", "knowledge_gap")
+REQUEST_KINDS = ("response_fit", "knowledge_gap", "self_diagnostic")
 
 
 @dataclass
@@ -78,6 +78,12 @@ class ScoutReport:
     request_id: str
     turn_id: str
     status: str = "ok"  # "ok" | "no_evidence" | "failed" | "cancelled"
+    # Carried through from the originating ScoutRequest by the worker
+    # (spec step 11) so Subsurface's evaluator can tell a turn-scoped
+    # report from a self_diagnostic one (Subsurface's own autonomous
+    # research, never scoped to a live user turn) without needing to
+    # still hold the request itself, which is long gone by report time.
+    request_kind: str = "response_fit"
     evidence_items: List[Dict[str, Any]] = field(default_factory=list)
     response_relationships: List[str] = field(default_factory=list)
     fit_rationales: List[str] = field(default_factory=list)

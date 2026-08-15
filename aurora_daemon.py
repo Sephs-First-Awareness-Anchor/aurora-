@@ -4613,13 +4613,145 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
         intensity=min(1.0, signal_intensity + 0.14),
         observer_context=observer_context,
     )
-    result = _poedex_ask(question, cat="researcher", lane="self", timeout=18.0)
-    if not result:
+    # Subsurface Presence and Evidence Scout spec, step 11: dispatch,
+    # never block. The old code blocked the whole main loop here for up
+    # to 18s waiting on _poedex_ask() -- during that window nothing else
+    # in the loop (turn events, Scout evidence, pressure routing, sleep
+    # cycle) advanced. A self_diagnostic ScoutRequest is Subsurface's own
+    # autonomous research, never scoped to a live user turn, so it uses
+    # turn_id="" -- subsurface_scout_bridge.evaluate_report() special-
+    # cases request_kind="self_diagnostic" to skip the turn-currency
+    # check that would otherwise (correctly, for turn-scoped evidence)
+    # mark it "stale" the moment a live user turn is in progress.
+    try:
+        from aurora_internal.scouting.broker import dispatch_scout_request
+        from aurora_internal.scouting.contracts import ScoutRequest
+        request_id = dispatch_scout_request(_STATE_DIR, ScoutRequest(
+            turn_id="",
+            request_kind="self_diagnostic",
+            inquiry=question,
+            evidence_needed=signal_issue,
+            priority=0.85,
+            ttl_s=45.0,
+        ))
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:_maybe_research_recurring_issue:dispatch",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_research_recurring_issue", "source_file": "aurora_daemon.py"},
+        )
+        request_id = None
+
+    if not request_id:
         return False
 
+    _record_pending_issue_research(request_id, {
+        "candidate_dim": candidate_dim,
+        "qao_recent_events": qao_recent,
+        "qao_top_issue": qao_top_issue,
+        "surface_reason": surface_reason,
+        "signal_issue": signal_issue,
+        "signal_intensity": signal_intensity,
+        "observer_context": observer_context,
+        "dispatched_at": now_ts,
+    })
+
+    # Write the cooldown-gate state now, at dispatch time, not after a
+    # result comes back -- otherwise every tick inside the 1200s
+    # throttle window would keep re-dispatching for the same issue
+    # (ScoutBroker's own inquiry-text dedup only catches byte-identical
+    # questions, not "same issue, slightly different QAO counts").
+    try:
+        state_path.write_text(json.dumps({
+            "ts": now_ts,
+            "issue": candidate_dim,
+            "qao_recent_events": qao_recent,
+            "qao_top_issue": qao_top_issue,
+            "surface_reason": surface_reason,
+            "selected_proposal_id": "",
+            "applied_proposal_id": "",
+        }, indent=2))
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_daemon.py:3752",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_research_recurring_issue", "handler_line": 3752, "source_file": "aurora_daemon.py"},
+        )
+        pass
+
+    _log(f"  [POEDEX] Dispatched autonomous issue research for {candidate_dim} (qao={qao_recent}); awaiting Scout evidence.")
+    return True
+
+
+_PENDING_ISSUE_RESEARCH_FILENAME = "poedex_issue_research_pending.json"
+# Give up waiting on a dispatched self_diagnostic request after this
+# long -- same "Scout failure must never block Aurora" discipline (spec
+# section 17) as everywhere else this codebase dispatches a Scout.
+_PENDING_ISSUE_RESEARCH_MAX_AGE_S = 300.0
+
+
+def _load_pending_issue_research() -> Dict[str, Any]:
+    path = _STATE_DIR / _PENDING_ISSUE_RESEARCH_FILENAME
+    if not path.exists():
+        return {}
+    try:
+        raw = json.loads(path.read_text())
+        return raw if isinstance(raw, dict) else {}
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:_load_pending_issue_research",
+            exc=_aurora_boundary_exc,
+            context={"function": "_load_pending_issue_research", "source_file": "aurora_daemon.py"},
+        )
+        return {}
+
+
+def _save_pending_issue_research(pending: Dict[str, Any]) -> None:
+    path = _STATE_DIR / _PENDING_ISSUE_RESEARCH_FILENAME
+    try:
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps(pending, indent=2))
+        tmp.replace(path)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:_save_pending_issue_research",
+            exc=_aurora_boundary_exc,
+            context={"function": "_save_pending_issue_research", "source_file": "aurora_daemon.py"},
+        )
+
+
+def _record_pending_issue_research(request_id: str, correlation: Dict[str, Any]) -> None:
+    pending = _load_pending_issue_research()
+    pending[str(request_id)] = correlation
+    _save_pending_issue_research(pending)
+
+
+def _finish_recurring_issue_research(correlation: Dict[str, Any], result: str) -> None:
+    """The note-writing/activity-logging/repair-proposal-selection/
+    application tail _maybe_research_recurring_issue() used to run
+    synchronously right after its blocking Poedex call returned. Now
+    runs from _consume_recurring_issue_research() instead, once a
+    dispatched self_diagnostic request's evidence has actually come
+    back -- on whatever later tick that happens to be."""
+    notes_path = _STATE_DIR / "aurora_room_notes.json"
+    activity_path = _STATE_DIR / "aurora_room_activity.json"
+    state_path = _STATE_DIR / "poedex_issue_research_state.json"
+
+    now_ts = time.time()
+    candidate_dim = str(correlation.get("candidate_dim", "") or "")
+    qao_recent = int(correlation.get("qao_recent_events", 0) or 0)
+    qao_top_issue = str(correlation.get("qao_top_issue", "") or "?")
+    surface_reason = str(correlation.get("surface_reason", "") or "")
+    signal_issue = str(correlation.get("signal_issue", "") or candidate_dim)
+    signal_intensity = float(correlation.get("signal_intensity", 0.5) or 0.5)
+    observer_context = dict(correlation.get("observer_context") or {})
+
     _signal_operator("scan_tab", {"tab": "Poedex"})
-    if not result:
-        result = "Poedex did not return in time; subsurface is continuing with local QuasiArch repair selection."
     excerpt = str(result)[:280]
     _write_subsurface_repair_signal(
         "enforce",
@@ -4652,11 +4784,10 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
         notes_path.write_text(json.dumps(notes[-200:], indent=2))
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:3675",
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:_finish_recurring_issue_research:notes",
             exc=_aurora_boundary_exc,
-            context={"function": "_maybe_research_recurring_issue", "handler_line": 3675, "source_file": "aurora_daemon.py"},
+            context={"function": "_finish_recurring_issue_research", "source_file": "aurora_daemon.py"},
         )
         pass
 
@@ -4674,11 +4805,10 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
         activity_path.write_text(json.dumps(activity[-500:], indent=2))
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:3690",
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:_finish_recurring_issue_research:activity",
             exc=_aurora_boundary_exc,
-            context={"function": "_maybe_research_recurring_issue", "handler_line": 3690, "source_file": "aurora_daemon.py"},
+            context={"function": "_finish_recurring_issue_research", "source_file": "aurora_daemon.py"},
         )
         pass
 
@@ -4700,11 +4830,10 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
             activity_path.write_text(json.dumps(activity[-500:], indent=2))
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_daemon.py:3709",
+                locals(), module=__name__,
+                operation="exception_handler:aurora_daemon.py:_finish_recurring_issue_research:proposal_activity",
                 exc=_aurora_boundary_exc,
-                context={"function": "_maybe_research_recurring_issue", "handler_line": 3709, "source_file": "aurora_daemon.py"},
+                context={"function": "_finish_recurring_issue_research", "source_file": "aurora_daemon.py"},
             )
             pass
         if _apply_autonomous_repair_proposal(selected_proposal):
@@ -4729,11 +4858,10 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
                 notes_path.write_text(json.dumps(notes[-200:], indent=2))
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:3731",
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_daemon.py:_finish_recurring_issue_research:repair_notes",
                     exc=_aurora_boundary_exc,
-                    context={"function": "_maybe_research_recurring_issue", "handler_line": 3731, "source_file": "aurora_daemon.py"},
+                    context={"function": "_finish_recurring_issue_research", "source_file": "aurora_daemon.py"},
                 )
                 pass
             _write_subsurface_repair_signal(
@@ -4757,16 +4885,82 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
         }, indent=2))
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_daemon.py:3752",
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:_finish_recurring_issue_research:state",
             exc=_aurora_boundary_exc,
-            context={"function": "_maybe_research_recurring_issue", "handler_line": 3752, "source_file": "aurora_daemon.py"},
+            context={"function": "_finish_recurring_issue_research", "source_file": "aurora_daemon.py"},
         )
         pass
 
     _log(f"  [POEDEX] Autonomous issue research captured for {candidate_dim} (qao={qao_recent}).")
-    return True
+
+
+def _consume_recurring_issue_research(systems: Dict[str, Any]) -> None:
+    """
+    Subsurface Presence and Evidence Scout spec, step 11: called each
+    main-loop tick (like _consume_scout_evidence) to check whether any
+    self_diagnostic request _maybe_research_recurring_issue() dispatched
+    has come back yet. Correlates by request_id against
+    subsurface_scout_bridge's own durable, turn-keyed binding store
+    (turn_id="" for self_diagnostic requests, since they aren't scoped
+    to any live user turn) -- never a second poll_reports() call site;
+    the bridge remains the sole consumer (spec section 11).
+    """
+    try:
+        pending = _load_pending_issue_research()
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:_consume_recurring_issue_research:load",
+            exc=_aurora_boundary_exc,
+            context={"function": "_consume_recurring_issue_research", "source_file": "aurora_daemon.py"},
+        )
+        return
+    if not pending:
+        return
+
+    try:
+        from aurora_internal.scouting.subsurface_scout_bridge import read_bindings_for_turn
+        bindings_by_request = {
+            str(b.get("request_id", "")): b for b in read_bindings_for_turn(_STATE_DIR, "")
+        }
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:_consume_recurring_issue_research:read",
+            exc=_aurora_boundary_exc,
+            context={"function": "_consume_recurring_issue_research", "source_file": "aurora_daemon.py"},
+        )
+        return
+
+    now_ts = time.time()
+    still_pending: Dict[str, Any] = {}
+    changed = False
+    for request_id, correlation in pending.items():
+        binding = bindings_by_request.get(str(request_id))
+        if binding is None:
+            dispatched_at = float((correlation or {}).get("dispatched_at", 0.0) or 0.0)
+            if dispatched_at and (now_ts - dispatched_at) > _PENDING_ISSUE_RESEARCH_MAX_AGE_S:
+                changed = True  # gave up waiting -- Scout failure must never block Aurora
+                continue
+            still_pending[request_id] = correlation
+            continue
+
+        changed = True
+        if binding.get("status") == "accepted" and binding.get("evidence_items"):
+            result_text = str(binding["evidence_items"][0].get("text", "") or "")
+            try:
+                _finish_recurring_issue_research(correlation or {}, result_text)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_daemon.py:_consume_recurring_issue_research:finish",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_consume_recurring_issue_research", "source_file": "aurora_daemon.py"},
+                )
+
+    if changed:
+        _save_pending_issue_research(still_pending)
 
 
 def _run_classroom_cycle(systems: Dict[str, Any]) -> None:
@@ -9040,6 +9234,12 @@ def run(systems: Dict[str, Any]) -> None:
         # turn Subsurface currently considers live, folded into the
         # presence frame's response_fit_pressure.
         _consume_scout_evidence(systems)
+
+        # Completes recurring-issue self-diagnostic research once its
+        # dispatched ScoutRequest has actually come back (spec step 11)
+        # -- never blocks; a request with no evidence back yet just
+        # stays pending for a later tick.
+        _consume_recurring_issue_research(systems)
 
         # Grammar motif training — fires when the SIC has no promoted sentence
         # patterns, which means the emergent expression path produces word salad.

@@ -120,6 +120,7 @@ def _retrieve_and_normalize(request: ScoutRequest) -> ScoutReport:
     if not str(request.inquiry or "").strip():
         return ScoutReport(
             request_id=request.request_id, turn_id=request.turn_id,
+            request_kind=request.request_kind,
             status="no_evidence",
             elapsed_ms=(time.time() - started) * 1000.0,
         )
@@ -127,6 +128,7 @@ def _retrieve_and_normalize(request: ScoutRequest) -> ScoutReport:
     if not _room_responder_available():
         return ScoutReport(
             request_id=request.request_id, turn_id=request.turn_id,
+            request_kind=request.request_kind,
             status="no_evidence",
             fit_rationales=["Poedex Room responder is not running -- no external evidence source available"],
             elapsed_ms=(time.time() - started) * 1000.0,
@@ -146,6 +148,7 @@ def _retrieve_and_normalize(request: ScoutRequest) -> ScoutReport:
     if not raw_result:
         return ScoutReport(
             request_id=request.request_id, turn_id=request.turn_id,
+            request_kind=request.request_kind,
             status="no_evidence", elapsed_ms=elapsed_ms,
         )
 
@@ -159,6 +162,7 @@ def _retrieve_and_normalize(request: ScoutRequest) -> ScoutReport:
     return ScoutReport(
         request_id=request.request_id,
         turn_id=request.turn_id,
+        request_kind=request.request_kind,
         status="ok",
         evidence_items=evidence_items[: int(request.max_evidence_items or 5)],
         response_relationships=["explain"],
@@ -190,6 +194,7 @@ def run(*, poll_interval_s: float = 1.0, max_iterations: Optional[int] = None) -
         except Exception as exc:
             report = ScoutReport(
                 request_id=request.request_id, turn_id=request.turn_id,
+                request_kind=request.request_kind,
                 status="failed", fit_rationales=[f"scout worker error: {exc}"],
             )
         broker.submit_report(report)

@@ -72,6 +72,7 @@ class EvidenceBinding:
     request_id: str
     turn_id: str
     status: str  # "accepted" | "rejected" | "stale"
+    request_kind: str = "response_fit"
     relevance: float = 0.0
     consistency: float = 0.0
     strength: float = 0.0
@@ -97,6 +98,7 @@ def evaluate_report(report: ScoutReport, *, current_turn_id: str = "") -> Eviden
         binding_id=binding_id,
         request_id=report.request_id,
         turn_id=report.turn_id,
+        request_kind=report.request_kind,
         response_relationships=list(report.response_relationships),
         fit_rationales=list(report.fit_rationales),
         contradictions=list(report.contradictions),
@@ -116,7 +118,13 @@ def evaluate_report(report: ScoutReport, *, current_turn_id: str = "") -> Eviden
             rejected_reason="report has no evidence items", **common,
         )
 
-    is_current = bool(current_turn_id) and report.turn_id == current_turn_id
+    # self_diagnostic reports (spec step 11) are Subsurface's own
+    # autonomous research, never scoped to a live user turn -- the
+    # turn-currency check below doesn't apply to them at all, so they
+    # skip straight to strength/consistency-only acceptance instead of
+    # being discounted as though a newer turn had made them stale.
+    is_self_diagnostic = report.request_kind == "self_diagnostic"
+    is_current = is_self_diagnostic or (bool(current_turn_id) and report.turn_id == current_turn_id)
     relevance = 1.0 if is_current else _STALE_TURN_RELEVANCE
     consistency = 0.4 if report.contradictions else 1.0
     strength = max(0.0, min(1.0, float(report.confidence or 0.0)))
