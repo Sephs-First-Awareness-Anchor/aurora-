@@ -523,15 +523,16 @@ class _FacePainter extends CustomPainter {
     canvas.save();
     canvas.translate(faceCenter.dx, faceCenter.dy);
     canvas.rotate(shape.rotation);
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset.zero, width: rw, height: rh),
-      Radius.circular((rw < rh ? rw : rh) / 2), // fully rounded ends -> stadium/dot shape
-    );
-    canvas.drawRRect(rrect, paint);
+    // An oval, not a stadium RRect: a wide/short RRect's corner radius is
+    // capped at half the smaller dimension, so its top and bottom edges
+    // are dead straight for most of their length -- exactly the flat,
+    // geometric look that reads as robotic. An oval curves continuously
+    // everywhere, same as the eyes already do.
+    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: rw, height: rh), paint);
     canvas.restore();
   }
 
-  /// Articulated talking mouth: a black stadium shape whose HEIGHT
+  /// Articulated talking mouth: a black oval whose HEIGHT
   /// interpolates from a near-closed sliver up to a wide-open cavity as
   /// [openAmount] (the word-boundary pulse, 0..1) rises, with a white
   /// interior revealed once it opens enough to read as inside-the-mouth
@@ -551,21 +552,22 @@ class _FacePainter extends CustomPainter {
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotation);
 
-    final outer = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset.zero, width: w, height: h),
-      Radius.circular((w < h ? w : h) / 2),
-    );
-    canvas.drawRRect(outer, Paint()..color = Colors.black);
+    // Ovals, not stadium RRects -- same reasoning as the resting mouth
+    // above: a wide/short RRect's top and bottom edges go dead straight,
+    // which reads as a rigid mechanical slot opening and closing rather
+    // than a mouth. An oval keeps a continuous curve at every openness,
+    // including near-closed, where it reads as a soft closed-lip line
+    // instead of a flat-topped bar.
+    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: w, height: h), Paint()..color = Colors.black);
 
     if (open > 0.12) {
       final innerW = w - refSize * 0.30;
       final innerH = h - refSize * 0.16;
       if (innerW > 1 && innerH > 1) {
-        final inner = RRect.fromRectAndRadius(
+        canvas.drawOval(
           Rect.fromCenter(center: Offset.zero, width: innerW, height: innerH),
-          Radius.circular((innerW < innerH ? innerW : innerH) / 2),
+          Paint()..color = Colors.white.withOpacity(open),
         );
-        canvas.drawRRect(inner, Paint()..color = Colors.white.withOpacity(open));
       }
     }
     canvas.restore();
