@@ -21768,6 +21768,44 @@ def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str,
         )
 
 
+def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> list:
+    """
+    Subsurface Presence and Evidence Scout spec, step 9: the ONE point
+    where Surface is allowed to see Scout-derived evidence at all --
+    called right before expression, after belief/information have
+    already built the response draft. Reads through
+    subsurface_scout_bridge.read_bindings_for_turn(), never
+    ScoutBroker.poll_reports() directly (spec section 11: Surface must
+    never read raw scout_results) -- what comes back here is already
+    Subsurface-evaluated EvidenceBinding data for THIS turn_id only, and
+    already excludes any final_response field structurally (spec
+    section 8/ScoutReport.__post_init__).
+
+    Only "accepted" bindings are kept -- read_bindings_for_turn() can
+    also return "rejected"/"stale" bindings recorded under this same
+    turn_id (e.g. a report that came back weak or contradicted for this
+    very turn), and those must never reach expression at all.
+
+    Additive only: the result is available context Surface MAY draw on
+    (currently: passed alongside dominant_emotion into the expression
+    composer's assembly_data) -- it never substitutes for or overrides
+    state.response_content, which belief/information already finished
+    building before this ever runs.
+    """
+    try:
+        from aurora_internal.scouting.subsurface_scout_bridge import read_bindings_for_turn
+        bindings = read_bindings_for_turn(systems.get("state_dir"), turn_id)
+        return [b for b in bindings if isinstance(b, dict) and b.get("status") == "accepted"]
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_harvest_scout_evidence_for_expression",
+            exc=_aurora_boundary_exc,
+            context={"function": "_harvest_scout_evidence_for_expression", "source_file": "aurora.py"},
+        )
+        return []
+
+
 def _run_reasoning_pipeline(
     systems: dict,
     user_text: str,
@@ -22292,6 +22330,14 @@ def _run_reasoning_pipeline(
     _preserve_literal_response = bool(systems.pop("_preserve_literal_response_once", False))
     _skip_surface_expression = bool(systems.pop("_skip_surface_expression_once", False))
 
+    # Subsurface Presence and Evidence Scout spec, step 9: harvest
+    # whatever Subsurface has already accepted as evidence for THIS
+    # turn, right before expression -- draft content is finished by now,
+    # so this can only inform how it's expressed, never what was decided.
+    systems["_current_turn_scout_evidence"] = _harvest_scout_evidence_for_expression(
+        systems, turn_id=str(systems.get("_current_turn_id", "") or ""),
+    )
+
     if not _preserve_literal_response:
         try:
             if _skip_surface_expression:
@@ -22324,6 +22370,11 @@ def _run_reasoning_pipeline(
                             raw_expression=_resp_draft,
                             assembly_data={
                                 'dominant_emotion': str(getattr(state, 'response_tone', 'neutral') or 'neutral'),
+                                # Scout spec step 9: additive context only --
+                                # already Subsurface-accepted for this turn,
+                                # never a drafted response (contracts.py
+                                # structurally excludes final_response).
+                                'scout_evidence': systems.get('_current_turn_scout_evidence', []),
                             },
                         )
                         _evo_text_a5 = str(_evo_out_a5.get('final_text', '') or '')
