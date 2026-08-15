@@ -60,6 +60,36 @@ def _atomic_write(path: Path, payload: Any) -> None:
 
 # ── A. Turn open event (Surface -> Subsurface, "something is happening now") ──
 
+def _append_turn_event(state_dir: Any, event: Dict[str, Any], *, caller: str) -> None:
+    root = _resolve(state_dir)
+    path = root / _TURN_EVENTS_FILENAME
+    try:
+        existing: List[Dict[str, Any]] = []
+        if path.exists():
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(raw, list):
+                    existing = raw
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation=f"exception_handler:aurora_internal/dual_strata/subsurface_presence.py:{caller}:read",
+                    exc=_aurora_boundary_exc,
+                    context={"function": caller, "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+                )
+                existing = []
+        existing.append(event)
+        existing = existing[-_MAX_TURN_EVENTS:]
+        _atomic_write(path, existing)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation=f"exception_handler:aurora_internal/dual_strata/subsurface_presence.py:{caller}:write",
+            exc=_aurora_boundary_exc,
+            context={"function": caller, "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+        )
+
+
 def write_turn_open(
     state_dir: Any,
     *,
@@ -72,9 +102,6 @@ def write_turn_open(
     """Surface calls this the instant a turn is accepted, BEFORE the full
     response pipeline runs. Does not trigger a Scout -- purely a presence
     signal. Returns the event_id."""
-    root = _resolve(state_dir)
-    path = root / _TURN_EVENTS_FILENAME
-
     event_id = uuid.uuid4().hex
     event: Dict[str, Any] = {
         "event_id": event_id,
@@ -87,33 +114,55 @@ def write_turn_open(
         "prior_frame_ref": str(prior_frame_ref or "") or None,
         "consumed": False,
     }
+    _append_turn_event(state_dir, event, caller="write_turn_open")
+    return event_id
 
-    try:
-        existing: List[Dict[str, Any]] = []
-        if path.exists():
-            try:
-                raw = json.loads(path.read_text(encoding="utf-8"))
-                if isinstance(raw, list):
-                    existing = raw
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(), module=__name__,
-                    operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:write_turn_open:read",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "write_turn_open", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
-                )
-                existing = []
-        existing.append(event)
-        existing = existing[-_MAX_TURN_EVENTS:]
-        _atomic_write(path, existing)
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(), module=__name__,
-            operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:write_turn_open:write",
-            exc=_aurora_boundary_exc,
-            context={"function": "write_turn_open", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
-        )
 
+def write_interpreted_turn(
+    state_dir: Any,
+    *,
+    turn_id: str,
+    interpreted_meaning: str = "",
+    inferred_purpose: str = "",
+    current_topic: str = "",
+    resolved_referents: Optional[List[str]] = None,
+    unresolved_ambiguity: Optional[List[str]] = None,
+    interpretation_confidence: float = 0.0,
+    response_confidence: float = 0.0,
+    dominant_constraints: Optional[Dict[str, float]] = None,
+    representation_refs: Optional[List[str]] = None,
+    knowledge_gaps: Optional[List[str]] = None,
+    response_fit_pressure: float = 0.0,
+) -> str:
+    """Surface calls this once, in _run_reasoning_pipeline() right after
+    _chain_down3_purpose() -- at that point Aurora has been through
+    understanding -> meaning -> purpose (both the upward AND downward
+    passes for those three stages) but belief/information have not yet
+    refined the response, so this packet genuinely captures "how well
+    she understood the input" before "how she'll respond" has been
+    decided. The Scout, if one is later dispatched for this turn (spec
+    section 6), receives THIS interpretation as authoritative input --
+    never the raw_input from write_turn_open() above."""
+    event_id = uuid.uuid4().hex
+    event: Dict[str, Any] = {
+        "event_id": event_id,
+        "kind": "interpreted_turn",
+        "turn_id": str(turn_id or ""),
+        "created_at": time.time(),
+        "interpreted_meaning": str(interpreted_meaning or "")[:400],
+        "inferred_purpose": str(inferred_purpose or "")[:200],
+        "current_topic": str(current_topic or "")[:120],
+        "resolved_referents": [str(r) for r in list(resolved_referents or [])][:12],
+        "unresolved_ambiguity": [str(a) for a in list(unresolved_ambiguity or [])][:12],
+        "interpretation_confidence": round(max(0.0, min(1.0, float(interpretation_confidence or 0.0))), 4),
+        "response_confidence": round(max(0.0, min(1.0, float(response_confidence or 0.0))), 4),
+        "dominant_constraints": dict(dominant_constraints or {}),
+        "representation_refs": [str(r) for r in list(representation_refs or [])][:16],
+        "knowledge_gaps": [str(g) for g in list(knowledge_gaps or [])][:8],
+        "response_fit_pressure": round(max(0.0, min(1.0, float(response_fit_pressure or 0.0))), 4),
+        "consumed": False,
+    }
+    _append_turn_event(state_dir, event, caller="write_interpreted_turn")
     return event_id
 
 

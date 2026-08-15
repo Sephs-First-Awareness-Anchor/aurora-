@@ -21670,6 +21670,92 @@ def _apply_reflective_readdressing_to_state(
             pass
 
 
+def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str, turn_tick: int) -> None:
+    """
+    Subsurface Presence and Evidence Scout spec, section 5B: called from
+    _run_reasoning_pipeline() right after _chain_down3_purpose(). At this
+    point Aurora has been through understanding -> meaning -> purpose
+    (both the upward pass at the top of the pipeline and this downward
+    pass), but belief/information have not yet run -- so this packet
+    genuinely captures "how well she understood the input" BEFORE "how
+    she'll respond" gets decided, which is exactly the comparison
+    ResponseFitPressure (section 6) needs.
+
+    Field provenance, since TurnUnderstandingState doesn't carry 1:1
+    named fields for everything the spec asks for -- each is the closest
+    real signal already computed by this point, not a fabricated value:
+      interpreted_meaning   <- dominant_meaning_form / salient_concepts
+      inferred_purpose      <- state.intent (down3_purpose's own output)
+      resolved_referents    <- state.referent_map (up2_belief, upward pass)
+      unresolved_ambiguity  <- referent_map entries with no resolution
+      interpretation_confidence <- 1 - belief_tension (up2_belief)
+      response_confidence   <- state.response_confidence (pre-belief/
+                                information refinement -- a genuinely
+                                EARLY estimate, which is the point)
+      dominant_constraints  <- state.axis_activation
+      representation_refs   <- state.salient_concepts (concept labels;
+                                TurnUnderstandingState does not yet carry
+                                canonical RepresentationalRef addressing)
+      knowledge_gaps        <- state.learned_hints
+
+    Never allowed to affect the actual turn: any failure here is caught
+    and swallowed, same as the write functions it calls.
+    """
+    try:
+        turn_id = str(systems.get("_current_turn_id", "") or "") or f"{session_id}:{turn_tick}"
+
+        dominant_form = state.dominant_meaning_form if isinstance(state.dominant_meaning_form, dict) else {}
+        interpreted_meaning = str(dominant_form.get("text") or dominant_form.get("summary") or "")
+        if not interpreted_meaning and state.salient_concepts:
+            interpreted_meaning = ", ".join(str(c) for c in state.salient_concepts[:6])
+
+        current_topic = str(state.salient_concepts[0]) if state.salient_concepts else ""
+
+        referent_map = state.referent_map if isinstance(state.referent_map, dict) else {}
+        resolved_referents = [str(k) for k, v in referent_map.items() if v]
+        unresolved_ambiguity = [str(k) for k, v in referent_map.items() if not v]
+
+        belief_tension = max(0.0, min(1.0, float(getattr(state, "belief_tension", 0.0) or 0.0)))
+        interpretation_confidence = 1.0 - belief_tension
+        response_confidence = max(0.0, min(1.0, float(getattr(state, "response_confidence", 0.5) or 0.5)))
+
+        axis_activation = state.axis_activation if isinstance(state.axis_activation, dict) else {}
+
+        # ResponseFitPressure (spec section 6): "interpretation adequate +
+        # response relation inadequate" -- a continuous magnitude, not a
+        # boolean gate, so a later Scout broker (spec step 5) can weigh it
+        # against other signals rather than a hardcoded threshold owning
+        # the whole decision.
+        interpretation_adequate = interpretation_confidence >= 0.45
+        ambiguity_not_blocking = len(unresolved_ambiguity) == 0
+        response_gap = 1.0 - response_confidence
+        response_fit_pressure = response_gap if (interpretation_adequate and ambiguity_not_blocking) else 0.0
+
+        from aurora_internal.dual_strata.subsurface_presence import write_interpreted_turn
+        write_interpreted_turn(
+            systems.get("state_dir"),
+            turn_id=turn_id,
+            interpreted_meaning=interpreted_meaning,
+            inferred_purpose=str(getattr(state, "intent", "") or ""),
+            current_topic=current_topic,
+            resolved_referents=resolved_referents,
+            unresolved_ambiguity=unresolved_ambiguity,
+            interpretation_confidence=interpretation_confidence,
+            response_confidence=response_confidence,
+            dominant_constraints=axis_activation,
+            representation_refs=list(state.salient_concepts or [])[:16],
+            knowledge_gaps=list(getattr(state, "learned_hints", None) or [])[:8],
+            response_fit_pressure=response_fit_pressure,
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_emit_interpreted_turn_packet",
+            exc=_aurora_boundary_exc,
+            context={"function": "_emit_interpreted_turn_packet", "source_file": "aurora.py"},
+        )
+
+
 def _run_reasoning_pipeline(
     systems: dict,
     user_text: str,
@@ -22178,6 +22264,13 @@ def _run_reasoning_pipeline(
     _chain_down3_purpose(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled,
                         use_search=use_search, raw_evidence=raw_evidence or [])
     _capture_waveform_deposit(state, "purpose", systems)
+
+    # Subsurface Presence and Evidence Scout spec, section 5B: Subsurface
+    # gets Aurora's interpretation the moment it's formed (understanding
+    # -> meaning -> purpose all complete), not only after belief/
+    # information refine it into a finished response.
+    _emit_interpreted_turn_packet(systems, state, session_id=session_id, turn_tick=turn_tick)
+
     _chain_down2_belief(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled,
                             use_search=use_search)
     _capture_waveform_deposit(state, "belief", systems)

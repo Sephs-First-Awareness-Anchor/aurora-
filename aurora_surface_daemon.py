@@ -886,6 +886,13 @@ def run() -> None:
             raw_input=str(turn.get("content", "") or ""),
             session_id=str(turn.get("session_id", "surface_daemon") or "surface_daemon"),
         )
+        # Ephemeral per-turn handoff (same pattern as _subsurface_projection/
+        # _sedi_surface_frags below): lets _run_reasoning_pipeline()'s
+        # InterpretedTurnPacket (spec section 5B) correlate back to THIS
+        # turn_open event without threading a new turn_id parameter through
+        # process_external_user_turn() -> _run_live_response_turn() ->
+        # _run_reasoning_pipeline()'s existing call chain.
+        systems["_current_turn_id"] = str(turn.get("id", "") or "")
         _turn_started_at = time.time()
 
         try:
