@@ -13,21 +13,59 @@
 // the same word-boundary pulse home_screen.dart already drives TTS
 // with -- real jaw motion, not the resting shape breathing bigger and
 // smaller.
+//
+// Sunni: "her expressions and everything should be tailored to her
+// internal process ... people wear their expression on their face even
+// when they aren't through words." The face used to snap between 7
+// fixed looks the moment an axis crossed a hard threshold -- driven by
+// real internal state, but discretely, with a hard ceiling of 7 possible
+// faces no matter how nuanced the underlying axes actually were.
+// _FaceSpec.blend() below replaces that hard switch with a continuous
+// one: every one of the 7 looks below is kept as an exact reference
+// point (_archetypeSpec), but each has a smooth (sigmoid, not step)
+// activation function of the live axes, and the face actually rendered
+// is the activation-weighted blend of ALL of them at once -- so a
+// resting face doesn't sit on one frozen "neutral" pose, it continuously
+// drifts with whatever her real axis state is doing, the way a person's
+// face carries a trace of mood even at rest.
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 enum OrbState { dormant, listening, thinking, speaking }
 
 enum _Expression { joyful, happy, contemplative, attentive, uncertain, tired, neutral }
 
-_Expression _expressionFromAxes(Map<String, double> ax) {
-  final x = ax['X'] ?? 0.5, t = ax['T'] ?? 0.5, n = ax['N'] ?? 0.5, b = ax['B'] ?? 0.5, a = ax['A'] ?? 0.5;
-  if (a > 0.80 && n > 0.65) return _Expression.joyful;
-  if (a > 0.65) return _Expression.happy;
-  if (b > 0.70 && t > 0.65 && a < 0.45) return _Expression.contemplative;
-  if (x > 0.80 && a < 0.55) return _Expression.attentive;
-  if (n < 0.40 && b < 0.45) return _Expression.uncertain;
-  if (n < 0.35 && t < 0.45) return _Expression.tired;
-  return _Expression.neutral;
+/// Continuous (sigmoid, not step) stand-in for each archetype's old hard
+/// threshold condition -- 0 far below the threshold, 1 far above it,
+/// smoothly crossing 0.5 AT the original threshold value. [steepness]
+/// controls how sharp that crossing is; lower = blends further.
+double _activationSigmoid(double value, double center, [double steepness = 11.0]) =>
+    1.0 / (1.0 + math.exp(-(value - center) * steepness));
+
+/// How strongly each archetype "wants" to be expressed right now, as a
+/// continuous function of the live axes -- the same conditions
+/// _expressionFromAxes used to gate on, just soft instead of hard.
+/// [neutral] carries a constant floor rather than a condition: there is
+/// always SOME baseline calm presence blended in, so even an axis state
+/// that doesn't strongly match any archetype still renders as a face
+/// with quiet character, not a null/undefined expression.
+double _archetypeActivation(_Expression expr, double x, double t, double n, double b, double a) {
+  switch (expr) {
+    case _Expression.joyful:
+      return _activationSigmoid(a, 0.80) * _activationSigmoid(n, 0.65);
+    case _Expression.happy:
+      return _activationSigmoid(a, 0.65);
+    case _Expression.contemplative:
+      return _activationSigmoid(b, 0.70) * _activationSigmoid(t, 0.65) * (1.0 - _activationSigmoid(a, 0.45));
+    case _Expression.attentive:
+      return _activationSigmoid(x, 0.80) * (1.0 - _activationSigmoid(a, 0.55));
+    case _Expression.uncertain:
+      return (1.0 - _activationSigmoid(n, 0.40)) * (1.0 - _activationSigmoid(b, 0.45));
+    case _Expression.tired:
+      return (1.0 - _activationSigmoid(n, 0.35)) * (1.0 - _activationSigmoid(t, 0.45));
+    case _Expression.neutral:
+      return 0.35;
+  }
 }
 
 enum _ShapeKind { dot, colon, line }
@@ -72,20 +110,23 @@ enum _EyeKind { oval, arc, closed }
 /// fill, used for thoughtful/worried looks); `closed` is a flat stroked
 /// line (drowsy/tired). `dy` and sizes are fractions of the shared
 /// reference size so both eyes stay proportional to the mouth.
+/// `highlightOpacity` (0..1, not a bool) is what lets the continuous
+/// blend below fade the glare in/out smoothly across archetypes instead
+/// of snapping it on or off.
 class _EyeSpec {
   final _EyeKind kind;
   final double widthScale;
   final double heightScale;
   final double rotation;
   final double dy;
-  final bool highlight;
+  final double highlightOpacity;
   const _EyeSpec({
     this.kind = _EyeKind.oval,
     this.widthScale = 1.0,
     this.heightScale = 1.0,
     this.rotation = 0.0,
     this.dy = 0.0,
-    this.highlight = true,
+    this.highlightOpacity = 1.0,
   });
 }
 
@@ -95,7 +136,10 @@ class _FaceSpec {
   final _MouthShape mouth;
   const _FaceSpec(this.leftEye, this.rightEye, this.mouth);
 
-  factory _FaceSpec.fromExpression(_Expression expr) {
+  /// The archetype's exact, hand-tuned reference look -- still used
+  /// directly as one of the inputs [blend] mixes, never rendered as-is
+  /// anymore (see [blend] below).
+  factory _FaceSpec._archetype(_Expression expr) {
     final mouth = _MouthShape.fromExpression(expr);
     switch (expr) {
       case _Expression.joyful:
@@ -115,8 +159,8 @@ class _FaceSpec {
         // gentle asymmetry reads as "considering something" the way a
         // perfectly symmetric face can't.
         return _FaceSpec(
-          const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.85, heightScale: 0.9, rotation: -0.12, highlight: false),
-          const _EyeSpec(kind: _EyeKind.oval, widthScale: 0.8, heightScale: 0.5, rotation: 0.08, dy: 0.05, highlight: false),
+          const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.85, heightScale: 0.9, rotation: -0.12, highlightOpacity: 0.0),
+          const _EyeSpec(kind: _EyeKind.oval, widthScale: 0.8, heightScale: 0.5, rotation: 0.08, dy: 0.05, highlightOpacity: 0.0),
           mouth,
         );
       case _Expression.attentive:
@@ -129,14 +173,14 @@ class _FaceSpec {
         // Both brows knit inward and up -- the classic worried look --
         // paired with the existing colon mouth.
         return _FaceSpec(
-          const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.65, heightScale: 0.55, rotation: 0.28, highlight: false),
-          const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.65, heightScale: 0.55, rotation: -0.28, highlight: false),
+          const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.65, heightScale: 0.55, rotation: 0.28, highlightOpacity: 0.0),
+          const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.65, heightScale: 0.55, rotation: -0.28, highlightOpacity: 0.0),
           mouth,
         );
       case _Expression.tired:
         return _FaceSpec(
-          const _EyeSpec(kind: _EyeKind.closed, dy: 0.12, highlight: false),
-          const _EyeSpec(kind: _EyeKind.closed, dy: 0.12, highlight: false),
+          const _EyeSpec(kind: _EyeKind.closed, dy: 0.12, highlightOpacity: 0.0),
+          const _EyeSpec(kind: _EyeKind.closed, dy: 0.12, highlightOpacity: 0.0),
           mouth,
         );
       case _Expression.neutral:
@@ -146,6 +190,65 @@ class _FaceSpec {
           mouth,
         );
     }
+  }
+
+  /// The face actually rendered: every archetype's exact look, blended
+  /// by how strongly the live axes activate it (see
+  /// _archetypeActivation). Numeric shape parameters (size, rotation,
+  /// droop, glare opacity, mouth curve) are true continuous weighted
+  /// averages, so they glide rather than snap. `kind` (oval vs arc vs
+  /// closed eye; dot vs colon vs line mouth) is a genuinely categorical
+  /// choice -- there's no meaningful halfway shape between a stroked arc
+  /// and a filled oval -- so it's taken from whichever single archetype
+  /// currently has the highest activation, the way a real eyelid is
+  /// continuously in motion but is still definitely open or shut at any
+  /// instant.
+  factory _FaceSpec.blend(Map<String, double> ax) {
+    final x = ax['X'] ?? 0.5, t = ax['T'] ?? 0.5, n = ax['N'] ?? 0.5, b = ax['B'] ?? 0.5, a = ax['A'] ?? 0.5;
+
+    _Expression dominant = _Expression.neutral;
+    double dominantActivation = -1.0;
+    double totalActivation = 0.0;
+    final activations = <_Expression, double>{};
+    for (final expr in _Expression.values) {
+      final act = _archetypeActivation(expr, x, t, n, b, a);
+      activations[expr] = act;
+      totalActivation += act;
+      if (act > dominantActivation) {
+        dominantActivation = act;
+        dominant = expr;
+      }
+    }
+    if (totalActivation <= 0.0) totalActivation = 1.0;
+
+    double lw = 0, lh = 0, lr = 0, ldy = 0, lhi = 0;
+    double rw = 0, rh = 0, rr = 0, rdy = 0, rhi = 0;
+    double mw = 0, mh = 0, mr = 0, mc = 0;
+    for (final expr in _Expression.values) {
+      final weight = activations[expr]! / totalActivation;
+      final spec = _FaceSpec._archetype(expr);
+      lw += spec.leftEye.widthScale * weight;
+      lh += spec.leftEye.heightScale * weight;
+      lr += spec.leftEye.rotation * weight;
+      ldy += spec.leftEye.dy * weight;
+      lhi += spec.leftEye.highlightOpacity * weight;
+      rw += spec.rightEye.widthScale * weight;
+      rh += spec.rightEye.heightScale * weight;
+      rr += spec.rightEye.rotation * weight;
+      rdy += spec.rightEye.dy * weight;
+      rhi += spec.rightEye.highlightOpacity * weight;
+      mw += spec.mouth.widthScale * weight;
+      mh += spec.mouth.heightScale * weight;
+      mr += spec.mouth.rotation * weight;
+      mc += spec.mouth.curve * weight;
+    }
+
+    final dominantSpec = _FaceSpec._archetype(dominant);
+    return _FaceSpec(
+      _EyeSpec(kind: dominantSpec.leftEye.kind, widthScale: lw, heightScale: lh, rotation: lr, dy: ldy, highlightOpacity: lhi),
+      _EyeSpec(kind: dominantSpec.rightEye.kind, widthScale: rw, heightScale: rh, rotation: rr, dy: rdy, highlightOpacity: rhi),
+      _MouthShape(dominantSpec.mouth.kind, mw, mh, mr, mc),
+    );
   }
 }
 
@@ -319,14 +422,16 @@ class _FacePainter extends CustomPainter {
         Rect.fromCenter(center: Offset.zero, width: rw * 2, height: rh * 2),
         Paint()..color = Colors.black,
       );
-      if (spec.highlight) {
+      if (spec.highlightOpacity > 0.02) {
         // A glare -- a reflected catch-light tucked into the upper-left
         // corner of an otherwise solid eye -- not an iris/pupil, so it
-        // stays small, fully opaque, and off-center rather than a second
-        // centered dot that could read as a colored eye center.
+        // stays small and off-center rather than a second centered dot
+        // that could read as a colored eye center. Opacity itself is
+        // continuous (blended across archetypes) rather than an on/off
+        // bool, so the glare fades in and out smoothly.
         canvas.drawCircle(
           Offset(-rw * 0.38, -rh * 0.42), rw * 0.20,
-          Paint()..color = Colors.white,
+          Paint()..color = Colors.white.withOpacity(spec.highlightOpacity.clamp(0.0, 1.0).toDouble()),
         );
       }
     }
@@ -338,8 +443,7 @@ class _FacePainter extends CustomPainter {
     final w = size.width, h = size.height;
     if (w <= 0 || h <= 0) return;
 
-    final expr = _expressionFromAxes(axisState);
-    final face = _FaceSpec.fromExpression(expr);
+    final face = _FaceSpec.blend(axisState);
     final shape = face.mouth;
 
     // Background fill — the whole canvas is Aurora's emotional skin.
