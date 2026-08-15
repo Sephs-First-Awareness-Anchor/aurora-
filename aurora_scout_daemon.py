@@ -27,6 +27,17 @@ copy -- that would be real scope creep for this first implementation
 pass (spec section 22: "do not combine this first implementation with
 unrelated architectural rewrites").
 
+Aurora Build 694, step 6: state_dir is threaded explicitly through
+every function in this file (run() -> _retrieve_and_normalize() ->
+_poedex_ask_lightweight() -> ScoutBroker), rather than any of them
+reading the module-level _STATE_DIR constant directly. That constant
+now exists ONLY as run()'s default when no caller supplies one (desktop
+usage: `python3 aurora_scout_daemon.py` with no arguments). Android's
+writable application state directory is not the repository's default
+aurora_state path -- a worker that silently fell back to the module-
+relative default would read/write ScoutRequests and results in the
+wrong place entirely on that platform.
+
 The Scout is a courier, not cortex (spec section 4): it sends Aurora's
 own interpreted framing of the gap as context, never asks the external
 source to reinterpret the raw user utterance, and never drafts a
@@ -41,7 +52,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 _BASE_DIR = Path(__file__).parent
 _STATE_DIR = _BASE_DIR / "aurora_state"
@@ -67,15 +78,16 @@ def _room_responder_available() -> bool:
 
 
 def _poedex_ask_lightweight(
-    question: str, *, cat: str = "researcher", lane: str = "self", timeout: float = 20.0,
+    question: str, *, state_dir: Any, cat: str = "researcher", lane: str = "self", timeout: float = 20.0,
 ) -> str:
     """Minimal client-side reimplementation of _poedex_ask()'s
     per-request-file protocol against aurora_room.py's existing queue.
     This worker running its own blocking poll loop here is fine --
     unlike a call from inside Surface/Subsurface, nothing outside THIS
     already-isolated process is waiting on it."""
-    queue_dir = _STATE_DIR / "poedex_queue"
-    result_dir = _STATE_DIR / "poedex_results"
+    state_dir = Path(state_dir)
+    queue_dir = state_dir / "poedex_queue"
+    result_dir = state_dir / "poedex_results"
     queue_dir.mkdir(parents=True, exist_ok=True)
     result_dir.mkdir(parents=True, exist_ok=True)
 
@@ -111,7 +123,7 @@ def _poedex_ask_lightweight(
     return ""
 
 
-def _retrieve_and_normalize(request: ScoutRequest) -> ScoutReport:
+def _retrieve_and_normalize(request: ScoutRequest, *, state_dir: Any) -> ScoutReport:
     """request -> retrieve -> normalize evidence -> report. The whole
     job of this worker, in one function so it's independently testable
     without the claim/submit loop around it."""
@@ -140,7 +152,7 @@ def _retrieve_and_normalize(request: ScoutRequest) -> ScoutReport:
 
     remaining = request.deadline - time.time()
     raw_result = _poedex_ask_lightweight(
-        question, cat="researcher", lane="self",
+        question, state_dir=state_dir, cat="researcher", lane="self",
         timeout=max(5.0, min(45.0, remaining)),
     )
     elapsed_ms = (time.time() - started) * 1000.0
@@ -173,13 +185,28 @@ def _retrieve_and_normalize(request: ScoutRequest) -> ScoutReport:
     )
 
 
-def run(*, poll_interval_s: float = 1.0, max_iterations: Optional[int] = None) -> None:
+def run(
+    *,
+    state_dir: Optional[Any] = None,
+    poll_interval_s: float = 1.0,
+    max_iterations: Optional[int] = None,
+) -> None:
     """The worker's whole life: claim one request at a time (broker
     enforces concurrency=1 by default), process it, submit a report,
     repeat. max_iterations is test-only -- production callers never
-    pass it, so the loop runs forever."""
-    broker = ScoutBroker(_STATE_DIR)
-    print(f"[SCOUT] worker online, pid={os.getpid()}, concurrency={broker.max_concurrent}", flush=True)
+    pass it, so the loop runs forever.
+
+    state_dir defaults to the module's repo-relative _STATE_DIR only
+    when the caller supplies nothing at all -- desktop's `python3
+    aurora_scout_daemon.py` with no arguments. Android's caller always
+    passes its own writable application state directory explicitly
+    (spec step 8)."""
+    active_state_dir = Path(state_dir) if state_dir is not None else _STATE_DIR
+    broker = ScoutBroker(active_state_dir)
+    print(
+        f"[SCOUT] worker online, pid={os.getpid()}, concurrency={broker.max_concurrent}, "
+        f"state_dir={active_state_dir}", flush=True,
+    )
 
     iterations = 0
     while max_iterations is None or iterations < max_iterations:
@@ -190,7 +217,7 @@ def run(*, poll_interval_s: float = 1.0, max_iterations: Optional[int] = None) -
             time.sleep(poll_interval_s)
             continue
         try:
-            report = _retrieve_and_normalize(request)
+            report = _retrieve_and_normalize(request, state_dir=active_state_dir)
         except Exception as exc:
             report = ScoutReport(
                 request_id=request.request_id, turn_id=request.turn_id,
@@ -200,5 +227,14 @@ def run(*, poll_interval_s: float = 1.0, max_iterations: Optional[int] = None) -
         broker.submit_report(report)
 
 
+def _parse_cli_state_dir() -> Optional[str]:
+    """`python3 aurora_scout_daemon.py --state-dir=/path/to/state` --
+    optional; omitted entirely falls back to run()'s own default."""
+    for arg in sys.argv[1:]:
+        if arg.startswith("--state-dir="):
+            return arg.split("=", 1)[1]
+    return None
+
+
 if __name__ == "__main__":
-    run()
+    run(state_dir=_parse_cli_state_dir())
