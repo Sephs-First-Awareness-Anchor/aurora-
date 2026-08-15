@@ -17,7 +17,14 @@ become usable evidence just by existing. This module decides:
     strength      report.confidence, as reported by the Scout.
     pressure_relief   how much of response_fit_pressure this evidence,
                   if accepted, actually earns the right to relieve --
-                  never more than relevance * consistency * strength.
+                  never more than relevance * consistency * strength,
+                  and (Build 694 step 11, spec section 12) always 0.0
+                  for anything but a "response_fit" report. A
+                  knowledge_gap report becomes provisional semantic
+                  evidence instead -- Aurora reconsiders interpretation
+                  with it, it never mechanically subtracts from
+                  response_fit_pressure. A self_diagnostic report must
+                  never touch live-turn pressure at all.
 
 A report whose turn_id no longer matches Subsurface's live turn (per
 the presence frame Subsurface itself last published) is bound and
@@ -140,12 +147,26 @@ def evaluate_report(report: ScoutReport, *, current_turn_id: str = "") -> Eviden
         status = "accepted"
         rejected_reason = None
 
+    # Build 694 step 11 (spec section 12): "Current EvidenceBinding
+    # evaluation must stop treating every accepted Scout report as
+    # generic response-fit pressure relief." Only a response_fit report
+    # may ever relieve response_fit_pressure -- a knowledge_gap report,
+    # even when accepted, becomes provisional semantic evidence Aurora
+    # must reconsider interpretation with (consume_scout_reports() folds
+    # it into evidence_bindings either way; it just never subtracts from
+    # the pressure number itself). A self_diagnostic report must affect
+    # neither live-turn pressure automatically, at all -- structurally
+    # excluded here rather than relying on its turn_id happening not to
+    # match the live turn.
+    can_relieve_response_fit_pressure = report.request_kind == "response_fit"
+    pressure_relief = combined if (status == "accepted" and can_relieve_response_fit_pressure) else 0.0
+
     return EvidenceBinding(
         status=status,
         relevance=relevance,
         consistency=consistency,
         strength=strength,
-        pressure_relief=combined if status == "accepted" else 0.0,
+        pressure_relief=pressure_relief,
         rejected_reason=rejected_reason,
         **common,
     )
@@ -236,7 +257,17 @@ def consume_scout_reports(state_dir: Any, *, broker: Optional[ScoutBroker] = Non
     accepted_current = [b for b in bindings if b.status == "accepted" and b.turn_id == current_turn_id]
     if accepted_current:
         prior_pressure = float(frame.get("response_fit_pressure", 0.0) or 0.0)
-        total_relief = sum(b.pressure_relief for b in accepted_current)
+        # Build 694 step 11 (spec section 12): only response_fit bindings
+        # ever relieve response_fit_pressure. evaluate_report() already
+        # zeroes pressure_relief for every other request_kind, but
+        # summing only over response_fit bindings here too keeps the
+        # invariant explicit rather than depending solely on that
+        # upstream zeroing -- knowledge_gap/self_diagnostic bindings
+        # still appear in accepted_current (and below, in evidence_bindings/
+        # scout_evidence_integrated) as evidence Subsurface has, just
+        # never as pressure relief.
+        response_fit_accepted = [b for b in accepted_current if b.request_kind == "response_fit"]
+        total_relief = sum(b.pressure_relief for b in response_fit_accepted)
         updated_pressure = max(0.0, min(1.0, prior_pressure - total_relief))
 
         try:
