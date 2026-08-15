@@ -21683,12 +21683,12 @@ def _emit_interpreted_turn_packet(systems: dict, state: Any, *, session_id: str,
         )
 
 
-def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> list:
-    """
-    Subsurface Presence and Evidence Scout spec, step 9: the ONE point
-    where Surface is allowed to see Scout-derived evidence at all --
-    called right before expression, after belief/information have
-    already built the response draft. Reads through
+def _read_accepted_scout_bindings(systems: dict, *, turn_id: str) -> list:
+    """Shared by both current-turn evidence entry points below (the
+    early ingestion step 12 adds, and the late pre-expression harvest
+    step 9 of the prior build added) -- one read-and-filter
+    implementation so they can never quietly diverge on what "accepted
+    evidence for this turn" means. Reads through
     subsurface_scout_bridge.read_bindings_for_turn(), never
     ScoutBroker.poll_reports() directly (spec section 11: Surface must
     never read raw scout_results) -- what comes back here is already
@@ -21699,14 +21699,7 @@ def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> li
     Only "accepted" bindings are kept -- read_bindings_for_turn() can
     also return "rejected"/"stale" bindings recorded under this same
     turn_id (e.g. a report that came back weak or contradicted for this
-    very turn), and those must never reach expression at all.
-
-    Additive only: the result is available context Surface MAY draw on
-    (currently: passed alongside dominant_emotion into the expression
-    composer's assembly_data) -- it never substitutes for or overrides
-    state.response_content, which belief/information already finished
-    building before this ever runs.
-    """
+    very turn), and those must never reach either caller at all."""
     try:
         from aurora_internal.scouting.subsurface_scout_bridge import read_bindings_for_turn
         bindings = read_bindings_for_turn(systems.get("state_dir"), turn_id)
@@ -21714,11 +21707,75 @@ def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> li
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(), module=__name__,
-            operation="exception_handler:aurora.py:_harvest_scout_evidence_for_expression",
+            operation="exception_handler:aurora.py:_read_accepted_scout_bindings",
             exc=_aurora_boundary_exc,
-            context={"function": "_harvest_scout_evidence_for_expression", "source_file": "aurora.py"},
+            context={"function": "_read_accepted_scout_bindings", "source_file": "aurora.py"},
         )
         return []
+
+
+def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: str) -> list:
+    """
+    Build 694 step 12 (Subsurface Presence and Evidence Scout spec,
+    section 15): "Move the primary current-turn evidence intake
+    earlier." Called from _run_reasoning_pipeline() right after
+    _emit_interpreted_turn_packet() and BEFORE _chain_down2_belief() --
+    the spec's own required order is emit-interpreted-turn ->
+    Subsurface-evaluates-pressure -> Scout-if-warranted -> Subsurface-
+    integrates -> Surface-ingests, all ahead of DOWN2 belief, so
+    accepted evidence can shape the actual response decision rather than
+    only its final expression style.
+
+    Deliberately non-blocking here, same as every other point Surface
+    touches Scout machinery -- a same-turn ScoutRequest dispatched only
+    moments ago (in _emit_interpreted_turn_packet's own Trigger A, or an
+    evidence_need published earlier this turn) has usually not
+    round-tripped through the worker yet, so this call alone will often
+    find nothing. What it establishes is the pipeline POSITION and the
+    state.current_turn_scout_evidence field DOWN2 belief/DOWN1
+    information structurally consume (Build 694 step 13) -- Build 694
+    step 14's bounded same-turn wait is what gives a struggling turn a
+    real chance to have evidence actually land here before this point
+    runs.
+
+    The late pre-expression harvest (_harvest_scout_evidence_for_expression,
+    below) is retained as a secondary mechanism per the spec's own
+    instruction -- it must simply no longer be the ONLY current-turn use
+    of Scout evidence.
+    """
+    accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+    try:
+        state.current_turn_scout_evidence = accepted
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_ingest_current_turn_scout_evidence",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ingest_current_turn_scout_evidence", "source_file": "aurora.py"},
+        )
+    return accepted
+
+
+def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> list:
+    """
+    Subsurface Presence and Evidence Scout spec, step 9: the secondary
+    point where Surface sees Scout-derived evidence -- called right
+    before expression, after belief/information have already built the
+    response draft. Build 694 step 12 moved the PRIMARY current-turn
+    intake earlier (_ingest_current_turn_scout_evidence, above, runs
+    before DOWN2 belief); this late harvest remains useful because more
+    evidence may have arrived during DOWN2/DOWN1 (e.g. the bounded
+    same-turn wait Build 694 step 14 adds), and because it still informs
+    expression style even when nothing arrived in time to shape the
+    actual response decision.
+
+    Additive only: the result is available context Surface MAY draw on
+    (currently: passed alongside dominant_emotion into the expression
+    composer's assembly_data) -- it never substitutes for or overrides
+    state.response_content, which belief/information already finished
+    building before this ever runs.
+    """
+    return _read_accepted_scout_bindings(systems, turn_id=turn_id)
 
 
 def _run_reasoning_pipeline(
@@ -22235,6 +22292,13 @@ def _run_reasoning_pipeline(
     # -> meaning -> purpose all complete), not only after belief/
     # information refine it into a finished response.
     _emit_interpreted_turn_packet(systems, state, session_id=session_id, turn_tick=turn_tick)
+
+    # Build 694 step 12 (spec section 15): primary current-turn evidence
+    # intake, ahead of DOWN2 belief -- see _ingest_current_turn_scout_evidence's
+    # own docstring for why this is deliberately non-blocking on its own.
+    _ingest_current_turn_scout_evidence(
+        systems, state, turn_id=str(systems.get("_current_turn_id", "") or ""),
+    )
 
     _chain_down2_belief(_rr_subject_text, systems, state, auto_search_enabled=auto_search_enabled,
                             use_search=use_search)
