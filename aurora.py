@@ -33496,6 +33496,36 @@ def process_external_user_turn(
     if selected_mode is None:
         return {}
 
+    # Aurora Build 694, steps 1-2: process_external_user_turn() is THE
+    # canonical entry point for a genuine external interactive turn --
+    # it must own turn identity and the turn-open publication itself,
+    # not depend on a caller to have already set
+    # systems["_current_turn_id"] first. Confirmed directly against
+    # source: aurora_surface_daemon.py (the desktop daemon path) sets it
+    # before calling this function, but the Android app calls this
+    # function through aurora_bridge.handle_message() and never goes
+    # through aurora_surface_daemon.py at all -- every downstream Scout
+    # dispatch and presence event on Android was seeing "no_live_turn"
+    # or drifting turn identities as a result.
+    #
+    # If _current_turn_id is ALREADY set (the desktop daemon path, or a
+    # defensive case of true reentrancy despite the existing
+    # _live_turn_depth guard below), adopt it as-is rather than
+    # overwriting it -- this is what "nested simulations and
+    # noninteractive sensory pulses must not overwrite the active
+    # interactive turn ID" requires. Only a caller that set nothing at
+    # all (Android) gets a freshly minted one, cleared back to its prior
+    # value in the function's existing finally: block below so it never
+    # leaks into unrelated later calls on the same systems dict.
+    _prior_current_turn_id = systems.get("_current_turn_id")
+    _owns_current_turn_id = not bool(_prior_current_turn_id)
+    if _owns_current_turn_id:
+        import uuid as _turn_id_uuid
+        turn_id = f"turn_{_turn_id_uuid.uuid4().hex}"
+        systems["_current_turn_id"] = turn_id
+    else:
+        turn_id = str(_prior_current_turn_id)
+
     user_text = _normalize_identity_followup_text(user_text, systems)
 
     # ---- PRESENT-FRAME SNAPSHOT — freeze sensory state at turn boundary ----
@@ -33520,6 +33550,41 @@ def process_external_user_turn(
             context={"function": "process_external_user_turn", "handler_line": 24757, "source_file": "aurora.py"},
         )
         pass
+
+    # Aurora Build 694, step 2: the canonical turn-open publication now
+    # happens HERE, immediately after canonical turn identity is
+    # established and before any substantive reasoning runs -- not in
+    # aurora_surface_daemon.py, which only the desktop daemon path
+    # executes. This is what makes "the Android app must produce the
+    # same live Subsurface turn-open event as the daemon path" (spec
+    # acceptance requirement) true: both paths now funnel through this
+    # exact call. aurora_surface_daemon.py's own write_turn_open() call
+    # is removed as part of this same change (see that file) rather than
+    # left to double-publish and rely on turn_id dedup downstream.
+    try:
+        from aurora_internal.dual_strata.subsurface_presence import write_turn_open as _write_turn_open_canonical
+        import os as _turn_open_os
+        _turn_open_state_dir = str(
+            systems.get("state_dir") or systems.get("_state_dir") or
+            _turn_open_os.path.join(_turn_open_os.path.dirname(__file__), "aurora_state")
+        )
+        _write_turn_open_canonical(
+            _turn_open_state_dir,
+            turn_id=turn_id,
+            raw_input=user_text,
+            session_id=str(session_id or source_label or "") or None,
+            source_label=str(source_label or "external_user_turn"),
+            sensory_ref=str(systems.get("_present_frame_snapshot", {}).get("ref", "") or "") or None
+                if isinstance(systems.get("_present_frame_snapshot"), dict) else None,
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:process_external_user_turn:turn_open",
+            exc=_aurora_boundary_exc,
+            context={"function": "process_external_user_turn", "source_file": "aurora.py"},
+        )
+        pass  # a failed presence publish must never fail or delay the real turn
 
     had_pipeline_source = "_pipeline_source" in systems
     previous_pipeline_source = systems.get("_pipeline_source")
@@ -33885,6 +33950,17 @@ def process_external_user_turn(
             systems["_pipeline_source"] = previous_pipeline_source
         else:
             systems.pop("_pipeline_source", None)
+        # Build 694 step 1: restore/clear canonical turn identity --
+        # only the call that actually minted a fresh turn_id (nobody had
+        # set one yet, e.g. the Android path) clears it back to its
+        # prior value; a call that adopted an already-set turn_id (the
+        # desktop daemon path, which manages its own turn_id lifecycle)
+        # leaves it untouched for that caller to continue managing.
+        if _owns_current_turn_id:
+            if _prior_current_turn_id is None:
+                systems.pop("_current_turn_id", None)
+            else:
+                systems["_current_turn_id"] = _prior_current_turn_id
 
 
 def _run_surface_queued_turn(

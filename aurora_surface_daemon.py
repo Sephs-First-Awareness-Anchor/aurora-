@@ -19,7 +19,6 @@ from aurora_internal.dual_strata.sensory_snapshot_channel import (
     write_surface_snapshot,
 )
 from aurora_internal.dual_strata.surface_continuity_feed import write_continuity_packet
-from aurora_internal.dual_strata.subsurface_presence import write_turn_open
 from aurora_internal.dual_strata.presence_metrics import PresenceMetrics
 
 
@@ -874,18 +873,16 @@ def run() -> None:
 
         _write_json(_STATUS_FILE, _build_status(state_name="processing", active_turn=turn))
 
-        # Subsurface Presence and Evidence Scout spec, section 5A: tell
-        # Subsurface a turn is happening NOW, before the response
-        # pipeline runs -- not a Scout trigger, purely a presence signal.
-        # Must never block or fail the actual turn: write_turn_open()
-        # already swallows its own I/O errors, so no try/except needed
-        # around this specific call beyond the broader turn try below.
-        write_turn_open(
-            _STATE_DIR,
-            turn_id=str(turn.get("id", "") or ""),
-            raw_input=str(turn.get("content", "") or ""),
-            session_id=str(turn.get("session_id", "surface_daemon") or "surface_daemon"),
-        )
+        # Aurora Build 694, step 2: turn-open publication moved to
+        # aurora.process_external_user_turn() itself, called just below
+        # -- that is now the ONE canonical call site (desktop daemon AND
+        # Android bridge both funnel through it), so publishing a second,
+        # logically-identical turn_open event here would just be a
+        # same-turn_id duplicate for the consumer to dedupe. Setting
+        # _current_turn_id here (unchanged) is still what lets
+        # process_external_user_turn() below ADOPT this daemon-assigned
+        # ID instead of minting its own.
+        #
         # Ephemeral per-turn handoff (same pattern as _subsurface_projection/
         # _sedi_surface_frags below): lets _run_reasoning_pipeline()'s
         # InterpretedTurnPacket (spec section 5B) correlate back to THIS

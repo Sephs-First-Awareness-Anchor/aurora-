@@ -98,10 +98,20 @@ def write_turn_open(
     sensory_ref: Optional[str] = None,
     session_id: Optional[str] = None,
     prior_frame_ref: Optional[str] = None,
+    source_label: Optional[str] = None,
 ) -> str:
     """Surface calls this the instant a turn is accepted, BEFORE the full
     response pipeline runs. Does not trigger a Scout -- purely a presence
-    signal. Returns the event_id."""
+    signal. Returns the event_id.
+
+    Build 694: the canonical call site is now
+    aurora.process_external_user_turn() itself (every genuine external
+    interactive turn goes through it -- desktop daemon AND the Android
+    bridge alike), not aurora_surface_daemon.py, which only the desktop
+    daemon path ever runs. [source_label] carries process_external_user_
+    turn()'s own source_label through (e.g. "flutter_ui" vs
+    "external_user_turn"), so a turn-open event visibly identifies which
+    entry path produced it."""
     event_id = uuid.uuid4().hex
     event: Dict[str, Any] = {
         "event_id": event_id,
@@ -112,6 +122,7 @@ def write_turn_open(
         "sensory_ref": str(sensory_ref or "") or None,
         "session_id": str(session_id or "") or None,
         "prior_frame_ref": str(prior_frame_ref or "") or None,
+        "source_label": str(source_label or "") or None,
         "consumed": False,
     }
     _append_turn_event(state_dir, event, caller="write_turn_open")
@@ -213,32 +224,66 @@ def read_and_clear_turn_events(state_dir: Any) -> List[Dict[str, Any]]:
 
 # ── B/C. Presence frame (Subsurface -> Surface, event-driven) ──────────────
 
+# Build 694 section 19: "Do not erase populated fields every time a
+# partial update is written. Updates must merge with the current frame
+# for the same turn." A plain default (None/0/"") can't distinguish "the
+# caller explicitly wants this cleared" from "the caller didn't touch
+# this field at all" -- this sentinel lets write_presence_frame() tell
+# those apart, so e.g. integrate_turn_open() (which only knows turn_id/
+# raw_input) and integrate_interpreted_turn() (which only knows the
+# interpretation fields) can each update their own slice of the SAME
+# frame without wiping out what the other already wrote for this turn.
+_UNSET = object()
+
+
 def write_presence_frame(
     state_dir: Any,
     *,
     turn_id: str = "",
-    crest: Optional[Dict[str, Any]] = None,
-    active_pressure: Optional[Dict[str, Any]] = None,
-    continuity_summary: str = "",
-    unresolved_tensions: Optional[List[str]] = None,
-    scout_requests_pending: int = 0,
-    scout_evidence_integrated: Optional[List[str]] = None,
-    response_fit_pressure: float = 0.0,
-    evidence_bindings: Optional[List[Dict[str, Any]]] = None,
+    crest: Any = _UNSET,
+    active_pressure: Any = _UNSET,
+    continuity_summary: Any = _UNSET,
+    unresolved_tensions: Any = _UNSET,
+    scout_requests_pending: Any = _UNSET,
+    scout_evidence_integrated: Any = _UNSET,
+    response_fit_pressure: Any = _UNSET,
+    evidence_bindings: Any = _UNSET,
+    knowledge_gap_pressure: Any = _UNSET,
+    turn_open_at: Any = _UNSET,
+    interpreted_at: Any = _UNSET,
+    interpreted_meaning: Any = _UNSET,
+    inferred_purpose: Any = _UNSET,
+    current_topic: Any = _UNSET,
+    interpretation_confidence: Any = _UNSET,
+    response_confidence: Any = _UNSET,
+    resolved_referents: Any = _UNSET,
+    unresolved_ambiguity: Any = _UNSET,
+    knowledge_gaps: Any = _UNSET,
+    representation_refs: Any = _UNSET,
 ) -> Dict[str, Any]:
     """Subsurface calls this whenever turn state or Scout evidence
     actually changes -- NOT on a fixed interval. Deliberately not the
     60s daemon_status.json write path (see module docstring, section 14
     of the spec). Returns the frame written, including its own
-    sequence number."""
+    sequence number.
+
+    A NEW turn_id resets every field to that turn's own fresh defaults
+    (a new turn's presence frame must not inherit the previous turn's
+    interpreted_meaning, etc.) -- merging only applies WITHIN the same
+    turn_id, across the separate partial updates spec section 19
+    describes (turn_open first, interpreted_turn shortly after, Scout
+    evidence sometime after that).
+    """
     root = _resolve(state_dir)
     path = root / _PRESENCE_FRAME_FILENAME
 
+    prev: Dict[str, Any] = {}
     prev_seq = 0
     try:
         if path.exists():
-            prev = json.loads(path.read_text(encoding="utf-8"))
-            if isinstance(prev, dict):
+            raw_prev = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(raw_prev, dict):
+                prev = raw_prev
                 prev_seq = int(prev.get("seq", 0) or 0)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -247,20 +292,52 @@ def write_presence_frame(
             exc=_aurora_boundary_exc,
             context={"function": "write_presence_frame", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
         )
+        prev = {}
         prev_seq = 0
+
+    same_turn = bool(prev) and str(prev.get("turn_id", "") or "") == str(turn_id or "")
+    carry = prev if same_turn else {}
+
+    def merged(value: Any, key: str, default: Any):
+        return value if value is not _UNSET else carry.get(key, default)
 
     frame: Dict[str, Any] = {
         "seq": prev_seq + 1,
         "generated_at": time.time(),
         "turn_id": str(turn_id or ""),
-        "crest": crest if isinstance(crest, dict) else None,
-        "active_pressure": active_pressure if isinstance(active_pressure, dict) else None,
-        "continuity_summary": str(continuity_summary or "")[:400],
-        "unresolved_tensions": [str(t) for t in list(unresolved_tensions or []) if str(t).strip()][:6],
-        "scout_requests_pending": max(0, int(scout_requests_pending or 0)),
-        "scout_evidence_integrated": [str(e) for e in list(scout_evidence_integrated or [])][:12],
-        "response_fit_pressure": round(max(0.0, min(1.0, float(response_fit_pressure or 0.0))), 4),
-        "evidence_bindings": list(evidence_bindings or [])[:8],
+        "crest": merged(crest, "crest", None),
+        "active_pressure": merged(active_pressure, "active_pressure", None),
+        "continuity_summary": str(merged(continuity_summary, "continuity_summary", "") or "")[:400],
+        "unresolved_tensions": [
+            str(t) for t in list(merged(unresolved_tensions, "unresolved_tensions", []) or []) if str(t).strip()
+        ][:6],
+        "scout_requests_pending": max(0, int(merged(scout_requests_pending, "scout_requests_pending", 0) or 0)),
+        "scout_evidence_integrated": [
+            str(e) for e in list(merged(scout_evidence_integrated, "scout_evidence_integrated", []) or [])
+        ][:12],
+        "response_fit_pressure": round(
+            max(0.0, min(1.0, float(merged(response_fit_pressure, "response_fit_pressure", 0.0) or 0.0))), 4
+        ),
+        "evidence_bindings": list(merged(evidence_bindings, "evidence_bindings", []) or [])[:8],
+        # Build 694 section 19 additions -- all merge-capable the same way.
+        "knowledge_gap_pressure": round(
+            max(0.0, min(1.0, float(merged(knowledge_gap_pressure, "knowledge_gap_pressure", 0.0) or 0.0))), 4
+        ),
+        "turn_open_at": merged(turn_open_at, "turn_open_at", None),
+        "interpreted_at": merged(interpreted_at, "interpreted_at", None),
+        "interpreted_meaning": str(merged(interpreted_meaning, "interpreted_meaning", "") or "")[:400],
+        "inferred_purpose": str(merged(inferred_purpose, "inferred_purpose", "") or "")[:200],
+        "current_topic": str(merged(current_topic, "current_topic", "") or "")[:120],
+        "interpretation_confidence": round(
+            max(0.0, min(1.0, float(merged(interpretation_confidence, "interpretation_confidence", 0.0) or 0.0))), 4
+        ),
+        "response_confidence": round(
+            max(0.0, min(1.0, float(merged(response_confidence, "response_confidence", 0.0) or 0.0))), 4
+        ),
+        "resolved_referents": [str(r) for r in list(merged(resolved_referents, "resolved_referents", []) or [])][:12],
+        "unresolved_ambiguity": [str(a) for a in list(merged(unresolved_ambiguity, "unresolved_ambiguity", []) or [])][:12],
+        "knowledge_gaps": [str(g) for g in list(merged(knowledge_gaps, "knowledge_gaps", []) or [])][:8],
+        "representation_refs": [str(r) for r in list(merged(representation_refs, "representation_refs", []) or [])][:16],
     }
 
     try:
