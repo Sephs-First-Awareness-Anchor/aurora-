@@ -28,6 +28,26 @@
 // resting face doesn't sit on one frozen "neutral" pose, it continuously
 // drifts with whatever her real axis state is doing, the way a person's
 // face carries a trace of mood even at rest.
+//
+// Sunni: "I want her mouth to move like Face does -- varied gestures,
+// tired into the resting expression, all with a gradient expressive
+// applicator so she can express subtlety and high intensity depending
+// on the underlying variable." The mouth used to be one of three rigid,
+// mutually exclusive shapes (a filled stadium blob, two stacked dots, or
+// a stroked curve) with a hard "whichever archetype is winning right
+// now" switch between them -- Face's mouth is a single continuously
+// deformable line that smirks, sags, purses, and opens, never three
+// disconnected shapes. _MouthShape below is now ONE parametric lens
+// (independent left/right corner lift + thickness + width + rotation)
+// that every archetype expresses as different values of the SAME five
+// numbers, so it blends smoothly across the whole vocabulary -- a smirk
+// IS an open smile IS a tired sag, just different points on one
+// continuous surface. On top of that, _FaceSpec.blend() applies an
+// explicit intensity scalar (how far the live axis blend sits outside
+// the calm neutral archetype) that scales how far the rendered face is
+// allowed to swing from neutral's own baseline -- a barely-triggered
+// mood reads as a subtle trace on top of resting neutral, a strongly
+// triggered one reads as the full, unmuted expression.
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
@@ -68,37 +88,52 @@ double _archetypeActivation(_Expression expr, double x, double t, double n, doub
   }
 }
 
-enum _ShapeKind { dot, colon, line }
-
-/// One mouth config per expression. `dot` is a filled stadium shape (used
-/// for open/big-mouth expressions); `colon` is two small stacked dots;
-/// `line` is a stroked, unfilled curve (Face's default closed-mouth
-/// smile/smirk) — `curve` is how deep the arc bows (positive = smile,
-/// negative = flat/pursed), only used by `line`.
+/// One continuously-deformable mouth, expressed as five numbers instead
+/// of a choice between mutually exclusive shapes:
+///
+///   widthScale          how wide the mouth is
+///   thickness           how "open" it reads, from a near-hairline
+///                        closed-mouth curve up to a wide open cavity
+///   leftLift/rightLift   how far each CORNER sits above (positive) or
+///                        below (negative) center, INDEPENDENTLY -- this
+///                        is what lets one shape cover a symmetric smile
+///                        (both lifted), a symmetric frown/sag (both
+///                        dropped), and an asymmetric smirk (one lifted,
+///                        one flat or dropped) without a shape switch
+///   rotation             overall tilt, radians
+///
+/// Rendered as a closed lens/vesica path (see _drawMouthLens): a top
+/// curve and a bottom curve both running corner to corner, bowed apart
+/// by [thickness]. At thickness near zero the two curves nearly
+/// coincide and it reads as Face's default stroked smile-line; as
+/// thickness grows it reads as an increasingly open mouth -- the same
+/// shape machinery Face's own single continuous mouth-line uses,
+/// covering the entire range this widget used to need three separate
+/// shape kinds for.
 class _MouthShape {
-  final _ShapeKind kind;
   final double widthScale;
-  final double heightScale;
+  final double thickness;
+  final double leftLift;
+  final double rightLift;
   final double rotation; // radians
-  final double curve;
-  const _MouthShape(this.kind, this.widthScale, this.heightScale, this.rotation, [this.curve = 0.0]);
+  const _MouthShape(this.widthScale, this.thickness, this.leftLift, this.rightLift, this.rotation);
 
   factory _MouthShape.fromExpression(_Expression expr) {
     switch (expr) {
       case _Expression.joyful:
-        return const _MouthShape(_ShapeKind.dot, 3.2, 1.0, 0.0); // wide open smile
+        return const _MouthShape(3.0, 0.85, 0.55, 0.55, 0.0); // wide open, both corners high
       case _Expression.happy:
-        return const _MouthShape(_ShapeKind.dot, 2.4, 1.0, 0.0); // elongated dot
+        return const _MouthShape(2.2, 0.55, 0.42, 0.42, 0.0); // smaller open smile
       case _Expression.contemplative:
-        return const _MouthShape(_ShapeKind.line, 1.5, 0.0, -0.30, 0.05); // tilted pursed smirk
+        return const _MouthShape(1.4, 0.10, 0.05, 0.32, -0.18); // one corner lifted, tilted smirk
       case _Expression.attentive:
-        return const _MouthShape(_ShapeKind.line, 1.3, 0.0, 0.0, 0.12); // small alert smile
+        return const _MouthShape(1.25, 0.10, 0.22, 0.22, 0.0); // small alert closed smile
       case _Expression.uncertain:
-        return const _MouthShape(_ShapeKind.colon, 1.0, 1.0, 0.0); // colon-shaped
+        return const _MouthShape(1.0, 0.08, -0.10, -0.22, 0.05); // asymmetric worried dip
       case _Expression.tired:
-        return const _MouthShape(_ShapeKind.dot, 3.0, 0.35, 0.0); // thin horizontal slit
+        return const _MouthShape(1.7, 0.06, -0.20, -0.20, 0.0); // thin, corners sagging
       case _Expression.neutral:
-        return const _MouthShape(_ShapeKind.line, 2.0, 0.0, 0.0, 0.30); // simple resting smile line
+        return const _MouthShape(1.9, 0.14, 0.16, 0.16, 0.0); // calm resting baseline
     }
   }
 }
@@ -171,7 +206,7 @@ class _FaceSpec {
         );
       case _Expression.uncertain:
         // Both brows knit inward and up -- the classic worried look --
-        // paired with the existing colon mouth.
+        // paired with the existing asymmetric-dip mouth.
         return _FaceSpec(
           const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.65, heightScale: 0.55, rotation: 0.28, highlightOpacity: 0.0),
           const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.65, heightScale: 0.55, rotation: -0.28, highlightOpacity: 0.0),
@@ -194,15 +229,30 @@ class _FaceSpec {
 
   /// The face actually rendered: every archetype's exact look, blended
   /// by how strongly the live axes activate it (see
-  /// _archetypeActivation). Numeric shape parameters (size, rotation,
-  /// droop, glare opacity, mouth curve) are true continuous weighted
-  /// averages, so they glide rather than snap. `kind` (oval vs arc vs
-  /// closed eye; dot vs colon vs line mouth) is a genuinely categorical
-  /// choice -- there's no meaningful halfway shape between a stroked arc
-  /// and a filled oval -- so it's taken from whichever single archetype
-  /// currently has the highest activation, the way a real eyelid is
-  /// continuously in motion but is still definitely open or shut at any
-  /// instant.
+  /// _archetypeActivation), THEN scaled by an explicit intensity applied
+  /// around the neutral archetype's own baseline.
+  ///
+  /// Two separate continuous mechanisms stack here:
+  ///  1. Numeric shape parameters (size, rotation, droop, glare opacity,
+  ///     mouth lift/thickness) are weighted averages across all 7
+  ///     archetypes, so they glide rather than snap.
+  ///  2. `intensity` -- how much of the current blend's total weight
+  ///     sits OUTSIDE the neutral archetype -- then scales how far that
+  ///     blended result is allowed to travel from neutral's own
+  ///     hand-tuned baseline. At intensity ~0 (nothing strongly
+  ///     activated, neutral dominates the blend) the face is pulled
+  ///     almost all the way back to plain resting neutral; as intensity
+  ///     climbs toward 1 the face is allowed the FULL computed blend.
+  ///     This is what makes a barely-triggered mood read as a subtle
+  ///     trace on the resting face and a strongly-triggered one read as
+  ///     visibly, proportionately more expressive -- a gradient, not a
+  ///     fixed-size nudge every time something crosses zero.
+  ///
+  /// `kind` (oval vs arc vs closed eye -- there's no meaningful halfway
+  /// shape between a stroked arc and a filled oval) is a genuinely
+  /// categorical choice and stays taken from whichever single archetype
+  /// currently has the highest activation, same as before; the mouth no
+  /// longer has a categorical `kind` at all (see _MouthShape).
   factory _FaceSpec.blend(Map<String, double> ax) {
     final x = ax['X'] ?? 0.5, t = ax['T'] ?? 0.5, n = ax['N'] ?? 0.5, b = ax['B'] ?? 0.5, a = ax['A'] ?? 0.5;
 
@@ -223,7 +273,7 @@ class _FaceSpec {
 
     double lw = 0, lh = 0, lr = 0, ldy = 0, lhi = 0;
     double rw = 0, rh = 0, rr = 0, rdy = 0, rhi = 0;
-    double mw = 0, mh = 0, mr = 0, mc = 0;
+    double mWidth = 0, mThick = 0, mLeftLift = 0, mRightLift = 0, mRot = 0;
     for (final expr in _Expression.values) {
       final weight = activations[expr]! / totalActivation;
       final spec = _FaceSpec._archetype(expr);
@@ -237,17 +287,43 @@ class _FaceSpec {
       rr += spec.rightEye.rotation * weight;
       rdy += spec.rightEye.dy * weight;
       rhi += spec.rightEye.highlightOpacity * weight;
-      mw += spec.mouth.widthScale * weight;
-      mh += spec.mouth.heightScale * weight;
-      mr += spec.mouth.rotation * weight;
-      mc += spec.mouth.curve * weight;
+      mWidth += spec.mouth.widthScale * weight;
+      mThick += spec.mouth.thickness * weight;
+      mLeftLift += spec.mouth.leftLift * weight;
+      mRightLift += spec.mouth.rightLift * weight;
+      mRot += spec.mouth.rotation * weight;
     }
+
+    final neutralWeight = activations[_Expression.neutral]! / totalActivation;
+    final intensity = (1.0 - neutralWeight).clamp(0.0, 1.0);
+    final neutralSpec = _FaceSpec._archetype(_Expression.neutral);
+    double applied(double blended, double neutralValue) => neutralValue + (blended - neutralValue) * intensity;
 
     final dominantSpec = _FaceSpec._archetype(dominant);
     return _FaceSpec(
-      _EyeSpec(kind: dominantSpec.leftEye.kind, widthScale: lw, heightScale: lh, rotation: lr, dy: ldy, highlightOpacity: lhi),
-      _EyeSpec(kind: dominantSpec.rightEye.kind, widthScale: rw, heightScale: rh, rotation: rr, dy: rdy, highlightOpacity: rhi),
-      _MouthShape(dominantSpec.mouth.kind, mw, mh, mr, mc),
+      _EyeSpec(
+        kind: dominantSpec.leftEye.kind,
+        widthScale: applied(lw, neutralSpec.leftEye.widthScale),
+        heightScale: applied(lh, neutralSpec.leftEye.heightScale),
+        rotation: applied(lr, neutralSpec.leftEye.rotation),
+        dy: applied(ldy, neutralSpec.leftEye.dy),
+        highlightOpacity: applied(lhi, neutralSpec.leftEye.highlightOpacity),
+      ),
+      _EyeSpec(
+        kind: dominantSpec.rightEye.kind,
+        widthScale: applied(rw, neutralSpec.rightEye.widthScale),
+        heightScale: applied(rh, neutralSpec.rightEye.heightScale),
+        rotation: applied(rr, neutralSpec.rightEye.rotation),
+        dy: applied(rdy, neutralSpec.rightEye.dy),
+        highlightOpacity: applied(rhi, neutralSpec.rightEye.highlightOpacity),
+      ),
+      _MouthShape(
+        applied(mWidth, neutralSpec.mouth.widthScale),
+        applied(mThick, neutralSpec.mouth.thickness),
+        applied(mLeftLift, neutralSpec.mouth.leftLift),
+        applied(mRightLift, neutralSpec.mouth.rightLift),
+        applied(mRot, neutralSpec.mouth.rotation),
+      ),
     );
   }
 }
@@ -438,6 +514,42 @@ class _FacePainter extends CustomPainter {
     canvas.restore();
   }
 
+  /// The lens/vesica path a mouth shape traces: a top curve and a bottom
+  /// curve, each running from the left corner to the right corner, bowed
+  /// apart by [halfThick] on either side of the corners' own midline.
+  /// [leftY]/[rightY] let the two corners sit at different heights
+  /// (independently), which is what a symmetric smile, a symmetric sag,
+  /// and an asymmetric smirk all turn out to be -- just different corner
+  /// heights on the same two-curve shape.
+  Path _lensPath(double halfW, double leftY, double rightY, double halfThick) {
+    final midY = (leftY + rightY) / 2;
+    return Path()
+      ..moveTo(-halfW, leftY)
+      ..quadraticBezierTo(0, midY - halfThick, halfW, rightY)
+      ..quadraticBezierTo(0, midY + halfThick, -halfW, leftY)
+      ..close();
+  }
+
+  /// Draws one _MouthShape as a filled lens, in [color]. Used both for
+  /// the resting mouth and (called twice, for an outer and a smaller
+  /// inner copy) the talking mouth's open-cavity reveal.
+  void _drawMouthLens(Canvas canvas, Offset center, double refSize, _MouthShape shape, {Color color = Colors.black}) {
+    final halfW = refSize * shape.widthScale / 2;
+    final leftY = -refSize * shape.leftLift;
+    final rightY = -refSize * shape.rightLift;
+    // A floor on thickness, not zero -- at exactly zero the two curves
+    // fully coincide and can render as an invisible hairline at some
+    // pixel densities rather than the thin closed-mouth line it should
+    // read as.
+    final halfThick = refSize * math.max(shape.thickness, 0.03) / 2;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(shape.rotation);
+    canvas.drawPath(_lensPath(halfW, leftY, rightY, halfThick), Paint()..color = color);
+    canvas.restore();
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
@@ -474,103 +586,54 @@ class _FacePainter extends CustomPainter {
     _drawEye(canvas, Offset(faceCenter.dx + eyeSpacing, eyeY), refSize, face.rightEye);
 
     // Sunni: "her mouth should ... operate like a mouth" -- real talking
-    // is jaw motion (mostly a height change, revealing the inside), not
-    // the whole resting shape breathing bigger and smaller. While
-    // speaking, the resting expression's mouth is replaced by an
+    // is jaw motion (mostly a height/thickness change, revealing the
+    // inside), not the whole resting shape breathing bigger and smaller.
+    // While speaking, the resting expression's mouth is replaced by an
     // articulated open/close mouth driven by pulse (already kicked to
     // 1.0 on each TTS word boundary, see home_screen.dart's
-    // _kickPulse, and decaying between words) -- width and rotation
+    // _kickPulse, and decaying between words) -- width/lift/rotation
     // still carry the expression's character (a smirk stays tilted,
-    // "tired" stays narrower), but openness is what actually animates.
+    // "tired" stays sagging), but thickness is what actually animates.
     if (speaking) {
       _drawTalkingMouth(canvas, faceCenter, refSize, shape, pulse);
       return;
     }
 
-    final paint = Paint()..color = Colors.black;
-
-    if (shape.kind == _ShapeKind.colon) {
-      final dotR = refSize * 0.32;
-      final gap = refSize * 0.9;
-      canvas.drawCircle(Offset(faceCenter.dx, faceCenter.dy - gap / 2), dotR, paint);
-      canvas.drawCircle(Offset(faceCenter.dx, faceCenter.dy + gap / 2), dotR, paint);
-      return;
-    }
-
-    if (shape.kind == _ShapeKind.line) {
-      final mw = refSize * shape.widthScale;
-      final curveDepth = refSize * shape.curve;
-      canvas.save();
-      canvas.translate(faceCenter.dx, faceCenter.dy);
-      canvas.rotate(shape.rotation);
-      final path = Path()
-        ..moveTo(-mw / 2, 0)
-        ..quadraticBezierTo(0, curveDepth, mw / 2, 0);
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = Colors.black
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = refSize * 0.26
-          ..strokeCap = StrokeCap.round,
-      );
-      canvas.restore();
-      return;
-    }
-
-    final rw = refSize * shape.widthScale;
-    final rh = refSize * shape.heightScale;
-    canvas.save();
-    canvas.translate(faceCenter.dx, faceCenter.dy);
-    canvas.rotate(shape.rotation);
-    // An oval, not a stadium RRect: a wide/short RRect's corner radius is
-    // capped at half the smaller dimension, so its top and bottom edges
-    // are dead straight for most of their length -- exactly the flat,
-    // geometric look that reads as robotic. An oval curves continuously
-    // everywhere, same as the eyes already do.
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: rw, height: rh), paint);
-    canvas.restore();
+    _drawMouthLens(canvas, faceCenter, refSize, shape);
   }
 
-  /// Articulated talking mouth: a black oval whose HEIGHT
-  /// interpolates from a near-closed sliver up to a wide-open cavity as
-  /// [openAmount] (the word-boundary pulse, 0..1) rises, with a white
-  /// interior revealed once it opens enough to read as inside-the-mouth
-  /// rather than a second glare. Width/rotation come from the resting
+  /// Articulated talking mouth: the same lens shape the resting mouth
+  /// uses, with THICKNESS interpolating from a near-closed sliver up to
+  /// a wide-open cavity as [openAmount] (the word-boundary pulse, 0..1)
+  /// rises, plus a small width increase (mouths widen a little as they
+  /// open, not just deepen) and a white inner lens revealed once it
+  /// opens enough to read as inside-the-mouth rather than a second
+  /// glare. Corner lift and rotation come straight from the resting
   /// expression's mouth so a smirk still reads as a smirk mid-sentence.
   void _drawTalkingMouth(Canvas canvas, Offset center, double refSize, _MouthShape shape, double openAmount) {
     final open = openAmount.clamp(0.0, 1.0).toDouble();
-    final baseWidthScale = shape.kind == _ShapeKind.colon ? 1.3 : shape.widthScale;
-    final w = refSize * baseWidthScale.clamp(0.9, 3.2).toDouble();
-    final rotation = shape.kind == _ShapeKind.line ? shape.rotation : 0.0;
 
-    final closedH = refSize * 0.16;
-    final openH = refSize * 0.95;
-    final h = closedH + (openH - closedH) * open;
-
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(rotation);
-
-    // Ovals, not stadium RRects -- same reasoning as the resting mouth
-    // above: a wide/short RRect's top and bottom edges go dead straight,
-    // which reads as a rigid mechanical slot opening and closing rather
-    // than a mouth. An oval keeps a continuous curve at every openness,
-    // including near-closed, where it reads as a soft closed-lip line
-    // instead of a flat-topped bar.
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: w, height: h), Paint()..color = Colors.black);
+    const closedThickness = 0.10;
+    const openThickness = 0.85;
+    final talkShape = _MouthShape(
+      shape.widthScale * (1.0 + 0.12 * open),
+      closedThickness + (openThickness - closedThickness) * open,
+      shape.leftLift,
+      shape.rightLift,
+      shape.rotation,
+    );
+    _drawMouthLens(canvas, center, refSize, talkShape);
 
     if (open > 0.12) {
-      final innerW = w - refSize * 0.30;
-      final innerH = h - refSize * 0.16;
-      if (innerW > 1 && innerH > 1) {
-        canvas.drawOval(
-          Rect.fromCenter(center: Offset.zero, width: innerW, height: innerH),
-          Paint()..color = Colors.white.withOpacity(open),
-        );
-      }
+      final innerShape = _MouthShape(
+        talkShape.widthScale * 0.85,
+        talkShape.thickness * 0.75,
+        talkShape.leftLift * 0.8,
+        talkShape.rightLift * 0.8,
+        talkShape.rotation,
+      );
+      _drawMouthLens(canvas, center, refSize, innerShape, color: Colors.white.withOpacity(open));
     }
-    canvas.restore();
   }
 
   @override
