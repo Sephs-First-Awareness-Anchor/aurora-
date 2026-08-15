@@ -8431,46 +8431,20 @@ def _consume_surface_continuity_feed(systems: Dict[str, Any]) -> None:
 
 
 def _integrate_turn_open_event(event: Dict[str, Any]) -> None:
-    """Build 694 step 3: a turn_open event only ever tells Subsurface
-    that SOMETHING is happening now -- it must not stomp interpretation
-    fields an interpreted_turn event for the same turn may have already
-    written this cycle (write_presence_frame()'s same-turn merge is what
-    makes that safe)."""
-    from aurora_internal.dual_strata.subsurface_presence import write_presence_frame
-    write_presence_frame(
-        _STATE_DIR,
-        turn_id=str(event.get("turn_id", "") or ""),
-        continuity_summary=f"turn open: {str(event.get('raw_input', ''))[:120]}",
-        turn_open_at=float(event.get("created_at", 0.0) or 0.0),
-    )
+    """Thin delegation to the shared implementation (Build 694 step 4:
+    aurora_internal.dual_strata.subsurface_presence.integrate_turn_open_event),
+    kept as a same-named wrapper so this daemon-side call site and the
+    dedicated SubsurfacePresenceRuntime never drift apart on what
+    "integrating a turn_open event" means -- one implementation, two
+    callers."""
+    from aurora_internal.dual_strata.subsurface_presence import integrate_turn_open_event
+    integrate_turn_open_event(_STATE_DIR, event)
 
 
 def _integrate_interpreted_turn_event(event: Dict[str, Any]) -> None:
-    """Build 694 step 3: an interpreted_turn event carries the actual
-    substance _emit_interpreted_turn_packet() (aurora.py) computed --
-    interpreted_meaning/inferred_purpose/confidence/response_fit_pressure/
-    etc. The old collapse-to-events[-1] behavior either dropped these
-    fields entirely (if turn_open happened to be last in the batch) or
-    kept only whichever single event won by list position -- never both.
-    This is the fix: process it as its own event, merged onto whatever
-    turn_open already established for the same turn_id."""
-    from aurora_internal.dual_strata.subsurface_presence import write_presence_frame
-    write_presence_frame(
-        _STATE_DIR,
-        turn_id=str(event.get("turn_id", "") or ""),
-        interpreted_at=float(event.get("created_at", 0.0) or 0.0),
-        interpreted_meaning=str(event.get("interpreted_meaning", "") or ""),
-        inferred_purpose=str(event.get("inferred_purpose", "") or ""),
-        current_topic=str(event.get("current_topic", "") or ""),
-        interpretation_confidence=float(event.get("interpretation_confidence", 0.0) or 0.0),
-        response_confidence=float(event.get("response_confidence", 0.0) or 0.0),
-        resolved_referents=list(event.get("resolved_referents", []) or []),
-        unresolved_ambiguity=list(event.get("unresolved_ambiguity", []) or []),
-        knowledge_gaps=list(event.get("knowledge_gaps", []) or []),
-        representation_refs=list(event.get("representation_refs", []) or []),
-        response_fit_pressure=float(event.get("response_fit_pressure", 0.0) or 0.0),
-        continuity_summary=(str(event.get("interpreted_meaning", "") or "")[:120] or None),
-    )
+    """Thin delegation -- see _integrate_turn_open_event's docstring."""
+    from aurora_internal.dual_strata.subsurface_presence import integrate_interpreted_turn_event
+    integrate_interpreted_turn_event(_STATE_DIR, event)
 
 
 def _consume_subsurface_turn_events(systems: Dict[str, Any]) -> None:
@@ -8989,6 +8963,28 @@ def run(systems: Dict[str, Any]) -> None:
     # must survive a slow synchronous call inside the main loop below, so
     # it runs on its own thread rather than at the bottom of the loop body.
     _start_subsurface_heartbeat_thread()
+
+    # Build 694 step 4: presence processing must not be gated behind
+    # this loop's own 15-30s governor.recommended_sleep() cadence either
+    # -- the SAME problem the heartbeat thread above solves for pure
+    # liveness, but for actual turn-event/Scout-evidence integration.
+    # Runs as an ADDITIONAL fast (~150ms) path alongside this loop's
+    # existing _consume_subsurface_turn_events()/_consume_scout_evidence()
+    # calls below, which stay in place unchanged as a redundant slow
+    # backstop -- double-processing the same batch is harmless (re-
+    # integrating an already-integrated event just rewrites the presence
+    # frame with the same values) and safer than removing proven-working
+    # main-loop behavior to avoid it.
+    try:
+        from aurora_internal.dual_strata.subsurface_presence_runtime import start_subsurface_presence_runtime
+        start_subsurface_presence_runtime(systems, state_dir=_STATE_DIR)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:run:start_presence_runtime",
+            exc=_aurora_boundary_exc,
+            context={"function": "run", "source_file": "aurora_daemon.py"},
+        )
 
     # Enable proactive reach-out — Aurora should speak up on her own when she
     # has something to say (identity field pressure, novel sensory events, etc.)

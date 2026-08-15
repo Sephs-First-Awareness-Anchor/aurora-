@@ -353,6 +353,70 @@ def write_presence_frame(
     return frame
 
 
+# ── Event -> PresenceFrame integration (Build 694 step 3/4) ────────────────
+#
+# Shared by both consumers of the turn-events channel: aurora_daemon.py's
+# main loop (_consume_subsurface_turn_events, the slow ~15-30s-cadence
+# backstop) and SubsurfacePresenceRuntime (subsurface_presence_runtime.py,
+# the fast dedicated thread step 4 adds) -- one implementation, so the two
+# consumers can never quietly drift apart on what "integrating an event"
+# actually means.
+
+def integrate_turn_open_event(state_dir: Any, event: Dict[str, Any]) -> None:
+    """A turn_open event only ever tells Subsurface that SOMETHING is
+    happening now -- it must not stomp interpretation fields an
+    interpreted_turn event for the same turn may already have written
+    this cycle (write_presence_frame()'s same-turn merge is what makes
+    that safe)."""
+    write_presence_frame(
+        state_dir,
+        turn_id=str(event.get("turn_id", "") or ""),
+        continuity_summary=f"turn open: {str(event.get('raw_input', ''))[:120]}",
+        turn_open_at=float(event.get("created_at", 0.0) or 0.0),
+    )
+
+
+def integrate_interpreted_turn_event(state_dir: Any, event: Dict[str, Any]) -> None:
+    """An interpreted_turn event carries the actual substance
+    aurora._emit_interpreted_turn_packet() computed -- interpreted_meaning/
+    inferred_purpose/confidence/response_fit_pressure/etc. Merged onto
+    whatever turn_open already established for the same turn_id, never
+    collapsing/overwriting it."""
+    write_presence_frame(
+        state_dir,
+        turn_id=str(event.get("turn_id", "") or ""),
+        interpreted_at=float(event.get("created_at", 0.0) or 0.0),
+        interpreted_meaning=str(event.get("interpreted_meaning", "") or ""),
+        inferred_purpose=str(event.get("inferred_purpose", "") or ""),
+        current_topic=str(event.get("current_topic", "") or ""),
+        interpretation_confidence=float(event.get("interpretation_confidence", 0.0) or 0.0),
+        response_confidence=float(event.get("response_confidence", 0.0) or 0.0),
+        resolved_referents=list(event.get("resolved_referents", []) or []),
+        unresolved_ambiguity=list(event.get("unresolved_ambiguity", []) or []),
+        knowledge_gaps=list(event.get("knowledge_gaps", []) or []),
+        representation_refs=list(event.get("representation_refs", []) or []),
+        response_fit_pressure=float(event.get("response_fit_pressure", 0.0) or 0.0),
+        continuity_summary=(str(event.get("interpreted_meaning", "") or "")[:120] or None),
+    )
+
+
+def integrate_turn_event(state_dir: Any, event: Dict[str, Any]) -> Optional[str]:
+    """Dispatch one event by kind (Build 694 step 3's required shape).
+    Returns the kind actually integrated, or None if this event's kind
+    has no handler yet (evidence_need/turn_outcome -- neither has a
+    producer at this point in the implementation order)."""
+    if not isinstance(event, dict):
+        return None
+    kind = str(event.get("kind", "") or "")
+    if kind == "turn_open":
+        integrate_turn_open_event(state_dir, event)
+        return kind
+    if kind == "interpreted_turn":
+        integrate_interpreted_turn_event(state_dir, event)
+        return kind
+    return None
+
+
 def read_presence_frame(state_dir: Any) -> Optional[Dict[str, Any]]:
     """Surface calls this to sample the freshest presence frame --
     NEVER blocks waiting for a new one; a missing/unreadable frame
