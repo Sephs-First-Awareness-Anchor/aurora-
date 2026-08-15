@@ -1819,6 +1819,31 @@ def initialize(state_dir: str = "") -> str:
         # conscious crest decides to say without waiting for a user message.
         threading.Thread(target=_proactive_loop, daemon=True, name="aurora_proactive").start()
 
+        # Aurora Build 694, step 5: start the lightweight SubsurfacePresence
+        # Runtime against this ALREADY-booted Aurora. The Android app never
+        # runs aurora_daemon.py (the desktop Subsurface process) at all, so
+        # without this, presence processing (turn-event integration, Scout-
+        # evidence integration) simply never runs on this path -- this is
+        # the ONLY presence processing Android gets. Deliberately NOT
+        # aurora_daemon.main() or a second boot_aurora(): this runtime only
+        # ever touches the file-based presence/Scout primitives against the
+        # SAME state_dir this process already booted into, never a second
+        # SediMemory/genealogy/Dream/perception/DCE/CERS/consciousness
+        # engine/WorkingMemory.
+        try:
+            from aurora_internal.dual_strata.subsurface_presence_runtime import start_subsurface_presence_runtime
+            _presence_state_dir = state_dir if state_dir else "aurora_state"
+            start_subsurface_presence_runtime(_systems, state_dir=_presence_state_dir)
+        except Exception as _pr_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:presence_runtime",
+                exc=_pr_exc,
+                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
+            log.warning("SubsurfacePresenceRuntime failed to start: %s", _pr_exc)
+
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.
         # A degraded boot is better than no Aurora — physics is incomplete but
