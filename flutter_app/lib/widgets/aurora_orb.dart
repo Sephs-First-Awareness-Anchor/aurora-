@@ -1,11 +1,16 @@
 // Authors: Sunni (Sir) Morningstar & Cael Devo
 //
-// Aurora's face — minimal, Nick Jr "Face"-style: one solid black shape,
-// no separate detailed eyes. The shape's form (round dot, elongated
-// smile, colon-style double-dot, slanted cut) is a pure function of live
-// axis state (X/T/N/B/A), and its openness pulses in sync with speech
-// (the same word-boundary pulse home_screen.dart already drives TTS
-// with) so it visibly moves while she talks instead of sitting static.
+// Aurora's face — Nick Jr "Face"-style: simple black eyes + a mouth on a
+// flat color field, no photoreal detail. Reference: Face (Nick Jr's
+// shape-shifting host) reads as unmistakably alive from two small dark
+// eyes plus a mouth-line, even though every piece is a flat shape.
+// Previously this widget drew a mouth shape only, with the "neutral"
+// idle state landing on a plain filled circle — the state she spends
+// most of her idle time in was also the one that read as just a dot
+// instead of a face. Both eyes and mouth are now a pure function of live
+// axis state (X/T/N/B/A), and the mouth's openness pulses in sync with
+// speech (the same word-boundary pulse home_screen.dart already drives
+// TTS with) so it visibly moves while she talks instead of sitting static.
 import 'package:flutter/material.dart';
 
 enum OrbState { dormant, listening, thinking, speaking }
@@ -23,17 +28,20 @@ _Expression _expressionFromAxes(Map<String, double> ax) {
   return _Expression.neutral;
 }
 
-enum _ShapeKind { dot, colon }
+enum _ShapeKind { dot, colon, line }
 
-/// One shape config per expression: how wide/tall the base dot is (as a
-/// fraction of the reference size) and how far it's rotated. `colon`
-/// overrides width/height/rotation with two small stacked dots instead.
+/// One mouth config per expression. `dot` is a filled stadium shape (used
+/// for open/big-mouth expressions); `colon` is two small stacked dots;
+/// `line` is a stroked, unfilled curve (Face's default closed-mouth
+/// smile/smirk) — `curve` is how deep the arc bows (positive = smile,
+/// negative = flat/pursed), only used by `line`.
 class _MouthShape {
   final _ShapeKind kind;
   final double widthScale;
   final double heightScale;
   final double rotation; // radians
-  const _MouthShape(this.kind, this.widthScale, this.heightScale, this.rotation);
+  final double curve;
+  const _MouthShape(this.kind, this.widthScale, this.heightScale, this.rotation, [this.curve = 0.0]);
 
   factory _MouthShape.fromExpression(_Expression expr) {
     switch (expr) {
@@ -42,15 +50,99 @@ class _MouthShape {
       case _Expression.happy:
         return const _MouthShape(_ShapeKind.dot, 2.4, 1.0, 0.0); // elongated dot
       case _Expression.contemplative:
-        return const _MouthShape(_ShapeKind.dot, 2.0, 0.85, -0.45); // slant cut
+        return const _MouthShape(_ShapeKind.line, 1.5, 0.0, -0.30, 0.05); // tilted pursed smirk
       case _Expression.attentive:
-        return const _MouthShape(_ShapeKind.dot, 1.1, 1.1, 0.0); // slightly alert dot
+        return const _MouthShape(_ShapeKind.line, 1.3, 0.0, 0.0, 0.12); // small alert smile
       case _Expression.uncertain:
         return const _MouthShape(_ShapeKind.colon, 1.0, 1.0, 0.0); // colon-shaped
       case _Expression.tired:
         return const _MouthShape(_ShapeKind.dot, 3.0, 0.35, 0.0); // thin horizontal slit
       case _Expression.neutral:
-        return const _MouthShape(_ShapeKind.dot, 1.0, 1.0, 0.0); // plain dot
+        return const _MouthShape(_ShapeKind.line, 2.0, 0.0, 0.0, 0.30); // simple resting smile line
+    }
+  }
+}
+
+enum _EyeKind { oval, arc, closed }
+
+/// One eye config. `oval` is a filled almond with an optional highlight
+/// dot (Face's default open eye); `arc` is a thin curved brow-line (no
+/// fill, used for thoughtful/worried looks); `closed` is a flat stroked
+/// line (drowsy/tired). `dy` and sizes are fractions of the shared
+/// reference size so both eyes stay proportional to the mouth.
+class _EyeSpec {
+  final _EyeKind kind;
+  final double widthScale;
+  final double heightScale;
+  final double rotation;
+  final double dy;
+  final bool highlight;
+  const _EyeSpec({
+    this.kind = _EyeKind.oval,
+    this.widthScale = 1.0,
+    this.heightScale = 1.0,
+    this.rotation = 0.0,
+    this.dy = 0.0,
+    this.highlight = true,
+  });
+}
+
+class _FaceSpec {
+  final _EyeSpec leftEye;
+  final _EyeSpec rightEye;
+  final _MouthShape mouth;
+  const _FaceSpec(this.leftEye, this.rightEye, this.mouth);
+
+  factory _FaceSpec.fromExpression(_Expression expr) {
+    final mouth = _MouthShape.fromExpression(expr);
+    switch (expr) {
+      case _Expression.joyful:
+        return _FaceSpec(
+          const _EyeSpec(widthScale: 1.05, heightScale: 1.05),
+          const _EyeSpec(widthScale: 1.05, heightScale: 1.05),
+          mouth,
+        );
+      case _Expression.happy:
+        return _FaceSpec(
+          const _EyeSpec(widthScale: 1.0, heightScale: 0.95),
+          const _EyeSpec(widthScale: 1.0, heightScale: 0.95),
+          mouth,
+        );
+      case _Expression.contemplative:
+        // One thoughtful raised brow-arc, one half-lidded eye -- a
+        // gentle asymmetry reads as "considering something" the way a
+        // perfectly symmetric face can't.
+        return _FaceSpec(
+          const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.85, heightScale: 0.9, rotation: -0.12, highlight: false),
+          const _EyeSpec(kind: _EyeKind.oval, widthScale: 0.8, heightScale: 0.5, rotation: 0.08, dy: 0.05, highlight: false),
+          mouth,
+        );
+      case _Expression.attentive:
+        return _FaceSpec(
+          const _EyeSpec(widthScale: 1.1, heightScale: 1.15, dy: -0.08),
+          const _EyeSpec(widthScale: 1.1, heightScale: 1.15, dy: -0.08),
+          mouth,
+        );
+      case _Expression.uncertain:
+        // Both brows knit inward and up -- the classic worried look --
+        // paired with the existing colon mouth.
+        return _FaceSpec(
+          const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.65, heightScale: 0.55, rotation: 0.28, highlight: false),
+          const _EyeSpec(kind: _EyeKind.arc, widthScale: 0.65, heightScale: 0.55, rotation: -0.28, highlight: false),
+          mouth,
+        );
+      case _Expression.tired:
+        return _FaceSpec(
+          const _EyeSpec(kind: _EyeKind.closed, dy: 0.12, highlight: false),
+          const _EyeSpec(kind: _EyeKind.closed, dy: 0.12, highlight: false),
+          mouth,
+        );
+      case _Expression.neutral:
+        return _FaceSpec(
+          const _EyeSpec(widthScale: 0.85, heightScale: 0.85),
+          const _EyeSpec(widthScale: 0.85, heightScale: 0.85),
+          mouth,
+        );
     }
   }
 }
@@ -191,13 +283,58 @@ class _FacePainter extends CustomPainter {
     required this.pulse,
   });
 
+  void _drawEye(Canvas canvas, Offset center, double refSize, _EyeSpec spec) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy + refSize * spec.dy);
+    canvas.rotate(spec.rotation);
+
+    if (spec.kind == _EyeKind.arc) {
+      final w = refSize * 1.0 * spec.widthScale;
+      final path = Path()
+        ..moveTo(-w / 2, 0)
+        ..quadraticBezierTo(0, -refSize * 0.55 * spec.heightScale, w / 2, 0);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.black
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = refSize * 0.22
+          ..strokeCap = StrokeCap.round,
+      );
+    } else if (spec.kind == _EyeKind.closed) {
+      final w = refSize * 1.0 * spec.widthScale;
+      canvas.drawLine(
+        Offset(-w / 2, 0), Offset(w / 2, 0),
+        Paint()
+          ..color = Colors.black
+          ..strokeWidth = refSize * 0.22
+          ..strokeCap = StrokeCap.round,
+      );
+    } else {
+      final rw = refSize * 0.5 * spec.widthScale;
+      final rh = refSize * 0.68 * spec.heightScale;
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset.zero, width: rw * 2, height: rh * 2),
+        Paint()..color = Colors.black,
+      );
+      if (spec.highlight) {
+        canvas.drawCircle(
+          Offset(-rw * 0.28, -rh * 0.32), rw * 0.30,
+          Paint()..color = Colors.white.withOpacity(0.85),
+        );
+      }
+    }
+    canvas.restore();
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
     if (w <= 0 || h <= 0) return;
 
     final expr = _expressionFromAxes(axisState);
-    final shape = _MouthShape.fromExpression(expr);
+    final face = _FaceSpec.fromExpression(expr);
+    final shape = face.mouth;
 
     // Background fill — the whole canvas is Aurora's emotional skin.
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = _backgroundColor(axisState));
@@ -215,27 +352,56 @@ class _FacePainter extends CustomPainter {
       );
     }
 
+    final refSize = (w < h ? w : h) * 0.16;
+    final faceCenter = Offset(w / 2, h / 2);
+
+    // Eyes sit above the mouth, spaced symmetrically around the shared
+    // face center -- fixed layout, only their own shape/rotation/droop
+    // varies by expression.
+    final eyeY = faceCenter.dy - refSize * 1.35;
+    final eyeSpacing = refSize * 1.15;
+    _drawEye(canvas, Offset(faceCenter.dx - eyeSpacing, eyeY), refSize, face.leftEye);
+    _drawEye(canvas, Offset(faceCenter.dx + eyeSpacing, eyeY), refSize, face.rightEye);
+
     // While speaking, the pulse (already kicked to 1.0 on each TTS word
-    // boundary, see home_screen.dart's _kickPulse) opens the shape taller
+    // boundary, see home_screen.dart's _kickPulse) opens the mouth wider
     // in sync with speech instead of it sitting static.
     final speakOpen = speaking ? (1.0 + pulse * 0.9) : 1.0;
-
-    final refSize = (w < h ? w : h) * 0.16;
     final paint = Paint()..color = Colors.black;
 
     if (shape.kind == _ShapeKind.colon) {
       final dotR = refSize * 0.32;
       final gap = refSize * 0.9 * speakOpen;
-      final cx = w / 2, cy = h / 2;
-      canvas.drawCircle(Offset(cx, cy - gap / 2), dotR, paint);
-      canvas.drawCircle(Offset(cx, cy + gap / 2), dotR, paint);
+      canvas.drawCircle(Offset(faceCenter.dx, faceCenter.dy - gap / 2), dotR, paint);
+      canvas.drawCircle(Offset(faceCenter.dx, faceCenter.dy + gap / 2), dotR, paint);
+      return;
+    }
+
+    if (shape.kind == _ShapeKind.line) {
+      final mw = refSize * shape.widthScale * speakOpen;
+      final curveDepth = refSize * shape.curve * speakOpen;
+      canvas.save();
+      canvas.translate(faceCenter.dx, faceCenter.dy);
+      canvas.rotate(shape.rotation);
+      final path = Path()
+        ..moveTo(-mw / 2, 0)
+        ..quadraticBezierTo(0, curveDepth, mw / 2, 0);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.black
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = refSize * 0.26
+          ..strokeCap = StrokeCap.round,
+      );
+      canvas.restore();
       return;
     }
 
     final rw = refSize * shape.widthScale;
     final rh = refSize * shape.heightScale * speakOpen;
     canvas.save();
-    canvas.translate(w / 2, h / 2);
+    canvas.translate(faceCenter.dx, faceCenter.dy);
     canvas.rotate(shape.rotation);
     final rrect = RRect.fromRectAndRadius(
       Rect.fromCenter(center: Offset.zero, width: rw, height: rh),
