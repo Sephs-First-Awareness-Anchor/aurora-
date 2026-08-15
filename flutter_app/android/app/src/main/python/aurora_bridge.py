@@ -32,6 +32,13 @@ _lock          = threading.Lock()
 _last_response: str = ""      # Aurora's previous output
 _last_path_key: str = ""      # LSA path key that produced it
 
+# Aurora Build 694, step 8: the Scout worker thread's own stop signal --
+# module-level so it survives past initialize() returning and can be
+# used to independently stop the worker later (spec: "independently
+# stoppable") without killing the whole app process.
+_scout_worker_stop_event: Optional[threading.Event] = None
+_scout_worker_thread: Optional[threading.Thread] = None
+
 # Throttle for ambient perception sampling — don't hit hardware every single turn.
 _last_perceptual_ts: float = 0.0
 _PERCEPTUAL_INTERVAL: float = 5.0   # seconds between full camera/audio samples
@@ -1648,6 +1655,55 @@ def record_boot_health() -> str:
     return payload_json
 
 
+def _start_scout_worker(state_dir: str) -> None:
+    """
+    Aurora Build 694, step 8: start exactly one lightweight Scout worker
+    (aurora_scout_daemon.run()) on its own daemon thread, against this
+    ALREADY-booted Aurora's actual writable state_dir.
+
+    Must never boot_aurora() or import the full Aurora runtime -- true
+    structurally, not just by discipline: aurora_scout_daemon.py itself
+    never imports aurora.py/aurora_daemon.py at all (spec section 20,
+    verified by tests/test_scout_worker.py's own import-isolation test),
+    so importing it here carries none of that weight regardless of what
+    else this module has already booted.
+
+    Concurrency 1 (aurora_scout_daemon.run()'s own ScoutBroker default),
+    independently stoppable via the module-level _scout_worker_stop_event
+    this function sets before starting the thread, and survives
+    individual failed requests (run()'s own per-request try/except --
+    one bad ScoutRequest reports "failed" and the loop continues, it
+    never takes the worker thread down).
+    """
+    global _scout_worker_stop_event, _scout_worker_thread
+    if _scout_worker_thread is not None and _scout_worker_thread.is_alive():
+        return  # already running -- initialize() must be idempotent-safe
+
+    import aurora_scout_daemon  # type: ignore
+
+    _scout_worker_stop_event = threading.Event()
+    active_state_dir = state_dir if state_dir else "aurora_state"
+
+    def _worker_entry() -> None:
+        aurora_scout_daemon.run(state_dir=active_state_dir, stop_event=_scout_worker_stop_event)
+
+    _scout_worker_thread = threading.Thread(target=_worker_entry, daemon=True, name="aurora_scout_worker")
+    _scout_worker_thread.start()
+
+
+def stop_scout_worker(timeout: float = 2.0) -> None:
+    """Independently stoppable (spec step 8) -- signals
+    aurora_scout_daemon.run()'s loop to exit at its next poll boundary
+    and waits briefly for the thread to actually finish, without
+    touching Aurora's own cognitive state or requiring app shutdown."""
+    global _scout_worker_thread
+    if _scout_worker_stop_event is not None:
+        _scout_worker_stop_event.set()
+    if _scout_worker_thread is not None:
+        _scout_worker_thread.join(timeout=timeout)
+        _scout_worker_thread = None
+
+
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
     global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim
@@ -1843,6 +1899,23 @@ def initialize(state_dir: str = "") -> str:
                 context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
             )
             log.warning("SubsurfacePresenceRuntime failed to start: %s", _pr_exc)
+
+        # Aurora Build 694, step 8: start exactly one lightweight Scout
+        # worker against this same state_dir. Without this, ScoutRequests
+        # dispatched from steps 9-10 (evidence_need routing, automatic
+        # response-fit dispatch) would queue up with nothing ever
+        # claiming and processing them on the Android path.
+        try:
+            _start_scout_worker(state_dir)
+        except Exception as _sw_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:scout_worker",
+                exc=_sw_exc,
+                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
+            log.warning("Scout worker failed to start: %s", _sw_exc)
 
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.

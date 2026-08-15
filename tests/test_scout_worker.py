@@ -290,3 +290,47 @@ def test_run_defaults_to_resolve_backend_chain_when_none_supplied(tmp_path, monk
     assert len(captured_chains) == 1
     assert captured_chains[0] is not None
     assert len(captured_chains[0]) >= 1
+
+
+def test_run_stops_when_stop_event_is_set(tmp_path):
+    # Build 694 step 8: "independently stoppable" -- run() must exit its
+    # loop once stop_event is set, without needing max_iterations at all
+    # (production callers, e.g. Android, never pass max_iterations).
+    import threading
+    import aurora_scout_daemon as sd
+
+    stop_event = threading.Event()
+    thread = threading.Thread(
+        target=lambda: sd.run(state_dir=tmp_path, poll_interval_s=0.05, stop_event=stop_event),
+        daemon=True,
+    )
+    thread.start()
+    time.sleep(0.2)
+    assert thread.is_alive()  # still running -- would loop forever without the stop signal
+
+    stop_event.set()
+    thread.join(timeout=2.0)
+    assert not thread.is_alive()
+
+
+def test_run_wakes_immediately_on_stop_event_rather_than_waiting_out_the_poll_interval(tmp_path):
+    # The empty-queue wait uses stop_event.wait(poll_interval_s) rather
+    # than a plain time.sleep(), so a long poll interval doesn't delay
+    # shutdown.
+    import threading
+    import aurora_scout_daemon as sd
+
+    stop_event = threading.Event()
+    started = time.time()
+
+    def _run_with_long_poll():
+        sd.run(state_dir=tmp_path, poll_interval_s=10.0, stop_event=stop_event)
+
+    thread = threading.Thread(target=_run_with_long_poll, daemon=True)
+    thread.start()
+    time.sleep(0.1)
+    stop_event.set()
+    thread.join(timeout=2.0)
+    elapsed = time.time() - started
+    assert not thread.is_alive()
+    assert elapsed < 2.0  # nowhere near the 10s poll interval

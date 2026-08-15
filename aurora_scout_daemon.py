@@ -150,11 +150,12 @@ def run(
     poll_interval_s: float = 1.0,
     max_iterations: Optional[int] = None,
     backends: Optional[List[ScoutBackend]] = None,
+    stop_event: Optional["threading.Event"] = None,
 ) -> None:
     """The worker's whole life: claim one request at a time (broker
     enforces concurrency=1 by default), process it, submit a report,
     repeat. max_iterations is test-only -- production callers never
-    pass it, so the loop runs forever.
+    pass it, so the loop runs forever (or until stop_event is set).
 
     state_dir defaults to the module's repo-relative _STATE_DIR only
     when the caller supplies nothing at all -- desktop's `python3
@@ -166,7 +167,15 @@ def run(
     Android caller may pass its own chain explicitly (e.g. leading with
     LocalLessonsBackend only, if a future platform-specific backend set
     is ever warranted), but the default chain already works unmodified
-    there."""
+    there.
+
+    stop_event (spec step 8: "independently stoppable") -- when set,
+    the loop exits at the next poll boundary rather than running until
+    process exit. Production callers (e.g. Android, which runs this on
+    a daemon thread inside the app's own process) construct their own
+    threading.Event and hold onto it to stop the worker later without
+    killing the whole process; the desktop CLI entry point below simply
+    never sets one, so it runs forever as before."""
     active_state_dir = Path(state_dir) if state_dir is not None else _STATE_DIR
     active_backends = backends if backends is not None else resolve_backend_chain()
     broker = ScoutBroker(active_state_dir)
@@ -176,12 +185,15 @@ def run(
     )
 
     iterations = 0
-    while max_iterations is None or iterations < max_iterations:
+    while (max_iterations is None or iterations < max_iterations) and (stop_event is None or not stop_event.is_set()):
         iterations += 1
         broker.expire_stale_requests()
         request = broker.claim_next()
         if request is None:
-            time.sleep(poll_interval_s)
+            if stop_event is not None:
+                stop_event.wait(poll_interval_s)  # wakes immediately on stop, not just at the interval boundary
+            else:
+                time.sleep(poll_interval_s)
             continue
         try:
             report = _retrieve_and_normalize(request, state_dir=active_state_dir, backends=active_backends)
