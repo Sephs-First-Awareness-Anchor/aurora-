@@ -6,13 +6,21 @@ acceptance criteria in section 20): the lightweight Scout worker must
 never load a full Aurora instance, must never author a final response,
 and its claim/process/submit loop must actually round-trip through a
 real ScoutBroker.
+
+Aurora Build 694, step 7: retrieval now goes through the ScoutBackend
+abstraction (aurora_internal/scouting/backends.py) instead of a
+hardcoded Room-only path -- these tests inject deterministic
+TestBackend instances via the backends= parameter rather than
+monkeypatching module-private Room-specific functions that no longer
+exist.
 """
 import os
 import sys
-import threading
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from aurora_internal.scouting.backends import TestBackend
 
 
 def test_importing_scout_daemon_never_pulls_in_aurora_or_aurora_daemon():
@@ -44,108 +52,123 @@ def test_scout_report_from_worker_never_has_a_final_response_field(tmp_path):
     assert "final_response" not in report.to_dict()
 
 
-def test_empty_inquiry_short_circuits_to_no_evidence_without_checking_room(tmp_path, monkeypatch):
+def test_empty_inquiry_short_circuits_to_no_evidence_without_trying_any_backend(tmp_path):
     import aurora_scout_daemon as sd
     from aurora_internal.scouting.contracts import ScoutRequest
 
-    called = {"room_check": False}
-    def _fake_room_check():
-        called["room_check"] = True
-        return True
-    monkeypatch.setattr(sd, "_room_responder_available", _fake_room_check)
+    called = {"is_available": False}
+    class _WatchedBackend(TestBackend):
+        def is_available(self_inner):
+            called["is_available"] = True
+            return True
+    backend = _WatchedBackend(canned_result="should never be reached")
 
     req = ScoutRequest(turn_id="t1", inquiry="")
-    report = sd._retrieve_and_normalize(req, state_dir=tmp_path)
+    report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[backend])
     assert report.status == "no_evidence"
-    assert called["room_check"] is False
+    assert called["is_available"] is False
 
 
-def test_retrieve_and_normalize_reports_no_evidence_when_room_is_not_running(tmp_path, monkeypatch):
+def test_retrieve_and_normalize_reports_no_evidence_when_no_backend_is_available(tmp_path):
     import aurora_scout_daemon as sd
     from aurora_internal.scouting.contracts import ScoutRequest
 
-    monkeypatch.setattr(sd, "_room_responder_available", lambda: False)
+    unavailable = TestBackend(canned_result="unreachable", available=False)
 
     req = ScoutRequest(turn_id="t1", inquiry="what is a guitar chord")
-    report = sd._retrieve_and_normalize(req, state_dir=tmp_path)
+    report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[unavailable])
     assert report.status == "no_evidence"
     assert report.fit_rationales  # honest, not silent
 
 
-def test_retrieve_and_normalize_produces_evidence_when_room_answers(tmp_path, monkeypatch):
+def test_retrieve_and_normalize_produces_evidence_when_a_backend_answers(tmp_path):
     import aurora_scout_daemon as sd
     from aurora_internal.scouting.contracts import ScoutRequest
 
-    monkeypatch.setattr(sd, "_room_responder_available", lambda: True)
-    monkeypatch.setattr(sd, "_poedex_ask_lightweight", lambda *a, **k: "a guitar chord is three or more notes played together")
+    backend = TestBackend(canned_result="a guitar chord is three or more notes played together")
 
     req = ScoutRequest(
         turn_id="t1",
         interpreted_input="asking what a guitar chord is",
         inquiry="what is a guitar chord",
     )
-    report = sd._retrieve_and_normalize(req, state_dir=tmp_path)
+    report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[backend])
     assert report.status == "ok"
     assert report.evidence_items
     assert "guitar chord" in report.evidence_items[0]["text"]
     assert report.evidence_items[0]["emittable"] is False
     assert report.response_relationships == ["explain"]
     assert report.confidence > 0.0
+    assert report.provenance == ["test"]
     assert "final_response" not in report.to_dict()
 
 
-def test_retrieve_and_normalize_truncates_to_max_result_chars(tmp_path, monkeypatch):
+def test_retrieve_and_normalize_truncates_to_max_result_chars(tmp_path):
     import aurora_scout_daemon as sd
     from aurora_internal.scouting.contracts import ScoutRequest
 
-    monkeypatch.setattr(sd, "_room_responder_available", lambda: True)
-    monkeypatch.setattr(sd, "_poedex_ask_lightweight", lambda *a, **k: "x" * 5000)
+    backend = TestBackend(canned_result="x" * 5000)
 
     req = ScoutRequest(turn_id="t1", inquiry="q", max_result_chars=50)
-    report = sd._retrieve_and_normalize(req, state_dir=tmp_path)
+    report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[backend])
     assert len(report.evidence_items[0]["text"]) <= 50
 
 
-def test_scout_never_reinterprets_raw_input_it_only_receives_the_interpreted_packet(tmp_path, monkeypatch):
+def test_retrieve_and_normalize_falls_through_to_the_next_backend_in_the_chain(tmp_path):
+    import aurora_scout_daemon as sd
+    from aurora_internal.scouting.contracts import ScoutRequest
+
+    unavailable = TestBackend(canned_result="never used", available=False)
+    empty_result = TestBackend(canned_result="", available=True)
+    real_answer = TestBackend(canned_result="the second real answer")
+
+    req = ScoutRequest(turn_id="t1", inquiry="q")
+    report = sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[unavailable, empty_result, real_answer])
+    assert report.status == "ok"
+    assert report.evidence_items[0]["text"] == "the second real answer"
+
+
+def test_scout_never_reinterprets_raw_input_it_only_receives_the_interpreted_packet(tmp_path):
     # Sunni & Cael: the request itself carries interpreted_input as
     # CONTEXT the Scout is told about -- it never has its own separate
     # channel to the raw user utterance. This is a structural guarantee
     # (ScoutRequest simply has no raw_user_text field), verified here by
-    # confirming the question sent downstream is built only from
-    # request.inquiry/interpreted_input, nothing else.
+    # confirming the backend only ever receives the request object
+    # itself (inquiry/interpreted_input), nothing else.
     import aurora_scout_daemon as sd
     from aurora_internal.scouting.contracts import ScoutRequest
 
-    monkeypatch.setattr(sd, "_room_responder_available", lambda: True)
     captured = {}
-    def _fake_ask(question, **kwargs):
-        captured["question"] = question
-        return "evidence"
-    monkeypatch.setattr(sd, "_poedex_ask_lightweight", _fake_ask)
+    class _CapturingBackend(TestBackend):
+        def retrieve(self_inner, request, *, state_dir):
+            captured["inquiry"] = request.inquiry
+            captured["interpreted_input"] = request.interpreted_input
+            return "evidence"
+    backend = _CapturingBackend()
 
     req = ScoutRequest(turn_id="t1", interpreted_input="Aurora's own reading of the input", inquiry="the actual inquiry")
-    sd._retrieve_and_normalize(req, state_dir=tmp_path)
-    assert "the actual inquiry" in captured["question"]
-    assert "Aurora's own reading of the input" in captured["question"]
+    sd._retrieve_and_normalize(req, state_dir=tmp_path, backends=[backend])
+    assert captured["inquiry"] == "the actual inquiry"
+    assert captured["interpreted_input"] == "Aurora's own reading of the input"
 
 
-def test_retrieve_and_normalize_uses_the_supplied_state_dir_not_the_module_default(tmp_path, monkeypatch):
+def test_retrieve_and_normalize_uses_the_supplied_state_dir_not_the_module_default(tmp_path):
     # Build 694 step 6: the whole point of this refactor -- a caller-
-    # supplied state_dir must actually be what _poedex_ask_lightweight()
-    # receives, never the module's own repo-relative _STATE_DIR default.
+    # supplied state_dir must actually be what the backend receives,
+    # never the module's own repo-relative _STATE_DIR default.
     import aurora_scout_daemon as sd
     from aurora_internal.scouting.contracts import ScoutRequest
 
-    monkeypatch.setattr(sd, "_room_responder_available", lambda: True)
     captured = {}
-    def _fake_ask(question, *, state_dir, **kwargs):
-        captured["state_dir"] = state_dir
-        return "evidence"
-    monkeypatch.setattr(sd, "_poedex_ask_lightweight", _fake_ask)
+    class _CapturingBackend(TestBackend):
+        def retrieve(self_inner, request, *, state_dir):
+            captured["state_dir"] = state_dir
+            return "evidence"
+    backend = _CapturingBackend()
 
     android_like_dir = tmp_path / "android_app_state"
     req = ScoutRequest(turn_id="t1", inquiry="q")
-    sd._retrieve_and_normalize(req, state_dir=android_like_dir)
+    sd._retrieve_and_normalize(req, state_dir=android_like_dir, backends=[backend])
     assert str(captured["state_dir"]) == str(android_like_dir)
     assert str(captured["state_dir"]) != str(sd._STATE_DIR)
 
@@ -156,14 +179,12 @@ def test_worker_loop_round_trips_a_dispatched_request(tmp_path, monkeypatch):
     from aurora_internal.scouting.contracts import ScoutRequest
 
     monkeypatch.setattr(sd, "_STATE_DIR", tmp_path)
-    monkeypatch.setattr(sd, "_room_responder_available", lambda: True)
-    monkeypatch.setattr(sd, "_poedex_ask_lightweight", lambda *a, **k: "evidence text")
 
     dispatcher = ScoutBroker(tmp_path)
     req = ScoutRequest(turn_id="t1", inquiry="q1")
     dispatcher.dispatch(req)
 
-    sd.run(poll_interval_s=0.05, max_iterations=3)
+    sd.run(poll_interval_s=0.05, max_iterations=3, backends=[TestBackend(canned_result="evidence text")])
 
     reports = dispatcher.poll_reports()
     assert len(reports) == 1
@@ -178,7 +199,7 @@ def test_worker_loop_reports_failed_status_on_internal_exception(tmp_path, monke
 
     monkeypatch.setattr(sd, "_STATE_DIR", tmp_path)
 
-    def _boom(request, *, state_dir):
+    def _boom(request, *, state_dir, backends=None):
         raise RuntimeError("simulated retrieval failure")
     monkeypatch.setattr(sd, "_retrieve_and_normalize", _boom)
 
@@ -201,7 +222,7 @@ def test_worker_loop_never_blocks_on_an_empty_queue(tmp_path, monkeypatch):
     assert time.time() - started < 2.0
 
 
-def test_run_accepts_an_explicit_state_dir_without_touching_the_module_default(tmp_path, monkeypatch):
+def test_run_accepts_an_explicit_state_dir_without_touching_the_module_default(tmp_path):
     # Build 694 step 6: run(state_dir=...) is the real caller-facing
     # contract (Android passes its own writable state directory
     # explicitly, spec step 8) -- must work without ever needing to
@@ -212,14 +233,14 @@ def test_run_accepts_an_explicit_state_dir_without_touching_the_module_default(t
     from aurora_internal.scouting.contracts import ScoutRequest
 
     android_like_dir = tmp_path / "android_app_state"
-    monkeypatch.setattr(sd, "_room_responder_available", lambda: True)
-    monkeypatch.setattr(sd, "_poedex_ask_lightweight", lambda *a, **k: "evidence text")
-
     dispatcher = ScoutBroker(android_like_dir)
     req = ScoutRequest(turn_id="t1", inquiry="q1")
     dispatcher.dispatch(req)
 
-    sd.run(state_dir=android_like_dir, poll_interval_s=0.05, max_iterations=3)
+    sd.run(
+        state_dir=android_like_dir, poll_interval_s=0.05, max_iterations=3,
+        backends=[TestBackend(canned_result="evidence text")],
+    )
 
     reports = dispatcher.poll_reports()
     assert len(reports) == 1
@@ -243,5 +264,29 @@ def test_run_falls_back_to_module_default_state_dir_when_none_supplied(tmp_path,
 
     monkeypatch.setattr(sd, "_STATE_DIR", tmp_path)
     started = time.time()
-    sd.run(poll_interval_s=0.05, max_iterations=2)  # state_dir=None
+    sd.run(poll_interval_s=0.05, max_iterations=2)  # state_dir=None, backends=None
     assert time.time() - started < 2.0
+
+
+def test_run_defaults_to_resolve_backend_chain_when_none_supplied(tmp_path, monkeypatch):
+    # The desktop default (no backends= argument at all) must actually
+    # resolve a real chain, not silently end up with zero backends.
+    import aurora_scout_daemon as sd
+
+    captured_chains = []
+    def _fake_retrieve(request, *, state_dir, backends=None):
+        captured_chains.append(backends)
+        from aurora_internal.scouting.contracts import ScoutReport
+        return ScoutReport(request_id=request.request_id, turn_id=request.turn_id, status="no_evidence")
+    monkeypatch.setattr(sd, "_retrieve_and_normalize", _fake_retrieve)
+
+    from aurora_internal.scouting.broker import ScoutBroker
+    from aurora_internal.scouting.contracts import ScoutRequest
+    dispatcher = ScoutBroker(tmp_path)
+    dispatcher.dispatch(ScoutRequest(turn_id="t1", inquiry="q1"))
+
+    sd.run(state_dir=tmp_path, poll_interval_s=0.05, max_iterations=1)
+
+    assert len(captured_chains) == 1
+    assert captured_chains[0] is not None
+    assert len(captured_chains[0]) >= 1

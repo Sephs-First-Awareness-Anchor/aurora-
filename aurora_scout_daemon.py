@@ -17,26 +17,30 @@ boot_aurora() itself. Given the captured runtime's survival-mode memory
 pressure (spec section 9), that import cost alone is the thing to
 avoid, not just the boot call.
 
-Talks to the existing aurora_room.py Poedex responder via the same
-per-request-file protocol _poedex_ask() (aurora_daemon.py) already
-uses -- reimplemented minimally here rather than imported, specifically
-to avoid dragging in that module's heavy import graph. When Room isn't
-running, this worker reports "no_evidence" honestly rather than
-reproducing Room's own headless web-lookup logic in a second lightweight
-copy -- that would be real scope creep for this first implementation
-pass (spec section 22: "do not combine this first implementation with
-unrelated architectural rewrites").
-
 Aurora Build 694, step 6: state_dir is threaded explicitly through
 every function in this file (run() -> _retrieve_and_normalize() ->
-_poedex_ask_lightweight() -> ScoutBroker), rather than any of them
-reading the module-level _STATE_DIR constant directly. That constant
-now exists ONLY as run()'s default when no caller supplies one (desktop
-usage: `python3 aurora_scout_daemon.py` with no arguments). Android's
-writable application state directory is not the repository's default
+ScoutBroker/backends), rather than any of them reading the module-level
+_STATE_DIR constant directly. That constant now exists ONLY as run()'s
+default when no caller supplies one (desktop usage: `python3
+aurora_scout_daemon.py` with no arguments). Android's writable
+application state directory is not the repository's default
 aurora_state path -- a worker that silently fell back to the module-
 relative default would read/write ScoutRequests and results in the
 wrong place entirely on that platform.
+
+Aurora Build 694, step 7: retrieval itself now goes through
+aurora_internal.scouting.backends.ScoutBackend -- this worker used to
+have exactly one retrieval path hardcoded in (check whether
+aurora_room.py is running via `pgrep`, then talk to its Poedex queue),
+which made it structurally unusable on Android (no pgrep target ever
+exists there). _retrieve_and_normalize() now tries each available
+backend in a caller-configurable chain (default:
+[PoedexRoomBackend, LocalLessonsBackend] -- resolve_backend_chain()),
+using the first one that produces evidence. Both default backends work
+with zero external configuration, which is what makes Android capable
+out of the box: PoedexRoomBackend.is_available() just reports False
+there, and LocalLessonsBackend (Aurora's own persisted bound-lesson
+corpus, poedex_lessons.json) never depended on a Room process at all.
 
 The Scout is a courier, not cortex (spec section 4): it sends Aurora's
 own interpreted framing of the gap as context, never asks the external
@@ -46,87 +50,35 @@ response -- ScoutReport (contracts.py) has no field that could hold one.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
-import json
 import os
-import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 _BASE_DIR = Path(__file__).parent
 _STATE_DIR = _BASE_DIR / "aurora_state"
 
 sys.path.insert(0, str(_BASE_DIR))
 
+from aurora_internal.scouting.backends import ScoutBackend, resolve_backend_chain
 from aurora_internal.scouting.broker import ScoutBroker
 from aurora_internal.scouting.contracts import ScoutRequest, ScoutReport
 
 
-def _room_responder_available() -> bool:
-    """Same check _poedex_room_responder_available() (aurora_daemon.py)
-    performs -- duplicated rather than imported, for the same reason as
-    the rest of this file."""
-    try:
-        proc = subprocess.run(
-            ["pgrep", "-f", "aurora_room.py"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1.0,
-        )
-        return proc.returncode == 0
-    except Exception:
-        return False
-
-
-def _poedex_ask_lightweight(
-    question: str, *, state_dir: Any, cat: str = "researcher", lane: str = "self", timeout: float = 20.0,
-) -> str:
-    """Minimal client-side reimplementation of _poedex_ask()'s
-    per-request-file protocol against aurora_room.py's existing queue.
-    This worker running its own blocking poll loop here is fine --
-    unlike a call from inside Surface/Subsurface, nothing outside THIS
-    already-isolated process is waiting on it."""
-    state_dir = Path(state_dir)
-    queue_dir = state_dir / "poedex_queue"
-    result_dir = state_dir / "poedex_results"
-    queue_dir.mkdir(parents=True, exist_ok=True)
-    result_dir.mkdir(parents=True, exist_ok=True)
-
-    qid = f"scout_{time.time():.4f}_{os.getpid()}"
-    query_path = queue_dir / f"{qid}.json"
-    result_path = result_dir / f"{qid}.json"
-
-    try:
-        query_path.write_text(json.dumps({
-            "id": qid, "question": question, "cat": cat, "lane": lane,
-            "status": "pending", "submitted": time.time(),
-        }, indent=2), encoding="utf-8")
-    except Exception:
-        return ""
-
-    deadline = time.time() + max(1.0, float(timeout))
-    while time.time() < deadline:
-        time.sleep(0.4)
-        if result_path.exists():
-            try:
-                r = json.loads(result_path.read_text(encoding="utf-8"))
-                if r.get("id") == qid and r.get("status") == "done":
-                    result = str(r.get("result", "") or "")
-                    result_path.unlink(missing_ok=True)
-                    return result
-            except Exception:
-                pass
-
-    try:
-        query_path.unlink(missing_ok=True)
-    except Exception:
-        pass
-    return ""
-
-
-def _retrieve_and_normalize(request: ScoutRequest, *, state_dir: Any) -> ScoutReport:
+def _retrieve_and_normalize(
+    request: ScoutRequest, *, state_dir: Any, backends: Optional[List[ScoutBackend]] = None,
+) -> ScoutReport:
     """request -> retrieve -> normalize evidence -> report. The whole
     job of this worker, in one function so it's independently testable
-    without the claim/submit loop around it."""
+    without the claim/submit loop around it.
+
+    backends defaults to resolve_backend_chain() (spec step 7:
+    [PoedexRoomBackend, LocalLessonsBackend] unless configured
+    otherwise) -- tried in order, first one to produce non-empty text
+    wins. Every backend returns raw text, never a ScoutReport itself, so
+    normalization (truncation, evidence_items shape, provenance,
+    confidence) is identical regardless of which backend answered."""
     started = time.time()
 
     if not str(request.inquiry or "").strip():
@@ -137,35 +89,42 @@ def _retrieve_and_normalize(request: ScoutRequest, *, state_dir: Any) -> ScoutRe
             elapsed_ms=(time.time() - started) * 1000.0,
         )
 
-    if not _room_responder_available():
-        return ScoutReport(
-            request_id=request.request_id, turn_id=request.turn_id,
-            request_kind=request.request_kind,
-            status="no_evidence",
-            fit_rationales=["Poedex Room responder is not running -- no external evidence source available"],
-            elapsed_ms=(time.time() - started) * 1000.0,
-        )
+    active_backends = backends if backends is not None else resolve_backend_chain()
+    tried_names: List[str] = []
+    raw_result = ""
+    source_name = ""
+    for backend in active_backends:
+        try:
+            if not backend.is_available():
+                continue
+        except Exception:
+            continue
+        tried_names.append(backend.name)
+        try:
+            candidate = backend.retrieve(request, state_dir=state_dir)
+        except Exception:
+            candidate = ""
+        if candidate:
+            raw_result = candidate
+            source_name = backend.name
+            break
 
-    question = request.inquiry
-    if request.interpreted_input:
-        question = f"{request.inquiry} (context: Aurora already interprets the input as: {request.interpreted_input})"
-
-    remaining = request.deadline - time.time()
-    raw_result = _poedex_ask_lightweight(
-        question, state_dir=state_dir, cat="researcher", lane="self",
-        timeout=max(5.0, min(45.0, remaining)),
-    )
     elapsed_ms = (time.time() - started) * 1000.0
 
     if not raw_result:
+        rationale = (
+            f"no backend produced evidence (tried: {', '.join(tried_names)})" if tried_names
+            else "no Scout backend was available -- no external evidence source reachable"
+        )
         return ScoutReport(
             request_id=request.request_id, turn_id=request.turn_id,
             request_kind=request.request_kind,
-            status="no_evidence", elapsed_ms=elapsed_ms,
+            status="no_evidence", fit_rationales=[rationale],
+            elapsed_ms=elapsed_ms,
         )
 
     text = raw_result[: max(1, int(request.max_result_chars or 1200))]
-    evidence_items = [{"text": text, "source": "poedex_researcher"}]
+    evidence_items = [{"text": text, "source": source_name}]
 
     # Deliberately conservative: "explain" is the least presumptive
     # relationship category a Scout can report when it can't confidently
@@ -179,7 +138,7 @@ def _retrieve_and_normalize(request: ScoutRequest, *, state_dir: Any) -> ScoutRe
         evidence_items=evidence_items[: int(request.max_evidence_items or 5)],
         response_relationships=["explain"],
         fit_rationales=["external evidence retrieved and available to inform, not dictate, the response"],
-        provenance=["poedex_researcher"],
+        provenance=[source_name],
         confidence=0.55,
         elapsed_ms=elapsed_ms,
     )
@@ -190,6 +149,7 @@ def run(
     state_dir: Optional[Any] = None,
     poll_interval_s: float = 1.0,
     max_iterations: Optional[int] = None,
+    backends: Optional[List[ScoutBackend]] = None,
 ) -> None:
     """The worker's whole life: claim one request at a time (broker
     enforces concurrency=1 by default), process it, submit a report,
@@ -200,12 +160,19 @@ def run(
     when the caller supplies nothing at all -- desktop's `python3
     aurora_scout_daemon.py` with no arguments. Android's caller always
     passes its own writable application state directory explicitly
-    (spec step 8)."""
+    (spec step 8).
+
+    backends defaults to resolve_backend_chain() (spec step 7) -- an
+    Android caller may pass its own chain explicitly (e.g. leading with
+    LocalLessonsBackend only, if a future platform-specific backend set
+    is ever warranted), but the default chain already works unmodified
+    there."""
     active_state_dir = Path(state_dir) if state_dir is not None else _STATE_DIR
+    active_backends = backends if backends is not None else resolve_backend_chain()
     broker = ScoutBroker(active_state_dir)
     print(
         f"[SCOUT] worker online, pid={os.getpid()}, concurrency={broker.max_concurrent}, "
-        f"state_dir={active_state_dir}", flush=True,
+        f"state_dir={active_state_dir}, backends={[b.name for b in active_backends]}", flush=True,
     )
 
     iterations = 0
@@ -217,7 +184,7 @@ def run(
             time.sleep(poll_interval_s)
             continue
         try:
-            report = _retrieve_and_normalize(request, state_dir=active_state_dir)
+            report = _retrieve_and_normalize(request, state_dir=active_state_dir, backends=active_backends)
         except Exception as exc:
             report = ScoutReport(
                 request_id=request.request_id, turn_id=request.turn_id,
