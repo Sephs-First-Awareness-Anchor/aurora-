@@ -74,6 +74,7 @@ class SubsurfacePresenceRuntime:
         *,
         poll_interval_s: float = DEFAULT_POLL_INTERVAL_S,
         on_binding_change: Optional[Callable[[List[Any]], None]] = None,
+        metrics_write_interval_s: float = 2.0,
     ):
         self.state_dir = state_dir
         self.poll_interval_s = max(0.02, float(poll_interval_s or DEFAULT_POLL_INTERVAL_S))
@@ -86,6 +87,16 @@ class SubsurfacePresenceRuntime:
         self.last_tick_at: float = 0.0
         self.last_tick_error: str = ""
         self.tick_count: int = 0
+
+        # Build 694 step 17: this runtime holds its own long-lived
+        # PresenceMetrics instance (role="presence_runtime") -- ticking
+        # every ~150ms makes per-tick disk writes wasteful, so
+        # write_snapshot() is throttled to metrics_write_interval_s
+        # rather than called every tick.
+        from aurora_internal.dual_strata.presence_metrics import PresenceMetrics
+        self.metrics = PresenceMetrics(state_dir, role="presence_runtime")
+        self.metrics_write_interval_s = max(0.5, float(metrics_write_interval_s or 2.0))
+        self._last_metrics_write_at: float = 0.0
 
     def start(self) -> None:
         if self.is_running():
@@ -125,6 +136,7 @@ class SubsurfacePresenceRuntime:
     def tick(self) -> Dict[str, Any]:
         """One integration cycle -- also callable directly (tests,
         synchronous callers) without starting the background thread."""
+        _tick_started_at = time.time()
         integrated_kinds: List[str] = []
         try:
             events = read_and_clear_turn_events(self.state_dir)
@@ -136,8 +148,13 @@ class SubsurfacePresenceRuntime:
                 context={"function": "SubsurfacePresenceRuntime.tick", "source_file": "aurora_internal/dual_strata/subsurface_presence_runtime.py"},
             )
             events = []
+        # Build 694 step 17: presence_event_queue_depth -- how many turn
+        # events were waiting to be integrated at the START of this tick
+        # (before this tick drains them), the direct measure of whether
+        # events are piling up faster than they're being consumed.
+        self.metrics.set_presence_event_queue_depth(len(events))
         for event in events:
-            kind = integrate_turn_event(self.state_dir, event)
+            kind = integrate_turn_event(self.state_dir, event, metrics=self.metrics)
             if kind:
                 integrated_kinds.append(kind)
 
@@ -171,6 +188,20 @@ class SubsurfacePresenceRuntime:
             _aurora_record_exception_from_locals(
                 locals(), module=__name__,
                 operation="exception_handler:aurora_internal/dual_strata/subsurface_presence_runtime.py:tick:heartbeat",
+                exc=_aurora_boundary_exc,
+                context={"function": "SubsurfacePresenceRuntime.tick", "source_file": "aurora_internal/dual_strata/subsurface_presence_runtime.py"},
+            )
+
+        try:
+            self.metrics.record_presence_processing_latency_ms((time.time() - _tick_started_at) * 1000.0)
+            now = time.time()
+            if now - self._last_metrics_write_at >= self.metrics_write_interval_s:
+                self.metrics.write_snapshot()
+                self._last_metrics_write_at = now
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/subsurface_presence_runtime.py:tick:metrics",
                 exc=_aurora_boundary_exc,
                 context={"function": "SubsurfacePresenceRuntime.tick", "source_file": "aurora_internal/dual_strata/subsurface_presence_runtime.py"},
             )

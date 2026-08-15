@@ -234,10 +234,18 @@ def run(
     a daemon thread inside the app's own process) construct their own
     threading.Event and hold onto it to stop the worker later without
     killing the whole process; the desktop CLI entry point below simply
-    never sets one, so it runs forever as before."""
+    never sets one, so it runs forever as before.
+
+    Build 694 step 17: this worker holds its own long-lived
+    PresenceMetrics instance (role="scout"), recording scout_roundtrip_ms
+    and scout_backend (spec section 30) once per claimed request --
+    genuinely per-request, not throttled, since a Scout request happens
+    far less often than a presence tick."""
     active_state_dir = Path(state_dir) if state_dir is not None else _STATE_DIR
     active_backends = backends if backends is not None else resolve_backend_chain()
     broker = ScoutBroker(active_state_dir)
+    from aurora_internal.dual_strata.presence_metrics import PresenceMetrics
+    metrics = PresenceMetrics(active_state_dir, role="scout")
     print(
         f"[SCOUT] worker online, pid={os.getpid()}, concurrency={broker.max_concurrent}, "
         f"state_dir={active_state_dir}, backends={[b.name for b in active_backends]}", flush=True,
@@ -263,6 +271,12 @@ def run(
                 status="failed", fit_rationales=[f"scout worker error: {exc}"],
             )
         broker.submit_report(report)
+        try:
+            metrics.record_scout_roundtrip_ms(float(report.elapsed_ms or 0.0))
+            metrics.record_scout_backend(report.provenance[0] if report.provenance else "none")
+            metrics.write_snapshot()
+        except Exception:
+            pass
 
 
 def _parse_cli_state_dir() -> Optional[str]:

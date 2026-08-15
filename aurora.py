@@ -21787,6 +21787,25 @@ def _scout_rescue_budget_spend(systems: dict, turn_id: str, elapsed_s: float) ->
         tracker["remaining_s"] = max(0.0, float(tracker.get("remaining_s", 0.0) or 0.0) - max(0.0, elapsed_s))
 
 
+def _get_presence_metrics(systems: dict) -> Any:
+    """Build 694 step 17 (spec section 30): one PresenceMetrics instance
+    per systems dict, lazily created and cached under
+    systems["_presence_metrics"]. role="surface_pipeline", deliberately
+    distinct from aurora_surface_daemon.py's own role="surface" instance
+    (that module is a thin desktop-only external dispatcher with its own
+    separate recorder; _run_reasoning_pipeline is the canonical pipeline
+    every platform's turns actually flow through, Android included, so
+    giving it a distinct role keeps the two recorders' snapshots from
+    overwriting each other under the same role key in
+    presence_metrics.json)."""
+    metrics = systems.get("_presence_metrics")
+    if metrics is None:
+        from aurora_internal.dual_strata.presence_metrics import PresenceMetrics
+        metrics = PresenceMetrics(systems.get("state_dir"), role="surface_pipeline")
+        systems["_presence_metrics"] = metrics
+    return metrics
+
+
 def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: str) -> list:
     """
     Build 694 step 12 (Subsurface Presence and Evidence Scout spec,
@@ -21837,8 +21856,12 @@ def _ingest_current_turn_scout_evidence(systems: dict, state: Any, *, turn_id: s
                         systems.get("state_dir"), turn_id=turn_id,
                         request_kind="response_fit", timeout=window,
                     )
-                    _scout_rescue_budget_spend(systems, turn_id, time.time() - started)
+                    wait_elapsed_ms = (time.time() - started) * 1000.0
+                    _scout_rescue_budget_spend(systems, turn_id, wait_elapsed_ms / 1000.0)
                     accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+                    metrics = _get_presence_metrics(systems)
+                    metrics.record_same_turn_wait_ms(wait_elapsed_ms)
+                    metrics.record_same_turn_binding_used(bool(accepted))
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(), module=__name__,
@@ -22077,14 +22100,24 @@ def _attempt_abstention_rescue(
     if str(getattr(state, "response_src", "") or "") not in ("constraint_abstain", "constraint_abstain_seek"):
         return False
 
+    # Build 694 step 17: this IS an abstention -- recorded once, before
+    # any gate/eligibility check below decides whether a rescue is even
+    # attempted, so abstain_before_scout counts every abstention this
+    # function ever sees, matching spec section 30's before/after pair.
+    metrics = _get_presence_metrics(systems)
+    metrics.record_abstain_before_scout()
+
     retry_guard = systems.setdefault("_scout_retry_done", {})
     if retry_guard.get(turn_id):
+        metrics.record_abstain_after_scout()
         return False
     retry_guard[turn_id] = True
 
     if not bool((state.pipeline_state or {}).get("interpretation_adequate", False)):
+        metrics.record_abstain_after_scout()
         return False
 
+    metrics.record_abstain_rescue_attempted()
     try:
         from aurora_internal.dual_strata.subsurface_presence import dispatch_response_fit_scout
         dispatch_response_fit_scout(
@@ -22093,6 +22126,8 @@ def _attempt_abstention_rescue(
             inferred_purpose=str(getattr(state, "intent", "") or ""),
             representation_refs=list(state.salient_concepts or [])[:16],
             priority=0.9,
+            dispatch_reason="trigger_b_abstention_rescue",
+            metrics=metrics,
         )
 
         budget = _scout_rescue_budget_remaining(systems, turn_id)
@@ -22103,10 +22138,14 @@ def _attempt_abstention_rescue(
                 systems.get("state_dir"), turn_id=turn_id,
                 request_kind="response_fit", timeout=budget,
             )
-            _scout_rescue_budget_spend(systems, turn_id, time.time() - started)
+            wait_elapsed_ms = (time.time() - started) * 1000.0
+            metrics.record_same_turn_wait_ms(wait_elapsed_ms)
+            _scout_rescue_budget_spend(systems, turn_id, wait_elapsed_ms / 1000.0)
 
         accepted = _read_accepted_scout_bindings(systems, turn_id=turn_id)
+        metrics.record_same_turn_binding_used(bool(accepted))
         if not accepted:
+            metrics.record_abstain_after_scout()
             return False
         state.current_turn_scout_evidence = accepted
         _structure_current_turn_scout_evidence(state, accepted)
@@ -22124,7 +22163,12 @@ def _attempt_abstention_rescue(
             user_text, systems, state, use_search=use_search, skip_postprocessing=_skip_post,
         )
         _enforce_emission_discipline(user_text, systems, state)
-        return str(getattr(state, "response_src", "") or "") not in ("constraint_abstain", "constraint_abstain_seek")
+        rescued = str(getattr(state, "response_src", "") or "") not in ("constraint_abstain", "constraint_abstain_seek")
+        if rescued:
+            metrics.record_abstain_rescue_succeeded()
+        else:
+            metrics.record_abstain_after_scout()
+        return rescued
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(), module=__name__,
@@ -22132,6 +22176,7 @@ def _attempt_abstention_rescue(
             exc=_aurora_boundary_exc,
             context={"function": "_attempt_abstention_rescue", "source_file": "aurora.py"},
         )
+        metrics.record_abstain_after_scout()
         return False
 
 

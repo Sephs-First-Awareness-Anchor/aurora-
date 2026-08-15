@@ -157,3 +157,52 @@ def test_start_subsurface_presence_runtime_stashes_itself_on_systems_without_tou
 
 def test_default_poll_interval_is_well_under_the_250ms_responsiveness_target():
     assert DEFAULT_POLL_INTERVAL_S < 0.25
+
+
+# ── Build 694 step 17: PresenceMetrics wiring ───────────────────────────────
+
+def test_runtime_holds_its_own_presence_metrics_instance(tmp_path):
+    rt = SubsurfacePresenceRuntime(tmp_path)
+    assert rt.metrics is not None
+    assert rt.metrics.role == "presence_runtime"
+
+
+def test_tick_records_presence_event_queue_depth(tmp_path):
+    rt = SubsurfacePresenceRuntime(tmp_path)
+    sp.write_turn_open(tmp_path, turn_id="t1", raw_input="hello")
+    sp.write_interpreted_turn(tmp_path, turn_id="t1", interpreted_meaning="x")
+    rt.tick()
+    snap = rt.metrics.snapshot()
+    assert snap["presence_event_queue_depth"] == 2
+
+
+def test_tick_records_presence_processing_latency(tmp_path):
+    rt = SubsurfacePresenceRuntime(tmp_path)
+    rt.tick()
+    snap = rt.metrics.snapshot()
+    assert snap["presence_processing_latency_ms"]["count"] == 1
+
+
+def test_tick_records_turn_open_and_interpreted_turn_latency(tmp_path):
+    rt = SubsurfacePresenceRuntime(tmp_path)
+    sp.write_turn_open(tmp_path, turn_id="t1", raw_input="hello")
+    sp.write_interpreted_turn(tmp_path, turn_id="t1", interpreted_meaning="x", response_fit_pressure=0.1)
+    rt.tick()
+    snap = rt.metrics.snapshot()
+    assert snap["turn_open_latency_ms"]["count"] == 1
+    assert snap["interpreted_turn_latency_ms"]["count"] == 1
+
+
+def test_metrics_snapshot_write_is_throttled_not_written_every_tick(tmp_path):
+    rt = SubsurfacePresenceRuntime(tmp_path, metrics_write_interval_s=100.0)
+    rt.tick()
+    rt.tick()
+    rt.tick()
+    from aurora_internal.dual_strata.presence_metrics import read_all_snapshots
+    # With a 100s throttle, at most one write could have landed across
+    # three back-to-back ticks -- confirms this isn't writing a file
+    # every single tick (which at the 150ms default cadence would be
+    # wasteful I/O, exactly what step 17 avoids).
+    snaps = read_all_snapshots(tmp_path)
+    if "presence_runtime" in snaps:
+        assert snaps["presence_runtime"]["presence_processing_latency_ms"]["count"] <= 1

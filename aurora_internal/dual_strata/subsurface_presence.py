@@ -460,6 +460,8 @@ def dispatch_response_fit_scout(
     representation_refs: Optional[List[str]] = None,
     priority: float = 0.6,
     ttl_s: float = 30.0,
+    dispatch_reason: str = "unspecified",
+    metrics: Optional[Any] = None,
 ) -> Optional[str]:
     """The one place a response_fit ScoutRequest actually gets built,
     shared by both triggers (section 9) so they can never quietly diverge
@@ -475,7 +477,26 @@ def dispatch_response_fit_scout(
     need, so it goes straight through dispatch_scout_request() rather
     than the evidence_need event channel (that channel exists for
     Surface to describe a need across the boundary; this call never
-    crosses that boundary at all)."""
+    crosses that boundary at all).
+
+    Build 694 step 17 (spec section 30): `dispatch_reason` identifies
+    WHICH trigger called this ("trigger_a_pressure" from
+    integrate_interpreted_turn_event below, "trigger_b_abstention_rescue"
+    from aurora._attempt_abstention_rescue) -- recorded onto `metrics`
+    (a PresenceMetrics instance) when the caller supplies one, alongside
+    request_kind="response_fit". Both are optional and purely additive:
+    omitting `metrics` changes nothing about the dispatch itself."""
+    if metrics is not None:
+        try:
+            metrics.record_scout_dispatch_reason(dispatch_reason)
+            metrics.record_scout_request_kind("response_fit")
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:dispatch_response_fit_scout:metrics",
+                exc=_aurora_boundary_exc,
+                context={"function": "dispatch_response_fit_scout", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+            )
     try:
         from aurora_internal.scouting.broker import dispatch_scout_request
         from aurora_internal.scouting.contracts import ScoutRequest
@@ -498,26 +519,50 @@ def dispatch_response_fit_scout(
         return None
 
 
-def integrate_turn_open_event(state_dir: Any, event: Dict[str, Any]) -> None:
+def integrate_turn_open_event(state_dir: Any, event: Dict[str, Any], *, metrics: Optional[Any] = None) -> None:
     """A turn_open event only ever tells Subsurface that SOMETHING is
     happening now -- it must not stomp interpretation fields an
     interpreted_turn event for the same turn may already have written
     this cycle (write_presence_frame()'s same-turn merge is what makes
-    that safe)."""
+    that safe).
+
+    Build 694 step 17: `metrics` (optional, a PresenceMetrics instance)
+    records turn_open_latency_ms -- the gap between Surface writing this
+    event (its own created_at) and Subsurface integrating it right here,
+    spec section 30's direct measure of "does Subsurface know a live
+    turn is happening promptly.\""""
     write_presence_frame(
         state_dir,
         turn_id=str(event.get("turn_id", "") or ""),
         continuity_summary=f"turn open: {str(event.get('raw_input', ''))[:120]}",
         turn_open_at=float(event.get("created_at", 0.0) or 0.0),
     )
+    if metrics is not None:
+        try:
+            created_at = float(event.get("created_at", 0.0) or 0.0)
+            if created_at > 0:
+                metrics.record_turn_open_latency_ms(max(0.0, (time.time() - created_at) * 1000.0))
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:integrate_turn_open_event:metrics",
+                exc=_aurora_boundary_exc,
+                context={"function": "integrate_turn_open_event", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+            )
 
 
-def integrate_interpreted_turn_event(state_dir: Any, event: Dict[str, Any]) -> None:
+def integrate_interpreted_turn_event(state_dir: Any, event: Dict[str, Any], *, metrics: Optional[Any] = None) -> None:
     """An interpreted_turn event carries the actual substance
     aurora._emit_interpreted_turn_packet() computed -- interpreted_meaning/
     inferred_purpose/confidence/response_fit_pressure/etc. Merged onto
     whatever turn_open already established for the same turn_id, never
-    collapsing/overwriting it."""
+    collapsing/overwriting it.
+
+    Build 694 step 17: `metrics`, when given, records
+    interpreted_turn_latency_ms (same shape as turn_open_latency_ms
+    above) and response_fit_pressure -- the two figures spec section 30
+    needs to answer "did Subsurface become more present?" for this event
+    kind specifically."""
     write_presence_frame(
         state_dir,
         turn_id=str(event.get("turn_id", "") or ""),
@@ -534,6 +579,19 @@ def integrate_interpreted_turn_event(state_dir: Any, event: Dict[str, Any]) -> N
         response_fit_pressure=float(event.get("response_fit_pressure", 0.0) or 0.0),
         continuity_summary=(str(event.get("interpreted_meaning", "") or "")[:120] or None),
     )
+    if metrics is not None:
+        try:
+            created_at = float(event.get("created_at", 0.0) or 0.0)
+            if created_at > 0:
+                metrics.record_interpreted_turn_latency_ms(max(0.0, (time.time() - created_at) * 1000.0))
+            metrics.record_response_fit_pressure(float(event.get("response_fit_pressure", 0.0) or 0.0))
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:integrate_interpreted_turn_event:metrics",
+                exc=_aurora_boundary_exc,
+                context={"function": "integrate_interpreted_turn_event", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+            )
 
     # Build 694 step 10, Trigger A (spec section 9): graduated proactive
     # dispatch the instant integration sees meaningfully elevated
@@ -552,6 +610,8 @@ def integrate_interpreted_turn_event(state_dir: Any, event: Dict[str, Any]) -> N
                 inferred_purpose=str(event.get("inferred_purpose", "") or ""),
                 representation_refs=list(event.get("representation_refs", []) or []),
                 priority=pressure,
+                dispatch_reason="trigger_a_pressure",
+                metrics=metrics,
             )
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -562,7 +622,7 @@ def integrate_interpreted_turn_event(state_dir: Any, event: Dict[str, Any]) -> N
         )
 
 
-def integrate_evidence_need_event(state_dir: Any, event: Dict[str, Any]) -> Optional[str]:
+def integrate_evidence_need_event(state_dir: Any, event: Dict[str, Any], *, metrics: Optional[Any] = None) -> Optional[str]:
     """Build 694 step 9: the sole conversion point from "Surface described
     a need" to "a ScoutRequest actually got dispatched." Local/lazy
     imports (not module-level) because this is the one function in this
@@ -573,13 +633,30 @@ def integrate_evidence_need_event(state_dir: Any, event: Dict[str, Any]) -> Opti
     Failure here must never propagate into the turn-events consumption
     loop (a dispatch failure is not fatal to presence-frame integration
     generally) -- caught and swallowed the same way every other write in
-    this module already treats its own I/O failures."""
+    this module already treats its own I/O failures.
+
+    Build 694 step 17: `metrics`, when given, records scout_dispatch_reason
+    ("evidence_need_" + the event's own request_kind, so a knowledge_gap
+    vs a self_diagnostic evidence_need are distinguishable) and
+    scout_request_kind."""
+    request_kind = str(event.get("request_kind", "") or "knowledge_gap")
+    if metrics is not None:
+        try:
+            metrics.record_scout_dispatch_reason(f"evidence_need_{request_kind}")
+            metrics.record_scout_request_kind(request_kind)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/subsurface_presence.py:integrate_evidence_need_event:metrics",
+                exc=_aurora_boundary_exc,
+                context={"function": "integrate_evidence_need_event", "source_file": "aurora_internal/dual_strata/subsurface_presence.py"},
+            )
     try:
         from aurora_internal.scouting.broker import dispatch_scout_request
         from aurora_internal.scouting.contracts import ScoutRequest
         dispatch_scout_request(state_dir, ScoutRequest(
             turn_id=str(event.get("turn_id", "") or ""),
-            request_kind=str(event.get("request_kind", "") or "knowledge_gap"),
+            request_kind=request_kind,
             interpreted_input=str(event.get("target", "") or ""),
             inquiry=str(event.get("inquiry", "") or ""),
             evidence_needed=str(event.get("evidence_needed", "") or ""),
@@ -599,22 +676,26 @@ def integrate_evidence_need_event(state_dir: Any, event: Dict[str, Any]) -> Opti
     return "evidence_need"
 
 
-def integrate_turn_event(state_dir: Any, event: Dict[str, Any]) -> Optional[str]:
+def integrate_turn_event(state_dir: Any, event: Dict[str, Any], *, metrics: Optional[Any] = None) -> Optional[str]:
     """Dispatch one event by kind (Build 694 step 3's required shape).
     Returns the kind actually integrated, or None if this event's kind
     has no handler yet (turn_outcome has no producer at this point in
-    the implementation order)."""
+    the implementation order).
+
+    `metrics` (Build 694 step 17, optional) passes straight through to
+    whichever per-kind integrator handles this event -- this dispatcher
+    itself records nothing, it only threads the recorder along."""
     if not isinstance(event, dict):
         return None
     kind = str(event.get("kind", "") or "")
     if kind == "turn_open":
-        integrate_turn_open_event(state_dir, event)
+        integrate_turn_open_event(state_dir, event, metrics=metrics)
         return kind
     if kind == "interpreted_turn":
-        integrate_interpreted_turn_event(state_dir, event)
+        integrate_interpreted_turn_event(state_dir, event, metrics=metrics)
         return kind
     if kind == "evidence_need":
-        return integrate_evidence_need_event(state_dir, event)
+        return integrate_evidence_need_event(state_dir, event, metrics=metrics)
     return None
 
 

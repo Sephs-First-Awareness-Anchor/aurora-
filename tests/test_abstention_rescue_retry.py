@@ -149,7 +149,7 @@ def test_retry_guard_is_marked_even_if_the_rescue_itself_finds_nothing(tmp_path,
 def test_dispatches_via_the_shared_response_fit_helper(tmp_path, monkeypatch):
     captured = {}
 
-    def _fake_dispatch(state_dir, *, turn_id, interpreted_meaning, inferred_purpose, representation_refs, priority):
+    def _fake_dispatch(state_dir, *, turn_id, interpreted_meaning, inferred_purpose, representation_refs, priority, **kwargs):
         captured["turn_id"] = turn_id
         captured["interpreted_meaning"] = interpreted_meaning
         return "req-1"
