@@ -1855,6 +1855,7 @@ def apply_causal_evaluation(
     revised_interpretation: Optional[CapturedInterpretation] = None,
     dream_trainer: Any = None,
     counterfactual_branch: Optional["CounterfactualBranch"] = None,
+    systems: Optional[Dict[str, Any]] = None,
 ) -> CausalEvaluationResult:
     step = trace.steps[step_index]
     if step.consequence is None:
@@ -1871,6 +1872,26 @@ def apply_causal_evaluation(
         dual_strata_snapshot=step.dual_strata_snapshot,
     )
     step.causal_scores = result.as_dimension_scores()
+    # Build 714: this is real, already-computed, already-meaningful evidence
+    # of how well the step's own representation tracked what actually
+    # happened (prediction/state/evidence/revision/calibration accuracy
+    # against the REAL recorded consequence) -- exactly the "operational
+    # discrepancy" signal representational resolution needs, carried on a
+    # step that already threads representational_ref through untouched
+    # (see EpisodeStep.representational_ref's own docstring). Ambient and
+    # optional: absent systems/genealogy/ref is a silent no-op, never a
+    # required part of causal evaluation's own contract.
+    if systems is not None and getattr(step, "representational_ref", None):
+        try:
+            from aurora_representational_resolution import record_ref_participation_from_scores
+            record_ref_participation_from_scores(
+                systems, step.representational_ref, step.causal_scores,
+                source="rcec_causal_evaluation",
+                context_tag=f"episode:{trace.episode_id}",
+                extra_trace_ids=[f"RCEC_EPISODE:{trace.episode_id}"],
+            )
+        except Exception:
+            pass
     if counterfactual_branch is not None:
         step.counterfactual_branch_ids = step.counterfactual_branch_ids + (counterfactual_branch.branch_id,)
     if dream_trainer is not None:
@@ -3067,7 +3088,7 @@ def run_shadow_promotion_cycle(
             run_episode_step(trace, shadow_systems, runtime_context, world, engine, boundary, agent_id)
             step = trace.steps[0]
 
-            apply_causal_evaluation(trace, 0, world, engine, boundary, agent_id, dream_trainer=dream_trainer)
+            apply_causal_evaluation(trace, 0, world, engine, boundary, agent_id, dream_trainer=dream_trainer, systems=shadow_systems)
             apply_expression_fidelity_evaluation(trace, 0)
 
             if step.interpretation.predicted_consequence is not None:
@@ -3241,7 +3262,7 @@ def run_closed_loop_episode(
     future_state_projection = build_future_state_projection(step.interpretation, synthesis_candidate=synthesis_hint)
 
     # 4: initial evaluation.
-    apply_causal_evaluation(trace, 0, world, engine, boundary, agent_id, dream_trainer=dream_trainer)
+    apply_causal_evaluation(trace, 0, world, engine, boundary, agent_id, dream_trainer=dream_trainer, systems=systems)
 
     # 5-6: backprojection -> revised evaluation.
     revised_interpretation = run_backprojection_step(trace, systems, episode_runtime_context, 0, boundary, agent_id, skin=skin)
@@ -3256,6 +3277,7 @@ def run_closed_loop_episode(
         revised_interpretation=revised_interpretation,
         counterfactual_branch=branch,
         dream_trainer=dream_trainer,
+        systems=systems,
     )
 
     # 9-10: transfer episode using ALT_SKIN -> transfer evaluation.
@@ -3278,6 +3300,7 @@ def run_closed_loop_episode(
     )
     transfer_result = apply_causal_evaluation(
         transfer_trace, 0, transfer_world, transfer_engine, transfer_boundary, agent_id, dream_trainer=dream_trainer,
+        systems=systems,
     )
     transfer_comparison = compute_transfer_comparison(
         causal_result.as_dimension_scores(), transfer_result.as_dimension_scores(),
