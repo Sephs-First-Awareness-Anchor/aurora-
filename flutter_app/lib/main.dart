@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/hub_screen.dart';
+import 'screens/habitat_space_screen.dart';
+import 'screens/habitat_self_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,8 +37,16 @@ class _AppShell extends StatefulWidget {
 class _AppShellState extends State<_AppShell> {
   int _tab = 0;
 
+  // Aurora Build 712, App Developmental Habitat: "Aurora | Hub" becomes
+  // "Aurora | Space | Self | Hub" -- four different relationships
+  // between Aurora, the human, and the environment (spec section 3),
+  // not just two more screens. IndexedStack keeps all four alive so
+  // Space/Self state survives tab switches without a re-fetch, same as
+  // Aurora/Hub already relied on.
   static const _screens = [
     HomeScreen(),
+    SpaceScreen(),
+    SelfScreen(),
     HubScreen(),
   ];
 
@@ -55,6 +65,16 @@ class _AppShellState extends State<_AppShell> {
             icon: Icon(Icons.chat_bubble_outline_rounded),
             selectedIcon: Icon(Icons.chat_bubble_rounded, color: Color(0xFFA020F0)),
             label: 'Aurora',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.public_outlined),
+            selectedIcon: Icon(Icons.public, color: Color(0xFFA020F0)),
+            label: 'Space',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.self_improvement_outlined),
+            selectedIcon: Icon(Icons.self_improvement, color: Color(0xFFA020F0)),
+            label: 'Self',
           ),
           NavigationDestination(
             icon: Icon(Icons.hub_outlined),

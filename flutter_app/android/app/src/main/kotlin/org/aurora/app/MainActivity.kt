@@ -255,6 +255,71 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    // ── Habitat (Aurora Build 712, App Developmental Habitat) ──
+                    // Every case is a thin pass-through via the existing generic
+                    // callPythonString/callPythonStringArg helpers -- no new
+                    // developmental logic belongs at this layer.
+                    "habitatGetAffordances" -> {
+                        AuroraService.callPythonString("habitat_get_affordances") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatGetState" -> {
+                        val params = call.argument<String>("params") ?: ""
+                        AuroraService.callPythonStringArg("habitat_get_state", params) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatGetEntity" -> {
+                        val params = call.argument<String>("params") ?: "{}"
+                        AuroraService.callPythonStringArg("habitat_get_entity", params) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatGetHistory" -> {
+                        val params = call.argument<String>("params") ?: "{}"
+                        AuroraService.callPythonStringArg("habitat_get_history", params) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatGetLineage" -> {
+                        val entityId = call.argument<String>("entityId") ?: ""
+                        AuroraService.callPythonStringArg("habitat_get_lineage", entityId) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatAct" -> {
+                        val actionJson = call.argument<String>("actionJson") ?: "{}"
+                        AuroraService.callPythonStringArg("habitat_act", actionJson) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatIntegrityReport" -> {
+                        AuroraService.callPythonString("habitat_integrity_report") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatBackup" -> {
+                        AuroraService.callPythonString("habitat_backup") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatRestore" -> {
+                        val backupPath = call.argument<String>("backupPath") ?: ""
+                        AuroraService.callPythonStringArg("habitat_restore", backupPath) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatIsolateCorrupt" -> {
+                        AuroraService.callPythonString("habitat_isolate_corrupt") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "habitatReset" -> {
+                        AuroraService.callPythonString("habitat_reset") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     else             -> result.notImplemented()
                 }
             }

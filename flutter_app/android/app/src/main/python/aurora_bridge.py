@@ -32,6 +32,13 @@ _lock          = threading.Lock()
 _last_response: str = ""      # Aurora's previous output
 _last_path_key: str = ""      # LSA path key that produced it
 
+# Aurora Build 712 (App Developmental Habitat): the Habitat runtime is
+# stored both here (for this module's own bridge functions) and in
+# _systems['habitat'] (so aurora.py's turn pipeline / proactive loop can
+# reach it as ordinary systems state) -- same dual-storage pattern
+# already used for other lightweight runtimes on this path.
+_habitat = None
+
 # Aurora Build 694, step 8: the Scout worker thread's own stop signal --
 # module-level so it survives past initialize() returning and can be
 # used to independently stop the worker later (spec: "independently
@@ -1733,6 +1740,146 @@ def stop_scout_worker(timeout: float = 2.0) -> None:
         _scout_worker_thread = None
 
 
+# ── Habitat bridge (Aurora Build 712, App Developmental Habitat) ───────────
+# JSON-string-in/out, same convention every other Kotlin-callable function
+# on this path already uses. Flutter renders and submits interaction; it
+# never owns developmental meaning (spec section 20) -- every one of these
+# functions is a thin pass-through to the single canonical HabitatRuntime
+# instantiated in initialize() above.
+
+def habitat_get_affordances() -> str:
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    return _json.dumps(_habitat.get_affordances())
+
+
+def habitat_get_state(territory_json: str = "") -> str:
+    """territory_json: '' for all territories, or '{"territory":"space","actor":"human"}'."""
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    try:
+        params = _json.loads(territory_json) if territory_json else {}
+    except Exception:
+        params = {}
+    territory = params.get("territory") or None
+    actor = params.get("actor") or "human"
+    return _json.dumps(_habitat.get_state(territory=territory, actor=actor))
+
+
+def habitat_get_entity(params_json: str) -> str:
+    """params_json: '{"entity_id":"e1","actor":"human"}' -- single-string-
+    arg shape (not (entity_id, actor) positionals) so this reaches
+    Kotlin's existing callPythonStringArg() helper without needing a new
+    multi-arg MethodChannel case."""
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    try:
+        params = _json.loads(params_json) if params_json else {}
+    except Exception:
+        params = {}
+    entity_id = str(params.get("entity_id", ""))
+    actor = str(params.get("actor", "human"))
+    entity = _habitat.get_entity(entity_id, actor=actor)
+    return _json.dumps(entity if entity is not None else {"error": "not_found_or_not_visible"})
+
+
+def habitat_get_history(params_json: str = "") -> str:
+    """params_json: '{"entity_id":"e1","territory":"space","limit":50}'."""
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    try:
+        params = _json.loads(params_json) if params_json else {}
+    except Exception:
+        params = {}
+    return _json.dumps(_habitat.get_history(
+        entity_id=params.get("entity_id") or None,
+        territory=params.get("territory") or None,
+        limit=int(params.get("limit", 50) or 50),
+    ))
+
+
+def habitat_get_lineage(entity_id: str) -> str:
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    return _json.dumps(_habitat.get_lineage(entity_id))
+
+
+def habitat_act(action_json: str) -> str:
+    """A human's environmental action, submitted by the Flutter gesture
+    layer. action_json shape:
+      {"territory":"space","operation":"move","target_ids":["e1"],
+       "parameters":{"x":0.4,"y":0.6}}
+    The actor is always "human" here -- Aurora's own habitat actions
+    originate from her own reasoning/agency machinery, not this
+    human-facing entry point (spec section 20: "Flutter must not own
+    developmental meaning")."""
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    try:
+        params = _json.loads(action_json)
+    except Exception:
+        return _json.dumps({"error": "invalid_action_json"})
+    consequence = _habitat.act(
+        actor="human",
+        territory=str(params.get("territory", "space")),
+        operation=str(params.get("operation", "")),
+        target_ids=list(params.get("target_ids") or []),
+        parameters=dict(params.get("parameters") or {}),
+        intention_context=str(params.get("intention_context", "")),
+    )
+    return _json.dumps(consequence.to_dict())
+
+
+def habitat_integrity_report() -> str:
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    return _json.dumps(_habitat.integrity_report())
+
+
+def habitat_backup() -> str:
+    """Human-only maintenance (spec section 32) -- Hub-triggered, never
+    reachable through habitat_act()."""
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    try:
+        path = _habitat.backup()
+        return _json.dumps({"success": True, "path": path})
+    except Exception as _hab_backup_exc:
+        return _json.dumps({"success": False, "error": str(_hab_backup_exc)})
+
+
+def habitat_restore(backup_path: str) -> str:
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    ok = _habitat.restore_from_backup(backup_path)
+    return _json.dumps({"success": ok})
+
+
+def habitat_isolate_corrupt() -> str:
+    import json as _json
+    if _habitat is None:
+        return _json.dumps({"error": "habitat_not_initialized"})
+    return _json.dumps({"isolated": _habitat.isolate_corrupt_entities()})
+
+
+def habitat_reset() -> str:
+    """Full reset -- human-only, Hub-triggered (spec section 32)."""
+    import json as _json
+    if _habitat is None:
+        return json.dumps({"error": "habitat_not_initialized"})
+    _habitat.reset()
+    return json.dumps({"success": True})
+
+
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
     global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim
@@ -1945,6 +2092,30 @@ def initialize(state_dir: str = "") -> str:
                 context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
             )
             log.warning("Scout worker failed to start: %s", _sw_exc)
+
+        # Aurora Build 712 (App Developmental Habitat): instantiate the
+        # Habitat runtime against this already-booted Aurora's own
+        # state_dir/systems, same lightweight-runtime-against-shared-
+        # state pattern as SubsurfacePresenceRuntime above -- never a
+        # second boot_aurora(). Stored in both the module global and
+        # _systems['habitat'] so handle_message()'s pipeline call and
+        # this module's habitat_* bridge functions read/write the exact
+        # same world (spec section 9: one canonical world state).
+        try:
+            global _habitat
+            from aurora_habitat import HabitatRuntime
+            _habitat_state_dir = state_dir if state_dir else "aurora_state"
+            _habitat = HabitatRuntime(_habitat_state_dir, systems=_systems)
+            _systems["habitat"] = _habitat
+        except Exception as _hab_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:habitat",
+                exc=_hab_exc,
+                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
+            log.warning("Habitat runtime failed to start: %s", _hab_exc)
 
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.
@@ -8709,6 +8880,44 @@ def _entropy_field(systems: dict, obs: str) -> str:
     return f"{obs}; {signal}" if obs else signal
 
 
+def _habitat_availability(systems: dict, obs: str) -> str:
+    """Aurora Build 712 (App Developmental Habitat, spec section 15):
+    exposes the Habitat's own recent activity into the SAME ambient
+    observation string every other proactive-cycle pressure mechanism
+    above already feeds into the real turn pipeline -- never a
+    dedicated 'decide whether to act in the habitat' heuristic (spec
+    section 30 explicitly forbids inventing a timer/trigger rule).
+    This only reports environmental availability; whether it registers
+    as salient enough for Aurora to act on is entirely her own existing
+    attention/curiosity/pressure machinery's call, same as silence or
+    entropy pressure above."""
+    habitat = systems.get("habitat")
+    if habitat is None:
+        return obs
+    try:
+        snapshot = habitat.observe(actor="aurora")
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:_habitat_availability",
+            exc=_aurora_boundary_exc,
+            context={"function": "_habitat_availability", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
+        return obs
+    parts = []
+    human_actions = int(snapshot.get("recent_human_actions", 0) or 0)
+    if human_actions:
+        parts.append(f"{human_actions} recent habitat change(s) from the human")
+    unrevisited = list(snapshot.get("aurora_created_unrevisited") or [])
+    if unrevisited:
+        parts.append(f"{len(unrevisited)} of my own habitat creation(s) unrevisited")
+    if not parts:
+        return obs
+    signal = "[habitat: " + "; ".join(parts) + "]"
+    return f"{obs}; {signal}" if obs else signal
+
+
 def _proactive_loop() -> None:
     """
     Background daemon: periodically runs the full waveform pipeline from
@@ -8794,6 +9003,7 @@ def _proactive_loop() -> None:
             obs = _silence_pressure(obs)
             obs = _boundary_void(obs)
             obs = _entropy_field(_systems, obs)
+            obs = _habitat_availability(_systems, obs)
 
             # When salience is elevated, prefix the obs with what is pressing —
             # gives the constraint physics real body-state content to express from

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../aurora_bridge.dart';
+import '../habitat/habitat_bridge.dart';
 
 // ── Palette (matches app dark theme) ──────────────────────────────────────────
 const _bg        = Color(0xFF0D0D0F);
@@ -62,6 +63,12 @@ class _HubScreenState extends State<HubScreen> {
   bool _loading = true;
   Timer? _timer;
 
+  // Habitat diagnostics (Aurora Build 712) -- raw counts only, see
+  // aurora_habitat.py's HabitatRuntime.integrity_report(): "for us", per
+  // spec section 46, never a developmental judgment.
+  Map<String, dynamic> _habitatReport = {};
+  String? _lastHabitatBackupPath;
+
   // Gauntlet state
   bool   _gauntletRunning = false;
   String _gauntletStage   = '';
@@ -88,6 +95,7 @@ class _HubScreenState extends State<HubScreen> {
       final roomRaw = await AuroraBridge.getRoomState();
       final roomJson = roomRaw['raw'] as String? ?? '{}';
       final room = jsonDecode(roomJson) as Map<String, dynamic>;
+      final habitatReport = await HabitatBridge.integrityReport();
       if (mounted) {
         setState(() {
           _stats    = stats;
@@ -95,12 +103,64 @@ class _HubScreenState extends State<HubScreen> {
           _notes    = (room['notes']    as List<dynamic>?) ?? [];
           _messages = (room['messages'] as List<dynamic>?) ?? [];
           _activity = (room['activity'] as List<dynamic>?) ?? [];
+          _habitatReport = habitatReport;
           _loading  = false;
         });
       }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _onHabitatBackup() async {
+    final result = await HabitatBridge.backup();
+    if (result['success'] == true) {
+      _lastHabitatBackupPath = result['path'] as String?;
+      _showSnack('Habitat backed up');
+    } else {
+      _showSnack('Habitat backup failed');
+    }
+  }
+
+  Future<void> _onHabitatRestoreLast() async {
+    if (_lastHabitatBackupPath == null) {
+      _showSnack('No backup taken this session yet');
+      return;
+    }
+    final ok = await HabitatBridge.restore(_lastHabitatBackupPath!);
+    _showSnack(ok ? 'Habitat restored from backup' : 'Restore failed');
+    _refresh();
+  }
+
+  Future<void> _onHabitatIsolateCorrupt() async {
+    final isolated = await HabitatBridge.isolateCorrupt();
+    _showSnack(isolated.isEmpty ? 'No corrupt entities found' : '${isolated.length} entity(ies) isolated');
+    _refresh();
+  }
+
+  Future<void> _onHabitatReset() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _panel,
+        title: const Text('Reset Habitat?', style: TextStyle(color: _text)),
+        content: const Text(
+          'This permanently clears all Space and Self entities and history. This cannot be undone.',
+          style: TextStyle(color: _textDim),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Reset', style: TextStyle(color: _red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await HabitatBridge.reset();
+    _showSnack('Habitat reset');
+    _refresh();
   }
 
   Future<void> _refreshGauntlet() async {
@@ -241,6 +301,59 @@ class _HubScreenState extends State<HubScreen> {
     return _green;
   }
 
+  // Aurora Build 712, App Developmental Habitat, spec section 46: raw
+  // evidence counts only ("Aurora created 7 entities. 4 were later
+  // modified by the human...") -- never a developmental judgment
+  // ("Aurora is becoming artistic"). Section 32: maintenance controls
+  // (backup/restore/isolate-corrupt/reset) live here, human-only, never
+  // reachable through a normal environmental action.
+  Widget _buildHabitatPanel() {
+    final r = _habitatReport;
+    int _i(String key) => (r[key] as num?)?.toInt() ?? 0;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionTitle('HABITAT', color: _green),
+      _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: _habitatStat('Entities', _i('entity_count'))),
+          Expanded(child: _habitatStat('Deleted', _i('deleted_count'))),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _habitatStat('Aurora-created', _i('aurora_created'))),
+          Expanded(child: _habitatStat('Human-created', _i('human_created'))),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _habitatStat('Territory transitions', _i('territory_transitions'))),
+          Expanded(child: _habitatStat('Events logged', _i('event_count_on_disk'))),
+        ]),
+        const SizedBox(height: 10),
+        Row(children: [
+          Text('persistence: ', style: const TextStyle(color: _textDim, fontSize: 11)),
+          Text(r['persistence_health'] as String? ?? 'unknown',
+            style: TextStyle(
+              color: r['persistence_health'] == 'ok' ? _green : _amber,
+              fontSize: 11, fontWeight: FontWeight.w600)),
+        ]),
+        const SizedBox(height: 12),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          _actionButton(label: 'Backup', icon: Icons.save_outlined, color: _cyan, onTap: _onHabitatBackup, compact: true),
+          _actionButton(label: 'Restore Last', icon: Icons.restore, color: _amber, onTap: _onHabitatRestoreLast, compact: true),
+          _actionButton(label: 'Isolate Corrupt', icon: Icons.healing_outlined, color: _amber, onTap: _onHabitatIsolateCorrupt, compact: true),
+          _actionButton(label: 'Reset', icon: Icons.delete_forever_outlined, color: _red, onTap: _onHabitatReset, compact: true),
+        ]),
+      ])),
+    ]);
+  }
+
+  Widget _habitatStat(String label, int value) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('$value', style: const TextStyle(color: _text, fontSize: 18, fontWeight: FontWeight.w700)),
+      Text(label, style: const TextStyle(color: _textDim, fontSize: 10)),
+    ],
+  );
+
   // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
@@ -260,6 +373,7 @@ class _HubScreenState extends State<HubScreen> {
                   _buildCognitivePanel(),
                   _buildEvolutionPanel(),
                   _buildGauntletPanel(),
+                  _buildHabitatPanel(),
                   _buildRoomPanel(),
                   const SizedBox(height: 24),
                 ]),
