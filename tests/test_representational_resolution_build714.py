@@ -434,3 +434,177 @@ def test_R_engine_with_no_prior_state_dir_data_starts_clean(tmp_path):
     ref = RepresentationalRef.for_c1("A", "DIFFERENCE", "B")
     assert engine.genealogy_for(ref) == []
     assert engine.current_resolution(ref) == ref
+
+
+# ── P (extended). WARP boundary advisory ────────────────────────────────────
+
+def test_P_warp_investigability_report_never_touches_warp_decision_code():
+    """The advisory is purely additive -- confirm neither WARP module calls
+    into it, and it never imports WARP itself (no coupling in either
+    direction)."""
+    import aurora_warp_protocol as warp_mod
+    warp_src = inspect.getsource(warp_mod)
+    assert "warp_investigability_report" not in warp_src
+    assert "aurora_representational_resolution" not in warp_src
+
+    import aurora_internal.aurora_recursive_causal_reasoning_waveform as rcrw_mod
+    rcrw_src = inspect.getsource(rcrw_mod)
+    assert "warp_investigability_report" not in rcrw_src
+
+    rr_src = inspect.getsource(rr)
+    assert "import aurora_warp_protocol" not in rr_src
+    assert "from aurora_warp_protocol" not in rr_src
+
+
+def test_P_warp_investigability_report_reflects_real_pressure_and_candidates(tmp_path):
+    genealogy, engine = _fresh(tmp_path, name="warp714")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    sibling = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="N", col_law_d="COST")
+    engine.ensure_registered(sibling)
+
+    quiet = rr.warp_investigability_report(engine, ref.encode())
+    assert quiet["available"] is True
+    assert quiet["investigable"] is False
+
+    _drive(genealogy, engine, ref, axis_sequence=["B", "N", "X"] * 3, n_contexts=3)
+    loud = rr.warp_investigability_report(engine, ref.encode())
+    assert loud["inadequacy_pressure"] > 0.0
+    assert loud["investigable"] is True
+    assert loud["candidate_count"] > 0
+
+
+def test_P_warp_investigability_report_handles_missing_engine_or_ref_safely():
+    assert rr.warp_investigability_report(None, "REF:T:MAGNITUDE:B:?:?:?:?")["available"] is False
+    dummy = rr.RepresentationalResolutionEngine.__new__(rr.RepresentationalResolutionEngine)
+    assert rr.warp_investigability_report(dummy, None)["available"] is False
+    assert rr.warp_investigability_report(dummy, "not-a-real-ref")["available"] is False
+
+
+# ── Section 10 extension: sensory citizenship as a real candidate source ────
+
+def test_sensory_citizenship_tag_convention_is_a_real_candidate_source(tmp_path):
+    """Reuses aurora_internal/aurora_sensory_crystal.py's OWN
+    'representational_ref:<encoded>' effect_tag convention verbatim (not
+    invented here) -- confirms a sensory-citizenship-registered ability
+    (never touched by RepresentationalResolutionEngine.ensure_registered())
+    is still recognized as a real structurally-connected representation."""
+    genealogy, engine = _fresh(tmp_path, name="sensory714")
+    sensory_ref = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="X", col_law_d="POLARITY")
+    genealogy.abilities["sensory:audio:tone:node1"] = AbilityProfile(
+        id="sensory:audio:tone:node1", axis="T", requires=("T",),
+        cost={a: 0.0 for a in AXES}, risk={a: 0.0 for a in AXES},
+        structured_state={"kind": "sensory_node", "domain": "audio"},
+        effect_tags=("sensory_representation", f"representational_ref:{sensory_ref.encode()}"),
+        notes="simulated sensory citizenship ability",
+    )
+    found = engine._ref_from_ability_id("sensory:audio:tone:node1")
+    assert found == sensory_ref
+
+
+def test_sensory_citizenship_registration_is_read_only_never_mutated():
+    """The candidate-recognition path must never write back to a
+    sensory-citizenship (or any other) ability -- read-only lookup only."""
+    src = inspect.getsource(rr.RepresentationalResolutionEngine._ref_from_ability_id)
+    assert "self.genealogy.abilities[" not in src
+
+
+# ── Section 13: context-scoped resolution ───────────────────────────────────
+
+def test_context_scoped_resolution_preserves_canonical_identity_without_duplication(tmp_path):
+    genealogy, engine = _fresh(tmp_path, name="ctxscope714")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    sibling = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="N", col_law_d="COST")
+    engine.ensure_registered(sibling)
+    _drive(genealogy, engine, ref, axis_sequence=["B", "N", "X"] * 3, n_contexts=3)
+
+    candidates = engine.unresolved_field_candidates(ref)
+    candidate = candidates[0]
+    staged = engine.stage_field_inquiry(ref, candidate, consumer="ctxtest")
+    result = engine.complete_field_inquiry(
+        ref, candidate, staged[0], consumer="ctxtest", actual_coactivation=True,
+        pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
+        pressure_after={a: 0.0 for a in AXES},
+        context_scope="territory:space",
+    )
+    assert result["representational_resolution_outcome"] == "context_specific"
+    refined = RepresentationalRef.decode(result["refined_ref"])
+
+    # The SAME canonical coarse identity resolves differently per scope --
+    # no duplicate/unrelated ref was ever created.
+    assert engine.current_resolution(ref, context_scope="territory:space") == refined
+    assert engine.current_resolution(ref, context_scope="territory:self") == ref
+    assert engine.current_resolution(ref) == ref  # no scope given -> minimum sufficient default
+    assert refined.nc_law_c == ref.nc_law_c and refined.nc_target == ref.nc_target
+
+
+def test_global_resolution_still_works_when_no_context_scope_given(tmp_path):
+    genealogy, engine = _fresh(tmp_path, name="ctxscope714b")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    sibling = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="N", col_law_d="COST")
+    engine.ensure_registered(sibling)
+    _drive(genealogy, engine, ref, axis_sequence=["B", "N", "X"] * 3, n_contexts=3)
+
+    candidates = engine.unresolved_field_candidates(ref)
+    candidate = candidates[0]
+    staged = engine.stage_field_inquiry(ref, candidate, consumer="globaltest")
+    result = engine.complete_field_inquiry(
+        ref, candidate, staged[0], consumer="globaltest", actual_coactivation=True,
+        pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
+        pressure_after={a: 0.0 for a in AXES},
+    )
+    assert result["representational_resolution_outcome"] == "retained"
+    refined = RepresentationalRef.decode(result["refined_ref"])
+    assert engine.current_resolution(ref) == refined
+    assert engine.current_resolution(ref, context_scope="anything") == refined
+
+
+# ── Section 25: resolution economics ────────────────────────────────────────
+
+def test_resolution_is_rejected_when_marginal_improvement_is_not_worth_accumulated_search_cost(tmp_path):
+    genealogy, engine = _fresh(tmp_path, name="cost714")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    sibling = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="N", col_law_d="COST")
+    engine.ensure_registered(sibling)
+    _drive(genealogy, engine, ref, axis_sequence=["B", "N", "X"] * 3, n_contexts=3)
+
+    # Real, repeated search work -- each call genuinely re-runs genealogy's
+    # own collision/gap search and accumulates its real result counts.
+    for _ in range(50):
+        engine.unresolved_field_candidates(ref)
+    accumulated_cost = engine._cost_ledger.get(ref.encode(), 0.0)
+    assert accumulated_cost > 10.0, "expected real accumulated search cost from repeated investigation"
+
+    candidates = engine.unresolved_field_candidates(ref)
+    candidate = candidates[0]
+    staged = engine.stage_field_inquiry(ref, candidate, consumer="cost_reject_test")
+    # A tiny improvement that clears the absolute floor on its own but is
+    # nowhere near worth what 50 rounds of searching actually cost.
+    result = engine.complete_field_inquiry(
+        ref, candidate, staged[0], consumer="cost_reject_test", actual_coactivation=True,
+        pressure_before={"X": 0.0, "T": 0.06, "N": 0.0, "B": 0.0, "A": 0.0},
+        pressure_after={a: 0.0 for a in AXES},
+    )
+    assert result["representational_resolution_outcome"] == "rejected"
+    assert result["refined_ref"] is None
+
+
+def test_resolution_cost_is_real_not_a_fixed_placeholder(tmp_path):
+    genealogy, engine = _fresh(tmp_path, name="cost714b")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    sibling = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="N", col_law_d="COST")
+    engine.ensure_registered(sibling)
+    _drive(genealogy, engine, ref, axis_sequence=["B", "N", "X"] * 3, n_contexts=3)
+
+    candidates = engine.unresolved_field_candidates(ref)
+    candidate = candidates[0]
+    staged = engine.stage_field_inquiry(ref, candidate, consumer="cost_real_test")
+    result = engine.complete_field_inquiry(
+        ref, candidate, staged[0], consumer="cost_real_test", actual_coactivation=True,
+        pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
+        pressure_after={a: 0.0 for a in AXES},
+    )
+    assert result["representational_resolution_outcome"] == "retained"
+    records = engine.genealogy_for(ref)
+    assert records[-1]["computational_cost"] > 0.0
+    # Retention pays off the cost ledger -- the next unresolved field starts fresh.
+    assert engine._cost_ledger.get(ref.encode(), 0.0) == 0.0

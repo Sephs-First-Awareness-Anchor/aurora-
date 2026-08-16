@@ -93,6 +93,19 @@ MIN_DISCREPANCY_IMPROVEMENT_TO_RETAIN = 0.05  # resolution must actually help
 MAX_CANDIDATE_FIELDS_PER_PASS = 4
 RESOLUTION_EVENTS_MAXLEN = 2000
 
+# Build 714, Section 25 -- resolution economics. Each candidate search
+# genuinely costs work (genealogy has to score every eligible collision/gap
+# counterpart, per aurora_internal/constraint_genealogy.py's own bounded-but-
+# nonzero search); MIN_BENEFIT_PER_COST_UNIT makes retention require the
+# measured discrepancy improvement to actually be worth that real,
+# accumulated cost, not merely clear the absolute floor above. This is what
+# creates pressure toward the SMALLEST sufficient distinction rather than
+# an arbitrary "coarse is good" bonus or "detail is good" bonus -- a field
+# that took many searches to barely help is rejected precisely because it
+# wasn't worth what it cost, using cost figures genealogy itself already
+# produced (search result counts), never an invented economy.
+MIN_BENEFIT_PER_COST_UNIT = 0.01
+
 
 def _now() -> float:
     return time.time()
@@ -309,7 +322,13 @@ class RepresentationalResolutionEngine:
         """Never invents a value. Only surfaces field values already
         independently resolved on some other structurally-connected
         representation, discovered through genealogy's own real
-        collision/gap search around this ref's registered ability."""
+        collision/gap search around this ref's registered ability.
+
+        Section 25: every entry genealogy's collision/gap search actually
+        returns (whether or not it yields a usable field value) is real,
+        already-performed work -- accumulated per-ref in _cost_ledger so a
+        later resolve_field() call can charge for what it genuinely took to
+        find, rather than a flat placeholder cost."""
         unresolved = ref.unresolved_fields()
         if not unresolved:
             return []
@@ -321,6 +340,7 @@ class RepresentationalResolutionEngine:
 
         candidates: List[Dict[str, Any]] = []
         seen_values: Dict[str, set] = {f: set() for f in unresolved}
+        coarse_key = ref.encode()
 
         for finder_name, finder in (
             ("collision", self.genealogy.representation_collision_candidates),
@@ -330,6 +350,7 @@ class RepresentationalResolutionEngine:
                 found = finder([TraceItem(kind="ABILITY", id=ability_id)])
             except Exception:
                 found = []
+            self._cost_ledger[coarse_key] = self._cost_ledger.get(coarse_key, 0.0) + float(len(found))
             for entry in found:
                 counterpart_id = str(entry.get("counterpart_representation_id", "") or "")
                 counterpart_ref = self._ref_from_ability_id(counterpart_id)
@@ -354,16 +375,35 @@ class RepresentationalResolutionEngine:
         return candidates
 
     def _ref_from_ability_id(self, ability_id: str) -> Optional[RepresentationalRef]:
+        """Section 10: candidate values may come from ANY real,
+        structurally-connected representation, not only ones this module
+        itself registered. Recognizes two real sources:
+          1. this module's own structured_state convention (Habitat/RCEC
+             refs registered via ensure_registered()).
+          2. sensory citizenship's OWN, independent 'representational_ref:
+             <encoded>' effect_tag -- the exact same tag prefix/format
+             aurora_internal/aurora_sensory_crystal.py's
+             grant_representational_citizenship() already writes (verified
+             by reading that method's own source), reused verbatim rather
+             than invented. Read-only: never writes to, or otherwise
+             touches, a sensory-citizenship ability."""
         ability = self.genealogy.abilities.get(ability_id)
         if ability is None:
             return None
         structured = getattr(ability, "structured_state", None) or {}
-        if structured.get("kind") != "representational_ref":
-            return None
-        try:
-            return RepresentationalRef.from_dict(structured.get("ref", {}))
-        except Exception:
-            return None
+        if structured.get("kind") == "representational_ref":
+            try:
+                return RepresentationalRef.from_dict(structured.get("ref", {}))
+            except Exception:
+                return None
+        for tag in (getattr(ability, "effect_tags", None) or ()):
+            tag = str(tag)
+            if tag.startswith("representational_ref:"):
+                try:
+                    return RepresentationalRef.decode(tag[len("representational_ref:"):])
+                except Exception:
+                    return None
+        return None
 
     # ── Inquiry / experiment integration (evidence decides, not this module) ─
 
@@ -388,11 +428,25 @@ class RepresentationalResolutionEngine:
         actual_coactivation: bool,
         pressure_before: Dict[str, float],
         pressure_after: Dict[str, float],
+        context_scope: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Only ever admits evidence through the SAME observe() ->
         PairStats -> _try_promote() chain every other genealogy consumer
         uses -- no alternate authority. On admission, evaluates whether
-        discrepancy actually improved before deciding retain/reject."""
+        discrepancy actually improved before deciding retain/reject.
+
+        context_scope (Section 13): a real caller that KNOWS the evidence
+        it is completing this inquiry with is scoped to one operational
+        context (e.g. Habitat's own territory tag, RCEC's own episode
+        family) may pass that context here. This module never infers scope
+        from ambiguous aggregate signals on its own -- consequence_profile's
+        EMA blends every context together, so there is no honest way to
+        decompose "this discrepancy improvement was really only true in
+        context X" without a caller who actually knows X. Passing None
+        (the default) retains the field universally, exactly as before;
+        passing a scope retains it only for that scope (current_resolution()
+        already supports per-scope + global lookup) -- the SAME canonical
+        ref identity either way, never a proliferated duplicate."""
         ability_id = self.ensure_registered(ref)
         coactivated_ids = [ability_id, str(candidate.get("counterpart_ability_id", ""))]
         discrepancy_before = float((self.consequence_profile_for(ref) or {}).get("discrepancy", 0.0) or 0.0)
@@ -409,10 +463,13 @@ class RepresentationalResolutionEngine:
         outcome_kind = "unresolved"
         refined_ref: Optional[RepresentationalRef] = None
         discrepancy_after = discrepancy_before
+        coarse_key = ref.encode()
+        real_cost = max(1.0, float(self._cost_ledger.get(coarse_key, 0.0)))
         if bool(result.get("evidence_admitted", False)):
             discrepancy_after = float((self.consequence_profile_for(ref) or {}).get("discrepancy", discrepancy_before) or discrepancy_before)
             improvement = discrepancy_before - discrepancy_after
-            if improvement >= MIN_DISCREPANCY_IMPROVEMENT_TO_RETAIN:
+            worth_the_cost = improvement >= (real_cost * MIN_BENEFIT_PER_COST_UNIT)
+            if improvement >= MIN_DISCREPANCY_IMPROVEMENT_TO_RETAIN and worth_the_cost:
                 refined_ref = self.resolve_field(
                     ref, str(candidate.get("field", "")), candidate.get("candidate_value"),
                     evidence=candidate.get("evidence", {}),
@@ -420,23 +477,34 @@ class RepresentationalResolutionEngine:
                     discrepancy_after=discrepancy_after,
                     pressure_before=self.inadequacy_pressure(ref),
                     pressure_after=0.0,
-                    cost=1.0,
+                    cost=real_cost,
                     inquiry_id=str(candidate.get("inquiry_id", "")),
                     source=f"stage:{stage.get('stage_id', '')}",
+                    context_scope=context_scope,
                 )
-                outcome_kind = "retained"
+                outcome_kind = "context_specific" if context_scope else "retained"
+                # Section 25: cost is "paid off" by a retained field -- the
+                # next unresolved field on this same ref starts its own
+                # search fresh rather than inheriting a prior success's cost.
+                self._cost_ledger[coarse_key] = 0.0
             else:
+                # Deliberately NOT reset here: a rejected/too-costly attempt
+                # was still real spent search effort. Leaving it accumulated
+                # means repeated marginal attempts on the same ref make the
+                # NEXT attempt's bar higher too -- genuine economic pressure
+                # against runaway low-value investigation, using only real,
+                # already-measured search-result counts.
                 outcome_kind = "rejected"
                 self._record_outcome(
                     ref, candidate, discrepancy_before=discrepancy_before,
                     discrepancy_after=discrepancy_after, outcome="rejected",
-                    inquiry_id=str(candidate.get("inquiry_id", "")),
+                    inquiry_id=str(candidate.get("inquiry_id", "")), cost=real_cost,
                 )
         else:
             self._record_outcome(
                 ref, candidate, discrepancy_before=discrepancy_before,
                 discrepancy_after=None, outcome="unresolved",
-                inquiry_id=str(candidate.get("inquiry_id", "")),
+                inquiry_id=str(candidate.get("inquiry_id", "")), cost=real_cost,
             )
 
         result["representational_resolution_outcome"] = outcome_kind
@@ -546,8 +614,9 @@ class RepresentationalResolutionEngine:
     def _record_outcome(
         self, ref: RepresentationalRef, candidate: Dict[str, Any], *,
         discrepancy_before: float, discrepancy_after: Optional[float], outcome: str,
-        inquiry_id: str = "",
+        inquiry_id: str = "", cost: Optional[float] = None,
     ) -> None:
+        real_cost = cost if cost is not None else max(1.0, float(self._cost_ledger.get(ref.encode(), 0.0)))
         event = ResolutionOutcome(
             event_id=f"rre_{len(self._resolution_events)}_{int(_now() * 1000)}",
             ref_before_encoded=ref.encode(),
@@ -569,7 +638,7 @@ class RepresentationalResolutionEngine:
             slots_examined=1,
             slots_materialized=1 if outcome in ("retained", "context_specific") else 0,
             semantic_resolutions_requested=1,
-            computational_cost=1.0,
+            computational_cost=real_cost,
             outcome=outcome,
             context_scope=None,
         )
@@ -641,6 +710,70 @@ class RepresentationalResolutionEngine:
 
 # ── systems-dict convenience wiring (the same "systems.get(...)" convention
 #    every other subsystem in this codebase already shares) ────────────────
+
+def warp_investigability_report(
+    engine: Optional["RepresentationalResolutionEngine"], ref_encoded: Optional[str],
+) -> Dict[str, Any]:
+    """Build 714, Section 26 -- WARP boundary.
+
+    Audited: aurora_warp_protocol.py's coverage-gap/anomaly-detection
+    machinery (CoverageGap, WarpComponent, WarpGenerator, ConstraintAnomaly
+    Record, evaluate_warp_trials) operates entirely on a disjoint 5D/15D
+    axis-profile vocabulary with NO representational_ref field anywhere.
+    The one WARP type that DOES carry a ref -- WarpDemand.representational_
+    ref -- is an existing, directive-protected invariant from an earlier
+    phase of this session, explicitly documented as "contextual provenance
+    only, never read by _classify()/_route() or any numeric pathway logic."
+    This function does not touch that boundary and is never called from
+    anywhere inside aurora_warp_protocol.py or aurora_internal/aurora_
+    recursive_causal_reasoning_waveform.py -- verified by
+    tests/test_representational_resolution_build714.py's own source scan.
+
+    Building a real (non-fabricated) bridge between "coverage gap in an
+    axis-profile space" and "unresolved RepresentationalRef field" is not
+    possible today without inventing a mapping between two vocabularies
+    that share no genuine structural correlation -- exactly what this
+    directive's own Section 34 forbids ("no hardcoded input pattern... as
+    authority"). So rather than wire a decision-affecting coupling into
+    WARP's promotion pipeline (which several existing tests protect in
+    exact-behavior detail), this is a standalone, read-only advisory a
+    caller MAY consult before treating a coverage gap as evidence for new
+    representational structure -- satisfying "existing unresolved
+    coordinates should be investigable before unnecessary new
+    representational invention" as a capability, while leaving "full
+    resolution must not become a mandatory WARP prerequisite" untouched:
+    nothing calls this, nothing gates on it, and a caller ignoring it
+    entirely is exactly as valid as one that doesn't.
+    """
+    if engine is None or not ref_encoded:
+        return {"available": False, "reason": "no_engine_or_ref"}
+    try:
+        ref = RepresentationalRef.decode(ref_encoded)
+    except Exception:
+        return {"available": False, "reason": "undecodable_ref"}
+
+    unresolved = ref.unresolved_fields()
+    if not unresolved:
+        return {"available": True, "ref": ref_encoded, "unresolved_fields": (), "investigable": False,
+                "reason": "already_fully_resolved"}
+
+    pressure = engine.inadequacy_pressure(ref)
+    candidates = engine.unresolved_field_candidates(ref) if pressure > 0.0 else []
+    records = engine.genealogy_for(ref)
+    recently_explained = any(
+        r.get("status") == "retained" and r.get("discrepancy_after", 1.0) < r.get("discrepancy_before", 0.0)
+        for r in records
+    )
+    return {
+        "available": True,
+        "ref": ref_encoded,
+        "unresolved_fields": unresolved,
+        "inadequacy_pressure": pressure,
+        "candidate_count": len(candidates),
+        "investigable": bool(candidates),
+        "already_explained_by_existing_structure": recently_explained,
+    }
+
 
 def get_or_create_engine(systems: Optional[Dict[str, Any]]) -> Optional["RepresentationalResolutionEngine"]:
     """Lazily builds (once) and caches a RepresentationalResolutionEngine on
