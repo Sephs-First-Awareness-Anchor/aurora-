@@ -301,6 +301,27 @@ def _normalize_weights(weights: Dict[str, float]) -> Dict[str, float]:
     return {key: max(0.0, float(value or 0.0)) / total for key, value in weights.items()}
 
 
+# Build 714, Section 14/29: observable accounting for how much of the
+# 125-slot projected manifold actually gets materialized per call, so
+# "resolution is demand-driven" is a checkable fact, not a claim. Reset
+# between test runs via reset_noncomp_materialization_stats().
+_NONCOMP_MATERIALIZATION_STATS: Dict[str, int] = {
+    "calls": 0,
+    "slots_materialized_total": 0,
+    "full_manifold_expansions": 0,
+    "narrow_expansions": 0,
+}
+
+
+def reset_noncomp_materialization_stats() -> None:
+    for key in _NONCOMP_MATERIALIZATION_STATS:
+        _NONCOMP_MATERIALIZATION_STATS[key] = 0
+
+
+def get_noncomp_materialization_stats() -> Dict[str, int]:
+    return dict(_NONCOMP_MATERIALIZATION_STATS)
+
+
 def _project_noncomp_state(
     match: MatchResult,
     *,
@@ -310,6 +331,7 @@ def _project_noncomp_state(
     origin_region: str,
     route: Optional["RouteResult"],
     expression: str,
+    resolution_need: str = "full",
 ) -> Dict[str, object]:
     """
     Compact a parsed utterance into the 25 atomic NonComp channels.
@@ -317,6 +339,25 @@ def _project_noncomp_state(
     The 25-channel matrix stays visible as internal substrate, while the
     dominant channel and compaction metrics give downstream systems a
     faster surface handle on what the utterance is doing.
+
+    resolution_need (Build 714, Section 14): every traced production
+    consumer of this function's output (aurora.py, aurora_working_memory.py
+    -- audited exhaustively) only ever reads dominant_target, basis_channel,
+    semantic_translation/manifold_translation, or checks truthiness of the
+    whole dict -- never indexes into manifold["layers"]/["slots"]/
+    ["vector"]/["top_slots"]. "full" (the default, unchanged for any
+    caller/test that doesn't ask for less) materializes and scores every
+    slot across all 5 target layers (125 slots), exactly as before this
+    directive. "narrow" materializes only the dominant target's own 25-slot
+    layer -- the one layer target_weights already identifies as what this
+    utterance is actually about -- which is sufficient for every field a
+    narrow-mode caller can observe here (manifold_translation/
+    semantic_translation's top_slot_labels come from that one layer's own
+    top slots rather than a global top-12 across all 5 layers; no
+    production caller currently reads finer than that). Addressability
+    (the full 5x25 space) is unchanged either way -- only materialization
+    is demand-driven; see manifold["materialized_targets"] /
+    manifold["materialized_layer_count"] for what was actually computed.
     """
     expr_low = str(expression or "").lower()
 
@@ -440,11 +481,34 @@ def _project_noncomp_state(
 
     focus_channel = f"{match.constraint}:{match.dimension}"
     target_weights = _normalize_weights(dict(constraint_weights))
+    # Build 714: dominant_target only ever depends on target_weights (itself
+    # only derived from the cheap 25-channel pass above) -- computing it
+    # here, before any layer is materialized, is what makes "materialize
+    # only the dominant target's layer" possible at all.
+    dominant_target = max(target_weights.items(), key=lambda kv: kv[1])[0] if target_weights else match.constraint
+    materialize_all = str(resolution_need or "full") != "narrow"
+    targets_to_materialize = set(AXES) if materialize_all else {dominant_target}
     manifold_layers: Dict[str, Dict[str, object]] = {}
     manifold_slots: List[Dict[str, object]] = []
     manifold_vector: List[float] = []
     for target in AXES:
         target_weight = float(target_weights.get(target, 0.0) or 0.0)
+        if target not in targets_to_materialize:
+            # Addressable (this target's own 25 slots exist in the real
+            # compiled manifold and remain requestable), just not computed
+            # here -- no slot dict, no compiled_layer lookup, no score
+            # arithmetic performed for it on this call.
+            manifold_layers[target] = {
+                "target_constraint": target,
+                "target_weight": round(target_weight, 6),
+                "materialized": False,
+                "slot_count": 0,
+                "top_slots": [],
+                "slots": [],
+                "entropy": 0.0,
+                "dominant_slot": {},
+            }
+            continue
         compiled_layer = None
         if _NONCOMP_LAYER_AVAILABLE and _NONCOMP_LAYER_COMPILER is not None:
             try:
@@ -533,7 +597,6 @@ def _project_noncomp_state(
         if score <= 0.0:
             continue
         manifold_entropy -= score * math.log(score, 125)
-    dominant_target = max(target_weights.items(), key=lambda kv: kv[1])[0] if target_weights else match.constraint
     top_slot_labels = []
     for item in manifold_top[:5]:
         slot_name = str(item.get("slot_name", "") or item.get("law_channel", "") or item.get("slot_id", "") or "")
@@ -545,6 +608,14 @@ def _project_noncomp_state(
         f"basis={focus_channel}, top={' | '.join(top_slot_labels)}"
         if top_slot_labels else f"125-layer manifold: target={dominant_target}, basis={focus_channel}"
     )
+
+    _NONCOMP_MATERIALIZATION_STATS["calls"] += 1
+    _NONCOMP_MATERIALIZATION_STATS["slots_materialized_total"] += len(manifold_slots)
+    if materialize_all:
+        _NONCOMP_MATERIALIZATION_STATS["full_manifold_expansions"] += 1
+    else:
+        _NONCOMP_MATERIALIZATION_STATS["narrow_expansions"] += 1
+
     return {
         "focus": {
             "constraint": match.constraint,
@@ -590,6 +661,13 @@ def _project_noncomp_state(
             "vector": manifold_vector,
             "basis_channel": focus_channel,
             "translation": manifold_translation,
+            # Build 714, Section 14/29: "slot_count"/"layer_count" above
+            # describe the addressable space (unchanged by resolution_need);
+            # these describe what was ACTUALLY computed on this call.
+            "resolution_need": "full" if materialize_all else "narrow",
+            "materialized_targets": sorted(targets_to_materialize),
+            "materialized_layer_count": len(targets_to_materialize),
+            "materialized_slot_count": len(manifold_slots),
         },
     }
 
@@ -1110,6 +1188,14 @@ class ReflexiveInterpreter:
                 )
                 pass
 
+        # Build 714, Section 14: this is the projected-manifold field's only
+        # production call site (audited exhaustively -- see
+        # _project_noncomp_state's own docstring); every downstream
+        # consumer of noncomp_state only reads dominant_target/
+        # basis_channel/semantic_translation/manifold_translation or checks
+        # truthiness, never the full 125-slot manifold, so "narrow" is
+        # sufficient here and materializes only the dominant target's own
+        # 25-slot layer instead of all 125 slots every turn.
         noncomp_state = _project_noncomp_state(
             match,
             worth_score=ws,
@@ -1118,6 +1204,7 @@ class ReflexiveInterpreter:
             origin_region=origin_region,
             route=route_result,
             expression=expression,
+            resolution_need="narrow",
         )
 
         # ── FGAE Criterion 8 — Stamp FGAE input projection into noncomp_state ──

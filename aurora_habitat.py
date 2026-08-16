@@ -447,11 +447,13 @@ class HabitatRuntime:
             self._persist_event(action, consequence, pre_state, post_state, session_id=session_id)
             if consequence.success:
                 self._save_world_state()
-        # Deliberately outside the lock: neither of these mutate habitat
-        # state, and constraint/SediMemory have their own internals.
+        # Deliberately outside the lock: none of these mutate habitat
+        # state, and constraint/SediMemory/genealogy have their own
+        # internals.
         self._emit_constraint_evidence(action, consequence)
         if consequence.success:
             self._deposit_sediment(action, consequence)
+        self._emit_resolution_pressure(action, consequence)
         return consequence
 
     def _find_causal_parent(self, action: EnvironmentAction) -> Optional[str]:
@@ -879,6 +881,64 @@ class HabitatRuntime:
                 operation="exception_handler:aurora_habitat.py:_deposit_sediment",
                 exc=_aurora_boundary_exc,
                 context={"function": "_deposit_sediment", "source_file": "aurora_habitat.py"},
+            )
+
+    def _emit_resolution_pressure(self, action: EnvironmentAction, consequence: EnvironmentConsequence) -> None:
+        """Build 714: lets a real Habitat consequence participate in
+        adaptive representational resolution, through the exact same
+        generic score->pressure bridge RCEC's causal evaluation already
+        uses (aurora_representational_resolution.record_ref_participation_
+        from_scores) -- never a second, habitat-only mechanism (Rule 6).
+
+        The ref identity carries no entity-specific content: it is built
+        purely from the operation's own existence/change/boundary category
+        (the same neutral physics _operation_axis_amplitudes already
+        established) plus a fixed 'this was an agency-exercising event'
+        coordinate -- every Habitat action already carries Agency
+        amplitude by construction. The two scores fed in are real,
+        already-computed facts already sitting on this exact consequence
+        object (whether the action succeeded against the permission
+        boundary; whether it was itself a measured structural response to
+        a prior action, per _find_causal_parent) -- neither is invented
+        for this purpose, and neither is a meaning label on the entity
+        (spec section 13 / Rule 8)."""
+        try:
+            from aurora_representational_address import RepresentationalRef
+            from aurora_representational_resolution import record_ref_participation_from_scores
+        except Exception:
+            return
+        if action.operation in _EXISTENCE_OPS:
+            axis = "X"
+        elif action.operation in _CHANGE_OPS:
+            axis = "N"
+        elif action.operation in _BOUNDARY_OPS:
+            axis = "B"
+        else:
+            return
+        try:
+            ref = RepresentationalRef.for_c1(axis, "OPERATOR", "A")
+            entity_type = "unknown"
+            for eid in consequence.affected_entities:
+                entity = self._entities.get(eid)
+                if entity is not None:
+                    entity_type = entity.entity_type
+                    break
+            context_tag = f"{action.territory}:{entity_type}:{action.actor}"
+            scores = {
+                "succeeded": 1.0 if consequence.success else 0.0,
+                "was_measured_response": 1.0 if consequence.causal_parent else 0.0,
+            }
+            record_ref_participation_from_scores(
+                self.systems, ref.encode(), scores,
+                source="habitat", context_tag=context_tag,
+                extra_trace_ids=[f"HABITAT_CTX:{context_tag}"],
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_habitat.py:_emit_resolution_pressure",
+                exc=_aurora_boundary_exc,
+                context={"function": "_emit_resolution_pressure", "source_file": "aurora_habitat.py"},
             )
 
     # ── attention-surface for the proactive loop (spec sections 15, 28) ─

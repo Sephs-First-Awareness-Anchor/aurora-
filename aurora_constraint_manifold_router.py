@@ -198,6 +198,22 @@ _COMPILER_AVAILABLE = True
 # Axis constants
 AXES: Tuple[str, ...] = ("X", "T", "N", "B", "A")
 
+# Build 714, Section 15/29: observable accounting so "_stream_sorted_entries
+# is genuinely bounded in its selection step" is a checkable fact.
+_ROUTER_MATERIALIZATION_STATS: Dict[str, int] = {
+    "calls": 0,
+    "entries_scored_total": 0,
+}
+
+
+def reset_router_materialization_stats() -> None:
+    for key in _ROUTER_MATERIALIZATION_STATS:
+        _ROUTER_MATERIALIZATION_STATS[key] = 0
+
+
+def get_router_materialization_stats() -> Dict[str, int]:
+    return dict(_ROUTER_MATERIALIZATION_STATS)
+
 # Leverage signs (mirrors aurora_leverage_scalar / aurora_noncomp_registry)
 LEVERAGE_SIGN: Dict[str, int] = {
     "X": -1, "T": -1, "N": 0, "B": +1, "A": +1
@@ -975,22 +991,49 @@ class ManifoldRouter:
         max_items: int,
     ) -> Iterator[IndexEntry]:
         """
-        Stream entries for a target sorted by evolution_grade descending.
-        Uses partial sort — only touches as many items as needed.
+        Stream entries for a target sorted by routing_score descending,
+        bounded to max_items.
+
+        Build 714, Section 15 correction: the previous docstring here
+        claimed "partial sort -- only touches as many items as needed,"
+        which was false -- every eligible entry was pushed onto an
+        UNBOUNDED heap (up to ~625 per axis) before any were popped, an
+        O(N log N) full-sort pattern wearing a "streaming" label. Caught
+        empirically: measured entries_touched equaled the full eligible
+        population regardless of max_items.
+
+        Honest accounting of what is and isn't lazy here: SCORING every
+        eligible entry is genuinely unavoidable with the current index --
+        routing_score depends on source_profile/signal, which are only
+        known at call time, so no precomputed sort order could substitute
+        for it without re-deriving one per distinct (source_profile,
+        signal) pair (not attempted here; the entry population per axis is
+        bounded and cheap enough per-item that a persistent per-query index
+        would add complexity without a measured need). What WAS genuinely
+        false laziness -- and is fixed here -- is the SELECTION step: this
+        now keeps a heap bounded to max_items throughout (the same
+        prune-the-worst-when-oversized pattern stream_top_targets() above
+        already used correctly), instead of accumulating every scored
+        candidate before picking the top max_items out of all of them.
+        Peak memory and the cost of the selection step are now O(max_items)
+        instead of O(N), even though scoring remains O(N).
         """
         import heapq
-        buf: List[Tuple[float, int, IndexEntry]] = []
+        _ROUTER_MATERIALIZATION_STATS["calls"] += 1
+        heap: List[Tuple[float, int, IndexEntry]] = []
         counter = 0
         for entry in self._index.stream_entries(target, min_evo=min_evo):
             # Use counter as tie-breaker so IndexEntry objects are never compared
             metrics = self._score_candidate(entry, source_profile, signal)
-            heapq.heappush(buf, (-metrics["routing_score"], counter, entry))
+            _ROUTER_MATERIALIZATION_STATS["entries_scored_total"] += 1
+            heapq.heappush(heap, (metrics["routing_score"], counter, entry))
             counter += 1
-        yielded = 0
-        while buf and yielded < max_items:
-            _, _, entry = heapq.heappop(buf)
+            if len(heap) > max_items:
+                # Discard the current worst-scoring candidate -- the heap
+                # never holds more than max_items+1 entries at once.
+                heapq.heappop(heap)
+        for _, _, entry in sorted(heap, key=lambda x: -x[0]):
             yield entry
-            yielded += 1
 
     def _resolve_source_profile(self, signal: RouteSignal) -> _RouterProfile:
         if isinstance(signal.source_profile, _RouterProfile):
