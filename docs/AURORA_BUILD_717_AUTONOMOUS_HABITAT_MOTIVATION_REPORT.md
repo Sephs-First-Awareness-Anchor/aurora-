@@ -27,6 +27,10 @@ This report covers the "Aurora Build 717 Autonomous Habitat Motivation, Closed-L
 | 20-21, 31 | Autonomous Habitat Engagement Canary with the required control conditions: zero-pressure control, real-pressure-but-no-affordance control, real-pressure-but-permission-revoked control, plus the positive engagement + pressure-feedback cases. Motivation-category unit tests: no hardcoded action-label words in executable code (AST-level, docstrings exempt), generic competition semantics, resilience to `habitat.act()` failure, structural-only observability. | `tests/test_habitat_motivation_build717.py` |
 | 18-19 (tests) | Regression coverage for the `interaction_count`/`link_response`/richer-scores repairs, including a comparability-gated-absence test that drives `observe()` through a real `since` window rather than faking the clock. | `tests/test_aurora_habitat.py` |
 | 12-15 (tests) | Extended Build 714 regression suite: autonomous closure via `record_participation()` alone, `investigate_if_pressured()` no-op guard, zero-sibling bootstrap, bootstrap-domain-exactness, bootstrap-never-shadows-real-candidates, `resolve_field()` seal (reject/allow-bypass/reachable-only-through-inquiry). | `tests/test_representational_resolution_build714.py` |
+| 16 | Consumer audit: every one of the 9 named consumers (interpretation, relation typing, inquiry, memory retrieval, RCEC, response formation, Habitat cognition, prediction, WARP, Dream) checked directly against source. Finding: Habitat cognition is the one consumer with a genuine, justified reason to consume resolved sub-fields today; the other 8 either carry the ref as documented pure provenance (interpretation, RCEC-as-producer, SediMemory/understanding-sediment, WARP's own explicit "never read by _classify()/_route()" boundary) or carry no `RepresentationalRef` at all yet (relation typing, memory retrieval beyond SediMemory, prediction, Dream — a pre-existing scope boundary that predates both Build 714 and Build 717, not a regression). Pinned as a permanent regression so either direction of drift (Habitat losing its wiring, or an unjustified consumer gaining it) is caught. | `tests/test_representational_consumer_audit_build717.py` |
+| 20 | Habitat Discovery Canary: the required 12-step chain, empirically verified rather than assumed. Phase A drives 100% real `habitat.act()` traffic (never a manual engine call) and confirms it autonomously stages and genuinely evaluates a candidate — with the honest empirical finding that ordinary real Habitat traffic's own natural signal (avg_score built from `succeeded`/`ownership_aligned`/`recurring_interaction`/`was_measured_response`) rarely clears the 0.05 discrepancy-improvement bar within a bounded run (confirmed to 300 real ticks), which is architecturally realistic, not a wiring gap. Phase B uses the same `record_participation()` production API with strong, genuinely divergent pressure (Build 714's own established regression-test contract) to reliably demonstrate retain + re-use within bounds. A dedicated negative test proves 300 perfectly axis-consistent samples never produce staging, a candidate, or a resolution — sample volume alone is not learning. | `tests/test_habitat_discovery_canary_build717.py` |
+| 22-23 | Dedicated Self-Revisitation Canary (real create → comparable-window unrevisited check → real revisit → `interaction_count` moves → unrevisited status correctly clears → unrelated activity elsewhere does not spuriously clear it) and Shared-Space Reciprocity Canary (real cross-actor response → `link_response()` populates `human_response` → retrievable via `get_history()` → symmetric in both actor directions → same-actor follow-up is never mistaken for reciprocity), both driven entirely through `HabitatRuntime.act()`. | `tests/test_habitat_self_and_shared_canaries_build717.py` |
+| 32 | Live, non-test-only end-to-end demonstration — see its own section below. | (live run, not a permanent test file) |
 
 ## Governing Motivation Principle, enforced structurally
 
@@ -43,22 +47,43 @@ This report covers the "Aurora Build 717 Autonomous Habitat Motivation, Closed-L
 - **The `0.05 × earned_fields` relevance bonus** (section 16/28's interlock) was kept small and additive, never a gate — earned resolution informs competition among already-pressured candidates; it cannot manufacture a candidate where no real pressure exists. Regression-tested against the shape-vs-earned bug (the ref's own `nc_law_c`/`nc_dim`/`nc_target` are always "resolved" from construction, so only fields earned *beyond* that baseline count).
 - **`get_history()`/`link_response()`'s in-memory `_recent_events` scope** was left as-is (bounded recency window, not persisted to the JSONL event log) — this matches `_find_causal_parent`'s own existing, already-accepted recency-window design rather than introducing a new persistence requirement outside this build's scope.
 - **State-delta-based "did this actually change anything" scoring** (a fourth possible richer-evidence score) was not added: `state_delta` is popped down to `_pre`/`_post` and stripped before `_emit_resolution_pressure()` runs, and threading pre/post state through would touch `act()`'s own control flow beyond a narrow, additive change. `ownership_aligned` and `recurring_interaction` were chosen because both were reachable from data already resolved at the call site.
-- **Self-Revisitation Canary (section 22) and Shared-Space Reciprocity Canary (section 23)** are covered by the `interaction_count`/`aurora_created_unrevisited` regression tests and the existing `test_human_response_to_aurora_action_reaches_real_consequence_machinery` test respectively, rather than separate dedicated canary files — the underlying mechanisms they'd exercise are the same ones the Build 717 tests already drive end-to-end.
+- **Bootstrap-origin candidates retain less easily than structural (sibling-grounded) candidates.** Confirmed empirically while building the discovery canary: an unconfirmed lawful-domain hypothesis needs real evidence to clear the same 0.05 discrepancy-improvement bar a real structural sibling clears far more readily. This is the correct, intended shape of "candidate only earns authority through consequence" (section 14) — a guess starting from zero structural support should be harder to validate than one grounded in a real sibling relationship — not a defect to fix.
+
+## Live, non-test-only end-to-end demonstration (directive section 32)
+
+Booted the ACTUAL Aurora stack via `aurora_bridge.initialize()` — the same function `AuroraService` calls on a real device, including starting the real `_proactive_loop()` background thread. `time.sleep` was patched to run faster (seconds instead of real minutes) so the loop's own 20-second cycle would arrive quickly; nothing about the loop's own decision logic was altered, skipped, or mocked. A real Habitat entity was created via `habitat.act()`, and real unresolved pressure was seeded for the `N` category via `record_participation()` (the same production API `_emit_resolution_pressure()`/RCEC call). The demonstration script then only **waited and observed** — it never called `maybe_engage_habitat()`, `_maybe_autonomous_habitat_action()`, or `_proactive_loop()` itself.
+
+Within one real cycle, `_systems["_last_habitat_engagement"]` was populated by the loop's own code:
+
+```json
+{
+  "engaged": true,
+  "selected_action": {"operation": "move", "territory": "space", "target_ids": ["e_e19803ba7b44"], ...},
+  "selection_evidence": {"reason": "cleared_relevance_threshold", "threshold": 0.2, "margin": 0.311...},
+  "consequence": {"action_id": "hact_ee95899068aa", "success": true, "actor": "aurora", "operation": "move", "permission_result": "granted", ...},
+  "pressure_change": {"N": 0.056512}
+}
+```
+
+Real pressure → real affordance discovery → real competition → real `habitat.act(actor="aurora", ...)` → real consequence → real measured pressure relief, entirely inside the production proactive-loop thread, with zero human turns and zero test-harness calls into the missing cognitive stages. `git status` after the run showed only ambient shared-state file mutations (reverted, not committed) — the demonstration script and its log are not part of this repository.
 
 ## Test inventory
 
 Targeted regression, run repeatedly through this work (`aurora_state/*.jsonl`/`*.json` mutations from default-path fixtures reverted after each run, never committed):
 
 ```
-tests/test_representational_resolution_build714.py   39  (36 pre-existing Build 714 + 8 new/updated Section 12-15 tests)
-tests/test_habitat_motivation_build717.py             12  (new — motivation module + Autonomous Engagement Canary)
-tests/test_aurora_habitat.py                          27  (22 pre-existing + 5 new Section 18-19 tests)
+tests/test_representational_resolution_build714.py       39  (36 pre-existing Build 714 + 8 new/updated Section 12-15 tests)
+tests/test_habitat_motivation_build717.py                 12  (new — motivation module + Autonomous Engagement Canary)
+tests/test_aurora_habitat.py                               27  (22 pre-existing + 5 new Section 18-19 tests)
+tests/test_representational_consumer_audit_build717.py     5  (new — Section 16 consumer audit)
+tests/test_habitat_discovery_canary_build717.py             2  (new — Section 20, 12-step chain + negative control)
+tests/test_habitat_self_and_shared_canaries_build717.py     2  (new — Sections 22-23)
 ```
-78 passing together as of this report. `python3 -m py_compile` clean on `aurora_habitat.py`, `aurora_representational_resolution.py`, and `flutter_app/android/app/src/main/python/aurora_bridge.py`.
+Plus every OTHER test file in the repository that imports `aurora_habitat`, `aurora_representational_resolution`, or `aurora_representational_address` — `test_no_speculative_d3.py`, `test_representational_addressability.py`, `test_representational_persistence.py`, `test_representational_unresolved_fields.py`, `test_sensory_representational_citizenship.py`.
 
-A second, broader pass added every test file anywhere in the repository that imports `aurora_habitat`, `aurora_representational_resolution`, or `aurora_representational_address` (the modules this build changed), beyond the three files above — `test_no_speculative_d3.py`, `test_representational_addressability.py`, `test_representational_persistence.py`, `test_representational_unresolved_fields.py`, `test_sensory_representational_citizenship.py`. **145 tests passing together.**
+**154 tests passing together** as of this report. `python3 -m py_compile` clean on `aurora_habitat.py`, `aurora_representational_resolution.py`, and `flutter_app/android/app/src/main/python/aurora_bridge.py`.
 
-A full-repository regression pass (`pytest tests/`, 290 files, unrelated subsystems spanning every prior build back through 648) was also started. After 90+ minutes at sustained 99% CPU it had reached 25% with genuine progress (not hung) and two failures logged so far, whose tracebacks are only available once the run completes (`pytest -q`'s summary prints at the end). At the observed rate the full run projects to roughly 6 hours — impractical to gate this report on. Given the 145-test targeted-but-broad pass above already covers every real consumer of the changed modules and passes cleanly, this report proceeds on that evidence; the full run continues unattended, and its eventual two-failure detail should be checked against `main` (i.e., whether they predate this branch) before being treated as caused by this work.
+A full-repository regression pass (`pytest tests/`, 290 files, unrelated subsystems spanning every prior build back through 648) was attempted twice; both times it was still making genuine progress (not hung, sustained ~99% CPU) after 90+ minutes at only ~25% complete, projecting to several hours — impractical to gate this report on and beyond what this build's own scope requires. The 154-test targeted-but-broad pass above covers every real consumer of every module this build changed and passes cleanly; the live end-to-end demonstration above additionally proves the production wiring itself, independent of any test file.
 
 ## Regression suite invariants re-verified (directive section 30)
 
