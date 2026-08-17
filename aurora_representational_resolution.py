@@ -90,7 +90,10 @@ MIN_DISTINCT_CONTEXTS_FOR_PRESSURE = 3       # one anomalous event never refines
 MIN_CONFIDENCE_FOR_PRESSURE = 0.15
 MIN_DISCREPANCY_FOR_PRESSURE = 0.12
 MIN_DISCREPANCY_IMPROVEMENT_TO_RETAIN = 0.05  # resolution must actually help
-MAX_CANDIDATE_FIELDS_PER_PASS = 4
+# Five keeps a complete native axis/dimension domain (X/T/N/B/A or the five
+# Noncomp dimensions) available to a bootstrap inquiry. A bound of four made
+# the last lawful value unreachable in production, independent of evidence.
+MAX_CANDIDATE_FIELDS_PER_PASS = 5
 RESOLUTION_EVENTS_MAXLEN = 2000
 
 # Build 714, Section 25 -- resolution economics. Each candidate search
@@ -140,6 +143,7 @@ class ResolutionOutcome:
     computational_cost: float
     outcome: str  # "retained" | "rejected" | "unresolved" | "context_specific"
     context_scope: Optional[str]
+    candidate_evaluation: Dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=_now)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -184,6 +188,15 @@ class RepresentationalResolutionEngine:
         # completion with zero reads was never actually tested and cannot
         # be retained regardless of ambient discrepancy.
         self._provisional_reads: Dict[str, int] = {}
+        # A read is not a test.  This ledger is populated only by a consumer
+        # that can show how the candidate's exact value changed relevance,
+        # prediction, parameterisation, or action.  The real outcome is joined
+        # later by record_participation() for the same staged ref.
+        self._candidate_downstream_effects: Dict[str, Dict[str, Any]] = {}
+        # Prevent one non-discriminating domain value from being restaged
+        # forever merely because it is first in AXES.  Counts are reconstructed
+        # from persisted resolution events on boot.
+        self._candidate_attempt_counts: Dict[str, int] = {}
         # Section 15: the seal on resolve_field()'s production authority --
         # True only for the exact duration of a real complete_field_inquiry()
         # call, set/cleared by that method itself, never settable from
@@ -200,6 +213,10 @@ class RepresentationalResolutionEngine:
         the resolved values overlap, because encode() includes every field
         position (unresolved fields as '?')."""
         return "REFAB:" + ref.encode()[len("REF:"):]
+
+    @staticmethod
+    def _candidate_attempt_key(ref_encoded: str, field_name: str, value: Any) -> str:
+        return f"{ref_encoded}|{field_name}={value}"
 
     def ensure_registered(self, ref: RepresentationalRef, *, notes: str = "") -> str:
         """Idempotent. Creates the synthetic AbilityProfile the first time
@@ -282,6 +299,7 @@ class RepresentationalResolutionEngine:
         extra_trace: Optional[List[Any]] = None,
         notes: Optional[Dict[str, Any]] = None,
         consumer: str = "auto",
+        candidate_evaluation: Optional[Dict[str, Any]] = None,
     ) -> Optional[Any]:
         """Call this wherever a ref genuinely participated in an experience
         whose consequence is genuinely measurable as a 5-axis pressure
@@ -308,16 +326,21 @@ class RepresentationalResolutionEngine:
         ability_id = self.ensure_registered(ref)
         coarse_key = ref.encode()
         pending = self._active_stage_for_ref.get(coarse_key)
+        candidate_ready = bool(
+            pending is not None
+            and candidate_evaluation
+            and self._candidate_downstream_effects.get(coarse_key)
+        )
         # Captured BEFORE this tick's own observe() call -- see
         # complete_field_inquiry()'s _discrepancy_before_override docstring
         # for why this matters specifically for the domain_hypothesis path.
         discrepancy_before_this_tick = (
             float((self.consequence_profile_for(ref) or {}).get("discrepancy", 0.0) or 0.0)
-            if pending is not None else None
+            if candidate_ready else None
         )
 
         trace = [TraceItem(kind="ABILITY", id=ability_id)]
-        if pending is not None:
+        if candidate_ready and pending is not None:
             counterpart_id = str(pending["candidate"].get("counterpart_ability_id", ""))
             if counterpart_id:
                 trace.append(TraceItem(kind="ABILITY", id=counterpart_id))
@@ -343,17 +366,33 @@ class RepresentationalResolutionEngine:
         )
 
         try:
-            if pending is not None:
+            if candidate_ready and pending is not None:
                 self._active_stage_for_ref.pop(coarse_key, None)
-                self.complete_field_inquiry(
+                completion = self.complete_field_inquiry(
                     ref, pending["candidate"], pending["stage"],
                     consumer=pending.get("consumer", consumer),
                     actual_coactivation=True,
                     pressure_before=p_before.to_dict(), pressure_after=p_after.to_dict(),
                     context_scope=pending.get("context_scope"),
                     _discrepancy_before_override=discrepancy_before_this_tick,
+                    candidate_evaluation=candidate_evaluation,
                 )
-            else:
+                # The completed candidate no longer occupies the stage. If it
+                # did not earn authority and real inadequacy remains, stage the
+                # least-tested alternative for a future consequence. A
+                # retained/context-specific refinement stops this pass: future
+                # cognition must first consume that earned structure rather
+                # than immediately launching a competing value for the same
+                # still-coarse key.
+                if completion.get("representational_resolution_outcome") not in (
+                    "retained", "context_specific",
+                ):
+                    self.investigate_if_pressured(
+                        ref,
+                        consumer=pending.get("consumer", consumer),
+                        context_scope=pending.get("context_scope"),
+                    )
+            elif pending is None:
                 # context_scope deliberately NOT auto-populated from
                 # context_tag here: context_tag is a co-activation-
                 # diversity marker (what distinguishes this tick from
@@ -392,15 +431,35 @@ class RepresentationalResolutionEngine:
         candidates = self.unresolved_field_candidates(ref)
         if not candidates:
             return None
-        candidate = candidates[0]
+        # Candidate order is not authority.  Prefer the least-tested value;
+        # canonical identity is only a stable neutral tie order, and the
+        # selection method is recorded on the stage.  A value with no causal
+        # downstream effect therefore yields to alternatives on the next pass
+        # instead of becoming first-domain-value luck.
+        candidate = min(
+            candidates,
+            key=lambda item: (
+                self._candidate_attempt_counts.get(
+                    self._candidate_attempt_key(
+                        coarse_key, str(item.get("field", "")), item.get("candidate_value"),
+                    ),
+                    0,
+                ),
+                self._candidate_attempt_key(
+                    coarse_key, str(item.get("field", "")), item.get("candidate_value"),
+                ),
+            ),
+        )
         staged = self.stage_field_inquiry(ref, candidate, consumer=consumer)
         if not staged:
             return None
         self._active_stage_for_ref[coarse_key] = {
             "stage": staged[0], "candidate": candidate, "consumer": consumer,
             "context_scope": context_scope,
+            "candidate_selection": "least_tested_then_canonical_neutral_tie",
         }
         self._provisional_reads[coarse_key] = 0
+        self._candidate_downstream_effects.pop(coarse_key, None)
         return self._active_stage_for_ref[coarse_key]
 
     def provisional_resolution(self, ref: RepresentationalRef) -> RepresentationalRef:
@@ -426,6 +485,68 @@ class RepresentationalResolutionEngine:
             return self.current_resolution(ref)
         self._provisional_reads[coarse_key] = self._provisional_reads.get(coarse_key, 0) + 1
         return replace(ref, **{field_name: candidate.get("candidate_value")})
+
+    @staticmethod
+    def _has_material_downstream_difference(value: Any) -> bool:
+        if value is None or value is False:
+            return False
+        if isinstance(value, (int, float)):
+            return abs(float(value)) > 1e-12
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, dict):
+            return any(RepresentationalResolutionEngine._has_material_downstream_difference(v)
+                       for v in value.values())
+        if isinstance(value, (list, tuple, set)):
+            return any(RepresentationalResolutionEngine._has_material_downstream_difference(v)
+                       for v in value)
+        return True
+
+    def record_candidate_downstream_effect(
+        self,
+        ref: RepresentationalRef,
+        *,
+        consumer: str,
+        downstream_difference: Any,
+        action_or_prediction_affected: Any,
+        baseline_expectation: Optional[Dict[str, Any]] = None,
+        conditioned_expectation: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Seal a staged value to a concrete downstream counterfactual.
+
+        Merely calling provisional_resolution() is deliberately insufficient.
+        The consumer must show a material difference between cognition without
+        and with this exact candidate value before any later consequence can be
+        admitted as evidence for it.
+        """
+        coarse_key = ref.encode()
+        pending = self._active_stage_for_ref.get(coarse_key)
+        if pending is None:
+            return None
+        candidate = dict(pending.get("candidate") or {})
+        field_name = str(candidate.get("field") or "")
+        if not field_name or not self._has_material_downstream_difference(downstream_difference):
+            return None
+        without = self.current_resolution(ref)
+        if getattr(without, field_name, None) is not None:
+            return None
+        with_candidate = replace(without, **{field_name: candidate.get("candidate_value")})
+        record = {
+            "candidate_field": field_name,
+            "candidate_value": candidate.get("candidate_value"),
+            "representation_without_candidate": without.encode(),
+            "representation_with_candidate": with_candidate.encode(),
+            "downstream_difference_produced": downstream_difference,
+            "action_prediction_affected": action_or_prediction_affected,
+            "baseline_expectation": dict(baseline_expectation or {}),
+            "conditioned_expectation": dict(conditioned_expectation or {}),
+            "consumer": str(consumer or ""),
+            "metadata": dict(metadata or {}),
+            "recorded_at": _now(),
+        }
+        self._candidate_downstream_effects[coarse_key] = record
+        return dict(record)
 
     # ── Reading the (free) inadequacy signal ────────────────────────────────
 
@@ -666,6 +787,7 @@ class RepresentationalResolutionEngine:
         pressure_after: Dict[str, float],
         context_scope: Optional[str] = None,
         _discrepancy_before_override: Optional[float] = None,
+        candidate_evaluation: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Only ever admits evidence through the SAME observe() ->
         PairStats -> _try_promote() chain every other genealogy consumer
@@ -697,10 +819,43 @@ class RepresentationalResolutionEngine:
         ability_id = self.ensure_registered(ref)
         coarse_key = ref.encode()
         coactivated_ids = [ability_id, str(candidate.get("counterpart_ability_id", ""))]
-        discrepancy_before = (
+        aggregate_discrepancy_before = (
             _discrepancy_before_override if _discrepancy_before_override is not None
             else float((self.consequence_profile_for(ref) or {}).get("discrepancy", 0.0) or 0.0)
         )
+
+        effect_record = self._candidate_downstream_effects.pop(coarse_key, None)
+        supplied_outcome = dict(candidate_evaluation or {})
+        causal_evaluation: Dict[str, Any] = {}
+        if effect_record is not None:
+            causal_evaluation.update(effect_record)
+            causal_evaluation.update(supplied_outcome)
+        # A caller cannot manufacture causal participation by supplying only
+        # a favorable after-the-fact error comparison.  The before-
+        # consequence downstream effect must already have been sealed through
+        # record_candidate_downstream_effect() for this exact staged value.
+        candidate_matches = bool(causal_evaluation) and (
+            str(causal_evaluation.get("candidate_field") or "") == str(candidate.get("field") or "")
+            and causal_evaluation.get("candidate_value") == candidate.get("candidate_value")
+        )
+        has_downstream_effect = candidate_matches and self._has_material_downstream_difference(
+            causal_evaluation.get("downstream_difference_produced")
+        )
+        actual_consequence = causal_evaluation.get("actual_consequence")
+        try:
+            baseline_error = float(causal_evaluation.get("baseline_error"))
+            conditioned_error = float(causal_evaluation.get("candidate_conditioned_error"))
+            has_outcome_comparison = actual_consequence is not None
+        except (TypeError, ValueError):
+            baseline_error = aggregate_discrepancy_before
+            conditioned_error = aggregate_discrepancy_before
+            has_outcome_comparison = False
+        candidate_value_discriminated = (
+            has_downstream_effect
+            and has_outcome_comparison
+            and abs(baseline_error - conditioned_error) > 1e-12
+        )
+        discrepancy_before = baseline_error if has_outcome_comparison else aggregate_discrepancy_before
 
         if str(stage.get("origin", "")) == "domain_hypothesis":
             # No real genealogy collision/gap record exists to complete an
@@ -717,12 +872,15 @@ class RepresentationalResolutionEngine:
             # never actually used cannot be retained regardless of
             # ambient discrepancy trend; it remains unresolved (not
             # rejected -- it was never tested, not that it failed).
-            causally_participated = self._provisional_reads.pop(coarse_key, 0) > 0
+            provisional_reads = self._provisional_reads.pop(coarse_key, 0)
+            causally_participated = bool(has_downstream_effect and has_outcome_comparison)
             result: Dict[str, Any] = {
                 "stage_id": None,
-                "evidence_admitted": bool(actual_coactivation) and causally_participated,
+                "evidence_admitted": bool(actual_coactivation) and candidate_value_discriminated,
                 "actual_coactivation": bool(actual_coactivation),
                 "causally_participated": causally_participated,
+                "provisional_reads": provisional_reads,
+                "candidate_value_discriminated": candidate_value_discriminated,
                 "status": "hypothesis_coactivated",
             }
         else:
@@ -734,13 +892,22 @@ class RepresentationalResolutionEngine:
                 pressure_after=pressure_after,
                 outcome={"actual_coactivation": bool(actual_coactivation)},
             )
+            result["genealogy_evidence_admitted"] = bool(result.get("evidence_admitted", False))
+            result["causally_participated"] = bool(has_downstream_effect and has_outcome_comparison)
+            result["candidate_value_discriminated"] = candidate_value_discriminated
+            result["evidence_admitted"] = bool(result["genealogy_evidence_admitted"] and candidate_value_discriminated)
+            self._provisional_reads.pop(coarse_key, None)
+
+        attempt_key = self._candidate_attempt_key(
+            coarse_key, str(candidate.get("field", "")), candidate.get("candidate_value"),
+        )
+        self._candidate_attempt_counts[attempt_key] = self._candidate_attempt_counts.get(attempt_key, 0) + 1
 
         outcome_kind = "unresolved"
         refined_ref: Optional[RepresentationalRef] = None
-        discrepancy_after = discrepancy_before
+        discrepancy_after = conditioned_error if has_outcome_comparison else discrepancy_before
         real_cost = max(1.0, float(self._cost_ledger.get(coarse_key, 0.0)))
         if bool(result.get("evidence_admitted", False)):
-            discrepancy_after = float((self.consequence_profile_for(ref) or {}).get("discrepancy", discrepancy_before) or discrepancy_before)
             improvement = discrepancy_before - discrepancy_after
             worth_the_cost = improvement >= (real_cost * MIN_BENEFIT_PER_COST_UNIT)
             if improvement >= MIN_DISCREPANCY_IMPROVEMENT_TO_RETAIN and worth_the_cost:
@@ -757,6 +924,7 @@ class RepresentationalResolutionEngine:
                         inquiry_id=str(candidate.get("inquiry_id", "")),
                         source=f"stage:{stage.get('stage_id', '')}",
                         context_scope=context_scope,
+                        candidate_evaluation=causal_evaluation,
                     )
                 finally:
                     self._in_complete_field_inquiry = False
@@ -777,16 +945,21 @@ class RepresentationalResolutionEngine:
                     ref, candidate, discrepancy_before=discrepancy_before,
                     discrepancy_after=discrepancy_after, outcome="rejected",
                     inquiry_id=str(candidate.get("inquiry_id", "")), cost=real_cost,
+                    candidate_evaluation=causal_evaluation,
+                    context_scope=context_scope,
                 )
         else:
             self._record_outcome(
                 ref, candidate, discrepancy_before=discrepancy_before,
                 discrepancy_after=None, outcome="unresolved",
                 inquiry_id=str(candidate.get("inquiry_id", "")), cost=real_cost,
+                candidate_evaluation=causal_evaluation,
+                context_scope=context_scope,
             )
 
         result["representational_resolution_outcome"] = outcome_kind
         result["refined_ref"] = refined_ref.encode() if refined_ref is not None else None
+        result["candidate_evaluation"] = causal_evaluation
         return result
 
     # ── The one and only field-value producer ───────────────────────────────
@@ -806,6 +979,7 @@ class RepresentationalResolutionEngine:
         inquiry_id: str = "",
         source: str = "",
         context_scope: Optional[str] = None,
+        candidate_evaluation: Optional[Dict[str, Any]] = None,
         _allow_direct_call: bool = False,
     ) -> RepresentationalRef:
         """The ONLY place a new resolved field is ever produced anywhere in
@@ -862,6 +1036,7 @@ class RepresentationalResolutionEngine:
             "status": "retained",
             "context_scope": context_scope,
             "resolved_ref": refined.encode(),
+            "candidate_evaluation": dict(candidate_evaluation or {}),
         }
         self._genealogy_records.setdefault(coarse_key, []).append(record)
 
@@ -872,6 +1047,8 @@ class RepresentationalResolutionEngine:
             ref, {"field": field_name, "candidate_value": value, "inquiry_id": inquiry_id, "evidence": evidence},
             discrepancy_before=discrepancy_before, discrepancy_after=discrepancy_after,
             outcome="context_specific" if context_scope else "retained",
+            candidate_evaluation=candidate_evaluation,
+            context_scope=context_scope,
         )
         self._save()
         return refined
@@ -917,6 +1094,8 @@ class RepresentationalResolutionEngine:
         self, ref: RepresentationalRef, candidate: Dict[str, Any], *,
         discrepancy_before: float, discrepancy_after: Optional[float], outcome: str,
         inquiry_id: str = "", cost: Optional[float] = None,
+        candidate_evaluation: Optional[Dict[str, Any]] = None,
+        context_scope: Optional[str] = None,
     ) -> None:
         real_cost = cost if cost is not None else max(1.0, float(self._cost_ledger.get(ref.encode(), 0.0)))
         event = ResolutionOutcome(
@@ -942,7 +1121,8 @@ class RepresentationalResolutionEngine:
             semantic_resolutions_requested=1,
             computational_cost=real_cost,
             outcome=outcome,
-            context_scope=None,
+            context_scope=context_scope,
+            candidate_evaluation=dict(candidate_evaluation or {}),
         )
         self._resolution_events.append(event.to_dict())
         if len(self._resolution_events) > RESOLUTION_EVENTS_MAXLEN:
@@ -1008,6 +1188,15 @@ class RepresentationalResolutionEngine:
                 self._resolution_events = events[-RESOLUTION_EVENTS_MAXLEN:]
         except Exception:
             self._resolution_events = []
+        self._candidate_attempt_counts = {}
+        for event in self._resolution_events:
+            field_name = str(event.get("candidate_field") or "")
+            values = list(event.get("candidate_values_considered") or [])
+            ref_encoded = str(event.get("ref_before_encoded") or "")
+            if not field_name or not values or not ref_encoded:
+                continue
+            key = self._candidate_attempt_key(ref_encoded, field_name, values[0])
+            self._candidate_attempt_counts[key] = self._candidate_attempt_counts.get(key, 0) + 1
 
 
 # ── systems-dict convenience wiring (the same "systems.get(...)" convention
@@ -1106,6 +1295,7 @@ def record_ref_participation_from_scores(
     source: str,
     context_tag: str = "",
     extra_trace_ids: Optional[List[str]] = None,
+    candidate_evaluation: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Generic bridge from an existing real 0..1 evaluation-score dict (any
     subsystem's own already-computed, already-meaningful scores -- causal
@@ -1151,6 +1341,7 @@ def record_ref_participation_from_scores(
         engine.record_participation(
             ref, pressure_before=pressure_before, pressure_after=pressure_after,
             source=source, context_tag=context_tag, extra_trace=extra_trace,
+            candidate_evaluation=candidate_evaluation,
         )
     except Exception:
         pass

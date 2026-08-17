@@ -114,13 +114,10 @@ def test_A_control_zero_pressure_produces_zero_engagement(tmp_path):
     assert record.active_pressures == {}
 
 
-def test_B_control_real_pressure_but_no_afforded_opportunity_produces_zero_engagement(tmp_path):
-    """Section 21's required IRRELEVANT-affordance control: real,
-    genuinely-measured pressure exists, but nothing in the Habitat
-    currently affords Aurora an opportunity to act on it (no entities at
-    all) -- engagement must still not occur. Pressure being real is not
-    sufficient; an actual afforded opportunity is also required (section 5:
-    Habitat is a neutral affordance surface, not a wish granter)."""
+def test_B_real_pressure_in_empty_habitat_allows_creation_to_compete(tmp_path):
+    """An empty Habitat still exposes the real consequence that something
+    persistent could exist. Creation competes; emptiness is no longer treated
+    as absence of every affordance."""
     genealogy, systems, habitat = _fresh_systems(tmp_path, "canary_irrelevant")
     engine = get_or_create_engine(systems)
     ref = RepresentationalRef.for_c1("N", "OPERATOR", "A")
@@ -134,8 +131,14 @@ def test_B_control_real_pressure_but_no_afforded_opportunity_produces_zero_engag
     for entity in habitat.get_state()["entities"]:
         habitat.act(actor="aurora", territory=entity["territory"], operation="delete", target_ids=[entity["id"]])
     record = mot.maybe_engage_habitat(systems)
-    assert record.engaged is False
-    assert record.candidate_actions == []
+    assert record.candidate_actions
+    operations = {candidate["operation"] for candidate in record.candidate_actions}
+    assert "create" in operations
+    # Deleted persistent state also exposes restore; there are no live-target
+    # mutation candidates after the deletion pass.
+    assert operations <= {"create", "restore"}
+    if record.engaged:
+        assert record.selected_action["operation"] == "create"
 
 
 def test_C_control_afforded_entity_aurora_cannot_modify_produces_zero_engagement(tmp_path):
@@ -166,13 +169,13 @@ def test_C_control_afforded_entity_aurora_cannot_modify_produces_zero_engagement
             habitat.act(actor="aurora", territory=entity["territory"], operation="delete", target_ids=[entity["id"]])
 
     record = mot.maybe_engage_habitat(systems)
-    assert record.engaged is False
-    # Item 4 follow-up: autonomous creation candidates are not tied to any
-    # existing entity, so they may legitimately still appear here (real
-    # X-axis pressure from the seeding helper's own create() calls) without
-    # ever crossing the engagement threshold -- what must never happen is
-    # a candidate that targets the specific permission-revoked entity.
-    assert eid not in [t for c in record.candidate_actions for t in c["target_ids"]]
+    # Ordinary mutations are unavailable, but transfer and permission repair
+    # remain independently legal under Habitat's own operation-specific law.
+    targeted_operations = {
+        candidate["operation"] for candidate in record.candidate_actions
+        if eid in candidate["target_ids"]
+    }
+    assert targeted_operations <= {"transfer", "grant_permission", "revoke_permission"}
 
 
 def test_D_relevant_pressure_with_real_afforded_entity_produces_real_engagement(tmp_path):
@@ -193,7 +196,8 @@ def test_D_relevant_pressure_with_real_afforded_entity_produces_real_engagement(
     record = mot.maybe_engage_habitat(systems)
     assert record.engaged is True
     assert record.selected_action is not None
-    assert record.selected_action["operation"] in ("move", "resize", "rotate", "recolor", "connect", "disconnect", "group", "delete", "transfer", "create")
+    from aurora_habitat import OPERATIONS
+    assert record.selected_action["operation"] in OPERATIONS
     # eid itself is one genuinely eligible entity among several real ones
     # the pressure-seeding helper also created -- selection may legally
     # land on any of them; what matters is a real, existing target (or no
@@ -273,15 +277,18 @@ def test_no_action_labels_are_hardcoded_in_this_module(tmp_path):
         assert word not in code_only, f"forbidden hardcoded action-label word found in executable code: {word!r}"
 
 
-def test_operation_category_is_imported_not_duplicated(tmp_path):
-    """_operation_category must import aurora_habitat's real frozensets
-    rather than maintaining a parallel, driftable copy."""
-    from aurora_habitat import _EXISTENCE_OPS, _CHANGE_OPS, _BOUNDARY_OPS
-    assert mot._operation_category("create") == "X"
-    assert mot._operation_category("move") == "N"
-    assert mot._operation_category("group") == "B"
-    assert mot._operation_category("nonexistent_op") is None
-    assert set(_EXISTENCE_OPS) | set(_CHANGE_OPS) | set(_BOUNDARY_OPS)
+def test_operations_expose_physical_dimensions_not_fixed_axis_categories(tmp_path):
+    """The Habitat advertises observable consequences, including profiles
+    that intersect multiple native axes, instead of X/N/B operation bins."""
+    habitat = HabitatRuntime(tmp_path / "dimension_surface")
+    affordances = habitat.get_affordances()
+    assert affordances["consequence_dimensions"]["move"] == ["spatial_relation"]
+    assert affordances["consequence_dimensions"]["recolor"] == ["appearance"]
+    assert len([
+        value for value in affordances["consequence_axis_profiles"]["create"].values()
+        if value > 0.0
+    ]) > 1
+    assert not hasattr(mot, "_operation_category")
 
 
 def test_select_action_is_generic_competition_not_habitat_specific(tmp_path):

@@ -9050,6 +9050,13 @@ def _proactive_loop() -> None:
             _sample_ambient_perception(_systems)
             _inject_room_context(_systems)  # room notes / pending commands as awareness
             obs = str((_systems.get("_ambient_perceptual") or {}).get("observation") or "").strip()
+
+            # The Habitat is continuously available even when no fresh
+            # linguistic/sensory observation arrived this cycle.  Endogenous
+            # developmental pressure is therefore allowed to reach agency
+            # arbitration before the ambient-observation silence gate.
+            obs = _habitat_availability(_systems, obs)
+            obs = _maybe_autonomous_habitat_action(_systems, obs)
             if not obs:
                 continue
 
@@ -9064,8 +9071,6 @@ def _proactive_loop() -> None:
             obs = _silence_pressure(obs)
             obs = _boundary_void(obs)
             obs = _entropy_field(_systems, obs)
-            obs = _habitat_availability(_systems, obs)
-            obs = _maybe_autonomous_habitat_action(_systems, obs)
 
             # When salience is elevated, prefix the obs with what is pressing —
             # gives the constraint physics real body-state content to express from

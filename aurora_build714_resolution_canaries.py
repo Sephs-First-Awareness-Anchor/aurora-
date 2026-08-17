@@ -115,10 +115,30 @@ def canary_3_refinement_pays_off(root: Path) -> Dict[str, Any]:
     discrepancy_before = (engine.consequence_profile_for(ref) or {}).get("discrepancy", 0.0)
 
     staged = engine.stage_field_inquiry(ref, candidate, consumer="canary3")
+    engine._active_stage_for_ref[ref.encode()] = {
+        "stage": staged[0], "candidate": candidate,
+        "consumer": "canary3", "context_scope": None,
+    }
+    engine.provisional_resolution(ref)
+    engine.record_candidate_downstream_effect(
+        ref,
+        consumer="canary3",
+        downstream_difference={"prediction_partition": "changed"},
+        action_or_prediction_affected="consequence_prediction",
+        baseline_expectation={"partition": "baseline"},
+        conditioned_expectation={"partition": "conditioned"},
+    )
     result = engine.complete_field_inquiry(
         ref, candidate, staged[0], consumer="canary3", actual_coactivation=True,
         pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={a: 0.0 for a in AXES},
+        candidate_evaluation={
+            "candidate_field": candidate["field"],
+            "candidate_value": candidate["candidate_value"],
+            "actual_consequence": {"partition": "conditioned"},
+            "baseline_error": 0.8,
+            "candidate_conditioned_error": 0.1,
+        },
     )
     retained = result["representational_resolution_outcome"] == "retained"
     resolved = RepresentationalRef.decode(result["refined_ref"]) if result["refined_ref"] else None
@@ -151,6 +171,19 @@ def canary_4_refinement_does_not_pay_off(root: Path) -> Dict[str, Any]:
     candidates = engine.unresolved_field_candidates(ref)
     candidate = candidates[0]
     staged = engine.stage_field_inquiry(ref, candidate, consumer="canary4")
+    engine._active_stage_for_ref[ref.encode()] = {
+        "stage": staged[0], "candidate": candidate,
+        "consumer": "canary4", "context_scope": None,
+    }
+    engine.provisional_resolution(ref)
+    engine.record_candidate_downstream_effect(
+        ref,
+        consumer="canary4",
+        downstream_difference={"prediction_partition": "changed"},
+        action_or_prediction_affected="consequence_prediction",
+        baseline_expectation={"partition": "baseline"},
+        conditioned_expectation={"partition": "conditioned"},
+    )
     # The experiment happens, but the "after" state shows NO real
     # improvement over "before" -- the candidate distinction did not
     # actually discriminate anything.
@@ -158,6 +191,13 @@ def canary_4_refinement_does_not_pay_off(root: Path) -> Dict[str, Any]:
         ref, candidate, staged[0], consumer="canary4", actual_coactivation=True,
         pressure_before={"X": 0.0, "T": 0.05, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={"X": 0.0, "T": 0.049, "N": 0.0, "B": 0.0, "A": 0.0},
+        candidate_evaluation={
+            "candidate_field": candidate["field"],
+            "candidate_value": candidate["candidate_value"],
+            "actual_consequence": {"partition": "conditioned"},
+            "baseline_error": 0.05,
+            "candidate_conditioned_error": 0.049,
+        },
     )
     outcome = result["representational_resolution_outcome"]
     return {

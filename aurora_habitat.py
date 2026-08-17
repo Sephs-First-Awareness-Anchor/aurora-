@@ -49,6 +49,7 @@ import os
 import time
 import threading
 import uuid
+from collections import deque
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -78,6 +79,59 @@ OPERATIONS = (
     "connect", "disconnect", "group", "ungroup",
     "transfer", "grant_permission", "revoke_permission",
 )
+
+# Neutral physical consequence vocabulary.  These labels describe what a
+# successful operation can observably change; they never say why that change
+# should matter.  Motivation consumers compare this surface with Aurora's own
+# active structure instead of treating every N/B/X operation as equivalent.
+CONSEQUENCE_DIMENSION_AXES: Dict[str, Dict[str, float]] = {
+    "existence":            {"X": 1.0, "T": 0.35},
+    "persistence":          {"T": 1.0, "X": 0.25},
+    "spatial_relation":     {"X": 0.45, "N": 0.70, "B": 0.55},
+    "extent_magnitude":     {"X": 0.45, "N": 0.75},
+    "orientation":          {"N": 0.65, "B": 0.45},
+    "appearance":           {"X": 0.45, "N": 0.55, "B": 0.25},
+    "relational_structure": {"T": 0.35, "N": 0.35, "B": 1.0},
+    "containment":          {"T": 0.35, "B": 1.0},
+    "ownership":            {"T": 0.25, "B": 0.75, "A": 0.80},
+    "territory_boundary":   {"T": 0.25, "B": 1.0, "A": 0.35},
+    "permission_boundary":  {"T": 0.30, "B": 1.0, "A": 0.45},
+}
+
+_OPERATION_CONSEQUENCE_DIMENSIONS: Dict[str, Tuple[str, ...]] = {
+    "create": ("existence", "persistence", "spatial_relation", "extent_magnitude", "orientation", "appearance"),
+    "duplicate": ("existence", "persistence", "spatial_relation", "extent_magnitude", "orientation", "appearance"),
+    "delete": ("existence", "persistence"),
+    "restore": ("existence", "persistence"),
+    "move": ("spatial_relation",),
+    "resize": ("extent_magnitude",),
+    "rotate": ("orientation",),
+    "recolor": ("appearance",),
+    "connect": ("relational_structure",),
+    "disconnect": ("relational_structure",),
+    "group": ("containment", "relational_structure"),
+    "ungroup": ("containment", "relational_structure"),
+    "transfer": ("ownership", "territory_boundary"),
+    "grant_permission": ("permission_boundary",),
+    "revoke_permission": ("permission_boundary",),
+}
+
+
+def operation_consequence_dimensions(operation: str) -> Tuple[str, ...]:
+    """Physical distinctions an operation can reveal or alter."""
+    return _OPERATION_CONSEQUENCE_DIMENSIONS.get(str(operation), ())
+
+
+def consequence_axis_profile(dimensions: List[str] | Tuple[str, ...]) -> Dict[str, float]:
+    """Project physical consequence dimensions into the native five axes."""
+    profile = {axis: 0.0 for axis in "XTNBA"}
+    for dimension in dimensions:
+        for axis, value in CONSEQUENCE_DIMENSION_AXES.get(str(dimension), {}).items():
+            profile[axis] += float(value)
+    peak = max(profile.values()) if profile else 0.0
+    if peak > 0.0:
+        profile = {axis: value / peak for axis, value in profile.items()}
+    return profile
 
 _PERMISSION_KEYS = (
     "visible_to_aurora", "visible_to_human",
@@ -204,6 +258,11 @@ class EnvironmentAction:
     target_ids: List[str] = field(default_factory=list)
     parameters: Dict[str, Any] = field(default_factory=dict)
     intention_context: str = ""
+    # Optional structural handoff from the agency arbitration that selected
+    # this concrete action.  The Habitat never interprets it; it persists the
+    # causal trace and returns the real consequence to the originating
+    # representational inquiry.
+    causal_context: Dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=_now)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -257,36 +316,91 @@ def _entity_state_changed(pre: Dict[str, Any], post: Dict[str, Any]) -> bool:
     return False
 
 
+def _expectation_error(expected: Any, actual: Any) -> float:
+    """Set-distance used only for candidate-conditioned consequence credit."""
+    expected_set = {str(x) for x in (expected or [])}
+    actual_set = {str(x) for x in (actual or [])}
+    if not expected_set and not actual_set:
+        return 0.0
+    union = expected_set | actual_set
+    return 1.0 - (len(expected_set & actual_set) / max(1, len(union)))
+
+
+def _parameter_error(expected: Any, actual: Any) -> float:
+    expected_dict = dict(expected or {})
+    actual_dict = dict(actual or {})
+    if not expected_dict:
+        return 0.0
+    matches = sum(1 for key, value in expected_dict.items() if actual_dict.get(key) == value)
+    return 1.0 - (matches / len(expected_dict))
+
+
 # ── Constraint / memory bridges (Rule 6: use the real machinery) ───────────
 
-# Section 22's mapping is by EVENT CATEGORY (existence / persistence /
-# change / boundary / agency of the ACTION itself), never by entity
-# content -- this is what keeps it from becoming "red object = N" style
-# semantic scripting (section 22's own explicit prohibition).
-_EXISTENCE_OPS = frozenset({"create", "duplicate", "delete", "restore"})
-_CHANGE_OPS = frozenset({"move", "resize", "rotate", "recolor"})
-_BOUNDARY_OPS = frozenset({
-    "connect", "disconnect", "group", "ungroup",
-    "transfer", "grant_permission", "revoke_permission",
-})
+def _actual_consequence_dimensions(
+    action: EnvironmentAction,
+    consequence: EnvironmentConsequence,
+    pre_state: Optional[Dict[str, Any]],
+    post_state: Optional[Dict[str, Any]],
+) -> Tuple[str, ...]:
+    """Dimensions the executed before/after evidence says really changed.
+
+    A denied or vacuous action produces no dimensions.  For a genuine state
+    change the operation's neutral physical contract supplies the candidate
+    dimensions; simple mutations are narrowed by their concrete before/after
+    fields where the snapshots make that distinction directly observable.
+    """
+    if not consequence.success or not consequence.state_changed:
+        return ()
+    operation = action.operation
+    if operation == "transfer":
+        before = pre_state if isinstance(pre_state, dict) else {}
+        after = post_state if isinstance(post_state, dict) else {}
+        ids = set(before) | set(after)
+        changed: List[str] = []
+        if any((before.get(eid) or {}).get("owner") != (after.get(eid) or {}).get("owner")
+               for eid in ids):
+            changed.append("ownership")
+        if any((before.get(eid) or {}).get("territory") != (after.get(eid) or {}).get("territory")
+               for eid in ids):
+            changed.append("territory_boundary")
+        return tuple(changed)
+    if operation in ("move", "resize", "rotate", "recolor", "connect", "disconnect",
+                     "group", "ungroup", "grant_permission", "revoke_permission"):
+        return operation_consequence_dimensions(operation)
+    if operation in ("create", "duplicate", "delete", "restore"):
+        return operation_consequence_dimensions(operation)
+    return ()
 
 
-def _operation_axis_amplitudes(operation: str, success: bool) -> Dict[str, float]:
-    """Neutral physical-event -> axis amplitude mapping (spec section 22).
+def _consequence_axis_amplitudes(
+    action: EnvironmentAction,
+    consequence: EnvironmentConsequence,
+    pre_state: Optional[Dict[str, Any]] = None,
+    post_state: Optional[Dict[str, Any]] = None,
+) -> Dict[str, float]:
+    """Project the observed consequence into Aurora's native axes.
 
-    Every action carries some Agency amplitude (it was a chosen action,
-    by construction). Its category additionally carries the matching
-    axis. A rejected action still carries Boundary evidence (the
-    boundary held) but a muted Agency amplitude (the attempt did not
-    complete)."""
-    amps = {"X": 0.0, "T": 0.0, "N": 0.0, "B": 0.0, "A": 0.35 if success else 0.15}
-    if operation in _EXISTENCE_OPS:
-        amps["X"] = 0.6
-    elif operation in _CHANGE_OPS:
-        amps["N"] = 0.5
-    elif operation in _BOUNDARY_OPS:
-        amps["B"] = 0.6
-    return amps
+    This deliberately does not classify operation names as X/N/B families.
+    The intermediate object is the neutral physical distinction that really
+    occurred. Agency amplitude comes from the actor's completed/attempted
+    action itself, independent of which operation was chosen; a denied action
+    also exposes a small boundary fact because a real permission boundary
+    held.
+    """
+    dimensions = _actual_consequence_dimensions(
+        action, consequence, pre_state, post_state,
+    )
+    profile = consequence_axis_profile(dimensions)
+    scale = 0.60 if consequence.success and consequence.state_changed else 0.0
+    amplitudes = {
+        axis: round(float(profile.get(axis, 0.0)) * scale, 6)
+        for axis in "XTNBA"
+    }
+    amplitudes["A"] = max(amplitudes["A"], 0.35 if consequence.success else 0.15)
+    if not consequence.success:
+        amplitudes["B"] = max(amplitudes["B"], 0.20)
+    return amplitudes
 
 
 class HabitatRuntime:
@@ -301,6 +415,7 @@ class HabitatRuntime:
         self._lock = threading.RLock()
         self._entities: Dict[str, HabitatEntity] = {}
         self._recent_events: List[Dict[str, Any]] = []
+        self._recent_motivation_events: List[Dict[str, Any]] = []
         self._load()
 
     # ── persistence ─────────────────────────────────────────────────────
@@ -314,25 +429,56 @@ class HabitatRuntime:
     def _lineage_path(self) -> Path:
         return self.root / "entity_lineage.jsonl"
 
+    def _motivation_events_path(self) -> Path:
+        return self.root / "habitat_motivation_events.jsonl"
+
     def _load(self) -> None:
         path = self._world_state_path()
-        if not path.exists():
-            return
-        try:
-            raw = json.loads(path.read_text(encoding="utf-8") or "{}")
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(), module=__name__,
-                operation="exception_handler:aurora_habitat.py:HabitatRuntime._load",
-                exc=_aurora_boundary_exc,
-                context={"function": "_load", "source_file": "aurora_habitat.py"},
-            )
-            return
-        for eid, edict in (raw.get("entities") or {}).items():
+        if path.exists():
             try:
-                self._entities[eid] = HabitatEntity.from_dict(edict)
-            except Exception:
-                continue
+                raw = json.loads(path.read_text(encoding="utf-8") or "{}")
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_habitat.py:HabitatRuntime._load",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_load", "source_file": "aurora_habitat.py"},
+                )
+                raw = {}
+            for eid, edict in (raw.get("entities") or {}).items():
+                try:
+                    self._entities[eid] = HabitatEntity.from_dict(edict)
+                except Exception:
+                    continue
+        self._recent_events = self._load_jsonl_tail(self._events_path(), _RECENT_EVENTS_MAXLEN)
+        self._recent_motivation_events = self._load_jsonl_tail(
+            self._motivation_events_path(), _RECENT_EVENTS_MAXLEN,
+        )
+        # human_response is an index over the persisted causal_parent facts.
+        # Rebuild it after restart instead of pretending that an in-memory
+        # mutation of an earlier JSONL line was durable.
+        by_id = {str(ev.get("event_id")): ev for ev in self._recent_events}
+        for event in self._recent_events:
+            parent = by_id.get(str(event.get("causal_parent") or ""))
+            if parent is not None:
+                parent["human_response"] = event.get("event_id")
+
+    @staticmethod
+    def _load_jsonl_tail(path: Path, limit: int) -> List[Dict[str, Any]]:
+        if not path.exists():
+            return []
+        records: deque = deque(maxlen=max(1, int(limit)))
+        try:
+            with path.open("r", encoding="utf-8") as handle:
+                for line in handle:
+                    if not line.strip():
+                        continue
+                    value = json.loads(line)
+                    if isinstance(value, dict):
+                        records.append(value)
+        except Exception:
+            return list(records)
+        return list(records)
 
     def _save_world_state(self) -> None:
         payload = {
@@ -344,8 +490,12 @@ class HabitatRuntime:
     def _persist_event(self, action: EnvironmentAction, consequence: EnvironmentConsequence,
                         pre_state: Optional[Dict[str, Any]], post_state: Optional[Dict[str, Any]],
                         session_id: str = "") -> None:
+        consequence_dimensions = _actual_consequence_dimensions(
+            action, consequence, pre_state, post_state,
+        )
         record = {
             "event_id": _new_id("hev"),
+            "action_id": action.action_id,
             "timestamp": consequence.timestamp,
             "actor": action.actor,
             "event_type": action.operation,
@@ -360,7 +510,12 @@ class HabitatRuntime:
             "causal_parent": consequence.causal_parent,
             "session_id": session_id,
             "success": consequence.success,
+            "state_changed": consequence.state_changed,
             "rejected_reason": consequence.rejected_reason,
+            "parameters": dict(action.parameters),
+            "intention_context": action.intention_context,
+            "causal_context": dict(action.causal_context),
+            "consequence_dimensions": list(consequence_dimensions),
         }
         _append_jsonl(self._events_path(), record)
         self._recent_events.append(record)
@@ -427,6 +582,26 @@ class HabitatRuntime:
             events = [ev for ev in events if ev.get("territory") == territory]
         return events[-max(1, int(limit)):]
 
+    def record_motivation_event(self, record: Dict[str, Any]) -> None:
+        """Persist structural arbitration/consequence telemetry.
+
+        This is evidence about why a Habitat action was considered and what
+        followed, not a second memory or motive system.  Candidate generation
+        reads it only to measure whether repeated equivalent actions continued
+        producing useful distinction.
+        """
+        payload = dict(record or {})
+        payload.setdefault("timestamp", _now())
+        with self._lock:
+            _append_jsonl(self._motivation_events_path(), payload)
+            self._recent_motivation_events.append(payload)
+            if len(self._recent_motivation_events) > _RECENT_EVENTS_MAXLEN:
+                self._recent_motivation_events = self._recent_motivation_events[-_RECENT_EVENTS_MAXLEN:]
+
+    def get_motivation_history(self, *, limit: int = 50) -> List[Dict[str, Any]]:
+        with self._lock:
+            return list(self._recent_motivation_events[-max(1, int(limit)):])
+
     def get_lineage(self, entity_id: str) -> List[Dict[str, Any]]:
         """Full on-disk lineage for one entity -- real history, not a
         synthetic summary (spec section 13's own requirement)."""
@@ -458,6 +633,14 @@ class HabitatRuntime:
             "territories": list(TERRITORIES),
             "owners": list(OWNERS),
             "operations": list(OPERATIONS),
+            "consequence_dimensions": {
+                operation: list(operation_consequence_dimensions(operation))
+                for operation in OPERATIONS
+            },
+            "consequence_axis_profiles": {
+                operation: consequence_axis_profile(operation_consequence_dimensions(operation))
+                for operation in OPERATIONS
+            },
             "permission_keys": list(_PERMISSION_KEYS),
         }
 
@@ -465,13 +648,14 @@ class HabitatRuntime:
 
     def act(self, *, actor: str, territory: str, operation: str,
             target_ids: Optional[List[str]] = None, parameters: Optional[Dict[str, Any]] = None,
-            intention_context: str = "", session_id: str = "") -> EnvironmentConsequence:
+            intention_context: str = "", session_id: str = "",
+            causal_context: Optional[Dict[str, Any]] = None) -> EnvironmentConsequence:
         """The one canonical entry point for every environmental change,
         by Aurora or a human alike (spec section 9)."""
         action = EnvironmentAction(
             action_id=_new_id("hact"), actor=actor, territory=territory, operation=operation,
             target_ids=list(target_ids or []), parameters=dict(parameters or {}),
-            intention_context=intention_context,
+            intention_context=intention_context, causal_context=dict(causal_context or {}),
         )
         with self._lock:
             consequence = self._execute(action)
@@ -486,10 +670,10 @@ class HabitatRuntime:
         # Deliberately outside the lock: none of these mutate habitat
         # state, and constraint/SediMemory/genealogy have their own
         # internals.
-        self._emit_constraint_evidence(action, consequence)
+        self._emit_constraint_evidence(action, consequence, pre_state, post_state)
         if consequence.success:
-            self._deposit_sediment(action, consequence)
-        self._emit_resolution_pressure(action, consequence)
+            self._deposit_sediment(action, consequence, pre_state, post_state)
+        self._emit_resolution_pressure(action, consequence, pre_state, post_state)
         return consequence
 
     def _find_causal_parent(self, action: EnvironmentAction) -> Optional[str]:
@@ -898,7 +1082,13 @@ class HabitatRuntime:
 
     # ── consequence reaching Aurora's real cognition (Rule 5, Rule 6) ───
 
-    def _emit_constraint_evidence(self, action: EnvironmentAction, consequence: EnvironmentConsequence) -> None:
+    def _emit_constraint_evidence(
+        self,
+        action: EnvironmentAction,
+        consequence: EnvironmentConsequence,
+        pre_state: Optional[Dict[str, Any]] = None,
+        post_state: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """Route habitat events into Aurora's REAL constraint physics
         (spec section 22) via the same WaveformPressurePump entry point
         perceptual subsystems already use -- never a bespoke habitat-only
@@ -912,7 +1102,9 @@ class HabitatRuntime:
             return
         try:
             from aurora_waveform_pressure import PressureDisturbance
-            amps = _operation_axis_amplitudes(action.operation, consequence.success)
+            amps = _consequence_axis_amplitudes(
+                action, consequence, pre_state, post_state,
+            )
             disturbance = PressureDisturbance(
                 source=f"habitat:{action.territory}:{action.operation}",
                 axis_amplitudes=amps,
@@ -928,7 +1120,13 @@ class HabitatRuntime:
                 context={"function": "_emit_constraint_evidence", "source_file": "aurora_habitat.py"},
             )
 
-    def _deposit_sediment(self, action: EnvironmentAction, consequence: EnvironmentConsequence) -> None:
+    def _deposit_sediment(
+        self,
+        action: EnvironmentAction,
+        consequence: EnvironmentConsequence,
+        pre_state: Optional[Dict[str, Any]] = None,
+        post_state: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """Deposit the raw event into SediMemory as real experience
         (spec section 19) -- content only, no interpretation of what it
         means (spec section 13)."""
@@ -941,14 +1139,26 @@ class HabitatRuntime:
         try:
             from aurora_internal.aurora_constraint_manifold_patched import ConstraintVector
             from foundational_contract import ExistenceMode
-            amps = _operation_axis_amplitudes(action.operation, consequence.success)
+            amps = _consequence_axis_amplitudes(
+                action, consequence, pre_state, post_state,
+            )
             cv = ConstraintVector(
                 X=max(0.05, amps["X"]), T=0.2, N=amps["N"], B=amps["B"], A=amps["A"],
             )
             content = {
                 "source": "habitat", "territory": action.territory, "operation": action.operation,
                 "actor": action.actor, "affected_entities": list(consequence.affected_entities),
+                # Stable environmental identity is preserved as provenance so
+                # an ordinary SediMemory reactivation can bind back to the same
+                # Habitat entity without a Habitat-only memory index.
+                "entity_ids": list(consequence.affected_entities),
+                "action_id": action.action_id,
                 "success": consequence.success,
+                "state_changed": consequence.state_changed,
+                "consequence_dimensions": list(_actual_consequence_dimensions(
+                    action, consequence, pre_state, post_state,
+                )),
+                "intention_context": action.intention_context,
             }
             sedimemory.ingest_event(
                 content=content, constraint_vector=cv, source="habitat",
@@ -962,72 +1172,27 @@ class HabitatRuntime:
                 context={"function": "_deposit_sediment", "source_file": "aurora_habitat.py"},
             )
 
-    def _emit_resolution_pressure(self, action: EnvironmentAction, consequence: EnvironmentConsequence) -> None:
-        """Build 714: lets a real Habitat consequence participate in
-        adaptive representational resolution, through the exact same
-        generic score->pressure bridge RCEC's causal evaluation already
-        uses (aurora_representational_resolution.record_ref_participation_
-        from_scores) -- never a second, habitat-only mechanism (Rule 6).
+    def _emit_resolution_pressure(
+        self,
+        action: EnvironmentAction,
+        consequence: EnvironmentConsequence,
+        pre_state: Optional[Dict[str, Any]] = None,
+        post_state: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Route the real consequence through adaptive resolution.
 
-        The ref identity carries no entity-specific content: it is built
-        purely from the operation's own existence/change/boundary category
-        (the same neutral physics _operation_axis_amplitudes already
-        established) plus a fixed 'this was an agency-exercising event'
-        coordinate -- every Habitat action already carries Agency
-        amplitude by construction. Every score fed in is a real,
-        already-computed fact already sitting on this exact consequence/
-        entity pair (spec section 13 / Rule 8's "no meaning label on the
-        entity" still holds -- none of these describe WHAT the entity is,
-        only HOW this action structurally relates to prior ones):
-
-          succeeded              -- against the permission boundary AND
-                                     against reality: a legally-granted
-                                     action that changed nothing observable
-                                     (state_changed=False -- moving an
-                                     entity to its own position, restoring
-                                     an already-live entity...) does NOT
-                                     score as succeeded here (follow-up
-                                     fix: a no-op must never count as a
-                                     successful developmental consequence,
-                                     even though Habitat's own permission
-                                     law correctly still grants it).
-          state_changed           -- the same real fact, reported
-                                     separately too (Section 18 style
-                                     richer evidence) so a caller reading
-                                     raw scores can distinguish "the
-                                     permission boundary held" from "the
-                                     world actually moved".
-          was_measured_response  -- this action structurally followed a
-                                     prior one by a different actor,
-                                     per _find_causal_parent.
-          ownership_aligned      -- the acting party is this entity's own
-                                     owner (Build 717 section 18: real
-                                     ownership fact, only included when an
-                                     unambiguous owner exists -- omitted
-                                     rather than guessed for "shared").
-          recurring_interaction  -- this entity had already been
-                                     interacted with before THIS action
-                                     (interaction_count > 1, counting this
-                                     one) -- real recurrence, not
-                                     fabricated from absence (section 18/
-                                     22; interaction_count is incremented
-                                     exactly once per existing-entity
-                                     touch, in _execute() above)."""
+        A staged candidate receives credit only when the selecting consumer
+        supplied a candidate-conditioned counterfactual and this exact action
+        produced the consequence being compared.  Ambient aggregate
+        discrepancy remains useful pressure, but cannot by itself retain a
+        candidate value.
+        """
         try:
             from aurora_representational_address import RepresentationalRef
             from aurora_representational_resolution import record_ref_participation_from_scores
         except Exception:
             return
-        if action.operation in _EXISTENCE_OPS:
-            axis = "X"
-        elif action.operation in _CHANGE_OPS:
-            axis = "N"
-        elif action.operation in _BOUNDARY_OPS:
-            axis = "B"
-        else:
-            return
         try:
-            ref = RepresentationalRef.for_c1(axis, "OPERATOR", "A")
             entity_type = "unknown"
             owner_bucket = "none"
             scores = {
@@ -1051,11 +1216,92 @@ class HabitatRuntime:
                 scores["recurring_interaction"] = 1.0 if entity.interaction_count > 1 else 0.0
                 break
             context_tag = f"{action.territory}:{entity_type}:{action.actor}:{owner_bucket}"
-            record_ref_participation_from_scores(
-                self.systems, ref.encode(), scores,
-                source="habitat", context_tag=context_tag,
-                extra_trace_ids=[f"HABITAT_CTX:{context_tag}"],
+            actual_dimensions = list(_actual_consequence_dimensions(
+                action, consequence, pre_state, post_state,
+            ))
+            axis_profile = consequence_axis_profile(actual_dimensions)
+            participating_refs = {
+                RepresentationalRef.for_c1(axis, "OPERATOR", "A").encode(): weight
+                for axis, weight in axis_profile.items()
+                if float(weight) > 0.0
+            }
+            # A real choice/attempt is agency evidence regardless of which
+            # physical operation happened to instantiate it.
+            agency_ref = RepresentationalRef.for_c1("A", "OPERATOR", "A").encode()
+            participating_refs[agency_ref] = max(
+                float(participating_refs.get(agency_ref, 0.0)),
+                0.35 if consequence.success else 0.15,
             )
+            if not consequence.success:
+                boundary_ref = RepresentationalRef.for_c1("B", "OPERATOR", "A").encode()
+                participating_refs[boundary_ref] = max(
+                    float(participating_refs.get(boundary_ref, 0.0)), 0.20,
+                )
+            evaluated_refs = set()
+            for evaluation in list((action.causal_context or {}).get("candidate_evaluations") or []):
+                ref_encoded = str(evaluation.get("ref_encoded") or "")
+                if not ref_encoded:
+                    continue
+                baseline_dimensions = list(evaluation.get("expected_dimensions_without_candidate") or [])
+                conditioned_dimensions = list(evaluation.get("expected_dimensions_with_candidate") or [])
+                baseline_error = _expectation_error(baseline_dimensions, actual_dimensions)
+                conditioned_error = _expectation_error(conditioned_dimensions, actual_dimensions)
+
+                baseline_parameters = dict(evaluation.get("parameters_without_candidate") or {})
+                conditioned_parameters = dict(evaluation.get("parameters_with_candidate") or {})
+                if baseline_parameters != conditioned_parameters:
+                    baseline_error = (baseline_error + _parameter_error(baseline_parameters, action.parameters)) / 2.0
+                    conditioned_error = (conditioned_error + _parameter_error(conditioned_parameters, action.parameters)) / 2.0
+
+                candidate_evaluation = dict(evaluation)
+                candidate_evaluation.update({
+                    "actual_consequence": {
+                        "action_id": action.action_id,
+                        "operation": action.operation,
+                        "parameters": dict(action.parameters),
+                        "success": bool(consequence.success),
+                        "state_changed": bool(consequence.state_changed),
+                        "affected_entities": list(consequence.affected_entities),
+                        "consequence_dimensions": actual_dimensions,
+                    },
+                    "candidate_conditioned_error": round(conditioned_error, 6),
+                    "baseline_error": round(baseline_error, 6),
+                })
+                # The caller-owned evaluation list is the same causal record
+                # later persisted by motivation telemetry. Join the measured
+                # outcome back into it so the arbitration and resolution
+                # ledgers expose one inspectable before/after chain.
+                evaluation.update({
+                    "actual_consequence": dict(candidate_evaluation["actual_consequence"]),
+                    "candidate_conditioned_error": candidate_evaluation["candidate_conditioned_error"],
+                    "baseline_error": candidate_evaluation["baseline_error"],
+                })
+                candidate_scores = dict(scores)
+                candidate_scores["conditioned_consequence_match"] = max(0.0, 1.0 - conditioned_error)
+                candidate_scores["physical_consequence_axis_weight"] = float(
+                    participating_refs.get(ref_encoded, 0.0)
+                )
+                record_ref_participation_from_scores(
+                    self.systems, ref_encoded, candidate_scores,
+                    source="habitat", context_tag=context_tag,
+                    extra_trace_ids=[f"HABITAT_CTX:{context_tag}"],
+                    candidate_evaluation=candidate_evaluation,
+                )
+                evaluated_refs.add(ref_encoded)
+
+            # Preserve the real consequence stream for every native axis the
+            # physical dimensions intersect. If a ref was candidate-
+            # conditioned above, do not complete it twice.
+            for ref_encoded, weight in participating_refs.items():
+                if ref_encoded in evaluated_refs:
+                    continue
+                axis_scores = dict(scores)
+                axis_scores["physical_consequence_axis_weight"] = float(weight)
+                record_ref_participation_from_scores(
+                    self.systems, ref_encoded, axis_scores,
+                    source="habitat", context_tag=context_tag,
+                    extra_trace_ids=[f"HABITAT_CTX:{context_tag}"],
+                )
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(), module=__name__,
@@ -1178,4 +1424,5 @@ class HabitatRuntime:
         with self._lock:
             self._entities = {}
             self._recent_events = []
+            self._recent_motivation_events = []
             self._save_world_state()

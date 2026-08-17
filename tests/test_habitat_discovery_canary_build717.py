@@ -140,6 +140,7 @@ def test_habitat_discovery_canary_phase_a_bootstrap_evaluation(tmp_path):
         eids.append(c.affected_entities[0])
 
     staged_at = None
+    staged_ref_encoded = None
     for tick in range(60):
         eid = eids[tick % len(eids)]
         actor = "aurora" if tick % 3 != 0 else "human"
@@ -150,29 +151,46 @@ def test_habitat_discovery_canary_phase_a_bootstrap_evaluation(tmp_path):
         # ── Step 6: autonomous staging observed, never driven ──────────
         if engine._active_stage_for_ref and staged_at is None:
             staged_at = tick
+            staged_ref_encoded = next(iter(engine._active_stage_for_ref))
             break
     assert staged_at is not None, "real Habitat traffic must autonomously produce a staged inquiry"
-    assert engine.inadequacy_pressure(ref) > 0.0
+    staged_ref = RepresentationalRef.decode(staged_ref_encoded)
+    assert engine.inadequacy_pressure(staged_ref) > 0.0
 
     # ── Step 5: candidate investigable, generated from real evidence ───
-    candidates = engine.unresolved_field_candidates(ref)
+    candidates = engine.unresolved_field_candidates(staged_ref)
     assert candidates, "a real candidate must be investigable at this point"
     assert candidates[0]["origin"] == "domain_hypothesis"  # zero siblings exist for this fresh family
 
     # ── Step 7: candidate is not knowledge -- ref stays unresolved ─────
-    assert ref.unresolved_fields() == engine.current_resolution(ref).unresolved_fields()
+    assert staged_ref.unresolved_fields() == engine.current_resolution(staged_ref).unresolved_fields()
 
-    # ── Step 8: a further real Habitat action supplies co-activation ───
+    # ── Step 8: unrelated traffic cannot consume candidate credit ─────
     assert not engine._resolution_events  # nothing evaluated yet
     eid = eids[(staged_at + 1) % len(eids)]
     habitat.act(actor="aurora", territory="space", operation="move", target_ids=[eid], parameters={"x": 0.5, "y": 0.5})
-    assert not engine._active_stage_for_ref  # stage consumed by real completion
+    assert staged_ref_encoded in engine._active_stage_for_ref
+    assert not engine._resolution_events
+
+    # The production motivation consumer now lets the exact provisional value
+    # alter relevance/action comparison before a real Habitat consequence can
+    # evaluate it. No manual completion or direct participation call occurs.
+    for _ in range(4):
+        mot.maybe_engage_habitat(systems)
+        if any(event["ref_before_encoded"] == staged_ref_encoded
+               for event in engine._resolution_events):
+            break
 
     # ── Step 9: candidate genuinely evaluated (real outcome, real numbers) ──
-    assert engine._resolution_events, "a real ResolutionOutcome must exist after completion"
-    outcome_a = engine._resolution_events[-1]
+    matching = [
+        event for event in engine._resolution_events
+        if event["ref_before_encoded"] == staged_ref_encoded
+    ]
+    assert matching, "a real candidate-conditioned ResolutionOutcome must exist after autonomous action"
+    outcome_a = matching[-1]
     assert outcome_a["outcome"] in ("retained", "rejected", "unresolved")
     assert isinstance(outcome_a["discrepancy_before"], float)
+    assert outcome_a["candidate_evaluation"]["downstream_difference_produced"]
 
     # ── Step 12: rejected/unresolved is a legitimate terminal state ────
     # (Empirically, ordinary real Habitat traffic's own natural avg_score
@@ -192,18 +210,9 @@ def test_habitat_discovery_canary_phase_b_retain_and_reuse(tmp_path):
     engine = get_or_create_engine(systems)
     ref = RepresentationalRef.for_c1("N", "OPERATOR", "A")
 
-    # A real structural sibling -- exactly what unresolved_field_candidates()
-    # would look up on its own if one already existed from prior real
-    # activity elsewhere in the system.
-    sibling = RepresentationalRef.for_m21("N", "OPERATOR", "A", col_law_c="B", col_law_d="COST")
-    engine.ensure_registered(sibling)
-
-    # Real, decisive divergence purely through Habitat's own permission
-    # law: a human genuinely, repeatedly fails to move Aurora's Self-owned
-    # entities (real denial -- Self defaults modifiable_by_human=False)
-    # while Aurora succeeds on her own Space entities. Enough distinct
-    # entities/actors/owners for genealogy's own distinct-contexts
-    # requirement (MIN_DISTINCT_CONTEXTS_FOR_PRESSURE).
+    # Real, varied shared-Habitat traffic supplies consequence divergence and
+    # enough distinct actor/ownership contexts for native inadequacy pressure.
+    # No sibling, candidate value, action, or expected winner is injected.
     random.seed(2024)
     space_eids = [
         habitat.act(
@@ -212,38 +221,24 @@ def test_habitat_discovery_canary_phase_b_retain_and_reuse(tmp_path):
         ).affected_entities[0]
         for i in range(6)
     ]
-    self_eids = [
-        habitat.act(
-            actor="aurora", territory="self", operation="create",
-            parameters={"entity_type": "shape", "owner": "aurora"},
-        ).affected_entities[0]
-        for i in range(4)
-    ]
     for tick in range(60):
-        if tick % 4 == 3:
-            eid = self_eids[tick % len(self_eids)]
-            # Genuinely denied every time -- real permission law, not simulated.
-            denial = habitat.act(
-                actor="human", territory="self", operation="move",
-                target_ids=[eid], parameters={"x": random.uniform(0, 1), "y": random.uniform(0, 1)},
-            )
-            assert not denial.success, "this must be a REAL permission denial, not a scripted one"
-        else:
-            eid = space_eids[tick % len(space_eids)]
-            act_actor = "aurora" if tick % 3 != 0 else "human"
-            habitat.act(
-                actor=act_actor, territory="space", operation="move",
-                target_ids=[eid], parameters={"x": random.uniform(0, 1), "y": random.uniform(0, 1)},
-            )
+        eid = space_eids[tick % len(space_eids)]
+        act_actor = "aurora" if tick % 3 != 0 else "human"
+        habitat.act(
+            actor=act_actor, territory="space", operation="move",
+            target_ids=[eid],
+            parameters={"x": (tick % 11) / 11.0, "y": (tick % 13) / 13.0},
+        )
 
     # From here on (if not already retained from the real traffic above --
     # _emit_resolution_pressure() fires on every single habitat.act() call,
     # seed ticks included, so retention may already have happened before
     # this loop even starts), Aurora's own real autonomous loop chooses
     # everything; this test only ticks the clock.
-    for _tick in range(50):
+    for _tick in range(20):
         if engine.current_resolution(ref).resolved_fields() != ref.resolved_fields():
             break
+        random.seed(2024 + _tick)
         mot.maybe_engage_habitat(systems)
 
     # ── Step 10: retained -- current_resolution() genuinely refined ────

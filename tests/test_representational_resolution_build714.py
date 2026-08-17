@@ -70,6 +70,45 @@ def _drive(genealogy, engine, ref, *, axis_sequence, context_prefix="CTX", n_con
         )
 
 
+def _condition_candidate(
+    engine, ref, candidate, stage, *, baseline_error=0.8, conditioned_error=0.1,
+):
+    """Give a staged value a real, pre-consequence counterfactual role.
+
+    Older Build 714 tests treated aggregate pressure relief as candidate
+    evidence. Build 723 requires an exact value to change downstream
+    cognition first, then joins the resulting real consequence/error.
+    """
+    key = ref.encode()
+    engine._active_stage_for_ref[key] = {
+        "stage": stage,
+        "candidate": candidate,
+        "consumer": "resolution_regression",
+        "context_scope": None,
+    }
+    provisional = engine.provisional_resolution(ref)
+    assert getattr(provisional, candidate["field"]) == candidate["candidate_value"]
+    effect = engine.record_candidate_downstream_effect(
+        ref,
+        consumer="resolution_regression",
+        downstream_difference={
+            "prediction_without_candidate": "baseline-partition",
+            "prediction_with_candidate": "conditioned-partition",
+        },
+        action_or_prediction_affected="consequence_prediction",
+        baseline_expectation={"partition": "baseline"},
+        conditioned_expectation={"partition": "conditioned"},
+    )
+    assert effect is not None
+    return {
+        "candidate_field": candidate["field"],
+        "candidate_value": candidate["candidate_value"],
+        "actual_consequence": {"partition": "conditioned"},
+        "baseline_error": baseline_error,
+        "candidate_conditioned_error": conditioned_error,
+    }
+
+
 # ── A. Coarse Sufficiency ───────────────────────────────────────────────────
 
 def test_A_coherent_consequences_leave_representation_coarse(tmp_path):
@@ -141,11 +180,15 @@ def test_D_native_inquiry_sequence_produces_a_newly_resolved_field_traceable_to_
 
     staged = engine.stage_field_inquiry(ref, candidate, consumer="test_D")
     assert staged
+    candidate_evaluation = _condition_candidate(
+        engine, ref, candidate, staged[0], baseline_error=0.8, conditioned_error=0.1,
+    )
 
     result = engine.complete_field_inquiry(
         ref, candidate, staged[0], consumer="test_D", actual_coactivation=True,
         pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={a: 0.0 for a in AXES},
+        candidate_evaluation=candidate_evaluation,
     )
     assert result["representational_resolution_outcome"] == "retained"
     resolved = RepresentationalRef.decode(result["refined_ref"])
@@ -528,11 +571,15 @@ def test_context_scoped_resolution_preserves_canonical_identity_without_duplicat
     candidates = engine.unresolved_field_candidates(ref)
     candidate = candidates[0]
     staged = engine.stage_field_inquiry(ref, candidate, consumer="ctxtest")
+    candidate_evaluation = _condition_candidate(
+        engine, ref, candidate, staged[0], baseline_error=0.8, conditioned_error=0.1,
+    )
     result = engine.complete_field_inquiry(
         ref, candidate, staged[0], consumer="ctxtest", actual_coactivation=True,
         pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={a: 0.0 for a in AXES},
         context_scope="territory:space",
+        candidate_evaluation=candidate_evaluation,
     )
     assert result["representational_resolution_outcome"] == "context_specific"
     refined = RepresentationalRef.decode(result["refined_ref"])
@@ -555,10 +602,14 @@ def test_global_resolution_still_works_when_no_context_scope_given(tmp_path):
     candidates = engine.unresolved_field_candidates(ref)
     candidate = candidates[0]
     staged = engine.stage_field_inquiry(ref, candidate, consumer="globaltest")
+    candidate_evaluation = _condition_candidate(
+        engine, ref, candidate, staged[0], baseline_error=0.8, conditioned_error=0.1,
+    )
     result = engine.complete_field_inquiry(
         ref, candidate, staged[0], consumer="globaltest", actual_coactivation=True,
         pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={a: 0.0 for a in AXES},
+        candidate_evaluation=candidate_evaluation,
     )
     assert result["representational_resolution_outcome"] == "retained"
     refined = RepresentationalRef.decode(result["refined_ref"])
@@ -585,12 +636,16 @@ def test_resolution_is_rejected_when_marginal_improvement_is_not_worth_accumulat
     candidates = engine.unresolved_field_candidates(ref)
     candidate = candidates[0]
     staged = engine.stage_field_inquiry(ref, candidate, consumer="cost_reject_test")
+    candidate_evaluation = _condition_candidate(
+        engine, ref, candidate, staged[0], baseline_error=0.06, conditioned_error=0.0,
+    )
     # A tiny improvement that clears the absolute floor on its own but is
     # nowhere near worth what 50 rounds of searching actually cost.
     result = engine.complete_field_inquiry(
         ref, candidate, staged[0], consumer="cost_reject_test", actual_coactivation=True,
         pressure_before={"X": 0.0, "T": 0.06, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={a: 0.0 for a in AXES},
+        candidate_evaluation=candidate_evaluation,
     )
     assert result["representational_resolution_outcome"] == "rejected"
     assert result["refined_ref"] is None
@@ -606,10 +661,14 @@ def test_resolution_cost_is_real_not_a_fixed_placeholder(tmp_path):
     candidates = engine.unresolved_field_candidates(ref)
     candidate = candidates[0]
     staged = engine.stage_field_inquiry(ref, candidate, consumer="cost_real_test")
+    candidate_evaluation = _condition_candidate(
+        engine, ref, candidate, staged[0], baseline_error=0.8, conditioned_error=0.1,
+    )
     result = engine.complete_field_inquiry(
         ref, candidate, staged[0], consumer="cost_real_test", actual_coactivation=True,
         pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={a: 0.0 for a in AXES},
+        candidate_evaluation=candidate_evaluation,
     )
     assert result["representational_resolution_outcome"] == "retained"
     records = engine.genealogy_for(ref)
@@ -620,12 +679,9 @@ def test_resolution_cost_is_real_not_a_fixed_placeholder(tmp_path):
 
 # ── Build 717, Section 12: production resolution loop closes autonomously ──
 
-def test_autonomous_resolution_loop_closes_via_record_participation_alone(tmp_path):
-    """No test/production caller manually invokes unresolved_field_candidates,
-    stage_field_inquiry, or complete_field_inquiry here -- ONLY
-    record_participation(), exactly as RCEC/Habitat production code already
-    calls it. The engine must autonomously investigate, stage, and complete
-    on its own, riding the same real event stream."""
+def test_autonomous_resolution_loop_closes_after_consumer_records_causal_effect(tmp_path):
+    """Pressure stages autonomously, but completion waits until a real
+    consumer records how that exact value changed downstream prediction."""
     genealogy, engine = _fresh(tmp_path, name="autoloop717")
     ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
     sibling = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="N", col_law_d="COST")
@@ -643,6 +699,17 @@ def test_autonomous_resolution_loop_closes_via_record_participation_alone(tmp_pa
         if engine._active_stage_for_ref:
             break
     assert engine._active_stage_for_ref, "expected autonomous staging to occur from pressure alone"
+    pending = next(iter(engine._active_stage_for_ref.values()))
+    candidate = pending["candidate"]
+    engine.provisional_resolution(ref)
+    assert engine.record_candidate_downstream_effect(
+        ref,
+        consumer="prod_sim",
+        downstream_difference={"prediction": "changed"},
+        action_or_prediction_affected="consequence_prediction",
+        baseline_expectation={"partition": "baseline"},
+        conditioned_expectation={"partition": "conditioned"},
+    ) is not None
 
     # Next real participation with genuine relief on the declared axis
     # completes the staged inquiry -- still purely via record_participation().
@@ -651,10 +718,17 @@ def test_autonomous_resolution_loop_closes_via_record_participation_alone(tmp_pa
         ref, pressure_before={"X": 0.0, "T": 0.5, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={a: 0.0 for a in AXES}, source="prod_sim",
         context_tag=f"CTX:{i % 3}", extra_trace=[TraceItem(kind="ABILITY", id=f"CTX:{i % 3}")],
+        candidate_evaluation={
+            "candidate_field": candidate["field"],
+            "candidate_value": candidate["candidate_value"],
+            "actual_consequence": {"partition": "conditioned"},
+            "baseline_error": 0.8,
+            "candidate_conditioned_error": 0.1,
+        },
     )
-    assert not engine._active_stage_for_ref, "stage should be consumed after completion attempt"
+    assert not engine._active_stage_for_ref, "retained value should close this pass"
     resolved = engine.current_resolution(ref)
-    assert resolved.col_law_c == "N"
+    assert getattr(resolved, candidate["field"]) == candidate["candidate_value"]
     records = engine.genealogy_for(ref)
     assert records and records[-1]["status"] == "retained"
     assert records[-1]["evidence_source"].startswith("stage:")
@@ -702,12 +776,27 @@ def test_bootstrap_resolves_the_first_ever_member_of_a_family_with_zero_siblings
     # can ever be retained (item 6).
     provisional = engine.provisional_resolution(ref)
     assert getattr(provisional, staged_candidate["field"]) == staged_candidate["candidate_value"]
+    assert engine.record_candidate_downstream_effect(
+        ref,
+        consumer="bootstrap_sim",
+        downstream_difference={"prediction": "changed"},
+        action_or_prediction_affected="consequence_prediction",
+        baseline_expectation={"partition": "baseline"},
+        conditioned_expectation={"partition": "conditioned"},
+    ) is not None
 
     _context_ability(genealogy, f"CTX:{i % 3}")
     engine.record_participation(
         ref, pressure_before={"X": 0.0, "T": 0.5, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={a: 0.0 for a in AXES}, source="bootstrap_sim",
         context_tag=f"CTX:{i % 3}", extra_trace=[TraceItem(kind="ABILITY", id=f"CTX:{i % 3}")],
+        candidate_evaluation={
+            "candidate_field": staged_candidate["field"],
+            "candidate_value": staged_candidate["candidate_value"],
+            "actual_consequence": {"partition": "conditioned"},
+            "baseline_error": 0.8,
+            "candidate_conditioned_error": 0.1,
+        },
     )
     resolved_field = staged_candidate["field"]
     resolved = engine.current_resolution(ref)
@@ -752,7 +841,8 @@ def test_bootstrap_candidate_never_retained_without_real_causal_participation(tm
     resolved_field = staged_candidate["field"]
     resolved = engine.current_resolution(ref)
     assert getattr(resolved, resolved_field) is None, "an unread candidate must never be retained"
-    assert not engine._active_stage_for_ref, "the stage must still be consumed even when unread"
+    assert engine._active_stage_for_ref, "an untested candidate must remain staged, not consume unrelated evidence"
+    assert next(iter(engine._active_stage_for_ref.values()))["candidate"] == staged_candidate
 
 
 def test_bootstrap_hypothesis_values_are_exactly_the_fields_lawful_domain(tmp_path):
@@ -823,10 +913,14 @@ def test_resolve_field_is_only_reachable_through_complete_field_inquiry_in_pract
     candidates = engine.unresolved_field_candidates(ref)
     candidate = candidates[0]
     staged = engine.stage_field_inquiry(ref, candidate, consumer="seal_test")
+    candidate_evaluation = _condition_candidate(
+        engine, ref, candidate, staged[0], baseline_error=0.8, conditioned_error=0.1,
+    )
     result = engine.complete_field_inquiry(
         ref, candidate, staged[0], consumer="seal_test", actual_coactivation=True,
         pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
         pressure_after={a: 0.0 for a in AXES},
+        candidate_evaluation=candidate_evaluation,
     )
     assert result["representational_resolution_outcome"] == "retained"
     assert engine._in_complete_field_inquiry is False, "flag must be cleared after completion"

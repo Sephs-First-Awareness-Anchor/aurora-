@@ -949,6 +949,13 @@ class NCStrainFilter:
             'source', 'module', 'action', 'outcome', 'timestamp',
             'user_text', 'response', 'fact', 'summary', 'claim',
             'note', 'anchor', 'topic', 'salient', 'intent',
+            # Stable environmental provenance.  These keys do not affect
+            # resonance or strain selection; they merely let an ordinary
+            # reactivated fragment point back to the real entity/action that
+            # produced it (including Habitat entities) without a parallel
+            # domain-specific memory store.
+            'entity_id', 'entity_ids', 'affected_entities', 'action_id',
+            'state_changed', 'consequence_dimensions', 'intention_context',
             # AURORA LIVE REPRESENTATIONAL PROPAGATION AND CONSEQUENCE-
             # BINDING DIRECTIVE: preserved as optional provenance only --
             # never read, matched against, or used by resonance/strain
