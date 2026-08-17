@@ -20,62 +20,58 @@ import json
 import time as _time
 
 from aurora_habitat import HabitatRuntime
+from aurora_habitat_motivation import maybe_engage_habitat
+from aurora_internal.constraint_genealogy import ConstraintGenealogyLogger, GenealogyConfig
 
 
 # ── Section 22: Self-Revisitation Canary ────────────────────────────────────
 
 def test_self_revisitation_canary(tmp_path):
-    rt = HabitatRuntime(tmp_path / "self_revisit")
+    genealogy = ConstraintGenealogyLogger(
+        "self_revisit", config=GenealogyConfig(),
+        output_dir=str(tmp_path / "self_revisit" / "genealogy"),
+    )
+    systems = {
+        "genealogy": genealogy,
+        "state_dir": str(tmp_path / "self_revisit" / "state"),
+    }
+    rt = HabitatRuntime(tmp_path / "self_revisit" / "world", systems=systems)
+    systems["habitat"] = rt
 
-    # Step 1: Aurora creates two real entities in her own real Habitat action.
-    untouched = rt.act(actor="aurora", territory="space", operation="create", parameters={"entity_type": "shape"})
-    untouched_id = untouched.affected_entities[0]
-    revisited = rt.act(actor="aurora", territory="space", operation="create", parameters={"entity_type": "shape"})
-    revisited_id = revisited.affected_entities[0]
+    # The canary now genuinely concerns Self: Aurora-owned state is created
+    # there and survives a full runtime restart.
+    created = rt.act(
+        actor="aurora", territory="self", operation="create",
+        parameters={"entity_type": "shape"},
+    )
+    entity_id = created.affected_entities[0]
+    assert rt.get_entity(entity_id)["territory"] == "self"
+    assert rt.get_entity(entity_id)["owner"] == "aurora"
+    rt = HabitatRuntime(tmp_path / "self_revisit" / "world", systems=systems)
+    systems["habitat"] = rt
+    assert rt.get_entity(entity_id)["territory"] == "self"
 
-    # Step 2: neither has been interacted with again yet -- real, not assumed.
-    assert rt.get_entity(untouched_id)["interaction_count"] == 0
-    assert rt.get_entity(revisited_id)["interaction_count"] == 0
+    # A real reactivated memory identity supplies the later internal reason.
+    # No elapsed-time observation, revisit interval, or Self bonus participates.
+    systems["_sedi_surface_frags"] = [{
+        "event_id": "self-memory",
+        "resonance": 1.0,
+        "content": {"source": "habitat", "entity_ids": [entity_id]},
+    }]
+    record = maybe_engage_habitat(systems)
+    assert record.engaged is True
+    assert record.selected_action is not None
+    assert entity_id in record.selected_action["target_ids"]
+    assert record.selected_action["territory"] == "self"
+    assert record.selected_action["reason"]["ownership_bonus"] == 0.0
+    assert record.selected_action["candidate_score_components"].get(
+        "entity:reactivated_memory_binding", 0.0,
+    ) > 0.0
 
-    # Step 3: a comparable observation window (real elapsed-time cutoff, not
-    # a fabricated one) -- both entities' modified_at falls before `since`.
-    since = _time.time() + 1.0
-    before_revisit = rt.observe(actor="aurora", since=since)["aurora_created_unrevisited"]
-    assert untouched_id in before_revisit
-    assert revisited_id in before_revisit, "not yet revisited -- correctly reported"
-
-    # Step 4: Aurora genuinely revisits ONE of the two, via a real action.
-    rt.act(actor="aurora", territory="space", operation="move", target_ids=[revisited_id], parameters={"x": 0.4, "y": 0.4})
-
-    # Step 5: interaction_count now real (Section 18 fix) -- exactly the
-    # revisited entity moved, the untouched one did not.
-    assert rt.get_entity(revisited_id)["interaction_count"] == 1
-    assert rt.get_entity(untouched_id)["interaction_count"] == 0
-
-    # Step 6: the SAME comparable window now correctly distinguishes them --
-    # revisited drops out, untouched remains (comparability-gated, section 19,
-    # never fabricated from silence: both entities had the identical real
-    # observation window; only the one with a real subsequent interaction
-    # is excluded).
-    since2 = _time.time() + 1.0
-    after_revisit = rt.observe(actor="aurora", since=since2)["aurora_created_unrevisited"]
-    assert revisited_id not in after_revisit, "genuinely revisited entity must not be reported as unrevisited"
-    assert untouched_id in after_revisit, "genuinely untouched entity must still be reported"
-
-    # Step 7 (negative control): many OTHER unrelated real actions must not
-    # spuriously clear the untouched entity's own unrevisited status --
-    # proves the check tracks THIS entity's real history, not global
-    # activity volume.
-    other = rt.act(actor="aurora", territory="space", operation="create", parameters={"entity_type": "text"})
-    other_id = other.affected_entities[0]
-    for _ in range(5):
-        rt.act(actor="aurora", territory="space", operation="recolor", target_ids=[other_id], parameters={"color": "green"})
-    since3 = _time.time() + 1.0
-    final = rt.observe(actor="aurora", since=since3)["aurora_created_unrevisited"]
-    assert untouched_id in final, "unrelated activity elsewhere must not clear this entity's own unrevisited status"
-
-    # No interpretation anywhere in the observation surface.
-    blob = json.dumps(rt.observe(actor="aurora", since=since3))
+    history = rt.get_history(entity_id=entity_id)
+    assert len(history) >= 2
+    assert history[-1]["actor"] == "aurora"
+    blob = json.dumps(record.to_dict())
     for word in ("lonely", "forgotten", "abandoned", "neglected"):
         assert word not in blob.lower()
 

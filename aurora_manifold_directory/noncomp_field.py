@@ -36,6 +36,12 @@ _DIM_STR_TO_INT:  Dict[str, int] = {
     "OPERATOR": 0, "POLARITY": 1, "MAGNITUDE": 2, "COST": 3, "DIFFERENCE": 4,
 }
 
+# The field's native equilibrium reference.  This is the value the executable
+# state is actually born at; consumers must read it rather than guessing a
+# visually convenient threshold (the Habitat bridge in Build 723 guessed 0.30
+# even though every axis starts here at 0.10).
+REFERENCE_AXIS_PRESSURE = 0.10
+
 # Sensory modality → weighted axis contributions (must sum to 1.0)
 _MODALITY_AXES: Dict[str, Dict[str, float]] = {
     "visual":         {"X": 0.45, "B": 0.30, "N": 0.10, "T": 0.10, "A": 0.05},
@@ -128,7 +134,9 @@ class NoncompField:
         self._lock     = threading.Lock()
         self._profiles: List[NoncompProfile] = []
         self._by_axis: Dict[int, List[NoncompProfile]] = {i: [] for i in range(5)}
-        self._axis_p:  Dict[int, float] = {i: 0.10 for i in range(5)}  # resting
+        self._axis_p:  Dict[int, float] = {
+            i: REFERENCE_AXIS_PRESSURE for i in range(5)
+        }
         self._loaded_count = 0
         self._boot_done    = False
         self._load_index()
@@ -197,6 +205,35 @@ class NoncompField:
     def axis_pressure(self, axis: int) -> float:
         return self._axis_p.get(axis, 0.0)
 
+    def reference_axis_pressures(self) -> Dict[str, float]:
+        """Return the field's own neutral reference state.
+
+        This is deliberately an executable interface rather than a duplicated
+        constant in each consumer.  A future field implementation may replace
+        the fixed birth equilibrium with a rolling/local reference without
+        changing callers.
+        """
+        return {axis: REFERENCE_AXIS_PRESSURE for axis in _AXIS_STR_TO_INT}
+
+    def dimension_pressures(self) -> Dict[str, float]:
+        """Current native activity aggregated by NonComp dimension.
+
+        The values come from the live 125-profile field itself.  They let a
+        consumer distinguish active MAGNITUDE, DIFFERENCE, POLARITY, COST, and
+        OPERATOR structure without inventing a second dimensional state.
+        """
+        buckets: Dict[int, List[float]] = {i: [] for i in range(5)}
+        for profile in self._profiles:
+            try:
+                buckets[profile.key.nc_dim].append(float(profile.mean_pressure()))
+            except Exception:
+                continue
+        inverse = {value: name for name, value in _DIM_STR_TO_INT.items()}
+        return {
+            inverse[index]: round(sum(values) / len(values), 6) if values else 0.0
+            for index, values in buckets.items()
+        }
+
     def all_profiles(self) -> List[NoncompProfile]:
         return self._profiles
 
@@ -223,6 +260,8 @@ class NoncompField:
                 _AXIS_INT_TO_STR[i]: round(v, 4)
                 for i, v in self._axis_p.items()
             },
+            "reference_axis_pressures": self.reference_axis_pressures(),
+            "dimension_pressures": self.dimension_pressures(),
         }
 
 
