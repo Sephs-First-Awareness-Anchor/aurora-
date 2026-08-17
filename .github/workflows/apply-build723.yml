@@ -1,0 +1,88 @@
+name: Apply Build 723 native motivation binding
+
+on:
+  push:
+    branches:
+      - agent/build-723-native-motivation-binding
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct and apply exact Build 723 patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$(git merge-base origin/main HEAD)"
+          echo "$BASE" > /tmp/build723-base
+          cat .github/build723-patch/b64-* > /tmp/build723.patch.gz.b64
+          base64 -d /tmp/build723.patch.gz.b64 | gzip -dc > /tmp/build723.patch
+          git apply --check /tmp/build723.patch
+          git apply /tmp/build723.patch
+
+      - name: Run focused Build 723 verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q \
+            tests/test_native_motivation_binding_build723.py \
+            tests/test_habitat_motivation_build717.py \
+            tests/test_habitat_discovery_canary_build717.py \
+            tests/test_habitat_self_and_shared_canaries_build717.py \
+            tests/test_representational_resolution_build714.py
+          python aurora_build714_resolution_canaries.py
+          python -m compileall -q \
+            aurora_build714_resolution_canaries.py \
+            aurora_habitat.py \
+            aurora_habitat_motivation.py \
+            aurora_manifold_directory/noncomp_field.py \
+            aurora_representational_resolution.py \
+            aurora_sedimemory.py \
+            flutter_app/android/app/src/main/python/aurora_bridge.py \
+            tests/test_native_motivation_binding_build723.py
+
+      - name: Seal intended source-only delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$(cat /tmp/build723-base)"
+
+          # Never publish runtime/test-generated Aurora state.
+          git restore --source="$BASE" --worktree --staged -- aurora_state 2>/dev/null || true
+
+          # Remove the temporary transfer/applicator machinery from the final tree.
+          rm -rf .github/build723-patch
+          rm -f .github/workflows/apply-build723.yml
+          git add -A
+
+          cat > /tmp/expected-build723-files <<'EOF'
+          AURORA_BUILD_723_NATIVE_MOTIVATION_BINDING_REPORT.md
+          aurora_build714_resolution_canaries.py
+          aurora_habitat.py
+          aurora_habitat_motivation.py
+          aurora_manifold_directory/noncomp_field.py
+          aurora_representational_resolution.py
+          aurora_sedimemory.py
+          flutter_app/android/app/src/main/python/aurora_bridge.py
+          tests/test_habitat_discovery_canary_build717.py
+          tests/test_habitat_motivation_build717.py
+          tests/test_habitat_self_and_shared_canaries_build717.py
+          tests/test_native_motivation_binding_build723.py
+          tests/test_representational_resolution_build714.py
+          EOF
+          git diff --cached --name-only "$BASE" | sort > /tmp/actual-build723-files
+          sort /tmp/expected-build723-files -o /tmp/expected-build723-files
+          diff -u /tmp/expected-build723-files /tmp/actual-build723-files
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Build 723: bind native motivation to causal action selection"
+          git push origin HEAD
