@@ -673,7 +673,12 @@ def test_bootstrap_resolves_the_first_ever_member_of_a_family_with_zero_siblings
     """No sibling is EVER registered anywhere in this test -- genuinely the
     first representation in its family. Resolution must still be possible
     (Section 13), earned only through real consequence (Section 14), driven
-    purely by record_participation() with no manual stage/complete calls."""
+    purely by record_participation() with no manual stage/complete calls.
+
+    Follow-up (item 6): a staged candidate must also genuinely PARTICIPATE
+    -- provisional_resolution() called by a real consumer while it is
+    staged -- before it can be retained; co-activation and ambient
+    discrepancy improvement alone are no longer sufficient."""
     genealogy, engine = _fresh(tmp_path, name="bootstrap717")
     ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
 
@@ -692,6 +697,12 @@ def test_bootstrap_resolves_the_first_ever_member_of_a_family_with_zero_siblings
     staged_candidate = list(engine._active_stage_for_ref.values())[0]["candidate"]
     assert staged_candidate["origin"] == "domain_hypothesis"
 
+    # A real consumer reads the provisional value while it is staged --
+    # this IS the causal participation the candidate must have before it
+    # can ever be retained (item 6).
+    provisional = engine.provisional_resolution(ref)
+    assert getattr(provisional, staged_candidate["field"]) == staged_candidate["candidate_value"]
+
     _context_ability(genealogy, f"CTX:{i % 3}")
     engine.record_participation(
         ref, pressure_before={"X": 0.0, "T": 0.5, "N": 0.0, "B": 0.0, "A": 0.0},
@@ -704,6 +715,44 @@ def test_bootstrap_resolves_the_first_ever_member_of_a_family_with_zero_siblings
     records = engine.genealogy_for(ref)
     assert records and records[-1]["status"] == "retained"
     assert records[-1]["evidence"]["origin"] == "lawful_domain"
+
+
+def test_bootstrap_candidate_never_retained_without_real_causal_participation(tmp_path):
+    """The negative case item 6 exists to prevent: co-activation (the
+    hypothesis marker merely appearing in the same trace) plus ambient
+    discrepancy improvement used to be sufficient on their own. Now, a
+    candidate that reaches completion with ZERO real provisional_
+    resolution() reads must remain unresolved, however favorable the
+    ambient discrepancy trend looks."""
+    genealogy, engine = _fresh(tmp_path, name="bootstrap717_unread")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+
+    i = 0
+    for ax in ["B", "N", "X"] * 5:
+        _context_ability(genealogy, f"CTX:{i % 3}")
+        engine.record_participation(
+            ref, pressure_before={a: (0.3 if a == ax else 0.0) for a in AXES},
+            pressure_after={a: 0.0 for a in AXES}, source="bootstrap_sim",
+            context_tag=f"CTX:{i % 3}", extra_trace=[TraceItem(kind="ABILITY", id=f"CTX:{i % 3}")],
+        )
+        i += 1
+        if engine._active_stage_for_ref:
+            break
+    assert engine._active_stage_for_ref
+    staged_candidate = list(engine._active_stage_for_ref.values())[0]["candidate"]
+
+    # Deliberately NEVER call provisional_resolution() here -- no real
+    # consumer ever looked at the candidate's value while it was staged.
+    _context_ability(genealogy, f"CTX:{i % 3}")
+    engine.record_participation(
+        ref, pressure_before={"X": 0.0, "T": 0.5, "N": 0.0, "B": 0.0, "A": 0.0},
+        pressure_after={a: 0.0 for a in AXES}, source="bootstrap_sim",
+        context_tag=f"CTX:{i % 3}", extra_trace=[TraceItem(kind="ABILITY", id=f"CTX:{i % 3}")],
+    )
+    resolved_field = staged_candidate["field"]
+    resolved = engine.current_resolution(ref)
+    assert getattr(resolved, resolved_field) is None, "an unread candidate must never be retained"
+    assert not engine._active_stage_for_ref, "the stage must still be consumed even when unread"
 
 
 def test_bootstrap_hypothesis_values_are_exactly_the_fields_lawful_domain(tmp_path):

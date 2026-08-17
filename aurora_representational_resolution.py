@@ -172,6 +172,18 @@ class RepresentationalResolutionEngine:
         # just mean it expires normally on the far side, same as any other
         # process-restart interruption of an in-progress genealogy stage.
         self._active_stage_for_ref: Dict[str, Dict[str, Any]] = {}
+        # Follow-up (item 6) -- causal-participation ledger: how many times
+        # a real consumer has actually READ this ref's currently-staged
+        # provisional value (via provisional_resolution() below) since it
+        # was staged. Previously a domain-hypothesis candidate could be
+        # retained purely from co-activation (a marker ability merely
+        # appearing in the same observed trace) plus ambient discrepancy
+        # trend -- neither of which required the hypothesized VALUE to
+        # ever have been used for anything. Reset to 0 whenever a new
+        # stage begins (investigate_if_pressured()); a stage that reaches
+        # completion with zero reads was never actually tested and cannot
+        # be retained regardless of ambient discrepancy.
+        self._provisional_reads: Dict[str, int] = {}
         # Section 15: the seal on resolve_field()'s production authority --
         # True only for the exact duration of a real complete_field_inquiry()
         # call, set/cleared by that method itself, never settable from
@@ -388,7 +400,32 @@ class RepresentationalResolutionEngine:
             "stage": staged[0], "candidate": candidate, "consumer": consumer,
             "context_scope": context_scope,
         }
+        self._provisional_reads[coarse_key] = 0
         return self._active_stage_for_ref[coarse_key]
+
+    def provisional_resolution(self, ref: RepresentationalRef) -> RepresentationalRef:
+        """Section 14/28 follow-up (item 6) -- lets a real consumer opt in
+        to seeing a currently-staged candidate's PROVISIONAL value, never
+        silently substituted for current_resolution() (which only ever
+        returns EARNED, retained authority -- "candidate is not knowledge"
+        still holds everywhere else). This is what makes causal
+        participation real rather than a synthetic marker: a consumer that
+        calls this and lets the provisional value genuinely shape a real
+        decision is recorded here, and complete_field_inquiry() requires
+        at least one such real read before a domain-hypothesis candidate
+        may be retained. Falls back to current_resolution() when nothing
+        is staged, or when the staged candidate targets a field that is
+        somehow already resolved (defensive; should not happen)."""
+        coarse_key = ref.encode()
+        pending = self._active_stage_for_ref.get(coarse_key)
+        if pending is None:
+            return self.current_resolution(ref)
+        candidate = pending.get("candidate") or {}
+        field_name = str(candidate.get("field", ""))
+        if not field_name or getattr(ref, field_name, None) is not None:
+            return self.current_resolution(ref)
+        self._provisional_reads[coarse_key] = self._provisional_reads.get(coarse_key, 0) + 1
+        return replace(ref, **{field_name: candidate.get("candidate_value")})
 
     # ── Reading the (free) inadequacy signal ────────────────────────────────
 
@@ -658,6 +695,7 @@ class RepresentationalResolutionEngine:
         it through here instead. Internal wiring only -- production callers
         completing a real (non-hypothesis) staged inquiry never need this."""
         ability_id = self.ensure_registered(ref)
+        coarse_key = ref.encode()
         coactivated_ids = [ability_id, str(candidate.get("counterpart_ability_id", ""))]
         discrepancy_before = (
             _discrepancy_before_override if _discrepancy_before_override is not None
@@ -668,14 +706,24 @@ class RepresentationalResolutionEngine:
             # No real genealogy collision/gap record exists to complete an
             # experiment against (Sections 13-14) -- the co-activation
             # itself (this ref's ability + the hypothesis marker genuinely
-            # present together in the SAME already-observed trace) IS the
-            # evidence. Nothing here fabricates promotion/PairStats
-            # authority; it only reads what genealogy's own
-            # _attribute_consequence() already, separately, computed from
-            # that real tick.
+            # present together in the SAME already-observed trace) is
+            # necessary evidence, but Section 14 follow-up (item 6) makes
+            # it no longer SUFFICIENT: co-activation alone never required
+            # the hypothesized VALUE to have actually influenced any real
+            # decision. causally_participated is True only if a real
+            # consumer called provisional_resolution() at least once while
+            # this candidate was staged (see that method) -- a genuine
+            # causal role, not a synthetic marker. A candidate that was
+            # never actually used cannot be retained regardless of
+            # ambient discrepancy trend; it remains unresolved (not
+            # rejected -- it was never tested, not that it failed).
+            causally_participated = self._provisional_reads.pop(coarse_key, 0) > 0
             result: Dict[str, Any] = {
-                "stage_id": None, "evidence_admitted": bool(actual_coactivation),
-                "actual_coactivation": bool(actual_coactivation), "status": "hypothesis_coactivated",
+                "stage_id": None,
+                "evidence_admitted": bool(actual_coactivation) and causally_participated,
+                "actual_coactivation": bool(actual_coactivation),
+                "causally_participated": causally_participated,
+                "status": "hypothesis_coactivated",
             }
         else:
             result = self.genealogy.complete_representation_experiment(
@@ -690,7 +738,6 @@ class RepresentationalResolutionEngine:
         outcome_kind = "unresolved"
         refined_ref: Optional[RepresentationalRef] = None
         discrepancy_after = discrepancy_before
-        coarse_key = ref.encode()
         real_cost = max(1.0, float(self._cost_ledger.get(coarse_key, 0.0)))
         if bool(result.get("evidence_admitted", False)):
             discrepancy_after = float((self.consequence_profile_for(ref) or {}).get("discrepancy", discrepancy_before) or discrepancy_before)
