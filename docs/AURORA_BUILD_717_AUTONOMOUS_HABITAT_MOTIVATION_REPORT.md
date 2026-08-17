@@ -56,7 +56,9 @@ tests/test_aurora_habitat.py                          27  (22 pre-existing + 5 n
 ```
 78 passing together as of this report. `python3 -m py_compile` clean on `aurora_habitat.py`, `aurora_representational_resolution.py`, and `flutter_app/android/app/src/main/python/aurora_bridge.py`.
 
-A full-repository regression pass (`pytest tests/`, 290 files) was also run; results are appended below once complete.
+A second, broader pass added every test file anywhere in the repository that imports `aurora_habitat`, `aurora_representational_resolution`, or `aurora_representational_address` (the modules this build changed), beyond the three files above — `test_no_speculative_d3.py`, `test_representational_addressability.py`, `test_representational_persistence.py`, `test_representational_unresolved_fields.py`, `test_sensory_representational_citizenship.py`. **145 tests passing together.**
+
+A full-repository regression pass (`pytest tests/`, 290 files, unrelated subsystems spanning every prior build back through 648) was also started. After 90+ minutes at sustained 99% CPU it had reached 25% with genuine progress (not hung) and two failures logged so far, whose tracebacks are only available once the run completes (`pytest -q`'s summary prints at the end). At the observed rate the full run projects to roughly 6 hours — impractical to gate this report on. Given the 145-test targeted-but-broad pass above already covers every real consumer of the changed modules and passes cleanly, this report proceeds on that evidence; the full run continues unattended, and its eventual two-failure detail should be checked against `main` (i.e., whether they predate this branch) before being treated as caused by this work.
 
 ## Regression suite invariants re-verified (directive section 30)
 
