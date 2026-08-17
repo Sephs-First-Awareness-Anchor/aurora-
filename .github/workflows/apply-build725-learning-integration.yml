@@ -24,67 +24,89 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install focused verification dependencies
-        run: python -m pip install --upgrade pip pytest numpy==1.26.4
-
-      - name: Apply Build 725 repair
-        run: python .github/build725-repair/apply.py
-
-      - name: Compile modified Python
+      - name: Run repair and focused verification
+        id: repair
+        shell: bash
         run: |
-          python -m compileall -q \
-            aurora_simulation_engine.py \
-            aurora_autonomy.py \
-            aurora_dream_trainer.py \
-            aurora.py \
-            aurora_sedimemory.py \
-            aurora_habitat.py \
-            aurora_habitat_motivation.py \
-            aurora_manifold_directory/noncomp_field.py \
-            aurora_internal/aurora_understanding_contract.py \
-            aurora_internal/aurora_ontological_scaffolding.py \
-            flutter_app/android/app/src/main/python/aurora_bridge.py
+          set +e
+          LOG=/tmp/build725-run.log
+          : > "$LOG"
+          {
+            echo '=== install ==='
+            python -m pip install --upgrade pip pytest numpy==1.26.4
+            echo '=== apply ==='
+            python .github/build725-repair/apply.py
+            echo '=== compile ==='
+            python -m compileall -q \
+              aurora_simulation_engine.py \
+              aurora_autonomy.py \
+              aurora_dream_trainer.py \
+              aurora.py \
+              aurora_sedimemory.py \
+              aurora_habitat.py \
+              aurora_habitat_motivation.py \
+              aurora_manifold_directory/noncomp_field.py \
+              aurora_internal/aurora_understanding_contract.py \
+              aurora_internal/aurora_ontological_scaffolding.py \
+              flutter_app/android/app/src/main/python/aurora_bridge.py
+            echo '=== pytest ==='
+            python -m pytest -q \
+              tests/test_build725_learning_integration_repair.py \
+              tests/test_afterthought_topic_identity_and_shard_collision_repair.py \
+              tests/test_afterthought_topic_identity_and_shard_collision_live.py \
+              tests/test_native_motivation_binding_build723.py \
+              tests/test_habitat_motivation_build717.py \
+              tests/test_habitat_discovery_canary_build717.py \
+              tests/test_habitat_self_and_shared_canaries_build717.py \
+              tests/test_representational_resolution_build714.py \
+              tests/test_comm_credit_phase_g_live_wiring.py \
+              tests/test_communication_credit_unification.py \
+              tests/test_zip_pipeline_learning_oets_promotion.py
+            echo '=== canaries ==='
+            python aurora_build714_resolution_canaries.py
+            echo '=== removal guards ==='
+            ! grep -n "def _extract_semantic_topic" aurora_simulation_engine.py
+            ! grep -n "def _derive_understanding" aurora_simulation_engine.py
+            ! grep -n "def _stamp_crystal" aurora_simulation_engine.py
+            ! grep -n "def inject_into_oets" aurora_simulation_engine.py
+            ! grep -R -n --include='*.py' --exclude='apply.py' "\.inject_into_oets(" aurora_*.py tests
+            grep -n "self.run_reflection_cycle(" aurora_internal/aurora_understanding_contract.py
+            grep -n "reset_pressure_topology" aurora_internal/aurora_understanding_contract.py
+            grep -n "fragment_count" aurora_sedimemory.py
+            grep -n "Concept Crystals" flutter_app/lib/screens/hub_screen.dart
+            grep -n "Timer.periodic" flutter_app/lib/habitat/habitat_gesture_layer.dart
+          } >"$LOG" 2>&1
+          RC=$?
+          echo "exit_code=$RC" >> "$LOG"
+          echo "rc=$RC" >> "$GITHUB_OUTPUT"
+          cp "$LOG" /tmp/build725-run-preserved.log
+          exit 0
 
-      - name: Build 725 focused regression
+      - name: Commit successful repair or failure log
+        shell: bash
         run: |
-          python -m pytest -q \
-            tests/test_build725_learning_integration_repair.py \
-            tests/test_afterthought_topic_identity_and_shard_collision_repair.py \
-            tests/test_afterthought_topic_identity_and_shard_collision_live.py \
-            tests/test_native_motivation_binding_build723.py \
-            tests/test_habitat_motivation_build717.py \
-            tests/test_habitat_discovery_canary_build717.py \
-            tests/test_habitat_self_and_shared_canaries_build717.py \
-            tests/test_representational_resolution_build714.py \
-            tests/test_comm_credit_phase_g_live_wiring.py \
-            tests/test_communication_credit_unification.py \
-            tests/test_zip_pipeline_learning_oets_promotion.py
-          python aurora_build714_resolution_canaries.py
-
-      - name: Architectural removal guards
-        run: |
-          ! grep -n "def _extract_semantic_topic" aurora_simulation_engine.py
-          ! grep -n "def _derive_understanding" aurora_simulation_engine.py
-          ! grep -n "def _stamp_crystal" aurora_simulation_engine.py
-          ! grep -n "def inject_into_oets" aurora_simulation_engine.py
-          ! grep -R -n --exclude='*.md' --exclude='apply.py' "\.inject_into_oets(" aurora_*.py tests || true
-          grep -n "self.run_reflection_cycle(" aurora_internal/aurora_understanding_contract.py
-          grep -n "reset_pressure_topology" aurora_internal/aurora_understanding_contract.py
-          grep -n "fragment_count" aurora_sedimemory.py
-          grep -n "Concept Crystals" flutter_app/lib/screens/hub_screen.dart
-          grep -n "Timer.periodic" flutter_app/lib/habitat/habitat_gesture_layer.dart
-
-      - name: Seal source-only repair commit
-        run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git restore --staged --worktree aurora_state 2>/dev/null || true
-          rm -rf .pytest_cache __pycache__ */__pycache__ */*/__pycache__
-          rm -f .github/build725-repair/apply.py
-          rm -f .github/workflows/apply-build725-learning-integration.yml
-          rmdir .github/build725-repair 2>/dev/null || true
-          git add -A
-          git diff --cached --check
-          git status --short
-          git commit -m "Build 725: remove legacy learning contamination and repair live development wiring"
-          git push origin HEAD:agent/build-724-learning-integration-repair
+          RC='${{ steps.repair.outputs.rc }}'
+          if [ "$RC" = "0" ]; then
+            git restore --staged --worktree aurora_state 2>/dev/null || true
+            rm -rf .pytest_cache __pycache__ */__pycache__ */*/__pycache__
+            rm -f .github/build725-repair/apply.py
+            rm -f .github/build725-repair/run.log
+            rm -f .github/workflows/apply-build725-learning-integration.yml
+            rmdir .github/build725-repair 2>/dev/null || true
+            git add -A
+            git diff --cached --check
+            git status --short
+            git commit -m "Build 725: remove legacy learning contamination and repair live development wiring"
+            git push origin HEAD:agent/build-724-learning-integration-repair
+          else
+            cp /tmp/build725-run-preserved.log /tmp/run.log
+            git reset --hard HEAD
+            mkdir -p .github/build725-repair
+            cp /tmp/run.log .github/build725-repair/run.log
+            git add .github/build725-repair/run.log
+            git commit -m "Record Build 725 repair gate failure"
+            git push origin HEAD:agent/build-724-learning-integration-repair
+          fi
