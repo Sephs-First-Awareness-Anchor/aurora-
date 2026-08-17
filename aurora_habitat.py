@@ -339,6 +339,15 @@ class HabitatRuntime:
         self._recent_events.append(record)
         if len(self._recent_events) > _RECENT_EVENTS_MAXLEN:
             self._recent_events = self._recent_events[-_RECENT_EVENTS_MAXLEN:]
+        # Build 717 (directive section 18): the prior event this one is a
+        # structural response to (already computed, real, recency-window-
+        # bound adjacency -- consequence.causal_parent) now genuinely gets
+        # its OWN "a subsequent actor response exists" fact recorded too.
+        # link_response() previously had no caller anywhere in this module;
+        # "subsequent actor response" was on the directive's list of
+        # available-but-unused rich facts because of that gap.
+        if record.get("causal_parent"):
+            self.link_response(record["causal_parent"], record["event_id"])
 
     def _persist_lineage(self, entity_id: str, event: str, *, parent_ids: Optional[List[str]] = None,
                           action_id: str = "") -> None:
@@ -531,7 +540,7 @@ class HabitatRuntime:
                 permission_result="denied:no_handler", rejected_reason="no_handler",
             )
         try:
-            return handler(action, targets)
+            consequence = handler(action, targets)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(), module=__name__,
@@ -543,6 +552,19 @@ class HabitatRuntime:
                 action_id=action.action_id, success=False, actor=action.actor, operation=op,
                 permission_result="denied:execution_error", rejected_reason="execution_error",
             )
+        if consequence.success:
+            # Build 717 (directive section 18/22): `targets` is the set of
+            # entities that already existed BEFORE this action -- for
+            # create/duplicate that is the source being duplicated (a real
+            # re-interaction), never the newly-minted entity itself (whose
+            # own creation must not count as a "revisit"). This is the only
+            # place interaction_count is incremented anywhere in this
+            # module -- previously it was written nowhere, so observe()'s
+            # aurora_created_unrevisited check (interaction_count == 0) was
+            # vacuously true for every entity regardless of real history.
+            for e in targets:
+                e.interaction_count += 1
+        return consequence
 
     def _op_create(self, action: EnvironmentAction, _targets: List[HabitatEntity]) -> EnvironmentConsequence:
         p = action.parameters
@@ -895,13 +917,29 @@ class HabitatRuntime:
         (the same neutral physics _operation_axis_amplitudes already
         established) plus a fixed 'this was an agency-exercising event'
         coordinate -- every Habitat action already carries Agency
-        amplitude by construction. The two scores fed in are real,
-        already-computed facts already sitting on this exact consequence
-        object (whether the action succeeded against the permission
-        boundary; whether it was itself a measured structural response to
-        a prior action, per _find_causal_parent) -- neither is invented
-        for this purpose, and neither is a meaning label on the entity
-        (spec section 13 / Rule 8)."""
+        amplitude by construction. Every score fed in is a real,
+        already-computed fact already sitting on this exact consequence/
+        entity pair (spec section 13 / Rule 8's "no meaning label on the
+        entity" still holds -- none of these describe WHAT the entity is,
+        only HOW this action structurally relates to prior ones):
+
+          succeeded              -- against the permission boundary.
+          was_measured_response  -- this action structurally followed a
+                                     prior one by a different actor,
+                                     per _find_causal_parent.
+          ownership_aligned      -- the acting party is this entity's own
+                                     owner (Build 717 section 18: real
+                                     ownership fact, only included when an
+                                     unambiguous owner exists -- omitted
+                                     rather than guessed for "shared").
+          recurring_interaction  -- this entity had already been
+                                     interacted with before THIS action
+                                     (interaction_count > 1, counting this
+                                     one) -- real recurrence, not
+                                     fabricated from absence (section 18/
+                                     22; interaction_count is incremented
+                                     exactly once per existing-entity
+                                     touch, in _execute() above)."""
         try:
             from aurora_representational_address import RepresentationalRef
             from aurora_representational_resolution import record_ref_participation_from_scores
@@ -918,16 +956,27 @@ class HabitatRuntime:
         try:
             ref = RepresentationalRef.for_c1(axis, "OPERATOR", "A")
             entity_type = "unknown"
-            for eid in consequence.affected_entities:
-                entity = self._entities.get(eid)
-                if entity is not None:
-                    entity_type = entity.entity_type
-                    break
-            context_tag = f"{action.territory}:{entity_type}:{action.actor}"
+            owner_bucket = "none"
             scores = {
                 "succeeded": 1.0 if consequence.success else 0.0,
                 "was_measured_response": 1.0 if consequence.causal_parent else 0.0,
             }
+            for eid in consequence.affected_entities:
+                entity = self._entities.get(eid)
+                if entity is None:
+                    continue
+                entity_type = entity.entity_type
+                if entity.owner == action.actor:
+                    owner_bucket = "own"
+                    scores["ownership_aligned"] = 1.0
+                elif entity.owner in ("aurora", "human"):
+                    owner_bucket = "other"
+                    scores["ownership_aligned"] = 0.0
+                else:
+                    owner_bucket = entity.owner or "none"
+                scores["recurring_interaction"] = 1.0 if entity.interaction_count > 1 else 0.0
+                break
+            context_tag = f"{action.territory}:{entity_type}:{action.actor}:{owner_bucket}"
             record_ref_participation_from_scores(
                 self.systems, ref.encode(), scores,
                 source="habitat", context_tag=context_tag,

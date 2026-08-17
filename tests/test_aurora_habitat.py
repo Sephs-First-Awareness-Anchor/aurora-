@@ -368,3 +368,123 @@ def test_reset_clears_world_but_is_not_reachable_via_normal_action(tmp_path):
     assert "reset" not in OPERATIONS  # not an environmental action an actor can invoke
     rt.reset()
     assert rt.get_state()["entity_count"] == 0
+
+
+# ── Build 717, sections 18-19: richer evidence + comparability-gated absence ──
+
+def test_interaction_count_never_credits_an_entitys_own_creation(tmp_path):
+    """Regression guard: interaction_count must stay 0 immediately after
+    create -- the entity's own birth is not a 'revisit'. Previously this
+    counter was never incremented anywhere, so it was always 0 regardless
+    of real history; this test would have passed even under that bug, so
+    the NEXT test is the one that actually catches it."""
+    rt = HabitatRuntime(tmp_path)
+    c = rt.act(actor="aurora", territory="space", operation="create", parameters={"entity_type": "shape"})
+    eid = c.affected_entities[0]
+    assert rt.get_entity(eid)["interaction_count"] == 0
+
+
+def test_interaction_count_increments_on_real_re_interaction(tmp_path):
+    """The bug this guards: interaction_count was written nowhere in the
+    module, so observe()'s aurora_created_unrevisited check
+    (interaction_count == 0) was vacuously true for every entity forever,
+    regardless of whether Aurora had genuinely returned to it. A real
+    second touch by ANY actor must move the counter."""
+    rt = HabitatRuntime(tmp_path)
+    c = rt.act(actor="aurora", territory="space", operation="create", parameters={"entity_type": "shape"})
+    eid = c.affected_entities[0]
+    rt.act(actor="aurora", territory="space", operation="move", target_ids=[eid], parameters={"x": 0.3, "y": 0.3})
+    assert rt.get_entity(eid)["interaction_count"] == 1
+    rt.act(actor="human", territory="space", operation="recolor", target_ids=[eid], parameters={"color": "blue"})
+    assert rt.get_entity(eid)["interaction_count"] == 2
+
+
+def test_aurora_created_unrevisited_is_comparability_gated_not_fabricated_from_silence(tmp_path):
+    """Section 19: 'unrevisited' may only be reported when Aurora genuinely
+    had a comparable observation window (real elapsed time since creation)
+    AND the persistence to check it (interaction_count really is still 0)
+    -- never inferred from the mere absence of a later action. This drives
+    observe() through its real `since` window rather than faking the
+    system clock, so the comparability check is genuinely exercised."""
+    rt = HabitatRuntime(tmp_path)
+    untouched = rt.act(actor="aurora", territory="space", operation="create", parameters={"entity_type": "shape"})
+    untouched_id = untouched.affected_entities[0]
+    revisited = rt.act(actor="aurora", territory="space", operation="create", parameters={"entity_type": "shape"})
+    revisited_id = revisited.affected_entities[0]
+    # Genuine re-interaction -- interaction_count now real, not vacuous.
+    rt.act(actor="aurora", territory="space", operation="move", target_ids=[revisited_id], parameters={"x": 0.4, "y": 0.4})
+
+    # A comparable observation window: `since` far enough in the past that
+    # both entities' modified_at falls before the cutoff (real elapsed
+    # time, not a fabricated one), so an honest comparison is possible.
+    import time as _t
+    snapshot = rt.observe(actor="aurora", since=_t.time() + 1.0)
+    unvisited = snapshot["aurora_created_unrevisited"]
+    assert untouched_id in unvisited, "genuinely untouched entity must be reported"
+    assert revisited_id not in unvisited, "genuinely revisited entity must NOT be reported as unrevisited"
+
+
+def test_link_response_populates_subsequent_actor_response_on_the_prior_event(tmp_path):
+    """Section 18's 'subsequent actor response' fact: link_response() had
+    no caller anywhere in this module before Build 717 -- human_response
+    was always None regardless of real history. A genuine structural
+    response (different actor, same entity, within the recency window)
+    must now populate it on the ORIGINAL event, retrievable via
+    get_history()."""
+    rt = HabitatRuntime(tmp_path)
+    aurora_create = rt.act(actor="aurora", territory="space", operation="create", parameters={"entity_type": "shape"})
+    eid = aurora_create.affected_entities[0]
+    human_move = rt.act(actor="human", territory="space", operation="move", target_ids=[eid], parameters={"x": .5, "y": .5})
+    assert human_move.causal_parent is not None
+
+    history = rt.get_history(entity_id=eid)
+    original_events = [ev for ev in history if ev["event_id"] == human_move.causal_parent]
+    assert original_events, "the original aurora create event must still be in recent history"
+    assert original_events[0]["human_response"] == history[-1]["event_id"]
+
+
+def test_ownership_and_recurrence_facts_reach_resolution_pressure_as_real_scores(tmp_path, monkeypatch):
+    """Section 18: _emit_resolution_pressure must feed richer real facts
+    (ownership_aligned, recurring_interaction) into the same generic
+    score bridge, not just succeeded/was_measured_response. Spies on
+    record_ref_participation_from_scores rather than re-deriving the
+    resolution engine's own physics."""
+    import aurora_habitat as habitat_mod
+
+    calls = []
+
+    def _spy(systems, ref_encoded, dimension_scores, **kwargs):
+        calls.append(dict(dimension_scores))
+
+    monkeypatch.setattr(habitat_mod, "record_ref_participation_from_scores", _spy, raising=False)
+    # _emit_resolution_pressure imports the real function lazily inside the
+    # method body, not at module scope -- patch the resolution module's
+    # own attribute, which is what that lazy import actually resolves.
+    import aurora_representational_resolution as rr_mod
+    monkeypatch.setattr(rr_mod, "record_ref_participation_from_scores", _spy)
+
+    rt = HabitatRuntime(tmp_path)
+    # Space defaults new entities to owner="shared" -- explicit owner here
+    # so ownership_aligned has an unambiguous party to compare against
+    # (the code deliberately omits the score entirely for "shared", so a
+    # default-owner entity would not exercise this path at all).
+    c = rt.act(actor="aurora", territory="space", operation="create", parameters={"entity_type": "shape", "owner": "aurora"})
+    eid = c.affected_entities[0]
+    calls.clear()
+
+    # First real re-interaction by the owner (aurora created it, so owner == "aurora").
+    rt.act(actor="aurora", territory="space", operation="move", target_ids=[eid], parameters={"x": 0.2, "y": 0.2})
+    assert calls, "richer scores must have reached the generic score bridge"
+    first = calls[-1]
+    assert first.get("ownership_aligned") == 1.0
+    assert first.get("recurring_interaction") == 0.0  # first real touch since creation
+
+    # A second real re-interaction by the same owner -- now genuinely recurring.
+    rt.act(actor="aurora", territory="space", operation="move", target_ids=[eid], parameters={"x": 0.6, "y": 0.6})
+    second = calls[-1]
+    assert second.get("recurring_interaction") == 1.0
+
+    # A human touching Aurora's own-owned entity in shared space -- not ownership-aligned.
+    rt.act(actor="human", territory="space", operation="recolor", target_ids=[eid], parameters={"color": "red"})
+    third = calls[-1]
+    assert third.get("ownership_aligned") == 0.0

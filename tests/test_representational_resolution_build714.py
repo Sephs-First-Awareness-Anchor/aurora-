@@ -113,10 +113,17 @@ def test_C_pressure_creates_investigation_not_an_immediate_field_value(tmp_path)
     ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
     _drive(genealogy, engine, ref, axis_sequence=["B", "N", "X"] * 3, n_contexts=3)
     assert engine.inadequacy_pressure(ref) > 0.0
-    # Pressure alone, with NO structurally-connected sibling registered yet,
-    # must not populate a field -- candidates require real evidence.
+    # Pressure alone -- even with candidates now surfaced (Build 717's
+    # bootstrap domain hypotheses, since no sibling exists) -- must not by
+    # itself populate a field. A candidate is an investigable hypothesis,
+    # never knowledge (directive Section 14): the ref stays unresolved
+    # until a hypothesis is staged, genuinely co-activated, and shown to
+    # reduce discrepancy.
     assert ref.unresolved_fields() == ("sub_law_c", "sub_law_d", "col_law_c", "col_law_d")
-    assert engine.unresolved_field_candidates(ref) == []
+    candidates = engine.unresolved_field_candidates(ref)
+    assert candidates, "Build 717 bootstrap should surface domain hypotheses when no sibling exists"
+    assert all(c.get("origin") == "domain_hypothesis" for c in candidates)
+    assert ref.unresolved_fields() == ("sub_law_c", "sub_law_d", "col_law_c", "col_law_d")
 
 
 # ── D. Earned Intermediate Field ────────────────────────────────────────────
@@ -161,7 +168,7 @@ def test_E_resolving_one_field_does_not_automatically_resolve_another(tmp_path):
 
     resolved = engine.resolve_field(
         ref, "col_law_c", "N", evidence={}, discrepancy_before=0.9, discrepancy_after=0.3,
-        pressure_before=0.5, pressure_after=0.0, cost=1.0,
+        pressure_before=0.5, pressure_after=0.0, cost=1.0, _allow_direct_call=True,
     )
     assert resolved.col_law_c == "N"
     assert resolved.col_law_d is None
@@ -176,7 +183,7 @@ def test_F_a_resolved_pattern_that_matches_no_named_rung_stays_honest(tmp_path):
     ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
     resolved = engine.resolve_field(
         ref, "col_law_c", "N", evidence={}, discrepancy_before=0.9, discrepancy_after=0.3,
-        pressure_before=0.5, pressure_after=0.0, cost=1.0,
+        pressure_before=0.5, pressure_after=0.0, cost=1.0, _allow_direct_call=True,
     )
     # {nc_law_c, nc_dim, nc_target, col_law_c} matches none of the six named
     # ladder rungs (D1/C1/D2/M21/M22/C2) -- level() must say so honestly,
@@ -409,6 +416,7 @@ def test_Q_earned_resolution_and_genealogy_survive_restart(tmp_path):
     resolved = engine.resolve_field(
         ref, "col_law_c", "N", evidence={"source": "test"}, discrepancy_before=0.9,
         discrepancy_after=0.3, pressure_before=0.5, pressure_after=0.0, cost=1.0,
+        _allow_direct_call=True,
     )
     state_dir = engine.root.parent
     engine2 = RepresentationalResolutionEngine(genealogy, state_dir=str(state_dir))
@@ -608,3 +616,168 @@ def test_resolution_cost_is_real_not_a_fixed_placeholder(tmp_path):
     assert records[-1]["computational_cost"] > 0.0
     # Retention pays off the cost ledger -- the next unresolved field starts fresh.
     assert engine._cost_ledger.get(ref.encode(), 0.0) == 0.0
+
+
+# ── Build 717, Section 12: production resolution loop closes autonomously ──
+
+def test_autonomous_resolution_loop_closes_via_record_participation_alone(tmp_path):
+    """No test/production caller manually invokes unresolved_field_candidates,
+    stage_field_inquiry, or complete_field_inquiry here -- ONLY
+    record_participation(), exactly as RCEC/Habitat production code already
+    calls it. The engine must autonomously investigate, stage, and complete
+    on its own, riding the same real event stream."""
+    genealogy, engine = _fresh(tmp_path, name="autoloop717")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    sibling = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="N", col_law_d="COST")
+    engine.ensure_registered(sibling)
+
+    i = 0
+    for ax in ["B", "N", "X"] * 5:
+        _context_ability(genealogy, f"CTX:{i % 3}")
+        engine.record_participation(
+            ref, pressure_before={a: (0.3 if a == ax else 0.0) for a in AXES},
+            pressure_after={a: 0.0 for a in AXES}, source="prod_sim",
+            context_tag=f"CTX:{i % 3}", extra_trace=[TraceItem(kind="ABILITY", id=f"CTX:{i % 3}")],
+        )
+        i += 1
+        if engine._active_stage_for_ref:
+            break
+    assert engine._active_stage_for_ref, "expected autonomous staging to occur from pressure alone"
+
+    # Next real participation with genuine relief on the declared axis
+    # completes the staged inquiry -- still purely via record_participation().
+    _context_ability(genealogy, f"CTX:{i % 3}")
+    engine.record_participation(
+        ref, pressure_before={"X": 0.0, "T": 0.5, "N": 0.0, "B": 0.0, "A": 0.0},
+        pressure_after={a: 0.0 for a in AXES}, source="prod_sim",
+        context_tag=f"CTX:{i % 3}", extra_trace=[TraceItem(kind="ABILITY", id=f"CTX:{i % 3}")],
+    )
+    assert not engine._active_stage_for_ref, "stage should be consumed after completion attempt"
+    resolved = engine.current_resolution(ref)
+    assert resolved.col_law_c == "N"
+    records = engine.genealogy_for(ref)
+    assert records and records[-1]["status"] == "retained"
+    assert records[-1]["evidence_source"].startswith("stage:")
+
+
+def test_investigate_if_pressured_is_a_noop_without_real_pressure(tmp_path):
+    genealogy, engine = _fresh(tmp_path, name="autoloop717b")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    assert engine.investigate_if_pressured(ref, consumer="test") is None
+    assert engine._active_stage_for_ref == {}
+
+
+# ── Build 717, Sections 13-14: first-candidate bootstrap ───────────────────
+
+def test_bootstrap_resolves_the_first_ever_member_of_a_family_with_zero_siblings(tmp_path):
+    """No sibling is EVER registered anywhere in this test -- genuinely the
+    first representation in its family. Resolution must still be possible
+    (Section 13), earned only through real consequence (Section 14), driven
+    purely by record_participation() with no manual stage/complete calls."""
+    genealogy, engine = _fresh(tmp_path, name="bootstrap717")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+
+    i = 0
+    for ax in ["B", "N", "X"] * 5:
+        _context_ability(genealogy, f"CTX:{i % 3}")
+        engine.record_participation(
+            ref, pressure_before={a: (0.3 if a == ax else 0.0) for a in AXES},
+            pressure_after={a: 0.0 for a in AXES}, source="bootstrap_sim",
+            context_tag=f"CTX:{i % 3}", extra_trace=[TraceItem(kind="ABILITY", id=f"CTX:{i % 3}")],
+        )
+        i += 1
+        if engine._active_stage_for_ref:
+            break
+    assert engine._active_stage_for_ref, "expected a domain-hypothesis stage with zero siblings present"
+    staged_candidate = list(engine._active_stage_for_ref.values())[0]["candidate"]
+    assert staged_candidate["origin"] == "domain_hypothesis"
+
+    _context_ability(genealogy, f"CTX:{i % 3}")
+    engine.record_participation(
+        ref, pressure_before={"X": 0.0, "T": 0.5, "N": 0.0, "B": 0.0, "A": 0.0},
+        pressure_after={a: 0.0 for a in AXES}, source="bootstrap_sim",
+        context_tag=f"CTX:{i % 3}", extra_trace=[TraceItem(kind="ABILITY", id=f"CTX:{i % 3}")],
+    )
+    resolved_field = staged_candidate["field"]
+    resolved = engine.current_resolution(ref)
+    assert getattr(resolved, resolved_field) == staged_candidate["candidate_value"]
+    records = engine.genealogy_for(ref)
+    assert records and records[-1]["status"] == "retained"
+    assert records[-1]["evidence"]["origin"] == "lawful_domain"
+
+
+def test_bootstrap_hypothesis_values_are_exactly_the_fields_lawful_domain(tmp_path):
+    from aurora_representational_address import AXES as ADDR_AXES, DIM_NAMES
+    genealogy, engine = _fresh(tmp_path, name="bootstrap717b")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    _drive(genealogy, engine, ref, axis_sequence=["B", "N", "X"] * 3, n_contexts=3)
+    candidates = engine.unresolved_field_candidates(ref, max_candidates=100)
+    assert candidates
+    for c in candidates:
+        assert c["origin"] == "domain_hypothesis"
+        if c["field"] in ("sub_law_c", "col_law_c"):
+            assert c["candidate_value"] in ADDR_AXES
+        else:
+            assert c["candidate_value"] in DIM_NAMES
+        # Never presented as already-earned evidence.
+        assert c["evidence"]["origin"] == "lawful_domain"
+
+
+def test_bootstrap_hypotheses_never_surface_when_real_structural_candidates_exist(tmp_path):
+    """Domain hypotheses are a last resort -- a real sibling's evidence
+    must always take priority over an unconfirmed lawful-domain guess."""
+    genealogy, engine = _fresh(tmp_path, name="bootstrap717c")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    sibling = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="N", col_law_d="COST")
+    engine.ensure_registered(sibling)
+    _drive(genealogy, engine, ref, axis_sequence=["B", "N", "X"] * 3, n_contexts=3)
+    candidates = engine.unresolved_field_candidates(ref)
+    assert candidates
+    assert all(c.get("origin") != "domain_hypothesis" for c in candidates)
+
+
+# ── Build 717, Section 15: resolve_field() production authority is sealed ──
+
+def test_resolve_field_rejects_arbitrary_direct_production_calls(tmp_path):
+    genealogy, engine = _fresh(tmp_path, name="seal717")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    with pytest.raises(PermissionError):
+        engine.resolve_field(
+            ref, "col_law_c", "N", evidence={}, discrepancy_before=0.9, discrepancy_after=0.1,
+            pressure_before=0.5, pressure_after=0.0, cost=1.0,
+        )
+    # No field was resolved by the rejected attempt.
+    assert engine.current_resolution(ref) == ref
+    assert engine.genealogy_for(ref) == []
+
+
+def test_resolve_field_allows_explicit_test_fixture_bypass(tmp_path):
+    genealogy, engine = _fresh(tmp_path, name="seal717b")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    resolved = engine.resolve_field(
+        ref, "col_law_c", "N", evidence={}, discrepancy_before=0.9, discrepancy_after=0.1,
+        pressure_before=0.5, pressure_after=0.0, cost=1.0, _allow_direct_call=True,
+    )
+    assert resolved.col_law_c == "N"
+
+
+def test_resolve_field_is_only_reachable_through_complete_field_inquiry_in_practice(tmp_path):
+    """End-to-end: the autonomous production path (record_participation
+    alone) legitimately reaches resolve_field() without ever setting
+    _allow_direct_call -- confirming the seal's flag genuinely tracks real
+    in-flight completion, not merely gating an unused param."""
+    genealogy, engine = _fresh(tmp_path, name="seal717c")
+    ref = RepresentationalRef.for_c1("T", "MAGNITUDE", "B")
+    sibling = RepresentationalRef.for_m21("T", "MAGNITUDE", "B", col_law_c="N", col_law_d="COST")
+    engine.ensure_registered(sibling)
+    _drive(genealogy, engine, ref, axis_sequence=["B", "N", "X"] * 3, n_contexts=3)
+    candidates = engine.unresolved_field_candidates(ref)
+    candidate = candidates[0]
+    staged = engine.stage_field_inquiry(ref, candidate, consumer="seal_test")
+    result = engine.complete_field_inquiry(
+        ref, candidate, staged[0], consumer="seal_test", actual_coactivation=True,
+        pressure_before={"X": 0.0, "T": 0.4, "N": 0.0, "B": 0.0, "A": 0.0},
+        pressure_after={a: 0.0 for a in AXES},
+    )
+    assert result["representational_resolution_outcome"] == "retained"
+    assert engine._in_complete_field_inquiry is False, "flag must be cleared after completion"

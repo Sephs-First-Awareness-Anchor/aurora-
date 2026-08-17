@@ -1809,6 +1809,20 @@ def habitat_get_lineage(entity_id: str) -> str:
     return _json.dumps(_habitat.get_lineage(entity_id))
 
 
+def habitat_get_last_engagement() -> str:
+    """Aurora Build 717 (section 25 -- motivation observability): the
+    structural record of the most recent autonomous-engagement decision
+    the proactive loop made, whether or not it resulted in action.
+    Structural causes only (active pressures, candidates considered,
+    selection evidence, consequence) -- never an anthropomorphic
+    explanation Aurora has not herself formed. Returns {} if the proactive
+    loop has not run this decision yet."""
+    import json as _json
+    if _systems is None:
+        return _json.dumps({})
+    return _json.dumps(_systems.get("_last_habitat_engagement") or {})
+
+
 def habitat_act(action_json: str) -> str:
     """A human's environmental action, submitted by the Flutter gesture
     layer. action_json shape:
@@ -8918,6 +8932,53 @@ def _habitat_availability(systems: dict, obs: str) -> str:
     return f"{obs}; {signal}" if obs else signal
 
 
+def _maybe_autonomous_habitat_action(systems: dict, obs: str) -> str:
+    """Aurora Build 717 (Autonomous Habitat Motivation directive, section
+    32): the real, non-test-only production path that lets Aurora's own
+    existing representational-inadequacy pressure (aurora_representational_
+    resolution.py, computed from genealogy's own consequence_profile --
+    the SAME physics _habitat_availability above and every other pressure
+    mechanism in this loop already reads from) find a genuinely available
+    Habitat affordance and act on it, with no human command in between and
+    no Habitat-specific "if bored: go_to_space()" rule anywhere in this
+    function. aurora_habitat_motivation.maybe_engage_habitat() is the
+    entire decision: it reads real pressure, lists real affordances,
+    competes them, and either acts or returns "no action" -- the common,
+    legitimate outcome (directive section 3) when nothing in Aurora's own
+    state affords an opportunity here. This call sits beside the speech
+    decision below, not inside it: whether Aurora acts in the Habitat this
+    tick is independent of whether she also has something to say (section
+    7 -- no privileged execution lane for either)."""
+    habitat = systems.get("habitat")
+    if habitat is None:
+        return obs
+    try:
+        import aurora_habitat_motivation as _habitat_motivation
+        record = _habitat_motivation.maybe_engage_habitat(systems)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:_maybe_autonomous_habitat_action",
+            exc=_aurora_boundary_exc,
+            context={"function": "_maybe_autonomous_habitat_action", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
+        return obs
+    # Section 25 -- motivation observability: kept queryable (habitat_get_
+    # last_engagement below) regardless of whether this tick engaged, so
+    # "why didn't she act" is answerable from the same structural record as
+    # "why did she."
+    systems["_last_habitat_engagement"] = record.to_dict()
+    if not record.engaged or not record.selected_action:
+        return obs
+    action = record.selected_action
+    signal = (
+        f"[habitat: I just performed {action.get('operation')} "
+        f"on my own initiative in {action.get('territory')}]"
+    )
+    return f"{obs}; {signal}" if obs else signal
+
+
 def _proactive_loop() -> None:
     """
     Background daemon: periodically runs the full waveform pipeline from
@@ -9004,6 +9065,7 @@ def _proactive_loop() -> None:
             obs = _boundary_void(obs)
             obs = _entropy_field(_systems, obs)
             obs = _habitat_availability(_systems, obs)
+            obs = _maybe_autonomous_habitat_action(_systems, obs)
 
             # When salience is elevated, prefix the obs with what is pressing —
             # gives the constraint physics real body-state content to express from

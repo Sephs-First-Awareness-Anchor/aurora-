@@ -164,6 +164,19 @@ class RepresentationalResolutionEngine:
         self._active_resolutions: Dict[str, str] = {}
         self._resolution_events: List[Dict[str, Any]] = []
         self._cost_ledger: Dict[str, float] = {}
+        # Section 12: in-flight investigations, keyed by coarse ref encoded
+        # string -> {"stage", "candidate", "consumer", "context_scope"}.
+        # Deliberately in-memory only (not persisted) -- a stage is already
+        # time-boxed by genealogy's own stage_representation_inquiry()
+        # lifetime; surviving a restart with a stale pending stage would
+        # just mean it expires normally on the far side, same as any other
+        # process-restart interruption of an in-progress genealogy stage.
+        self._active_stage_for_ref: Dict[str, Dict[str, Any]] = {}
+        # Section 15: the seal on resolve_field()'s production authority --
+        # True only for the exact duration of a real complete_field_inquiry()
+        # call, set/cleared by that method itself, never settable from
+        # outside this class.
+        self._in_complete_field_inquiry: bool = False
         self._load()
 
     # ── Registration: coarse ref <-> synthetic AbilityProfile ──────────────
@@ -256,16 +269,46 @@ class RepresentationalResolutionEngine:
         context_tag: str = "",
         extra_trace: Optional[List[Any]] = None,
         notes: Optional[Dict[str, Any]] = None,
+        consumer: str = "auto",
     ) -> Optional[Any]:
         """Call this wherever a ref genuinely participated in an experience
         whose consequence is genuinely measurable as a 5-axis pressure
         delta -- exactly the same contract every other genealogy.observe()
         call site in this codebase already honors. Returns the ReliefRecord
-        genealogy.observe() returns (None on a non-qualifying tick)."""
+        genealogy.observe() returns (None on a non-qualifying tick).
+
+        Section 12 -- closes the production resolution loop on the SAME
+        real event stream this call already rides, without a second
+        scheduler or privileged execution lane (Section 7): if a candidate
+        is already staged for this ref (from a PRIOR pressured
+        participation), this tick's genuine co-activation with the
+        candidate's counterpart ability is what completes the inquiry --
+        the counterpart is added to THIS tick's own trace, so "co-
+        activation" means exactly what it means everywhere else in
+        genealogy (two ids genuinely present in the same observed trace),
+        never fabricated. If no candidate is staged yet, a pressured
+        outcome from THIS tick may stage one for the next participation to
+        complete. Every step here is best-effort and non-fatal: a failure
+        anywhere in this optional closure must never break the primary
+        participation record genealogy.observe() itself provides."""
         from aurora_internal.constraint_genealogy import PressureVec, TraceItem
 
         ability_id = self.ensure_registered(ref)
+        coarse_key = ref.encode()
+        pending = self._active_stage_for_ref.get(coarse_key)
+        # Captured BEFORE this tick's own observe() call -- see
+        # complete_field_inquiry()'s _discrepancy_before_override docstring
+        # for why this matters specifically for the domain_hypothesis path.
+        discrepancy_before_this_tick = (
+            float((self.consequence_profile_for(ref) or {}).get("discrepancy", 0.0) or 0.0)
+            if pending is not None else None
+        )
+
         trace = [TraceItem(kind="ABILITY", id=ability_id)]
+        if pending is not None:
+            counterpart_id = str(pending["candidate"].get("counterpart_ability_id", ""))
+            if counterpart_id:
+                trace.append(TraceItem(kind="ABILITY", id=counterpart_id))
         for item in (extra_trace or []):
             trace.append(item)
 
@@ -280,12 +323,72 @@ class RepresentationalResolutionEngine:
             "context_tag": str(context_tag or ""),
         })
         tick = int(getattr(self.genealogy, "tick_count", 0))
-        return self.genealogy.observe(
+        result = self.genealogy.observe(
             p_before, trace, p_after,
             state_sig_before=f"reprres_pre_t{tick}",
             state_sig_after=f"reprres_post_t{tick}",
             notes=merged_notes,
         )
+
+        try:
+            if pending is not None:
+                self._active_stage_for_ref.pop(coarse_key, None)
+                self.complete_field_inquiry(
+                    ref, pending["candidate"], pending["stage"],
+                    consumer=pending.get("consumer", consumer),
+                    actual_coactivation=True,
+                    pressure_before=p_before.to_dict(), pressure_after=p_after.to_dict(),
+                    context_scope=pending.get("context_scope"),
+                    _discrepancy_before_override=discrepancy_before_this_tick,
+                )
+            else:
+                # context_scope deliberately NOT auto-populated from
+                # context_tag here: context_tag is a co-activation-
+                # diversity marker (what distinguishes this tick from
+                # others), not an explicit claim that the resulting
+                # resolution is only valid in that one context. Per
+                # complete_field_inquiry()'s own invariant, only a caller
+                # that genuinely knows the evidence is scoped may assert
+                # that -- the automatic closure has no such knowledge, so
+                # it retains globally by default (the honest "this seems to
+                # generalize until shown otherwise" posture) and lets
+                # demote_field()/renewed discrepancy in a future context
+                # correct it later if it doesn't.
+                self.investigate_if_pressured(ref, consumer=consumer)
+        except Exception:
+            pass
+
+        return result
+
+    def investigate_if_pressured(
+        self, ref: RepresentationalRef, *, consumer: str = "auto", context_scope: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Section 12: if this ref currently carries real inadequacy
+        pressure and no investigation is already in flight for it, generate
+        candidates from real structural evidence and stage the first one --
+        exactly the same stage_field_inquiry() production callers would use
+        directly. A no-op (returns None) when there's no pressure, no
+        candidates, or an investigation is already pending -- staging is
+        never forced. This is what record_participation() calls
+        automatically; a caller may also call it directly (e.g. Habitat's
+        own proactive affordance scan) without duplicating the logic."""
+        coarse_key = ref.encode()
+        if coarse_key in self._active_stage_for_ref:
+            return None
+        if self.inadequacy_pressure(ref) <= 0.0:
+            return None
+        candidates = self.unresolved_field_candidates(ref)
+        if not candidates:
+            return None
+        candidate = candidates[0]
+        staged = self.stage_field_inquiry(ref, candidate, consumer=consumer)
+        if not staged:
+            return None
+        self._active_stage_for_ref[coarse_key] = {
+            "stage": staged[0], "candidate": candidate, "consumer": consumer,
+            "context_scope": context_scope,
+        }
+        return self._active_stage_for_ref[coarse_key]
 
     # ── Reading the (free) inadequacy signal ────────────────────────────────
 
@@ -372,7 +475,80 @@ class RepresentationalResolutionEngine:
                     })
                     if len(candidates) >= max_candidates:
                         return candidates
+
+        if not candidates:
+            candidates = self._bootstrap_domain_hypotheses(ref, unresolved, max_candidates)
         return candidates
+
+    def _bootstrap_domain_hypotheses(
+        self, ref: RepresentationalRef, unresolved: Tuple[str, ...], max_candidates: int,
+    ) -> List[Dict[str, Any]]:
+        """Build 717, Sections 13-14 -- solves the first-candidate bootstrap
+        problem. Aurora cannot require an already-resolved sibling to exist
+        before the FIRST member of a representational family can ever be
+        investigated -- that would make resolution permanently impossible
+        for any family with no prior resolved member. When structural
+        (sibling) evidence finds nothing, fall back to the representational
+        substrate's own already-defined lawful domain (AXES for the two
+        axis-valued fields, DIM_NAMES for the two dimension-valued fields --
+        RepresentationalRef.__post_init__ already validates exactly this
+        domain, so nothing new is invented here). Every value in that
+        domain becomes a HYPOTHESIS, explicitly tagged "domain_hypothesis"
+        and never treated as evidence -- "the manifold's existence of N is
+        not evidence that N is correct" (directive Section 13, verbatim).
+        These hypotheses are never returned when structural candidates
+        already exist; they are a last resort, not a competing source."""
+        candidates: List[Dict[str, Any]] = []
+        coarse_key = ref.encode()
+        # Section 25: enumerating the domain is itself real, if cheap, work
+        # -- charge one unit per value considered, same currency as a real
+        # collision/gap search result count.
+        self._cost_ledger[coarse_key] = self._cost_ledger.get(coarse_key, 0.0) + 1.0
+        for field_name in unresolved:
+            domain = AXES if field_name in ("sub_law_c", "col_law_c") else DIM_NAMES
+            for value in domain:
+                hyp_id = self._hypothesis_ability_id(coarse_key, field_name, value)
+                self._ensure_hypothesis_registered(hyp_id, field_name, value)
+                candidates.append({
+                    "field": field_name,
+                    "candidate_value": value,
+                    "source": f"domain_hypothesis:{field_name}={value}",
+                    "inquiry_id": "",
+                    "counterpart_ability_id": hyp_id,
+                    "evidence": {
+                        "origin": "lawful_domain",
+                        "note": "unconfirmed hypothesis from the field's own valid domain -- not structural evidence, earns authority only through consequence",
+                    },
+                    "pressure": 0.0,
+                    "origin": "domain_hypothesis",
+                })
+                if len(candidates) >= max_candidates:
+                    return candidates
+        return candidates
+
+    @staticmethod
+    def _hypothesis_ability_id(coarse_key: str, field_name: str, value: str) -> str:
+        return f"REFHYP:{coarse_key[len('REF:'):]}:{field_name}={value}"
+
+    def _ensure_hypothesis_registered(self, hyp_id: str, field_name: str, value: str) -> None:
+        """A domain hypothesis gets its own tiny, idempotent marker ability
+        -- just enough identity for it to genuinely co-activate (in the
+        real genealogy sense: literally present together in the same
+        observed trace) with the ref being investigated. It is NOT
+        discoverable by collision/gap search (no origin_signature override,
+        no representational_ref tag) -- it is a private test fixture for
+        this one hypothesis, not a new structurally-connected
+        representation other refs could mistake for real evidence."""
+        if hyp_id in self.genealogy.abilities:
+            return
+        from aurora_internal.constraint_genealogy import AbilityProfile
+        axis = value if value in AXES else "X"
+        self.genealogy.abilities[hyp_id] = AbilityProfile(
+            id=hyp_id, axis=axis, requires=(axis,),
+            cost={a: 0.0 for a in AXES}, risk={a: 0.0 for a in AXES},
+            effect_tags=("domain_hypothesis_marker", f"hypothesis_field:{field_name}", f"hypothesis_value:{value}"),
+            notes=f"Build 717 bootstrap hypothesis marker for {field_name}={value} -- test fixture, not a representation.",
+        )
 
     def _ref_from_ability_id(self, ability_id: str) -> Optional[RepresentationalRef]:
         """Section 10: candidate values may come from ANY real,
@@ -411,7 +587,30 @@ class RepresentationalResolutionEngine:
         self, ref: RepresentationalRef, candidate: Dict[str, Any], *, consumer: str,
     ) -> List[Dict[str, Any]]:
         """Routes through the existing time-boxed staged-inquiry harness.
-        Staging itself is evidence-inert (genealogy's own guarantee)."""
+        Staging itself is evidence-inert (genealogy's own guarantee).
+
+        A domain_hypothesis candidate (Section 13-14 bootstrap) has no real
+        genealogy collision/gap record behind it -- there is nothing for
+        genealogy's own stage_representation_inquiry() to look up (passing
+        an empty/unknown inquiry_id would incorrectly fall back to
+        whatever ELSE happens to be pending in genealogy's own inquiry
+        pool, unrelated to this specific hypothesis). Instead it returns a
+        clearly-marked synthetic stage: same list-of-one shape every other
+        caller of this method already expects, but stage_id=None signals
+        complete_field_inquiry() to validate it through direct, real
+        co-activation (Section 12's own record_participation() closure
+        already puts the hypothesis marker ability into the very next
+        real observed trace) rather than genealogy's pairwise experiment
+        harness, which has no record of this hypothesis to consult."""
+        if str(candidate.get("origin", "")) == "domain_hypothesis":
+            return [{
+                "stage_id": None,
+                "origin": "domain_hypothesis",
+                "inquiry_id": "",
+                "consumer": consumer,
+                "operand_ids": [self.ability_id_for_ref(ref), str(candidate.get("counterpart_ability_id", ""))],
+                "status": "staged",
+            }]
         inquiry_id = str(candidate.get("inquiry_id", "") or "")
         return self.genealogy.stage_representation_inquiry(
             consumer, context={"resolution_candidate_field": candidate.get("field", "")},
@@ -429,6 +628,7 @@ class RepresentationalResolutionEngine:
         pressure_before: Dict[str, float],
         pressure_after: Dict[str, float],
         context_scope: Optional[str] = None,
+        _discrepancy_before_override: Optional[float] = None,
     ) -> Dict[str, Any]:
         """Only ever admits evidence through the SAME observe() ->
         PairStats -> _try_promote() chain every other genealogy consumer
@@ -446,19 +646,46 @@ class RepresentationalResolutionEngine:
         (the default) retains the field universally, exactly as before;
         passing a scope retains it only for that scope (current_resolution()
         already supports per-scope + global lookup) -- the SAME canonical
-        ref identity either way, never a proliferated duplicate."""
+        ref identity either way, never a proliferated duplicate.
+
+        _discrepancy_before_override (Sections 13-14, bootstrap): for a
+        domain_hypothesis stage, the real co-activation between this ref
+        and the hypothesis marker already happened in record_participation
+        ()'s OWN genealogy.observe() call, BEFORE this method runs -- so
+        measuring discrepancy_before here (after that observe()) would
+        already reflect the very evidence being evaluated. record_
+        participation() captures the true pre-tick discrepancy and passes
+        it through here instead. Internal wiring only -- production callers
+        completing a real (non-hypothesis) staged inquiry never need this."""
         ability_id = self.ensure_registered(ref)
         coactivated_ids = [ability_id, str(candidate.get("counterpart_ability_id", ""))]
-        discrepancy_before = float((self.consequence_profile_for(ref) or {}).get("discrepancy", 0.0) or 0.0)
-
-        result = self.genealogy.complete_representation_experiment(
-            str(stage.get("stage_id", "")),
-            consumer=consumer,
-            coactivated_ids=coactivated_ids,
-            pressure_before=pressure_before,
-            pressure_after=pressure_after,
-            outcome={"actual_coactivation": bool(actual_coactivation)},
+        discrepancy_before = (
+            _discrepancy_before_override if _discrepancy_before_override is not None
+            else float((self.consequence_profile_for(ref) or {}).get("discrepancy", 0.0) or 0.0)
         )
+
+        if str(stage.get("origin", "")) == "domain_hypothesis":
+            # No real genealogy collision/gap record exists to complete an
+            # experiment against (Sections 13-14) -- the co-activation
+            # itself (this ref's ability + the hypothesis marker genuinely
+            # present together in the SAME already-observed trace) IS the
+            # evidence. Nothing here fabricates promotion/PairStats
+            # authority; it only reads what genealogy's own
+            # _attribute_consequence() already, separately, computed from
+            # that real tick.
+            result: Dict[str, Any] = {
+                "stage_id": None, "evidence_admitted": bool(actual_coactivation),
+                "actual_coactivation": bool(actual_coactivation), "status": "hypothesis_coactivated",
+            }
+        else:
+            result = self.genealogy.complete_representation_experiment(
+                str(stage.get("stage_id", "")),
+                consumer=consumer,
+                coactivated_ids=coactivated_ids,
+                pressure_before=pressure_before,
+                pressure_after=pressure_after,
+                outcome={"actual_coactivation": bool(actual_coactivation)},
+            )
 
         outcome_kind = "unresolved"
         refined_ref: Optional[RepresentationalRef] = None
@@ -470,18 +697,22 @@ class RepresentationalResolutionEngine:
             improvement = discrepancy_before - discrepancy_after
             worth_the_cost = improvement >= (real_cost * MIN_BENEFIT_PER_COST_UNIT)
             if improvement >= MIN_DISCREPANCY_IMPROVEMENT_TO_RETAIN and worth_the_cost:
-                refined_ref = self.resolve_field(
-                    ref, str(candidate.get("field", "")), candidate.get("candidate_value"),
-                    evidence=candidate.get("evidence", {}),
-                    discrepancy_before=discrepancy_before,
-                    discrepancy_after=discrepancy_after,
-                    pressure_before=self.inadequacy_pressure(ref),
-                    pressure_after=0.0,
-                    cost=real_cost,
-                    inquiry_id=str(candidate.get("inquiry_id", "")),
-                    source=f"stage:{stage.get('stage_id', '')}",
-                    context_scope=context_scope,
-                )
+                self._in_complete_field_inquiry = True
+                try:
+                    refined_ref = self.resolve_field(
+                        ref, str(candidate.get("field", "")), candidate.get("candidate_value"),
+                        evidence=candidate.get("evidence", {}),
+                        discrepancy_before=discrepancy_before,
+                        discrepancy_after=discrepancy_after,
+                        pressure_before=self.inadequacy_pressure(ref),
+                        pressure_after=0.0,
+                        cost=real_cost,
+                        inquiry_id=str(candidate.get("inquiry_id", "")),
+                        source=f"stage:{stage.get('stage_id', '')}",
+                        context_scope=context_scope,
+                    )
+                finally:
+                    self._in_complete_field_inquiry = False
                 outcome_kind = "context_specific" if context_scope else "retained"
                 # Section 25: cost is "paid off" by a retained field -- the
                 # next unresolved field on this same ref starts its own
@@ -528,6 +759,7 @@ class RepresentationalResolutionEngine:
         inquiry_id: str = "",
         source: str = "",
         context_scope: Optional[str] = None,
+        _allow_direct_call: bool = False,
     ) -> RepresentationalRef:
         """The ONLY place a new resolved field is ever produced anywhere in
         this module. Requires: field was unresolved on `ref`, `value` is a
@@ -535,7 +767,30 @@ class RepresentationalResolutionEngine:
         (never a literal passed from outside that pipeline), and the caller
         has already confirmed measurable discrepancy improvement. Preserves
         the coarse ancestor's own record -- ancestry does not equal
-        obsolescence."""
+        obsolescence.
+
+        Build 717, Section 15 -- sealed production authority. This
+        docstring's own claim ("the ONLY place...") was previously
+        aspirational, not enforced: nothing stopped an arbitrary caller
+        from fabricating discrepancy/evidence and calling this directly.
+        Now: any call arriving while NOT genuinely inside
+        complete_field_inquiry()'s own evidence-admission logic (tracked
+        via the private _in_complete_field_inquiry flag, set only for the
+        duration of that method's own call) is rejected outright. Tests may
+        use this as an internal fixture per the directive's own allowance,
+        but must say so explicitly via _allow_direct_call=True -- the
+        param's underscore and name make it unmistakable that this is a
+        deliberate bypass of the sealed path, never something a production
+        caller would plausibly pass by accident."""
+        if not self._in_complete_field_inquiry and not _allow_direct_call:
+            raise PermissionError(
+                "resolve_field() may only be reached through complete_field_inquiry()'s "
+                "own evidence-admission chain (source representation -> unresolved field -> "
+                "candidate origin -> inquiry/experiment -> evidence -> observed consequence -> "
+                "adequacy comparison -> retention decision). Direct production calls are "
+                "sealed (Section 15). Tests may pass _allow_direct_call=True as an explicit, "
+                "unmistakable internal-fixture bypass."
+            )
         if getattr(ref, field_name) is not None:
             raise ValueError(f"{field_name} is already resolved on this ref; resolve_field never overwrites")
         refined = replace(ref, **{field_name: value})
