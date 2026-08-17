@@ -225,9 +225,36 @@ class EnvironmentConsequence:
     human_response: Optional[str] = None  # action_id of a later response, filled in by link_response()
     temporal_context: Dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=_now)
+    # Build 717 (follow-up): a legally-executed, permission-granted action
+    # can still produce zero observable effect (moving an entity to its own
+    # current position, restoring an already-live entity, connecting two
+    # already-linked entities...). `success` answers "was this legal";
+    # `state_changed` answers "did anything actually change" -- the two
+    # are deliberately independent so a no-op is never silently counted as
+    # a genuine developmental consequence downstream (resolution pressure,
+    # autonomous-engagement observability). Defaults True for operations
+    # that structurally cannot no-op (create/duplicate/group always mint a
+    # new real entity given they were reached at all).
+    state_changed: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
+
+
+_ENTITY_BOOKKEEPING_FIELDS = frozenset({"modified_at", "revision_count", "interaction_count"})
+
+
+def _entity_state_changed(pre: Dict[str, Any], post: Dict[str, Any]) -> bool:
+    """Real semantic-diff between an entity's before/after dict, ignoring
+    bookkeeping fields that mutate on every call by construction (they
+    would otherwise make every action look like a real change even when
+    nothing observable actually moved)."""
+    for key in set(pre.keys()) | set(post.keys()):
+        if key in _ENTITY_BOOKKEEPING_FIELDS:
+            continue
+        if pre.get(key) != post.get(key):
+            return True
+    return False
 
 
 # ── Constraint / memory bridges (Rule 6: use the real machinery) ───────────
@@ -642,37 +669,53 @@ class HabitatRuntime:
             return self._deny(action, "no_target")
         affected = []
         pre, post = {}, {}
+        any_changed = False
         for e in targets:
             pre[e.id] = e.to_dict()
+            was_deleted = e.deleted
             e.deleted = False
-            e.modified_at = _now()
+            if was_deleted:
+                e.modified_at = _now()
+                any_changed = True
+                self._persist_lineage(e.id, "restored", action_id=action.action_id)
             post[e.id] = e.to_dict()
             affected.append(e.id)
-            self._persist_lineage(e.id, "restored", action_id=action.action_id)
         return EnvironmentConsequence(
             action_id=action.action_id, success=True, actor=action.actor, operation="restore",
             affected_entities=affected, permission_result="granted",
-            state_delta={"_pre": pre, "_post": post},
+            state_delta={"_pre": pre, "_post": post}, state_changed=any_changed,
         )
 
     def _mutate_simple(self, action: EnvironmentAction, targets: List[HabitatEntity],
                         apply_fn) -> EnvironmentConsequence:
+        """Build 717 (follow-up): apply_fn's own effect is measured via a
+        real before/after semantic diff -- revision_count/modified_at/
+        lineage persistence (developmental evidence) only advance when
+        something actually, observably changed, never on a legally-granted
+        but vacuous call (e.g. move with no real displacement)."""
         if not targets:
             return self._deny(action, "no_target")
         affected = []
         pre, post = {}, {}
+        any_changed = False
         for e in targets:
-            pre[e.id] = e.to_dict()
+            pre_dict = e.to_dict()
+            pre[e.id] = pre_dict
             apply_fn(e, action.parameters)
-            e.modified_at = _now()
-            e.revision_count += 1
-            post[e.id] = e.to_dict()
+            post_dict = e.to_dict()
+            changed = _entity_state_changed(pre_dict, post_dict)
+            if changed:
+                e.modified_at = _now()
+                e.revision_count += 1
+                post_dict = e.to_dict()
+                self._persist_lineage(e.id, "transformed", action_id=action.action_id)
+                any_changed = True
+            post[e.id] = post_dict
             affected.append(e.id)
-            self._persist_lineage(e.id, "transformed", action_id=action.action_id)
         return EnvironmentConsequence(
             action_id=action.action_id, success=True, actor=action.actor, operation=action.operation,
             affected_entities=affected, permission_result="granted",
-            state_delta={"_pre": pre, "_post": post},
+            state_delta={"_pre": pre, "_post": post}, state_changed=any_changed,
         )
 
     def _op_move(self, action, targets):
@@ -705,17 +748,21 @@ class HabitatRuntime:
             return self._deny(action, "connect_requires_two_targets")
         a, b = targets[0], targets[1]
         pre = {a.id: a.to_dict(), b.id: b.to_dict()}
+        changed = False
         if b.id not in a.links:
             a.links.append(b.id)
+            changed = True
         if a.id not in b.links:
             b.links.append(a.id)
-        a.modified_at = b.modified_at = _now()
+            changed = True
+        if changed:
+            a.modified_at = b.modified_at = _now()
+            self._persist_lineage(a.id, "combined", parent_ids=[b.id], action_id=action.action_id)
         post = {a.id: a.to_dict(), b.id: b.to_dict()}
-        self._persist_lineage(a.id, "combined", parent_ids=[b.id], action_id=action.action_id)
         return EnvironmentConsequence(
             action_id=action.action_id, success=True, actor=action.actor, operation="connect",
             affected_entities=[a.id, b.id], permission_result="granted",
-            state_delta={"_pre": pre, "_post": post},
+            state_delta={"_pre": pre, "_post": post}, state_changed=changed,
         )
 
     def _op_disconnect(self, action: EnvironmentAction, targets: List[HabitatEntity]) -> EnvironmentConsequence:
@@ -723,14 +770,16 @@ class HabitatRuntime:
             return self._deny(action, "disconnect_requires_two_targets")
         a, b = targets[0], targets[1]
         pre = {a.id: a.to_dict(), b.id: b.to_dict()}
+        changed = (b.id in a.links) or (a.id in b.links)
         a.links = [x for x in a.links if x != b.id]
         b.links = [x for x in b.links if x != a.id]
-        a.modified_at = b.modified_at = _now()
+        if changed:
+            a.modified_at = b.modified_at = _now()
         post = {a.id: a.to_dict(), b.id: b.to_dict()}
         return EnvironmentConsequence(
             action_id=action.action_id, success=True, actor=action.actor, operation="disconnect",
             affected_entities=[a.id, b.id], permission_result="granted",
-            state_delta={"_pre": pre, "_post": post},
+            state_delta={"_pre": pre, "_post": post}, state_changed=changed,
         )
 
     def _op_group(self, action: EnvironmentAction, targets: List[HabitatEntity]) -> EnvironmentConsequence:
@@ -789,22 +838,26 @@ class HabitatRuntime:
         if new_territory not in TERRITORIES:
             new_territory = targets[0].territory
         affected, pre, post = [], {}, {}
+        any_changed = False
         for e in targets:
             pre[e.id] = e.to_dict()
+            changed = (e.owner != new_owner) or (e.territory != new_territory)
             e.owner = new_owner
             e.territory = new_territory
-            e.modified_at = _now()
-            # Crossing into Self resets to Self's conservative default
-            # unless the acting owner explicitly overrides; crossing
-            # into Space opens up, matching each territory's own law.
-            e.interaction_permissions = _default_permissions(new_territory, new_owner)
+            if changed:
+                e.modified_at = _now()
+                # Crossing into Self resets to Self's conservative default
+                # unless the acting owner explicitly overrides; crossing
+                # into Space opens up, matching each territory's own law.
+                e.interaction_permissions = _default_permissions(new_territory, new_owner)
+                self._persist_lineage(e.id, "transferred", action_id=action.action_id)
+                any_changed = True
             post[e.id] = e.to_dict()
             affected.append(e.id)
-            self._persist_lineage(e.id, "transferred", action_id=action.action_id)
         return EnvironmentConsequence(
             action_id=action.action_id, success=True, actor=action.actor, operation="transfer",
             affected_entities=affected, permission_result="granted",
-            state_delta={"_pre": pre, "_post": post},
+            state_delta={"_pre": pre, "_post": post}, state_changed=any_changed,
             resulting_state={"new_owner": new_owner, "new_territory": new_territory},
         )
 
@@ -821,16 +874,20 @@ class HabitatRuntime:
         if key not in _PERMISSION_KEYS:
             return self._deny(action, "unknown_permission_key")
         affected, pre, post = [], {}, {}
+        any_changed = False
         for e in targets:
             pre[e.id] = e.to_dict()
+            changed = e.interaction_permissions.get(key) != value
             e.interaction_permissions[key] = value
-            e.modified_at = _now()
+            if changed:
+                e.modified_at = _now()
+                any_changed = True
             post[e.id] = e.to_dict()
             affected.append(e.id)
         return EnvironmentConsequence(
             action_id=action.action_id, success=True, actor=action.actor, operation=action.operation,
             affected_entities=affected, permission_result="granted",
-            state_delta={"_pre": pre, "_post": post},
+            state_delta={"_pre": pre, "_post": post}, state_changed=any_changed,
         )
 
     def _deny(self, action: EnvironmentAction, reason: str) -> EnvironmentConsequence:
@@ -923,7 +980,23 @@ class HabitatRuntime:
         entity" still holds -- none of these describe WHAT the entity is,
         only HOW this action structurally relates to prior ones):
 
-          succeeded              -- against the permission boundary.
+          succeeded              -- against the permission boundary AND
+                                     against reality: a legally-granted
+                                     action that changed nothing observable
+                                     (state_changed=False -- moving an
+                                     entity to its own position, restoring
+                                     an already-live entity...) does NOT
+                                     score as succeeded here (follow-up
+                                     fix: a no-op must never count as a
+                                     successful developmental consequence,
+                                     even though Habitat's own permission
+                                     law correctly still grants it).
+          state_changed           -- the same real fact, reported
+                                     separately too (Section 18 style
+                                     richer evidence) so a caller reading
+                                     raw scores can distinguish "the
+                                     permission boundary held" from "the
+                                     world actually moved".
           was_measured_response  -- this action structurally followed a
                                      prior one by a different actor,
                                      per _find_causal_parent.
@@ -958,7 +1031,8 @@ class HabitatRuntime:
             entity_type = "unknown"
             owner_bucket = "none"
             scores = {
-                "succeeded": 1.0 if consequence.success else 0.0,
+                "succeeded": 1.0 if (consequence.success and consequence.state_changed) else 0.0,
+                "state_changed": 1.0 if consequence.state_changed else 0.0,
                 "was_measured_response": 1.0 if consequence.causal_parent else 0.0,
             }
             for eid in consequence.affected_entities:

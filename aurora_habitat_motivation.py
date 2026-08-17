@@ -54,6 +54,7 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 from __future__ import annotations
 
+import random
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
@@ -67,6 +68,37 @@ _CATEGORY_AXES: Tuple[str, ...] = ("X", "N", "B")
 
 MIN_RELEVANCE_TO_ENGAGE = 0.20
 STAGE_PENDING_BONUS = 0.35
+
+# Follow-up (broadened motivational inputs, item 1): aurora_language_field.py's
+# identity-field axis_pressures default to ~0.30 when no data is present
+# (its own _tensor_state() fallback) -- only elevation genuinely ABOVE that
+# resting baseline counts as a real motivational signal, never the resting
+# value itself (which would manufacture motive out of nothing, violating
+# section 3).
+IDENTITY_FIELD_BASELINE = 0.30
+IDENTITY_FIELD_ELEVATION_WEIGHT = 0.5
+
+# Follow-up (item 2, real Self/Space relevance): both bonuses are read from
+# REAL structural facts already sitting on the entity/action -- never a
+# hardcoded "Self means X" label. An entity Aurora exclusively owns carries
+# a real, technically-enforced boundary (aurora_habitat.py's own
+# _default_permissions: Self defaults modifiable_by_human=False) that a
+# shared Space entity never has -- OWNERSHIP_ALIGNED_BONUS reflects that
+# real fact, and SELF_EXCLUSIVE_BONUS is the additional real weight of the
+# territory itself defaulting new entities to exclusive Aurora ownership
+# (aurora_habitat.py::_op_create's own owner default). Both are small and
+# additive, exactly like the earned-resolution bonus below -- they inform
+# competition among already-pressured candidates, never manufacture one.
+OWNERSHIP_ALIGNED_BONUS = 0.05
+SELF_EXCLUSIVE_BONUS = 0.05
+
+# Follow-up (item 3, fully instantiated actions): a small, real, neutral
+# vocabulary for parameter values that are neither fabricated meaning nor
+# derived from Aurora's own internal axis state (Rule 3) -- a genuine
+# environmental dice roll, exactly as "which exact pixel a hand lands on"
+# is not itself a developmental claim.
+_RECOLOR_PALETTE: Tuple[str, ...] = ("red", "blue", "green", "yellow", "purple", "orange", "teal", "gray")
+_CREATABLE_ENTITY_TYPES: Tuple[str, ...] = ("shape", "text", "mark_path", "connector")
 
 
 @dataclass
@@ -120,29 +152,64 @@ def _operation_category(operation: str) -> Optional[str]:
     return None
 
 
+def _identity_field_axis_elevation(systems: Optional[Dict[str, Any]]) -> Dict[str, float]:
+    """Follow-up, item 1 -- broadens motivational input beyond
+    representational inadequacy: Aurora's own identity field already
+    computes real X/T/N/B/A axis pressure every tick (aurora_language_
+    field.py, consumed identically by _proactive_loop()'s own salience
+    prefix and by aurora_possibility_selves.py/aurora_quantum_dream_
+    substrate.py elsewhere in this codebase -- an established, widely-read
+    real signal, not invented for this module). Only genuine elevation
+    above the field's own resting baseline counts; the baseline itself
+    carries no motivational content (section 3 -- no motive manufactured
+    from nothing)."""
+    identity_field = (systems or {}).get("identity_field")
+    if identity_field is None or not hasattr(identity_field, "status"):
+        return {}
+    try:
+        status = identity_field.status() or {}
+    except Exception:
+        return {}
+    axis_pressures = status.get("axis_pressures") or {}
+    elevation: Dict[str, float] = {}
+    for axis in _CATEGORY_AXES:
+        v = axis_pressures.get(axis)
+        if v is None:
+            continue
+        above_baseline = float(v) - IDENTITY_FIELD_BASELINE
+        if above_baseline > 0.0:
+            elevation[axis] = above_baseline * IDENTITY_FIELD_ELEVATION_WEIGHT
+    return elevation
+
+
 def active_pressures(systems: Optional[Dict[str, Any]]) -> Dict[str, float]:
     """The real, already-computed inadequacy_pressure() for each Habitat
     operation-category ref that has ever actually been registered (i.e.
     genuinely participated in at least one real consequence -- see
     aurora_representational_resolution.RepresentationalResolutionEngine.
-    ensure_registered()). A category with no prior participation simply
-    has no pressure to report -- never fabricated as zero-with-meaning,
-    just genuinely absent."""
+    ensure_registered()), COMBINED with Aurora's own broader identity-field
+    axis elevation (item 1 -- motivational input is no longer limited to
+    this one narrow representational-inadequacy signal). A category with
+    neither source active simply has no pressure to report -- never
+    fabricated as zero-with-meaning, just genuinely absent."""
     from aurora_representational_address import RepresentationalRef
     from aurora_representational_resolution import get_or_create_engine
 
-    engine = get_or_create_engine(systems)
-    if engine is None:
-        return {}
     pressures: Dict[str, float] = {}
-    for axis in _CATEGORY_AXES:
-        ref = RepresentationalRef.for_c1(axis, "OPERATOR", "A")
-        ability_id = engine.ability_id_for_ref(ref)
-        if ability_id not in getattr(engine.genealogy, "abilities", {}):
-            continue
-        p = engine.inadequacy_pressure(ref)
-        if p > 0.0:
-            pressures[axis] = p
+    engine = get_or_create_engine(systems)
+    if engine is not None:
+        for axis in _CATEGORY_AXES:
+            ref = RepresentationalRef.for_c1(axis, "OPERATOR", "A")
+            ability_id = engine.ability_id_for_ref(ref)
+            if ability_id not in getattr(engine.genealogy, "abilities", {}):
+                continue
+            p = engine.inadequacy_pressure(ref)
+            if p > 0.0:
+                pressures[axis] = p
+
+    for axis, elevation in _identity_field_axis_elevation(systems).items():
+        pressures[axis] = pressures.get(axis, 0.0) + elevation
+
     return pressures
 
 
@@ -161,7 +228,7 @@ def resolved_context_for_axis(systems: Optional[Dict[str, Any]], axis: str) -> D
 
     engine = get_or_create_engine(systems)
     if engine is None:
-        return {"resolved_fields": (), "earned_fields": (), "level": "UNKNOWN"}
+        return {"resolved_fields": (), "earned_fields": (), "provisional_fields": (), "level": "UNKNOWN"}
     ref = RepresentationalRef.for_c1(axis, "OPERATOR", "A")
     refined = engine.current_resolution(ref)
     base_resolved = set(ref.resolved_fields())
@@ -170,9 +237,23 @@ def resolved_context_for_axis(systems: Optional[Dict[str, Any]], axis: str) -> D
     # instant for_c1() is called, so counting them would reward every
     # category identically regardless of any real genealogy evidence.
     earned = tuple(f for f in refined.resolved_fields() if f not in base_resolved)
+
+    # Follow-up, item 6 -- causal participation: if a domain-hypothesis
+    # candidate is currently staged for this ref, this call to
+    # provisional_resolution() IS a real causal read (recorded by the
+    # engine itself) that complete_field_inquiry() will require before the
+    # candidate may ever be retained. Never conflated with earned_fields
+    # (current_resolution() alone still governs what counts as knowledge,
+    # Section 14) -- kept in its own key so a caller can tell "this
+    # already earned authority" from "this is only being tried right now".
+    provisional = engine.provisional_resolution(ref)
+    provisional_fields = tuple(
+        f for f in provisional.resolved_fields() if f not in base_resolved and f not in earned
+    )
     return {
         "resolved_fields": refined.resolved_fields(),
         "earned_fields": earned,
+        "provisional_fields": provisional_fields,
         "level": refined.level(),
     }
 
@@ -197,6 +278,85 @@ def active_inquiries(systems: Optional[Dict[str, Any]]) -> List[str]:
     return live
 
 
+def _ownership_relevance_bonus(territory: Optional[str], owner: Optional[str]) -> float:
+    """Follow-up, item 2 -- Self and Space genuinely differ because their
+    REAL ownership/permission facts differ, never because of a hardcoded
+    label. An entity Aurora exclusively owns carries more real, technically
+    -enforced significance than a jointly-owned one; Self territory is the
+    only place that exclusivity is the DEFAULT (aurora_habitat.py's own
+    _default_permissions: Self's modifiable_by_human starts False unless
+    the owner is human)."""
+    bonus = 0.0
+    if owner == "aurora":
+        bonus += OWNERSHIP_ALIGNED_BONUS
+        if territory == "self":
+            bonus += SELF_EXCLUSIVE_BONUS
+    return bonus
+
+
+def _real_parameters_for_operation(
+    operation: str, entity: Dict[str, Any], all_entities: List[Dict[str, Any]],
+) -> Optional[Tuple[Dict[str, Any], List[str]]]:
+    """Follow-up, item 3 -- returns (parameters, extra_target_ids) for a
+    genuinely enactable, non-vacuous instance of `operation`, or None when
+    no real instantiation is currently possible (e.g. connect with no
+    eligible partner -- a genuinely absent affordance, never fabricated).
+    Every value is either a real environmental dice roll (never derived
+    from Aurora's own internal axis state -- Rule 3) or read from real
+    existing entity data; nothing here invents meaning or an intended
+    developmental outcome (Section 10)."""
+    entity_id = entity.get("id")
+    if operation == "move":
+        return {"x": round(random.uniform(0.0, 1.0), 4), "y": round(random.uniform(0.0, 1.0), 4)}, []
+    if operation == "resize":
+        return {"width": round(random.uniform(0.05, 1.0), 4), "height": round(random.uniform(0.05, 1.0), 4)}, []
+    if operation == "rotate":
+        return {"degrees": round(random.uniform(0.0, 360.0), 2)}, []
+    if operation == "recolor":
+        current = (entity.get("visual_properties") or {}).get("color")
+        choices = [c for c in _RECOLOR_PALETTE if c != current] or list(_RECOLOR_PALETTE)
+        return {"color": random.choice(choices)}, []
+    if operation in ("connect", "disconnect"):
+        territory = entity.get("territory")
+        links = set(entity.get("links") or [])
+        eligible: List[str] = []
+        for other in all_entities:
+            other_id = other.get("id")
+            if not other_id or other_id == entity_id:
+                continue
+            if other.get("territory") != territory:
+                continue
+            if not (other.get("interaction_permissions") or {}).get("modifiable_by_aurora", False):
+                continue
+            already_linked = other_id in links
+            if operation == "connect" and already_linked:
+                continue
+            if operation == "disconnect" and not already_linked:
+                continue
+            eligible.append(other_id)
+        if not eligible:
+            return None  # no real second party -- multi-target requirement genuinely unmet
+        return {}, [random.choice(eligible)]
+    if operation == "transfer":
+        from aurora_habitat import OWNERS
+        current_owner = entity.get("owner")
+        choices = [o for o in OWNERS if o != current_owner] or list(OWNERS)
+        return {"owner": random.choice(choices), "territory": entity.get("territory")}, []
+    return {}, []
+
+
+def _real_creation_parameters(territory: str) -> Dict[str, Any]:
+    """Follow-up, item 4 -- autonomous creation. A real, neutral
+    entity_type/position/dimensions dice roll; ownership/permissions are
+    left to aurora_habitat.py's own _op_create defaults (Self exclusive,
+    Space shared) rather than duplicated here."""
+    return {
+        "entity_type": random.choice(_CREATABLE_ENTITY_TYPES),
+        "position": [round(random.uniform(0.0, 1.0), 4), round(random.uniform(0.0, 1.0), 4)],
+        "dimensions": [round(random.uniform(0.05, 0.3), 4), round(random.uniform(0.05, 0.3), 4)],
+    }
+
+
 def candidate_actions(systems: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Section 5/6/10 -- neutral affordance surface intersected with real
     pressure. Returns [] whenever nothing is genuinely pressured, which is
@@ -204,10 +364,13 @@ def candidate_actions(systems: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]
 
     Never attaches an intended developmental outcome to a candidate (no
     "move object to learn agency") -- each candidate is exactly:
-    {operation, territory, target_ids, relevance_score, reason}, where
-    relevance_score is built ONLY from real pressure/stage signals already
-    computed elsewhere, and reason records which real signal produced it
-    (Section 25) rather than an invented motive."""
+    {operation, territory, target_ids, parameters, relevance_score, reason},
+    where relevance_score is built ONLY from real pressure/stage/ownership
+    signals already computed elsewhere, and reason records which real
+    signal produced it (Section 25) rather than an invented motive.
+    parameters are always concrete and non-vacuous when present (item 3);
+    target_ids includes every entity the operation structurally requires
+    (item 3's multi-target requirement, e.g. connect/disconnect)."""
     habitat = (systems or {}).get("habitat")
     if habitat is None:
         return []
@@ -229,6 +392,25 @@ def candidate_actions(systems: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]
     for axis in pressures.keys() | inquiries:
         resolved_context[axis] = resolved_context_for_axis(systems, axis)
 
+    def _earned_bonus(axis: str) -> Tuple[float, Dict[str, Any]]:
+        earned = resolved_context.get(
+            axis, {"resolved_fields": (), "earned_fields": (), "provisional_fields": (), "level": "UNKNOWN"},
+        )
+        # A pressure whose ref carries more earned, non-demoted resolution
+        # is less speculative -- Aurora already knows more about what
+        # specifically is unresolved here, not just that something is.
+        # Small and capped: earned resolution informs competition, it does
+        # not override real pressure (Section 3).
+        bonus = 0.05 * len(earned["earned_fields"])
+        # Item 6 -- a currently-staged (unconfirmed) candidate contributes
+        # too, but at a fraction of earned's weight: this is what makes
+        # reading it a genuine causal act (it measurably moves competition)
+        # rather than an inert lookup, while still keeping "candidate is
+        # not knowledge" real -- an unproven hypothesis can never outweigh
+        # actual earned authority.
+        bonus += 0.02 * len(earned.get("provisional_fields") or ())
+        return bonus, earned
+
     candidates: List[Dict[str, Any]] = []
     for entity in entities:
         entity_id = entity.get("id")
@@ -236,6 +418,7 @@ def candidate_actions(systems: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]
             continue
         territory = entity.get("territory")
         entity_type = entity.get("entity_type")
+        owner = entity.get("owner")
         perms = entity.get("interaction_permissions", {}) or {}
         if not perms.get("modifiable_by_aurora", False):
             continue
@@ -247,31 +430,65 @@ def candidate_actions(systems: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]
             has_inquiry = axis in inquiries
             if not has_pressure and not has_inquiry:
                 continue
+            instantiation = _real_parameters_for_operation(operation, entity, entities)
+            if instantiation is None:
+                continue  # no real, non-fabricated way to instantiate this right now
+            parameters, extra_targets = instantiation
             relevance = float(pressures.get(axis, 0.0))
             if has_inquiry:
                 relevance += STAGE_PENDING_BONUS
-            earned = resolved_context.get(
-                axis, {"resolved_fields": (), "earned_fields": (), "level": "UNKNOWN"},
-            )
-            # A pressure whose ref carries more earned, non-demoted
-            # resolution is less speculative -- Aurora already knows more
-            # about what specifically is unresolved here, not just that
-            # something is. Small and capped: earned resolution informs
-            # competition, it does not override real pressure (Section 3).
-            relevance += 0.05 * len(earned["earned_fields"])
+            earned_bonus, earned = _earned_bonus(axis)
+            relevance += earned_bonus
+            relevance += _ownership_relevance_bonus(territory, owner)
             candidates.append({
                 "operation": operation,
                 "territory": territory,
-                "target_ids": [entity_id],
+                "target_ids": [entity_id] + extra_targets,
                 "entity_type": entity_type,
+                "parameters": parameters,
                 "relevance_score": relevance,
                 "reason": {
                     "axis": axis,
                     "inadequacy_pressure": pressures.get(axis, 0.0),
                     "active_inquiry_pending": has_inquiry,
                     "earned_resolution": earned,
+                    "ownership_bonus": _ownership_relevance_bonus(territory, owner),
                 },
             })
+
+    # Item 4 -- autonomous creation, not tied to any existing entity.
+    # Existence-axis pressure/inquiry is what makes creating something new
+    # (rather than modifying something that already exists) relevant.
+    if "X" in pressures or "X" in inquiries:
+        earned_bonus, earned = _earned_bonus("X")
+        for territory in ("self", "space"):
+            relevance = float(pressures.get("X", 0.0))
+            if "X" in inquiries:
+                relevance += STAGE_PENDING_BONUS
+            relevance += earned_bonus
+            # No existing entity to read ownership from yet -- the real
+            # structural fact is the territory's own default (Self
+            # defaults new entities to exclusive Aurora ownership; Space
+            # defaults to shared), so this is exactly the SELF_EXCLUSIVE
+            # half of the same bonus above, not a separate rule.
+            ownership_bonus = SELF_EXCLUSIVE_BONUS if territory == "self" else 0.0
+            relevance += ownership_bonus
+            candidates.append({
+                "operation": "create",
+                "territory": territory,
+                "target_ids": [],
+                "entity_type": None,
+                "parameters": _real_creation_parameters(territory),
+                "relevance_score": relevance,
+                "reason": {
+                    "axis": "X",
+                    "inadequacy_pressure": pressures.get("X", 0.0),
+                    "active_inquiry_pending": "X" in inquiries,
+                    "earned_resolution": earned,
+                    "ownership_bonus": ownership_bonus,
+                },
+            })
+
     candidates.sort(key=lambda c: -c["relevance_score"])
     return candidates
 
@@ -293,6 +510,8 @@ def _real_operations_for_entity(habitat: Any, territory: Optional[str], entity: 
     for op in all_ops:
         if op in ("create", "duplicate", "grant_permission", "revoke_permission"):
             continue  # not a per-entity affordance on an existing entity
+        if op == "restore":
+            continue  # get_state() never returns deleted entities -- restore-on-a-live-entity is a structural no-op
         if op in ("resize", "rotate", "recolor") and entity_type == "group":
             continue  # groups don't carry these properties directly
         if op == "ungroup" and entity_type != "group":
@@ -370,11 +589,18 @@ def maybe_engage_habitat(systems: Optional[Dict[str, Any]]) -> HabitatEngagement
     try:
         consequence = habitat.act(
             actor="aurora", territory=winner["territory"], operation=winner["operation"],
-            target_ids=winner["target_ids"], parameters={},
+            target_ids=winner["target_ids"], parameters=dict(winner.get("parameters") or {}),
             intention_context="autonomous_engagement",
         )
         record.consequence = consequence.to_dict() if hasattr(consequence, "to_dict") else dict(consequence or {})
-        record.engaged = bool(getattr(consequence, "success", False))
+        # A legally-granted but vacuous action (state_changed=False) is not
+        # a genuine engagement -- Aurora didn't actually do anything to the
+        # world, whatever the permission boundary said. Defaults to True
+        # for any Habitat build predating the state_changed field so this
+        # module degrades gracefully rather than under-reporting.
+        record.engaged = bool(getattr(consequence, "success", False)) and bool(
+            getattr(consequence, "state_changed", True)
+        )
     except Exception as exc:
         record.consequence = {"error": str(exc)}
         record.engaged = False
