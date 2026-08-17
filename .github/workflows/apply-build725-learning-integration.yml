@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/build-724-learning-integration-repair
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
