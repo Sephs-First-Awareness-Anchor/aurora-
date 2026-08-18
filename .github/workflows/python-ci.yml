@@ -1,12 +1,12 @@
-name: Build 725 verified publisher
+name: Build 725 source publisher
 
 on:
   push:
     branches:
-      - 'claude/build725-publisher'
-  pull_request:
-    branches:
       - main
+      - 'claude/build725-publisher'
+  schedule:
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -15,39 +15,42 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
-      - name: Checkout publisher payload
+      - name: Checkout staging tree
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 2
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Reconstruct Build 725 and apply to live main
+      - name: Reconstruct Build 725 patch on clean main parent
         shell: bash
         run: |
           set -euo pipefail
           cat .github/build725-payload/part-* > /tmp/build725.patch.gz.b64
           base64 -d /tmp/build725.patch.gz.b64 | gzip -dc > /tmp/build725.patch
           git fetch --no-tags origin main:refs/remotes/origin/main
-          BASE="$(git rev-parse refs/remotes/origin/main)"
-          echo "$BASE" > /tmp/build725-base
-          CURRENT_REPAIR="$(git ls-remote origin refs/heads/agent/build-724-learning-integration-repair | cut -f1)"
-          echo "$CURRENT_REPAIR" > /tmp/build725-repair-before
-          git reset --hard "$BASE"
+          STAGING="$(git rev-parse refs/remotes/origin/main)"
+          if [ ! -e .github/build725-payload/part-00 ]; then
+            echo 'Build 725 payload is not present on main; nothing to publish.'
+            exit 0
+          fi
+          CLEAN_BASE="$(git rev-parse "${STAGING}^1")"
+          echo "$STAGING" > /tmp/build725-staging
+          echo "$CLEAN_BASE" > /tmp/build725-clean-base
+          git reset --hard "$CLEAN_BASE"
           git apply --check /tmp/build725.patch
           git apply /tmp/build725.patch
           git diff --check
 
       - name: Install core test dependencies
-        run: |
-          python -m pip install --disable-pip-version-check -q -r requirements-core.txt pytest
+        run: python -m pip install --disable-pip-version-check -q -r requirements-core.txt pytest
 
-      - name: Run focused Build 725 regression battery
+      - name: Verify repaired source
         env:
           AURORA_SKIP_DEP_INSTALL: '1'
         shell: bash
@@ -76,13 +79,10 @@ jobs:
           python aurora_build714_resolution_canaries.py
           python tests/test_layer_acyclicity.py
           python -m py_compile \
-            aurora.py \
-            aurora_habitat.py \
-            aurora_habitat_motivation.py \
+            aurora.py aurora_habitat.py aurora_habitat_motivation.py \
             aurora_internal/aurora_ontological_scaffolding.py \
             aurora_internal/aurora_understanding_contract.py \
-            aurora_manifold_directory/noncomp_field.py \
-            aurora_sedimemory.py \
+            aurora_manifold_directory/noncomp_field.py aurora_sedimemory.py \
             aurora_simulation_engine.py \
             flutter_app/android/app/src/main/python/aurora_bridge.py
           python - <<'PY'
@@ -93,17 +93,15 @@ jobs:
           print('Aurora core imports OK')
           PY
 
-      - name: Seal exact clean source delta and publish repair branch
+      - name: Publish exact repaired source to main
         shell: bash
         run: |
           set -euo pipefail
-          BASE="$(cat /tmp/build725-base)"
-          BEFORE="$(cat /tmp/build725-repair-before)"
-
-          git restore --source="$BASE" --worktree --staged -- aurora_state 2>/dev/null || true
+          STAGING="$(cat /tmp/build725-staging)"
+          CLEAN_BASE="$(cat /tmp/build725-clean-base)"
+          git restore --source="$CLEAN_BASE" --worktree --staged -- aurora_state 2>/dev/null || true
           rm -rf .pytest_cache __pycache__ */__pycache__ */*/__pycache__ */*/*/__pycache__
           git add -A
-
           cat > /tmp/expected-build725-files <<'EOF'
           aurora.py
           aurora_habitat.py
@@ -122,38 +120,84 @@ jobs:
           EOF
           sed -i 's/^          //' /tmp/expected-build725-files
           sort /tmp/expected-build725-files -o /tmp/expected-build725-files
-          git diff --cached --name-only "$BASE" | sort > /tmp/actual-build725-files
+          git diff --cached --name-only "$CLEAN_BASE" | sort > /tmp/actual-build725-files
           diff -u /tmp/expected-build725-files /tmp/actual-build725-files
           git diff --cached --check
-
           TREE="$(git write-tree)"
           CLEAN_COMMIT="$(printf '%s\n\n%s\n' \
             'Build 725: native semantic externalization and live interaction repair' \
-            'Restore local semantic ancestry to externalization, remove legacy conversational contamination, preserve nonblocking deeper cognition, localize receiver-validated pressure relief, and reconcile telemetry/Habitat surfaces.' \
-            | git commit-tree "$TREE" -p "$BASE")"
-
-          NOW="$(git ls-remote origin refs/heads/agent/build-724-learning-integration-repair | cut -f1)"
-          if [ "$NOW" != "$BEFORE" ]; then
-            echo "Repair branch moved during verification: before=$BEFORE now=$NOW" >&2
+            'Apply the verified semantic externalization, contamination removal, nonblocking subsurface, local pressure relief, Habitat, and telemetry repairs.' \
+            | git commit-tree "$TREE" -p "$STAGING")"
+          NOW="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ "$NOW" != "$STAGING" ]; then
+            echo "main moved during verification: expected=$STAGING actual=$NOW" >&2
             exit 1
           fi
-          git push origin "$CLEAN_COMMIT":refs/heads/agent/build-724-learning-integration-repair \
-            --force-with-lease=refs/heads/agent/build-724-learning-integration-repair:"$BEFORE"
-          echo "Published clean Build 725 commit: $CLEAN_COMMIT"
+          git push origin "$CLEAN_COMMIT":refs/heads/main
+          echo "BUILD725_COMMIT=$CLEAN_COMMIT" >> "$GITHUB_ENV"
+          git reset --hard "$CLEAN_COMMIT"
 
-      - name: Publish publisher status
-        if: always()
-        shell: bash
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Android NDK 25
         run: |
-          set -e
-          STATUS='${{ job.status }}'
-          git fetch --no-tags origin claude/build725-publisher:refs/remotes/origin/claude/build725-publisher
-          git reset --hard refs/remotes/origin/claude/build725-publisher
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          printf '%s\n' "$STATUS" > .github/build725-publisher-status.txt
-          git add .github/build725-publisher-status.txt
-          if ! git diff --cached --quiet; then
-            git commit -m "Record Build 725 publisher status: $STATUS"
-            git push origin HEAD:claude/build725-publisher
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+            "ndk;25.1.8937393" "cmake;3.22.1"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.3'
+          channel: stable
+          cache: true
+
+      - name: Write local.properties
+        working-directory: flutter_app/android
+        run: |
+          printf "flutter.sdk=%s\nsdk.dir=%s\nndk.dir=%s\nndk.version=25.1.8937393\n" \
+            "$FLUTTER_ROOT" "$ANDROID_SDK_ROOT" "$ANDROID_SDK_ROOT/ndk/25.1.8937393" > local.properties
+
+      - name: Set up signing keystore
+        env:
+          RELEASE_KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
+        run: |
+          mkdir -p ~/.android
+          if [ -n "$RELEASE_KEYSTORE_B64" ]; then
+            echo "$RELEASE_KEYSTORE_B64" | base64 -d > ~/.android/release.keystore
+          else
+            keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android \
+              -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+              -validity 10000 -dname "CN=Android Debug,O=Android,C=US" 2>/dev/null || true
           fi
+
+      - name: Build repaired Android APK
+        working-directory: flutter_app
+        env:
+          RELEASE_STORE_PASS: ${{ secrets.RELEASE_STORE_PASS }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASS: ${{ secrets.RELEASE_KEY_PASS }}
+        run: |
+          flutter pub get
+          flutter clean
+          flutter build apk --release -v
+          cp build/app/outputs/flutter-apk/app-release.apk ../aurora-release.apk
+
+      - name: Upload repaired APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurora-build-725-apk
+          path: aurora-release.apk
+
+      - name: Create Build 725 release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-725-${{ github.run_number }}
+          name: Aurora Build 725.${{ github.run_number }}
+          target_commitish: ${{ env.BUILD725_COMMIT }}
+          files: aurora-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
