@@ -136,3 +136,20 @@ jobs:
           git push origin "$CLEAN_COMMIT":refs/heads/agent/build-724-learning-integration-repair \
             --force-with-lease=refs/heads/agent/build-724-learning-integration-repair:"$BEFORE"
           echo "Published clean Build 725 commit: $CLEAN_COMMIT"
+
+      - name: Publish publisher status
+        if: always()
+        shell: bash
+        run: |
+          set -e
+          STATUS='${{ job.status }}'
+          git fetch --no-tags origin claude/build725-publisher:refs/remotes/origin/claude/build725-publisher
+          git reset --hard refs/remotes/origin/claude/build725-publisher
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf '%s\n' "$STATUS" > .github/build725-publisher-status.txt
+          git add .github/build725-publisher-status.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Record Build 725 publisher status: $STATUS"
+            git push origin HEAD:claude/build725-publisher
+          fi
