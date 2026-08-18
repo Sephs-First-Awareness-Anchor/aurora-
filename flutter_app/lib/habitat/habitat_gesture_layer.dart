@@ -7,6 +7,8 @@
 // defines -- nothing here decides what an action MEANS, only which
 // physical operation the human chose (spec section 20: Flutter must
 // not own developmental meaning).
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'habitat_bridge.dart';
@@ -33,11 +35,20 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
   String? _connectFromId;
   bool _loading = true;
   String? _lastMessage;
+  Timer? _stateRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     _refresh();
+    // UI synchronization only: observe canonical Habitat state changed by Aurora.
+    _stateRefreshTimer = Timer.periodic(const Duration(seconds: 2), (_) => _refresh());
+  }
+
+  @override
+  void dispose() {
+    _stateRefreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _refresh() async {

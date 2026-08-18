@@ -2048,6 +2048,10 @@ class SediMemory:
     # STATS
     # ------------------------------------------------------------------
 
+    def fragment_count(self) -> int:
+        """Current active fragments in the canonical sediment basins."""
+        return int(self._column.stats().get("total_active_frags", 0) or 0)
+
     def stats(self) -> Dict[str, Any]:
         s = self._column.stats()
         s['recent_event_count'] = len(self._event_log)

@@ -85,7 +85,7 @@ class NoncompProfile:
     Live pressure tracker for one of the 125 noncomp positions.
     Data from the corresponding JSON file is loaded lazily.
     """
-    __slots__ = ("key", "_loaded", "_pressure", "_tension", "_slots", "_file")
+    __slots__ = ("key", "_loaded", "_pressure", "_tension", "_slots", "_semantic_summary", "_file")
 
     def __init__(self, key: _ProfileKey, file_rel: str) -> None:
         self.key       = key
@@ -93,6 +93,7 @@ class NoncompProfile:
         self._pressure = 0.0  # current constraint pressure
         self._tension  = 0.5  # distance from equilibrium (0=at rest, 1=max)
         self._slots: List[dict] = []
+        self._semantic_summary = ""
         self._file = os.path.join(_DATA_DIR, file_rel)
 
     def _ensure_loaded(self) -> None:
@@ -102,9 +103,15 @@ class NoncompProfile:
             with open(self._file, "r", encoding="utf-8") as fh:
                 data = json.load(fh)
             self._slots = data.get("slots", [])
+            self._semantic_summary = str(data.get("nc_semantic_summary", "") or "")
             self._loaded = True
         except Exception:
             self._loaded = False
+
+    def semantic_summary(self) -> str:
+        """Generalized semantic ancestry for this NonComp, loaded lazily."""
+        self._ensure_loaded()
+        return self._semantic_summary
 
     def mean_pressure(self) -> float:
         return self._pressure
@@ -118,8 +125,11 @@ class NoncompProfile:
         self._tension = abs(self._pressure - 0.1)
 
     def decay(self, rate: float = 0.15) -> None:
-        self._pressure = max(0.0, self._pressure * (1.0 - rate))
-        self._tension  = abs(self._pressure - 0.1)
+        # Resolution releases excess activation toward the field's declared
+        # equilibrium; it does not invent a lower arbitrary resting state.
+        if self._pressure > REFERENCE_AXIS_PRESSURE:
+            self._pressure = REFERENCE_AXIS_PRESSURE + (self._pressure - REFERENCE_AXIS_PRESSURE) * (1.0 - rate)
+        self._tension = abs(self._pressure - REFERENCE_AXIS_PRESSURE)
 
 
 class NoncompField:
@@ -243,13 +253,49 @@ class NoncompField:
         return [p for p in self._profiles if p.key.nc_law_c == p.key.nc_target]
 
     def reset_pressure_topology(self, understanding: dict) -> None:
+        """Release only pressure belonging to the representation just resolved.
+
+        Receiver-validated communication carries the exact NonComp regions that
+        participated in the emitted representation.  Those profiles, and only
+        their participating axes, may discharge from this consequence.  Older
+        internal Understanding events that do not carry region identity retain
+        the historical all-field fallback for compatibility; the live dialogue
+        path no longer globalizes one local resolution.
+        """
         resolved = float((understanding or {}).get("resolved_accuracy", 0.5) or 0.5)
-        decay_rate = 0.10 + 0.20 * resolved  # resolved understanding → stronger decay
+        decay_rate = 0.10 + 0.20 * resolved
+        regions = [
+            dict(item) for item in list((understanding or {}).get("resolved_noncomp_regions") or [])
+            if isinstance(item, dict) and str(item.get("nc_name") or "")
+        ]
         with self._lock:
+            if regions:
+                names = {str(item.get("nc_name") or "") for item in regions}
+                active_profiles = [p for p in self._profiles if p.key.nc_name in names]
+                active_axes = set()
+                for prof in active_profiles:
+                    prof.decay(decay_rate)
+                    active_axes.add(prof.key.nc_law_c)
+                    active_axes.add(prof.key.nc_target)
+                for ax_int in active_axes:
+                    self._axis_p[ax_int] = (
+                        REFERENCE_AXIS_PRESSURE
+                        + max(0.0, self._axis_p[ax_int] - REFERENCE_AXIS_PRESSURE)
+                        * (1.0 - decay_rate)
+                    )
+                return
+
+            # Compatibility for non-conversational callers that predate exact
+            # region identity. This is deliberately not used by the repaired
+            # receiver-validated live path.
             for prof in self._profiles:
                 prof.decay(decay_rate)
             for ax_int in self._axis_p:
-                self._axis_p[ax_int] = max(0.05, self._axis_p[ax_int] * (1.0 - decay_rate))
+                self._axis_p[ax_int] = (
+                    REFERENCE_AXIS_PRESSURE
+                    + max(0.0, self._axis_p[ax_int] - REFERENCE_AXIS_PRESSURE)
+                    * (1.0 - decay_rate)
+                )
 
     def status(self) -> dict:
         diag_live = sum(1 for p in self.diagonal_profiles() if p._pressure > 0.05)

@@ -314,13 +314,18 @@ class _HubScreenState extends State<HubScreen> {
       _sectionTitle('HABITAT', color: _green),
       _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: _habitatStat('Entities', _i('entity_count'))),
+          Expanded(child: _habitatStat('Renderable', _i('surface_renderable_count'))),
           Expanded(child: _habitatStat('Deleted', _i('deleted_count'))),
         ]),
         const SizedBox(height: 8),
         Row(children: [
-          Expanded(child: _habitatStat('Aurora-created', _i('aurora_created'))),
-          Expanded(child: _habitatStat('Human-created', _i('human_created'))),
+          Expanded(child: _habitatStat('Aurora visible', _i('surface_aurora_created'))),
+          Expanded(child: _habitatStat('Human visible', _i('surface_human_created'))),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _habitatStat('Incomplete legacy', _i('incomplete_live_count'))),
+          Expanded(child: _habitatStat('Canonical live', _i('entity_count'))),
         ]),
         const SizedBox(height: 8),
         Row(children: [
@@ -428,8 +433,9 @@ class _HubScreenState extends State<HubScreen> {
     final lsa    = _stats['lsa_paths']   as int?    ?? 0;
     final nCost  = _stats['avg_n_cost']  as double? ?? 1.0;
     final sedi   = _stats['sedimemory_depth'] as int? ?? 0;
-    final crMat  = _stats['crystal_maturity']  as double? ?? 0.0;
-    final crN    = _stats['crystal_nodes']     as int?    ?? 0;
+    final crMat  = _stats['concept_crystal_maturity'] as double? ?? 0.0;
+    final crN    = _stats['concept_crystal_nodes'] as int? ?? 0;
+    final crP    = _stats['concept_crystal_promoted'] as int? ?? 0;
     final nonc   = _stats['noncomp_loaded']    as int?    ?? 0;
     final noncD  = _stats['noncomp_diagonal_live'] as int? ?? 0;
     final uIdx   = _stats['understanding_index'] as double? ?? 0.0;
@@ -450,7 +456,7 @@ class _HubScreenState extends State<HubScreen> {
         Row(children: [
           Expanded(child: _miniStat('SediMemory', '$sedi frags', _cyan)),
           const SizedBox(width: 10),
-          Expanded(child: _miniStat('Crystal', '${(crMat * 100).toStringAsFixed(0)}% / $crN nodes', _green)),
+          Expanded(child: _miniStat('Concept Crystals', '$crP promoted / $crN total (${(crMat * 100).toStringAsFixed(0)}%)', _green)),
         ]),
         const SizedBox(height: 8),
         Row(children: [

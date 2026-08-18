@@ -10306,9 +10306,11 @@ def get_cognitive_stats() -> str:
         "noncomp_loaded":   0,
         "noncomp_diagonal_live": 0,
 
-        # Sensory crystal
-        "crystal_maturity": 0.0,
-        "crystal_nodes":    0,
+        # Concept Crystal developmental registry
+        "concept_crystal_maturity": 0.0,
+        "concept_crystal_nodes": 0,
+        "concept_crystal_promoted": 0,
+        "concept_crystal_grounded": 0,
 
         # Chamber (EvolutionaryChamber)
         "chamber_fossils":  0,
@@ -10397,8 +10399,8 @@ def get_cognitive_stats() -> str:
             try:
                 if hasattr(sm, "fragment_count"):
                     stats["sedimemory_depth"] = int(sm.fragment_count())
-                elif hasattr(sm, "_fragments"):
-                    stats["sedimemory_depth"] = len(sm._fragments)
+                elif hasattr(sm, "stats"):
+                    stats["sedimemory_depth"] = int((sm.stats() or {}).get("total_active_frags", 0) or 0)
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
@@ -10409,25 +10411,22 @@ def get_cognitive_stats() -> str:
                 )
                 pass
 
-        # ── Sensory crystal ───────────────────────────────────────────────────
-        sc = (
-            _systems.get("sensory_crystal")
-            or getattr(_systems.get("hardware"), "sensory_crystal", None)
-        )
-        if sc is not None:
+        # ── Concept Crystals (developmental semantic registry) ────────────────
+        registry = _systems.get("_concept_crystal_registry")
+        if registry is not None and hasattr(registry, "stats"):
             try:
-                sc_state = sc.get_state() if hasattr(sc, "get_state") else {}
-                stats["crystal_maturity"] = round(float(sc_state.get("maturity", 0.0)), 3)
-                stats["crystal_nodes"]    = int(sc_state.get("active_nodes", 0))
+                cr = registry.stats() or {}
+                total = int(cr.get("total", 0) or 0)
+                promoted = sum(int((cr.get("by_stage") or {}).get(stage, 0) or 0)
+                               for stage in ("composite", "higher_order", "quasi"))
+                stats["concept_crystal_nodes"] = total
+                stats["concept_crystal_promoted"] = promoted
+                stats["concept_crystal_grounded"] = int(cr.get("grounded", 0) or 0)
+                stats["concept_crystal_maturity"] = round((promoted / total) if total else 0.0, 3)
             except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:8293",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "get_cognitive_stats", "handler_line": 8293, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                )
-                pass
+                _aurora_record_exception_from_locals(locals(), module=__name__,
+                    operation="get_cognitive_stats:concept_crystals", exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats"})
 
         # ── EvolutionaryChamber ───────────────────────────────────────────────
         chamber = _systems.get("chamber")

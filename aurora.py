@@ -6649,6 +6649,27 @@ def _build_communication_contributors(
             "gap_type": str(gap.get("gap_type") or ""),
             "action": str(gap.get("action") or ""),
         }
+    _manifold_resolution = [
+        dict(item)
+        for item in list(systems.get("_manifold_semantic_resolution") or [])
+        if isinstance(item, dict)
+    ]
+    if _manifold_resolution:
+        contributors["manifold_semantic_resolution"] = [
+            {
+                "nc_name": str(item.get("nc_name") or ""),
+                "nc_target": str(item.get("nc_target") or ""),
+                "sub_coordinate": str(item.get("sub_coordinate") or ""),
+                "slot_id": item.get("slot_id"),
+                "semantic_ancestry": list(item.get("semantic_ancestry") or []),
+                "resolution_scope": str(item.get("resolution_scope") or ""),
+                "selected_word": str(item.get("selected_word") or ""),
+                "selected_fit": float(item.get("selected_fit", 0.0) or 0.0),
+                "source": str(item.get("source") or ""),
+            }
+            for item in _manifold_resolution
+        ]
+
     _constraint_semantics = dict(pipeline_state.get("constraint_semantic_state") or {})
     if _constraint_semantics:
         contributors["constraint_semantics"] = {
@@ -7079,6 +7100,29 @@ def _finalize_validated_communication(
                     context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
                 )
                 pass
+    # Build 725: only receiver evidence may complete UNDERSTANDING and
+    # trigger the existing downward modulation cascade.  Immediate self-reentry
+    # still reconciles, but cannot discharge representational pressure by itself.
+    if positive:
+        _uc = systems.get("understanding_contract")
+        if _uc is not None and hasattr(_uc, "run_reflection_cycle"):
+            try:
+                finalized["receiver_validated_reflection"] = _uc.run_reflection_cycle(
+                    systems,
+                    user_text,
+                    str(pending.get("summary", "") or ""),
+                    session_id=session_id,
+                    allow_understanding=True,
+                    resolution_context=list(contributors.get("manifold_semantic_resolution") or []),
+                )
+            except Exception as _rv_reflection_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="receiver_validated_reflection",
+                    exc=_rv_reflection_exc,
+                    context={"function": "_finalize_validated_communication", "response_id": evidence_id},
+                )
+
     try:
         from aurora_persistence_utils import atomic_write_json
         atomic_write_json(
@@ -19540,6 +19584,140 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             context={"function": "_chain_down5_understanding", "source_file": "aurora.py"},
         )
 
+
+def _manifold_coordinate_summary(target_axis: str, law_axis: str, dimension: str) -> str:
+    """Return an existing generalized semantic root for one local coordinate."""
+    family = _DIAGONAL_FAMILY_BY_AXIS.get(str(law_axis or ""), "")
+    return str(
+        (((_MANIFOLD_INVENTORY.get(str(target_axis or ""), {}) or {}).get(family, {}) or {})
+         .get(str(dimension or ""), {}) or {}).get("summary", "") or ""
+    ).strip()
+
+
+def _semantic_basis_tokens(parts: List[str]) -> Set[str]:
+    """Lexical evidence projection of existing semantic ancestry, not a topic parser."""
+    stop = {
+        "the","a","an","and","or","of","to","in","on","for","with","what","how","is","are",
+        "that","this","when","where","which","between","from","into","within","through","as","be",
+        "being","it","its","their","they","them","actual","target","domain","captures","represents",
+        "describes","tracks","expresses","reflects","encodes","models","relation","relationship",
+    }
+    out: Set[str] = set()
+    for part in parts:
+        for token in re.findall(r"[a-z][a-z_'-]+", str(part or "").lower()):
+            token = token.strip("_'-")
+            if len(token) >= 3 and token not in stop:
+                out.add(token)
+    return out
+
+
+def _candidate_semantic_text(candidate: Any) -> str:
+    """Read semantics the candidate already owns; never invent a definition."""
+    if isinstance(candidate, str):
+        return candidate
+    chunks: List[str] = []
+    for attr in ("word", "meaning", "role"):
+        value = getattr(candidate, attr, None)
+        if value:
+            chunks.append(str(value))
+    try:
+        best = candidate.best_definition()
+        if best and not str(best).startswith("learned:"):
+            chunks.append(str(best))
+    except Exception:
+        pass
+    for definition in list(getattr(candidate, "definitions", []) or [])[:5]:
+        if isinstance(definition, dict) and definition.get("text"):
+            chunks.append(str(definition["text"]))
+    for sense in list((getattr(candidate, "senses", {}) or {}).values())[:5]:
+        gloss = getattr(sense, "gloss", "")
+        if gloss:
+            chunks.append(str(gloss))
+    return " ".join(chunks)
+
+
+def _local_semantic_fit(candidate: Any, basis_parts: List[str]) -> float:
+    """Fit one already-local candidate to the active slot's semantic ancestry."""
+    basis = _semantic_basis_tokens(basis_parts)
+    if not basis:
+        return 0.0
+    candidate_tokens = _semantic_basis_tokens([_candidate_semantic_text(candidate)])
+    if not candidate_tokens:
+        return 0.0
+    overlap = len(basis & candidate_tokens) / max(1, len(basis | candidate_tokens))
+    containment = len(basis & candidate_tokens) / max(1, min(len(basis), 8))
+    return max(0.0, min(1.0, 0.55 * overlap + 0.45 * containment))
+
+
+def _oets_nodes_for_noncomp(oets: Any, noncomp_id: str) -> List[Any]:
+    """Read only the OETS nodes already bound to one exact NonComp coordinate.
+
+    OETS historically had no public ``get_nodes_by_noncomp`` API even though
+    callers expected one.  Prefer that API if a future implementation supplies
+    it; otherwise inspect the existing web's node identities locally.  No
+    semantic search or global candidate expansion happens here.
+    """
+    if oets is None or not noncomp_id:
+        return []
+    getter = getattr(oets, "get_nodes_by_noncomp", None)
+    if callable(getter):
+        try:
+            return list(getter(noncomp_id) or [])
+        except Exception:
+            return []
+    web = getattr(oets, "web", None)
+    nodes = getattr(web, "nodes", {}) if web is not None else {}
+    values = nodes.values() if isinstance(nodes, dict) else list(nodes or [])
+    return [
+        node for node in values
+        if str(getattr(node, "noncomp_id", "") or "") == str(noncomp_id)
+    ]
+
+
+def _semantic_relation_fit(web: Any, candidate: Any, basis_parts: List[str]) -> float:
+    """One-hop learned semantic support from the active semantic ancestry.
+
+    Literal word overlap is useful but cannot express learned synonymy or other
+    semantic relations.  This asks only whether the candidate word is already
+    related in Aurora's OETS web to one of the generalized semantic-root words
+    participating in this exact local representation.  It does not expand the
+    search population beyond the current NonComp coordinate.
+    """
+    if web is None or not hasattr(web, "get_relation_between"):
+        return 0.0
+    word = str(getattr(candidate, "word", candidate if isinstance(candidate, str) else "") or "").strip().lower()
+    if not word:
+        return 0.0
+    best = 0.0
+    for basis_word in _semantic_basis_tokens(basis_parts):
+        if basis_word == word:
+            best = max(best, 1.0)
+            continue
+        try:
+            relation = web.get_relation_between(word, basis_word)
+        except Exception:
+            relation = None
+        if relation is None:
+            continue
+        strength = max(0.0, min(1.0, float(getattr(relation, "strength", 0.0) or 0.0)))
+        confidence = max(0.0, min(1.0, float(getattr(relation, "confidence", 0.0) or 0.0)))
+        best = max(best, strength * confidence)
+    return best
+
+
+def _local_semantic_evidence(candidate: Any, basis_parts: List[str], web: Any = None) -> Tuple[float, float, float]:
+    """Return (combined, lexical, relational) evidence for one local candidate.
+
+    The generalized manifold summary is evidence, never a phrase-to-answer
+    table.  A candidate can therefore fit either through semantics it already
+    carries directly or through an OETS relation Aurora has actually learned.
+    """
+    lexical = _local_semantic_fit(candidate, basis_parts)
+    relational = _semantic_relation_fit(web, candidate, basis_parts)
+    combined = max(lexical, relational)
+    return combined, lexical, relational
+
+
 def _generate_from_manifold(systems: dict, user_text: str, state: any, core_claim: str = None) -> tuple:
     live_thought = {}  # law_bindings now live in subsurface_detail; use native_meaning_obj below
     native_meaning = {}
@@ -19602,6 +19780,7 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
     tokens = []
     selected_records = []
     systems["_fgae_selected_entries"] = []
+    systems["_manifold_semantic_resolution"] = []
     
     # Intent consolidation — reduce to the 1-2 dominant bindings by score.
     # Iterating the full pressure field emits a multi-anchor cluster; selecting
@@ -19689,21 +19868,96 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                         word = str(selected_entry.get("word_or_phrase") or "").strip().lower()
                         selected_grammar = dict(selected_entry.get("grammar_affordance") or {})
                 
+                # Build 725: semantic ancestry survives into LOCAL lexical
+                # resolution.  The parent NonComp establishes the broad semantic
+                # territory; the active sub-position and selected column add only
+                # the two locally participating generalized roots.  No global
+                # 78,125-position search and no descendant meaning is predefined.
+                semantic_basis = []
+                parent_summary = str((binding.get("summary", "") if isinstance(binding, dict) else "") or m.nc_semantic_summary or "").strip()
+                if parent_summary:
+                    semantic_basis.append(parent_summary)
+                sub_summary = _manifold_coordinate_summary(m.nc_target, top_sub.law_c, top_sub.law_d)
+                if sub_summary and sub_summary not in semantic_basis:
+                    semantic_basis.append(sub_summary)
+                if slot is not None:
+                    col_summary = _manifold_coordinate_summary(m.nc_target, slot.col_law_c, slot.col_law_d)
+                    if col_summary and col_summary not in semantic_basis:
+                        semantic_basis.append(col_summary)
+                semantic_trace = {
+                    "nc_name": nc_name,
+                    "nc_target": m.nc_target,
+                    "sub_coordinate": f"{top_sub.law_c}:{top_sub.law_d}",
+                    "slot_id": slot.slot_id if slot is not None else None,
+                    "semantic_ancestry": list(semantic_basis),
+                    "resolution_scope": "active_noncomp_subposition",
+                    "candidate_noncomp_id": ncid,
+                    "candidate_count": 0,
+                    "selected_word": "",
+                    "selected_fit": 0.0,
+                    "source": "slot_semantics" if selected_entry else "",
+                }
+
                 # Fallback only: OETS/lexicon do not bypass FGAE when the
                 # populated manifold has a viable word at this coordinate.
-                if oets and hasattr(oets, "get_nodes_by_noncomp"):
-                    nodes = oets.get_nodes_by_noncomp(ncid)
-                    if nodes and not word:
-                        # Weight by relation to anchors + valence match
-                        valence_target = (intensity * 2.0) - 1.0
-                        best_node = max(nodes, key=lambda n: (sum(1 for a in anchors if oets.web.get_relation_between(n.word, a)) * 0.7) + (1.0 - abs(n.emotional_valence - valence_target)) * 0.3)
+                nodes = _oets_nodes_for_noncomp(oets, ncid)
+                if nodes and not word:
+                    valence_target = (intensity * 2.0) - 1.0
+                    semantic_trace["candidate_count"] = len(nodes)
+                    oets_web = getattr(oets, "web", None)
+                    def _node_score(n):
+                        context_relation_fit = 0.0
+                        if oets_web is not None and hasattr(oets_web, "get_relation_between"):
+                            for anchor in anchors:
+                                try:
+                                    relation = oets_web.get_relation_between(n.word, anchor)
+                                except Exception:
+                                    relation = None
+                                if relation is not None:
+                                    context_relation_fit = max(
+                                        context_relation_fit,
+                                        max(0.0, min(1.0, float(getattr(relation, "strength", 0.0) or 0.0)))
+                                        * max(0.0, min(1.0, float(getattr(relation, "confidence", 0.0) or 0.0))),
+                                    )
+                        valence_fit = max(0.0, 1.0 - abs(float(getattr(n, "emotional_valence", 0.0) or 0.0) - valence_target))
+                        semantic_fit, _lex_fit, _rel_fit = _local_semantic_evidence(n, semantic_basis, oets_web)
+                        return semantic_fit * 0.55 + context_relation_fit * 0.25 + valence_fit * 0.20
+                    best_node = max(nodes, key=_node_score)
+                    best_fit, lexical_fit, relation_fit = _local_semantic_evidence(best_node, semantic_basis, oets_web)
+                    # Valence/context can rank semantically viable candidates,
+                    # but cannot authorize a candidate with no semantic evidence.
+                    if best_fit > 0.0 or not semantic_basis:
                         word = best_node.word
-                
-                # Try lexicon if OETS is empty
+                        semantic_trace["selected_fit"] = round(best_fit, 4)
+                        semantic_trace["selected_lexical_fit"] = round(lexical_fit, 4)
+                        semantic_trace["selected_relation_fit"] = round(relation_fit, 4)
+                        semantic_trace["source"] = "oets_local_semantic_fit"
+                    else:
+                        semantic_trace["source"] = "unresolved_local_semantic_gap"
+
+                # Try lexicon if OETS has no viable word. Candidates remain
+                # restricted to this exact NonComp coordinate; OETS may provide
+                # one-hop learned semantic relations for those same candidates.
                 if not word and lexicon and hasattr(lexicon, "find_by_noncomp"):
                     valence_target = (intensity * 2.0) - 1.0
-                    matches = lexicon.find_by_noncomp(ncid, valence_target=valence_target)
-                    if matches: word = matches[0].word
+                    matches = list(lexicon.find_by_noncomp(ncid, valence_target=valence_target) or [])
+                    if matches:
+                        semantic_trace["candidate_count"] = len(matches)
+                        oets_web = getattr(oets, "web", None) if oets is not None else None
+                        def _lex_score(entry):
+                            sem, _lex_fit, _rel_fit = _local_semantic_evidence(entry, semantic_basis, oets_web)
+                            val = 1.0 - min(1.0, abs(float(getattr(entry, "emotional_valence", 0.0) or 0.0) - valence_target) / 2.0)
+                            return sem * 0.75 + val * 0.25
+                        best_entry = max(matches, key=_lex_score)
+                        best_fit, lexical_fit, relation_fit = _local_semantic_evidence(best_entry, semantic_basis, oets_web)
+                        if best_fit > 0.0 or not semantic_basis:
+                            word = best_entry.word
+                            semantic_trace["selected_fit"] = round(best_fit, 4)
+                            semantic_trace["selected_lexical_fit"] = round(lexical_fit, 4)
+                            semantic_trace["selected_relation_fit"] = round(relation_fit, 4)
+                            semantic_trace["source"] = "lexicon_local_semantic_fit"
+                        else:
+                            semantic_trace["source"] = "unresolved_local_semantic_gap"
 
                 # Do not fall back to axis labels, nc_names, family/dimension names,
                 # OETS node names, or anchor names — these are constraint metadata, not
@@ -19723,7 +19977,27 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                         }
                     )
                     if _is_natural:
-                        word = _anchor_cand
+                        _anchor_fit = _local_semantic_fit(_anchor_cand, semantic_basis)
+                        if _anchor_fit > 0.0 or not semantic_basis:
+                            word = _anchor_cand
+                            semantic_trace["selected_fit"] = round(_anchor_fit, 4)
+                            semantic_trace["source"] = "representational_anchor_local_fit"
+
+                if word:
+                    semantic_trace["selected_word"] = str(word)
+                elif semantic_basis:
+                    # Preserve inadequacy in Aurora's existing semantic-pressure
+                    # state so inquiry/resolution machinery can act on the gap.
+                    # No global lexical sweep is permitted to hide a local miss.
+                    current_pressure = float(getattr(state, "semantic_pressure", 0.0) or 0.0)
+                    best_fit = float(semantic_trace.get("selected_fit", 0.0) or 0.0)
+                    state.semantic_pressure = max(
+                        current_pressure,
+                        min(1.0, 0.55 + 0.45 * (1.0 - best_fit)),
+                    )
+                    semantic_trace["unresolved_pressure"] = round(float(state.semantic_pressure), 4)
+                    semantic_trace["source"] = semantic_trace.get("source") or "unresolved_local_semantic_gap"
+                systems.setdefault("_manifold_semantic_resolution", []).append(semantic_trace)
                 
                 # ARTICULATION: keep the manifold output lexical. The selected
                 # slot's grammar_affordance is retained for downstream grammar;
@@ -19811,6 +20085,9 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
             systems["_fgae_coherence_status"]["coherent"] = True
         
     # ── FGAE Output Pipeline O-2 → O-6 (spec §9) ────────────────────────
+    # A lexical fallback may legitimately have no developed slot grammar yet.
+    # Keep that path executable rather than referencing a branch-local variable.
+    sentence = ""
     # Build a response FGAEProjection from the manifold-selected records
     # (which carry proper slot_ids and grammatical positions from O-2) and
     # run the full output pipeline:
@@ -22497,6 +22774,68 @@ def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> li
     return _read_accepted_scout_bindings(systems, turn_id=turn_id)
 
 
+def _dispatch_afterthought_subsurface(
+    systems: Dict[str, Any], user_text: str, *, session_id: str = "", turn_tick: int = 0
+) -> Optional[threading.Thread]:
+    """Continue post-turn experiential cognition without blocking Surface.
+
+    The worker retains the initiating turn identity so any later result belongs
+    to the same lived interaction rather than becoming an unrelated answer.
+    """
+    aurora = systems.get("aurora")
+    gateway = getattr(aurora, "gateway", None) if aurora is not None else None
+    simulation = getattr(gateway, "simulation", None) if gateway is not None else None
+    if simulation is None or not hasattr(simulation, "run_episode"):
+        return None
+    ExistenceMode = systems.get("ExistenceMode")
+    if ExistenceMode is None:
+        return None
+    cause = {
+        "turn_id": str(systems.get("_current_turn_id", "") or f"{session_id}:{turn_tick}"),
+        "session_id": str(session_id or ""),
+        "turn_tick": int(turn_tick or 0),
+        "user_text": str(user_text or "")[:320],
+    }
+
+    _subsurface_lock = systems.setdefault("_afterthought_subsurface_lock", threading.Lock())
+
+    def _worker() -> None:
+        try:
+            # The live-response bridge intentionally refuses recursive synthetic
+            # turns while Surface owns the current external turn. Wait here, in
+            # the background only, until that boundary is released so the deeper
+            # episode receives the genuine pipeline instead of the reentrancy
+            # guard's cheap fallback. This synchronization never blocks Surface.
+            while int(systems.get("_live_turn_depth", 0) or 0) > 0:
+                time.sleep(0.005)
+            # Multiple rapidly dispatched afterthoughts share one simulation
+            # session. Serialize that subsurface organ without serializing the
+            # user's live interaction.
+            with _subsurface_lock:
+                result = simulation.run_episode(
+                    seed_prompt=f"[AFTERTHOUGHT] {user_text}", turns=2, mode=ExistenceMode.BOUNDED
+                )
+            systems["_last_afterthought_result"] = {
+                "cause": dict(cause),
+                "completed_at": time.time(),
+                "episode_id": str(getattr(result, "episode_id", "") or ""),
+            }
+        except Exception as exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__, operation="subsurface_afterthought",
+                exc=exc, context=dict(cause),
+            )
+
+    thread = threading.Thread(
+        target=_worker, name=f"aurora-afterthought-{cause['turn_tick']}", daemon=True
+    )
+    thread.start()
+    systems["_last_afterthought_dispatch"] = {
+        "cause": dict(cause), "dispatched_at": time.time(), "nonblocking": True,
+    }
+    return thread
+
+
 def _run_reasoning_pipeline(
     systems: dict,
     user_text: str,
@@ -24212,8 +24551,8 @@ def _run_reasoning_pipeline(
             # _topic_from_seed_prompt in aurora_simulation_engine.py,
             # which is the single normalization point every seed_prompt-
             # driven episode passes through.
-            aurora.gateway.simulation.run_episode(
-                seed_prompt=f"[AFTERTHOUGHT] {user_text}", turns=2, mode=ExistenceMode.BOUNDED
+            _dispatch_afterthought_subsurface(
+                systems, user_text, session_id=session_id, turn_tick=turn_tick,
             )
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
@@ -28787,6 +29126,21 @@ def boot_aurora(
     # Re-bind after load (load_all may replace internal objects)
     systems['core_identity'] = enhanced_persist.core_identity
     systems['conversation_memory'] = enhanced_persist.conversation_memory
+    # Build 725: OETS persistence rehydrates nodes after the lexicon seed pass.
+    # Re-conserve any exact NonComp identities already owned by LexicalMemory so
+    # local semantic externalization can find the same learned coordinate after
+    # restart. No new coordinate or semantic meaning is inferred here.
+    try:
+        _perception = systems.get("perception")
+        _oets = getattr(_perception, "oets", None) if _perception is not None else None
+        _lexicon = getattr(_perception, "lexicon", None) if _perception is not None else None
+        if _oets is not None and _lexicon is not None and hasattr(_oets, "reconcile_noncomp_ids_from_lexicon"):
+            _oets.reconcile_noncomp_ids_from_lexicon(getattr(_lexicon, "entries", {}) or {})
+    except Exception as _oets_coord_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__, operation="oets_noncomp_coordinate_reconciliation",
+            exc=_oets_coord_exc, context={"function": "boot_aurora", "source_file": "aurora.py"},
+        )
     try:
         seeded = seed_identity_into_dna(identity, enhanced_persist.core_identity)
         if seeded and verbose:
@@ -28946,6 +29300,14 @@ def boot_aurora(
             _learner_wire = getattr(getattr(_sim_wire, 'session', None), 'learner', None)
             if _learner_wire is not None and hasattr(_learner_wire, 'set_dps'):
                 _learner_wire.set_dps(_dps_wire)
+                # Build 725 migration: old generated outcome prose may already
+                # exist in persisted OETS from earlier builds. Remove only that
+                # obsolete semantic authority at boot while preserving the
+                # experiential shard/genealogy that produced it.
+                if hasattr(_learner_wire, 'purge_legacy_semantic_contamination'):
+                    _learner_wire.purge_legacy_semantic_contamination(
+                        getattr(perception, 'oets', None)
+                    )
             # Grammar motif promotions → crystals
             _ge_wire = systems.get('grammar_engine')
             if _ge_wire is not None and hasattr(_ge_wire, 'set_dps'):
@@ -33507,6 +33869,7 @@ def _run_live_response_turn(
                 user_text,
                 getattr(resp_A, 'content', '') or "",
                 session_id=session_id,
+                allow_understanding=False,
             )
             systems['_last_reflection_result'] = _refl
             if not _refl.get('reached_understanding'):
@@ -33521,10 +33884,10 @@ def _run_live_response_turn(
                     _refl_tension = float(_refl.get('understanding', {}).get('tension_total', 0.0) or 0.0)
                     _refl_reached = bool(_refl.get('reached_understanding', False))
                     if _refl_reached:
-                        # Resolved understanding — release pressure via valuation signal
+                        # Receiver-validated Understanding only; the immediate
+                        # reflection call above is intentionally pre-validation.
                         _ifield_refl.ingest_internal_signal('valuation', magnitude=0.6, source_axis='A')
-                    else:
-                        # Unresolved tension — drives N-axis pressure
+                    elif _refl.get('reflection_step') == 'RECONCILIATION_FAILED':
                         _mag = min(1.0, 0.3 + _refl_tension)
                         _ifield_refl.ingest_internal_signal('tension', magnitude=_mag, source_axis='N')
                 except Exception as _aurora_boundary_exc:

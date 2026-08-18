@@ -2774,6 +2774,8 @@ class RuntimeUnderstandingContract:
         *,
         constraint_state: Optional[Dict[str, Any]] = None,
         session_id: str = "",
+        allow_understanding: bool = True,
+        resolution_context: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """
         Enforce the mandatory Reflection re-entry sequence before Understanding.
@@ -2820,6 +2822,14 @@ class RuntimeUnderstandingContract:
             result["reflection_step"] = "RECONCILIATION_FAILED"
             return result
 
+        if not allow_understanding:
+            # Reconciliation is a valid immediate self-observation, but it is
+            # not evidence that communication resolved in the receiver. Keep
+            # the representation live until next-turn consequence validates it.
+            result["reflection_step"] = "RECONCILED_PENDING_RECEIVER"
+            result["reconciled"] = True
+            return result
+
         # ── STEP 5: UNDERSTANDING ── field at equilibrium; all noncomp manifolds coherent
         result["reflection_step"] = "UNDERSTANDING"
         understanding = self._emit_understanding(
@@ -2827,6 +2837,7 @@ class RuntimeUnderstandingContract:
             reentry=reentry,
             tension=tension,
             session_id=session_id,
+            resolution_context=resolution_context,
         )
         result["reached_understanding"] = True
         result["understanding"] = understanding
@@ -2963,6 +2974,7 @@ class RuntimeUnderstandingContract:
         reentry: Dict[str, Any],
         tension: Dict[str, float],
         session_id: str = "",
+        resolution_context: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """
         UNDERSTANDING step: emit the resolved field state.
@@ -2978,6 +2990,15 @@ class RuntimeUnderstandingContract:
             "resolved_boundary_ambiguity": float(self.state.get("B", {}).get("ambiguity", 0.0) or 0.0),
             "tension_at_resolution": dict(tension),
             "reentry_delta": dict(reentry),
+            # Exact locally-participating semantic regions from the response
+            # whose receiver consequence just validated this Understanding.
+            # The pressure field uses these identities to discharge locally
+            # instead of treating one resolved expression as proof that the
+            # entire 78,125-position manifold reached equilibrium.
+            "resolved_noncomp_regions": [
+                dict(item) for item in list(resolution_context or [])
+                if isinstance(item, dict) and str(item.get("nc_name") or "")
+            ],
             "prior_state_time_index": int(state_snapshot.get("time_index", 0) or 0),
             "crystal_level": "understanding",
             "law": "AURORA_COGNITIVE_PHYSICS §7 Understanding — field at equilibrium across all noncomp manifolds",

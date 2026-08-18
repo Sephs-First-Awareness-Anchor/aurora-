@@ -38,7 +38,7 @@ _RECOLOR_PALETTE: Tuple[str, ...] = (
     "red", "blue", "green", "yellow", "purple", "orange", "teal", "gray",
 )
 _CREATABLE_ENTITY_TYPES: Tuple[str, ...] = (
-    "shape", "text", "mark_path", "connector",
+    "shape", "mark_path",
 )
 
 # Native NonComp dimensions compared with physical consequence dimensions.
@@ -987,16 +987,26 @@ def _creation_instance(
     polarity_strength = float(polarity_record.get("strength", 0.0))
     polarity_available = "signed_value" in polarity_record and polarity_strength > 0.0
     polarity = float(polarity_record.get("signed_value", 0.0) or 0.0)
+    entity_type = random.choice(_CREATABLE_ENTITY_TYPES)
     parameters: Dict[str, Any] = {
-        "entity_type": random.choice(_CREATABLE_ENTITY_TYPES),
+        "entity_type": entity_type,
         "position": [round(random.uniform(0.0, 1.0), 4), round(random.uniform(0.0, 1.0), 4)],
         "visual_properties": {"color": random.choice(_RECOLOR_PALETTE)},
     }
+    if entity_type == "mark_path":
+        # Geometry is a complete physical affordance, not invented semantic
+        # content. Text remains unavailable until Aurora has actual text to externalize.
+        parameters["content"] = {
+            "points": [[round(random.uniform(0.1, 0.4), 4), round(random.uniform(0.1, 0.9), 4)],
+                       [round(random.uniform(0.6, 0.9), 4), round(random.uniform(0.1, 0.9), 4)]]
+        }
     sources: Dict[str, Any] = {
         "entity_type": _exploratory_source(),
         "position": _exploratory_source(),
         "visual_properties.color": _exploratory_source(),
     }
+    if entity_type == "mark_path":
+        sources["content.points"] = _exploratory_source("bounded_geometric_instantiation")
     if magnitude > 0.0:
         size = round(0.05 + 0.45 * magnitude, 4)
         parameters["dimensions"] = [size, size]
