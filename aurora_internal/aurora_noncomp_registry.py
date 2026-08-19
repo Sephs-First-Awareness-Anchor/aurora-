@@ -151,38 +151,49 @@ INFORMATION_LINEAGE_MAP: Dict[str, Tuple[str, str, str]] = {
     "A": ("Agency",    "Understanding", "Field Impact"),
 }
 
-# Magnitude formula: Magnitude = (B × T × X) / N
+# ⚠ ARCHITECTURAL FLAG (Build 725 Correction, foundational operator mapping):
+# This composite formula was authored under the pre-correction assumption
+# that B carried the MAGNITUDE role (old AXIS_NC_DIM: B→MAGNITUDE). The
+# corrected canonical mapping is X→MAGNITUDE, B→DIFFERENCE. The axis-role
+# LABELS below have NOT been changed pending Sunni's verification of whether
+# this composite (B×T×X)/N formula still holds as physics, or whether it
+# was itself downstream of the mapping error and needs re-derivation with X
+# as the magnitude primitive. Per the correction record: "Anything
+# downstream that derived semantics or behavior from an incorrect mapping
+# must then be regenerated or verified rather than blindly retained." This
+# formula is that case — flagged, not silently rewritten.
+#
+# Magnitude formula (AS SHIPPED, unverified post-correction): Magnitude = (B × T × X) / N
 # Semantic reading: Meaning = (Boundary × Belief × Information) / Purpose
 #   B = primary magnitude carrier — boundary IS the measure
 #   T = propagation multiplier — how far magnitude reaches through time
 #   X = coherence anchor — grounds magnitude in admissibility
 #   N = normalization denominator — cost of sustaining magnitude
 #     (higher N activation = lower magnitude cost ratio = more efficient field)
-# This is NC Registry Dimension 1 (MAGNITUDE) canonical formula.
 MAGNITUDE_NUMERATOR_AXES: Tuple[str, str, str] = ("B", "T", "X")
 MAGNITUDE_DENOMINATOR_AXIS: str = "N"
 
-# Impact formula: Impact = Magnitude × A = ((B × T × X) / N) × A
+# Impact formula (AS SHIPPED, unverified post-correction): Impact = Magnitude × A = ((B × T × X) / N) × A
 # Semantic reading: Understanding = Meaning × Agency
 #   A converts field potential (magnitude) into directed cognitive outcome.
 #   Agency without magnitude is incoherent. Magnitude without agency is inert.
-# This is the composite NC Dimension 1+2 (MAGNITUDE × OPERATOR[A]) formula.
 IMPACT_NUMERATOR_AXES: Tuple[str, str, str, str] = ("B", "T", "X", "A")
 IMPACT_DENOMINATOR_AXIS: str = "N"
 
 # NC dimension provenance per axis — which NC dimension a link's dominant axis
-# most directly exercises. Derived from the information lineage above.
-#   X → OPERATOR  (admissibility gate is the existence operator)
-#   T → DIFFERENCE (temporal sequence creates delta from expected tick)
-#   N → COST      (energy conservation is the cost reference dimension)
-#   B → MAGNITUDE (boundary is the primary magnitude carrier)
-#   A → POLARITY  (agency control sets direction/polarity of impact)
+# most directly exercises. This is Aurora's canonical foundational operator
+# mapping (Architectural Correction Record, Build 725):
+#   X → MAGNITUDE  (existence is the scale/intensity primitive)
+#   T → POLARITY   (time carries directional lean — before/after, flip)
+#   N → COST       (energy conservation is the cost reference dimension)
+#   B → DIFFERENCE (boundary is the contrast/distinguishability primitive)
+#   A → OPERATOR   (agency is the invariant rule/transformation primitive)
 AXIS_NC_DIM: Dict[str, str] = {
-    "X": "OPERATOR",
-    "T": "DIFFERENCE",
+    "X": "MAGNITUDE",
+    "T": "POLARITY",
     "N": "COST",
-    "B": "MAGNITUDE",
-    "A": "POLARITY",
+    "B": "DIFFERENCE",
+    "A": "OPERATOR",
 }
 
 

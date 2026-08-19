@@ -340,8 +340,27 @@ class TensorExpressionLayer:
     THOUGHT_THRESHOLD: float = 0.06      # all-active: minimum per crystal
     REFLECTION_THRESHOLD: float = 0.10   # self-directed: moderate
 
-    def __init__(self, identity_field=None):
+    def __init__(self, identity_field=None, warp_target: Any = None):
         self._field = identity_field
+
+        # Build 725 Correction, item 4: universal route for exposing salient
+        # axis-pressure profiles to WARP. None by default -- Salience stays
+        # a pure signal until connect_warp() is called. This mirrors
+        # identity_field's own optional-then-connect_field() pattern.
+        #
+        # Target is a WarpField instance (aurora_warp_protocol.py), not any
+        # one individual WarpCapable system. WarpField already maintains
+        # _warp_capable_registry -- every system with gap potential
+        # (language_field, DPS, thought_formation, ontological_scaffolding,
+        # general_execution_foundry, communication_emergence,
+        # recursive_causal_reasoning_waveform, operational_synthesis all
+        # self-register into it at boot via register_warp_capable()).
+        # Submitting a WarpDemand here reaches all of them through WarpField's
+        # own existing routing (_route_to_warp_capable: named source first,
+        # falls back to any registered system) -- Salience never needs to
+        # pick one itself, exactly per WarpDemand's own docstring: "The
+        # submitting system does NOT need to know what WARP will do."
+        self._warp_field: Any = warp_target
 
         # The five composite crystals
         self.activation  = ActivationTensor()
@@ -367,13 +386,57 @@ class TensorExpressionLayer:
         self._field = field
         self._cached_state = None
 
+    def connect_warp(self, warp_target: Any) -> bool:
+        """
+        Attach a WarpField instance (the thing with .submit(WarpDemand))
+        as Salience's universal discovery route (Build 725 Correction,
+        item 4). WarpField's own _warp_capable_registry already knows
+        about every system with gap potential -- this does not require
+        Salience or TensorExpressionLayer to know which one to pick.
+        """
+        if warp_target is None or not hasattr(warp_target, "submit"):
+            return False
+        self._warp_field = warp_target
+        return True
+
     # ── Core read ────────────────────────────────────────────────────────────
 
     def _axis_pressures(self) -> Dict[str, float]:
-        """Read current axis pressures from the identity field."""
+        """Read current axis pressures from the identity field.
+
+        Bug fix (discovered live, 2026-08-19): this called
+        self._field.pressure_topology(), which does not exist on the real
+        NoncompField class (aurora_manifold_directory/noncomp_field.py) --
+        confirmed by reading that class directly. Every call was silently
+        raising AttributeError and falling through to the flat {X:0.3,
+        T:0.3, N:0.3, B:0.3, A:0.3} fallback below -- meaning Salience,
+        and everything downstream of it (including the WarpDemand routing
+        Build 725 Correction item 4 added), was computing off a uniform,
+        undifferentiated pressure signal on every single tick, in every
+        boot, rather than the real live field. Confirmed live: a real
+        boot's WarpField log showed Salience firing with severity=0.300
+        repeatedly -- geomean(0.3, 0.3) exactly, the fallback value, not
+        genuine computed pressure.
+
+        NoncompField's real, public, live-data method for this shape is
+        axis_pressure(axis: int) -> float (confirmed against its own
+        status() method, which builds an identical {letter: pressure}
+        dict from the same accessor for its own diagnostic output).
+        """
         if self._field is None:
             return {ax: 0.3 for ax in ('X', 'T', 'N', 'B', 'A')}
         try:
+            if hasattr(self._field, "axis_pressure"):
+                _axis_int = {"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}
+                return {
+                    letter: float(self._field.axis_pressure(idx))
+                    for letter, idx in _axis_int.items()
+                }
+            # Backward/forward compatible: some identity-field
+            # implementations may still expose pressure_topology()
+            # directly (e.g. test doubles, or a future real
+            # implementation) -- prefer it only when axis_pressure isn't
+            # present, rather than assuming either shape unconditionally.
             return dict(self._field.pressure_topology())
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
@@ -443,6 +506,38 @@ class TensorExpressionLayer:
         pred  = self.prediction.compute(pressures)
         att   = self.attention.compute(pressures)
         mng   = self.meaning.compute(pressures)
+
+        # Build 725 Correction, item 4: Salience as the generic trigger for
+        # WARP/representational discovery. Salience doesn't interpret what
+        # it found or pick which system should handle it -- it submits a
+        # WarpDemand (the universal "I cannot resolve this, WARP decide"
+        # primitive) to WarpField, whose own _warp_capable_registry already
+        # covers every system with gap potential. severity=sal directly:
+        # Salience's activation IS the 0..1 urgency signal WarpDemand wants.
+        # No-op when nothing is connected (connect_warp() was never
+        # called), so this is inert until wired.
+        if self._warp_field is not None and self.salience.is_salient(sal):
+            try:
+                from aurora_warp_protocol import WarpDemand, WarpTrigger
+                self._warp_field.submit(WarpDemand(
+                    source="salience",
+                    layer="tensor_expressions",
+                    trigger=WarpTrigger.GAP,
+                    profile=dict(pressures),
+                    severity=float(sal),
+                    persistence_key=f"salience:{'-'.join(sorted(k for k, v in pressures.items() if v > 0.5))}",
+                ))
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_tensor_expressions.py:behavioral_state.salience_warp",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "behavioral_state", "source_file": "aurora_internal/aurora_tensor_expressions.py"},
+                )
+                # Best-effort, mirrors this file's other WARP/SediMemory
+                # integration points -- never break the cognitive tick on it.
+                pass
 
         # Emergent function levels — derived from crystal intersections
         # Emotion: N-dominant — Activation (X+N) + Salience (N+B) both involve N
@@ -643,13 +738,16 @@ class TensorExpressionLayer:
 _layer_singleton: Optional[TensorExpressionLayer] = None
 
 
-def get_tensor_layer(identity_field=None) -> TensorExpressionLayer:
+def get_tensor_layer(identity_field=None, warp_target: Any = None) -> TensorExpressionLayer:
     """Get or create the module-level TensorExpressionLayer singleton."""
     global _layer_singleton
     if _layer_singleton is None:
-        _layer_singleton = TensorExpressionLayer(identity_field)
-    elif identity_field is not None and _layer_singleton._field is None:
-        _layer_singleton.connect_field(identity_field)
+        _layer_singleton = TensorExpressionLayer(identity_field, warp_target=warp_target)
+    else:
+        if identity_field is not None and _layer_singleton._field is None:
+            _layer_singleton.connect_field(identity_field)
+        if warp_target is not None and _layer_singleton._warp_field is None:
+            _layer_singleton.connect_warp(warp_target)
     return _layer_singleton
 
 

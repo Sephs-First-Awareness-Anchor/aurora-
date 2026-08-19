@@ -4487,9 +4487,21 @@ def _project_utterance_axes(text: str, systems: dict, parsed: Optional[Dict[str,
         _crest_axis = str(_live_crest.get("axis", "") or "").upper()
         _crest_intensity = float(_live_crest.get("intensity", 0.0) or 0.0)
         if _crest_axis in ("X", "T", "N", "B", "A") and _crest_intensity >= 0.35:
-            # Blend at 25% weight — the subsurface crest frames the surface
+            # Repair J (per Sunni, 2026-08-19): weight must be determined
+            # by the pressure itself, not a fixed fraction imposed
+            # regardless of strength. The old "0.75/0.25" split let a
+            # crest sitting exactly at the 0.35 floor influence the axis
+            # by the identical amount as one at 0.99 -- a ceiling decided
+            # outside the pressure system, silently overriding what the
+            # constraint physics would otherwise conclude. _crest_intensity
+            # is already a real, bounded [0,1] pressure value (not a
+            # design constant); using it directly as its own blend weight
+            # means a genuinely strong subsurface convergence can actually
+            # dominate the surface projection, and a weak one (just past
+            # threshold) barely nudges it -- proportional to what it
+            # actually is, not what a cap allows it to be.
             _cur = float(projection.get(_crest_axis, 0.2))
-            projection[_crest_axis] = (_cur * 0.75) + (_crest_intensity * 0.25)
+            projection[_crest_axis] = (_cur * (1.0 - _crest_intensity)) + (_crest_intensity * _crest_intensity)
 
         # 3. Blend live Sensory Vitals (Physical perturbation)
         _live_sensory = dict(systems.get("_live_sensory_state") or {})
@@ -5197,20 +5209,61 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state, trigger: str =
         pass
     _seed_abstained_gap(user_text, systems)
     _abstain = ""
+    _seeking = False
     try:
         _emitter = systems.get("constraint_emitter") if isinstance(systems, dict) else None
         if _emitter is not None:
             from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
             _gp = getattr(state, "parsed", {}) or {}
+            _is_q = bool(_gp.get("is_question", False))
+            # Repair G (2026-08-19, per Sunni): an abstain must be an
+            # effort to seek resolution through the user -- surfacing what
+            # the gap is and what would resolve it -- not a dead end.
+            # ConstraintEmitter already has this ability, fully built:
+            # _seek_gap() constructs a real "what do you mean by X?"
+            # question, routes it to the comprehension-gap system, sets a
+            # working-memory seeking flag, and pushes it to the OETS
+            # research queue. It was never reachable from this chokepoint
+            # -- _emit_abstain() was called directly, bypassing emit()'s
+            # own classification entirely, and topic_concept (what
+            # _seek_gap needs to seek about) was never populated on the
+            # InputFrame in the first place.
+            _topic = str(_gp.get("topic", "") or "").strip()
+            if not _topic:
+                for _cand in list(_gp.get("entities", []) or []) + list(_gp.get("topic_words", []) or []):
+                    _cand_s = str(_cand or "").strip()
+                    if _cand_s:
+                        _topic = _cand_s
+                        break
             _gif = _IF(
                 text=str(user_text or ""),
-                is_question=bool(_gp.get("is_question", False)),
+                is_question=_is_q,
                 is_directed=True,
+                is_statement=not _is_q,
                 is_self_referential=bool(_gp.get("is_self_referential", False)),
+                topic_concept=_topic or None,
             )
             _gctx = EmissionContextBuilder().build(systems, input_frame=_gif, recent_words=[])
+            # Repair G, revised: routing through emit()'s full classifier
+            # was tried and reverted -- confirmed live it can land on an
+            # act (e.g. REPAIR) that assumes partial understanding this
+            # path doesn't actually have, producing malformed text ("Actually,
+            # I can see the mean.") instead of an honest gap. _emit_abstain()
+            # is the reliable, narrow-purpose call this chokepoint always
+            # used -- keep it as the base. Layer _seek_gap() on top
+            # independently when there's a topic to seek about, since
+            # _seek_gap() is self-contained (only needs ctx + a topic) and
+            # doesn't depend on full classification succeeding.
             _ares = _emitter._emit_abstain(_gctx)
             _abstain = str(getattr(_ares, "text", "") or "").strip()
+            _seeking = bool(getattr(_ares, "seeking", False))
+            if getattr(_ares, "abstained", False) and not _seeking and _topic:
+                from aurora_constraint_emission import SlotFrame as _SF, SpeechAct as _SA
+                _seek_result = _emitter._seek_gap(_gctx, "both", _SF(), _SA.ABSTAIN)
+                _seek_text = str(getattr(_seek_result, "text", "") or "").strip()
+                if _seek_text:
+                    _abstain = _seek_text
+                    _seeking = True
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -5223,7 +5276,7 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state, trigger: str =
     state.response_content = _abstain
     state.response_tone = "honest"
     state.response_confidence = 0.4
-    state.response_src = "constraint_abstain"
+    state.response_src = "constraint_seek" if _seeking else "constraint_abstain"
     if isinstance(systems, dict):
         systems["_preserve_literal_response_once"] = True
     _log_constraint_fallback(systems, trigger, _abstain)
@@ -6649,27 +6702,6 @@ def _build_communication_contributors(
             "gap_type": str(gap.get("gap_type") or ""),
             "action": str(gap.get("action") or ""),
         }
-    _manifold_resolution = [
-        dict(item)
-        for item in list(systems.get("_manifold_semantic_resolution") or [])
-        if isinstance(item, dict)
-    ]
-    if _manifold_resolution:
-        contributors["manifold_semantic_resolution"] = [
-            {
-                "nc_name": str(item.get("nc_name") or ""),
-                "nc_target": str(item.get("nc_target") or ""),
-                "sub_coordinate": str(item.get("sub_coordinate") or ""),
-                "slot_id": item.get("slot_id"),
-                "semantic_ancestry": list(item.get("semantic_ancestry") or []),
-                "resolution_scope": str(item.get("resolution_scope") or ""),
-                "selected_word": str(item.get("selected_word") or ""),
-                "selected_fit": float(item.get("selected_fit", 0.0) or 0.0),
-                "source": str(item.get("source") or ""),
-            }
-            for item in _manifold_resolution
-        ]
-
     _constraint_semantics = dict(pipeline_state.get("constraint_semantic_state") or {})
     if _constraint_semantics:
         contributors["constraint_semantics"] = {
@@ -7100,29 +7132,6 @@ def _finalize_validated_communication(
                     context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
                 )
                 pass
-    # Build 725: only receiver evidence may complete UNDERSTANDING and
-    # trigger the existing downward modulation cascade.  Immediate self-reentry
-    # still reconciles, but cannot discharge representational pressure by itself.
-    if positive:
-        _uc = systems.get("understanding_contract")
-        if _uc is not None and hasattr(_uc, "run_reflection_cycle"):
-            try:
-                finalized["receiver_validated_reflection"] = _uc.run_reflection_cycle(
-                    systems,
-                    user_text,
-                    str(pending.get("summary", "") or ""),
-                    session_id=session_id,
-                    allow_understanding=True,
-                    resolution_context=list(contributors.get("manifold_semantic_resolution") or []),
-                )
-            except Exception as _rv_reflection_exc:
-                _aurora_record_exception_from_locals(
-                    locals(), module=__name__,
-                    operation="receiver_validated_reflection",
-                    exc=_rv_reflection_exc,
-                    context={"function": "_finalize_validated_communication", "response_id": evidence_id},
-                )
-
     try:
         from aurora_persistence_utils import atomic_write_json
         atomic_write_json(
@@ -15486,11 +15495,65 @@ def _apply_noncomp_behavior_actuation(
     return actuation
 
 
+def _instinctive_understanding(systems: Any) -> Dict[str, Any]:
+    """
+    The compact, constrained subsurface function (per Sunni, 2026-08-19):
+    corrected mid-conversation from "a surface engine" to what it actually
+    needs to be -- a specific, always-available piece OF the subsurface,
+    reachable by the surface even when the rest of the subsurface (genealogy)
+    is genuinely busy. Deliberately the SAME channel that already relays
+    intuition and instinct: the continuously-running ThoughtBraid
+    (aurora_thought_formation.py), structurally separate from genealogy's
+    _concurrency_lock entirely -- tapping it never blocks on anything
+    genealogy is doing. Not a new subsystem; this function only compiles
+    what that channel already produces into one small, bounded shape.
+
+    A temporary comprehension substitute, explicitly not a permanent one:
+    returns a compact axis lean, a confidence level, and whatever the braid
+    is currently curious/unresolved about -- never attempting the depth
+    genealogy provides, only enough for the surface to keep responding
+    honestly while the subsurface's usual backend assistance is unavailable.
+    """
+    out: Dict[str, Any] = {
+        "available": False, "dominant_axis": "X", "confidence": 0.0,
+        "curiosity_lean": "", "source": "instinct",
+    }
+    if not isinstance(systems, dict):
+        return out
+    braid = systems.get("_thought_braid")
+    if braid is not None:
+        try:
+            slice_ = braid.current_slice()
+            pf = dict(getattr(slice_, "predictive_frame", None) or {})
+            if pf.get("dominant_field"):
+                out["dominant_axis"] = str(pf["dominant_field"])
+                out["available"] = True
+            if pf.get("curiosity_lean"):
+                out["curiosity_lean"] = str(pf["curiosity_lean"])
+            ev = getattr(slice_, "emotion_valence", None)
+            if ev is not None:
+                out["emotion_valence"] = dict(getattr(ev, "valence", None) or {})
+        except Exception:
+            pass
+    ts = systems.get("_current_thought_state")
+    if ts is not None:
+        try:
+            fp = list(getattr(ts, "axis_fingerprint", None) or [])
+            if fp and not out["available"]:
+                out["dominant_axis"] = str(fp[0])
+                out["available"] = True
+            out["confidence"] = max(0.0, min(1.0, float(getattr(ts, "confidence", 0.0) or 0.0)))
+        except Exception:
+            pass
+    return out
+
+
 def _select_active_abilities(
     axis_activation: Dict[str, float],
     dominant_axis: str,
     genealogy: Any,
     max_n: int = 5,
+    systems: Optional[Any] = None,
 ) -> List[Dict[str, Any]]:
     """
     Select the most affordable abilities from the genealogy whose primary axis
@@ -15500,8 +15563,54 @@ def _select_active_abilities(
     Called once per turn between the upward and downward reasoning passes so
     the pipeline knows *which* thinking operations are live this exchange.
     """
-    abilities = getattr(genealogy, "abilities", None)
+    # Repair N (per Sunni, 2026-08-19): genealogy.observe() now runs on a
+    # background thread (the afterthought simulation episode) as well as
+    # the surface's own synchronous path, both serialized against each
+    # other by genealogy's own _concurrency_lock -- but this function
+    # was reading the live .abilities dict directly, with no protection
+    # at all, on the surface side. The surface must never wait on the
+    # subsurface: this takes a quick, non-blocking snapshot attempt
+    # (try the lock, don't queue for it) and falls back to the most
+    # recent successfully-read snapshot when the background thread
+    # currently holds it, rather than either blocking or returning
+    # nothing. A slightly-stale perceptive frame, never a stall.
+    lock = getattr(genealogy, "_concurrency_lock", None)
+    abilities_snapshot: Optional[Dict[str, Any]] = None
+    if lock is not None:
+        got_lock = lock.acquire(blocking=False)
+        if got_lock:
+            try:
+                abilities_snapshot = dict(getattr(genealogy, "abilities", None) or {})
+                genealogy._last_abilities_snapshot = abilities_snapshot
+            finally:
+                lock.release()
+        else:
+            abilities_snapshot = getattr(genealogy, "_last_abilities_snapshot", None)
+    else:
+        abilities_snapshot = getattr(genealogy, "abilities", None)
+
+    abilities = abilities_snapshot
     if not abilities:
+        # No genuine genealogy read has ever succeeded for this instance
+        # yet (cold start) and the lock is currently held -- rather than
+        # return nothing, reach for the constrained, always-available
+        # instinct channel. This is explicitly a substitute, not a
+        # replacement: one synthetic entry, clearly marked, giving the
+        # downward chain *something* to lean on until genealogy's usual
+        # backend assistance is available again.
+        instinct = _instinctive_understanding(systems)
+        if instinct.get("available"):
+            ax = str(instinct.get("dominant_axis") or "X")
+            return [{
+                "id": "instinct:temporary_substitute",
+                "axis": ax,
+                "cost": {a: 0.1 for a in ("X", "T", "N", "B", "A")},
+                "effect_tags": ("instinctive_fallback", f"curiosity:{instinct.get('curiosity_lean', '')}"[:80]),
+                "viable_band_alignment": max(0.1, instinct.get("confidence", 0.0)),
+                "ontological_status": "",
+                "active_weight": max(0.1, instinct.get("confidence", 0.0)),
+                "source": "instinct",
+            }]
         return []
 
     def _ability_metadata(ab: Any) -> Dict[str, Any]:
@@ -18528,14 +18637,29 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
                     default=0.0,
                 )
                 _sc_lanes = len(_sc_st.get("lanes") or {})
-                # Weight the contribution proportionally to crystal maturity (max 12%)
-                _w = min(_sc_mat * 0.12, 0.12)
+                # Repair J (per Sunni, 2026-08-19): weight determined by
+                # the pressure itself (crystal maturity, already a real
+                # bounded [0,1] value from lived perceptual accumulation),
+                # not an arbitrary ceiling imposed regardless of how
+                # mature the crystal actually is. The old min(mat*0.12,
+                # 0.12) meant a fully-matured sensory crystal (mat=1.0)
+                # could never contribute more than a crystal barely past
+                # its own minimal-data floor -- a cap decided outside the
+                # pressure system, overriding what genuinely accumulated
+                # perceptual experience would otherwise earn. Same fix
+                # applied to lane_contrib below: the /10.0 normalization
+                # is a reasonable scale (lane count has no natural [0,1]
+                # bound on its own), but the additional min(...,0.3)
+                # ceiling on top of that was the same pattern -- removed,
+                # so genuinely high cross-modal agreement can actually
+                # register as significant instead of being truncated.
+                _w = _sc_mat
                 if _sc_audio > 0.08:
                     _raw["N"] = min(1.0, float(_raw.get("N", 0.2)) + _sc_audio * _w)
                 if _sc_visual > 0.08:
                     _raw["X"] = min(1.0, float(_raw.get("X", 0.2)) + _sc_visual * _w)
                 if _sc_lanes > 0:
-                    _lane_contrib = min(float(_sc_lanes) / 10.0, 0.3)
+                    _lane_contrib = min(1.0, float(_sc_lanes) / 10.0)
                     _raw["B"] = min(1.0, float(_raw.get("B", 0.2)) + _lane_contrib * _w)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -18550,15 +18674,28 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
     # ---- Collective axis blend ----
     # The IStateCollective already processed this input in _chain_up1_information
     # and deposited ontologically-grounded net axis displacements in pipeline_state.
-    # Blend them into _raw at a low weight (max 10%) so the beings' reading of
-    # "what energy/boundary/agency is actually at stake" informs the N-axis field.
     try:
         _coll_net = dict((state.pipeline_state or {}).get("collective_axis_net", {}) or {})
         if _coll_net:
-            # Normalize net displacements to [0,1] range and blend at up to 10% weight
+            # Repair J (per Sunni, 2026-08-19): weight determined by the
+            # pressure itself. The old flat 0.10 applied identically
+            # whether the collective's reading was barely-active or
+            # produced by strong agreement across many I-State beings --
+            # axis_net_displacements is a genuine SUM of signed
+            # contributions (confirmed by reading _synthesize_constraint_
+            # vector directly: "Sum signed displacements per constraint
+            # axis"), not a normalized value, so its real magnitude was
+            # already being discarded by the max-normalization step below
+            # even before the fixed 0.10 was applied on top -- two
+            # genuinely different-strength collective readings produced
+            # the identical blend weight. collective_resonance (dominant_
+            # resonance from the same synthesis, already deposited in
+            # pipeline_state, already a real bounded strength signal) is
+            # the correct weight: how coherent/strong the collective's
+            # reading actually was, not a fixed fraction regardless of it.
             _coll_max = max(abs(v) for v in _coll_net.values()) if _coll_net else 1.0
             _coll_max = max(_coll_max, 1e-6)
-            _coll_w = 0.10
+            _coll_w = float((state.pipeline_state or {}).get("collective_resonance", 0.0) or 0.0)
             for _ax in ("X", "T", "N", "B", "A"):
                 if _ax in _coll_net:
                     _norm = float(_coll_net[_ax]) / _coll_max  # signed, -1..1
@@ -18572,6 +18709,62 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
             operation="exception_handler:aurora.py:14713",
             exc=_aurora_boundary_exc,
             context={"function": "_chain_up3_purpose", "handler_line": 14713, "source_file": "aurora.py"},
+        )
+        pass
+
+    # ---- Subsurface braid blend (per Sunni, 2026-08-19) ----
+    # The continuously-running thought braid (aurora_thought_formation.py)
+    # was tapped at the top of this turn (begin_response_turn) and its
+    # ThoughtState already sits in systems['_current_thought_state'] --
+    # available here, never previously read by axis projection. Blended
+    # the identical way collective_axis_net is blended immediately above:
+    # a weighted nudge into the SAME X/T/N/B/A pressure vector, not a
+    # parallel scoring system. Pressure-induced, not a fixed constant:
+    # weight scales with thought_state.confidence, which already
+    # incorporates unresolved-conflict count (_compute_thought_confidence
+    # subtracts 0.08 per conflict -- confirmed by reading it directly) --
+    # deliberately NOT also penalizing by len(unresolved) separately here,
+    # since that would double-count the identical signal through two
+    # paths, which is exactly the parallel-heuristic drift the doctrine
+    # forbids. axis_fingerprint is itself constraint-native by
+    # construction: literal X/T/N/B/A letters extracted from the axis_
+    # signature of whichever process contexts actually dominated this
+    # tick's integration (turn content, memory, identity, braid_memory,
+    # braid_predictive, etc.) -- ranked by how many dominant processes
+    # actually carried that axis, not a free-text read.
+    try:
+        _ts = systems.get("_current_thought_state") if isinstance(systems, dict) else None
+        _fp = list(getattr(_ts, "axis_fingerprint", None) or []) if _ts is not None else []
+        if _fp:
+            _ts_conf = max(0.0, min(1.0, float(getattr(_ts, "confidence", 0.0) or 0.0)))
+            # Repair J (per Sunni, 2026-08-19): weight determined by the
+            # pressure itself. The original 0.12*confidence carried the
+            # same anti-pattern flagged everywhere else in this pass --
+            # even a fully-confident thought state (_ts_conf=1.0) could
+            # never contribute more than 12%, a ceiling this function had
+            # no basis to impose over what genuinely converged, high-
+            # confidence subsurface integration earned. confidence is
+            # already the correct, real, bounded weight on its own --
+            # using it directly, not as a mere scale factor on an
+            # arbitrary cap.
+            _ts_base_w = _ts_conf
+            for _rank, _ax in enumerate(_fp[:3]):
+                if _ax in ("X", "T", "N", "B", "A") and _ts_base_w > 0.0:
+                    _rank_w = _ts_base_w * (1.0 - _rank * 0.3)  # 1st=full, 2nd=70%, 3rd=40%
+                    _cur = float(_raw.get(_ax, 0.2))
+                    _raw[_ax] = max(0.0, min(1.0, _cur + _rank_w))
+            if isinstance(state.pipeline_state, dict):
+                state.pipeline_state["braid_axis_blend"] = {
+                    "axis_fingerprint": list(_fp[:3]),
+                    "thought_confidence": round(_ts_conf, 4),
+                }
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_chain_up3_purpose.braid_axis_blend",
+            exc=_aurora_boundary_exc,
+            context={"function": "_chain_up3_purpose", "source_file": "aurora.py"},
         )
         pass
 
@@ -19584,140 +19777,6 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             context={"function": "_chain_down5_understanding", "source_file": "aurora.py"},
         )
 
-
-def _manifold_coordinate_summary(target_axis: str, law_axis: str, dimension: str) -> str:
-    """Return an existing generalized semantic root for one local coordinate."""
-    family = _DIAGONAL_FAMILY_BY_AXIS.get(str(law_axis or ""), "")
-    return str(
-        (((_MANIFOLD_INVENTORY.get(str(target_axis or ""), {}) or {}).get(family, {}) or {})
-         .get(str(dimension or ""), {}) or {}).get("summary", "") or ""
-    ).strip()
-
-
-def _semantic_basis_tokens(parts: List[str]) -> Set[str]:
-    """Lexical evidence projection of existing semantic ancestry, not a topic parser."""
-    stop = {
-        "the","a","an","and","or","of","to","in","on","for","with","what","how","is","are",
-        "that","this","when","where","which","between","from","into","within","through","as","be",
-        "being","it","its","their","they","them","actual","target","domain","captures","represents",
-        "describes","tracks","expresses","reflects","encodes","models","relation","relationship",
-    }
-    out: Set[str] = set()
-    for part in parts:
-        for token in re.findall(r"[a-z][a-z_'-]+", str(part or "").lower()):
-            token = token.strip("_'-")
-            if len(token) >= 3 and token not in stop:
-                out.add(token)
-    return out
-
-
-def _candidate_semantic_text(candidate: Any) -> str:
-    """Read semantics the candidate already owns; never invent a definition."""
-    if isinstance(candidate, str):
-        return candidate
-    chunks: List[str] = []
-    for attr in ("word", "meaning", "role"):
-        value = getattr(candidate, attr, None)
-        if value:
-            chunks.append(str(value))
-    try:
-        best = candidate.best_definition()
-        if best and not str(best).startswith("learned:"):
-            chunks.append(str(best))
-    except Exception:
-        pass
-    for definition in list(getattr(candidate, "definitions", []) or [])[:5]:
-        if isinstance(definition, dict) and definition.get("text"):
-            chunks.append(str(definition["text"]))
-    for sense in list((getattr(candidate, "senses", {}) or {}).values())[:5]:
-        gloss = getattr(sense, "gloss", "")
-        if gloss:
-            chunks.append(str(gloss))
-    return " ".join(chunks)
-
-
-def _local_semantic_fit(candidate: Any, basis_parts: List[str]) -> float:
-    """Fit one already-local candidate to the active slot's semantic ancestry."""
-    basis = _semantic_basis_tokens(basis_parts)
-    if not basis:
-        return 0.0
-    candidate_tokens = _semantic_basis_tokens([_candidate_semantic_text(candidate)])
-    if not candidate_tokens:
-        return 0.0
-    overlap = len(basis & candidate_tokens) / max(1, len(basis | candidate_tokens))
-    containment = len(basis & candidate_tokens) / max(1, min(len(basis), 8))
-    return max(0.0, min(1.0, 0.55 * overlap + 0.45 * containment))
-
-
-def _oets_nodes_for_noncomp(oets: Any, noncomp_id: str) -> List[Any]:
-    """Read only the OETS nodes already bound to one exact NonComp coordinate.
-
-    OETS historically had no public ``get_nodes_by_noncomp`` API even though
-    callers expected one.  Prefer that API if a future implementation supplies
-    it; otherwise inspect the existing web's node identities locally.  No
-    semantic search or global candidate expansion happens here.
-    """
-    if oets is None or not noncomp_id:
-        return []
-    getter = getattr(oets, "get_nodes_by_noncomp", None)
-    if callable(getter):
-        try:
-            return list(getter(noncomp_id) or [])
-        except Exception:
-            return []
-    web = getattr(oets, "web", None)
-    nodes = getattr(web, "nodes", {}) if web is not None else {}
-    values = nodes.values() if isinstance(nodes, dict) else list(nodes or [])
-    return [
-        node for node in values
-        if str(getattr(node, "noncomp_id", "") or "") == str(noncomp_id)
-    ]
-
-
-def _semantic_relation_fit(web: Any, candidate: Any, basis_parts: List[str]) -> float:
-    """One-hop learned semantic support from the active semantic ancestry.
-
-    Literal word overlap is useful but cannot express learned synonymy or other
-    semantic relations.  This asks only whether the candidate word is already
-    related in Aurora's OETS web to one of the generalized semantic-root words
-    participating in this exact local representation.  It does not expand the
-    search population beyond the current NonComp coordinate.
-    """
-    if web is None or not hasattr(web, "get_relation_between"):
-        return 0.0
-    word = str(getattr(candidate, "word", candidate if isinstance(candidate, str) else "") or "").strip().lower()
-    if not word:
-        return 0.0
-    best = 0.0
-    for basis_word in _semantic_basis_tokens(basis_parts):
-        if basis_word == word:
-            best = max(best, 1.0)
-            continue
-        try:
-            relation = web.get_relation_between(word, basis_word)
-        except Exception:
-            relation = None
-        if relation is None:
-            continue
-        strength = max(0.0, min(1.0, float(getattr(relation, "strength", 0.0) or 0.0)))
-        confidence = max(0.0, min(1.0, float(getattr(relation, "confidence", 0.0) or 0.0)))
-        best = max(best, strength * confidence)
-    return best
-
-
-def _local_semantic_evidence(candidate: Any, basis_parts: List[str], web: Any = None) -> Tuple[float, float, float]:
-    """Return (combined, lexical, relational) evidence for one local candidate.
-
-    The generalized manifold summary is evidence, never a phrase-to-answer
-    table.  A candidate can therefore fit either through semantics it already
-    carries directly or through an OETS relation Aurora has actually learned.
-    """
-    lexical = _local_semantic_fit(candidate, basis_parts)
-    relational = _semantic_relation_fit(web, candidate, basis_parts)
-    combined = max(lexical, relational)
-    return combined, lexical, relational
-
-
 def _generate_from_manifold(systems: dict, user_text: str, state: any, core_claim: str = None) -> tuple:
     live_thought = {}  # law_bindings now live in subsurface_detail; use native_meaning_obj below
     native_meaning = {}
@@ -19780,7 +19839,6 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
     tokens = []
     selected_records = []
     systems["_fgae_selected_entries"] = []
-    systems["_manifold_semantic_resolution"] = []
     
     # Intent consolidation — reduce to the 1-2 dominant bindings by score.
     # Iterating the full pressure field emits a multi-anchor cluster; selecting
@@ -19868,96 +19926,21 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                         word = str(selected_entry.get("word_or_phrase") or "").strip().lower()
                         selected_grammar = dict(selected_entry.get("grammar_affordance") or {})
                 
-                # Build 725: semantic ancestry survives into LOCAL lexical
-                # resolution.  The parent NonComp establishes the broad semantic
-                # territory; the active sub-position and selected column add only
-                # the two locally participating generalized roots.  No global
-                # 78,125-position search and no descendant meaning is predefined.
-                semantic_basis = []
-                parent_summary = str((binding.get("summary", "") if isinstance(binding, dict) else "") or m.nc_semantic_summary or "").strip()
-                if parent_summary:
-                    semantic_basis.append(parent_summary)
-                sub_summary = _manifold_coordinate_summary(m.nc_target, top_sub.law_c, top_sub.law_d)
-                if sub_summary and sub_summary not in semantic_basis:
-                    semantic_basis.append(sub_summary)
-                if slot is not None:
-                    col_summary = _manifold_coordinate_summary(m.nc_target, slot.col_law_c, slot.col_law_d)
-                    if col_summary and col_summary not in semantic_basis:
-                        semantic_basis.append(col_summary)
-                semantic_trace = {
-                    "nc_name": nc_name,
-                    "nc_target": m.nc_target,
-                    "sub_coordinate": f"{top_sub.law_c}:{top_sub.law_d}",
-                    "slot_id": slot.slot_id if slot is not None else None,
-                    "semantic_ancestry": list(semantic_basis),
-                    "resolution_scope": "active_noncomp_subposition",
-                    "candidate_noncomp_id": ncid,
-                    "candidate_count": 0,
-                    "selected_word": "",
-                    "selected_fit": 0.0,
-                    "source": "slot_semantics" if selected_entry else "",
-                }
-
                 # Fallback only: OETS/lexicon do not bypass FGAE when the
                 # populated manifold has a viable word at this coordinate.
-                nodes = _oets_nodes_for_noncomp(oets, ncid)
-                if nodes and not word:
-                    valence_target = (intensity * 2.0) - 1.0
-                    semantic_trace["candidate_count"] = len(nodes)
-                    oets_web = getattr(oets, "web", None)
-                    def _node_score(n):
-                        context_relation_fit = 0.0
-                        if oets_web is not None and hasattr(oets_web, "get_relation_between"):
-                            for anchor in anchors:
-                                try:
-                                    relation = oets_web.get_relation_between(n.word, anchor)
-                                except Exception:
-                                    relation = None
-                                if relation is not None:
-                                    context_relation_fit = max(
-                                        context_relation_fit,
-                                        max(0.0, min(1.0, float(getattr(relation, "strength", 0.0) or 0.0)))
-                                        * max(0.0, min(1.0, float(getattr(relation, "confidence", 0.0) or 0.0))),
-                                    )
-                        valence_fit = max(0.0, 1.0 - abs(float(getattr(n, "emotional_valence", 0.0) or 0.0) - valence_target))
-                        semantic_fit, _lex_fit, _rel_fit = _local_semantic_evidence(n, semantic_basis, oets_web)
-                        return semantic_fit * 0.55 + context_relation_fit * 0.25 + valence_fit * 0.20
-                    best_node = max(nodes, key=_node_score)
-                    best_fit, lexical_fit, relation_fit = _local_semantic_evidence(best_node, semantic_basis, oets_web)
-                    # Valence/context can rank semantically viable candidates,
-                    # but cannot authorize a candidate with no semantic evidence.
-                    if best_fit > 0.0 or not semantic_basis:
+                if oets and hasattr(oets, "get_nodes_by_noncomp"):
+                    nodes = oets.get_nodes_by_noncomp(ncid)
+                    if nodes and not word:
+                        # Weight by relation to anchors + valence match
+                        valence_target = (intensity * 2.0) - 1.0
+                        best_node = max(nodes, key=lambda n: (sum(1 for a in anchors if oets.web.get_relation_between(n.word, a)) * 0.7) + (1.0 - abs(n.emotional_valence - valence_target)) * 0.3)
                         word = best_node.word
-                        semantic_trace["selected_fit"] = round(best_fit, 4)
-                        semantic_trace["selected_lexical_fit"] = round(lexical_fit, 4)
-                        semantic_trace["selected_relation_fit"] = round(relation_fit, 4)
-                        semantic_trace["source"] = "oets_local_semantic_fit"
-                    else:
-                        semantic_trace["source"] = "unresolved_local_semantic_gap"
-
-                # Try lexicon if OETS has no viable word. Candidates remain
-                # restricted to this exact NonComp coordinate; OETS may provide
-                # one-hop learned semantic relations for those same candidates.
+                
+                # Try lexicon if OETS is empty
                 if not word and lexicon and hasattr(lexicon, "find_by_noncomp"):
                     valence_target = (intensity * 2.0) - 1.0
-                    matches = list(lexicon.find_by_noncomp(ncid, valence_target=valence_target) or [])
-                    if matches:
-                        semantic_trace["candidate_count"] = len(matches)
-                        oets_web = getattr(oets, "web", None) if oets is not None else None
-                        def _lex_score(entry):
-                            sem, _lex_fit, _rel_fit = _local_semantic_evidence(entry, semantic_basis, oets_web)
-                            val = 1.0 - min(1.0, abs(float(getattr(entry, "emotional_valence", 0.0) or 0.0) - valence_target) / 2.0)
-                            return sem * 0.75 + val * 0.25
-                        best_entry = max(matches, key=_lex_score)
-                        best_fit, lexical_fit, relation_fit = _local_semantic_evidence(best_entry, semantic_basis, oets_web)
-                        if best_fit > 0.0 or not semantic_basis:
-                            word = best_entry.word
-                            semantic_trace["selected_fit"] = round(best_fit, 4)
-                            semantic_trace["selected_lexical_fit"] = round(lexical_fit, 4)
-                            semantic_trace["selected_relation_fit"] = round(relation_fit, 4)
-                            semantic_trace["source"] = "lexicon_local_semantic_fit"
-                        else:
-                            semantic_trace["source"] = "unresolved_local_semantic_gap"
+                    matches = lexicon.find_by_noncomp(ncid, valence_target=valence_target)
+                    if matches: word = matches[0].word
 
                 # Do not fall back to axis labels, nc_names, family/dimension names,
                 # OETS node names, or anchor names — these are constraint metadata, not
@@ -19977,27 +19960,7 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                         }
                     )
                     if _is_natural:
-                        _anchor_fit = _local_semantic_fit(_anchor_cand, semantic_basis)
-                        if _anchor_fit > 0.0 or not semantic_basis:
-                            word = _anchor_cand
-                            semantic_trace["selected_fit"] = round(_anchor_fit, 4)
-                            semantic_trace["source"] = "representational_anchor_local_fit"
-
-                if word:
-                    semantic_trace["selected_word"] = str(word)
-                elif semantic_basis:
-                    # Preserve inadequacy in Aurora's existing semantic-pressure
-                    # state so inquiry/resolution machinery can act on the gap.
-                    # No global lexical sweep is permitted to hide a local miss.
-                    current_pressure = float(getattr(state, "semantic_pressure", 0.0) or 0.0)
-                    best_fit = float(semantic_trace.get("selected_fit", 0.0) or 0.0)
-                    state.semantic_pressure = max(
-                        current_pressure,
-                        min(1.0, 0.55 + 0.45 * (1.0 - best_fit)),
-                    )
-                    semantic_trace["unresolved_pressure"] = round(float(state.semantic_pressure), 4)
-                    semantic_trace["source"] = semantic_trace.get("source") or "unresolved_local_semantic_gap"
-                systems.setdefault("_manifold_semantic_resolution", []).append(semantic_trace)
+                        word = _anchor_cand
                 
                 # ARTICULATION: keep the manifold output lexical. The selected
                 # slot's grammar_affordance is retained for downstream grammar;
@@ -20085,9 +20048,6 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
             systems["_fgae_coherence_status"]["coherent"] = True
         
     # ── FGAE Output Pipeline O-2 → O-6 (spec §9) ────────────────────────
-    # A lexical fallback may legitimately have no developed slot grammar yet.
-    # Keep that path executable rather than referencing a branch-local variable.
-    sentence = ""
     # Build a response FGAEProjection from the manifold-selected records
     # (which carry proper slot_ids and grammatical positions from O-2) and
     # run the full output pipeline:
@@ -21565,7 +21525,27 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
             # invalid, matching Repair E's "composer result is empty or
             # invalid" condition without excluding the rejected-but-
             # nonempty case.
-            if _grounded_is_echo and not _preserved:
+            #
+            # Repair F (found live, 2026-08-19): the echo check alone
+            # assumed "not an echo" implies "genuinely authored for this
+            # turn" -- but state.response_src == "learned_hint" is a
+            # third, distinct failure this branch never caught: a
+            # comprehension miss (_build_comprehension_response returned
+            # None) that got silently backfilled with an unrelated,
+            # previously-stored dream-training hint. Confirmed live: the
+            # exact case Sunni's own architecture is designed to
+            # recognize and route to WARP as a genuine representational
+            # gap (_emit_honest_abstain_and_seek -> warp_guard(trigger=
+            # MISSING_REPRESENTATION)) was instead being delivered as if
+            # it were a real answer, because it neither echoed the input
+            # nor was flagged low-authority-enough alone to trigger
+            # abstention. A recycled hint is not "genuinely authored,
+            # appropriately qualified" content for THIS turn regardless
+            # of whether it happens to echo the input -- it's borrowed
+            # content from an unrelated past exchange standing in for an
+            # answer that was never actually produced.
+            _is_recycled_hint = str(getattr(state, "response_src", "") or "") == "learned_hint"
+            if (_grounded_is_echo or _is_recycled_hint) and not _preserved:
                 _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
                 resp_A.content = state.response_content
                 resp_A.emotional_tone = state.response_tone
@@ -21575,7 +21555,10 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
                     text=state.response_content, source="honest_abstain",
                     semantic_authority=0.0, articulation_quality=0.0,
                     confidence=state.response_confidence,
-                    rejection_reasons=list(_reasons) + [_echo_reason, "weak_candidate_invalidated"],
+                    rejection_reasons=list(_reasons) + [
+                        _echo_reason or ("recycled_learned_hint" if _is_recycled_hint else ""),
+                        "weak_candidate_invalidated",
+                    ],
                 )
             else:
                 resp_A.content = _grounded_text
@@ -22774,68 +22757,6 @@ def _harvest_scout_evidence_for_expression(systems: dict, *, turn_id: str) -> li
     return _read_accepted_scout_bindings(systems, turn_id=turn_id)
 
 
-def _dispatch_afterthought_subsurface(
-    systems: Dict[str, Any], user_text: str, *, session_id: str = "", turn_tick: int = 0
-) -> Optional[threading.Thread]:
-    """Continue post-turn experiential cognition without blocking Surface.
-
-    The worker retains the initiating turn identity so any later result belongs
-    to the same lived interaction rather than becoming an unrelated answer.
-    """
-    aurora = systems.get("aurora")
-    gateway = getattr(aurora, "gateway", None) if aurora is not None else None
-    simulation = getattr(gateway, "simulation", None) if gateway is not None else None
-    if simulation is None or not hasattr(simulation, "run_episode"):
-        return None
-    ExistenceMode = systems.get("ExistenceMode")
-    if ExistenceMode is None:
-        return None
-    cause = {
-        "turn_id": str(systems.get("_current_turn_id", "") or f"{session_id}:{turn_tick}"),
-        "session_id": str(session_id or ""),
-        "turn_tick": int(turn_tick or 0),
-        "user_text": str(user_text or "")[:320],
-    }
-
-    _subsurface_lock = systems.setdefault("_afterthought_subsurface_lock", threading.Lock())
-
-    def _worker() -> None:
-        try:
-            # The live-response bridge intentionally refuses recursive synthetic
-            # turns while Surface owns the current external turn. Wait here, in
-            # the background only, until that boundary is released so the deeper
-            # episode receives the genuine pipeline instead of the reentrancy
-            # guard's cheap fallback. This synchronization never blocks Surface.
-            while int(systems.get("_live_turn_depth", 0) or 0) > 0:
-                time.sleep(0.005)
-            # Multiple rapidly dispatched afterthoughts share one simulation
-            # session. Serialize that subsurface organ without serializing the
-            # user's live interaction.
-            with _subsurface_lock:
-                result = simulation.run_episode(
-                    seed_prompt=f"[AFTERTHOUGHT] {user_text}", turns=2, mode=ExistenceMode.BOUNDED
-                )
-            systems["_last_afterthought_result"] = {
-                "cause": dict(cause),
-                "completed_at": time.time(),
-                "episode_id": str(getattr(result, "episode_id", "") or ""),
-            }
-        except Exception as exc:
-            _aurora_record_exception_from_locals(
-                locals(), module=__name__, operation="subsurface_afterthought",
-                exc=exc, context=dict(cause),
-            )
-
-    thread = threading.Thread(
-        target=_worker, name=f"aurora-afterthought-{cause['turn_tick']}", daemon=True
-    )
-    thread.start()
-    systems["_last_afterthought_dispatch"] = {
-        "cause": dict(cause), "dispatched_at": time.time(), "nonblocking": True,
-    }
-    return thread
-
-
 def _run_reasoning_pipeline(
     systems: dict,
     user_text: str,
@@ -23186,6 +23107,7 @@ def _run_reasoning_pipeline(
                 state.dominant_axis or "X",
                 _genealogy,
                 max_n=5,
+                systems=systems,
             )
             if _sel_abs and isinstance(state.pipeline_state, dict):
                 state.pipeline_state["active_abilities"] = [a.get("id", "") for a in _sel_abs]
@@ -24539,21 +24461,50 @@ def _run_reasoning_pipeline(
         try:
             if hasattr(aurora, "gateway") and hasattr(aurora.gateway, "queue_response_pressure_plan"):
                 aurora.gateway.queue_response_pressure_plan(phase="afterthought", episode_budget=1)
-            # The "[AFTERTHOUGHT]" prefix is kept here deliberately (Build
-            # 616 Repair A) rather than moved to a separate episode_source
-            # kwarg: _answer_from_sedimemory_context() (this file) still
-            # keys off this exact literal prefix on recalled content to
-            # exclude afterthought re-processing artifacts from genuine
-            # recalled memory, so the raw prefixed string must keep
-            # flowing unchanged into the simulation call. The prefix is
-            # still stripped before it can ever become a semantic topic --
-            # see _strip_internal_transport_marker /
-            # _topic_from_seed_prompt in aurora_simulation_engine.py,
-            # which is the single normalization point every seed_prompt-
-            # driven episode passes through.
-            _dispatch_afterthought_subsurface(
-                systems, user_text, session_id=session_id, turn_tick=turn_tick,
-            )
+            # Repair N (per Sunni, 2026-08-19): "the surface must never
+            # wait on the subsurface" -- this whole block, seed_prompt
+            # literally named [AFTERTHOUGHT], already runs strictly AFTER
+            # _finalize_articulation has fully settled resp_A/resp_B
+            # (confirmed by reading the code order directly, not
+            # assumed). It was still running synchronously, though,
+            # which meant a slow afterthought episode delayed returning
+            # an already-complete response. Backgrounded as a daemon
+            # thread, same pattern already proven correct with
+            # ThoughtBraid tonight -- fire, don't wait. genealogy.observe()
+            # (what this ultimately reaches, several layers down through
+            # ingest_interaction -> composer.absorb -> grammar_engine.
+            # observe_exchange) is now protected by its own
+            # _concurrency_lock against the surface's own synchronous
+            # genealogy.observe() calls elsewhere in this same file, and
+            # _select_active_abilities' read of genealogy.abilities takes
+            # a non-blocking snapshot rather than racing it unprotected.
+            # The "[AFTERTHOUGHT]" prefix and everything about what
+            # run_episode does internally is completely unchanged --
+            # this only changes when the calling thread gets control back.
+            _aurora_gw = aurora.gateway
+            _aurora_sim = _aurora_gw.simulation
+            _aurora_seed_prompt = f"[AFTERTHOUGHT] {user_text}"
+            _aurora_mode = ExistenceMode.BOUNDED
+
+            def _run_afterthought_episode_bg():
+                try:
+                    _aurora_sim.run_episode(
+                        seed_prompt=_aurora_seed_prompt, turns=2, mode=_aurora_mode
+                    )
+                except Exception as _bg_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora.py:_run_reasoning_pipeline.afterthought_bg_thread",
+                        exc=_bg_exc,
+                        context={"function": "_run_afterthought_episode_bg", "source_file": "aurora.py"},
+                    )
+
+            threading.Thread(
+                target=_run_afterthought_episode_bg,
+                daemon=True,
+                name="aurora_afterthought_episode",
+            ).start()
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -28435,6 +28386,14 @@ def boot_aurora(
             from aurora_internal.aurora_tensor_expressions import get_tensor_layer as _get_tensor_layer
             _tensor_layer = _get_tensor_layer(_ifield)
             systems['tensor_expressions'] = _tensor_layer
+            # Build 725 Correction, item 4: Salience's universal discovery
+            # route. warp_field is already booted above (Layer 3) with
+            # every WarpCapable system registered into it, so this is the
+            # single connection point that reaches all of them without
+            # TensorExpressionLayer needing to know which ones exist.
+            _wf_for_salience = systems.get('warp_field')
+            if _wf_for_salience is not None:
+                _tensor_layer.connect_warp(_wf_for_salience)
             if verbose:
                 _tlstat = _tensor_layer.status()
                 print(f"  [TENSOR] Composite crystals live — "
@@ -28622,6 +28581,34 @@ def boot_aurora(
                 operation="exception_handler:aurora.py:20731",
                 exc=_aurora_boundary_exc,
                 context={"function": "boot_aurora", "handler_line": 20731, "source_file": "aurora.py"},
+            )
+            pass
+    # Build 725 Correction, item 4 follow-up: OntologicalWeb (perception.oets.web)
+    # is WarpCapable and already calls self.check_and_extend() internally
+    # (aurora_internal/aurora_ontological_scaffolding.py), but was never
+    # registered into the central WarpField registry -- so cross-system
+    # demands (e.g. from Salience) could never reach it by name, and it
+    # wasn't even eligible for the "any registered system" fallback. Same
+    # pattern as the 'representation' registration directly above: register
+    # under the exact key it emits as demand.source (its own
+    # _warp_level_name() == 'ontological_relation_typing'), constructed
+    # synchronously inside ExpressionPerceptionEngine.__init__ so it's
+    # already live by this point in boot.
+    if systems.get('warp_field') is not None:
+        try:
+            _oets_boot = getattr(perception, 'oets', None)
+            _web_boot = getattr(_oets_boot, 'web', None) if _oets_boot is not None else None
+            if _web_boot is not None and hasattr(_web_boot, 'check_and_extend'):
+                systems['warp_field'].register_warp_capable('ontological_relation_typing', _web_boot)
+                if verbose:
+                    print("  [WARP] OntologicalWeb registered as actuator ('ontological_relation_typing')")
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:boot_aurora.register_ontological_web",
+                exc=_aurora_boundary_exc,
+                context={"function": "boot_aurora", "source_file": "aurora.py"},
             )
             pass
     _register_layer(systems, 'L5', 'Expression & Perception', 'perception', perception, {
@@ -29126,21 +29113,6 @@ def boot_aurora(
     # Re-bind after load (load_all may replace internal objects)
     systems['core_identity'] = enhanced_persist.core_identity
     systems['conversation_memory'] = enhanced_persist.conversation_memory
-    # Build 725: OETS persistence rehydrates nodes after the lexicon seed pass.
-    # Re-conserve any exact NonComp identities already owned by LexicalMemory so
-    # local semantic externalization can find the same learned coordinate after
-    # restart. No new coordinate or semantic meaning is inferred here.
-    try:
-        _perception = systems.get("perception")
-        _oets = getattr(_perception, "oets", None) if _perception is not None else None
-        _lexicon = getattr(_perception, "lexicon", None) if _perception is not None else None
-        if _oets is not None and _lexicon is not None and hasattr(_oets, "reconcile_noncomp_ids_from_lexicon"):
-            _oets.reconcile_noncomp_ids_from_lexicon(getattr(_lexicon, "entries", {}) or {})
-    except Exception as _oets_coord_exc:
-        _aurora_record_exception_from_locals(
-            locals(), module=__name__, operation="oets_noncomp_coordinate_reconciliation",
-            exc=_oets_coord_exc, context={"function": "boot_aurora", "source_file": "aurora.py"},
-        )
     try:
         seeded = seed_identity_into_dna(identity, enhanced_persist.core_identity)
         if seeded and verbose:
@@ -29300,14 +29272,6 @@ def boot_aurora(
             _learner_wire = getattr(getattr(_sim_wire, 'session', None), 'learner', None)
             if _learner_wire is not None and hasattr(_learner_wire, 'set_dps'):
                 _learner_wire.set_dps(_dps_wire)
-                # Build 725 migration: old generated outcome prose may already
-                # exist in persisted OETS from earlier builds. Remove only that
-                # obsolete semantic authority at boot while preserving the
-                # experiential shard/genealogy that produced it.
-                if hasattr(_learner_wire, 'purge_legacy_semantic_contamination'):
-                    _learner_wire.purge_legacy_semantic_contamination(
-                        getattr(perception, 'oets', None)
-                    )
             # Grammar motif promotions → crystals
             _ge_wire = systems.get('grammar_engine')
             if _ge_wire is not None and hasattr(_ge_wire, 'set_dps'):
@@ -33783,7 +33747,7 @@ def _run_live_response_turn(
                             "topic": "live_lineage_emergence",
                             "entities": [lineage_anchor, lineage_kind],
                             "source": "runtime_turn_lineage",
-                            "noncomp_state": dict(getattr(state, "noncomp_input_state", {}) or {}),
+                            "noncomp_state": dict(getattr(systems.get("_last_turn_state"), "noncomp_input_state", {}) or {}),
                         },
                         turn_tick=turn_tick,
                         source=f"runtime_turn:{src}:lineage",
@@ -33869,7 +33833,6 @@ def _run_live_response_turn(
                 user_text,
                 getattr(resp_A, 'content', '') or "",
                 session_id=session_id,
-                allow_understanding=False,
             )
             systems['_last_reflection_result'] = _refl
             if not _refl.get('reached_understanding'):
@@ -33884,10 +33847,10 @@ def _run_live_response_turn(
                     _refl_tension = float(_refl.get('understanding', {}).get('tension_total', 0.0) or 0.0)
                     _refl_reached = bool(_refl.get('reached_understanding', False))
                     if _refl_reached:
-                        # Receiver-validated Understanding only; the immediate
-                        # reflection call above is intentionally pre-validation.
+                        # Resolved understanding — release pressure via valuation signal
                         _ifield_refl.ingest_internal_signal('valuation', magnitude=0.6, source_axis='A')
-                    elif _refl.get('reflection_step') == 'RECONCILIATION_FAILED':
+                    else:
+                        # Unresolved tension — drives N-axis pressure
                         _mag = min(1.0, 0.3 + _refl_tension)
                         _ifield_refl.ingest_internal_signal('tension', magnitude=_mag, source_axis='N')
                 except Exception as _aurora_boundary_exc:
@@ -34538,6 +34501,73 @@ def _run_live_response_turn(
             "result": _representation_result_out,
             "variants": list(_pipeline_state_out.get("poedex_representation_variants", []) or []),
         }
+
+    # Repair H (found live, 2026-08-19, per Sunni): close the thought <->
+    # expression <-> thought loop. ThoughtBraid.feed_expression_back()
+    # already exists, fully implemented, and is exactly what
+    # _update_predictive() reads back (_last_expression_feedback/_axes)
+    # on the braid's next tick -- it just had zero real callers anywhere
+    # in the codebase (confirmed by grep; the two other call sites,
+    # StreamingThoughtThread.feed_back() and
+    # StreamingExpressionLayer.complete(), are themselves both unreached).
+    # Called directly here rather than through either unused wrapper --
+    # this is the one point in the pipeline where the final delivered
+    # text and this turn's ThoughtState are both genuinely settled.
+    # Best-effort: must never block or fail turn completion.
+    try:
+        _braid_fb = systems.get('_thought_braid') if isinstance(systems, dict) else None
+        _ts_fb = systems.get('_current_thought_state') if isinstance(systems, dict) else None
+        _final_text_fb = str(getattr(resp_A, 'content', '') or '').strip()
+        if _braid_fb is not None and _ts_fb is not None and _final_text_fb:
+            _braid_fb.feed_expression_back(_final_text_fb, _ts_fb)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_run_live_response_turn.feed_expression_back",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
+        pass
+
+    # Repair I (per Sunni, 2026-08-19): her own output must ripple the same
+    # pond input does, not just update the braid's private feedback state.
+    # _chain_up1_information already injects a 'user_input_precomp'
+    # disturbance BEFORE comprehension (the stone landing); this is the
+    # symmetric outgoing wave -- the act of speaking, AFTER the response is
+    # genuinely settled, using state.axis_activation (this turn's settled
+    # understanding -- input plus the subsurface braid blend, already
+    # verified live this session) as the amplitude source. Not a duplicate
+    # of the input injection: this represents her having ACTED on that
+    # understanding, a new event in the field's own history, distinguished
+    # by source so QuasiArch/anything reading the trace buffer can tell
+    # input waves from expression waves apart. Intensity sits between the
+    # primary input injection (0.65, a real external stimulus) and the
+    # continuous background braid tick (0.35, passive ongoing thought) --
+    # a deliberate act, weighted accordingly. Best-effort, never blocks
+    # turn completion.
+    try:
+        _wf_pump_out = systems.get('pressure_pump') if isinstance(systems, dict) else None
+        _wf_ifield_out = systems.get('identity_field') if isinstance(systems, dict) else None
+        _out_axes = dict(_last_turn_state_out.axis_activation or {}) if _last_turn_state_out is not None else {}
+        if _wf_pump_out is not None and _wf_ifield_out is not None and _out_axes and _final_text_fb:
+            from aurora_waveform_pressure import WaveformPressurePump as _WFPumpOut
+            _out_dist = _WFPumpOut.from_axis_state(
+                _out_axes,
+                source="aurora_expression_output",
+                intensity=0.50,
+                coupling_mode="full",
+            )
+            _wf_pump_out.inject(_out_dist, _wf_ifield_out, qao=systems.get('quasiarch_observer'))
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_run_live_response_turn.expression_ripple",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
+        pass
 
     return {
         'input': user_text,

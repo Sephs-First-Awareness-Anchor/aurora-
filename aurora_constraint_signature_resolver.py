@@ -17,11 +17,11 @@ guessing -- both sides compute the identical string from the same inputs.
 from __future__ import annotations
 
 DIMENSION_ROLE = {
-    "OPERATOR":   "X",
-    "POLARITY":   "A",
-    "MAGNITUDE":  "B",
+    "OPERATOR":   "A",
+    "POLARITY":   "T",
+    "MAGNITUDE":  "X",
     "COST":       "N",
-    "DIFFERENCE": "T",
+    "DIFFERENCE": "B",
 }
 
 # Law prefixes as used in nc_name (differ from target suffixes for X and A)
@@ -72,12 +72,23 @@ def parse_nc_name(name: str) -> tuple[str, str, str]:
 
 
 if __name__ == "__main__":
-    # Self-check against known values from the actual manifold files
+    # Self-check under the CORRECTED foundational operator mapping
+    # (Architectural Correction Record, Build 725): X=Magnitude, T=Polarity,
+    # N=Cost, B=Difference, A=Operator.
+    #
+    # ⚠ These signature strings (AAN/AAB/AAX/AAA/AAT) are the join keys used
+    # against aurora_state/aurora_manifold_directory/*.json per this file's
+    # module docstring. That manifold directory data was generated under the
+    # OLD (incorrect) mapping. Flipping DIMENSION_ROLE here means the
+    # generated signatures below will no longer match whatever is currently
+    # on disk in aurora_manifold_directory/ until that data is regenerated
+    # or re-verified against this corrected table. Do not treat this
+    # self-check passing as proof the manifold directory itself is fixed.
     assert lineage_signature("A", "COST", "A") == "AAN"
-    assert lineage_signature("A", "DIFFERENCE", "A") == "AAT"
-    assert lineage_signature("A", "MAGNITUDE", "A") == "AAB"
-    assert lineage_signature("A", "OPERATOR", "A") == "AAX"
-    assert lineage_signature("A", "POLARITY", "A") == "AAA"
+    assert lineage_signature("A", "DIFFERENCE", "A") == "AAB"
+    assert lineage_signature("A", "MAGNITUDE", "A") == "AAX"
+    assert lineage_signature("A", "OPERATOR", "A") == "AAA"
+    assert lineage_signature("A", "POLARITY", "A") == "AAT"
     assert nc_name("X", "OPERATOR", "X") == "Existential_Operator_of_Existence"
     assert nc_name("A", "COST", "X") == "Agentive_Cost_of_Existence"
     assert parse_nc_name("Agentive_Cost_of_Existence") == ("A", "COST", "X")

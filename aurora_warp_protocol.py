@@ -179,11 +179,11 @@ def axes_to_istates(
 # it carries that constraint's information through one of the five character
 # lenses — which the architecture already defines:
 #
-#   POLARITY    → presence/absence, being vs non-being        (X-criterial)
-#   MAGNITUDE   → degree, intensity, how-much                  (all axes)
-#   OPERATOR    → transformation, action capacity              (N-criterial)
-#   COST        → effort, expenditure, work                    (N/T-criterial)
+#   MAGNITUDE   → degree, intensity, how-much                  (X-criterial)
+#   POLARITY    → presence/absence, being vs non-being        (T-criterial)
+#   COST        → effort, expenditure, work                    (N-criterial)
 #   DIFFERENCE  → distinguishability, inside/outside, deviation (B-criterial)
+#   OPERATOR    → transformation, action capacity              (A-criterial)
 #
 # So the root-level criteria are not a new definition set — they are the
 # 25-channel basis read functionally. A candidate representation of axis C
