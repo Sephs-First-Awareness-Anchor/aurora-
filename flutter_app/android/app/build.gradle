@@ -25,6 +25,7 @@ task preparePythonSources {
         include "**/*.py"
         include "aurora_manifold_directory/**"
         include "aurora_internal/**/*.json"
+        include "aurora_genealogy/**"
         include "*.py"
         exclude "**/__pycache__/**"
         exclude "**/*.pyc"
@@ -87,6 +88,17 @@ task preparePythonSources {
             from(repoRoot) {
                 include "aurora_manifold_directory/**"
                 exclude "**/__pycache__/**"
+            }
+            into destDir
+        }
+        // Genealogy fossil record (abilities/couplings/links/pair_stats.json) --
+        // has no .py files of its own, so the broad **/*.py copy above never
+        // touched it, even though aurora_internal/aurora_operator_composer.py
+        // (instantiated at boot in aurora.py) reads aurora_genealogy/couplings.json
+        // relative to this same repo root.
+        copy {
+            from(repoRoot) {
+                include "aurora_genealogy/**"
             }
             into destDir
         }
