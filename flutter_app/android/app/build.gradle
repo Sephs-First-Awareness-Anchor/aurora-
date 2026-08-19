@@ -24,6 +24,7 @@ task preparePythonSources {
     inputs.files fileTree(repoRoot) {
         include "**/*.py"
         include "aurora_manifold_directory/**"
+        include "aurora_internal/**/*.json"
         include "*.py"
         exclude "**/__pycache__/**"
         exclude "**/*.pyc"
@@ -68,8 +69,17 @@ task preparePythonSources {
         }
         // Expose aurora_internal at top level so bridge imports work unchanged:
         //   from aurora_internal.X import Y  →  src/main/python/aurora_internal/
+        // Also include its *.json data (universal_function_constraints.json,
+        // universal_function_lineage.json, lineage_canonical_generated.json) --
+        // lineage_canonical.py and aurora_universal_function_lineage.py load
+        // these relative to aurora_internal's own directory at runtime, and a
+        // .py-only copy silently left them missing on-device.
         copy {
-            from("${repoRoot}/aurora_internal") { include "**/*.py"; exclude "**/__pycache__/**" }
+            from("${repoRoot}/aurora_internal") {
+                include "**/*.py"
+                include "**/*.json"
+                exclude "**/__pycache__/**"
+            }
             into "${destDir}/aurora_internal"
         }
         // Manifold directory — King Quasicrystal identity field data + Python package
