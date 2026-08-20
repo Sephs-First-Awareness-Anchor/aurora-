@@ -1261,6 +1261,39 @@ class ConstraintEmitter:
         words = re.findall(r"[A-Za-z']+", text or "")
         return sum(1 for w in words if len(w) > 2 and w.lower() not in _ANCHOR_TOKEN_STOPWORDS)
 
+    @staticmethod
+    def _strip_internal_annotation(text: str) -> str:
+        """Confirmed live (Sunni, 2026-08-21): aurora.py's dual_question_pipeline
+        appends 'f"{user_text} [Internal: {gap_result[\'content\']}]"' to carry
+        an internal reasoning note forward as context for the rest of that
+        turn's processing -- but that mutated user_text is the same string
+        that becomes ctx.input_frame.text, and this module's staged
+        seek-to-understand protocol (_advance_awaiting_meaning/_example/
+        _validation) quotes that text verbatim into what she says out loud
+        ("Let me try it: {source} — is that using 'X' the way you mean?").
+        Without this strip, her own internal reasoning trace -- things like
+        "[Internal: I've added 'learn' as in a minute. That shifts how I
+        reason through this thread...]" -- gets spoken as if it were part
+        of what Sunni said. Never touch the upstream annotation mechanism
+        itself (other code may depend on user_text carrying that context);
+        just never let it leak into text attributed back to the user here.
+
+        Codex review, PR #172: a greedy '.*' regex anchored only at the
+        string's end would start at the FIRST " [Internal: " it found --
+        if Sunni's own reply happened to quote or discuss that exact
+        marker text before the pipeline's real appended annotation, this
+        deleted her genuine reply content in between along with it.
+        Instead find the LAST occurrence of the marker (the pipeline only
+        ever appends one, at the very end) and only strip from there,
+        leaving any earlier occurrence in her own words untouched."""
+        text = text or ""
+        if text.endswith("]"):
+            marker = " [Internal:"
+            idx = text.rfind(marker)
+            if idx != -1:
+                return text[:idx].strip()
+        return text.strip()
+
     _AFFIRM_MARKERS = ("yes", "yeah", "yep", "right", "correct", "exactly", "that's it", "precisely")
     _NEGATE_MARKERS = ("no", "nope", "not quite", "not really", "wrong", "not exactly", "close but", "actually no")
 
@@ -1285,21 +1318,69 @@ class ConstraintEmitter:
     def _looks_negative(cls, text: str) -> bool:
         return cls._matches_marker(text, cls._NEGATE_MARKERS)
 
-    def _construct_own_example(self, topic: str, definition_text: str, example_text: str) -> str:
-        """Her own attempted usage, built from what she was actually told —
-        not free generation (she has no LLM language faculty to do that
-        with), a structured reflection of the source material framed as her
-        own tentative attempt, offered for validation or correction. Prefers
-        the example (concrete usage) over the bare definition when both
-        exist, since a usage is closer to "her own example" than a restated
-        definition would be."""
+    def _construct_own_example(self, ctx: EmissionContext, topic: str, definition_text: str, example_text: str) -> str:
+        """Her own attempted usage. Genuinely free generation isn't
+        available (no LLM language faculty), so this draws on two
+        different sources rather than inventing text: (1) real prior
+        evidence -- neighbor words she already had this topic connected
+        to in OETS, from research or corpus absorption BEFORE this turn,
+        independent of anything said just now; and (2) the user's own
+        contextual answer this turn, as grounding material when (1) isn't
+        available.
+
+        Confirmed by Sunni, 2026-08-21: the previous version used ONLY
+        the just-said text, so "her attempt" was indistinguishable from
+        copying back the user's own explanation -- never actually
+        drawing on anything she independently knows, which doesn't feel
+        like she researched the gap at all. When she genuinely has
+        nothing else to draw on, this now says so honestly instead of
+        presenting a bare echo as if it were her own construction --
+        consistent with "never manufacture false understanding":
+        overclaiming a plain reflection as independent work is its own
+        small manufacture."""
         source = (example_text or definition_text or "").strip()
         source = re.sub(r"\s+", " ", source)
         if len(source) > 140:
             source = source[:140].rsplit(" ", 1)[0] + "..."
-        if not source:
+
+        neighbor = ""
+        try:
+            node = self._get_or_create_oets_node(ctx, topic)
+            if node is not None and hasattr(node, "get_connected_words"):
+                # Defense in depth: a neighbor surfaced here is spoken
+                # directly to Sunni, so it must actually be a word --
+                # not a role-tag artifact ("[assistant]") or an
+                # apostrophe-fragment ("don't") that made it into OETS
+                # through some path other than apply_seed()'s own
+                # _is_real_word() filter (which already rejects these,
+                # but nothing guarantees every future write path routes
+                # through it).
+                candidates = sorted(
+                    w for w in node.get_connected_words()
+                    if w and w != topic
+                    and w.replace("_", "").replace("-", "").replace("'", "").replace("’", "").isalpha()
+                )
+                if candidates:
+                    neighbor = candidates[0]
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_constraint_emission.py:_construct_own_example",
+                exc=_aurora_boundary_exc,
+                context={"function": "_construct_own_example", "source_file": "aurora_constraint_emission.py"},
+            )
+            neighbor = ""
+
+        if not source and not neighbor:
             return f"Let me try '{topic}' — is there a way you'd want me to use it?"
-        return f"Let me try it: {source} — is that using '{topic}' the way you mean?"
+        if neighbor and source:
+            return (
+                f"Let me try it: {source} — and I already had '{topic}' connected to "
+                f"'{neighbor}'. Is that using '{topic}' the way you mean?"
+            )
+        if neighbor:
+            return f"I already have '{topic}' connected to '{neighbor}' — is that close to what you mean?"
+        return f"I don't have anything of my own for '{topic}' yet, but from what you said: {source} — is that close?"
 
     def _record_seeking_progress(
         self, ctx: EmissionContext, topic: str, shape: str, reply_text: str, axis_snap: Dict[str, float],
@@ -1423,7 +1504,7 @@ class ConstraintEmitter:
         treated as a dictionary definition, stored and used exactly as given."""
         topic      = flag.get("topic") or ""
         axis_snap  = flag.get("axis_snapshot", {})
-        reply_text = ctx.input_frame.text if ctx.input_frame else ""
+        reply_text = self._strip_internal_annotation(ctx.input_frame.text if ctx.input_frame else "")
 
         # Codex review, PR #168: don't write to the OETS node yet.
         # SemanticNode.add_definition() -> _recalculate_depth() ->
@@ -1455,7 +1536,7 @@ class ConstraintEmitter:
 
         if sf is not None:
             sf["stage"] = "awaiting_validation"
-        attempt = self._construct_own_example(topic, reply_text, "")
+        attempt = self._construct_own_example(ctx, topic, reply_text, "")
         return EmissionResult(
             text=attempt,
             speech_act=SpeechAct.HEDGE,
@@ -1468,7 +1549,7 @@ class ConstraintEmitter:
     def _advance_awaiting_example(self, ctx: EmissionContext, flag_key: str, flag: Dict[str, Any]) -> EmissionResult:
         topic      = flag.get("topic") or ""
         axis_snap  = flag.get("axis_snapshot", {})
-        reply_text = ctx.input_frame.text if ctx.input_frame else ""
+        reply_text = self._strip_internal_annotation(ctx.input_frame.text if ctx.input_frame else "")
 
         # Codex review, PR #168: same deferral as _advance_awaiting_meaning
         # -- an example offered before validation is still provisional, so
@@ -1482,7 +1563,7 @@ class ConstraintEmitter:
             sf["example_text"] = reply_text
             sf["stage"] = "awaiting_validation"
 
-        attempt = self._construct_own_example(topic, definition_text, reply_text)
+        attempt = self._construct_own_example(ctx, topic, definition_text, reply_text)
         return EmissionResult(
             text=attempt,
             speech_act=SpeechAct.HEDGE,
@@ -1496,7 +1577,7 @@ class ConstraintEmitter:
         topic      = flag.get("topic") or ""
         axis_snap  = flag.get("axis_snapshot", {})
         shape      = flag.get("predicted_answer_shape", "entity")
-        reply_text = ctx.input_frame.text if ctx.input_frame else ""
+        reply_text = self._strip_internal_annotation(ctx.input_frame.text if ctx.input_frame else "")
         self._record_seeking_progress(ctx, topic, shape, reply_text, axis_snap)
 
         sf = ctx.working_memory.seeking_flags.get(flag_key) if hasattr(ctx.working_memory, "seeking_flags") else None
@@ -1558,7 +1639,7 @@ class ConstraintEmitter:
             else:
                 definition_text = sf.get("definition_text", "") if sf else ""
                 example_text    = sf.get("example_text", "") if sf else ""
-            attempt = self._construct_own_example(topic, definition_text, example_text)
+            attempt = self._construct_own_example(ctx, topic, definition_text, example_text)
             return EmissionResult(
                 text=attempt,
                 speech_act=SpeechAct.HEDGE,

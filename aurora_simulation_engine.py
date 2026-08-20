@@ -285,6 +285,36 @@ _TOPIC_STOPWORDS: Set[str] = {
     "for", "and", "or", "so", "please", "can", "could", "would", "will",
     "just", "like", "actually", "really", "um", "uh", "hmm", "yes",
     "no", "okay", "ok",
+    # "not" confirmed live (Sunni, 2026-08-21): missing here let a bare
+    # "not" survive stopword stripping as a top-2 salient word from
+    # otherwise-stopword-heavy casual turns ("or not is...", "that's not
+    # really"), becoming semantic_topic "not" -- and since a negation
+    # particle never accumulates real OETS depth/neighbors, every such
+    # observation produced the same shallow templated understanding text
+    # ("not built connection ... still shallow in my web"), repeatedly
+    # re-admitted into persistent memory (DPS crystal facets, OETS
+    # injection) as if it were a real, recurring insight.
+    "not",
+    # Contraction forms of the same closed-class stopwords above, kept as
+    # single tokens by the apostrophe-stripping fix in
+    # _extract_semantic_topic() below rather than fragmenting into
+    # meaningless pieces ("don't" -> "don"+"t") -- without these, the
+    # contracted form of an already-stopworded word would survive as a
+    # bogus topic on its own.
+    "dont", "doesnt", "didnt", "isnt", "arent", "wasnt", "werent",
+    "hasnt", "havent", "hadnt", "cant", "cannot", "couldnt", "wouldnt",
+    "shouldnt", "wont", "aint", "mightnt", "neednt", "mustnt",
+    "im", "ive", "ill", "id", "youre", "youve", "youll", "youd",
+    "hes", "shes", "its", "theyre", "theyve", "theyll", "theyd",
+    "thats", "thatll", "thatd", "whos", "whats", "whatll", "whatd",
+    "whatve", "wholl", "whod", "whove", "lets",
+    # Codex review, PR #172: "we'll"/"we'd"/"we've" and the "there"/"here"
+    # contraction forms weren't covered by the first pass and collapsed to
+    # "well"/"wed"/"weve"/etc. -- confirmed as still-bogus surviving
+    # topics for otherwise-ordinary utterances ("we'll do it", "we'd
+    # understand", "we've learned").
+    "well", "wed", "weve", "theres", "therell", "thered",
+    "heres", "herell", "hered", "itll", "itd",
 }
 
 # Leading question/request stems stripped before content-word extraction.
@@ -331,7 +361,18 @@ def _extract_semantic_topic(prompt: str) -> Tuple[str, str]:
     if any(p in text for p in _IDENTITY_TOPIC_PATTERNS):
         return ("identity/self", "resolved")
 
-    no_punct = re.sub(r"[^\w\s]", " ", text)
+    # Strip apostrophes first (delete, don't replace with a space) so a
+    # contraction like "don't"/"that's"/"you're" survives as one token
+    # ("dont"/"thats"/"youre") instead of the general punctuation-stripping
+    # regex below fragmenting it into meaningless pieces on the apostrophe
+    # ("don"+"t", "s"+"not"). Confirmed live: "I don't understand" was
+    # resolving to semantic_topic "don/t" -- neither fragment is a real
+    # word -- which then flowed all the way through to
+    # ConsciousLearner.observe_outcome() as if "don/t" were a genuine
+    # subject worth building a persistent understanding shard about. The
+    # single-token contraction forms are covered by _TOPIC_STOPWORDS above.
+    no_apostrophe = text.replace("'", "").replace("’", "")
+    no_punct = re.sub(r"[^\w\s]", " ", no_apostrophe)
     no_punct = re.sub(r"\s+", " ", no_punct).strip()
     stemmed = _TOPIC_LEAD_STEM_PATTERN.sub("", no_punct).strip()
 
