@@ -1276,8 +1276,23 @@ class ConstraintEmitter:
         reason through this thread...]" -- gets spoken as if it were part
         of what Sunni said. Never touch the upstream annotation mechanism
         itself (other code may depend on user_text carrying that context);
-        just never let it leak into text attributed back to the user here."""
-        return re.sub(r"\s*\[Internal:.*\]\s*$", "", text or "", flags=re.DOTALL).strip()
+        just never let it leak into text attributed back to the user here.
+
+        Codex review, PR #172: a greedy '.*' regex anchored only at the
+        string's end would start at the FIRST " [Internal: " it found --
+        if Sunni's own reply happened to quote or discuss that exact
+        marker text before the pipeline's real appended annotation, this
+        deleted her genuine reply content in between along with it.
+        Instead find the LAST occurrence of the marker (the pipeline only
+        ever appends one, at the very end) and only strip from there,
+        leaving any earlier occurrence in her own words untouched."""
+        text = text or ""
+        if text.endswith("]"):
+            marker = " [Internal:"
+            idx = text.rfind(marker)
+            if idx != -1:
+                return text[:idx].strip()
+        return text.strip()
 
     _AFFIRM_MARKERS = ("yes", "yeah", "yep", "right", "correct", "exactly", "that's it", "precisely")
     _NEGATE_MARKERS = ("no", "nope", "not quite", "not really", "wrong", "not exactly", "close but", "actually no")

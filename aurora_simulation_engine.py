@@ -303,10 +303,18 @@ _TOPIC_STOPWORDS: Set[str] = {
     # bogus topic on its own.
     "dont", "doesnt", "didnt", "isnt", "arent", "wasnt", "werent",
     "hasnt", "havent", "hadnt", "cant", "cannot", "couldnt", "wouldnt",
-    "shouldnt", "wont", "aint",
+    "shouldnt", "wont", "aint", "mightnt", "neednt", "mustnt",
     "im", "ive", "ill", "id", "youre", "youve", "youll", "youd",
     "hes", "shes", "its", "theyre", "theyve", "theyll", "theyd",
-    "thats", "whos", "whats", "lets",
+    "thats", "thatll", "thatd", "whos", "whats", "whatll", "whatd",
+    "whatve", "wholl", "whod", "whove", "lets",
+    # Codex review, PR #172: "we'll"/"we'd"/"we've" and the "there"/"here"
+    # contraction forms weren't covered by the first pass and collapsed to
+    # "well"/"wed"/"weve"/etc. -- confirmed as still-bogus surviving
+    # topics for otherwise-ordinary utterances ("we'll do it", "we'd
+    # understand", "we've learned").
+    "well", "wed", "weve", "theres", "therell", "thered",
+    "heres", "herell", "hered", "itll", "itd",
 }
 
 # Leading question/request stems stripped before content-word extraction.
