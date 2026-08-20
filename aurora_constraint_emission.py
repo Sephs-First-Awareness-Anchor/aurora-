@@ -348,8 +348,16 @@ class ConstraintEmitter:
     """
 
     def emit(self, ctx: EmissionContext) -> EmissionResult:
-        # 0. Integration check — close any open seeking flags before new output (§7)
-        self.check_and_run_integration(ctx)
+        # 0. Integration check — advance any open seeking flag before new output (§7).
+        # Per Sunni: the seeking protocol now has real stages (meaning -> example ->
+        # her own attempt -> validation), and a reply that's actually answering an
+        # open question must be treated as THAT turn's whole content, not just
+        # silently folded in before the rest of emit() reprocesses the same text
+        # as if it were unrelated new input. When this returns a result, that IS
+        # the turn's output.
+        advance_result = self.check_and_run_integration(ctx)
+        if advance_result is not None:
+            return advance_result
         input_text = str(ctx.input_frame.text or "") if ctx.input_frame else ""
         if _SELF_DEVELOPMENT_TERMS.search(input_text):
             return EmissionResult(
@@ -974,6 +982,19 @@ class ConstraintEmitter:
         slots:     SlotFrame,
         act:       SpeechAct,
     ) -> EmissionResult:
+        # Anchor guard (per Sunni): pursue development of the FIRST gap she
+        # opened before branching to a new one. Without this, closing a flag
+        # on the user's reply (§7) and then re-scanning that same reply for
+        # any OTHER unfamiliar word in this same emit() call opens a second,
+        # unrelated seek immediately -- "what do you mean by doing?" ->
+        # answered -> "what do you mean by answering?" -> forever. If a
+        # different topic is already open, stay on it instead of asking
+        # about something new.
+        existing = self._find_open_seeking_flag(ctx)
+        if existing is not None:
+            _key, _flag = existing
+            return self._reask_open_flag(ctx, _flag)
+
         topic = (ctx.input_frame.topic_concept or "") if ctx.input_frame else ""
         input_text = (ctx.input_frame.text or "") if ctx.input_frame else ""
 
@@ -1182,6 +1203,15 @@ class ConstraintEmitter:
                 "predicted_answer_shape": slot_kind,
                 "topic":                  topic,
                 "status":                 "open",
+                # Staged protocol (per Sunni): ask meaning -> (optionally)
+                # ask for an example -> she attempts her own example ->
+                # user validates or corrects. Each reply is the CONTEXTUAL
+                # use of the word, not a dictionary lookup -- stored as-is,
+                # never rephrased into a formal definition.
+                "stage":                  "awaiting_meaning",
+                "attempts":               0,
+                "definition_text":        "",
+                "example_text":           "",
             }
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
@@ -1194,80 +1224,90 @@ class ConstraintEmitter:
             pass
         return flag_id
 
-    # ── integration callback (§7) ─────────────────────────────────────────────
-    def check_and_run_integration(self, ctx: EmissionContext) -> Optional[str]:
-        """
-        §7.1: Call at start of each turn. Checks for open seeking flags that
-        match the current input's content shape. Runs mandatory integration
-        steps if a match is found. Returns the closed flag_id or None.
-        """
+    def _find_open_seeking_flag(self, ctx: EmissionContext) -> Optional[Tuple[str, Dict[str, Any]]]:
+        """Any single open flag, if one exists. Working memory is meant to
+        hold at most one live seeking thread at a time (the anchor guard in
+        _seek_gap enforces this on the write side)."""
         wm = ctx.working_memory
         if wm is None or not hasattr(wm, "seeking_flags"):
             return None
-        if not ctx.input_frame or not ctx.input_frame.text:
-            return None
+        for fk, fv in wm.seeking_flags.items():
+            if isinstance(fv, dict) and fv.get("status") == "open":
+                return fk, fv
+        return None
 
-        open_flags = {
-            k: v for k, v in wm.seeking_flags.items()
-            if isinstance(v, dict) and v.get("status") == "open"
-        }
-        if not open_flags:
-            return None
+    def _reask_open_flag(self, ctx: EmissionContext, flag: Dict[str, Any]) -> EmissionResult:
+        """Re-surface the currently-open flag's own question instead of
+        opening a competing one on whatever new word the current input
+        happens to contain. Doesn't touch flag state -- this turn didn't
+        answer anything, it just didn't manage to either."""
+        topic = flag.get("topic", "") or "that"
+        stage = flag.get("stage", "awaiting_meaning")
+        if stage == "awaiting_example":
+            text = f"Before that — can you give me an example of '{topic}'?"
+        else:
+            text = f"I'm still working out what you mean by '{topic}' — can you say more?"
+        return EmissionResult(
+            text=text,
+            speech_act=SpeechAct.QUESTION,
+            seeking=True,
+            seeking_flag_id=flag.get("flag_id"),
+            axis_signature=self._axis_signature(ctx),
+            abstained=False,
+        )
 
-        # §7.1: most recent open flag whose predicted_answer_shape matches reply
-        frame         = ctx.input_frame
-        matched_key   = None
-        matched_flag  = None
+    @staticmethod
+    def _content_word_count(text: str) -> int:
+        words = re.findall(r"[A-Za-z']+", text or "")
+        return sum(1 for w in words if len(w) > 2 and w.lower() not in _ANCHOR_TOKEN_STOPWORDS)
 
-        for fk, fv in open_flags.items():
-            topic = fv.get("topic", "")
-            shape = fv.get("predicted_answer_shape", "")
-            if topic and topic.lower() in frame.text.lower():
-                matched_key, matched_flag = fk, fv
-                break
-            if frame.is_statement and shape in ("entity", "both"):
-                matched_key, matched_flag = fk, fv
-                break
+    _AFFIRM_MARKERS = ("yes", "yeah", "yep", "right", "correct", "exactly", "that's it", "precisely")
+    _NEGATE_MARKERS = ("no", "nope", "not quite", "not really", "wrong", "not exactly", "close but", "actually no")
 
-        if matched_key is None:
-            return None
+    @classmethod
+    def _matches_marker(cls, text: str, markers: Tuple[str, ...]) -> bool:
+        # Codex review, PR #168: naive substring/space-padding matching let
+        # "incorrect" satisfy the "correct" affirmative marker, and let
+        # punctuation ("No, that's incorrect") hide "no" from the "no "
+        # marker. Word-boundary regex avoids both: \b requires an actual
+        # word edge, so "correct" won't fire inside "incorrect", and
+        # boundaries are punctuation-agnostic so "No," still matches "no".
+        t = (text or "").lower()
+        return any(re.search(r"\b" + re.escape(m) + r"\b", t) for m in markers)
 
-        self._run_integration_steps(ctx, matched_key, matched_flag)
-        return matched_flag.get("flag_id")
+    @classmethod
+    def _looks_affirmative(cls, text: str) -> bool:
+        if cls._matches_marker(text, cls._NEGATE_MARKERS):
+            return False
+        return cls._matches_marker(text, cls._AFFIRM_MARKERS)
 
-    def _run_integration_steps(
-        self,
-        ctx:       EmissionContext,
-        flag_key:  str,
-        flag:      Dict[str, Any],
+    @classmethod
+    def _looks_negative(cls, text: str) -> bool:
+        return cls._matches_marker(text, cls._NEGATE_MARKERS)
+
+    def _construct_own_example(self, topic: str, definition_text: str, example_text: str) -> str:
+        """Her own attempted usage, built from what she was actually told —
+        not free generation (she has no LLM language faculty to do that
+        with), a structured reflection of the source material framed as her
+        own tentative attempt, offered for validation or correction. Prefers
+        the example (concrete usage) over the bare definition when both
+        exist, since a usage is closer to "her own example" than a restated
+        definition would be."""
+        source = (example_text or definition_text or "").strip()
+        source = re.sub(r"\s+", " ", source)
+        if len(source) > 140:
+            source = source[:140].rsplit(" ", 1)[0] + "..."
+        if not source:
+            return f"Let me try '{topic}' — is there a way you'd want me to use it?"
+        return f"Let me try it: {source} — is that using '{topic}' the way you mean?"
+
+    def _record_seeking_progress(
+        self, ctx: EmissionContext, topic: str, shape: str, reply_text: str, axis_snap: Dict[str, float],
     ) -> None:
-        topic      = flag.get("topic") or ""
-        shape      = flag.get("predicted_answer_shape", "entity")
-        axis_snap  = flag.get("axis_snapshot", {})
-        reply_text = ctx.input_frame.text if ctx.input_frame else ""
-
-        # §7.2.1 OETS patch — locate or create node, attach definition + example
-        try:
-            if ctx.oets and topic:
-                node = ctx.oets.nodes.get(topic)
-                if node is None and hasattr(ctx.oets, "get_or_create_node"):
-                    node = ctx.oets.get_or_create_node(topic)
-                if node:
-                    if hasattr(node, "add_definition"):
-                        node.add_definition(reply_text, source="user_answer", confidence=0.7)
-                    if hasattr(node, "add_usage_example"):
-                        node.add_usage_example(reply_text, context="seeking_integration")
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1224",
-                exc=_aurora_boundary_exc,
-                context={"function": "_run_integration_steps", "handler_line": 1224, "source_file": "aurora_constraint_emission.py"},
-            )
-            pass
-
-        # §7.2.2 SediMemory channel carve along seeking axis configuration
+        """SediMemory channel carve + genealogy pressure-relief for one
+        step of progress on an open gap -- same physics-native relief
+        signal previously only fired once, at final closure. Each real
+        reply is real relief, not just the last one."""
         try:
             sedi = ctx.sedi_memory
             if sedi and hasattr(sedi, "ingest_event"):
@@ -1280,25 +1320,18 @@ class ConstraintEmitter:
                     a=axis_snap.get("A", 0.0),
                 )
                 sedi.ingest_event(
-                    content={
-                        "seeking_closure": topic,
-                        "shape":           shape,
-                        "reply":           reply_text,
-                    },
+                    content={"seeking_progress": topic, "shape": shape, "reply": reply_text},
                     constraint_vector=cv,
                     source="constraint_emission_integration",
                 )
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1248",
+                locals(), module=__name__,
+                operation="exception_handler:aurora_constraint_emission.py:_record_seeking_progress:sedi",
                 exc=_aurora_boundary_exc,
-                context={"function": "_run_integration_steps", "handler_line": 1248, "source_file": "aurora_constraint_emission.py"},
+                context={"function": "_record_seeking_progress", "source_file": "aurora_constraint_emission.py"},
             )
             pass
-
-        # §7.2.3 Constraint genealogy pressure-relief event
         try:
             gen = ctx.constraint_genealogy
             if gen and hasattr(gen, "record_event"):
@@ -1313,31 +1346,242 @@ class ConstraintEmitter:
                 gen.record_event(relief, x_risk=0.1)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1264",
+                locals(), module=__name__,
+                operation="exception_handler:aurora_constraint_emission.py:_record_seeking_progress:genealogy",
                 exc=_aurora_boundary_exc,
-                context={"function": "_run_integration_steps", "handler_line": 1264, "source_file": "aurora_constraint_emission.py"},
+                context={"function": "_record_seeking_progress", "source_file": "aurora_constraint_emission.py"},
             )
             pass
 
-        # §7.2.4 Close the seeking flag
+    def _get_or_create_oets_node(self, ctx: EmissionContext, topic: str) -> Any:
+        if not (ctx.oets and topic):
+            return None
         try:
-            if hasattr(ctx.working_memory, "seeking_flags"):
-                sf = ctx.working_memory.seeking_flags.get(flag_key)
-                if sf:
-                    sf["status"]         = "closed"
-                    sf["closed_at_turn"] = ctx.turn_id
-                    sf["resolution"]     = reply_text[:200]
+            node = ctx.oets.nodes.get(topic)
+            if node is None and hasattr(ctx.oets, "get_or_create_node"):
+                node = ctx.oets.get_or_create_node(topic)
+            return node
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:1275",
+                locals(), module=__name__,
+                operation="exception_handler:aurora_constraint_emission.py:_get_or_create_oets_node",
                 exc=_aurora_boundary_exc,
-                context={"function": "_run_integration_steps", "handler_line": 1275, "source_file": "aurora_constraint_emission.py"},
+                context={"function": "_get_or_create_oets_node", "source_file": "aurora_constraint_emission.py"},
             )
-            pass
+            return None
+
+    # ── integration callback (§7) ─────────────────────────────────────────────
+    def check_and_run_integration(self, ctx: EmissionContext) -> Optional[EmissionResult]:
+        """
+        §7.1: Call at the top of emit(). Checks for an open seeking flag that
+        matches the current input, and if found, advances the staged
+        protocol (meaning -> optional example -> her own attempt ->
+        validation). Returns the turn's full EmissionResult when the reply
+        was consumed as an answer to an open question -- emit() returns
+        this immediately rather than reprocessing the same text as
+        unrelated new input. Returns None when nothing was open or nothing
+        matched, and the turn proceeds through emit()'s normal pipeline.
+        """
+        wm = ctx.working_memory
+        if wm is None or not hasattr(wm, "seeking_flags"):
+            return None
+        if not ctx.input_frame or not ctx.input_frame.text:
+            return None
+
+        open_flags = {
+            k: v for k, v in wm.seeking_flags.items()
+            if isinstance(v, dict) and v.get("status") == "open"
+        }
+        if not open_flags:
+            return None
+
+        frame        = ctx.input_frame
+        matched_key  = None
+        matched_flag = None
+        for fk, fv in open_flags.items():
+            topic = fv.get("topic", "")
+            shape = fv.get("predicted_answer_shape", "")
+            if topic and topic.lower() in frame.text.lower():
+                matched_key, matched_flag = fk, fv
+                break
+            if frame.is_statement and shape in ("entity", "both"):
+                matched_key, matched_flag = fk, fv
+                break
+
+        if matched_key is None:
+            return None
+
+        stage = matched_flag.get("stage", "awaiting_meaning")
+        if stage == "awaiting_meaning":
+            return self._advance_awaiting_meaning(ctx, matched_key, matched_flag)
+        if stage == "awaiting_example":
+            return self._advance_awaiting_example(ctx, matched_key, matched_flag)
+        return self._advance_awaiting_validation(ctx, matched_key, matched_flag)
+
+    def _advance_awaiting_meaning(self, ctx: EmissionContext, flag_key: str, flag: Dict[str, Any]) -> EmissionResult:
+        """The reply is the contextual use, in the user's own words -- never
+        treated as a dictionary definition, stored and used exactly as given."""
+        topic      = flag.get("topic") or ""
+        axis_snap  = flag.get("axis_snapshot", {})
+        reply_text = ctx.input_frame.text if ctx.input_frame else ""
+
+        # Codex review, PR #168: don't write to the OETS node yet.
+        # SemanticNode.add_definition() -> _recalculate_depth() ->
+        # _update_comprehension_confidence() uses max(), so any confidence
+        # bump here would be permanent even if validation later rejects or
+        # abandons this meaning. The provisional text lives only on the
+        # seeking flag (sf["definition_text"] below) until she's actually
+        # confirmed right, in _advance_awaiting_validation.
+        self._record_seeking_progress(ctx, topic, "meaning", reply_text, axis_snap)
+
+        sf = ctx.working_memory.seeking_flags.get(flag_key) if hasattr(ctx.working_memory, "seeking_flags") else None
+        if sf is not None:
+            sf["definition_text"] = reply_text
+
+        # Thin answer (few real content words) -> ask for a concrete example
+        # before attempting her own; a substantial answer already gives
+        # enough to try using it herself.
+        if self._content_word_count(reply_text) < 4:
+            if sf is not None:
+                sf["stage"] = "awaiting_example"
+            return EmissionResult(
+                text=f"Can you give me an example of '{topic}'?",
+                speech_act=SpeechAct.QUESTION,
+                seeking=True,
+                seeking_flag_id=flag.get("flag_id"),
+                axis_signature=self._axis_signature(ctx),
+                abstained=False,
+            )
+
+        if sf is not None:
+            sf["stage"] = "awaiting_validation"
+        attempt = self._construct_own_example(topic, reply_text, "")
+        return EmissionResult(
+            text=attempt,
+            speech_act=SpeechAct.HEDGE,
+            seeking=True,
+            seeking_flag_id=flag.get("flag_id"),
+            axis_signature=self._axis_signature(ctx),
+            abstained=False,
+        )
+
+    def _advance_awaiting_example(self, ctx: EmissionContext, flag_key: str, flag: Dict[str, Any]) -> EmissionResult:
+        topic      = flag.get("topic") or ""
+        axis_snap  = flag.get("axis_snapshot", {})
+        reply_text = ctx.input_frame.text if ctx.input_frame else ""
+
+        # Codex review, PR #168: same deferral as _advance_awaiting_meaning
+        # -- an example offered before validation is still provisional, so
+        # it stays on the seeking flag (sf["example_text"] below) rather
+        # than feeding SemanticNode.add_example()'s confidence bump early.
+        self._record_seeking_progress(ctx, topic, "example", reply_text, axis_snap)
+
+        sf = ctx.working_memory.seeking_flags.get(flag_key) if hasattr(ctx.working_memory, "seeking_flags") else None
+        definition_text = sf.get("definition_text", "") if sf is not None else ""
+        if sf is not None:
+            sf["example_text"] = reply_text
+            sf["stage"] = "awaiting_validation"
+
+        attempt = self._construct_own_example(topic, definition_text, reply_text)
+        return EmissionResult(
+            text=attempt,
+            speech_act=SpeechAct.HEDGE,
+            seeking=True,
+            seeking_flag_id=flag.get("flag_id"),
+            axis_signature=self._axis_signature(ctx),
+            abstained=False,
+        )
+
+    def _advance_awaiting_validation(self, ctx: EmissionContext, flag_key: str, flag: Dict[str, Any]) -> EmissionResult:
+        topic      = flag.get("topic") or ""
+        axis_snap  = flag.get("axis_snapshot", {})
+        shape      = flag.get("predicted_answer_shape", "entity")
+        reply_text = ctx.input_frame.text if ctx.input_frame else ""
+        self._record_seeking_progress(ctx, topic, shape, reply_text, axis_snap)
+
+        sf = ctx.working_memory.seeking_flags.get(flag_key) if hasattr(ctx.working_memory, "seeking_flags") else None
+
+        if self._looks_affirmative(reply_text):
+            # Real closure, not just "one reply happened" -- re-add the
+            # definition at higher, user-validated confidence so
+            # comprehension_confidence (derived, not set directly) reflects
+            # that this was actually confirmed, not just offered.
+            node = self._get_or_create_oets_node(ctx, topic)
+            try:
+                if node and hasattr(node, "add_definition"):
+                    src = (sf.get("definition_text") if sf else "") or reply_text
+                    node.add_definition(src, source="user_validated", confidence=0.9)
+                if node and hasattr(node, "encounter"):
+                    node.encounter()
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_constraint_emission.py:_advance_awaiting_validation:close",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_advance_awaiting_validation", "source_file": "aurora_constraint_emission.py"},
+                )
+                pass
+            if sf is not None:
+                sf["status"]         = "closed"
+                sf["closed_at_turn"] = ctx.turn_id
+                sf["resolution"]     = "validated"
+            return EmissionResult(
+                text="Good — that's it.",
+                speech_act=SpeechAct.ACKNOWLEDGMENT,
+                seeking=False,
+                seeking_flag_id=flag.get("flag_id"),
+                axis_signature=self._axis_signature(ctx),
+                abstained=False,
+            )
+
+        attempts = int(flag.get("attempts", 0)) + 1
+        if sf is not None:
+            sf["attempts"] = attempts
+
+        # Only actually re-attempt when the reply reads as a real correction
+        # (not just "not quite" with no content) and we haven't already
+        # tried twice -- cap it so an unclear correction can't loop forever.
+        if self._looks_negative(reply_text) and attempts < 2:
+            correction = reply_text if self._content_word_count(reply_text) >= 3 else ""
+            if correction:
+                # Codex review, PR #168: by this stage sf["definition_text"]
+                # and sf["example_text"] are usually both already set from
+                # the earlier stages, so `existing or correction` was never
+                # picking the correction -- it just rebuilt the same
+                # already-rejected attempt. A real correction supersedes
+                # both for this retry.
+                definition_text = correction
+                example_text    = correction
+                if sf is not None:
+                    sf["definition_text"] = correction
+                    sf["example_text"]    = correction
+            else:
+                definition_text = sf.get("definition_text", "") if sf else ""
+                example_text    = sf.get("example_text", "") if sf else ""
+            attempt = self._construct_own_example(topic, definition_text, example_text)
+            return EmissionResult(
+                text=attempt,
+                speech_act=SpeechAct.HEDGE,
+                seeking=True,
+                seeking_flag_id=flag.get("flag_id"),
+                axis_signature=self._axis_signature(ctx),
+                abstained=False,
+            )
+
+        # Give up honestly rather than loop -- abstaining on further
+        # certainty about this one word, not on the conversation itself.
+        if sf is not None:
+            sf["status"]         = "closed"
+            sf["closed_at_turn"] = ctx.turn_id
+            sf["resolution"]     = "abandoned_after_attempts"
+        return EmissionResult(
+            text=f"I'm not landing on '{topic}' exactly yet — I'll keep sitting with that one.",
+            speech_act=SpeechAct.HEDGE,
+            seeking=False,
+            seeking_flag_id=flag.get("flag_id"),
+            axis_signature=self._axis_signature(ctx),
+            abstained=False,
+        )
 
         # §7.2.5 Verification gate: next turn will re-run _resolve_content_slot;
         # if it still fails, seeking naturally re-fires — no extra bookkeeping needed.
