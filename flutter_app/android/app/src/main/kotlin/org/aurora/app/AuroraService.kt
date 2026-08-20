@@ -610,6 +610,26 @@ class AuroraService : Service() {
             } catch (_: Exception) { /* best-effort */ }
         }
 
+        // Same idea, for MainActivity.kt's own post-boot marker file
+        // (last_app_stage.txt) -- separate from the one above specifically
+        // to avoid MainActivity's writes racing with and clobbering this
+        // function's own boot-stage markers, since MainActivity can call
+        // startNativeStt() concurrently with this coroutine (home_screen.
+        // dart's _init() calls _startListening() unconditionally at
+        // widget-mount time, not gated on the "ready" event). Only
+        // consulted when nothing more specific was already found above.
+        if (previousCrash == null) {
+            try {
+                val af = File(filesDir, "aurora_state/last_app_stage.txt")
+                if (af.exists()) {
+                    val raw = af.readText()
+                    val stage = raw.substringAfter("stage=", raw)
+                    previousCrash = "process died without a catchable error, last reached: $stage"
+                    af.delete()
+                }
+            } catch (_: Exception) { /* best-effort */ }
+        }
+
         markStage("starting python runtime")
         try {
             if (!Python.isStarted()) {

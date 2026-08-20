@@ -471,17 +471,34 @@ class MainActivity : FlutterActivity() {
     // The first real native calls after a successful boot are exactly here:
     // TextToSpeech.speak() (the 'ready' case in home_screen.dart calls
     // _speak("Aurora is online.") right away) and SpeechRecognizer creation/
-    // start. Writes to the exact same last_boot_stage.txt file
-    // AuroraService.kt's bootPython() already reads and reports as
-    // previous_crash on the next launch -- same mechanism, same format,
-    // just also reachable from this class for the post-boot window
-    // AuroraService.kt's own markers don't cover.
+    // start.
+    //
+    // Two things a review caught before this shipped, both real:
+    // 1. home_screen.dart's _init() calls _startListening() unconditionally
+    //    at Flutter widget-mount time -- concurrently with, not after,
+    //    AuroraService.kt's bootPython(). Writing to the same
+    //    last_boot_stage.txt file both processes' markers use would let
+    //    this class's writes clobber the actual Python boot trail (or vice
+    //    versa) on a genuine race. Uses its own last_app_stage.txt instead
+    //    -- bootPython() checks both files, preferring the boot-stage one
+    //    since a real boot failure is diagnostically more specific.
+    // 2. A marker left behind after a call *succeeds* looks identical to
+    //    one left behind because the process died mid-call -- there's
+    //    nothing else that ever clears this file. Without clearing it,
+    //    every ordinary future close/force-stop/reboot would falsely
+    //    report "previous crash" forever after the first real one. Cleared
+    //    once startListening() actually returns without throwing, since
+    //    reaching a stable, actively-listening state means nothing died.
     private fun markAppStage(stage: String) {
         try {
-            val f = File(filesDir, "aurora_state/last_boot_stage.txt")
+            val f = File(filesDir, "aurora_state/last_app_stage.txt")
             f.parentFile?.mkdirs()
             f.writeText("time=${System.currentTimeMillis()} stage=$stage")
         } catch (_: Throwable) { /* best-effort */ }
+    }
+
+    private fun clearAppStage() {
+        try { File(filesDir, "aurora_state/last_app_stage.txt").delete() } catch (_: Throwable) {}
     }
 
     private fun nativeSpeak(text: String) {
@@ -518,7 +535,10 @@ class MainActivity : FlutterActivity() {
         }
         markAppStage("startNativeStt: about to call speechRecognizer.startListening()")
         speechRecognizer?.startListening(intent)
-        markAppStage("startNativeStt: startListening() call returned")
+        // Reached a stable, actively-listening state -- clear rather than
+        // leave a "returned" marker sitting around to be misread as a
+        // crash symptom on some unrelated future launch.
+        clearAppStage()
     }
 
     // ── Camera (Aurora visual sensory intake) ─────────────────────────────────
