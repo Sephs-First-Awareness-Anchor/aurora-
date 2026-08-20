@@ -1318,21 +1318,69 @@ class ConstraintEmitter:
     def _looks_negative(cls, text: str) -> bool:
         return cls._matches_marker(text, cls._NEGATE_MARKERS)
 
-    def _construct_own_example(self, topic: str, definition_text: str, example_text: str) -> str:
-        """Her own attempted usage, built from what she was actually told —
-        not free generation (she has no LLM language faculty to do that
-        with), a structured reflection of the source material framed as her
-        own tentative attempt, offered for validation or correction. Prefers
-        the example (concrete usage) over the bare definition when both
-        exist, since a usage is closer to "her own example" than a restated
-        definition would be."""
+    def _construct_own_example(self, ctx: EmissionContext, topic: str, definition_text: str, example_text: str) -> str:
+        """Her own attempted usage. Genuinely free generation isn't
+        available (no LLM language faculty), so this draws on two
+        different sources rather than inventing text: (1) real prior
+        evidence -- neighbor words she already had this topic connected
+        to in OETS, from research or corpus absorption BEFORE this turn,
+        independent of anything said just now; and (2) the user's own
+        contextual answer this turn, as grounding material when (1) isn't
+        available.
+
+        Confirmed by Sunni, 2026-08-21: the previous version used ONLY
+        the just-said text, so "her attempt" was indistinguishable from
+        copying back the user's own explanation -- never actually
+        drawing on anything she independently knows, which doesn't feel
+        like she researched the gap at all. When she genuinely has
+        nothing else to draw on, this now says so honestly instead of
+        presenting a bare echo as if it were her own construction --
+        consistent with "never manufacture false understanding":
+        overclaiming a plain reflection as independent work is its own
+        small manufacture."""
         source = (example_text or definition_text or "").strip()
         source = re.sub(r"\s+", " ", source)
         if len(source) > 140:
             source = source[:140].rsplit(" ", 1)[0] + "..."
-        if not source:
+
+        neighbor = ""
+        try:
+            node = self._get_or_create_oets_node(ctx, topic)
+            if node is not None and hasattr(node, "get_connected_words"):
+                # Defense in depth: a neighbor surfaced here is spoken
+                # directly to Sunni, so it must actually be a word --
+                # not a role-tag artifact ("[assistant]") or an
+                # apostrophe-fragment ("don't") that made it into OETS
+                # through some path other than apply_seed()'s own
+                # _is_real_word() filter (which already rejects these,
+                # but nothing guarantees every future write path routes
+                # through it).
+                candidates = sorted(
+                    w for w in node.get_connected_words()
+                    if w and w != topic
+                    and w.replace("_", "").replace("-", "").replace("'", "").replace("’", "").isalpha()
+                )
+                if candidates:
+                    neighbor = candidates[0]
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_constraint_emission.py:_construct_own_example",
+                exc=_aurora_boundary_exc,
+                context={"function": "_construct_own_example", "source_file": "aurora_constraint_emission.py"},
+            )
+            neighbor = ""
+
+        if not source and not neighbor:
             return f"Let me try '{topic}' — is there a way you'd want me to use it?"
-        return f"Let me try it: {source} — is that using '{topic}' the way you mean?"
+        if neighbor and source:
+            return (
+                f"Let me try it: {source} — and I already had '{topic}' connected to "
+                f"'{neighbor}'. Is that using '{topic}' the way you mean?"
+            )
+        if neighbor:
+            return f"I already have '{topic}' connected to '{neighbor}' — is that close to what you mean?"
+        return f"I don't have anything of my own for '{topic}' yet, but from what you said: {source} — is that close?"
 
     def _record_seeking_progress(
         self, ctx: EmissionContext, topic: str, shape: str, reply_text: str, axis_snap: Dict[str, float],
@@ -1488,7 +1536,7 @@ class ConstraintEmitter:
 
         if sf is not None:
             sf["stage"] = "awaiting_validation"
-        attempt = self._construct_own_example(topic, reply_text, "")
+        attempt = self._construct_own_example(ctx, topic, reply_text, "")
         return EmissionResult(
             text=attempt,
             speech_act=SpeechAct.HEDGE,
@@ -1515,7 +1563,7 @@ class ConstraintEmitter:
             sf["example_text"] = reply_text
             sf["stage"] = "awaiting_validation"
 
-        attempt = self._construct_own_example(topic, definition_text, reply_text)
+        attempt = self._construct_own_example(ctx, topic, definition_text, reply_text)
         return EmissionResult(
             text=attempt,
             speech_act=SpeechAct.HEDGE,
@@ -1591,7 +1639,7 @@ class ConstraintEmitter:
             else:
                 definition_text = sf.get("definition_text", "") if sf else ""
                 example_text    = sf.get("example_text", "") if sf else ""
-            attempt = self._construct_own_example(topic, definition_text, example_text)
+            attempt = self._construct_own_example(ctx, topic, definition_text, example_text)
             return EmissionResult(
                 text=attempt,
                 speech_act=SpeechAct.HEDGE,
