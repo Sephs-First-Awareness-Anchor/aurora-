@@ -16,6 +16,7 @@ aurora_bridge.py (the on-device first-boot backfill).
 
 import hashlib
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any, Dict
@@ -132,7 +133,14 @@ def apply_seed(seed_path: Path, target_path: Path) -> Dict[str, Any]:
         rtype = rel.get("relation_type", "")
         if (src, tgt, rtype) in existing_rel_keys:
             continue
-        if src in touched_set or tgt in touched_set:
+        # Codex review, PR #169: a relation touching a word this run added
+        # or boosted is only real once BOTH endpoints actually resolve to a
+        # node in the merged file -- the other endpoint may have been
+        # rejected by _is_real_word()/_worth_keeping() and never made it
+        # into existing_nodes. OETSPersistence.load_web() silently drops
+        # any relation with a missing endpoint, so keeping those here would
+        # just inflate the file with unloadable records.
+        if (src in touched_set or tgt in touched_set) and src in existing_nodes and tgt in existing_nodes:
             existing_rels[rel_id] = rel
             existing_rel_keys.add((src, tgt, rtype))
             new_rel_count += 1
@@ -153,9 +161,17 @@ def apply_seed(seed_path: Path, target_path: Path) -> Dict[str, Any]:
     content = json.dumps(checksum_payload, sort_keys=True, default=str)
     data["_checksum"] = hashlib.md5(content.encode()).hexdigest()[:12]
 
+    # Codex review, PR #169: write-then-rename instead of writing target_path
+    # directly. A direct write left mid-flight (process killed, storage
+    # full) truncates the canonical file in place; OETSPersistence.load_web()
+    # doesn't know about .pre_seed_backup, so a device's own learned
+    # vocabulary would not be recoverable on the next boot. os.replace() is
+    # atomic on both POSIX and Android's filesystem.
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(target_path, "w", encoding="utf-8") as f:
+    tmp_path = target_path.with_suffix(".json.tmp")
+    with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
+    os.replace(tmp_path, target_path)
 
     return {
         "added": len(added),

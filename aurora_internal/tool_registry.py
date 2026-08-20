@@ -1070,7 +1070,8 @@ def _corpus_train_auto(systems: Optional[Dict[str, Any]] = None, **_) -> ToolRes
         _corpora_dir = _base / "aurora_state" / "corpora"
         try:
             _found = [
-                p for p in list(_corpora_dir.glob("*.json")) + list(_corpora_dir.glob("*.jsonl"))
+                p for _ext in ("*.json", "*.jsonl", "*.csv", "*.txt")
+                for p in _corpora_dir.glob(_ext)
                 if p.is_file() and p.stat().st_size > 1024
             ]
             if _found:

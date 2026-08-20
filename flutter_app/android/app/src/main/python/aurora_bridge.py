@@ -68,19 +68,23 @@ def _apply_vocabulary_seed_once(state_dir: str) -> None:
         bridge_dir = os.path.dirname(os.path.abspath(__file__))
         seed_path = os.path.join(bridge_dir, "aurora_internal", "aurora_vocabulary_seed.json")
         if not os.path.exists(seed_path):
-            return  # older bundle without a seed file — nothing to apply
+            return  # older bundle without a seed file — nothing to apply, no marker either
         target_path = os.path.join(state_dir, "aurora_oets_web.json") if state_dir else "aurora_oets_web.json"
         from aurora_vocabulary_seed_apply import apply_seed
         stats = apply_seed(seed_path, target_path)
         log.info("Vocabulary seed applied: %s", stats)
-    except Exception as _seed_exc:
-        log.warning("Vocabulary seed application failed (non-fatal): %s", _seed_exc)
-    finally:
+        # Codex review, PR #169: marker must only be written on success --
+        # this used to live in a `finally`, so a transient failure here
+        # (storage full, target momentarily unreadable) still marked the
+        # seed as applied, permanently skipping it on every later boot
+        # even after the transient problem cleared.
         try:
             with open(marker_path, "w", encoding="utf-8") as f:
                 f.write(f"time={int(time.time() * 1000)}")
         except Exception:
             pass
+    except Exception as _seed_exc:
+        log.warning("Vocabulary seed application failed (non-fatal, will retry next boot): %s", _seed_exc)
 
 
 class _BootStageTee:
