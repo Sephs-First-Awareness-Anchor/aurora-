@@ -29,8 +29,9 @@ def main() -> None:
     args = ap.parse_args()
 
     stats = apply_seed(Path(args.seed), Path(args.target))
-    print(f"Added {stats['added']} words, skipped {stats['skipped_existing']} (already known), "
-          f"rejected {stats['rejected']} (junk/low-value)")
+    print(f"Added {stats['added']} words, boosted {stats['boosted']} existing words "
+          f"(more encounters/confidence from the corpus run), skipped {stats['skipped_existing']} "
+          f"(already known and not improved on), rejected {stats['rejected']} (junk/low-value)")
     print(f"Added {stats['relations_added']} relations")
     print(f"Target now has {stats['total_nodes']} nodes total")
     if stats["backup_path"]:

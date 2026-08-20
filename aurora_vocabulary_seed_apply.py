@@ -47,11 +47,34 @@ def _worth_keeping(node: Dict[str, Any]) -> bool:
 
 
 def apply_seed(seed_path: Path, target_path: Path) -> Dict[str, Any]:
-    """Backfill target_path's OETS nodes/relations from seed_path, skipping
-    any word the target already has. Returns stats: added/skipped/rejected
-    node counts and added relation count. Creates target_path fresh
-    (empty nodes/relations/categories) if it doesn't exist yet -- the
-    true first-ever-boot case."""
+    """Backfill target_path's OETS nodes/relations from seed_path.
+
+    Two kinds of real signal come out of an actual corpus_runner.py run,
+    and both are merged:
+      1. Brand-new words the target doesn't have at all -- added outright
+         (never overwrites an existing word).
+      2. Words the target ALREADY has (its own baseline vocabulary) that
+         the corpus run actually encountered -- confirmed live: running
+         corpus_runner.py's observer pass over a real transcript raised
+         times_encountered/comprehension_confidence for words like
+         "accountability"/"credit"/"radical" that appear in it, well
+         above the 0.1 dataclass default other baseline words sit at,
+         with NO new definition attached. A node-only merge would throw
+         this away entirely on any device, since every fresh install
+         already ships the same baseline vocabulary the seed's word list
+         mostly overlaps with. Boosted via max(), matching
+         SemanticNode._update_comprehension_confidence's own "only ever
+         grows, never erodes" contract -- never lowers what a device
+         already earned on its own.
+    Relations are merged for any word this seed run actually touched
+    (new or boosted), deduped by (source, target, type) rather than the
+    seed's random relation_id, since two independent runs assign
+    different ids to what is logically the same edge.
+
+    Returns stats: added/skipped/rejected/boosted node counts and added
+    relation count. Creates target_path fresh (empty nodes/relations/
+    categories) if it doesn't exist yet -- the true first-ever-boot case.
+    """
     seed_path = Path(seed_path)
     target_path = Path(target_path)
 
@@ -73,13 +96,23 @@ def apply_seed(seed_path: Path, target_path: Path) -> Dict[str, Any]:
     existing_nodes = data.get("nodes", {}) or {}
     existing_rels  = data.get("relations", {}) or {}
 
-    added, skipped_existing, rejected = [], [], []
+    added, skipped_existing, rejected, boosted = [], [], [], []
     for word, node in seed_nodes.items():
         if not _is_real_word(word):
             rejected.append(word)
             continue
         if word in existing_nodes:
-            skipped_existing.append(word)
+            target_node = existing_nodes[word]
+            seed_conf   = float(node.get("comprehension_confidence", 0.0) or 0.0)
+            target_conf = float(target_node.get("comprehension_confidence", 0.0) or 0.0)
+            seed_enc    = int(node.get("times_encountered", 0) or 0)
+            target_enc  = int(target_node.get("times_encountered", 0) or 0)
+            if seed_conf > target_conf or seed_enc > target_enc:
+                target_node["comprehension_confidence"] = max(seed_conf, target_conf)
+                target_node["times_encountered"] = max(seed_enc, target_enc)
+                boosted.append(word)
+            else:
+                skipped_existing.append(word)
             continue
         if not _worth_keeping(node):
             rejected.append(word)
@@ -87,15 +120,21 @@ def apply_seed(seed_path: Path, target_path: Path) -> Dict[str, Any]:
         existing_nodes[word] = node
         added.append(word)
 
-    added_set = set(added)
+    touched_set = set(added) | set(boosted)
+    existing_rel_keys = {
+        (r.get("source_word", ""), r.get("target_word", ""), r.get("relation_type", ""))
+        for r in existing_rels.values()
+    }
     new_rel_count = 0
     for rel_id, rel in seed_rels.items():
-        if rel_id in existing_rels:
-            continue
         src = rel.get("source_word", "")
         tgt = rel.get("target_word", "")
-        if src in added_set or tgt in added_set:
+        rtype = rel.get("relation_type", "")
+        if (src, tgt, rtype) in existing_rel_keys:
+            continue
+        if src in touched_set or tgt in touched_set:
             existing_rels[rel_id] = rel
+            existing_rel_keys.add((src, tgt, rtype))
             new_rel_count += 1
 
     cats = data.get("categories", {}) or {}
@@ -120,6 +159,7 @@ def apply_seed(seed_path: Path, target_path: Path) -> Dict[str, Any]:
 
     return {
         "added": len(added),
+        "boosted": len(boosted),
         "skipped_existing": len(skipped_existing),
         "rejected": len(rejected),
         "relations_added": new_rel_count,
