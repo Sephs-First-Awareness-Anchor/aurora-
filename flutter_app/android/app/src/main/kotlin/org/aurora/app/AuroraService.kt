@@ -486,6 +486,17 @@ class AuroraService : Service() {
                     == PackageManager.PERMISSION_GRANTED) {
                 type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
             }
+            // Review caught a real second bug here: Android 14 throws
+            // InvalidForegroundServiceTypeException if the type passed is
+            // FOREGROUND_SERVICE_TYPE_NONE (0) while the manifest declares
+            // non-none types -- passing 0 when neither permission is
+            // granted would have crashed in exactly the scenario this fix
+            // targets. dataSync (added to the manifest alongside
+            // microphone|camera) requires no runtime permission of its own,
+            // so it's used as the fallback instead of NONE.
+            if (type == 0) {
+                type = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            }
             startForeground(NOTIF_ID, notification, type)
         } else {
             // Pre-Android 10 has no per-call type argument, and this whole

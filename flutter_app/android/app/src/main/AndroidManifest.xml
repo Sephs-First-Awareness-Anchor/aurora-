@@ -55,11 +55,18 @@
             </intent-filter>
         </activity>
 
-        <!-- Aurora foreground service (Chaquopy Python backend) -->
+        <!-- Aurora foreground service (Chaquopy Python backend). dataSync is
+             declared alongside microphone|camera as a permission-free
+             fallback type: Android 14 throws InvalidForegroundServiceType-
+             Exception if startForeground() passes FOREGROUND_SERVICE_TYPE_
+             NONE while the manifest only declares non-none types, so
+             AuroraService.kt's startForegroundSafely() needs a real,
+             already-declared type to fall back to when neither camera nor
+             microphone permission is granted yet (e.g. every fresh install). -->
         <service
             android:name=".AuroraService"
             android:exported="false"
-            android:foregroundServiceType="microphone|camera" />
+            android:foregroundServiceType="microphone|camera|dataSync" />
 
         <!-- Aurora curtain overlay service -->
         <service
