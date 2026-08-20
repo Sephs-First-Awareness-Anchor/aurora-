@@ -5244,26 +5244,41 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state, trigger: str =
                 topic_concept=_topic or None,
             )
             _gctx = EmissionContextBuilder().build(systems, input_frame=_gif, recent_words=[])
-            # Repair G, revised: routing through emit()'s full classifier
-            # was tried and reverted -- confirmed live it can land on an
-            # act (e.g. REPAIR) that assumes partial understanding this
-            # path doesn't actually have, producing malformed text ("Actually,
-            # I can see the mean.") instead of an honest gap. _emit_abstain()
-            # is the reliable, narrow-purpose call this chokepoint always
-            # used -- keep it as the base. Layer _seek_gap() on top
-            # independently when there's a topic to seek about, since
-            # _seek_gap() is self-contained (only needs ctx + a topic) and
-            # doesn't depend on full classification succeeding.
-            _ares = _emitter._emit_abstain(_gctx)
-            _abstain = str(getattr(_ares, "text", "") or "").strip()
-            _seeking = bool(getattr(_ares, "seeking", False))
-            if getattr(_ares, "abstained", False) and not _seeking and _topic:
-                from aurora_constraint_emission import SlotFrame as _SF, SpeechAct as _SA
-                _seek_result = _emitter._seek_gap(_gctx, "both", _SF(), _SA.ABSTAIN)
-                _seek_text = str(getattr(_seek_result, "text", "") or "").strip()
-                if _seek_text:
-                    _abstain = _seek_text
-                    _seeking = True
+            # Codex review, PR #168: this chokepoint is the only live
+            # caller into ConstraintEmitter (emit() itself is retired from
+            # aurora.py per the governance test below), so it's also the
+            # only place a reply to an open seeking flag is ever actually
+            # seen. Give the staged protocol first refusal -- if a flag is
+            # already open, check_and_run_integration() advances or closes
+            # it using *this* reply as the answer; only when there's no
+            # open flag (or it declines to advance) does the turn fall
+            # through to the abstain/seek-gap base below.
+            _integration_result = _emitter.check_and_run_integration(_gctx)
+            _int_text = str(getattr(_integration_result, "text", "") or "").strip() if _integration_result is not None else ""
+            if _int_text:
+                _abstain = _int_text
+                _seeking = bool(getattr(_integration_result, "seeking", False))
+            else:
+                # Repair G, revised: routing through emit()'s full classifier
+                # was tried and reverted -- confirmed live it can land on an
+                # act (e.g. REPAIR) that assumes partial understanding this
+                # path doesn't actually have, producing malformed text ("Actually,
+                # I can see the mean.") instead of an honest gap. _emit_abstain()
+                # is the reliable, narrow-purpose call this chokepoint always
+                # used -- keep it as the base. Layer _seek_gap() on top
+                # independently when there's a topic to seek about, since
+                # _seek_gap() is self-contained (only needs ctx + a topic) and
+                # doesn't depend on full classification succeeding.
+                _ares = _emitter._emit_abstain(_gctx)
+                _abstain = str(getattr(_ares, "text", "") or "").strip()
+                _seeking = bool(getattr(_ares, "seeking", False))
+                if getattr(_ares, "abstained", False) and not _seeking and _topic:
+                    from aurora_constraint_emission import SlotFrame as _SF, SpeechAct as _SA
+                    _seek_result = _emitter._seek_gap(_gctx, "both", _SF(), _SA.ABSTAIN)
+                    _seek_text = str(getattr(_seek_result, "text", "") or "").strip()
+                    if _seek_text:
+                        _abstain = _seek_text
+                        _seeking = True
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),

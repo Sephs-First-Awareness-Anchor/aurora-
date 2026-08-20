@@ -1262,19 +1262,28 @@ class ConstraintEmitter:
         return sum(1 for w in words if len(w) > 2 and w.lower() not in _ANCHOR_TOKEN_STOPWORDS)
 
     _AFFIRM_MARKERS = ("yes", "yeah", "yep", "right", "correct", "exactly", "that's it", "precisely")
-    _NEGATE_MARKERS = ("no ", "nope", "not quite", "not really", "wrong", "not exactly", "close but", "actually no")
+    _NEGATE_MARKERS = ("no", "nope", "not quite", "not really", "wrong", "not exactly", "close but", "actually no")
+
+    @classmethod
+    def _matches_marker(cls, text: str, markers: Tuple[str, ...]) -> bool:
+        # Codex review, PR #168: naive substring/space-padding matching let
+        # "incorrect" satisfy the "correct" affirmative marker, and let
+        # punctuation ("No, that's incorrect") hide "no" from the "no "
+        # marker. Word-boundary regex avoids both: \b requires an actual
+        # word edge, so "correct" won't fire inside "incorrect", and
+        # boundaries are punctuation-agnostic so "No," still matches "no".
+        t = (text or "").lower()
+        return any(re.search(r"\b" + re.escape(m) + r"\b", t) for m in markers)
 
     @classmethod
     def _looks_affirmative(cls, text: str) -> bool:
-        t = " " + (text or "").strip().lower() + " "
-        if any(m in t for m in cls._NEGATE_MARKERS):
+        if cls._matches_marker(text, cls._NEGATE_MARKERS):
             return False
-        return any(m in t for m in cls._AFFIRM_MARKERS)
+        return cls._matches_marker(text, cls._AFFIRM_MARKERS)
 
     @classmethod
     def _looks_negative(cls, text: str) -> bool:
-        t = " " + (text or "").strip().lower() + " "
-        return any(m in t for m in cls._NEGATE_MARKERS)
+        return cls._matches_marker(text, cls._NEGATE_MARKERS)
 
     def _construct_own_example(self, topic: str, definition_text: str, example_text: str) -> str:
         """Her own attempted usage, built from what she was actually told —
@@ -1416,18 +1425,13 @@ class ConstraintEmitter:
         axis_snap  = flag.get("axis_snapshot", {})
         reply_text = ctx.input_frame.text if ctx.input_frame else ""
 
-        node = self._get_or_create_oets_node(ctx, topic)
-        try:
-            if node and hasattr(node, "add_definition"):
-                node.add_definition(reply_text, source="user_answer", confidence=0.7)
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(), module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:_advance_awaiting_meaning",
-                exc=_aurora_boundary_exc,
-                context={"function": "_advance_awaiting_meaning", "source_file": "aurora_constraint_emission.py"},
-            )
-            pass
+        # Codex review, PR #168: don't write to the OETS node yet.
+        # SemanticNode.add_definition() -> _recalculate_depth() ->
+        # _update_comprehension_confidence() uses max(), so any confidence
+        # bump here would be permanent even if validation later rejects or
+        # abandons this meaning. The provisional text lives only on the
+        # seeking flag (sf["definition_text"] below) until she's actually
+        # confirmed right, in _advance_awaiting_validation.
         self._record_seeking_progress(ctx, topic, "meaning", reply_text, axis_snap)
 
         sf = ctx.working_memory.seeking_flags.get(flag_key) if hasattr(ctx.working_memory, "seeking_flags") else None
@@ -1466,18 +1470,10 @@ class ConstraintEmitter:
         axis_snap  = flag.get("axis_snapshot", {})
         reply_text = ctx.input_frame.text if ctx.input_frame else ""
 
-        node = self._get_or_create_oets_node(ctx, topic)
-        try:
-            if node and hasattr(node, "add_example"):
-                node.add_example(reply_text, context="seeking_integration")
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(), module=__name__,
-                operation="exception_handler:aurora_constraint_emission.py:_advance_awaiting_example",
-                exc=_aurora_boundary_exc,
-                context={"function": "_advance_awaiting_example", "source_file": "aurora_constraint_emission.py"},
-            )
-            pass
+        # Codex review, PR #168: same deferral as _advance_awaiting_meaning
+        # -- an example offered before validation is still provisional, so
+        # it stays on the seeking flag (sf["example_text"] below) rather
+        # than feeding SemanticNode.add_example()'s confidence bump early.
         self._record_seeking_progress(ctx, topic, "example", reply_text, axis_snap)
 
         sf = ctx.working_memory.seeking_flags.get(flag_key) if hasattr(ctx.working_memory, "seeking_flags") else None
@@ -1547,10 +1543,21 @@ class ConstraintEmitter:
         # tried twice -- cap it so an unclear correction can't loop forever.
         if self._looks_negative(reply_text) and attempts < 2:
             correction = reply_text if self._content_word_count(reply_text) >= 3 else ""
-            definition_text = (sf.get("definition_text", "") if sf else "") or correction
-            example_text    = (sf.get("example_text", "") if sf else "") or correction
-            if sf is not None and correction:
-                sf["definition_text"] = correction
+            if correction:
+                # Codex review, PR #168: by this stage sf["definition_text"]
+                # and sf["example_text"] are usually both already set from
+                # the earlier stages, so `existing or correction` was never
+                # picking the correction -- it just rebuilt the same
+                # already-rejected attempt. A real correction supersedes
+                # both for this retry.
+                definition_text = correction
+                example_text    = correction
+                if sf is not None:
+                    sf["definition_text"] = correction
+                    sf["example_text"]    = correction
+            else:
+                definition_text = sf.get("definition_text", "") if sf else ""
+                example_text    = sf.get("example_text", "") if sf else ""
             attempt = self._construct_own_example(topic, definition_text, example_text)
             return EmissionResult(
                 text=attempt,
