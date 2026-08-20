@@ -78,6 +78,24 @@ class MainActivity : FlutterActivity() {
         reportAndClearPreviousCrash()
     }
 
+    // A review on this same change caught a real problem: AuroraService
+    // can already be mid-boot (restarted headlessly via BootCompletedReceiver
+    // or START_STICKY) by the time this Activity opens, actively writing
+    // NEW markers into these same files for a boot that's still genuinely
+    // in progress -- not a leftover from a dead process at all. Reading
+    // and deleting on file-existence alone can't tell "abandoned by a
+    // process that's gone" apart from "being actively refreshed right
+    // now," and would both misreport a live boot as a past crash AND
+    // delete AuroraService's own in-progress marker out from under it.
+    // Every writer of these files stamps a leading "time=<epoch ms>" --
+    // a marker only counts as stale (and only then gets consumed) if it's
+    // older than this. Anything actively being refreshed writes far more
+    // often than this threshold, so a truly live boot never qualifies.
+    private val STALE_THRESHOLD_MS = 5_000L
+
+    private fun markerTimestampMs(text: String): Long? =
+        Regex("""time=(\d+)""").find(text)?.groupValues?.get(1)?.toLongOrNull()
+
     private fun reportAndClearPreviousCrash() {
         try {
             val stateDir = File(filesDir, "aurora_state")
@@ -86,13 +104,20 @@ class MainActivity : FlutterActivity() {
                 "boot sequence" to File(stateDir, "last_boot_stage.txt"),
                 "app/native call" to File(stateDir, "last_app_stage.txt"),
             )
+            val now = System.currentTimeMillis()
             val lines = mutableListOf<String>()
             for ((label, f) in sources) {
-                if (f.exists()) {
-                    val text = f.readText().trim()
-                    if (text.isNotEmpty()) lines.add("[$label]\n$text")
-                    f.delete()
-                }
+                if (!f.exists()) continue
+                val text = f.readText().trim()
+                if (text.isEmpty()) { f.delete(); continue }
+                val ts = markerTimestampMs(text)
+                // Recent + parseable => almost certainly a live, in-progress
+                // write from a boot that's still actually running right now.
+                // Leave it alone entirely -- don't read it as a crash, don't
+                // delete it, let that boot's own lifecycle handle it.
+                if (ts != null && (now - ts) < STALE_THRESHOLD_MS) continue
+                lines.add("[$label]\n$text")
+                f.delete()
             }
             if (lines.isEmpty()) return
             AlertDialog.Builder(this)
