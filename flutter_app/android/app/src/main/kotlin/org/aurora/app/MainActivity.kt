@@ -1,6 +1,7 @@
 package org.aurora.app
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -54,6 +55,80 @@ class MainActivity : FlutterActivity() {
         const val FACE_DETECT_INTERVAL_MS = 300L  // faster than FRAME_INTERVAL_MS -- proximity should feel responsive
         const val AMBIENT_AUDIO_SAMPLE_RATE = 16_000  // Hz -- ample for the DSP features computed Python-side
         const val AUDIO_PUSH_INTERVAL_MS = 1_000L      // bounded push rate (Section XXVIII battery discipline)
+    }
+
+    // Diagnostic hardening, part 6 (per Sunni: repeated tests never showed
+    // any previous-crash report, no matter what got added). The chain that
+    // was supposed to surface it -- Python writes a file -> AuroraService.
+    // bootPython() reads it -> sends a JSON event -> Flutter's EventChannel
+    // has to be listening -> gets rendered as a chat message -- has several
+    // places it can silently fail, and critically, AuroraService is a
+    // START_STICKY foreground service: after a crash, Android can restart
+    // it in the background before the user ever reopens the app, which
+    // would read-and-delete the crash file with no UI attached to show it,
+    // burning the one-shot report on nobody. This reads the same three
+    // diagnostic files directly, in plain Kotlin, with no dependency on
+    // Python having booted, the Flutter engine being configured, or the
+    // EventChannel being connected -- and shows them in a native
+    // AlertDialog the instant this Activity is created. Deliberately does
+    // NOT go through Flutter at all, so none of the prior failure modes
+    // can apply to this path.
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        reportAndClearPreviousCrash()
+    }
+
+    // A review on this same change caught a real problem: AuroraService
+    // can already be mid-boot (restarted headlessly via BootCompletedReceiver
+    // or START_STICKY) by the time this Activity opens, actively writing
+    // NEW markers into these same files for a boot that's still genuinely
+    // in progress -- not a leftover from a dead process at all. Reading
+    // and deleting on file-existence alone can't tell "abandoned by a
+    // process that's gone" apart from "being actively refreshed right
+    // now," and would both misreport a live boot as a past crash AND
+    // delete AuroraService's own in-progress marker out from under it.
+    // Every writer of these files stamps a leading "time=<epoch ms>" --
+    // a marker only counts as stale (and only then gets consumed) if it's
+    // older than this. Anything actively being refreshed writes far more
+    // often than this threshold, so a truly live boot never qualifies.
+    private val STALE_THRESHOLD_MS = 5_000L
+
+    private fun markerTimestampMs(text: String): Long? =
+        Regex("""time=(\d+)""").find(text)?.groupValues?.get(1)?.toLongOrNull()
+
+    private fun reportAndClearPreviousCrash() {
+        try {
+            val stateDir = File(filesDir, "aurora_state")
+            val sources = listOf(
+                "fatal error (caught exception/OOM)" to File(stateDir, "last_crash.txt"),
+                "boot sequence" to File(stateDir, "last_boot_stage.txt"),
+                "app/native call" to File(stateDir, "last_app_stage.txt"),
+            )
+            val now = System.currentTimeMillis()
+            val lines = mutableListOf<String>()
+            for ((label, f) in sources) {
+                if (!f.exists()) continue
+                val text = f.readText().trim()
+                if (text.isEmpty()) { f.delete(); continue }
+                val ts = markerTimestampMs(text)
+                // Recent + parseable => almost certainly a live, in-progress
+                // write from a boot that's still actually running right now.
+                // Leave it alone entirely -- don't read it as a crash, don't
+                // delete it, let that boot's own lifecycle handle it.
+                if (ts != null && (now - ts) < STALE_THRESHOLD_MS) continue
+                lines.add("[$label]\n$text")
+                f.delete()
+            }
+            if (lines.isEmpty()) return
+            AlertDialog.Builder(this)
+                .setTitle("Aurora didn't close cleanly last time")
+                .setMessage(lines.joinToString("\n\n"))
+                .setPositiveButton("OK", null)
+                .setCancelable(true)
+                .show()
+        } catch (_: Throwable) {
+            // Diagnostic reporting must never itself crash the app.
+        }
     }
 
     @Volatile private var pendingSummon = false
