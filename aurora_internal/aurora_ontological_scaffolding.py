@@ -336,6 +336,16 @@ class SemanticNode:
     # Lineage tracking
     lineage: str = ""                   # Which i-state lineage introduced this
 
+    # Perf (2026-08-20): running sum of depth_contribution() across every
+    # relation on this node, maintained incrementally by add_relation()/
+    # adjust_relation_contribution() instead of _recalculate_depth()
+    # rescanning self.relations.values() on every call -- confirmed via
+    # cProfile as a dominant cost on hub words (some carry hundreds of
+    # relations from baseline seeding), compounding on every single
+    # relation addition. Not part of equality/repr -- it's a derived
+    # cache, not identity.
+    _rel_contribution_sum: float = field(default=0.0, repr=False, compare=False)
+
     def add_sense(self, sense_id: str, gloss: str, source: str = "inferred",
                   confidence: float = 0.3, context_clues: List[str] = None):
         """Add or reinforce a word sense."""
@@ -445,8 +455,31 @@ class SemanticNode:
 
     def add_relation(self, relation: SemanticRelation):
         """Add or strengthen a semantic relation."""
+        if relation.relation_id not in self.relations:
+            self._rel_contribution_sum += relation.depth_contribution()
         self.relations[relation.relation_id] = relation
         self._recalculate_depth()
+
+    def adjust_relation_contribution(self, delta: float) -> None:
+        """Incrementally correct the cached relation-contribution sum when
+        an already-attached relation's strength/confidence changes in
+        place (the "strengthen existing relation" paths), instead of
+        _recalculate_depth() rescanning every relation on this node.
+        Callers compute delta as (new_contribution - old_contribution),
+        captured via depth_contribution() immediately before and after
+        the mutation. Clamped at 0 as a defensive floor only -- weight,
+        strength, and confidence are all non-negative, so a correctly
+        computed delta should never actually drive the sum negative."""
+        self._rel_contribution_sum = max(0.0, self._rel_contribution_sum + delta)
+
+    def remove_relation(self, relation_id: str) -> None:
+        """Detach a relation (pruning) and correct the cached sum to
+        match -- counterpart to add_relation()'s increment."""
+        rel = self.relations.pop(relation_id, None)
+        if rel is not None:
+            self._rel_contribution_sum = max(
+                0.0, self._rel_contribution_sum - rel.depth_contribution()
+            )
 
     def get_relations_by_type(self, rtype: RelationType) -> List[SemanticRelation]:
         """Get all relations of a specific type."""
@@ -490,11 +523,19 @@ class SemanticNode:
         else:
             ex_depth = 0.0
 
-        # Relation depth (0-0.4) — the biggest contributor
+        # Relation depth (0-0.4) — the biggest contributor.
+        # Perf (2026-08-20): was `sum(r.depth_contribution() for r in
+        # self.relations.values())`, rescanning every relation on this
+        # node on every call -- confirmed via cProfile as a dominant cost
+        # in ordinary message processing, worst on hub words with
+        # hundreds of relations from baseline seeding. _rel_contribution_sum
+        # is kept incrementally correct by add_relation()/
+        # adjust_relation_contribution()/remove_relation(), so this is now
+        # an O(1) read for the same value.
         if self.relations:
-            rel_contributions = [r.depth_contribution() for r in self.relations.values()]
-            rel_depth = min(0.4, sum(rel_contributions) / max(len(rel_contributions), 1)
-                           * min(len(rel_contributions), 8) / 8 * 0.4)
+            rel_count = len(self.relations)
+            rel_depth = min(0.4, self._rel_contribution_sum / rel_count
+                           * min(rel_count, 8) / 8 * 0.4)
         else:
             rel_depth = 0.0
 
@@ -729,6 +770,23 @@ class OntologicalWeb(WarpCapable):
         # revealed it.
         self._selection_outcomes: Dict[str, Dict[str, Dict[str, int]]] = {}
 
+        # Perf (2026-08-20): _select_relation_type() used to rebuild this
+        # from RELATION_TYPE_AXIS_PROFILES (a fixed module-level constant)
+        # on every single call -- confirmed live via cProfile as one of
+        # the two dominant hotspots in ordinary message processing (96,111
+        # calls for a 12-message corpus run). The table never changes at
+        # runtime, so build it once and reuse it.
+        self._relation_type_checker: Optional[Any] = None
+
+        # Perf (2026-08-20): _select_relation_type()'s raw_scores (cosine
+        # similarity per candidate relation type) depends only on the
+        # (r1, r2) role-pair signature, never on the dynamic
+        # self._selection_outcomes discount -- see that method's docstring
+        # for the full reasoning. Unbounded only in theory; role values
+        # come from a small closed vocabulary, so this stays tiny in
+        # practice.
+        self._raw_score_cache: Dict[str, Dict[str, float]] = {}
+
     # ================================================================
     # WARP SURFACE (FIX-A010) — plumbing only, see class docstring
     # ================================================================
@@ -900,8 +958,18 @@ class OntologicalWeb(WarpCapable):
         if existing_id:
             # Strengthen existing relation
             rel = self.relations[existing_id]
+            # Perf (2026-08-20): capture depth_contribution() before/after
+            # this in-place mutation so both endpoint nodes' cached
+            # _rel_contribution_sum stays correct without a full rescan --
+            # see SemanticNode.adjust_relation_contribution().
+            _old_contribution = rel.depth_contribution()
             rel.strength = _clamp(rel.strength + strength * 0.2)
             rel.confidence = _clamp(max(rel.confidence, confidence))
+            _delta = rel.depth_contribution() - _old_contribution
+            if source in self.nodes:
+                self.nodes[source].adjust_relation_contribution(_delta)
+            if target in self.nodes:
+                self.nodes[target].adjust_relation_contribution(_delta)
             # N2.1 (decision memo, 2026-07-16): this branch used to touch
             # only strength/confidence, silently no-opping knowledge_source
             # forever -- the exact bug N2's mini-acceptance found live
@@ -1101,16 +1169,32 @@ class OntologicalWeb(WarpCapable):
         signature to add_relation() so a future failure can be attributed
         back to this exact selection pattern.
         """
-        from aurora_warp_protocol import AxisCoverageChecker
         signature = "+".join(sorted((r1, r2)))
-        signal = _role_pair_axis_signal(r1, r2)
-        checker = AxisCoverageChecker({
-            f"RELTYPE:{rtype.value}": dict(profile)
-            for rtype, profile in RELATION_TYPE_AXIS_PROFILES.items()
-            if rtype is not RelationType.RELATED_TO
-        })
-        d15 = checker._ensure_full_dims(signal)
-        raw_scores = {cid: checker.cosine(profile, d15) for cid, profile in checker._components.items()}
+        if self._relation_type_checker is None:
+            from aurora_warp_protocol import AxisCoverageChecker
+            self._relation_type_checker = AxisCoverageChecker({
+                f"RELTYPE:{rtype.value}": dict(profile)
+                for rtype, profile in RELATION_TYPE_AXIS_PROFILES.items()
+                if rtype is not RelationType.RELATED_TO
+            })
+        checker = self._relation_type_checker
+        # Perf (2026-08-20): raw_scores depends only on (r1, r2) -- via the
+        # pure, order-independent _role_pair_axis_signal() -- and the fixed
+        # checker built above, never on self._selection_outcomes (that
+        # discount is applied below, fresh every call, since it's the one
+        # genuinely dynamic part). role values are drawn from a small
+        # closed vocabulary (noun/verb/adjective/adverb/...), so the
+        # number of distinct signatures is tiny -- confirmed via cProfile
+        # as the single largest remaining hotspot after the
+        # _rel_contribution_sum fix (1M+ cosine() calls for a 12-message
+        # corpus run). Cache by the same `signature` already computed
+        # above for outcome tracking.
+        raw_scores = self._raw_score_cache.get(signature)
+        if raw_scores is None:
+            signal = _role_pair_axis_signal(r1, r2)
+            d15 = checker._ensure_full_dims(signal)
+            raw_scores = {cid: checker.cosine(profile, d15) for cid, profile in checker._components.items()}
+            self._raw_score_cache[signature] = raw_scores
 
         outcomes = self._selection_outcomes.get(signature, {})
         adjusted_scores: Dict[str, float] = {}
@@ -1252,26 +1336,41 @@ class OntologicalWeb(WarpCapable):
         # Look for taxonomy markers
         taxonomy_markers = {"type", "kind", "form", "category", "example",
                             "instance", "variant", "class"}
+        has_marker = bool(def_words & taxonomy_markers)
 
-        for other_word, other_node in self.nodes.items():
-            if other_word == word:
+        # Perf (2026-08-20): was `for other_word, other_node in
+        # self.nodes.items()` -- a full scan of every node in the web
+        # (thousands) for every word this runs on, checking membership in
+        # def_words (a handful of words from one definition). Confirmed
+        # via cProfile as the top remaining hotspot after the relation-depth
+        # and relation-type-selection fixes (10.1s of a 30.9s profiled run
+        # over just 12 messages). Inverted to walk the small side and do
+        # an O(1) dict lookup on the large side instead -- correct as long
+        # as node keys are lowercase-normalized, which every node-creation
+        # path in this codebase already guarantees (add_node() is only
+        # ever called with words from re.findall(r'\b[a-z]+\b', text.lower())
+        # -- GeometryExtractor.extract(), infer_relations_from_context(),
+        # etc. -- never a raw/mixed-case token).
+        for w in def_words:
+            if w == word:
                 continue
-            if other_word.lower() in def_words:
-                # This word appears in our definition
-                if def_words & taxonomy_markers:
-                    # Taxonomy marker present → IS_A
-                    self.add_relation(
-                        word, other_word, RelationType.IS_A,
-                        strength=0.5, confidence=0.4,
-                        knowledge_source="definition_analysis"
-                    )
-                else:
-                    # General mention → RELATED_TO
-                    self.add_relation(
-                        word, other_word, RelationType.RELATED_TO,
-                        strength=0.3, confidence=0.3,
-                        knowledge_source="definition_analysis"
-                    )
+            other_node = self.nodes.get(w)
+            if other_node is None:
+                continue
+            if has_marker:
+                # Taxonomy marker present → IS_A
+                self.add_relation(
+                    word, w, RelationType.IS_A,
+                    strength=0.5, confidence=0.4,
+                    knowledge_source="definition_analysis"
+                )
+            else:
+                # General mention → RELATED_TO
+                self.add_relation(
+                    word, w, RelationType.RELATED_TO,
+                    strength=0.3, confidence=0.3,
+                    knowledge_source="definition_analysis"
+                )
 
     # ================================================================
     # PRUNING — Keep the web manageable
@@ -1338,11 +1437,14 @@ class OntologicalWeb(WarpCapable):
             self._relations_by_source[rel.source_word].discard(rel.relation_id)
             self._relations_by_target[rel.target_word].discard(rel.relation_id)
             self._relations_by_type[rel.relation_type].discard(rel.relation_id)
-            # Remove from nodes
+            # Remove from nodes -- remove_relation() also corrects the
+            # node's cached _rel_contribution_sum (2026-08-20 perf fix);
+            # a bare .relations.pop() here would silently leave it
+            # over-counting this relation forever.
             if rel.source_word in self.nodes:
-                self.nodes[rel.source_word].relations.pop(rel.relation_id, None)
+                self.nodes[rel.source_word].remove_relation(rel.relation_id)
             if rel.target_word in self.nodes:
-                self.nodes[rel.target_word].relations.pop(rel.relation_id, None)
+                self.nodes[rel.target_word].remove_relation(rel.relation_id)
             del self.relations[rel.relation_id]
 
     # ================================================================
@@ -1545,6 +1647,19 @@ class ClusterEngine:
         """
         Coherence = actual internal connections / possible internal connections.
         Higher coherence means the cluster is more tightly knit.
+
+        Performance note (2026-08-20): this used to re-scan w1's entire
+        relations dict for every single w2 in the cluster -- O(cluster_size^2
+        * relations_per_node). Confirmed live via cProfile: on a real OETS
+        (~2500 nodes / ~18000 relations from baseline seeding), this one
+        function accounted for 72.6s of a 191s corpus-ingestion run over
+        just 12 messages, and it fires on ordinary conversation turns too
+        (called from consolidate() via the normal gateway.receive() path,
+        not just corpus runs). get_connected_words() already builds a
+        node's full connected-word set in one pass; computing it once per
+        w1 and doing O(1) set-membership checks against it for every w2
+        turns the relations-scan factor from "repeated n times" into
+        "once" -- O(cluster_size * relations_per_node + cluster_size^2).
         """
         n = len(members)
         if n < 2:
@@ -1553,14 +1668,13 @@ class ClusterEngine:
         actual = 0
         member_list = list(members)
         for i, w1 in enumerate(member_list):
+            node = self.web.nodes.get(w1)
+            if not node:
+                continue
+            connected = node.get_connected_words()
             for w2 in member_list[i+1:]:
-                node = self.web.nodes.get(w1)
-                if node:
-                    for rel in node.relations.values():
-                        other = rel.target_word if rel.source_word == w1 else rel.source_word
-                        if other == w2:
-                            actual += 1
-                            break
+                if w2 in connected:
+                    actual += 1
         return _clamp(actual / max(max_possible, 1))
 
     def _integrate_clusters(self, new_clusters: List[ConceptCluster]):
@@ -2680,8 +2794,21 @@ class OntologicalScaffoldingEngine:
                 if source_node and target_node:
                     if (source_node.times_encountered > 5 and
                             target_node.times_encountered > 5):
+                        # Perf (2026-08-20): same cache-correction pattern
+                        # as the strengthen-existing branch in
+                        # OntologicalWeb.add_relation() -- this loop
+                        # doesn't call _recalculate_depth() immediately
+                        # (the unconditional full-node pass earlier in
+                        # consolidate() already covers this cycle; the
+                        # next cycle picks up this strengthening), but the
+                        # cache must still track it now or it silently
+                        # under-counts these boosts forever.
+                        _old_contribution = rel.depth_contribution()
                         rel.strength = _clamp(rel.strength + 0.05)
                         rel.confidence = _clamp(rel.confidence + 0.02)
+                        _delta = rel.depth_contribution() - _old_contribution
+                        source_node.adjust_relation_contribution(_delta)
+                        target_node.adjust_relation_contribution(_delta)
 
         self.web.total_consolidations += 1
 

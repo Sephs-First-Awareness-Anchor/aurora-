@@ -759,6 +759,19 @@ class OETSPersistence:
                 web.nodes[source].relations[rel_id] = relation
                 web.nodes[target].relations[rel_id] = relation
 
+            # Perf (2026-08-20): relations above are attached directly into
+            # node.relations, bypassing SemanticNode.add_relation() (which
+            # is what normally keeps node._rel_contribution_sum -- the
+            # cached sum _recalculate_depth() now relies on instead of
+            # rescanning every relation on every call -- up to date). Without
+            # this, every restored node's cache would silently sit at its
+            # 0.0 default despite holding real relations. One-time O(total
+            # relations) pass at load time only, not a hot path.
+            for node in web.nodes.values():
+                node._rel_contribution_sum = sum(
+                    r.depth_contribution() for r in node.relations.values()
+                )
+
             for cat, words in data.get("categories", {}).items():
                 web._semantic_categories[cat] = set(words)
 
