@@ -5279,6 +5279,28 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state, trigger: str =
                     if _seek_text:
                         _abstain = _seek_text
                         _seeking = True
+                        # Sunni, 2026-08-21: "she should be able to research
+                        # in real time while surface handles the space
+                        # between research and understanding material
+                        # accumulation" -- a freshly-opened gap used to only
+                        # get a research_priority boost and wait for the
+                        # next periodic daemon scan to notice it, possibly
+                        # minutes away. Dispatch real research (dictionary +
+                        # DuckDuckGo, the same callback wired at boot) right
+                        # now on a background worker instead -- non-blocking,
+                        # the conversation keeps going on the surface exactly
+                        # as it already does during the staged seek protocol.
+                        try:
+                            from aurora_research_dispatch import request_research as _request_research
+                            _request_research(systems, _topic)
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(), module=__name__,
+                                operation="exception_handler:aurora.py:_emit_honest_abstain_and_seek:urgent_research",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_emit_honest_abstain_and_seek", "source_file": "aurora.py"},
+                            )
+                            pass
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
