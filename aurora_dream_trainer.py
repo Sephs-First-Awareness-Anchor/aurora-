@@ -2853,7 +2853,17 @@ class DreamTrainer:
             op_synth = systems.get("operational_synthesis") if isinstance(systems, dict) else None
             if op_synth is None or not hasattr(op_synth, "observe_example"):
                 return
-            op_synth.observe_example(
+            # Build 725 Correction, item 5: route through the universal
+            # discovery seam instead of calling operational_synthesis
+            # directly. Behavior for this caller is unchanged (op_synth
+            # still receives the identical call it always did) -- the
+            # difference is general_execution_foundry now sees this same
+            # lived evidence too, whereas before this specific example
+            # (source/target role pair -> confirmed relation type) never
+            # reached it at all.
+            from aurora_internal.aurora_operational_synthesis import submit_lived_experience
+            submit_lived_experience(
+                systems,
                 "relation_type_from_role_pair",
                 {"source_role": left_role, "target_role": right_role},
                 confirmed_type,

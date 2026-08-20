@@ -360,6 +360,16 @@ class AuroraOrb extends StatefulWidget {
   final Animation<double> pulse;
   final Map<String, double> axisState;
   final VoidCallback? onTap;
+  // Repair Q (per Sunni, 2026-08-19): front-camera face-proximity/gaze
+  // state. faceFraction is the detected face's bounding-box area as a
+  // fraction of frame area (a real "how close" proxy); faceOffsetX/Y is
+  // the face center position, -1..1, left/top to right/bottom. All
+  // default to "nobody detected, centered" so existing call sites that
+  // don't pass these keep rendering exactly as before.
+  final bool faceDetected;
+  final double faceFraction;
+  final double faceOffsetX;
+  final double faceOffsetY;
 
   const AuroraOrb({
     super.key,
@@ -369,13 +379,17 @@ class AuroraOrb extends StatefulWidget {
     this.size = 120,
     this.height,
     this.onTap,
+    this.faceDetected = false,
+    this.faceFraction = 0.0,
+    this.faceOffsetX = 0.0,
+    this.faceOffsetY = 0.0,
   });
 
   @override
   State<AuroraOrb> createState() => _AuroraOrbState();
 }
 
-class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMixin {
+class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
   // Axis snapshots arrive discretely (bridge pushes ~1/s, and the underlying
   // state itself only drifts every ~12-20 s while idle) — easing between the
   // last two snapshots is what makes the face read as continuously alive
@@ -386,6 +400,33 @@ class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMix
 
   Map<String, double> get _liveAxis => _lerpAxes(_prevAxis, _targetAxis, Curves.easeInOut.transform(_axisAnim.value));
 
+  // Repair Q: same eased-snapshot pattern as _axisAnim above, its own
+  // controller since face-proximity updates arrive on the same ~1 s
+  // cadence as axis_state but are conceptually a different signal (a
+  // physically-grounded reflex, not a mood shift) and should be able to
+  // move independently. Shorter duration than the 900 ms axis ease --
+  // a reflexive lean/pull-back should read as quicker than an
+  // expression change, the way a person's flinch is faster than their
+  // mood visibly shifting.
+  late final AnimationController _faceReactAnim;
+  late double _prevFraction, _targetFraction;
+  late double _prevOffsetX, _targetOffsetX;
+  late double _prevOffsetY, _targetOffsetY;
+  late bool _targetDetected;
+
+  double get _liveFraction {
+    final t = Curves.easeOut.transform(_faceReactAnim.value);
+    return _prevFraction + (_targetFraction - _prevFraction) * t;
+  }
+  double get _liveOffsetX {
+    final t = Curves.easeOut.transform(_faceReactAnim.value);
+    return _prevOffsetX + (_targetOffsetX - _prevOffsetX) * t;
+  }
+  double get _liveOffsetY {
+    final t = Curves.easeOut.transform(_faceReactAnim.value);
+    return _prevOffsetY + (_targetOffsetY - _prevOffsetY) * t;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -394,6 +435,15 @@ class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMix
     _axisAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
+      value: 1.0,
+    );
+    _prevFraction = _targetFraction = widget.faceFraction;
+    _prevOffsetX  = _targetOffsetX  = widget.faceOffsetX;
+    _prevOffsetY  = _targetOffsetY  = widget.faceOffsetY;
+    _targetDetected = widget.faceDetected;
+    _faceReactAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
       value: 1.0,
     );
   }
@@ -409,11 +459,34 @@ class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMix
         ..value = 0.0
         ..forward();
     }
+    // Repair Q: same interrupt-and-restart pattern as the axis ease
+    // above -- a new detection arriving mid-reaction restarts smoothly
+    // from wherever the current lerp actually is, never pops.
+    if (widget.faceDetected != _targetDetected ||
+        widget.faceFraction != _targetFraction ||
+        widget.faceOffsetX  != _targetOffsetX  ||
+        widget.faceOffsetY  != _targetOffsetY) {
+      _prevFraction = _liveFraction;
+      _prevOffsetX  = _liveOffsetX;
+      _prevOffsetY  = _liveOffsetY;
+      // A lost detection eases back to centered/neutral rather than
+      // freezing on the last-seen position -- "someone was there, now
+      // they're not" is itself a real transition, not just silence.
+      _targetDetected = widget.faceDetected;
+      _targetFraction = widget.faceDetected ? widget.faceFraction : 0.0;
+      _targetOffsetX  = widget.faceDetected ? widget.faceOffsetX  : 0.0;
+      _targetOffsetY  = widget.faceDetected ? widget.faceOffsetY  : 0.0;
+      _faceReactAnim
+        ..stop()
+        ..value = 0.0
+        ..forward();
+    }
   }
 
   @override
   void dispose() {
     _axisAnim.dispose();
+    _faceReactAnim.dispose();
     super.dispose();
   }
 
@@ -427,23 +500,75 @@ class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMix
     OrbState.dormant   => 0.05 + 0.05 * widget.pulse.value,
   };
 
+  // Repair Q (per Sunni, 2026-08-19): "if I get close to the phone when
+  // talking she could pull her face to one side away from me... or she
+  // could pull her face close to the screen enlarging her face." Two
+  // distinct behaviors depending on how close, not one continuous scale:
+  // moderate closeness reads as interest (lean in, gently enlarge);
+  // crossing into someone's-face-filling-the-frame territory reads as
+  // personal space being crossed (pull back and to the side instead).
+  // Thresholds are descriptive buckets tuned by feel, not derived from
+  // anything physical -- there's no calibrated real-world distance
+  // available from a bounding-box fraction alone.
+  static const double _leanInFloor = 0.03;   // below this, no reaction -- normal conversational distance
+  static const double _discomfortFloor = 0.24; // above this, pull back instead of lean in
+
+  ({double scale, double dx, double dy}) get _faceReaction {
+    final frac = _liveFraction;
+    final ox = _liveOffsetX, oy = _liveOffsetY;
+    if (frac < _leanInFloor) {
+      return (scale: 1.0, dx: 0.0, dy: 0.0);
+    }
+    if (frac < _discomfortFloor) {
+      // Lean-in territory: gentle scale-up proportional to closeness,
+      // and a small gaze-toward drift on the offset (eyes/face angling
+      // slightly toward where the detected face actually is in frame,
+      // not just growing symmetrically in place).
+      final t = ((frac - _leanInFloor) / (_discomfortFloor - _leanInFloor)).clamp(0.0, 1.0);
+      return (
+        scale: 1.0 + t * 0.12,
+        dx: ox * t * 0.06,
+        dy: oy * t * 0.04,
+      );
+    }
+    // Discomfort territory: pull back (shrink slightly below neutral)
+    // and shift AWAY from the detected face's offset -- if the face is
+    // left-of-center in frame, she moves right, and vice versa.
+    final over = ((frac - _discomfortFloor) / (1.0 - _discomfortFloor)).clamp(0.0, 1.0);
+    return (
+      scale: 1.0 - over * 0.08,
+      dx: -ox * over * 0.10,
+      dy: -oy * over * 0.06,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final reaction = _faceReaction;
     return GestureDetector(
       onTap: widget.onTap,
       child: SizedBox(
         width: double.infinity,
         height: widget.height ?? widget.size * 1.9,
         child: AnimatedBuilder(
-          animation: Listenable.merge([widget.pulse, _axisAnim]),
-          builder: (_, __) => CustomPaint(
-            painter: _FacePainter(
-              axisState:  _liveAxis,
-              glowEnergy: _glowEnergy,
-              speaking:   widget.state == OrbState.speaking,
-              pulse:      widget.pulse.value,
+          animation: Listenable.merge([widget.pulse, _axisAnim, _faceReactAnim]),
+          builder: (_, __) => Transform.translate(
+            offset: Offset(
+              reaction.dx * (widget.height ?? widget.size * 1.9),
+              reaction.dy * (widget.height ?? widget.size * 1.9),
             ),
-            child: const SizedBox.expand(),
+            child: Transform.scale(
+              scale: reaction.scale,
+              child: CustomPaint(
+                painter: _FacePainter(
+                  axisState:  _liveAxis,
+                  glowEnergy: _glowEnergy,
+                  speaking:   widget.state == OrbState.speaking,
+                  pulse:      widget.pulse.value,
+                ),
+                child: const SizedBox.expand(),
+              ),
+            ),
           ),
         ),
       ),

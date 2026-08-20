@@ -2328,13 +2328,6 @@ class OntologicalScaffoldingEngine:
 
             self.web.add_node(word, role, valence, meaning, lineage)
 
-        # Build 725: LexicalMemory already carries earned/seeded exact NonComp
-        # coordinates. Preserve those coordinates in OETS rather than replacing
-        # them with the coarse role-derived fallback used for otherwise-unbound
-        # nodes. The same reconciliation is called again after OETS persistence
-        # load, because load_web() reconstructs the web after this seed pass.
-        self.reconcile_noncomp_ids_from_lexicon(lexical_entries)
-
         # Initial relation inference: connect words that share categories
         categories = self.web._semantic_categories
         for category, words in categories.items():
@@ -2354,26 +2347,6 @@ class OntologicalScaffoldingEngine:
         self.cluster_engine.discover_clusters()
 
         self._initialized = True
-
-    def reconcile_noncomp_ids_from_lexicon(self, lexical_entries: Dict[str, Any]) -> int:
-        """Restore exact lexical NonComp identity after OETS rehydration.
-
-        This does not infer or assign new meaning. It only conserves coordinates
-        LexicalMemory already owns for nodes that already exist in the OETS web.
-        """
-        changed = 0
-        for word, entry in (lexical_entries or {}).items():
-            lexical_noncomp_id = getattr(entry, "noncomp_id", None)
-            if not lexical_noncomp_id:
-                continue
-            node = self.web.nodes.get(word)
-            if node is None:
-                continue
-            exact_id = str(lexical_noncomp_id)
-            if str(getattr(node, "noncomp_id", "") or "") != exact_id:
-                node.noncomp_id = exact_id
-                changed += 1
-        return changed
 
     def _seed_foundational_relations(self):
         """Seed core ontological relations that Aurora should know from the start."""

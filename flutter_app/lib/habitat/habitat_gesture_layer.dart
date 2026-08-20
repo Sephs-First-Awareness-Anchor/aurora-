@@ -36,6 +36,11 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
   bool _loading = true;
   String? _lastMessage;
   Timer? _stateRefreshTimer;
+  // Repair S (per Sunni, 2026-08-19): "the shared space should inspire
+  // interaction not just allow for it." Real presence signal -- was
+  // Aurora (actor='aurora') genuinely active here recently -- not a
+  // decorative "she's here!" indicator invented at this layer.
+  bool _auroraRecentlyActive = false;
 
   @override
   void initState() {
@@ -54,9 +59,31 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
   Future<void> _refresh() async {
     final state = await HabitatBridge.getState(territory: widget.territory, actor: 'human');
     if (!mounted) return;
+    // Repair S: real recent-history check, not inferred from state alone
+    // -- an entity Aurora created a week ago shouldn't read as "she's
+    // active right now." Bounded to the last 5 history entries so this
+    // stays cheap on the same 2s refresh cadence as everything else here.
+    bool auroraActive = false;
+    try {
+      final history = await HabitatBridge.getHistory(territory: widget.territory, limit: 5);
+      final nowSec = DateTime.now().millisecondsSinceEpoch / 1000.0;
+      for (final h in history) {
+        final actor = h['actor'] as String?;
+        final ts = (h['timestamp'] as num?)?.toDouble();
+        if (actor == 'aurora' && ts != null && (nowSec - ts) < 120.0) {
+          auroraActive = true;
+          break;
+        }
+      }
+    } catch (_) {
+      // Best-effort presence signal -- a failed history fetch should
+      // never block the core state refresh above it.
+    }
+    if (!mounted) return;
     setState(() {
       _state = state;
       _loading = false;
+      _auroraRecentlyActive = auroraActive;
       if (_selectedId != null && !_state.entities.any((e) => e.id == _selectedId)) {
         _selectedId = null;
       }
@@ -86,14 +113,14 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
     await _refresh();
   }
 
-  Future<void> _create() async {
+  Future<void> _create({String entityType = 'shape', Map<String, dynamic>? visualProperties, List<double>? position}) async {
     await _act(
       operation: 'create',
       parameters: {
-        'entity_type': 'shape',
-        'position': [0.5, 0.5],
+        'entity_type': entityType,
+        'position': position ?? [0.5, 0.5],
         'dimensions': [0.14, 0.14],
-        'visual_properties': {'color': 'blue', 'shape_kind': 'rect'},
+        'visual_properties': visualProperties ?? {'color': 'blue', 'shape_kind': 'rect'},
       },
     );
   }
@@ -177,10 +204,76 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
     );
   }
 
+  // Repair S: real, grounded quick-start options -- entity_type values
+  // ('shape', 'text', 'mark_path') are the actual backend vocabulary
+  // from aurora_habitat.py's ENTITY_TYPES, not invented labels. Each
+  // one calls the exact same _act(operation: 'create', ...) path the
+  // toolbar's own + button already uses -- no parallel creation logic.
+  Widget _buildEmptyStateInvite() {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 320),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.auto_awesome_outlined, color: Colors.white.withOpacity(0.25), size: 36),
+          const SizedBox(height: 10),
+          Text(
+            widget.territory == 'space'
+                ? 'Nothing here yet — this space is shared with Aurora.\nStart something, or wait and see what she brings to it.'
+                : 'Aurora hasn\'t placed anything here yet.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 13, height: 1.4),
+          ),
+          if (widget.humanCanCreate) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8, runSpacing: 8,
+              children: [
+                _inviteChip('a shape', Icons.crop_square, () => _create(
+                    entityType: 'shape', visualProperties: {'color': 'blue', 'shape_kind': 'rect'})),
+                _inviteChip('a mark', Icons.gesture, () => _create(
+                    entityType: 'mark_path', visualProperties: {'color': 'purple'})),
+                _inviteChip('a note', Icons.text_fields, () => _create(
+                    entityType: 'text', visualProperties: {'color': 'amber'})),
+              ],
+            ),
+          ],
+        ]),
+      ),
+    );
+  }
+
+  Widget _inviteChip(String label, IconData icon, VoidCallback onTap) {
+    return ActionChip(
+      avatar: Icon(icon, size: 15, color: Colors.white70),
+      label: Text(label, style: const TextStyle(fontSize: 12, color: Colors.white)),
+      backgroundColor: Colors.white.withOpacity(0.08),
+      side: BorderSide(color: Colors.white.withOpacity(0.15)),
+      onPressed: onTap,
+    );
+  }
+
+  // Repair S: real presence, not decoration -- only shown when
+  // _auroraRecentlyActive is genuinely true, sourced from real history
+  // within the last two minutes (see _refresh() above).
+  Widget _buildPresenceBanner() {
+    return Container(
+      width: double.infinity,
+      color: Colors.purpleAccent.withOpacity(0.12),
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: const Text(
+        'Aurora was just active here',
+        textAlign: TextAlign.center,
+        style: TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.w500),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     return Column(children: [
+      if (_auroraRecentlyActive) _buildPresenceBanner(),
       if (_connectFromId != null)
         Container(
           width: double.infinity,
@@ -196,16 +289,19 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
           child: Text(_lastMessage!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
         ),
       Expanded(
-        child: HabitatCanvas(
-          entities: _state.entities,
-          selectedEntityId: _selectedId,
-          onEntityTapped: _onTapEntity,
-          onEntityDragged: _onDrag,
-          onBackgroundTapped: () => setState(() {
-            _selectedId = null;
-            _connectFromId = null;
-          }),
-        ),
+        child: Stack(children: [
+          HabitatCanvas(
+            entities: _state.entities,
+            selectedEntityId: _selectedId,
+            onEntityTapped: _onTapEntity,
+            onEntityDragged: _onDrag,
+            onBackgroundTapped: () => setState(() {
+              _selectedId = null;
+              _connectFromId = null;
+            }),
+          ),
+          if (_state.entities.isEmpty) _buildEmptyStateInvite(),
+        ]),
       ),
       Container(
         color: Colors.black.withOpacity(0.35),

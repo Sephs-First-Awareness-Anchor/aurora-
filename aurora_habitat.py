@@ -247,25 +247,6 @@ def _default_permissions(territory: str, owner: str) -> Dict[str, bool]:
     }
 
 
-def _entity_renderability(entity: HabitatEntity) -> Tuple[bool, str]:
-    """Physical surface contract only; no interpretation of entity meaning."""
-    if entity.deleted:
-        return False, "deleted"
-    if entity.entity_type == "shape":
-        return True, ""
-    if entity.entity_type == "text":
-        return (bool(str((entity.content or {}).get("text", "")).strip()), "missing_text")
-    if entity.entity_type == "mark_path":
-        points = (entity.content or {}).get("points") or []
-        valid = sum(1 for p in points if isinstance(p, (list, tuple)) and len(p) >= 2)
-        return (valid >= 2, "missing_path_points")
-    if entity.entity_type == "connector":
-        return (len(entity.links or []) >= 1, "missing_relation")
-    if entity.entity_type == "group":
-        return True, ""
-    return False, "unknown_entity_type"
-
-
 # ── Action / Consequence protocol (spec sections 9, 10) ────────────────────
 
 @dataclass
@@ -572,7 +553,7 @@ class HabitatRuntime:
         return e.to_dict()
 
     def get_state(self, *, territory: Optional[str] = None, actor: Optional[str] = None,
-                  include_deleted: bool = False, include_incomplete: bool = False) -> Dict[str, Any]:
+                  include_deleted: bool = False) -> Dict[str, Any]:
         """Structural perception (spec section 8) -- objective facts
         only, no rendering, no interpretation."""
         with self._lock:
@@ -583,8 +564,6 @@ class HabitatRuntime:
                 if territory and e.territory != territory:
                     continue
                 if actor and not e.is_visible_to(actor):
-                    continue
-                if not include_incomplete and not _entity_renderability(e)[0]:
                     continue
                 entities.append(e.to_dict())
             return {
@@ -806,19 +785,6 @@ class HabitatRuntime:
         owner = str(p.get("owner") or ("shared" if action.territory == "space" else action.actor))
         if owner not in OWNERS:
             owner = action.actor
-        # Creation is successful only when its requested physical type is
-        # completely instantiable.  This validates structure, never meaning.
-        preview = HabitatEntity(
-            id="preview", entity_type=entity_type, creator=action.actor, owner=owner,
-            territory=action.territory,
-            position=[_clamp01(x) for x in (p.get("position") or [0.5, 0.5])][:2] or [0.5, 0.5],
-            dimensions=[_clamp01(x) for x in (p.get("dimensions") or [0.1, 0.1])][:2] or [0.1, 0.1],
-            visual_properties=dict(p.get("visual_properties") or {}), content=dict(p.get("content") or {}),
-            links=list(p.get("links") or []),
-        )
-        renderable, reason = _entity_renderability(preview)
-        if not renderable:
-            return self._deny(action, f"incomplete_entity:{reason}")
         entity = HabitatEntity(
             id=_new_id("e"), entity_type=entity_type, creator=action.actor, owner=owner,
             territory=action.territory,
@@ -1392,23 +1358,11 @@ class HabitatRuntime:
                     events_on_disk = sum(1 for _ in f)
         except Exception:
             pass
-        renderability = [(e, _entity_renderability(e)) for e in live]
-        renderable = [e for e, (ok, _reason) in renderability if ok]
-        incomplete = [
-            {"id": e.id, "entity_type": e.entity_type, "creator": e.creator, "territory": e.territory, "reason": reason}
-            for e, (ok, reason) in renderability if not ok
-        ]
         return {
             "entity_count": len(live),
-            "surface_renderable_count": len(renderable),
-            "incomplete_live_count": len(incomplete),
-            "incomplete_live_entities": incomplete[:50],
             "deleted_count": len(entities) - len(live),
             "aurora_created": sum(1 for e in live if e.creator == "aurora"),
             "human_created": sum(1 for e in live if e.creator == "human"),
-            "surface_aurora_created": sum(1 for e in renderable if e.creator == "aurora"),
-            "surface_human_created": sum(1 for e in renderable if e.creator == "human"),
-            "incomplete_aurora_created": sum(1 for e, (ok, _reason) in renderability if not ok and e.creator == "aurora"),
             "territory_transitions": transfers,
             "event_count_on_disk": events_on_disk,
             "recent_event_count": len(self._recent_events),

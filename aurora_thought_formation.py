@@ -1532,19 +1532,34 @@ class ThoughtBraid(WarpCapable):
     # ---- Private stream updaters -----------------------------------------------
 
     def _update_memory(self, systems: Dict[str, Any]) -> None:
-        """Pull ambient memory presence from SediMemory. Not retrieval — presence."""
+        """Pull ambient memory presence from SediMemory. Not retrieval — presence.
+
+        Bug fix (found live, 2026-08-19): this called sm.ambient_surface()
+        and sm.recent_strata() -- neither method exists anywhere on the
+        real SediMemory class (confirmed by reading it directly), so the
+        hasattr guards always failed and this signal shipped as an empty
+        {tick, source} stub on every one of the braid's ticks since boot.
+        get_recent_fragments(n) is SediMemory's real, existing method for
+        exactly this "ambient presence" purpose -- already used elsewhere
+        in the codebase (fidelity feedback). Each SedimentFragment carries
+        real structured content, not a string to guess at.
+        """
         signal: Dict[str, Any] = {"tick": self._braid_tick, "source": "memory"}
         try:
             consciousness = systems.get("consciousness")
             sm = getattr(consciousness, "sedimemory", None) if consciousness else None
             if sm is None:
                 sm = systems.get("sedimemory")
-            if sm:
-                if hasattr(sm, "ambient_surface"):
-                    signal["surface"] = sm.ambient_surface()
-                elif hasattr(sm, "recent_strata"):
-                    strata = sm.recent_strata(n=3)
-                    signal["strata_topics"] = [str(s) for s in strata][:3]
+            if sm is not None and hasattr(sm, "get_recent_fragments"):
+                frags = sm.get_recent_fragments(n=3) or []
+                signal["strata_topics"] = [
+                    {
+                        "axis": str(getattr(f, "axis", "") or ""),
+                        "resonance": round(float(getattr(f, "resonance", 0.0) or 0.0), 4),
+                        "content_keys": list(dict(getattr(f, "content", {}) or {}).keys())[:5],
+                    }
+                    for f in frags
+                ]
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -1557,15 +1572,25 @@ class ThoughtBraid(WarpCapable):
         self._memory_stream.append(signal)
 
     def _update_sensory(self, systems: Dict[str, Any]) -> None:
-        """Pull environmental/session context signal."""
+        """Pull environmental/session context signal.
+
+        Bug fix (found live, 2026-08-19): systems["session"] and
+        systems["conversation_context"] are never set anywhere in the
+        codebase -- confirmed by grep across the full source tree. Every
+        tick silently produced nothing but open_loop_pressure. The real,
+        already-established source for turn count and active topic
+        throughout this codebase (used 10+ times elsewhere) is
+        working_memory.turn_count / working_memory.current_topic.
+        """
         signal: Dict[str, Any] = {"tick": self._braid_tick, "source": "sensory"}
         try:
-            session = systems.get("session") or systems.get("conversation_context")
-            if session:
-                if hasattr(session, "turn_count"):
-                    signal["turn_count"] = int(session.turn_count)
-                if hasattr(session, "topic_weight"):
-                    signal["topic_weight"] = float(session.topic_weight)
+            working_memory = systems.get("working_memory")
+            if working_memory is not None:
+                if hasattr(working_memory, "turn_count"):
+                    signal["turn_count"] = int(getattr(working_memory, "turn_count", 0) or 0)
+                _topic = str(getattr(working_memory, "current_topic", "") or "").strip()
+                if _topic:
+                    signal["current_topic"] = _topic
             open_loops = systems.get("_open_loops") or []
             signal["open_loop_pressure"] = min(1.0, len(open_loops) * 0.1)
         except Exception as _aurora_boundary_exc:
@@ -1584,6 +1609,18 @@ class ThoughtBraid(WarpCapable):
         Lean forward — model what is coming, what meaning is being built toward.
         The predictive stream is shaped by prior expression feedback,
         open curiosity objects, and dominant constraint field direction.
+
+        Bug fix (found live, 2026-08-19): systems["_open_curiosity_loops"]
+        and systems["field_map"]/["constraint_field_map"] are never set
+        anywhere in the codebase -- confirmed by grep. The real, live
+        equivalents: systems["_open_loops"] (populated by
+        _seed_abstained_gap on every honest-abstain) for curiosity_lean,
+        and systems["_prev_axis_activation"] (the real, persisted,
+        cross-turn axis field -- set at the end of every comprehension
+        pass) for dominant field direction, computed directly rather than
+        importing aurora.py's module-level _field_balancer (would risk a
+        circular import: aurora.py -> aurora_braid_wiring.py ->
+        aurora_thought_formation.py -> aurora.py).
         """
         signal: Dict[str, Any] = {"tick": self._braid_tick, "source": "predictive"}
         try:
@@ -1591,12 +1628,14 @@ class ThoughtBraid(WarpCapable):
                 signal["prior_expression"] = self._last_expression_feedback[:60]
             if self._last_expression_axes:
                 signal["prior_axes"] = list(self._last_expression_axes)
-            open_curiosity = systems.get("_open_curiosity_loops") or []
-            if open_curiosity:
-                signal["curiosity_lean"] = str(open_curiosity[0])[:60]
-            field_map = systems.get("field_map") or systems.get("constraint_field_map")
-            if field_map and hasattr(field_map, "dominant_field"):
-                signal["dominant_field"] = str(field_map.dominant_field or "")
+            open_loops = systems.get("_open_loops") or []
+            if open_loops:
+                _tension = str(dict(open_loops[-1] or {}).get("tension", "") or "").strip()
+                if _tension:
+                    signal["curiosity_lean"] = _tension[:60]
+            _prev_axes = dict(systems.get("_prev_axis_activation") or {})
+            if _prev_axes:
+                signal["dominant_field"] = max(_prev_axes, key=lambda k: float(_prev_axes.get(k, 0.0) or 0.0))
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -1746,6 +1785,24 @@ class StreamingThoughtThread:
                 # propagates through the manifold so curiosity, reasoning,
                 # and prediction can self-select response to the braid's
                 # current dominant axis without being explicitly notified.
+                #
+                # Bug fix (found live, 2026-08-19, per Sunni): this read
+                # _slice.axis_state and _slice.streams -- neither field
+                # exists on the real ThoughtStreamSlice (confirmed by
+                # reading its dataclass directly: memory_signal,
+                # sensory_signal, predictive_frame, emotion_valence,
+                # braid_tick, is_tap, warp_signals -- no axis_state, no
+                # streams). _braid_axes was therefore always {}, and this
+                # injection -- the braid's OWN accumulated understanding
+                # rippling back into the shared pressure field every tick,
+                # exactly the "apply understanding back into the same
+                # field" half of the wave model -- had never fired once.
+                # emotion_valence.valence IS already a real, per-tick
+                # X/T/N/B/A dict (the felt reading of the current thought,
+                # not a re-derivation); folding in memory_signal's
+                # resonance-weighted axis distribution (now real, since
+                # this session's earlier fix) adds what's actually
+                # activated in ambient memory, not just affect alone.
                 try:
                     _pump = self.systems.get('pressure_pump')
                     _ifield = self.systems.get('identity_field')
@@ -1754,13 +1811,14 @@ class StreamingThoughtThread:
                             WaveformPressurePump,
                         )
                         _slice = self.braid.tap()
-                        _braid_axes = getattr(_slice, 'axis_state', None) or {}
-                        if not _braid_axes:
-                            _braid_axes = {
-                                s.stream_type: s.weight
-                                for s in (getattr(_slice, 'streams', None) or [])
-                                if hasattr(s, 'stream_type') and hasattr(s, 'weight')
-                            }
+                        _braid_axes: Dict[str, float] = dict(
+                            getattr(_slice.emotion_valence, 'valence', None) or {}
+                        )
+                        for _frag in list((_slice.memory_signal or {}).get('strata_topics', []) or []):
+                            _fax = str(_frag.get('axis', '') or '').strip().upper()
+                            _fres = float(_frag.get('resonance', 0.0) or 0.0)
+                            if _fax in ('X', 'T', 'N', 'B', 'A') and _fres > 0.0:
+                                _braid_axes[_fax] = max(_braid_axes.get(_fax, 0.0), _fres * 0.5)
                         if _braid_axes:
                             _bdist = WaveformPressurePump.from_axis_state(
                                 _braid_axes,

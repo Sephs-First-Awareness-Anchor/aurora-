@@ -359,11 +359,11 @@ def _slot_semantic(
 
 def _lineage_signature(nc_target: str, nc_law_c: str, nc_dim: str) -> str:
     dim_axis = {
-        "POLARITY": "A",
-        "MAGNITUDE": "B",
-        "OPERATOR": "X",
+        "POLARITY": "T",
+        "MAGNITUDE": "X",
+        "OPERATOR": "A",
         "COST": "N",
-        "DIFFERENCE": "T",
+        "DIFFERENCE": "B",
     }.get(nc_dim, "")
     raw = "".join(token for token in (nc_target, nc_law_c, dim_axis) if token in AXES)
     return raw or nc_target

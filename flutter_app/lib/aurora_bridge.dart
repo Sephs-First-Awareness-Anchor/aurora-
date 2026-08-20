@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/services.dart';
 
 /// Dart wrapper around the Kotlin MethodChannel / EventChannel that talks to
@@ -51,17 +53,51 @@ class AuroraBridge {
       'A': _parseDouble(json, 'A'),
       // Developmental health — present on type=="ready"/"error" boot events.
       'healthOverall': healthOverallMatch?.group(1),
+      // Repair Q (per Sunni, 2026-08-19): front-camera face-proximity/gaze
+      // — present on type=="face_state" events.
+      'detected':     json.contains('"detected":true'),
+      'face_fraction': _parseDouble(json, 'face_fraction'),
+      'offset_x':     _parseDouble(json, 'offset_x'),
+      'offset_y':     _parseDouble(json, 'offset_y'),
     };
   }
 
   static double? _parseDouble(String json, String key) {
-    final m = RegExp('"$key"\\s*:\\s*([0-9]+\\.?[0-9]*)').firstMatch(json);
+    // Repair Q: added the optional leading "-?" -- the original pattern
+    // only matched non-negative numbers, which was correct for X/T/N/B/A
+    // (0..1 by design) but silently failed on offset_x/offset_y, which
+    // are genuinely signed (-1..1). Backward-compatible: making the sign
+    // optional doesn't change matching for values that never have one.
+    final m = RegExp('"$key"\\s*:\\s*(-?[0-9]+\\.?[0-9]*)').firstMatch(json);
     return m != null ? double.tryParse(m.group(1)!) : null;
   }
 
   static Future<String> sendMessage(String text) async {
     final result = await _channel.invokeMethod<String>('sendMessage', {'text': text});
     return result ?? '';
+  }
+
+  // Repair R (per Sunni, 2026-08-19): the reply is a real JSON summary
+  // from provide_uploaded_content() -- what she actually detected/did
+  // with the content (kind, extracted features or her real response to
+  // uploaded text), not a bare "ok". Returns the raw JSON string;
+  // callers decode with jsonDecode directly rather than through
+  // _parseEvent's regex extraction (that path is specifically for the
+  // EventChannel's streamed events, this is a normal method-call result).
+  static Future<Map<String, dynamic>> uploadContent(
+    Uint8List bytes, String filename, String contentType,
+  ) async {
+    final result = await _channel.invokeMethod<String>('uploadContent', {
+      'bytes': bytes,
+      'filename': filename,
+      'contentType': contentType,
+    });
+    if (result == null) return {'ok': false, 'error': 'no_response'};
+    try {
+      final decoded = jsonDecode(result);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    return {'ok': false, 'error': 'malformed_response'};
   }
 
   static Future<String> getState() async =>

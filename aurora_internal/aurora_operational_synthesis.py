@@ -868,6 +868,76 @@ def _restore_component(record: Mapping[str, Any]) -> WarpComponent:
     )
 
 
+# ---------------------------------------------------------------------------
+# UNIVERSAL DISCOVERY SEAM (Build 725 Correction, item 5)
+# ---------------------------------------------------------------------------
+# AuroraOperationalSynthesisChamber and AuroraGeneralExecutionFoundry both
+# already implement observe_example(task_id, input_value, expected_output,
+# *, validation, source, need_description) with an identical signature --
+# the "narrow means" the correction record asks for already exists twice
+# over, independently. What's missing is one seam any subsystem producing
+# an observable operation can call without needing to know which chamber
+# is "correct" for its domain, or whether either is even present.
+#
+# Before this: only ONE bespoke caller existed anywhere in the codebase
+# (aurora_dream_trainer.py's _submit_relation_type_evidence, hand-wired to
+# operational_synthesis specifically), and AuroraGeneralExecutionFoundry's
+# own observe_example had zero callers at all -- confirmed by direct grep
+# across the full source tree before writing this.
+#
+# This function makes no decisions about what the experience means and
+# does not require understanding the calling subsystem -- it forwards
+# identically to every present chamber sharing the signature, and lets
+# each chamber's own validation/promotion machinery decide independently
+# what survives. That is the boundary: "This must not require a central
+# governor that understands every subsystem."
+def submit_lived_experience(
+    systems: Mapping[str, Any],
+    task_id: str,
+    input_value: Any,
+    expected_output: Any,
+    *,
+    validation: bool = False,
+    source: str = "experience",
+    need_description: str = "",
+) -> Dict[str, Any]:
+    """
+    Universal discovery-seam entry point. Any subsystem that has just
+    observed a real (input, expected_output) pair from lived operation
+    calls this once. Forwards to every discovery chamber present in
+    `systems` that implements observe_example() with this signature --
+    currently 'operational_synthesis' and 'general_execution_foundry'.
+    Does not reshape, validate, or interpret the call for either target;
+    each chamber owns that entirely.
+
+    Returns {chamber_key: result_dict_or_None} for every chamber checked,
+    so a caller can inspect what each chamber independently did with the
+    same evidence, but is never required to.
+    """
+    results: Dict[str, Any] = {
+        "operational_synthesis": None,
+        "general_execution_foundry": None,
+    }
+    if not isinstance(systems, Mapping):
+        return results
+    for key in ("operational_synthesis", "general_execution_foundry"):
+        target = systems.get(key)
+        if target is None or not hasattr(target, "observe_example"):
+            continue
+        try:
+            results[key] = target.observe_example(
+                task_id,
+                input_value,
+                expected_output,
+                validation=validation,
+                source=source,
+                need_description=need_description,
+            )
+        except Exception:
+            results[key] = None
+    return results
+
+
 class AuroraOperationalSynthesisChamber(WarpCapable):
     """Quarantined synthesis and promotion of previously missing operations."""
 
@@ -1255,9 +1325,41 @@ class AuroraOperationalSynthesisChamber(WarpCapable):
             task = self._tasks.get(self._component_task.get(component_id, ""))
             if task is None or task.candidate is None:
                 continue
-            task.status = "promoted"
-            task.candidate.status = "promoted"
-            task.candidate.genealogy_ability_id = self._register_genealogy(task, self._warp_promoted.get(component_id))
+            # Build 725 Correction, item 7: possibility/representation/
+            # awareness/operation must stay distinct transitions -- "Recognizing
+            # an ability does not automatically grant it operational
+            # authority." Genealogy admission (the "recognizes it as an
+            # ability" step) must be attempted and its outcome checked BEFORE
+            # this candidate is marked "promoted" -- execute() below treats
+            # status=="promoted" as full unconditional operational authority
+            # (it bypasses the allow_trial gate entirely for that status).
+            # The previous ordering set status="promoted" first and only
+            # then attempted genealogy registration, so a candidate whose
+            # genealogy registration failed (genealogy absent, missing the
+            # registration method, or an internal exception -- all three
+            # return "" from _register_genealogy, confirmed by reading it)
+            # was STILL granted full operational authority. WARP trial
+            # validation (representation passed scoring) was silently
+            # standing in for genealogy recognition (ability admitted) --
+            # exactly the collapse this item forbids.
+            ability_id = self._register_genealogy(task, self._warp_promoted.get(component_id))
+            task.candidate.genealogy_ability_id = ability_id
+            if ability_id:
+                task.status = "promoted"
+                task.candidate.status = "promoted"
+            else:
+                # Representation validated by WARP, but genealogy never
+                # actually recognized it as an ability -- stays a
+                # consultable trial (still reachable via execute(...,
+                # allow_trial=True), same as before promotion was ever
+                # attempted), not a fully operationally-authorized
+                # candidate. Not dissolved either: WARP already judged the
+                # representation itself sound: the outstanding gap is
+                # specifically genealogy admission, which can succeed
+                # later (e.g. once genealogy is wired in) without needing
+                # to re-earn WARP promotion from scratch.
+                task.status = "genealogy_pending"
+                task.candidate.status = "trial"
         for component_id in dissolved:
             task = self._tasks.get(self._component_task.get(component_id, ""))
             if task is not None:

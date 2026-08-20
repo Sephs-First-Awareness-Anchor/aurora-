@@ -245,11 +245,11 @@ _DIMENSION_NOTE: Dict[str, str] = {
 }
 
 _DIMENSION_TO_AXIS: Dict[str, str] = {
-    "POLARITY": "A",
-    "MAGNITUDE": "B",
-    "OPERATOR": "X",
+    "POLARITY": "T",
+    "MAGNITUDE": "X",
+    "OPERATOR": "A",
     "COST": "N",
-    "DIFFERENCE": "T",
+    "DIFFERENCE": "B",
 }
 
 

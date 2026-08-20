@@ -377,6 +377,8 @@ class _HubScreenState extends State<HubScreen> {
                   _buildAxisPanel(),
                   _buildCognitivePanel(),
                   _buildEvolutionPanel(),
+                  _buildGenealogyPanel(),
+                  _buildQuasiarchPanel(),
                   _buildGauntletPanel(),
                   _buildHabitatPanel(),
                   _buildRoomPanel(),
@@ -515,6 +517,140 @@ class _HubScreenState extends State<HubScreen> {
             ),
           ),
         ]),
+      ])),
+    ]);
+  }
+
+  // Repair R (per Sunni, 2026-08-19): genealogy mapping + WarpField
+  // routing history, for the deeper auditing surface she asked for --
+  // real ability admission data (axis distribution, most-recently-
+  // admitted abilities with their actual tags), not a synthetic summary.
+  Widget _buildGenealogyPanel() {
+    final total = _stats['genealogy_ability_count'] as int? ?? 0;
+    final axisCounts = Map<String, dynamic>.from(
+        _stats['genealogy_axis_counts'] as Map? ?? {});
+    final recentAbilities = List<dynamic>.from(
+        _stats['genealogy_recent_abilities'] as List? ?? []);
+    final warpActuators = _stats['warp_actuator_count'] as int? ?? 0;
+    final warpDemands = List<dynamic>.from(
+        _stats['warp_recent_demands'] as List? ?? []);
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionTitle('GENEALOGY', color: _amber),
+      _card(child: Column(children: [
+        Row(children: [
+          Expanded(child: _miniStat('Total Abilities', '$total', _amber)),
+          const SizedBox(width: 10),
+          Expanded(child: _miniStat('Actuators', '$warpActuators', _cyan)),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          for (final ax in ['X', 'T', 'N', 'B', 'A'])
+            Expanded(child: _miniStat(ax, '${axisCounts[ax] ?? 0}', _purple)),
+        ]),
+        if (recentAbilities.isNotEmpty) ...[
+          const Divider(color: _border, height: 20),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text('RECENTLY ADMITTED',
+                style: TextStyle(color: _textDim, fontSize: 10, letterSpacing: 1.2)),
+          ),
+          const SizedBox(height: 6),
+          for (final a in recentAbilities.take(5))
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(children: [
+                Container(
+                  width: 20, height: 20,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _purple.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text((a['axis'] as String? ?? '?'),
+                      style: const TextStyle(color: _purple, fontSize: 10, fontWeight: FontWeight.w700)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(
+                  (a['id'] as String? ?? ''),
+                  style: const TextStyle(color: _text, fontSize: 11),
+                  overflow: TextOverflow.ellipsis,
+                )),
+              ]),
+            ),
+        ],
+        if (warpDemands.isNotEmpty) ...[
+          const Divider(color: _border, height: 20),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text('RECENT WARP DEMANDS',
+                style: TextStyle(color: _textDim, fontSize: 10, letterSpacing: 1.2)),
+          ),
+          const SizedBox(height: 6),
+          for (final d in warpDemands.take(5))
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(children: [
+                Expanded(child: Text(
+                  '${d['source'] ?? ''} → ${d['trigger'] ?? ''} (${d['pathway'] ?? ''})',
+                  style: const TextStyle(color: _text, fontSize: 11),
+                  overflow: TextOverflow.ellipsis,
+                )),
+                Text('${((d['severity'] as num?) ?? 0.0).toStringAsFixed(2)}',
+                    style: const TextStyle(color: _textDim, fontSize: 10)),
+              ]),
+            ),
+        ],
+      ])),
+    ]);
+  }
+
+  // Repair R: quasiarch self-repair diagnostics -- what she noticed was
+  // going wrong with her own dialogue/articulation, what she tried, and
+  // whether it actually resolved. Real intervention records, not a
+  // health-check summary invented at this layer.
+  Widget _buildQuasiarchPanel() {
+    final eventCount = _stats['quasiarch_event_count'] as int? ?? 0;
+    final interventions = List<dynamic>.from(
+        _stats['quasiarch_recent_interventions'] as List? ?? []);
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionTitle('QUASIARCH DIAGNOSTICS', color: _cyan),
+      _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: _miniStat('Total Events', '$eventCount', _cyan)),
+        ]),
+        if (interventions.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text('No self-repair interventions yet this session.',
+                style: TextStyle(color: _textDim, fontSize: 11)),
+          )
+        else ...[
+          const Divider(color: _border, height: 20),
+          for (final ev in interventions.take(5))
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                if ((ev['target'] as String? ?? '').isNotEmpty)
+                  Text(ev['target'] as String,
+                      style: const TextStyle(color: _textDim, fontSize: 10)),
+                if ((ev['issue'] as String? ?? '').isNotEmpty)
+                  Text('issue: ${ev['issue']}',
+                      style: const TextStyle(color: _amber, fontSize: 11)),
+                if ((ev['intervention'] as String? ?? '').isNotEmpty)
+                  Text('tried: ${ev['intervention']}',
+                      style: const TextStyle(color: _text, fontSize: 11)),
+                if ((ev['observed_effect'] as String? ?? '').isNotEmpty)
+                  Text('effect: ${ev['observed_effect']}',
+                      style: TextStyle(
+                        color: (ev['observed_effect'] as String) == 'resolved_partially'
+                            ? _amber : _green,
+                        fontSize: 11,
+                      )),
+              ]),
+            ),
+        ],
       ])),
     ]);
   }

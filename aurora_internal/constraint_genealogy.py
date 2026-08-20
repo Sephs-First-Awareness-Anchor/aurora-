@@ -36,6 +36,7 @@ import hashlib
 import json
 import math
 import os
+import threading
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field, replace
@@ -147,18 +148,20 @@ def _zero_vec() -> Dict[str, float]:
 _SEMANTIC_DIM_HINT_EXPIRY_SECS = 45.0   # hints expire after this many seconds
 
 # NC dimension provenance per dominant axis — which NC dimension a promoted link
-# most directly exercises. Derived from AURORA_UNIFIED_FIELD_SPEC.md information lineage.
-#   X → OPERATOR  : admissibility gate is the existence operator
-#   T → DIFFERENCE: temporal sequence creates delta from expected tick
-#   N → COST      : energy conservation is the cost reference dimension
-#   B → MAGNITUDE : boundary is the primary magnitude carrier (Magnitude = B×T×X/N)
-#   A → POLARITY  : agency control sets direction/polarity of impact
+# most directly exercises. Canonical foundational operator mapping (Architectural
+# Correction Record, Build 725) — this replaces the prior mapping that was
+# inconsistent with aurora_internal/aurora_noncomp_registry.py's AXIS_NC_DIM.
+#   X → MAGNITUDE  : existence is the scale/intensity primitive
+#   T → POLARITY   : time carries directional lean — before/after, flip
+#   N → COST       : energy conservation is the cost reference dimension
+#   B → DIFFERENCE : boundary is the contrast/distinguishability primitive
+#   A → OPERATOR   : agency is the invariant rule/transformation primitive
 _AXIS_NC_DIM: Dict[str, str] = {
-    "X": "OPERATOR",
-    "T": "DIFFERENCE",
+    "X": "MAGNITUDE",
+    "T": "POLARITY",
     "N": "COST",
-    "B": "MAGNITUDE",
-    "A": "POLARITY",
+    "B": "DIFFERENCE",
+    "A": "OPERATOR",
 }
 
 # Maps expected dominant axis → the semantic dimensions it serves
@@ -2088,6 +2091,79 @@ class ConstraintGenealogyLogger:
         # must call mark_representation_index_dirty() so the stamp changes
         # even when the counts don't.
         self._representation_index_dirty_counter: int = 0
+        # Repair K (found live, 2026-08-19, per Sunni): _representation_
+        # index()'s stamp includes len(self._pair_stats), and every newly-
+        # observed pair explicitly sets _representation_index_stamp = None
+        # (confirmed by reading the two real invalidation sites directly,
+        # both in observe()'s promotion loop) -- meaning the FULL index,
+        # scanning every surviving link and ability (13,000+ in a real,
+        # months-deep genealogy), gets rebuilt from scratch on essentially
+        # every interaction, not just when something that actually needs
+        # re-evaluating changed. representation_is_eligible() ->
+        # _semantic_identity_for_item() -> _last_tag_value() was measured
+        # live at 9.1 million calls / 90+ seconds cumulative for ONE turn,
+        # entirely inside this rebuild -- and it gets slower every turn as
+        # genealogy keeps growing during the session itself, which is
+        # exactly the escalating 35s -> 46s -> stall pattern that surfaced
+        # this. Confirmed effect_tags is never mutated in place anywhere
+        # in this file (grep across the full source) -- an item's semantic
+        # identity, once computed, cannot silently go stale except through
+        # the exact in-place-replacement case mark_representation_index_
+        # dirty() already exists to signal. So: cache per item, keyed by
+        # item_id, and only clear the WHOLE cache when the dirty counter
+        # itself changes (the real "something's content mutated in place"
+        # signal) -- not on every new pair_stats entry, which is the vast
+        # majority of invalidations and never implies any EXISTING item's
+        # semantic identity needs recomputing, only that a new pair
+        # exists. This does not touch _representation_index()'s own
+        # eligibility bucketing/caching logic or its invalidation
+        # triggers at all -- purely removes redundant re-computation of
+        # unchanged items' semantic identity underneath it.
+        self._semantic_identity_cache: Dict[str, Dict[str, Any]] = {}
+        self._semantic_identity_cache_dirty_stamp: int = -1
+        # Repair K continued: _operational_effect_for_item()'s expensive
+        # part -- filtering an ability's effect_tags against 19 metadata
+        # prefixes -- is pure function of effect_tags alone (confirmed
+        # immutable, same as above), even though the REST of that
+        # function's output (consequence_profile, mean_relief) is
+        # genuinely live and must stay uncached. Caching only the filtered
+        # tag list, same invalidation rule as the identity cache.
+        self._effect_tags_filtered_cache: Dict[str, List[str]] = {}
+        # Repair L (per Sunni, 2026-08-19): the outer index-rebuild loop
+        # itself, not just per-item computation. See _representation_index()
+        # for the full reasoning.
+        self._representation_index_known_ids: set = set()
+        # Repair M (per Sunni, 2026-08-19): mark_representation_index_dirty()
+        # is a genuinely broad signal -- called for consequence_profile
+        # updates too, which fire continuously (measured live: 34 times in
+        # a single turn) but touch none of the fields
+        # _semantic_identity_for_item_uncached/representation_is_eligible/
+        # _collision_signature_for_item/_operational_effect_for_item's tag
+        # filter actually read (axis, effect_tags, topology_id,
+        # semantic_variant_id -- confirmed by reading all four directly).
+        # Repairs K and L's caches were correct but starved of any real
+        # benefit because they invalidated on the same broad signal.
+        # This narrower counter tracks ONLY genuine identity-relevant
+        # mutation (axis reassignment, effect_tags/topology/semantic_
+        # variant replacement) -- a strict subset of what bumps the
+        # original counter, never a superset, so nothing that currently
+        # depends on the original counter's broader meaning changes at
+        # all. mark_representation_index_dirty() itself is untouched;
+        # identity-relevant call sites now ALSO call the new
+        # mark_representation_identity_dirty() below, consequence-profile-
+        # only call sites do not.
+        self._representation_identity_dirty_counter: int = 0
+        # Repair N (per Sunni, 2026-08-19): the surface must never wait on
+        # the subsurface, and the subsurface must never stop for the
+        # surface -- consciousness as a fast, persistent crest riding a
+        # continuously-running depth process, never blocking it and never
+        # blocked by it. Backgrounding the afterthought simulation episode
+        # (aurora.py, previously synchronous, now a daemon thread) makes
+        # genealogy.observe() reachable from two threads at once for the
+        # first time. RLock (reentrant) rather than Lock: observe() calls
+        # internal helpers that may themselves need the same protection
+        # without deadlocking the thread that already holds it.
+        self._concurrency_lock = threading.RLock()
 
         # Cross-system activity registry (Sunni & Cael: "design the activity
         # registry first" -- the substrate a future consequence-derived
@@ -2254,6 +2330,36 @@ class ConstraintGenealogyLogger:
     # ----------------------------------------------------------------
 
     def observe(
+        self,
+        pressure_before: PressureVec,
+        trace: List[TraceItem],
+        pressure_after: PressureVec,
+        state_sig_before: str = "",
+        state_sig_after: str = "",
+        notes: Optional[Dict[str, Any]] = None,
+        difference_snapshot: Optional[DifferenceSnapshot] = None,
+    ) -> Optional[ReliefRecord]:
+        """Public entry point -- see _observe_impl for the real body.
+
+        Repair N: acquires _concurrency_lock for the full call. observe()
+        is genealogy's one confirmed mutating chokepoint reachable from
+        both the synchronous surface turn AND the now-backgrounded
+        afterthought thread (aurora.py calls it directly in two places,
+        and the afterthought simulation reaches it indirectly through
+        ingest_interaction -> composer.absorb -> grammar_engine.
+        observe_exchange). Wrapping the body in a separate _observe_impl
+        rather than reindenting ~350 lines under a `with` block -- same
+        pattern as Repair K's _semantic_identity_for_item wrapper, safer
+        for a function this large than a mass reindent.
+        """
+        with self._concurrency_lock:
+            return self._observe_impl(
+                pressure_before, trace, pressure_after,
+                state_sig_before=state_sig_before, state_sig_after=state_sig_after,
+                notes=notes, difference_snapshot=difference_snapshot,
+            )
+
+    def _observe_impl(
         self,
         pressure_before: PressureVec,
         trace: List[TraceItem],
@@ -3181,6 +3287,146 @@ class ConstraintGenealogyLogger:
         memo[item_id] = dict(counts)
         return counts
 
+    # ----------------------------------------------------------------
+    # GENERATIONAL DISTANCE PHYSICS (Build 725 Correction, item 2)
+    # ----------------------------------------------------------------
+    # _axis_counts_from_item() above (and _canonical_coupling_signature()
+    # below) flatten every axis touch into a single scalar tally -- a
+    # root-near Ability referenced directly and the same Ability's axis
+    # reached through twenty layers of Link composition both just add +1
+    # to the same slot. The "^" in signatures like "X^3" LOOKS like a real
+    # exponent but is ordinary multiplicity in disguise.
+    #
+    # The pair below is the missing companion, not a replacement: it walks
+    # the identical DAG (same parents, same recursion) but keeps each
+    # touch tagged with the generational depth at which it entered the
+    # lineage, then collapses that into a potency score where root-near
+    # contributions are genuinely amplified relative to heavily-derived
+    # ones -- per Sunni: "magnitude is only amplified when it's closer to
+    # the root derivative in combination." All 30 existing call sites on
+    # the flat counts/signature keep working unchanged; this adds fields,
+    # it does not remove or reinterpret existing ones.
+    GENERATIONAL_POTENCY_BASE: float = 2.0  # tune with Sunni; must stay > 1.0
+
+    def _axis_depth_counts_from_item(
+        self,
+        item: TraceItem,
+        memo: Optional[Dict[str, Dict[str, Dict[int, int]]]] = None,
+        seen: Optional[set] = None,
+        depth: int = 0,
+    ) -> Dict[str, Dict[int, int]]:
+        """
+        Depth-aware companion to _axis_counts_from_item(). Returns, per axis,
+        a {generational_depth: touch_count} map instead of a flat scalar:
+            {"X": {0: 2, 4: 1}, "T": {2: 1}}
+        means X was touched twice at depth 0 (root-near -- a base Ability
+        referenced directly by the item under evaluation) and once at depth
+        4 (reached through four layers of Link composition); T was touched
+        once at depth 2.
+
+        depth=0 at the outermost call means "the item passed in is the root
+        of this walk." Each hop into a Link's parents increases depth by 1.
+        """
+        memo = memo if memo is not None else {}
+        item_id = str(getattr(item, "id", ""))
+        kind = str(getattr(item, "kind", "ABILITY")).upper()
+
+        memo_key = f"{item_id}@{depth}"
+        if memo_key in memo:
+            return {ax: dict(d) for ax, d in memo[memo_key].items()}
+
+        result: Dict[str, Dict[int, int]] = {a: {} for a in AXES}
+
+        def _touch(axis: str, at_depth: int) -> None:
+            if axis in result:
+                result[axis][at_depth] = result[axis].get(at_depth, 0) + 1
+
+        if item_id.startswith("NC:") and ">" in item_id:
+            pair = item_id[3:]
+            left, right = pair.split(">", 1)
+            l_ax = left.strip().upper()
+            r_ax = right.strip().upper()
+            _touch(l_ax, depth)
+            _touch(r_ax, depth)
+            memo[memo_key] = {ax: dict(d) for ax, d in result.items()}
+            return result
+
+        if ":" in item_id and not item_id.startswith("L:"):
+            ax = item_id.split(":", 1)[0].strip().upper()
+            _touch(ax, depth)
+            memo[memo_key] = {ax: dict(d) for ax, d in result.items()}
+            return result
+
+        if kind == "LINK" and item_id.startswith("L:"):
+            if seen is None:
+                seen = set()
+            if item_id in seen:
+                # Cycle guard fallback -- mirrors _axis_counts_from_item's guard.
+                depth_guess = max(1, int(getattr(self.links.get(item_id), "depth", 1) or 1))
+                if depth_guess > 0:
+                    _touch("A", depth)
+                memo[memo_key] = {ax: dict(d) for ax, d in result.items()}
+                return result
+            seen.add(item_id)
+            lnk = self.links.get(item_id)
+            if lnk is not None:
+                for p in list(getattr(lnk, "parents", []) or []):
+                    p_id = str(p)
+                    p_kind = "LINK" if p_id.startswith("L:") else "ABILITY"
+                    pd = self._axis_depth_counts_from_item(
+                        TraceItem(kind=p_kind, id=p_id), memo=memo, seen=seen, depth=depth + 1
+                    )
+                    for ax, dcounts in pd.items():
+                        result.setdefault(ax, {})
+                        for d, c in dcounts.items():
+                            result[ax][d] = result[ax].get(d, 0) + c
+            seen.discard(item_id)
+            memo[memo_key] = {ax: dict(d) for ax, d in result.items()}
+            return result
+
+        memo[memo_key] = {ax: dict(d) for ax, d in result.items()}
+        return result
+
+    def _axis_potency_from_depth_counts(self, depth_counts: Dict[str, Dict[int, int]]) -> Dict[str, float]:
+        """
+        Collapse {axis: {depth: count}} into one potency float per axis:
+            potency[axis] = sum over touches of count * BASE ** (-depth)
+        A depth-0 (root-near) touch counts at full weight (BASE**0 = 1.0).
+        Each additional generation of derivation divides that touch's
+        contribution by GENERATIONAL_POTENCY_BASE. This is what lets two
+        lineages with identical flattened X/T/N/B/A totals stay physically
+        distinguishable when their generational composition differs.
+        """
+        potency: Dict[str, float] = {a: 0.0 for a in AXES}
+        for ax, dcounts in (depth_counts or {}).items():
+            if ax not in potency:
+                continue
+            total = 0.0
+            for d, c in dcounts.items():
+                total += float(c) * (self.GENERATIONAL_POTENCY_BASE ** (-max(0, int(d))))
+            potency[ax] = total
+        return potency
+
+    def _lineage_generation_from_depth_counts(self, depth_counts: Dict[str, Dict[int, int]]) -> int:
+        """
+        True generational depth: 1 + the deepest generational hop found
+        across all axis touches. Unlike the module-level
+        _lineage_generation_from_counts() (which infers "generation" from
+        the SUM of flattened touches and so cannot tell a root-heavy
+        lineage from a derivation-heavy one with the same total), this
+        reads the actual recursion depth recorded above -- the real
+        generational position at which each contribution entered the
+        lineage. Prefer this whenever DAG access is available; the
+        counts-only version remains the correct fallback when only a bare
+        signature string is on hand (signature strings don't carry depth
+        by design -- that boundary is unavoidable, not the bug).
+        """
+        max_depth = 0
+        for dcounts in (depth_counts or {}).values():
+            for d in dcounts.keys():
+                max_depth = max(max_depth, int(d))
+        return max(1, max_depth + 1)
+
     def _canonical_coupling_signature(self, counts: Dict[str, int]) -> str:
         parts = [f"{a}^{int(counts.get(a, 0))}" for a in AXES if int(counts.get(a, 0)) > 0]
         return "*".join(parts) if parts else "0"
@@ -3239,6 +3485,27 @@ class ConstraintGenealogyLogger:
         return "LINK" if str(item_id) in self.links or str(item_id).startswith("L:") else "ABILITY"
 
     def _semantic_identity_for_item(self, item_id: str) -> Dict[str, Any]:
+        """Resolve the current/local semantic surface for one stable identity.
+
+        Cached per item_id (Repair K) -- see the cache field's own comment
+        in __init__ for why this is safe (effect_tags never mutated in
+        place; the dirty counter is the correct, existing invalidation
+        signal for the one real case that changes an item's identity
+        without changing its item_id). The uncached implementation lives
+        in _semantic_identity_for_item_uncached below, unchanged.
+        """
+        iid = str(item_id)
+        if self._semantic_identity_cache_dirty_stamp != self._representation_identity_dirty_counter:
+            self._semantic_identity_cache.clear()
+            self._semantic_identity_cache_dirty_stamp = self._representation_identity_dirty_counter
+        cached = self._semantic_identity_cache.get(iid)
+        if cached is not None:
+            return dict(cached)
+        result = self._semantic_identity_for_item_uncached(iid)
+        self._semantic_identity_cache[iid] = dict(result)
+        return result
+
+    def _semantic_identity_for_item_uncached(self, item_id: str) -> Dict[str, Any]:
         """Resolve the current/local semantic surface for one stable identity.
 
         Ancestral tags remain on the fossil record.  Reverse tag lookup (or an
@@ -3313,16 +3580,42 @@ class ConstraintGenealogyLogger:
         if link is not None and isinstance(link.constraint_basis, dict) and link.constraint_basis:
             stored = self._json_clone(link.constraint_basis)
             stored.setdefault("signature", self._canonical_coupling_signature(dict(stored.get("counts", {}) or {})))
+            if "generational_depth_counts" not in stored or "generational_potency" not in stored:
+                # Historical links promoted before this fix stored flat
+                # counts only. Backfill the depth-aware fields lazily by
+                # re-walking the DAG rather than leaving them permanently
+                # absent -- error preservation over erasure, the flat
+                # fields stay exactly as they were.
+                kind = self._representation_kind(iid)
+                depth_counts = self._axis_depth_counts_from_item(
+                    TraceItem(kind=kind, id=iid), memo={}, seen=set()
+                )
+                stored.setdefault(
+                    "generational_depth_counts",
+                    {a: dict(depth_counts.get(a, {})) for a in AXES},
+                )
+                stored.setdefault(
+                    "generational_potency",
+                    self._axis_potency_from_depth_counts(depth_counts),
+                )
             return stored
 
         kind = self._representation_kind(iid)
         counts = self._axis_counts_from_item(
             TraceItem(kind=kind, id=iid), memo={}, seen=set()
         )
+        depth_counts = self._axis_depth_counts_from_item(
+            TraceItem(kind=kind, id=iid), memo={}, seen=set()
+        )
         identity = self._semantic_identity_for_item(iid)
         basis: Dict[str, Any] = {
             "counts": {a: int(counts.get(a, 0) or 0) for a in AXES},
             "signature": self._canonical_coupling_signature(counts),
+            # New, additive (Build 725 Correction, item 2) -- preserves
+            # generational position alongside the existing flat tally
+            # instead of replacing it.
+            "generational_depth_counts": {a: dict(depth_counts.get(a, {})) for a in AXES},
+            "generational_potency": self._axis_potency_from_depth_counts(depth_counts),
         }
         declared = str(identity.get("origin_signature", "") or "").strip()
         if declared:
@@ -3407,10 +3700,16 @@ class ConstraintGenealogyLogger:
             "leverage_grade:", "viable_band_alignment:", "formation_cost:",
             "dominant_constraint:", "dominant_dimension:", "ontological_status:",
         )
-        effect_tags = [
-            str(tag) for tag in (ability.effect_tags or ())
-            if not any(str(tag).startswith(prefix) for prefix in metadata_prefixes)
-        ]
+        if self._semantic_identity_cache_dirty_stamp != self._representation_identity_dirty_counter:
+            self._effect_tags_filtered_cache.clear()
+        if iid in self._effect_tags_filtered_cache:
+            effect_tags = self._effect_tags_filtered_cache[iid]
+        else:
+            effect_tags = [
+                str(tag) for tag in (ability.effect_tags or ())
+                if not any(str(tag).startswith(prefix) for prefix in metadata_prefixes)
+            ]
+            self._effect_tags_filtered_cache[iid] = effect_tags
         effect: Dict[str, Any] = {
             "dominant_axis": str(ability.axis or "X"),
             "cost": {a: float(ability.cost.get(a, 0.0) or 0.0) for a in AXES},
@@ -3872,12 +4171,66 @@ class ConstraintGenealogyLogger:
         cannot outlive the mutation that invalidated it."""
         self._representation_index_dirty_counter += 1
 
+    def mark_representation_identity_dirty(self) -> None:
+        """Repair M: narrower sibling of mark_representation_index_dirty()
+        above -- call this ONLY when the mutation actually touches a field
+        _semantic_identity_for_item/_operational_effect_for_item's tag
+        filter/representation_is_eligible/_collision_signature_for_item
+        read (axis, effect_tags, topology_id, semantic_variant_id).
+        Consequence-profile-only updates (live, continuous, frequent --
+        confirmed 34 calls in a single real turn) call
+        mark_representation_index_dirty() alone, unchanged, since that
+        signal's other consumers are not this session's to audit; this
+        counter exists so Repairs K/L can invalidate on exactly the
+        subset of dirty events that actually affects what they cache,
+        rather than on every dirty event regardless of relevance."""
+        self._representation_identity_dirty_counter += 1
+
     def _representation_index(self, active_ids: Optional[List[str]] = None) -> Dict[str, List[str]]:
         stamp = (
             len(self.links), len(self.abilities), len(self._pair_stats),
             self._representation_index_dirty_counter,
+            self._representation_identity_dirty_counter,
         )
         if self._representation_index_stamp != stamp:
+            # Repair L (per Sunni, 2026-08-19): Repair K cached each item's
+            # OWN semantic identity/effect-tags computation, but this outer
+            # loop still re-scanned and re-evaluated every observed_id from
+            # scratch on every rebuild -- and the stamp includes
+            # len(self._pair_stats), which grows on essentially every
+            # normal interaction, so a full rescan of the whole genealogy
+            # (13,000+ items in a real, months-deep history) was firing on
+            # almost every turn. The per-item cache made each of those
+            # evaluations cheap; this makes the SET of evaluations small
+            # too -- same principle (retain full resolution, pay only for
+            # what's actually new or actually changed), applied one level
+            # up.
+            #
+            # Growth-only changes (new pair observed, new link/ability
+            # added -- the overwhelmingly common case) are handled
+            # incrementally: only ids not seen in the previous build get
+            # evaluated; everything already indexed is reused verbatim.
+            # Genuine correctness requires a full rebuild in two cases,
+            # both detected explicitly rather than assumed away: the
+            # IDENTITY-relevant dirty counter changing (Repair M -- an
+            # EXISTING item's axis/tags/topology/semantic_variant was
+            # replaced in place; consequence_profile-only updates do NOT
+            # bump this counter and correctly no longer force a full
+            # rebuild), or any of the three counts having decreased (an
+            # item removed -- confirmed no removal path exists anywhere
+            # in this file today, but this guards the invariant
+            # explicitly rather than relying on that continuing to be
+            # true).
+            prev_stamp = self._representation_index_stamp
+            needs_full_rebuild = (
+                prev_stamp is None
+                or prev_stamp[4] != stamp[4]
+                or stamp[0] < prev_stamp[0]
+                or stamp[1] < prev_stamp[1]
+                or stamp[2] < prev_stamp[2]
+                or not self._representation_index_cache
+            )
+
             # Every surviving promoted link and persisted ability remains
             # reachable.  Per-item scan/candidate budgets below bound the
             # work, so reachability does not require prior PairStats activity
@@ -3899,13 +4252,26 @@ class ConstraintGenealogyLogger:
                     max(int(prev_tick), int(link.created_at_tick or 0)),
                     max(int(prev_count), int(link.count or 0)),
                 )
-            index: Dict[str, List[str]] = defaultdict(list)
-            for iid in sorted(observed_ids):
+
+            if needs_full_rebuild:
+                scan_ids = sorted(observed_ids)
+                index: Dict[str, List[str]] = defaultdict(list)
+            else:
+                scan_ids = sorted(observed_ids - self._representation_index_known_ids)
+                index = defaultdict(list, {sig: list(ids) for sig, ids in self._representation_index_cache.items()})
+
+            for iid in scan_ids:
                 if self.representation_is_eligible(iid):
                     index[self._collision_signature_for_item(iid)].append(iid)
+            # Re-sorted every rebuild regardless of path, using the freshly
+            # rebuilt (cheap -- never the profiled bottleneck) activity
+            # dict, so incremental runs never serve stale ordering for
+            # ids whose recency/count changed without becoming newly
+            # eligible.
             for bucket in index.values():
                 bucket.sort(key=lambda iid: (-activity[iid][0], -activity[iid][1], iid))
             self._representation_index_cache = dict(index)
+            self._representation_index_known_ids = set(observed_ids)
             self._representation_index_stamp = stamp
 
         index = {sig: list(ids) for sig, ids in self._representation_index_cache.items()}
@@ -6725,6 +7091,7 @@ class ConstraintGenealogyLogger:
             # without this the relevance index cache would not notice this
             # entry's tags/signature-relevant content just changed.
             self.mark_representation_index_dirty()
+            self.mark_representation_identity_dirty()  # Repair M: genuinely touches effect_tags
             self._experiment_trials.append({
                 "tick": int(self.tick_count),
                 "trigger_mode": "manual_code_assimilation",
@@ -8177,9 +8544,9 @@ class ConstraintGenealogyLogger:
             tags.extend(sem_tags)
 
         # NC dimension provenance: tag with which NC dimension this link's dominant
-        # axis primarily exercises, per the Unified Field Spec information lineage.
-        # This lets the fossil record distinguish MAGNITUDE links (B) from COST links (N)
-        # from OPERATOR links (X) — enabling NC-dimension-aware curriculum routing.
+        # axis primarily exercises, per the corrected foundational operator mapping.
+        # This lets the fossil record distinguish MAGNITUDE links (X) from COST links (N)
+        # from OPERATOR links (A) — enabling NC-dimension-aware curriculum routing.
         nc_dim_tag = _AXIS_NC_DIM.get(dom_axis)
         if nc_dim_tag:
             tags.append(f"nc_dim:{nc_dim_tag}")

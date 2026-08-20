@@ -2728,6 +2728,69 @@ def build_role_normalized_transition(step: EpisodeStep) -> Optional[RoleNormaliz
     )
 
 
+def consult_synthesized_capability(
+    systems: Dict[str, Any], rule_family: str, role_normalized_input: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    """Build 725 Correction, item 6: a read-only trial seam letting the
+    chamber consult whatever candidate program EITHER discovery chamber
+    currently holds for this task, as an internal hypothesis -- never
+    automatic final authority, and this call never writes anything back.
+    Reuses each chamber's own execute(..., allow_trial=True), which never
+    mutates task state on its own. Tries operational_synthesis first (the
+    more mature chamber), then general_execution_foundry -- previously
+    only operational_synthesis was reachable here at all; before the
+    Build 725 correction, general_execution_foundry.execute() had zero
+    callers anywhere in the codebase, meaning anything it ever validated
+    and admitted to genealogy had no path to ever run. Returns None when
+    neither chamber is wired in or has a candidate yet -- an absent
+    candidate is honest, not an error."""
+    task_id = rcec_primary_task_id(rule_family or "direct_trigger")
+    for key in ("operational_synthesis", "general_execution_foundry"):
+        chamber = systems.get(key)
+        if chamber is None or not hasattr(chamber, "execute"):
+            continue
+        try:
+            result = chamber.execute(task_id, role_normalized_input, allow_trial=True)
+        except Exception:
+            continue
+        if result and result.get("executed"):
+            result = dict(result)
+            result["chamber"] = key
+            return result
+    return None
+
+
+def report_synthesis_consequence(
+    systems: Dict[str, Any], rule_family: str, role_normalized: "RoleNormalizedTransition",
+) -> None:
+    """Build 725 Correction, item 6: closes the loop's last link -- "later
+    use produces new consequences and further development." Consulting a
+    candidate (above) is read-only and produces no evidence on its own;
+    this is the separate, explicit step that turns "we looked" into "we
+    learned." role_normalized already carries the REAL observed outcome
+    of this lived episode step (as_training_pair()'s second element comes
+    from step.consequence, which already happened by the time this runs)
+    -- so this reports genuine lived experience back through the same
+    universal seam item 5 built (submit_lived_experience), reaching both
+    chambers identically. This does not decide what Aurora does; it only
+    ensures that when a capability's territory gets touched by real
+    experience, that experience isn't discarded. Best-effort: a reporting
+    failure must never break the episode it's reporting on."""
+    try:
+        from aurora_internal.aurora_operational_synthesis import submit_lived_experience
+    except Exception:
+        return
+    task_id = rcec_primary_task_id(rule_family or "direct_trigger")
+    input_value, actual_outcome = role_normalized.as_training_pair()
+    try:
+        submit_lived_experience(
+            systems, task_id, input_value, actual_outcome,
+            source="rcec_episode", need_description=f"observed transition for {rule_family or 'direct_trigger'}",
+        )
+    except Exception:
+        pass
+
+
 def consult_operational_synthesis_candidate(
     systems: Dict[str, Any], rule_family: str, role_normalized_input: Dict[str, Any],
 ) -> Optional[Dict[str, Any]]:
@@ -2738,7 +2801,12 @@ def consult_operational_synthesis_candidate(
     AuroraOperationalSynthesisChamber.execute(..., allow_trial=True), which
     itself never mutates task state. Returns None when no chamber is
     wired in, or no candidate exists yet -- an absent candidate is honest,
-    not an error."""
+    not an error.
+
+    Kept as a thin backward-compatible alias -- error preservation over
+    erasure -- for anything still calling this exact name. New code
+    should prefer consult_synthesized_capability(), which also reaches
+    general_execution_foundry."""
     chamber = systems.get("operational_synthesis")
     if chamber is None or not hasattr(chamber, "execute"):
         return None
@@ -3250,15 +3318,20 @@ def run_closed_loop_episode(
 
     # Build 613 (L): diagnostic projection view -- see FutureStateProjection's
     # own docstring for the scope boundary this represents. Consults
-    # Operational Synthesis read-only (K) only when Aurora made no
-    # prediction of her own.
+    # both discovery chambers read-only (Build 725 Correction, item 6 --
+    # previously general_execution_foundry was unreachable from here
+    # entirely) only when Aurora made no prediction of her own, and
+    # reports the real observed outcome back through the same universal
+    # seam item 5 built -- closing the loop's last link ("later use
+    # produces new consequences") instead of leaving this a pure read.
     synthesis_hint = None
     if step.interpretation.predicted_consequence is None:
         role_normalized = build_role_normalized_transition(step)
         if role_normalized is not None:
-            synthesis_hint = consult_operational_synthesis_candidate(
+            synthesis_hint = consult_synthesized_capability(
                 systems, engine._rule.family, role_normalized.as_training_pair()[0],
             )
+            report_synthesis_consequence(systems, engine._rule.family, role_normalized)
     future_state_projection = build_future_state_projection(step.interpretation, synthesis_candidate=synthesis_hint)
 
     # 4: initial evaluation.

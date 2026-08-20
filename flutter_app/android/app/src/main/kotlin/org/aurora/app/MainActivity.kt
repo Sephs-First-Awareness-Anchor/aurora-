@@ -28,6 +28,9 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetectorOptions
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -47,6 +50,7 @@ class MainActivity : FlutterActivity() {
         const val EVENTS      = "org.aurora.app/events"
         const val PERM_REQUEST = 1001
         const val FRAME_INTERVAL_MS = 1_000L  // 1 FPS is ample for Aurora's visual loop
+        const val FACE_DETECT_INTERVAL_MS = 300L  // faster than FRAME_INTERVAL_MS -- proximity should feel responsive
         const val AMBIENT_AUDIO_SAMPLE_RATE = 16_000  // Hz -- ample for the DSP features computed Python-side
         const val AUDIO_PUSH_INTERVAL_MS = 1_000L      // bounded push rate (Section XXVIII battery discipline)
     }
@@ -112,6 +116,23 @@ class MainActivity : FlutterActivity() {
     private val cameraExecutor = Executors.newSingleThreadExecutor()
     private var cameraProvider: ProcessCameraProvider? = null
     private var lastFrameMs = 0L
+    // Repair Q: which physical camera is currently bound -- back camera
+    // is the default, passive environmental-awareness stream (unchanged
+    // from before); front camera is bound specifically during active
+    // conversation (see startNativeStt / TTS onDone below), since that's
+    // when there's an actual face in frame to react to.
+    private var isCameraFront = false
+    // Low-cost mode: FAST accuracy, no landmarks/classification/tracking
+    // -- this only ever needs a bounding box for proximity/position, not
+    // expression or identity.
+    private val faceDetector by lazy {
+        FaceDetection.getClient(
+            FaceDetectorOptions.Builder()
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                .build()
+        )
+    }
+    private var lastFaceDetectMs = 0L
 
     // ── Ambient audio (Section VI/VII, Sunni & Cael: Aurora must be able to
     // hear without requiring speech recognition) ───────────────────────────
@@ -187,6 +208,27 @@ class MainActivity : FlutterActivity() {
                             JSONObject().put("source","camera").put("type","captured").toString()
                         )
                         result.success(null)
+                    }
+                    // Repair R (per Sunni, 2026-08-19): "providing me a way
+                    // to upload files and audio and pictures she then
+                    // receives and processes would be a huge benefit to her
+                    // discovery and development." bytes/filename/contentType
+                    // come from Dart's file_picker selection; contentType is
+                    // Dart's own best-effort guess (extension-based) --
+                    // provide_uploaded_content() on the Python side does its
+                    // own real dispatch by actual content, this is only a
+                    // routing hint, never trusted as ground truth.
+                    "uploadContent" -> {
+                        val bytes = call.argument<ByteArray>("bytes")
+                        val filename = call.argument<String>("filename") ?: "upload"
+                        val contentType = call.argument<String>("contentType") ?: "unknown"
+                        if (bytes == null) {
+                            result.success(JSONObject().put("ok", false).put("error", "no_bytes").toString())
+                        } else {
+                            AuroraService.uploadContent(bytes, filename, contentType) { reply ->
+                                runOnUiThread { result.success(reply) }
+                            }
+                        }
                     }
                     "getSelfModel" -> {
                         AuroraService.getSelfModel { json ->
@@ -394,6 +436,13 @@ class MainActivity : FlutterActivity() {
                 tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {}
                     override fun onDone(utteranceId: String?) {
+                        // Repair Q: conversation-active window ends when
+                        // she finishes speaking (if listening restarts
+                        // right after, startNativeStt() below switches
+                        // back to front camera again -- a little
+                        // redundant rebinding in that case, correct and
+                        // simple either way).
+                        switchCamera(front = false)
                         runOnUiThread {
                             AuroraService.eventSink?.success(
                                 JSONObject().put("source","tts").put("type","done").toString()
@@ -426,6 +475,10 @@ class MainActivity : FlutterActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) { requestRuntimePermissions(); return }
         if (!SpeechRecognizer.isRecognitionAvailable(this)) return
+        // Repair Q: about to actively listen to a person -- there's a
+        // face to react to now. See switchCamera()'s docstring for the
+        // symmetric back-camera switch on TTS completion.
+        switchCamera(front = true)
         // SpeechRecognizer becomes stale after each session on Android — calling
         // startListening() on a previously-used instance silently does nothing.
         // Destroy and recreate every time so each session starts from a clean state.
@@ -447,13 +500,25 @@ class MainActivity : FlutterActivity() {
         ProcessCameraProvider.getInstance(this).also { future ->
             future.addListener({
                 cameraProvider = future.get()
-                bindCamera()
+                bindCamera(front = false)
             }, ContextCompat.getMainExecutor(this))
         }
     }
 
-    private fun bindCamera() {
+    // Repair Q (per Sunni, 2026-08-19): rebinds to whichever camera is
+    // requested. Called with front=true when active conversation begins
+    // (there's a face to react to) and front=false once it ends (back to
+    // passive environmental scanning, the original always-on behavior).
+    // A no-op guard on isCameraFront avoids redundant unbind/rebind
+    // churn if called twice for the same state in a row.
+    private fun switchCamera(front: Boolean) {
+        if (front == isCameraFront) return
+        bindCamera(front)
+    }
+
+    private fun bindCamera(front: Boolean) {
         val provider = cameraProvider ?: return
+        isCameraFront = front
         val analysis = ImageAnalysis.Builder()
             .setTargetResolution(Size(640, 480))
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -467,15 +532,76 @@ class MainActivity : FlutterActivity() {
                 val jpeg = proxy.toJpeg()
                 if (jpeg != null) AuroraService.provideCameraFrame(jpeg)
             }
-            proxy.close()
+            // Face detection only makes sense pointed at a person -- only
+            // runs on the front stream, and closes the proxy itself
+            // (ML Kit detection is async) rather than falling through to
+            // the unconditional proxy.close() below.
+            if (front && now - lastFaceDetectMs >= FACE_DETECT_INTERVAL_MS) {
+                lastFaceDetectMs = now
+                detectFace(proxy)
+            } else {
+                proxy.close()
+            }
         }
 
         try {
             provider.unbindAll()
-            provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, analysis)
+            val selector = if (front) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+            provider.bindToLifecycle(this, selector, analysis)
         } catch (e: Exception) {
             Log.w(TAG, "camera bind failed: ${e.message}")
         }
+    }
+
+    // Repair Q: runs ML Kit face detection on one front-camera frame and
+    // forwards a bounding-box-derived proximity/position signal to
+    // Python. faceFraction is the detected face's area as a fraction of
+    // total frame area -- a simple, real proxy for "how close" (a face
+    // filling more of the frame is a face that's closer to the lens,
+    // exactly the way it would read to a person). offsetX/offsetY are
+    // the face center's position within the frame, -1..1 from
+    // left/top to right/bottom, for gaze/lean-direction. Reports
+    // detected=false (not just silence) when no face is found, so
+    // Python can distinguish "no one's there" from "haven't checked yet."
+    // MUST close the ImageProxy in every branch, including on failure --
+    // an un-closed proxy stalls the whole analyzer pipeline.
+    private fun detectFace(proxy: ImageProxy) {
+        val mediaImage = proxy.image
+        if (mediaImage == null) {
+            proxy.close()
+            return
+        }
+        val inputImage = InputImage.fromMediaImage(mediaImage, proxy.imageInfo.rotationDegrees)
+        faceDetector.process(inputImage)
+            .addOnSuccessListener { faces ->
+                if (faces.isNotEmpty()) {
+                    // Largest face if more than one is in frame -- the
+                    // one most likely to be whoever's actually talking.
+                    val face = faces.maxByOrNull { it.boundingBox.width().toLong() * it.boundingBox.height().toLong() }
+                    if (face != null) {
+                        val frameW = inputImage.width.toFloat()
+                        val frameH = inputImage.height.toFloat()
+                        val box = face.boundingBox
+                        val faceFraction = ((box.width().toFloat() * box.height().toFloat()) / (frameW * frameH)).coerceIn(0f, 1f)
+                        val cx = box.centerX().toFloat()
+                        val cy = box.centerY().toFloat()
+                        val offsetX = (((cx / frameW) - 0.5f) * 2f).coerceIn(-1f, 1f)
+                        val offsetY = (((cy / frameH) - 0.5f) * 2f).coerceIn(-1f, 1f)
+                        AuroraService.provideFaceObservation(true, faceFraction, offsetX, offsetY)
+                    } else {
+                        AuroraService.provideFaceObservation(false, 0f, 0f, 0f)
+                    }
+                } else {
+                    AuroraService.provideFaceObservation(false, 0f, 0f, 0f)
+                }
+            }
+            .addOnFailureListener {
+                // Best-effort sensory signal -- a detection failure is
+                // not an error worth surfacing, just "nothing this tick."
+            }
+            .addOnCompleteListener {
+                proxy.close()
+            }
     }
 
     private fun ImageProxy.toJpeg(): ByteArray? {

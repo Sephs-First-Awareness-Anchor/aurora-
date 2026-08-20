@@ -24,6 +24,8 @@ task preparePythonSources {
     inputs.files fileTree(repoRoot) {
         include "**/*.py"
         include "aurora_manifold_directory/**"
+        include "aurora_internal/**/*.json"
+        include "aurora_genealogy/**"
         include "*.py"
         exclude "**/__pycache__/**"
         exclude "**/*.pyc"
@@ -68,8 +70,17 @@ task preparePythonSources {
         }
         // Expose aurora_internal at top level so bridge imports work unchanged:
         //   from aurora_internal.X import Y  →  src/main/python/aurora_internal/
+        // Also include its *.json data (universal_function_constraints.json,
+        // universal_function_lineage.json, lineage_canonical_generated.json) --
+        // lineage_canonical.py and aurora_universal_function_lineage.py load
+        // these relative to aurora_internal's own directory at runtime, and a
+        // .py-only copy silently left them missing on-device.
         copy {
-            from("${repoRoot}/aurora_internal") { include "**/*.py"; exclude "**/__pycache__/**" }
+            from("${repoRoot}/aurora_internal") {
+                include "**/*.py"
+                include "**/*.json"
+                exclude "**/__pycache__/**"
+            }
             into "${destDir}/aurora_internal"
         }
         // Manifold directory — King Quasicrystal identity field data + Python package
@@ -77,6 +88,17 @@ task preparePythonSources {
             from(repoRoot) {
                 include "aurora_manifold_directory/**"
                 exclude "**/__pycache__/**"
+            }
+            into destDir
+        }
+        // Genealogy fossil record (abilities/couplings/links/pair_stats.json) --
+        // has no .py files of its own, so the broad **/*.py copy above never
+        // touched it, even though aurora_internal/aurora_operator_composer.py
+        // (instantiated at boot in aurora.py) reads aurora_genealogy/couplings.json
+        // relative to this same repo root.
+        copy {
+            from(repoRoot) {
+                include "aurora_genealogy/**"
             }
             into destDir
         }
@@ -235,4 +257,14 @@ dependencies {
     implementation "androidx.camera:camera-core:1.3.4"
     implementation "androidx.camera:camera-camera2:1.3.4"
     implementation "androidx.camera:camera-lifecycle:1.3.4"
+
+    // Repair Q (per Sunni, 2026-08-19): on-device face detection for
+    // proximity/gaze awareness. ML Kit specifically (not cv2/Haar) --
+    // aurora_bridge.py's cv2 shim's CascadeClassifier is a deliberate
+    // no-op stub (confirmed by reading it directly), since real OpenCV
+    // isn't bundled through Chaquopy on this stack. ML Kit runs natively
+    // in Kotlin, on the raw camera frame, with no Python round-trip
+    // needed for the detection itself -- only the resulting bounding
+    // box crosses the bridge.
+    implementation "com.google.mlkit:face-detection:16.1.6"
 }

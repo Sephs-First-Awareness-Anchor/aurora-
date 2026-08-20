@@ -1198,9 +1198,21 @@ class AuroraGeneralExecutionFoundry(WarpCapable):
         for component_id in promoted:
             task = self.tasks.get(self._component_task.get(component_id, ""))
             if task and task.candidate:
-                task.status = "promoted"
-                task.candidate.status = "promoted"
-                task.candidate.genealogy_ability_id = self._register_genealogy(task, self._warp_promoted.get(component_id))
+                # Build 725 Correction, item 7: same fix as
+                # aurora_operational_synthesis.py's evaluate_development()
+                # -- genealogy admission must be attempted and checked
+                # before status is set to "promoted", not after. See that
+                # file's comment for the full reasoning; this mirrors it
+                # exactly since both chambers share the identical bug
+                # pattern (confirmed by direct comparison before fixing).
+                ability_id = self._register_genealogy(task, self._warp_promoted.get(component_id))
+                task.candidate.genealogy_ability_id = ability_id
+                if ability_id:
+                    task.status = "promoted"
+                    task.candidate.status = "promoted"
+                else:
+                    task.status = "genealogy_pending"
+                    task.candidate.status = "trial"
         for component_id in dissolved:
             task = self.tasks.get(self._component_task.get(component_id, ""))
             if task:

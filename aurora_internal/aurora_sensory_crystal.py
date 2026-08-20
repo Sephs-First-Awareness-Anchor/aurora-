@@ -1216,6 +1216,8 @@ class SensoryClusterFacet:
                 # was absent from axis:B until this call was added.
                 if hasattr(self._genealogy_ref, "mark_representation_index_dirty"):
                     self._genealogy_ref.mark_representation_index_dirty()
+                if hasattr(self._genealogy_ref, "mark_representation_identity_dirty"):
+                    self._genealogy_ref.mark_representation_identity_dirty()  # Repair M: genuine axis/tag reassignment
             try:
                 self._genealogy_ref.observe(
                     pressure_before=p_before,

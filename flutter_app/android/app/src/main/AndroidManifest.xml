@@ -98,5 +98,15 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Repair Q (per Sunni, 2026-08-19): forces the ML Kit face-
+             detection model to download automatically at install time,
+             rather than on first use. Without this, the first face
+             detection attempt would depend on a live network fetch,
+             which is a real reliability gap for something meant to feel
+             immediate and reflexive during a live conversation. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="face" />
     </application>
 </manifest>
