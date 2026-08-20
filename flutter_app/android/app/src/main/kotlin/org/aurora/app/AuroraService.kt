@@ -23,6 +23,9 @@ import com.chaquo.python.android.AndroidPlatform
 import io.flutter.plugin.common.EventChannel
 import kotlinx.coroutines.*
 import org.json.JSONObject
+import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
 import kotlin.math.sqrt
 
 class AuroraService : Service() {
@@ -409,7 +412,40 @@ class AuroraService : Service() {
         }
     }
 
+    // Diagnostic hardening (per Sunni: "she keeps crashing, no error, no
+    // reason, before she even finishes booting"). bootPython()'s own
+    // try/catch below only ever catches Exception -- it can't catch an
+    // OutOfMemoryError or StackOverflowError, which are Errors, not
+    // Exceptions. Booting Aurora's full cognitive stack through Chaquopy
+    // (dozens of large modules, a 13,000+-entry genealogy) is real memory
+    // pressure on a mobile heap, so an uncaught Error killing the process
+    // before bootPython's catch block can even run is a live possibility
+    // -- and would look exactly like "no error, no reason, just crashes."
+    // This can't prevent that crash, but it makes the *next* launch able
+    // to report what actually happened instead of staying a mystery.
+    private fun crashLogFile(): File = File(filesDir, "aurora_state/last_crash.txt")
+
+    private fun installCrashHandler() {
+        val previousHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val f = crashLogFile()
+                f.parentFile?.mkdirs()
+                val sw = StringWriter()
+                throwable.printStackTrace(PrintWriter(sw))
+                f.writeText(
+                    "time=${System.currentTimeMillis()} thread=${thread.name} " +
+                    "type=${throwable.javaClass.name} message=${throwable.message}\n$sw"
+                )
+            } catch (_: Throwable) {
+                // Crash-logging must never itself throw and mask the real crash.
+            }
+            previousHandler?.uncaughtException(thread, throwable)
+        }
+    }
+
     override fun onCreate() {
+        installCrashHandler()
         super.onCreate()
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -515,13 +551,74 @@ class AuroraService : Service() {
         }
     }
 
+    // Diagnostic hardening, part 2. Per Sunni: confirmed on build 732 that
+    // the crash still shows nothing -- no device to run adb, so
+    // installCrashHandler() from part 1 never fires at all. That means
+    // this isn't a catchable Java exception or even an OutOfMemoryError;
+    // something is killing the process outright (a native crash in a
+    // bundled .so, or the OS's low-memory killer stepping in) -- neither
+    // goes through any Java code, so no after-the-fact handler can ever
+    // see it. The only thing that can still work is reporting *which
+    // stage was reached* before death, live, so whichever stage is on
+    // screen (or last written to disk) when it dies tells us where.
+    private fun stageMarkerFile(): File = File(filesDir, "aurora_state/last_boot_stage.txt")
+
+    private suspend fun markStage(stage: String) {
+        Log.i(TAG, "Boot stage: $stage")
+        try {
+            val f = stageMarkerFile()
+            f.parentFile?.mkdirs()
+            f.writeText("time=${System.currentTimeMillis()} stage=$stage")
+        } catch (_: Throwable) { /* best-effort */ }
+        try {
+            val json = JSONObject().put("type", "boot_progress").put("text", stage).toString()
+            withContext(Dispatchers.Main) { eventSink?.success(json) }
+        } catch (_: Throwable) { /* never let progress reporting itself block boot */ }
+    }
+
     private suspend fun bootPython() {
+        // Surface any crash the previous run's installCrashHandler() caught
+        // (a real OutOfMemoryError/StackOverflowError, or anything else
+        // outside this function's own catch below) -- one-shot, consumed
+        // here so it's reported exactly once rather than on every future
+        // boot.
+        var previousCrash: String? = null
+        try {
+            val f = crashLogFile()
+            if (f.exists()) {
+                val firstLine = f.readText().lineSequence().firstOrNull().orEmpty()
+                previousCrash = if (firstLine.length > 200) firstLine.take(200) + "…" else firstLine
+                f.delete()
+            }
+        } catch (_: Exception) { /* best-effort; never block boot on this */ }
+
+        // If the last boot never reached the end (no explicit crash caught
+        // above, since that path requires a catchable Java Throwable), the
+        // stage marker from that run is still sitting on disk, un-cleared.
+        // That absence-of-cleanup is itself the signal for a native/OS-level
+        // kill -- report it if installCrashHandler() didn't already have
+        // something more specific to say.
+        if (previousCrash == null) {
+            try {
+                val sf = stageMarkerFile()
+                if (sf.exists()) {
+                    val raw = sf.readText()
+                    val stage = raw.substringAfter("stage=", raw)
+                    previousCrash = "process died without a catchable error, last reached: $stage"
+                    sf.delete()
+                }
+            } catch (_: Exception) { /* best-effort */ }
+        }
+
+        markStage("starting python runtime")
         try {
             if (!Python.isStarted()) {
                 Python.start(AndroidPlatform(applicationContext))
             }
+            markStage("python runtime up, loading aurora module")
             val py     = Python.getInstance()
             val bridge = py.getModule("aurora_bridge")
+            markStage("aurora module loaded, initializing cognitive systems")
 
             val stateDir = filesDir.absolutePath + "/aurora_state"
             val status   = bridge.callAttr("initialize", stateDir).toString()
@@ -569,17 +666,34 @@ class AuroraService : Service() {
             if (healthObj != null) {
                 jsonBuilder.put("health", healthObj)
             }
+            if (previousCrash != null) {
+                jsonBuilder.put("previous_crash", previousCrash)
+            }
             val json = jsonBuilder.toString()
             bootEvent = json
+            try { stageMarkerFile().delete() } catch (_: Throwable) {}
             withContext(Dispatchers.Main) { eventSink?.success(json) }
 
-        } catch (e: Exception) {
-            Log.e(TAG, "Python init failed: ${e.message}")
-            val json = JSONObject()
-                .put("type", "error")
-                .put("text", e.message ?: "init failed")
-                .toString()
+        } catch (e: Throwable) {
+            // Throwable, not Exception -- an OutOfMemoryError or
+            // StackOverflowError partway through boot must still reach
+            // Flutter as a visible "Boot error:", not vanish silently.
+            // Kept deliberately cheap (short string, no further Python
+            // calls) since the process may already be low on memory here.
+            Log.e(TAG, "Python init failed: ${e.message}", e)
+            val json = try {
+                JSONObject()
+                    .put("type", "error")
+                    .put("text", "${e.javaClass.simpleName}: ${e.message ?: "init failed"}")
+                    .toString()
+            } catch (_: Throwable) {
+                "{\"type\":\"error\",\"text\":\"init failed\"}"
+            }
             bootEvent = json
+            // A catchable Throwable landed here, so this run's own crash
+            // report is more specific than the generic stage marker --
+            // clear it so a later boot doesn't redundantly repeat it.
+            try { stageMarkerFile().delete() } catch (_: Throwable) {}
             withContext(Dispatchers.Main) { eventSink?.success(json) }
         }
     }
