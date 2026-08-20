@@ -145,6 +145,18 @@ class _HomeScreenState extends State<HomeScreen>
             _scrollToBottom();
           }
           switch (type) {
+            case 'boot_progress':
+              // Diagnostic hardening, part 2 (per Sunni: build 732 still
+              // crashed with zero message — confirmed the crash happens
+              // below any Java-catchable layer, so nothing after-the-fact
+              // can report it). AuroraService.kt now marks each boot
+              // checkpoint live, before the heavy call for that stage
+              // runs — so whichever stage text is on screen at the moment
+              // of a crash is the last one actually reached, visible
+              // without needing adb or any post-crash retrieval at all.
+              if (mounted && text.isNotEmpty) {
+                setState(() { _statusTxt = 'Starting Aurora… ($text)'; });
+              }
             case 'axis_state':
               if (mounted) {
                 setState(() {

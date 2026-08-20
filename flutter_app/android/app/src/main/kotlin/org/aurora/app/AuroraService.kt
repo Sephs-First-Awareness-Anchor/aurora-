@@ -551,6 +551,31 @@ class AuroraService : Service() {
         }
     }
 
+    // Diagnostic hardening, part 2. Per Sunni: confirmed on build 732 that
+    // the crash still shows nothing -- no device to run adb, so
+    // installCrashHandler() from part 1 never fires at all. That means
+    // this isn't a catchable Java exception or even an OutOfMemoryError;
+    // something is killing the process outright (a native crash in a
+    // bundled .so, or the OS's low-memory killer stepping in) -- neither
+    // goes through any Java code, so no after-the-fact handler can ever
+    // see it. The only thing that can still work is reporting *which
+    // stage was reached* before death, live, so whichever stage is on
+    // screen (or last written to disk) when it dies tells us where.
+    private fun stageMarkerFile(): File = File(filesDir, "aurora_state/last_boot_stage.txt")
+
+    private suspend fun markStage(stage: String) {
+        Log.i(TAG, "Boot stage: $stage")
+        try {
+            val f = stageMarkerFile()
+            f.parentFile?.mkdirs()
+            f.writeText("time=${System.currentTimeMillis()} stage=$stage")
+        } catch (_: Throwable) { /* best-effort */ }
+        try {
+            val json = JSONObject().put("type", "boot_progress").put("text", stage).toString()
+            withContext(Dispatchers.Main) { eventSink?.success(json) }
+        } catch (_: Throwable) { /* never let progress reporting itself block boot */ }
+    }
+
     private suspend fun bootPython() {
         // Surface any crash the previous run's installCrashHandler() caught
         // (a real OutOfMemoryError/StackOverflowError, or anything else
@@ -567,12 +592,33 @@ class AuroraService : Service() {
             }
         } catch (_: Exception) { /* best-effort; never block boot on this */ }
 
+        // If the last boot never reached the end (no explicit crash caught
+        // above, since that path requires a catchable Java Throwable), the
+        // stage marker from that run is still sitting on disk, un-cleared.
+        // That absence-of-cleanup is itself the signal for a native/OS-level
+        // kill -- report it if installCrashHandler() didn't already have
+        // something more specific to say.
+        if (previousCrash == null) {
+            try {
+                val sf = stageMarkerFile()
+                if (sf.exists()) {
+                    val raw = sf.readText()
+                    val stage = raw.substringAfter("stage=", raw)
+                    previousCrash = "process died without a catchable error, last reached: $stage"
+                    sf.delete()
+                }
+            } catch (_: Exception) { /* best-effort */ }
+        }
+
+        markStage("starting python runtime")
         try {
             if (!Python.isStarted()) {
                 Python.start(AndroidPlatform(applicationContext))
             }
+            markStage("python runtime up, loading aurora module")
             val py     = Python.getInstance()
             val bridge = py.getModule("aurora_bridge")
+            markStage("aurora module loaded, initializing cognitive systems")
 
             val stateDir = filesDir.absolutePath + "/aurora_state"
             val status   = bridge.callAttr("initialize", stateDir).toString()
@@ -625,6 +671,7 @@ class AuroraService : Service() {
             }
             val json = jsonBuilder.toString()
             bootEvent = json
+            try { stageMarkerFile().delete() } catch (_: Throwable) {}
             withContext(Dispatchers.Main) { eventSink?.success(json) }
 
         } catch (e: Throwable) {
@@ -643,6 +690,10 @@ class AuroraService : Service() {
                 "{\"type\":\"error\",\"text\":\"init failed\"}"
             }
             bootEvent = json
+            // A catchable Throwable landed here, so this run's own crash
+            // report is more specific than the generic stage marker --
+            // clear it so a later boot doesn't redundantly repeat it.
+            try { stageMarkerFile().delete() } catch (_: Throwable) {}
             withContext(Dispatchers.Main) { eventSink?.success(json) }
         }
     }
