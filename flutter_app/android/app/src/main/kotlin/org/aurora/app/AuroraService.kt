@@ -1,5 +1,6 @@
 package org.aurora.app
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -8,6 +9,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -18,6 +21,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import io.flutter.plugin.common.EventChannel
@@ -444,13 +448,60 @@ class AuroraService : Service() {
         }
     }
 
+    // Root cause found (per Sunni's real stack trace, finally): "Unable to
+    // create service org.aurora.app.AuroraService" -- thrown synchronously
+    // from the plain startForeground(id, notification) call below, on
+    // Android 14+ (this app targets SDK 34). That overload implicitly
+    // claims EVERY foreground service type declared in the manifest
+    // ("microphone|camera") in one shot, and Android 14 requires the
+    // corresponding runtime permission to already be *granted* at that
+    // exact moment for each type claimed -- not just requested. MainActivity.
+    // kt's configureFlutterEngine() calls startAuroraService() BEFORE
+    // requestRuntimePermissions(), so on any fresh install (nothing granted
+    // yet -- e.g. every time this CI's ephemeral debug keystore changes,
+    // forcing a full reinstall instead of an in-place update, which resets
+    // all permission grants), this throws immediately, before Python ever
+    // gets a chance to boot. Explains the exact intermittency observed:
+    // works when mic/camera happen to already be granted from a prior
+    // install, crashes here when they don't.
+    //
+    // Fixed at the source rather than by reordering MainActivity: request
+    // only the foreground service types this process actually, currently
+    // holds permission for, via the API 29+ three-arg overload. A type
+    // this call doesn't claim is a strict subset of what the manifest
+    // declares, which Android allows -- claiming none of them (both
+    // permissions ungranted) is exactly as valid as claiming both. This is
+    // correct regardless of what order MainActivity ends up calling things
+    // in, and regardless of whether the user ever grants either permission
+    // at all.
+    private fun startForegroundSafely() {
+        val notification = buildNotification()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            var type = 0
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED) {
+                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+            }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                    == PackageManager.PERMISSION_GRANTED) {
+                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            }
+            startForeground(NOTIF_ID, notification, type)
+        } else {
+            // Pre-Android 10 has no per-call type argument, and this whole
+            // "must already hold the permission" enforcement is a
+            // 14+-specific behavior change -- the plain overload is safe here.
+            startForeground(NOTIF_ID, notification)
+        }
+    }
+
     override fun onCreate() {
         installCrashHandler()
         super.onCreate()
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
         createNotificationChannel()
-        startForeground(NOTIF_ID, buildNotification())
+        startForegroundSafely()
 
         initHardwareSensors()
 
