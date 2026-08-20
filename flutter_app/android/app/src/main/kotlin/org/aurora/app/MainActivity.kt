@@ -37,6 +37,7 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.nio.ByteBuffer
 import java.util.Locale
 import java.util.UUID
@@ -464,24 +465,48 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    // Diagnostic hardening, part 5 (per Sunni: she now boots all the way to
+    // "Listening…" -- boot itself succeeds -- but crashes again almost
+    // immediately after, too fast for any polling-loop heartbeat to catch).
+    // The first real native calls after a successful boot are exactly here:
+    // TextToSpeech.speak() (the 'ready' case in home_screen.dart calls
+    // _speak("Aurora is online.") right away) and SpeechRecognizer creation/
+    // start. Writes to the exact same last_boot_stage.txt file
+    // AuroraService.kt's bootPython() already reads and reports as
+    // previous_crash on the next launch -- same mechanism, same format,
+    // just also reachable from this class for the post-boot window
+    // AuroraService.kt's own markers don't cover.
+    private fun markAppStage(stage: String) {
+        try {
+            val f = File(filesDir, "aurora_state/last_boot_stage.txt")
+            f.parentFile?.mkdirs()
+            f.writeText("time=${System.currentTimeMillis()} stage=$stage")
+        } catch (_: Throwable) { /* best-effort */ }
+    }
+
     private fun nativeSpeak(text: String) {
         if (!ttsReady || text.isEmpty()) return
+        markAppStage("nativeSpeak: about to call tts.speak(\"${text.take(60)}\")")
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString())
+        markAppStage("nativeSpeak: tts.speak() call returned")
     }
 
     // ── STT ───────────────────────────────────────────────────────────────────
 
     private fun startNativeStt() {
+        markAppStage("startNativeStt: entered")
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) { requestRuntimePermissions(); return }
         if (!SpeechRecognizer.isRecognitionAvailable(this)) return
         // Repair Q: about to actively listen to a person -- there's a
         // face to react to now. See switchCamera()'s docstring for the
         // symmetric back-camera switch on TTS completion.
+        markAppStage("startNativeStt: about to switchCamera(front=true)")
         switchCamera(front = true)
         // SpeechRecognizer becomes stale after each session on Android — calling
         // startListening() on a previously-used instance silently does nothing.
         // Destroy and recreate every time so each session starts from a clean state.
+        markAppStage("startNativeStt: about to create SpeechRecognizer")
         speechRecognizer?.destroy()
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         speechRecognizer?.setRecognitionListener(sttListener)
@@ -491,7 +516,9 @@ class MainActivity : FlutterActivity() {
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
         }
+        markAppStage("startNativeStt: about to call speechRecognizer.startListening()")
         speechRecognizer?.startListening(intent)
+        markAppStage("startNativeStt: startListening() call returned")
     }
 
     // ── Camera (Aurora visual sensory intake) ─────────────────────────────────
