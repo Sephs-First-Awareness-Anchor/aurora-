@@ -1042,7 +1042,17 @@ _reg("corpus_train", "Start a training loop on a downloaded corpus", "PERSISTENT
 
 
 def _corpus_train_auto(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
-    """Start training on the best available corpus — auto-discovers the path."""
+    """Start training on the best available corpus — auto-discovers the path.
+
+    Codex-review-adjacent gap fixed 2026-08-20: this candidate list never
+    scanned aurora_state/corpora/ -- the exact directory corpus_hunter's
+    downloads (via aurora_corpus_lifecycle.download_new_corpus) and the
+    shipped conversation corpora (scripts/source_conversation_corpora.py,
+    the personal-transcript seed) actually live in. A gap-driven
+    corpus_hunter -> corpus_train_auto cycle would successfully fetch new
+    data and then find nothing to train on. Now falls back to the newest
+    file in that directory when none of the specific named candidates exist.
+    """
     _base = Path(__file__).resolve().parents[1]
     _candidates = [
         _base.parent / "conversations.json",
@@ -1056,6 +1066,18 @@ def _corpus_train_auto(systems: Optional[Dict[str, Any]] = None, **_) -> ToolRes
         if _c.exists() and _c.stat().st_size > 1024:
             corp_path = _c
             break
+    if corp_path is None:
+        _corpora_dir = _base / "aurora_state" / "corpora"
+        try:
+            _found = [
+                p for _ext in ("*.json", "*.jsonl", "*.csv", "*.txt")
+                for p in _corpora_dir.glob(_ext)
+                if p.is_file() and p.stat().st_size > 1024
+            ]
+            if _found:
+                corp_path = max(_found, key=lambda p: p.stat().st_mtime)
+        except Exception:
+            pass
     if corp_path is None:
         return ToolResult("corpus_train_auto", "", False, "No corpus found. Download one first.")
 

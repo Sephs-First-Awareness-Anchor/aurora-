@@ -46,6 +46,47 @@ def _mark_boot_stage(stage: str) -> None:
         pass
 
 
+def _apply_vocabulary_seed_once(state_dir: str) -> None:
+    """First-ever-boot only: backfill aurora_oets_web.json from the
+    corpus-trained vocabulary seed bundled with the app, so a fresh
+    install starts with baseline vocabulary instead of nothing (Sunni,
+    2026-08-20: "why can't we run her through a decent chunked dataset
+    for her to learn from before hand so she has a basic level of
+    understanding"). Runs BEFORE boot_aurora() so the enriched file loads
+    through the normal OETSPersistence.load_web() path unchanged.
+
+    Guarded by a marker file so this never runs a second time -- once a
+    device has its own real aurora_oets_web.json, this must never touch
+    it again. aurora_vocabulary_seed_apply.apply_seed() only ever adds
+    words the target doesn't already have, so even if the marker were
+    somehow lost, re-running it could not overwrite anything she's
+    learned since."""
+    marker_path = os.path.join(state_dir, "vocab_seed_applied.marker") if state_dir else "vocab_seed_applied.marker"
+    if os.path.exists(marker_path):
+        return
+    try:
+        bridge_dir = os.path.dirname(os.path.abspath(__file__))
+        seed_path = os.path.join(bridge_dir, "aurora_internal", "aurora_vocabulary_seed.json")
+        if not os.path.exists(seed_path):
+            return  # older bundle without a seed file — nothing to apply, no marker either
+        target_path = os.path.join(state_dir, "aurora_oets_web.json") if state_dir else "aurora_oets_web.json"
+        from aurora_vocabulary_seed_apply import apply_seed
+        stats = apply_seed(seed_path, target_path)
+        log.info("Vocabulary seed applied: %s", stats)
+        # Codex review, PR #169: marker must only be written on success --
+        # this used to live in a `finally`, so a transient failure here
+        # (storage full, target momentarily unreadable) still marked the
+        # seed as applied, permanently skipping it on every later boot
+        # even after the transient problem cleared.
+        try:
+            with open(marker_path, "w", encoding="utf-8") as f:
+                f.write(f"time={int(time.time() * 1000)}")
+        except Exception:
+            pass
+    except Exception as _seed_exc:
+        log.warning("Vocabulary seed application failed (non-fatal, will retry next boot): %s", _seed_exc)
+
+
 class _BootStageTee:
     """Mirrors stdout into _mark_boot_stage() during boot_aurora(), which
     already prints a per-layer '[L0] Foundational Contract...' / '[OK]'
@@ -1992,6 +2033,7 @@ def initialize(state_dir: str = "") -> str:
     # From here on, cwd == state_dir, so the ordinary relative-path
     # _mark_boot_stage() lands in the same file as the entry marker above.
     _mark_boot_stage("early registries constructed, cwd set, about to import aurora.py")
+    _apply_vocabulary_seed_once(state_dir)
     try:
         # Use the root aurora.py (unified runner) — it integrates the Language
         # Sub-Emergent Field and ThoughtIntegrationSpace into the response pipeline.
