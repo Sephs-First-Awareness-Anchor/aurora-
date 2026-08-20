@@ -51,6 +51,25 @@ class AuroraService : Service() {
 
         private var scope: CoroutineScope? = null
 
+        fun uploadContent(bytes: ByteArray, filename: String, contentType: String, callback: (String) -> Unit) {
+            // Repair R: mirrors sendMessage()'s exact async pattern above --
+            // Chaquopy call on the IO-launched scope, result posted back to
+            // the caller's callback. provide_uploaded_content does its own
+            // real dispatch (image/audio/text) and returns a JSON summary
+            // of what she actually did with it, not just an ack.
+            scope?.launch(Dispatchers.IO) {
+                val py     = Python.getInstance()
+                val bridge = py.getModule("aurora_bridge")
+                val reply = try {
+                    bridge.callAttr("provide_uploaded_content", bytes, filename, contentType).toString()
+                } catch (e: Exception) {
+                    Log.e(TAG, "uploadContent error: ${e.message}")
+                    JSONObject().put("ok", false).put("error", e.message ?: "unknown").toString()
+                }
+                callback(reply)
+            }
+        }
+
         fun sendMessage(text: String, callback: (String) -> Unit) {
             // Sunni & Cael, review follow-up: the UI observation journal's
             // timeline previously only ever recorded 3 of the 5 promised
@@ -104,6 +123,22 @@ class AuroraService : Service() {
                     Python.getInstance()
                         .getModule("aurora_bridge")
                         .callAttr("provide_camera_frame", jpegBytes)
+                } catch (_: Exception) {}
+            }
+        }
+
+        // Repair Q (per Sunni, 2026-08-19): front-camera face detection
+        // result -- detected=false with zeroed floats means "checked,
+        // nobody there" (distinct from never having checked at all).
+        // faceFraction: detected face's bounding-box area as a fraction
+        // of total frame area, a real proximity proxy. offsetX/offsetY:
+        // face center position, -1..1, for gaze/lean direction.
+        fun provideFaceObservation(detected: Boolean, faceFraction: Float, offsetX: Float, offsetY: Float) {
+            scope?.launch(Dispatchers.IO) {
+                try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("provide_face_observation", detected, faceFraction, offsetX, offsetY)
                 } catch (_: Exception) {}
             }
         }
@@ -418,6 +453,20 @@ class AuroraService : Service() {
                     .put("source", "aurora")
                     .put("type", "axis_state")
                 withContext(Dispatchers.Main) { eventSink?.success(axisObj.toString()) }
+            } catch (_: Exception) { /* Python not ready yet — skip this tick */ }
+            // Repair Q (per Sunni, 2026-08-19): get_face_state() has
+            // existed on the Python side with a docstring explicitly
+            // claiming "Kotlin polls this alongside axis_state" -- it
+            // never actually did. Same loop, same cadence, same
+            // best-effort skip-on-failure as axis_state directly above.
+            try {
+                val faceJson = Python.getInstance()
+                    .getModule("aurora_bridge")
+                    .callAttr("get_face_state").toString()
+                val faceObj = JSONObject(faceJson)
+                    .put("source", "aurora")
+                    .put("type", "face_state")
+                withContext(Dispatchers.Main) { eventSink?.success(faceObj.toString()) }
             } catch (_: Exception) { /* Python not ready yet — skip this tick */ }
         }
     }

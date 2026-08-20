@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../aurora_bridge.dart';
 import '../widgets/aurora_orb.dart';
@@ -44,6 +45,15 @@ class _HomeScreenState extends State<HomeScreen>
   Map<String, double> _axisState = {
     'X': 0.5, 'T': 0.5, 'N': 0.5, 'B': 0.5, 'A': 0.5,
   };
+
+  // ── Repair Q (per Sunni, 2026-08-19): front-camera face-proximity/gaze
+  // state, mirrors _axisState's shape/update pattern exactly. detected=false
+  // is a real, meaningful value ("checked, nobody in frame"), not just the
+  // absence of an update.
+  bool   _faceDetected   = false;
+  double _faceFraction   = 0.0;
+  double _faceOffsetX    = 0.0;
+  double _faceOffsetY    = 0.0;
 
   // ── STT / TTS state ─────────────────────────────────────────────────────
   bool   _listening   = false;
@@ -131,6 +141,22 @@ class _HomeScreenState extends State<HomeScreen>
                     'B': (event['B'] as double?) ?? _axisState['B']!,
                     'A': (event['A'] as double?) ?? _axisState['A']!,
                   };
+                });
+              }
+            case 'face_state':
+              // Repair Q: mirrors axis_state's exact update pattern.
+              // detected/face_fraction/offset_x/offset_y come straight
+              // through from aurora_bridge.py's get_face_state() JSON,
+              // which is itself a direct pass-through of MainActivity.
+              // detectFace()'s ML Kit result -- no reinterpretation at
+              // this layer, only forwarded to AuroraOrb for the actual
+              // visual reaction.
+              if (mounted) {
+                setState(() {
+                  _faceDetected = (event['detected'] as bool?) ?? _faceDetected;
+                  _faceFraction = (event['face_fraction'] as double?) ?? _faceFraction;
+                  _faceOffsetX  = (event['offset_x'] as double?) ?? _faceOffsetX;
+                  _faceOffsetY  = (event['offset_y'] as double?) ?? _faceOffsetY;
                 });
               }
             case 'ready':
@@ -389,6 +415,71 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
+  // Repair R (per Sunni, 2026-08-19): "providing me a way to upload
+  // files and audio and pictures she then receives and processes would
+  // be a huge benefit to her discovery and development." Mirrors
+  // _sendMessage's exact shape -- a user-side message documenting what
+  // was shared, then whatever she genuinely did with it, sourced
+  // directly from provide_uploaded_content()'s real result. contentType
+  // sent here is only ever a hint (file extension) -- the Python side
+  // sniffs actual content and is the real authority on what this is.
+  Future<void> _uploadFile() async {
+    final picked = await FilePicker.platform.pickFiles(withData: true);
+    if (picked == null || picked.files.isEmpty) return;
+    final file = picked.files.single;
+    final bytes = file.bytes;
+    if (bytes == null) {
+      if (mounted) {
+        setState(() => _msgs.add(ChatMsg(
+            "Couldn't read that file — no data came through.", isUser: false)));
+      }
+      return;
+    }
+    final ext = (file.extension ?? '').toLowerCase();
+    final contentTypeHint = switch (ext) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'wav' => 'audio/wav',
+      'txt' || 'md' => 'text/plain',
+      _ => 'unknown',
+    };
+
+    setState(() {
+      _msgs.add(ChatMsg('[uploaded: ${file.name}]', isUser: true));
+      _statusTxt = 'Processing upload…';
+    });
+    _scrollToBottom();
+
+    final result = await AuroraBridge.uploadContent(bytes, file.name, contentTypeHint);
+    if (!mounted) return;
+
+    String feedback;
+    if (result['ok'] != true) {
+      feedback = "Couldn't make sense of that: ${result['error'] ?? 'unknown error'}";
+    } else {
+      final kind = result['kind'] as String? ?? 'unknown';
+      final detail = Map<String, dynamic>.from(result['detail'] as Map? ?? {});
+      feedback = switch (kind) {
+        'text' => (detail['response'] as String?)?.isNotEmpty == true
+            ? detail['response'] as String
+            : '(read it, but had nothing more to say)',
+        'image_jpeg' || 'image_png' =>
+          'I see it — ${detail['dominant_hue'] ?? 'a color I couldn\'t place'}, '
+          'brightness ${((detail['brightness'] as num?) ?? 0).toStringAsFixed(2)}.',
+        'audio_wav' =>
+          'I hear it — ${detail['activity'] ?? 'something'}'
+          '${detail['pitch_hz'] != null ? ' around ${(detail['pitch_hz'] as num).toStringAsFixed(0)} Hz' : ''}.',
+        _ => "Received it, but couldn't identify what kind of content it was.",
+      };
+    }
+
+    setState(() {
+      _msgs.add(ChatMsg(feedback, isUser: false));
+      _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…';
+    });
+    _scrollToBottom();
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollCtrl.hasClients) {
@@ -461,6 +552,10 @@ class _HomeScreenState extends State<HomeScreen>
                 pulse:     _pulseAnim,
                 axisState: _axisState,
                 size:      116,   // height ≈ 116 × 1.9 = 220 dp
+                faceDetected: _faceDetected,
+                faceFraction: _faceFraction,
+                faceOffsetX:  _faceOffsetX,
+                faceOffsetY:  _faceOffsetY,
               ),
               const SizedBox(height: 6),
               statusWidget,
@@ -480,7 +575,7 @@ class _HomeScreenState extends State<HomeScreen>
                   itemBuilder: (_, i) => _ChatBubble(msg: _msgs[i]),
                 ),
               ),
-              _InputBar(controller: _textCtrl, onSend: _sendMessage),
+              _InputBar(controller: _textCtrl, onSend: _sendMessage, onUpload: _uploadFile),
             ] else ...[
               // ── Idle: orb fills all available space ──────────────────────
               // Tap anywhere on the avatar to summon Aurora.
@@ -499,6 +594,10 @@ class _HomeScreenState extends State<HomeScreen>
                             axisState: _axisState,
                             size:      h * 0.48,
                             height:    h,
+                            faceDetected: _faceDetected,
+                            faceFraction: _faceFraction,
+                            faceOffsetX:  _faceOffsetX,
+                            faceOffsetY:  _faceOffsetY,
                           ),
                           // Status / partial-speech text floats near the bottom
                           Positioned(
@@ -625,7 +724,8 @@ class _ChatBubble extends StatelessWidget {
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onSend;
-  const _InputBar({required this.controller, required this.onSend});
+  final VoidCallback onUpload;
+  const _InputBar({required this.controller, required this.onSend, required this.onUpload});
 
   @override
   Widget build(BuildContext context) {
@@ -636,6 +736,22 @@ class _InputBar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // Repair R: upload trigger sits ahead of the text field, same
+          // tap-target size as the send button, so it reads as an equal
+          // sibling input method rather than a buried menu option.
+          GestureDetector(
+            onTap: onUpload,
+            child: Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1C1C28),
+                shape: BoxShape.circle,
+                border: Border.all(color: _purple.withOpacity(0.4), width: 1),
+              ),
+              child: const Icon(Icons.attach_file_rounded, color: _purple, size: 20),
+            ),
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: controller,

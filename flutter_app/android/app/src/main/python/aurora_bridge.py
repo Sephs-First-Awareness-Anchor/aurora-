@@ -4047,6 +4047,40 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
             )
         response = _sanitize_response(_extract_response(result), text)
 
+        # Repair P (per Sunni, 2026-08-19): _last_axis_state's X/T/N/B/A
+        # were never written anywhere in this file -- confirmed by
+        # searching every assignment pattern before touching anything.
+        # Only "speaking" was ever updated, so every consumer downstream
+        # (the face's axis_state event to Flutter, _get_dominant_axis(),
+        # the CPM i-state application, and the waveform pressure
+        # injection right below this) was reading a permanently frozen
+        # {0.5, 0.5, 0.5, 0.5, 0.5} default -- which is why _get_dominant_
+        # axis() always returned "X" (a five-way tie resolves to the
+        # first key) regardless of what she actually just felt.
+        # systems['_prev_axis_activation'] is the real, live, per-turn
+        # axis state -- the exact same key this session's backend work
+        # verified and used repeatedly tonight (set at the end of every
+        # comprehension pass). Written here, under the same lock every
+        # other writer in this file already uses, BEFORE _dom/_pol get
+        # computed below, so the face, the CPM, and the waveform
+        # injection all inherit the fix from this one write.
+        try:
+            _real_axes = dict(_systems.get("_prev_axis_activation") or {}) if _systems else {}
+            if _real_axes:
+                with _axis_state_lock:
+                    for _ax_k in ("X", "T", "N", "B", "A"):
+                        if _ax_k in _real_axes:
+                            _last_axis_state[_ax_k] = float(_real_axes[_ax_k])
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:handle_message.real_axis_state_write",
+                exc=_aurora_boundary_exc,
+                context={"function": "handle_message", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
+            pass
+
         # ── CPM + waveform: record synthesis outcome as pressure disturbance ────
         # The dominant axis + polarity of the just-completed synthesis turn is:
         #   (a) applied as an I-state to the CPM's active crystal tape
@@ -9138,6 +9172,27 @@ def _proactive_loop() -> None:
                 _lock.release()
 
             response = _sanitize_response(_extract_response(result), obs)
+            # Repair P continued: same fix as the direct-reply call site --
+            # this loop is what's supposed to drive her idle/ambient
+            # expression (the face breathing on its own between turns,
+            # not just reacting to direct replies), so it needs the same
+            # real axis write, not just the primary conversational path.
+            try:
+                _real_axes_pl = dict(_systems.get("_prev_axis_activation") or {}) if _systems else {}
+                if _real_axes_pl:
+                    with _axis_state_lock:
+                        for _ax_k in ("X", "T", "N", "B", "A"):
+                            if _ax_k in _real_axes_pl:
+                                _last_axis_state[_ax_k] = float(_real_axes_pl[_ax_k])
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:_proactive_loop.real_axis_state_write",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_proactive_loop", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
+                pass
             if response and len(response.strip()) > 10:
                 with _proactive_expression_lock:
                     global _proactive_expression
@@ -9393,6 +9448,81 @@ def provide_camera_frame(jpeg_bytes) -> None:
             log.warning("provide_camera_frame fallback also failed: %s", exc2)
 
 
+# Repair Q (per Sunni, 2026-08-19): "if I get close to the phone when
+# talking she could pull her face to one side away from me... or she
+# could pull her face close to the screen." Real, on-device (ML Kit,
+# Kotlin-side -- see MainActivity.kt's detectFace()) face detection now
+# feeds this. detected=False with zeroed floats means "checked this
+# tick, nobody in frame" -- distinct from having never checked.
+_last_face_observation = {"detected": False, "face_fraction": 0.0, "offset_x": 0.0, "offset_y": 0.0}
+_last_face_observation_lock = threading.Lock()
+
+
+def provide_face_observation(detected: bool, face_fraction: float, offset_x: float, offset_y: float) -> None:
+    """
+    Called from Kotlin (MainActivity.detectFace via AuroraService.
+    provideFaceObservation) with one front-camera face-detection result.
+
+    face_fraction: detected face's bounding-box area as a fraction of the
+    full frame -- a real, direct proximity proxy (a closer face fills
+    more of the frame, exactly the way it reads to a person looking at
+    a screen). offset_x/offset_y: face center position, -1..1, for
+    gaze/lean direction -- passed through to Flutter for the face
+    widget's own visual reaction (which side to lean, whether to look
+    toward), not reinterpreted here.
+
+    Also injects a real waveform pressure disturbance when a face is
+    genuinely close (matching Repair I/N's pattern on the backend: real
+    events, not synthetic ones, ripple the pond) -- proximity reads as
+    boundary/personal-space pressure (B axis), since that's what it
+    actually is: another presence entering close physical range, not an
+    abstract input. Only fires above a real closeness floor, not on
+    every detection, so an incidental face at normal conversational
+    distance doesn't constantly perturb the field.
+    """
+    global _last_face_observation
+    try:
+        with _last_face_observation_lock:
+            _last_face_observation = {
+                "detected": bool(detected),
+                "face_fraction": float(face_fraction),
+                "offset_x": float(offset_x),
+                "offset_y": float(offset_y),
+            }
+        if detected and face_fraction > 0.22:  # roughly "leaning in" territory, not just present
+            _pump = _systems.get("pressure_pump") if _systems else None
+            _ifield = _systems.get("identity_field") if _systems else None
+            if _pump is not None and _ifield is not None:
+                from aurora_waveform_pressure import WaveformPressurePump as _WFPumpFace
+                _closeness = min(1.0, float(face_fraction))
+                _face_axes = {"B": _closeness, "A": _closeness * 0.4}
+                _face_dist = _WFPumpFace.from_axis_state(
+                    _face_axes, source="face_proximity", intensity=min(0.6, _closeness), coupling_mode="full",
+                )
+                _pump.inject(_face_dist, _ifield, qao=_systems.get("quasiarch_observer"))
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:provide_face_observation",
+            exc=_aurora_boundary_exc,
+            context={"function": "provide_face_observation", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
+        pass
+
+
+def get_face_state() -> str:
+    """
+    Return the current face-detection observation as JSON. Mirrors
+    get_axis_state()'s exact polling contract -- Kotlin polls this
+    alongside axis_state and pushes a "face_state" event to Flutter,
+    where the face widget uses it for proximity/gaze reactions.
+    """
+    import json as _json
+    with _last_face_observation_lock:
+        return _json.dumps(_last_face_observation)
+
+
 def _estimate_pitch_autocorr(samples, sample_rate: int):
     """Simple time-domain autocorrelation pitch estimate, bounded to the
     80-1000 Hz range (covers speech/most ambient tonal sound). Returns
@@ -9527,6 +9657,34 @@ def provide_audio_observation_raw(pcm_bytes, sample_rate: int = 16000) -> None:
 
         confidence = 0.45 + 0.30 * harmonicity
         provide_audio_observation(activity, rms_db, confidence, **extras)
+
+        # Repair Q (per Sunni, 2026-08-19): "I wanna know how she
+        # processes music and how that ripples her pond." Same pattern
+        # as provide_face_observation's proximity injection just above
+        # in this file -- real, computed features become a real
+        # waveform disturbance, not a passive store nobody reads live.
+        # Loudness (rms_db, normalized from its typical -60..0 dB range)
+        # maps to N -- energy is what loudness actually is, physically.
+        # Harmonicity maps to T, boosted specifically for "music" --
+        # tonal, temporally-patterned sound engaging the temporal axis
+        # more than undifferentiated noise at the same loudness would.
+        # Gated on activity != silence/ambient AND a real loudness floor,
+        # matching the face-proximity gate's intent: routine background
+        # presence shouldn't constantly perturb the field, a genuine
+        # acoustic event should.
+        if activity not in ("silence", "ambient") and rms_db > -35.0:
+            _pump = _systems.get("pressure_pump") if _systems else None
+            _ifield = _systems.get("identity_field") if _systems else None
+            if _pump is not None and _ifield is not None:
+                from aurora_waveform_pressure import WaveformPressurePump as _WFPumpAudio
+                _loudness = max(0.0, min(1.0, (rms_db + 60.0) / 60.0))
+                _t_component = harmonicity * (1.15 if activity == "music" else 0.85)
+                _audio_axes = {"N": _loudness, "T": max(0.0, min(1.0, _t_component))}
+                _audio_dist = _WFPumpAudio.from_axis_state(
+                    _audio_axes, source=f"audio_{activity}",
+                    intensity=min(0.55, _loudness), coupling_mode="full",
+                )
+                _pump.inject(_audio_dist, _ifield, qao=_systems.get("quasiarch_observer"))
     except Exception as exc:
         log.warning("provide_audio_observation_raw: %s", exc)
 
@@ -9831,6 +9989,151 @@ def stop_ui_observation_session() -> str:
         log.warning("stop_ui_observation_session: %s", exc)
         _ui_observation_session = {}
         return "{}"
+
+
+def provide_uploaded_content(file_bytes, filename: str = "upload", content_type: str = "unknown") -> str:
+    """
+    Repair R (per Sunni, 2026-08-19): "providing me a way to upload files
+    and audio and pictures she then receives and processes would be a huge
+    benefit to her discovery and development." Real dispatch by sniffing
+    actual file magic bytes, not by trusting filename/content_type --
+    those are Dart's best-effort UI guesses, never verified fact.
+
+    Deliberately reuses existing, real, already-verified pipelines rather
+    than building parallel ones: images route through the exact same
+    provide_camera_frame() used for live camera frames (PIL opens PNG/JPEG
+    alike -- "jpeg_bytes" there is historical naming, not a hard format
+    requirement, confirmed by reading it directly), WAV audio routes
+    through the exact same provide_audio_observation_raw() used for live
+    microphone capture, and text routes through the real
+    process_external_user_turn() -- the same function this entire
+    session's backend work was built and verified against -- so an
+    uploaded document actually reaches comprehension, genealogy, and
+    WARP exactly like anything spoken to her would, not a side-channel
+    imitation of it.
+
+    Returns a JSON string describing what was ACTUALLY done, never a bare
+    acknowledgment -- "uploaded successfully" and "she processed this"
+    are different claims, and this only ever makes the one that's true.
+    """
+    import json as _json
+    result: dict = {"ok": False, "filename": str(filename), "kind": "unknown"}
+    try:
+        raw = bytes(file_bytes)
+        if len(raw) < 4:
+            result["error"] = "empty_or_too_small"
+            return _json.dumps(result)
+
+        # Real content sniffing (magic bytes), not the filename/hint.
+        if raw[:2] == b"\xff\xd8":
+            kind = "image_jpeg"
+        elif raw[:8] == b"\x89PNG\r\n\x1a\n":
+            kind = "image_png"
+        elif raw[:4] == b"RIFF" and raw[8:12] == b"WAVE":
+            kind = "audio_wav"
+        else:
+            # Sniffing found no recognized binary signature -- try decoding
+            # as text. A real decode success is still evidence, not the
+            # unverified content_type hint standing in for it.
+            try:
+                raw.decode("utf-8")
+                kind = "text"
+            except UnicodeDecodeError:
+                kind = "unrecognized"
+
+        if kind in ("image_jpeg", "image_png"):
+            provide_camera_frame(raw)
+            summary = dict(_last_camera_observation or {})
+            result["detail"] = {
+                "brightness": summary.get("brightness"),
+                "dominant_hue": summary.get("dominant_hue"),
+            }
+            # A deliberate upload is a stronger, more intentional event
+            # than passive ambient camera capture -- inject its own
+            # waveform disturbance (distinct source tag) rather than
+            # relying solely on provide_camera_frame's own sensory-crystal
+            # accumulation path, which is designed for gradual ambient
+            # signal, not a single deliberate "look at this" moment.
+            try:
+                _pump = _systems.get("pressure_pump") if _systems else None
+                _ifield = _systems.get("identity_field") if _systems else None
+                if _pump is not None and _ifield is not None:
+                    from aurora_waveform_pressure import WaveformPressurePump as _WFPumpUpload
+                    _dist = _WFPumpUpload.from_axis_state(
+                        {"X": 0.5, "B": 0.3}, source="uploaded_image",
+                        intensity=0.55, coupling_mode="full",
+                    )
+                    _pump.inject(_dist, _ifield, qao=_systems.get("quasiarch_observer"))
+            except Exception:
+                pass
+
+        elif kind == "audio_wav":
+            import io as _io
+            import wave as _wave
+            with _wave.open(_io.BytesIO(raw), "rb") as _wf:
+                sample_rate = _wf.getframerate()
+                n_channels = _wf.getnchannels()
+                sampwidth = _wf.getsampwidth()
+                pcm = _wf.readframes(_wf.getnframes())
+            # provide_audio_observation_raw expects little-endian 16-bit
+            # mono -- downmix/convert here rather than silently mis-reading
+            # a different format as if it already matched.
+            if sampwidth != 2:
+                result["error"] = f"unsupported_sample_width:{sampwidth * 8}bit (need 16-bit PCM)"
+                return _json.dumps(result)
+            if n_channels > 1:
+                import numpy as _np
+                arr = _np.frombuffer(pcm, dtype="<i2").reshape(-1, n_channels)
+                pcm = arr.mean(axis=1).astype("<i2").tobytes()
+            provide_audio_observation_raw(pcm, sample_rate)
+            result["detail"] = dict(_last_audio_observation or {})
+
+        elif kind == "text":
+            text = raw.decode("utf-8", errors="replace").strip()
+            if not text:
+                result["error"] = "empty_text"
+                return _json.dumps(result)
+            # Bounded -- this reaches real comprehension, not a log; an
+            # arbitrarily huge upload should not become one unbounded turn.
+            MAX_CHARS = 8000
+            truncated = len(text) > MAX_CHARS
+            if truncated:
+                text = text[:MAX_CHARS]
+            import aurora as _aurora  # type: ignore
+            if _systems is not None:
+                turn_result = _aurora.process_external_user_turn(
+                    _systems,
+                    text,
+                    source_label="file_upload",
+                    session_id="mobile",
+                    auto_search_enabled=True,
+                    record_exchange=True,
+                    update_interactive_state=False,
+                    track_evolutionary_trace=True,
+                    run_periodic_maintenance=False,
+                    mode_name="BOUNDED",
+                )
+                response = _sanitize_response(_extract_response(turn_result), text)
+                result["detail"] = {"response": response, "truncated": truncated, "chars_processed": len(text)}
+            else:
+                result["error"] = "systems_not_initialized"
+                return _json.dumps(result)
+
+        else:
+            result["error"] = "unrecognized content (sniffed no known image/audio signature, not valid UTF-8 text)"
+            return _json.dumps(result)
+
+        result["ok"] = True
+        result["kind"] = kind
+    except Exception as exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:provide_uploaded_content",
+            exc=exc,
+            context={"function": "provide_uploaded_content", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+        )
+        result["error"] = str(exc)
+    return _json.dumps(result, default=str)
 
 
 def provide_screen_observation(payload_json: str) -> None:
@@ -10443,6 +10746,101 @@ def get_cognitive_stats() -> str:
                     context={"function": "get_cognitive_stats", "handler_line": 8302, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
                 )
                 pass
+
+        # ── Repair R (per Sunni, 2026-08-19): genealogy mapping + quasiarch
+        # diagnostics for the Hub's auditing surface. Note this is the REAL
+        # genealogy (systems['genealogy'], the ConstraintGenealogyLogger
+        # with real per-turn ability admission/promotion), distinct from
+        # chamber._genealogy above (EvolutionaryChamber's own, smaller,
+        # concept-crystal-scoped genealogy -- kept untouched, this adds a
+        # second, clearly-separated stats block rather than conflating them).
+        genealogy = _systems.get("genealogy")
+        if genealogy is not None and hasattr(genealogy, "abilities"):
+            try:
+                axis_counts: dict = {"X": 0, "T": 0, "N": 0, "B": 0, "A": 0}
+                recent_abilities = []
+                for ab in genealogy.abilities.values():
+                    ax = str(getattr(ab, "axis", "") or "").upper()
+                    if ax in axis_counts:
+                        axis_counts[ax] += 1
+                # Repair R fix (caught before shipping): AbilityProfile
+                # has no created_at_tick field at all -- that's only on
+                # ConstraintLink (confirmed by reading the real dataclass
+                # directly). Sorting by a nonexistent attribute would have
+                # silently defaulted every ability to the same tiebreak
+                # value, giving arbitrary rather than genuinely-recent
+                # order. genealogy.abilities is a plain dict, and Python
+                # dicts have preserved insertion order since 3.7 -- the
+                # last N items ARE the most recently admitted abilities,
+                # with no per-item timestamp needed at all.
+                try:
+                    recent_items = list(genealogy.abilities.items())[-8:]
+                    recent_items.reverse()  # most-recent first
+                    for _aid, ab in recent_items:
+                        recent_abilities.append({
+                            "id": str(getattr(ab, "id", "") or ""),
+                            "axis": str(getattr(ab, "axis", "") or ""),
+                            "tags": list(getattr(ab, "effect_tags", ()) or ())[:4],
+                        })
+                except Exception:
+                    pass
+                stats["genealogy_ability_count"] = len(genealogy.abilities)
+                stats["genealogy_axis_counts"] = axis_counts
+                stats["genealogy_recent_abilities"] = recent_abilities
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="get_cognitive_stats:real_genealogy", exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats"})
+
+        # WarpField recent demand/decision activity -- real routing
+        # history (source, trigger, severity, pathway), the same
+        # WarpDecision objects verified live throughout this session's
+        # backend work (Repairs D/N/O all produced and traced these).
+        warp_field = _systems.get("warp_field")
+        if warp_field is not None and hasattr(warp_field, "_decisions"):
+            try:
+                recent_demands = []
+                for d in list(warp_field._decisions)[-8:]:
+                    demand = getattr(d, "demand", None)
+                    recent_demands.append({
+                        "source": str(getattr(demand, "source", "") or ""),
+                        "trigger": str(getattr(demand, "trigger", "") or ""),
+                        "severity": round(float(getattr(demand, "severity", 0.0) or 0.0), 3),
+                        "pathway": str(getattr(d, "pathway", "") or ""),
+                    })
+                stats["warp_recent_demands"] = recent_demands
+                stats["warp_actuator_count"] = len(getattr(warp_field, "_warp_capable_registry", {}) or {})
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="get_cognitive_stats:warp_field", exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats"})
+
+        # QuasiArch self-repair diagnostics -- real intervention events
+        # (what she noticed was going wrong with her own dialogue/
+        # articulation, what she tried, whether it resolved), not a
+        # synthetic summary.
+        qao = _systems.get("quasiarch_observer")
+        if qao is not None and hasattr(qao, "recent_events"):
+            try:
+                recent_interventions = []
+                for ev in list(qao.recent_events)[-8:]:
+                    if not isinstance(ev, dict):
+                        continue
+                    recent_interventions.append({
+                        "target": str(ev.get("target", "") or ""),
+                        "issue": str(ev.get("issue", "") or ""),
+                        "intervention": str(ev.get("intervention", "") or ""),
+                        "observed_effect": str(ev.get("observed_effect", "") or ""),
+                    })
+                stats["quasiarch_recent_interventions"] = recent_interventions
+                stats["quasiarch_event_count"] = len(qao.recent_events)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="get_cognitive_stats:quasiarch", exc=_aurora_boundary_exc,
+                    context={"function": "get_cognitive_stats"})
 
     except Exception as exc:
         _aurora_record_exception_from_locals(

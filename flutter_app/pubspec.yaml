@@ -8,6 +8,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Repair R (per Sunni, 2026-08-19): "providing me a way to upload files
+  # and audio and pictures she then receives and processes." Real,
+  # widely-used cross-platform file selection -- no native Android code
+  # needed for the picker UI itself, only for what happens after
+  # (uploadContent in MainActivity.kt/AuroraService.kt).
+  file_picker: ^8.1.2
 
 dev_dependencies:
   flutter_test:
