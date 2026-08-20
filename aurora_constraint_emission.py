@@ -1261,6 +1261,24 @@ class ConstraintEmitter:
         words = re.findall(r"[A-Za-z']+", text or "")
         return sum(1 for w in words if len(w) > 2 and w.lower() not in _ANCHOR_TOKEN_STOPWORDS)
 
+    @staticmethod
+    def _strip_internal_annotation(text: str) -> str:
+        """Confirmed live (Sunni, 2026-08-21): aurora.py's dual_question_pipeline
+        appends 'f"{user_text} [Internal: {gap_result[\'content\']}]"' to carry
+        an internal reasoning note forward as context for the rest of that
+        turn's processing -- but that mutated user_text is the same string
+        that becomes ctx.input_frame.text, and this module's staged
+        seek-to-understand protocol (_advance_awaiting_meaning/_example/
+        _validation) quotes that text verbatim into what she says out loud
+        ("Let me try it: {source} — is that using 'X' the way you mean?").
+        Without this strip, her own internal reasoning trace -- things like
+        "[Internal: I've added 'learn' as in a minute. That shifts how I
+        reason through this thread...]" -- gets spoken as if it were part
+        of what Sunni said. Never touch the upstream annotation mechanism
+        itself (other code may depend on user_text carrying that context);
+        just never let it leak into text attributed back to the user here."""
+        return re.sub(r"\s*\[Internal:.*\]\s*$", "", text or "", flags=re.DOTALL).strip()
+
     _AFFIRM_MARKERS = ("yes", "yeah", "yep", "right", "correct", "exactly", "that's it", "precisely")
     _NEGATE_MARKERS = ("no", "nope", "not quite", "not really", "wrong", "not exactly", "close but", "actually no")
 
@@ -1423,7 +1441,7 @@ class ConstraintEmitter:
         treated as a dictionary definition, stored and used exactly as given."""
         topic      = flag.get("topic") or ""
         axis_snap  = flag.get("axis_snapshot", {})
-        reply_text = ctx.input_frame.text if ctx.input_frame else ""
+        reply_text = self._strip_internal_annotation(ctx.input_frame.text if ctx.input_frame else "")
 
         # Codex review, PR #168: don't write to the OETS node yet.
         # SemanticNode.add_definition() -> _recalculate_depth() ->
@@ -1468,7 +1486,7 @@ class ConstraintEmitter:
     def _advance_awaiting_example(self, ctx: EmissionContext, flag_key: str, flag: Dict[str, Any]) -> EmissionResult:
         topic      = flag.get("topic") or ""
         axis_snap  = flag.get("axis_snapshot", {})
-        reply_text = ctx.input_frame.text if ctx.input_frame else ""
+        reply_text = self._strip_internal_annotation(ctx.input_frame.text if ctx.input_frame else "")
 
         # Codex review, PR #168: same deferral as _advance_awaiting_meaning
         # -- an example offered before validation is still provisional, so
@@ -1496,7 +1514,7 @@ class ConstraintEmitter:
         topic      = flag.get("topic") or ""
         axis_snap  = flag.get("axis_snapshot", {})
         shape      = flag.get("predicted_answer_shape", "entity")
-        reply_text = ctx.input_frame.text if ctx.input_frame else ""
+        reply_text = self._strip_internal_annotation(ctx.input_frame.text if ctx.input_frame else "")
         self._record_seeking_progress(ctx, topic, shape, reply_text, axis_snap)
 
         sf = ctx.working_memory.seeking_flags.get(flag_key) if hasattr(ctx.working_memory, "seeking_flags") else None
