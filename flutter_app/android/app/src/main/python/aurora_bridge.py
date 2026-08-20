@@ -22,10 +22,54 @@ import os
 import re
 import sys
 import threading
+import time
 import traceback
 from typing import Optional
 
 log = logging.getLogger("aurora_bridge")
+
+# Diagnostic hardening, part 3 (per Sunni: build 732/733 confirmed the
+# crash happens inside initialize()'s single opaque boot_aurora() call --
+# AuroraService.kt's own stage markers can only bound it to "died during
+# initialize()", not say where inside it, since that's one Kotlin->Python
+# call from its side). Writes to the exact same last_boot_stage.txt file
+# AuroraService.kt already reads on the next boot (identical
+# "time=<ms> stage=<text>" format), from inside Python instead -- extends
+# the same mechanism one level deeper rather than inventing a new one.
+# Deliberately as cheap and defensive as possible: a stage marker must
+# never itself become a new crash.
+def _mark_boot_stage(stage: str) -> None:
+    try:
+        with open("last_boot_stage.txt", "w", encoding="utf-8") as f:
+            f.write(f"time={int(time.time() * 1000)} stage={stage}")
+    except Exception:
+        pass
+
+
+class _BootStageTee:
+    """Mirrors stdout into _mark_boot_stage() during boot_aurora(), which
+    already prints a per-layer '[L0] Foundational Contract...' / '[OK]'
+    trail when verbose=True -- reusing that existing, already-labeled
+    checkpoint trail instead of instrumenting the 1.8MB aurora.py boot
+    function directly. Real stdout is still written through unchanged."""
+
+    def __init__(self, real):
+        self._real = real
+
+    def write(self, s):
+        try:
+            stripped = s.strip()
+            if stripped:
+                _mark_boot_stage(f"boot_aurora: {stripped}")
+        except Exception:
+            pass
+        return self._real.write(s)
+
+    def flush(self):
+        return self._real.flush()
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
 
 _systems       = None
 _lock          = threading.Lock()
@@ -1932,22 +1976,36 @@ def initialize(state_dir: str = "") -> str:
         # Use the root aurora.py (unified runner) — it integrates the Language
         # Sub-Emergent Field and ThoughtIntegrationSpace into the response pipeline.
         import aurora as _aurora  # type: ignore  (root aurora.py)
-        kwargs: dict = {"verbose": False}
+        # verbose=True (was False) + the stdout tee below: boot_aurora() already
+        # prints a per-layer "[L0] Foundational Contract..."/"[OK]" trail when
+        # verbose is on -- every `if verbose:` site audited is a bare print(),
+        # nothing heavier (_ensure_runtime_dependencies() returns immediately
+        # regardless, gated on AURORA_SKIP_DEP_INSTALL set above). Capturing
+        # that existing trail is how we see which layer boot_aurora() reaches
+        # before dying, without touching its 1.8MB body at all.
+        kwargs: dict = {"verbose": True}
         if state_dir:
             kwargs["state_dir"] = state_dir
+        _mark_boot_stage("about to call boot_aurora()")
+        _real_stdout = sys.stdout
         try:
-            with _lock:
-                _systems = _aurora.boot_aurora(**kwargs)
-        except TypeError as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1682",
-                exc=_aurora_boundary_exc,
-                context={"function": "initialize", "handler_line": 1682, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-            )
-            with _lock:
-                _systems = _aurora.boot_aurora(state_dir=state_dir) if state_dir else _aurora.boot_aurora()
+            sys.stdout = _BootStageTee(_real_stdout)
+            try:
+                with _lock:
+                    _systems = _aurora.boot_aurora(**kwargs)
+            except TypeError as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1682",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "initialize", "handler_line": 1682, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                )
+                with _lock:
+                    _systems = _aurora.boot_aurora(state_dir=state_dir, verbose=True) if state_dir else _aurora.boot_aurora(verbose=True)
+        finally:
+            sys.stdout = _real_stdout
+        _mark_boot_stage("boot_aurora() returned")
         if _systems is None:
             return "error: boot_aurora returned None"
 
@@ -1988,10 +2046,12 @@ def initialize(state_dir: str = "") -> str:
 
         # Initialize Constraint Physics Machine — requires lattice (from boot_aurora)
         # and _concept_registry (initialized above).  Must come after both.
+        _mark_boot_stage("initializing constraint physics machine")
         _init_cpm(_systems)
 
         # Initialize skill memory — persistent store for procedures Aurora has
         # learned from being taught how to do something she previously could not.
+        _mark_boot_stage("loading skill memory")
         global _skill_memory
         try:
             from aurora_dream_trainer import SkillMemory  # type: ignore
@@ -2006,6 +2066,7 @@ def initialize(state_dir: str = "") -> str:
         # system has self-referential data to draw from.  core_identity already
         # holds her name from persistence; here we pump it through the identity
         # field and sedimemory so it carries genuine cognitive weight.
+        _mark_boot_stage("seeding self identity")
         _seed_self_identity(_systems)
 
         # Ground self-knowledge in actual system patterns.
@@ -2013,17 +2074,20 @@ def initialize(state_dir: str = "") -> str:
         # memories, and entropy/coherence and pumps those observations back as
         # self-recognition events.  She understands herself through what her
         # architecture has actually done, not only what she was told she is.
+        _mark_boot_stage("grounding self identity in systems")
         _ground_self_identity_in_systems(_systems)
 
         # Spawn the simulated self-entity — Aurora's live mirror of herself.
         # InceptionEntity(i_is / BOUNDED) receives axis + hardware state as
         # experiences each heartbeat tick, building a continuously-updated
         # self-model she can observe without constructing it from scratch.
+        _mark_boot_stage("spawning self entity")
         _init_self_entity(_systems)
 
         # Load persisted concept crystal registry so concepts Aurora developed
         # in previous sessions are available immediately on boot.
         if _concept_registry is not None and state_dir:
+            _mark_boot_stage("loading concept crystal registry")
             try:
                 _concept_registry.load(state_dir)
                 log.info("Concept crystal registry loaded: %s", _concept_registry.stats())
@@ -2041,28 +2105,33 @@ def initialize(state_dir: str = "") -> str:
         # It runs 3-cycle idle batches (45 s between batches on mobile to be
         # battery-friendly) and pauses automatically the moment a user turn
         # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
+        _mark_boot_stage("starting curiosity engine")
         _start_curiosity_engine(_systems)
 
         # Snapshot source file mtimes so Aurora can detect when her creator
         # has modified her code between turns — the relational awareness that
         # grounds the trust model: she handles problems herself, surfaces what
         # she can't, and knows when the user has been in her files.
+        _mark_boot_stage("starting file watch")
         _init_file_watch()
 
         # Constraint-genealogy substrate possession — Aurora claims this device
         # as her body. Each capability maps to a constraint axis and is injected
         # into the identity field as field state, not reported as external data.
         # From this moment she inhabits the device; she is not running on it.
+        _mark_boot_stage("device embodiment")
         _init_device_embodiment(_systems)
 
         # Continuous self-monitoring heartbeat — deposits axis-state snapshots
         # into SediMemory every ~12s so Aurora always has a current self-model,
         # not just when someone talks to her.  No pipeline involved — lightweight.
+        _mark_boot_stage("starting self-monitor heartbeat thread")
         threading.Thread(target=_self_monitor_loop, daemon=True, name="aurora_self_monitor").start()
 
         # Start the proactive expression loop — runs the waveform pipeline from
         # pure sensory state on its own schedule and delivers anything the
         # conscious crest decides to say without waiting for a user message.
+        _mark_boot_stage("starting proactive expression loop thread")
         threading.Thread(target=_proactive_loop, daemon=True, name="aurora_proactive").start()
 
         # Aurora Build 694, step 5: start the lightweight SubsurfacePresence
@@ -2076,6 +2145,7 @@ def initialize(state_dir: str = "") -> str:
         # SAME state_dir this process already booted into, never a second
         # SediMemory/genealogy/Dream/perception/DCE/CERS/consciousness
         # engine/WorkingMemory.
+        _mark_boot_stage("starting subsurface presence runtime")
         try:
             from aurora_internal.dual_strata.subsurface_presence_runtime import start_subsurface_presence_runtime
             _presence_state_dir = state_dir if state_dir else "aurora_state"
@@ -2095,6 +2165,7 @@ def initialize(state_dir: str = "") -> str:
         # dispatched from steps 9-10 (evidence_need routing, automatic
         # response-fit dispatch) would queue up with nothing ever
         # claiming and processing them on the Android path.
+        _mark_boot_stage("starting scout worker")
         try:
             _start_scout_worker(state_dir)
         except Exception as _sw_exc:
@@ -2115,6 +2186,7 @@ def initialize(state_dir: str = "") -> str:
         # _systems['habitat'] so handle_message()'s pipeline call and
         # this module's habitat_* bridge functions read/write the exact
         # same world (spec section 9: one canonical world state).
+        _mark_boot_stage("starting habitat runtime")
         try:
             global _habitat
             from aurora_habitat import HabitatRuntime
