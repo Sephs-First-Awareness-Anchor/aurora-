@@ -103,6 +103,18 @@ def repair(in_path: Path, out_path: Path):
         live_nodes[source].relations[rel_id] = relation
         live_nodes[target].relations[rel_id] = relation
 
+    # Perf (2026-08-20): _recalculate_depth() now sums relation
+    # contributions from node._rel_contribution_sum (a cache normally kept
+    # up to date by SemanticNode.add_relation()) instead of rescanning
+    # self.relations.values() every call. Relations were attached directly
+    # above, bypassing add_relation(), so every node's cache would still
+    # be its 0.0 default without this -- same one-time fix as
+    # aurora_identity_persistence.py's load_web().
+    for node in live_nodes.values():
+        node._rel_contribution_sum = sum(
+            r.depth_contribution() for r in node.relations.values()
+        )
+
     # ── The actual repair: real _recalculate_depth() on every node ────
     before = {
         w: (n.ontological_depth, n.comprehension_confidence, n.research_priority)
