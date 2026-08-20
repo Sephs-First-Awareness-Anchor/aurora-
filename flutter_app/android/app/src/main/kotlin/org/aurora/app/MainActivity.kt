@@ -7,7 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
+import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -641,10 +643,20 @@ class MainActivity : FlutterActivity() {
     private fun bindCamera(front: Boolean) {
         val provider = cameraProvider ?: return
         isCameraFront = front
+        // Sunni, 2026-08-21: OUTPUT_IMAGE_FORMAT_RGBA_8888 used to be
+        // requested here, which routes every frame through CameraX's
+        // internal RenderScript-based YUV->RGBA converter -- confirmed
+        // live as a real, intermittent crash ("Only JPEG and YUV_420_888
+        // are supported now" IllegalArgumentException, thrown from a
+        // background analyzer thread on camera switch). YUV_420_888 is
+        // CameraX's own guaranteed-safe default output format, needs no
+        // internal conversion, and is what ML Kit's InputImage.fromMediaImage()
+        // natively expects anyway -- toJpeg() below does its own
+        // stride-aware YUV_420_888 -> NV21 -> JPEG conversion instead.
         val analysis = ImageAnalysis.Builder()
             .setTargetResolution(Size(640, 480))
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
             .build()
 
         analysis.setAnalyzer(cameraExecutor) { proxy ->
@@ -728,34 +740,58 @@ class MainActivity : FlutterActivity() {
 
     private fun ImageProxy.toJpeg(): ByteArray? {
         return try {
-            val plane      = planes[0]
-            val rowStride  = plane.rowStride
-            val pixStride  = plane.pixelStride  // 4 for RGBA_8888
-            val w          = width
-            val h          = height
-            val buf        = plane.buffer
-
-            // Copy into a tightly-packed RGBA byte array, stripping row padding
-            val rgba = ByteArray(w * h * 4)
-            if (rowStride == w * pixStride) {
-                buf.get(rgba)
-            } else {
-                for (row in 0 until h) {
-                    buf.position(row * rowStride)
-                    buf.get(rgba, row * w * 4, w * 4)
-                }
-            }
-
-            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            bmp.copyPixelsFromBuffer(ByteBuffer.wrap(rgba))
+            val nv21 = yuv420888ToNv21(this)
+            val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
             val out = ByteArrayOutputStream()
-            bmp.compress(Bitmap.CompressFormat.JPEG, 70, out)
-            bmp.recycle()
+            yuvImage.compressToJpeg(Rect(0, 0, width, height), 70, out)
             out.toByteArray()
         } catch (e: Exception) {
             Log.w(TAG, "toJpeg: ${e.message}")
             null
         }
+    }
+
+    // Row/pixel-stride-aware YUV_420_888 -> NV21 conversion (standard
+    // Android camera pattern -- planes are not guaranteed tightly packed
+    // or interleaved the same way across devices, so a naive buffer
+    // concat can produce a corrupted image even when it doesn't crash).
+    // Y plane copied row by row at rowStride; U/V planes interleaved as
+    // NV21's V,U,V,U,... using each plane's own rowStride/pixelStride.
+    private fun yuv420888ToNv21(image: ImageProxy): ByteArray {
+        val w = image.width
+        val h = image.height
+        val yPlane = image.planes[0]
+        val uPlane = image.planes[1]
+        val vPlane = image.planes[2]
+
+        val nv21 = ByteArray(w * h * 3 / 2)
+        var pos = 0
+
+        val yBuffer = yPlane.buffer
+        val yRowStride = yPlane.rowStride
+        for (row in 0 until h) {
+            yBuffer.position(row * yRowStride)
+            yBuffer.get(nv21, pos, w)
+            pos += w
+        }
+
+        val uBuffer = uPlane.buffer
+        val vBuffer = vPlane.buffer
+        val uRowStride = uPlane.rowStride
+        val uPixelStride = uPlane.pixelStride
+        val vRowStride = vPlane.rowStride
+        val vPixelStride = vPlane.pixelStride
+        val chromaHeight = h / 2
+        val chromaWidth = w / 2
+        for (row in 0 until chromaHeight) {
+            for (col in 0 until chromaWidth) {
+                val vIndex = row * vRowStride + col * vPixelStride
+                val uIndex = row * uRowStride + col * uPixelStride
+                nv21[pos++] = vBuffer.get(vIndex)
+                nv21[pos++] = uBuffer.get(uIndex)
+            }
+        }
+        return nv21
     }
 
     // ── Ambient audio (Section VI/VII) ──────────────────────────────────────
