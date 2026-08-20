@@ -1941,6 +1941,23 @@ def habitat_reset() -> str:
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
     global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim
+    # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()
+    # tracing showed NO new markers at all -- confirmed still dying at the
+    # exact same spot as before that fix existed. That means the crash is
+    # somewhere in this function BEFORE the first marker added in part 3,
+    # which started only once `import aurora as _aurora` had already
+    # succeeded. That single import alone -- 1.8MB of module-level code
+    # executing for the first time -- was completely uninstrumented. These
+    # earlier markers close that gap; can't call _mark_boot_stage() before
+    # this line since it writes a relative path and cwd isn't state_dir yet.
+    try:
+        if state_dir:
+            os.makedirs(state_dir, exist_ok=True)
+        _entry_marker_path = os.path.join(state_dir, "last_boot_stage.txt") if state_dir else "last_boot_stage.txt"
+        with open(_entry_marker_path, "w", encoding="utf-8") as _f:
+            _f.write(f"time={int(time.time() * 1000)} stage=initialize() entered")
+    except Exception:
+        pass
     _ingested_concepts          = set()
     _dev_tracker                = _DevelopmentTracker()
     try:
@@ -1972,10 +1989,14 @@ def initialize(state_dir: str = "") -> str:
     if state_dir:
         os.makedirs(state_dir, exist_ok=True)
         os.chdir(state_dir)
+    # From here on, cwd == state_dir, so the ordinary relative-path
+    # _mark_boot_stage() lands in the same file as the entry marker above.
+    _mark_boot_stage("early registries constructed, cwd set, about to import aurora.py")
     try:
         # Use the root aurora.py (unified runner) — it integrates the Language
         # Sub-Emergent Field and ThoughtIntegrationSpace into the response pipeline.
         import aurora as _aurora  # type: ignore  (root aurora.py)
+        _mark_boot_stage("aurora.py imported")
         # verbose=True (was False) + the stdout tee below: boot_aurora() already
         # prints a per-layer "[L0] Foundational Contract..."/"[OK]" trail when
         # verbose is on -- every `if verbose:` site audited is a bare print(),
