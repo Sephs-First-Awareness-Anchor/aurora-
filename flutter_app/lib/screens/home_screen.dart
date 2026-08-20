@@ -130,6 +130,20 @@ class _HomeScreenState extends State<HomeScreen>
             setState(() => _screenObserverReady = true);
           }
         default: // aurora service events
+          // Diagnostic hardening (per Sunni: silent boot crashes) — present
+          // only on the boot immediately after AuroraService.kt's
+          // installCrashHandler() caught something bootPython()'s own
+          // try/catch couldn't (an OutOfMemoryError/StackOverflowError, or
+          // anything else that killed the process before it could report
+          // itself). Surfaced once, as a real chat message so it's actually
+          // seen rather than needing adb logcat to ever find it.
+          final previousCrash = event['previous_crash'] as String?;
+          if (mounted && previousCrash != null && previousCrash.isNotEmpty) {
+            setState(() {
+              _msgs.add(ChatMsg('(Aurora crashed on the previous launch: $previousCrash)', isUser: false));
+            });
+            _scrollToBottom();
+          }
           switch (type) {
             case 'axis_state':
               if (mounted) {

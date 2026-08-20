@@ -37,6 +37,13 @@ class AuroraBridge {
     // silently missing. "overall" is a key name unique to this payload
     // shape elsewhere in the bridge, so a flat (non-nested) match is safe.
     final healthOverallMatch = RegExp(r'"overall"\s*:\s*"([^"]*)"').firstMatch(json);
+    // Diagnostic hardening (per Sunni: silent crashes during boot):
+    // AuroraService.kt's installCrashHandler() writes any uncaught crash
+    // (including an OutOfMemoryError/StackOverflowError bootPython()'s own
+    // try/catch can't catch) to a file, then reports it exactly once on
+    // the *next* boot's "ready"/"error" event under this key -- same
+    // optional-field pattern as healthOverallMatch above.
+    final previousCrashMatch = RegExp(r'"previous_crash"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
     return {
       'source':    sourceMatch?.group(1) ?? 'aurora',
       'type':      typeMatch?.group(1)   ?? 'unknown',
@@ -53,6 +60,8 @@ class AuroraBridge {
       'A': _parseDouble(json, 'A'),
       // Developmental health — present on type=="ready"/"error" boot events.
       'healthOverall': healthOverallMatch?.group(1),
+      // Previous-run crash summary, if any — present on type=="ready"/"error".
+      'previous_crash': previousCrashMatch?.group(1)?.replaceAll(r'\"', '"'),
       // Repair Q (per Sunni, 2026-08-19): front-camera face-proximity/gaze
       // — present on type=="face_state" events.
       'detected':     json.contains('"detected":true'),

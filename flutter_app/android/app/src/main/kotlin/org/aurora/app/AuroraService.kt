@@ -23,6 +23,9 @@ import com.chaquo.python.android.AndroidPlatform
 import io.flutter.plugin.common.EventChannel
 import kotlinx.coroutines.*
 import org.json.JSONObject
+import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
 import kotlin.math.sqrt
 
 class AuroraService : Service() {
@@ -409,7 +412,40 @@ class AuroraService : Service() {
         }
     }
 
+    // Diagnostic hardening (per Sunni: "she keeps crashing, no error, no
+    // reason, before she even finishes booting"). bootPython()'s own
+    // try/catch below only ever catches Exception -- it can't catch an
+    // OutOfMemoryError or StackOverflowError, which are Errors, not
+    // Exceptions. Booting Aurora's full cognitive stack through Chaquopy
+    // (dozens of large modules, a 13,000+-entry genealogy) is real memory
+    // pressure on a mobile heap, so an uncaught Error killing the process
+    // before bootPython's catch block can even run is a live possibility
+    // -- and would look exactly like "no error, no reason, just crashes."
+    // This can't prevent that crash, but it makes the *next* launch able
+    // to report what actually happened instead of staying a mystery.
+    private fun crashLogFile(): File = File(filesDir, "aurora_state/last_crash.txt")
+
+    private fun installCrashHandler() {
+        val previousHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val f = crashLogFile()
+                f.parentFile?.mkdirs()
+                val sw = StringWriter()
+                throwable.printStackTrace(PrintWriter(sw))
+                f.writeText(
+                    "time=${System.currentTimeMillis()} thread=${thread.name} " +
+                    "type=${throwable.javaClass.name} message=${throwable.message}\n$sw"
+                )
+            } catch (_: Throwable) {
+                // Crash-logging must never itself throw and mask the real crash.
+            }
+            previousHandler?.uncaughtException(thread, throwable)
+        }
+    }
+
     override fun onCreate() {
+        installCrashHandler()
         super.onCreate()
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -516,6 +552,21 @@ class AuroraService : Service() {
     }
 
     private suspend fun bootPython() {
+        // Surface any crash the previous run's installCrashHandler() caught
+        // (a real OutOfMemoryError/StackOverflowError, or anything else
+        // outside this function's own catch below) -- one-shot, consumed
+        // here so it's reported exactly once rather than on every future
+        // boot.
+        var previousCrash: String? = null
+        try {
+            val f = crashLogFile()
+            if (f.exists()) {
+                val firstLine = f.readText().lineSequence().firstOrNull().orEmpty()
+                previousCrash = if (firstLine.length > 200) firstLine.take(200) + "…" else firstLine
+                f.delete()
+            }
+        } catch (_: Exception) { /* best-effort; never block boot on this */ }
+
         try {
             if (!Python.isStarted()) {
                 Python.start(AndroidPlatform(applicationContext))
@@ -569,16 +620,28 @@ class AuroraService : Service() {
             if (healthObj != null) {
                 jsonBuilder.put("health", healthObj)
             }
+            if (previousCrash != null) {
+                jsonBuilder.put("previous_crash", previousCrash)
+            }
             val json = jsonBuilder.toString()
             bootEvent = json
             withContext(Dispatchers.Main) { eventSink?.success(json) }
 
-        } catch (e: Exception) {
-            Log.e(TAG, "Python init failed: ${e.message}")
-            val json = JSONObject()
-                .put("type", "error")
-                .put("text", e.message ?: "init failed")
-                .toString()
+        } catch (e: Throwable) {
+            // Throwable, not Exception -- an OutOfMemoryError or
+            // StackOverflowError partway through boot must still reach
+            // Flutter as a visible "Boot error:", not vanish silently.
+            // Kept deliberately cheap (short string, no further Python
+            // calls) since the process may already be low on memory here.
+            Log.e(TAG, "Python init failed: ${e.message}", e)
+            val json = try {
+                JSONObject()
+                    .put("type", "error")
+                    .put("text", "${e.javaClass.simpleName}: ${e.message ?: "init failed"}")
+                    .toString()
+            } catch (_: Throwable) {
+                "{\"type\":\"error\",\"text\":\"init failed\"}"
+            }
             bootEvent = json
             withContext(Dispatchers.Main) { eventSink?.success(json) }
         }
