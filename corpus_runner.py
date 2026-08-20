@@ -636,6 +636,12 @@ class ComparisonGeometry:
     # Fingerprint for archive lookup (hash of dominant axes + key terms)
     geometry_fingerprint: str = ""
 
+    # The quantized 5-axis cell this utterance lands in (e.g. "X2T0N1B2A0") --
+    # her actual dimensional address, at most 3^5=243 distinct values. Used
+    # for O(1) novelty lookups instead of scanning the fingerprint archive
+    # (see GeometryExtractor._compute_novelty).
+    axis_cell: str = ""
+
     # Assigned stratigraphic depth
     depth: StratigraphicDepth = StratigraphicDepth.SURFACE
 
@@ -722,7 +728,8 @@ class GeometryExtractor:
         self._fingerprint_cache: Dict[str, str] = {}
 
     def extract(self, text: str,
-                existing_fingerprints: Optional[Set[str]] = None) -> ComparisonGeometry:
+                existing_fingerprints: Optional[Set[str]] = None,
+                axis_cell_counts: Optional[Dict[str, int]] = None) -> ComparisonGeometry:
         """Extract comparison geometry from a text utterance."""
         if not text:
             return ComparisonGeometry()
@@ -747,13 +754,16 @@ class GeometryExtractor:
         # Constraint significance â scaled by axis count and depth
         geom.constraint_significance = self._compute_significance(geom)
 
-        # Geometry fingerprint
-        geom.geometry_fingerprint = self._fingerprint(geom, words)
+        # Geometry fingerprint -- axis_cell computed once, shared by the
+        # fingerprint hash and the O(1) novelty lookup below.
+        geom.axis_cell = self._axis_cell(geom)
+        geom.geometry_fingerprint = self._fingerprint(geom, words, geom.axis_cell)
 
         # Novelty against existing archive
         if existing_fingerprints:
             geom.novelty = self._compute_novelty(
-                geom.geometry_fingerprint, existing_fingerprints
+                geom.geometry_fingerprint, geom.axis_cell,
+                existing_fingerprints, axis_cell_counts,
             )
         else:
             geom.novelty = 1.0  # Everything is novel on a fresh field
@@ -797,14 +807,17 @@ class GeometryExtractor:
         depth_factor = axis_count / 5.0
         return min(1.0, mag * depth_factor * 1.5)
 
-    def _fingerprint(self, geom: ComparisonGeometry,
-                     words: Set[str]) -> str:
+    @staticmethod
+    def _axis_cell(geom: ComparisonGeometry) -> str:
         """
-        Generate a geometry fingerprint â identifies the comparison geometry
-        irrespective of specific word choices. Two utterances making the same
-        relational comparison should produce similar fingerprints.
+        The quantized 5-axis cell this geometry occupies -- her actual
+        dimensional address in X/T/N/B/A space, 3 levels per axis
+        (low/mid/high), so at most 3^5=243 distinct cells regardless of
+        corpus size. This IS the "same region of her constraint space"
+        that novelty/similarity is about -- unlike a hash-prefix, two
+        utterances in the same cell are geometrically similar by
+        construction, not by hash coincidence.
         """
-        # Quantize axis activations to 3 levels (low/mid/high)
         def quantize(v: float) -> str:
             if v < 0.3:
                 return "0"
@@ -813,7 +826,7 @@ class GeometryExtractor:
             else:
                 return "2"
 
-        axis_code = (
+        return (
             f"X{quantize(geom.x_activation)}"
             f"T{quantize(geom.t_activation)}"
             f"N{quantize(geom.n_activation)}"
@@ -821,6 +834,13 @@ class GeometryExtractor:
             f"A{quantize(geom.a_activation)}"
         )
 
+    def _fingerprint(self, geom: ComparisonGeometry,
+                     words: Set[str], axis_code: str) -> str:
+        """
+        Generate a geometry fingerprint -- identifies the comparison geometry
+        irrespective of specific word choices. Two utterances making the same
+        relational comparison should produce similar fingerprints.
+        """
         # Include salient B-axis words (relational comparison anchors)
         b_words = sorted(words & _B_MARKERS)[:4]
         b_anchor = "_".join(b_words)
@@ -828,22 +848,29 @@ class GeometryExtractor:
         raw = f"{axis_code}:{b_anchor}"
         return hashlib.md5(raw.encode()).hexdigest()[:12]
 
-    def _compute_novelty(self, fingerprint: str,
-                         existing: Set[str]) -> float:
+    def _compute_novelty(self, fingerprint: str, axis_cell: str,
+                         existing: Set[str],
+                         axis_cell_counts: Optional[Dict[str, int]]) -> float:
         """
         Novelty: 0.0 = identical geometry seen before, 1.0 = fully novel.
-        Uses fingerprint prefix matching (partial similarity within the archive).
+
+        Similarity against the archive is measured by how many prior items
+        landed in the same axis_cell (her real 5-axis dimensional address)
+        -- a dict lookup against a counter with at most 243 keys, not a
+        scan over every fingerprint ever seen. This replaced an MD5
+        hash-prefix scan that was both O(archive size) per call (making
+        corpus ingestion O(n^2) overall -- confirmed live: a 52-pair/
+        104-message run didn't finish in 15+ minutes) AND semantically
+        arbitrary (hash-prefix collision has no relationship to actual
+        axis-geometry similarity).
         """
         if fingerprint in existing:
             return 0.0
-        # Check for prefix-similar fingerprints (related geometry)
-        prefix = fingerprint[:6]
-        similar_count = sum(1 for fp in existing if fp.startswith(prefix))
+        similar_count = (axis_cell_counts or {}).get(axis_cell, 0)
         if similar_count > 0:
-            # Similar geometry exists â partial novelty
+            # Similar geometry exists -- partial novelty
             return max(0.3, 1.0 - (similar_count * 0.15))
         return 1.0
-
     def _assign_depth(self, geom: ComparisonGeometry) -> StratigraphicDepth:
         """
         Assign stratigraphic depth from the physics depth rules:
@@ -1057,8 +1084,13 @@ class AbsorptionField:
         self.path_gate = TwoFactorPathGate()
         self.plateau_detector = PlateauDetector()
 
-        # Archive of all geometry fingerprints seen â novelty reference
+        # Archive of all geometry fingerprints seen -- novelty reference
         self._seen_fingerprints: Set[str] = set()
+
+        # Count of absorbed items per quantized 5-axis cell -- the O(1)
+        # index novelty lookups use instead of scanning _seen_fingerprints
+        # (see GeometryExtractor._compute_novelty).
+        self._axis_cell_counts: Dict[str, int] = defaultdict(int)
 
         # Active tension items (unresolved contradiction holds)
         self._tension_queue: List[TensionRecord] = []
@@ -1072,6 +1104,13 @@ class AbsorptionField:
         self.tension_resolved: int = 0
         self.tension_expired: int = 0
 
+    def _record_fingerprint(self, geom: ComparisonGeometry) -> None:
+        """Add a geometry to the seen-fingerprint archive AND its axis-cell
+        counter together, so the two stay in sync -- every call site that
+        used to just do _seen_fingerprints.add(...) goes through here now."""
+        self._seen_fingerprints.add(geom.geometry_fingerprint)
+        self._axis_cell_counts[geom.axis_cell] += 1
+
     def absorb(self, text: str,
                context_hash: str = "") -> ComparisonGeometry:
         """
@@ -1080,7 +1119,7 @@ class AbsorptionField:
         Returns the extracted ComparisonGeometry so downstream systems
         can use it to govern DPME adjustments and cadence decisions.
         """
-        geom = self.extractor.extract(text, self._seen_fingerprints)
+        geom = self.extractor.extract(text, self._seen_fingerprints, self._axis_cell_counts)
 
         if not context_hash:
             context_hash = hashlib.md5(text[:32].encode()).hexdigest()[:8]
@@ -1092,7 +1131,7 @@ class AbsorptionField:
             geom.depth = StratigraphicDepth.SURFACE
         else:
             # Non-contradictory: record fingerprint and update archive
-            self._seen_fingerprints.add(geom.geometry_fingerprint)
+            self._record_fingerprint(geom)
 
             # Update path gate with this crossing
             path_id = geom.geometry_fingerprint
@@ -1129,16 +1168,16 @@ class AbsorptionField:
         for record in self._tension_queue:
             # Re-extract geometry against current (now larger) fingerprint set
             current_novelty = self.extractor.extract(
-                record.text, self._seen_fingerprints
+                record.text, self._seen_fingerprints, self._axis_cell_counts
             ).novelty
 
             if record.attempt_reconciliation(current_novelty):
                 # Reconciled: promote geometry to archive at mid depth
-                self._seen_fingerprints.add(record.geometry.geometry_fingerprint)
+                self._record_fingerprint(record.geometry)
                 record.geometry.depth = StratigraphicDepth.MID
                 self.tension_resolved += 1
             elif record.expired:
-                # Expired: geometry too contradictory â discard
+                # Expired: geometry too contradictory -- discard
                 self.tension_expired += 1
             else:
                 still_held.append(record)
@@ -1147,13 +1186,13 @@ class AbsorptionField:
 
     def understanding_write(self, text: str) -> ComparisonGeometry:
         """
-        Geological-depth write â only called after Reflection has confirmed
+        Geological-depth write -- only called after Reflection has confirmed
         UNDERSTANDING (full field equilibrium reached).
         This is the only path to GEOLOGICAL depth.
         """
-        geom = self.extractor.extract(text, self._seen_fingerprints)
+        geom = self.extractor.extract(text, self._seen_fingerprints, self._axis_cell_counts)
         geom.depth = StratigraphicDepth.GEOLOGICAL
-        self._seen_fingerprints.add(geom.geometry_fingerprint)
+        self._record_fingerprint(geom)
         return geom
 
     @property
@@ -1203,7 +1242,8 @@ class GeometryFidelityScorer:
         self.extractor = extractor
 
     def score(self, generated: str, truth: str,
-              seen_fingerprints: Optional[Set[str]] = None) -> Dict[str, float]:
+              seen_fingerprints: Optional[Set[str]] = None,
+              axis_cell_counts: Optional[Dict[str, int]] = None) -> Dict[str, float]:
         """
         Returns a dict with:
           geometry_fidelity  â primary signal (0.0â1.0)
@@ -1220,8 +1260,8 @@ class GeometryFidelityScorer:
         if not gen or not tr:
             return self._zero_score()
 
-        gen_geom = self.extractor.extract(gen, seen_fingerprints)
-        tr_geom = self.extractor.extract(tr, seen_fingerprints)
+        gen_geom = self.extractor.extract(gen, seen_fingerprints, axis_cell_counts)
+        tr_geom = self.extractor.extract(tr, seen_fingerprints, axis_cell_counts)
 
         axis_alignment = self._axis_alignment(gen_geom, tr_geom)
         depth_alignment = self._depth_alignment(gen_geom, tr_geom)
@@ -2898,6 +2938,7 @@ def run_corpus_ingestion(
                     generated=(resp.content if resp else ""),
                     truth=next_content,
                     seen_fingerprints=absorption_field._seen_fingerprints,
+                    axis_cell_counts=absorption_field._axis_cell_counts,
                 )
 
                 # ── FIXED-PATH WELD: learning write-paths per pair ──────────
@@ -3025,6 +3066,7 @@ def run_corpus_ingestion(
                     generated=(resp.content if resp else ""),
                     truth=next_content,
                     seen_fingerprints=absorption_field._seen_fingerprints,
+                    axis_cell_counts=absorption_field._axis_cell_counts,
                 )
 
                 dpme_result = dpme_adjust_from_geometry(

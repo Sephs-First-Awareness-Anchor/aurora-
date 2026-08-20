@@ -729,6 +729,14 @@ class OntologicalWeb(WarpCapable):
         # revealed it.
         self._selection_outcomes: Dict[str, Dict[str, Dict[str, int]]] = {}
 
+        # Perf (2026-08-20): _select_relation_type() used to rebuild this
+        # from RELATION_TYPE_AXIS_PROFILES (a fixed module-level constant)
+        # on every single call -- confirmed live via cProfile as one of
+        # the two dominant hotspots in ordinary message processing (96,111
+        # calls for a 12-message corpus run). The table never changes at
+        # runtime, so build it once and reuse it.
+        self._relation_type_checker: Optional[Any] = None
+
     # ================================================================
     # WARP SURFACE (FIX-A010) — plumbing only, see class docstring
     # ================================================================
@@ -1101,14 +1109,16 @@ class OntologicalWeb(WarpCapable):
         signature to add_relation() so a future failure can be attributed
         back to this exact selection pattern.
         """
-        from aurora_warp_protocol import AxisCoverageChecker
         signature = "+".join(sorted((r1, r2)))
         signal = _role_pair_axis_signal(r1, r2)
-        checker = AxisCoverageChecker({
-            f"RELTYPE:{rtype.value}": dict(profile)
-            for rtype, profile in RELATION_TYPE_AXIS_PROFILES.items()
-            if rtype is not RelationType.RELATED_TO
-        })
+        if self._relation_type_checker is None:
+            from aurora_warp_protocol import AxisCoverageChecker
+            self._relation_type_checker = AxisCoverageChecker({
+                f"RELTYPE:{rtype.value}": dict(profile)
+                for rtype, profile in RELATION_TYPE_AXIS_PROFILES.items()
+                if rtype is not RelationType.RELATED_TO
+            })
+        checker = self._relation_type_checker
         d15 = checker._ensure_full_dims(signal)
         raw_scores = {cid: checker.cosine(profile, d15) for cid, profile in checker._components.items()}
 
@@ -1545,6 +1555,19 @@ class ClusterEngine:
         """
         Coherence = actual internal connections / possible internal connections.
         Higher coherence means the cluster is more tightly knit.
+
+        Performance note (2026-08-20): this used to re-scan w1's entire
+        relations dict for every single w2 in the cluster -- O(cluster_size^2
+        * relations_per_node). Confirmed live via cProfile: on a real OETS
+        (~2500 nodes / ~18000 relations from baseline seeding), this one
+        function accounted for 72.6s of a 191s corpus-ingestion run over
+        just 12 messages, and it fires on ordinary conversation turns too
+        (called from consolidate() via the normal gateway.receive() path,
+        not just corpus runs). get_connected_words() already builds a
+        node's full connected-word set in one pass; computing it once per
+        w1 and doing O(1) set-membership checks against it for every w2
+        turns the relations-scan factor from "repeated n times" into
+        "once" -- O(cluster_size * relations_per_node + cluster_size^2).
         """
         n = len(members)
         if n < 2:
@@ -1553,14 +1576,13 @@ class ClusterEngine:
         actual = 0
         member_list = list(members)
         for i, w1 in enumerate(member_list):
+            node = self.web.nodes.get(w1)
+            if not node:
+                continue
+            connected = node.get_connected_words()
             for w2 in member_list[i+1:]:
-                node = self.web.nodes.get(w1)
-                if node:
-                    for rel in node.relations.values():
-                        other = rel.target_word if rel.source_word == w1 else rel.source_word
-                        if other == w2:
-                            actual += 1
-                            break
+                if w2 in connected:
+                    actual += 1
         return _clamp(actual / max(max_possible, 1))
 
     def _integrate_clusters(self, new_clusters: List[ConceptCluster]):
