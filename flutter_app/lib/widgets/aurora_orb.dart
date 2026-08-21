@@ -513,38 +513,73 @@ class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
   static const double _leanInFloor = 0.03;   // below this, no reaction -- normal conversational distance
   static const double _discomfortFloor = 0.24; // above this, pull back instead of lean in
 
-  ({double scale, double dx, double dy}) get _faceReaction {
+  // Repair R (per Sunni, 2026-08-21): "it's not so much that her eyes and
+  // mouth pull in pull out, it's the entire screen is pulling in and
+  // out ... the react doesn't just assume zoom out react, it's one form
+  // of gestured presence she can perform." Before this, _faceReaction fed
+  // a single Transform.scale/translate wrapped around the ENTIRE
+  // CustomPaint -- background field, glow, eyes and mouth all scaled and
+  // shifted together as one flat image, which reads as the whole screen
+  // zooming rather than a face reacting. It also only ever expressed one
+  // gesture shape (uniform grow/shrink) no matter which territory she was
+  // in.
+  //
+  // _FaceGesture below is a small vocabulary instead of one scalar:
+  //  - scale/dx/dy move the face GROUP (eyes+mouth together, as a rigid
+  //    unit -- see paint()) around its own center. The background fill
+  //    and glow are her ambient mood field, not a physical camera image,
+  //    and stay put -- only the features that would actually move on a
+  //    real face move.
+  //  - rotation is a head-turn, independent of scale -- pulling back
+  //    from someone crowding the frame now reads as turning away, not
+  //    just shrinking symmetrically in place.
+  //  - gazeX/gazeY move the eyes ALONE, a smaller/faster-reading signal
+  //    layered on top of the head-group motion -- tracking toward
+  //    interest or averting from discomfort, the way eyes lead a head
+  //    movement on a real face instead of the whole face moving as one
+  //    inert block.
+  _FaceGesture get _faceReaction {
     final frac = _liveFraction;
     final ox = _liveOffsetX, oy = _liveOffsetY;
     if (frac < _leanInFloor) {
-      return (scale: 1.0, dx: 0.0, dy: 0.0);
+      return const (scale: 1.0, dx: 0.0, dy: 0.0, rotation: 0.0, gazeX: 0.0, gazeY: 0.0);
     }
     if (frac < _discomfortFloor) {
-      // Lean-in territory: gentle scale-up proportional to closeness,
-      // and a small gaze-toward drift on the offset (eyes/face angling
-      // slightly toward where the detected face actually is in frame,
-      // not just growing symmetrically in place).
+      // Lean-in / interest: gentle scale-up proportional to closeness,
+      // the face group drifting toward where the detected face actually
+      // is in frame, and the eyes leading that drift with an extra
+      // gaze-toward offset of their own -- upright, no turn, full
+      // attention.
       final t = ((frac - _leanInFloor) / (_discomfortFloor - _leanInFloor)).clamp(0.0, 1.0);
       return (
         scale: 1.0 + t * 0.12,
         dx: ox * t * 0.06,
         dy: oy * t * 0.04,
+        rotation: 0.0,
+        gazeX: ox * t * 0.5,
+        gazeY: oy * t * 0.5,
       );
     }
-    // Discomfort territory: pull back (shrink slightly below neutral)
-    // and shift AWAY from the detected face's offset -- if the face is
-    // left-of-center in frame, she moves right, and vice versa.
+    // Discomfort / crowding: pull back (shrink slightly below neutral),
+    // shift AWAY from the detected face's offset, and now also turn the
+    // head away -- a continuous tilt opposite the intrusion, proportional
+    // to both how off-center it is and how far into discomfort territory
+    // she is -- with the eyes averting even further than the head-turn
+    // alone. If the intruding face is left-of-center, she turns/moves
+    // right and looks away up/down from it, and vice versa.
     final over = ((frac - _discomfortFloor) / (1.0 - _discomfortFloor)).clamp(0.0, 1.0);
     return (
       scale: 1.0 - over * 0.08,
       dx: -ox * over * 0.10,
       dy: -oy * over * 0.06,
+      rotation: -ox * over * 0.22,
+      gazeX: -ox * over * 0.6,
+      gazeY: -oy * over * 0.4,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final reaction = _faceReaction;
     return GestureDetector(
       onTap: widget.onTap,
       child: SizedBox(
@@ -552,23 +587,15 @@ class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
         height: widget.height ?? widget.size * 1.9,
         child: AnimatedBuilder(
           animation: Listenable.merge([widget.pulse, _axisAnim, _faceReactAnim]),
-          builder: (_, __) => Transform.translate(
-            offset: Offset(
-              reaction.dx * (widget.height ?? widget.size * 1.9),
-              reaction.dy * (widget.height ?? widget.size * 1.9),
+          builder: (_, __) => CustomPaint(
+            painter: _FacePainter(
+              axisState:  _liveAxis,
+              glowEnergy: _glowEnergy,
+              speaking:   widget.state == OrbState.speaking,
+              pulse:      widget.pulse.value,
+              gesture:    _faceReaction,
             ),
-            child: Transform.scale(
-              scale: reaction.scale,
-              child: CustomPaint(
-                painter: _FacePainter(
-                  axisState:  _liveAxis,
-                  glowEnergy: _glowEnergy,
-                  speaking:   widget.state == OrbState.speaking,
-                  pulse:      widget.pulse.value,
-                ),
-                child: const SizedBox.expand(),
-              ),
-            ),
+            child: const SizedBox.expand(),
           ),
         ),
       ),
@@ -576,17 +603,31 @@ class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
   }
 }
 
+/// scale/dx/dy move the face GROUP as a rigid unit; rotation is a head
+/// turn; gazeX/gazeY move the eyes alone on top of that. See _faceReaction
+/// above and _FacePainter.paint() below for how each channel is used.
+typedef _FaceGesture = ({
+  double scale,
+  double dx,
+  double dy,
+  double rotation,
+  double gazeX,
+  double gazeY,
+});
+
 class _FacePainter extends CustomPainter {
   final Map<String, double> axisState;
   final double glowEnergy;
   final bool speaking;
   final double pulse;
+  final _FaceGesture gesture;
 
   _FacePainter({
     required this.axisState,
     required this.glowEnergy,
     required this.speaking,
     required this.pulse,
+    required this.gesture,
   });
 
   void _drawEye(Canvas canvas, Offset center, double refSize, _EyeSpec spec) {
@@ -701,14 +742,35 @@ class _FacePainter extends CustomPainter {
 
     final refSize = (w < h ? w : h) * 0.16;
     final faceCenter = Offset(w / 2, h / 2);
+    final minDim = w < h ? w : h;
+
+    // Repair R: the physical-proximity reaction (gesture) is confined to
+    // this face GROUP -- eyes + mouth, moved/scaled/rotated together as
+    // one rigid unit pivoting on faceCenter -- rather than the whole
+    // canvas above (background field + glow, already drawn, untouched).
+    // A real face pulling closer or turning away doesn't take the room
+    // behind it along for the ride; this is the same restriction applied
+    // here.
+    canvas.save();
+    canvas.translate(
+      faceCenter.dx + gesture.dx * minDim,
+      faceCenter.dy + gesture.dy * minDim,
+    );
+    canvas.rotate(gesture.rotation);
+    canvas.scale(gesture.scale);
+    canvas.translate(-faceCenter.dx, -faceCenter.dy);
 
     // Eyes sit above the mouth, spaced symmetrically around the shared
     // face center -- fixed layout, only their own shape/rotation/droop
-    // varies by expression.
+    // varies by expression. gazeOffset is a second, independent motion
+    // layered on top of the group transform above -- the eyes lead a
+    // lean-in or an avert with their own small extra shift, the way a
+    // person's eyes move before (and further than) their head does.
     final eyeY = faceCenter.dy - refSize * 1.35;
     final eyeSpacing = refSize * 1.15;
-    _drawEye(canvas, Offset(faceCenter.dx - eyeSpacing, eyeY), refSize, face.leftEye);
-    _drawEye(canvas, Offset(faceCenter.dx + eyeSpacing, eyeY), refSize, face.rightEye);
+    final gazeOffset = Offset(gesture.gazeX * refSize * 0.35, gesture.gazeY * refSize * 0.35);
+    _drawEye(canvas, Offset(faceCenter.dx - eyeSpacing, eyeY) + gazeOffset, refSize, face.leftEye);
+    _drawEye(canvas, Offset(faceCenter.dx + eyeSpacing, eyeY) + gazeOffset, refSize, face.rightEye);
 
     // Sunni: "her mouth should ... operate like a mouth" -- real talking
     // is jaw motion (mostly a height/thickness change, revealing the
@@ -721,10 +783,10 @@ class _FacePainter extends CustomPainter {
     // "tired" stays sagging), but thickness is what actually animates.
     if (speaking) {
       _drawTalkingMouth(canvas, faceCenter, refSize, shape, pulse);
-      return;
+    } else {
+      _drawRestingMouth(canvas, faceCenter, refSize, shape, pulse);
     }
-
-    _drawRestingMouth(canvas, faceCenter, refSize, shape, pulse);
+    canvas.restore();
   }
 
   /// Sunni: "people wear their expression on their face even when they
@@ -790,5 +852,6 @@ class _FacePainter extends CustomPainter {
       !_axesEqual(old.axisState, axisState) ||
       old.glowEnergy != glowEnergy ||
       old.speaking != speaking ||
-      old.pulse != pulse;
+      old.pulse != pulse ||
+      old.gesture != gesture;
 }
