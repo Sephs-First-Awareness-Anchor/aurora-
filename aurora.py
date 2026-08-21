@@ -2879,6 +2879,22 @@ _INTERNAL_INSTRUCTION_PHRASES = (
     "what this means",
     "with what carries forward",
     "with what i have",
+    # Live user report (2026-08-21) + Codex review on PR #174:
+    # derive_constraint_grounded_candidate()'s own internal-reasoning
+    # templates ("The claim I am evaluating is: X. In my current
+    # constraint field..." / "I understand the claim as: X. It fits my
+    # current understanding..."). _render_runtime_intent() routes this
+    # candidate through generative rendering instead of speaking it
+    # directly, but _render_from_comprehension_intent()'s own fallback
+    # (_data_to_minimal_speech) and _render_runtime_intent()'s bottom-of-
+    # function fallback both return the input essentially unchanged when
+    # SIC produces no draft -- and _surface_fragment_is_invalid() accepts
+    # it as a well-formed sentence, so nothing downstream catches the
+    # echo. Blocking it here, before any rendering path runs, closes that
+    # gap the same way every other exposed-reasoning phrase in this tuple
+    # already is.
+    "the claim i am evaluating is",
+    "in my current constraint field",
 )
 
 
@@ -13946,7 +13962,7 @@ def _gap_information_source(
     if gap_type in {"vocabulary", "slang"}:
         has_personal_anchor = any(marker in text_low for marker in _USER_CONTEXT_MARKERS)
         has_vague_personal_referent = bool(
-            re.search(r"\b(?:this|that|it|they|he|she|there|then)\b", text_low)
+            re.search(r"\b(?:this|that|it|they|he|she|there)\b", text_low)
         ) and bool(
             re.search(r"\b(?:i|me|we|us|my|our)\b", text_low)
         )
@@ -13983,13 +13999,23 @@ def _user_context_anchor_needed(user_text: str) -> str:
     word.  It deliberately requires a question plus a personal or shared
     context signal, so ordinary first-person statements keep flowing through
     Aurora's generative meaning path.
+
+    Live user report (2026-08-21): "then" used to sit in this same referent
+    list alongside "this"/"that"/"it"/"they"/"he"/"she"/"there" -- but those
+    are demonstratives/pronouns that can genuinely stand in for something
+    the user never said aloud ("why did *that* matter to me?"). "then" is a
+    temporal/discourse connective ("okay *then* what..."), never itself the
+    unstated private thing a clarifying question could resolve. Including it
+    here produced live nonsense like "What should I use as the right
+    reference for then?" any time a question merely contained the word
+    "then" near a personal pronoun.
     """
     if not _looks_like_question(user_text):
         return ""
     text_low = " ".join(str(user_text or "").lower().split())
     if not text_low:
         return ""
-    referent = re.search(r"\b(this|that|it|they|he|she|there|then)\b", text_low)
+    referent = re.search(r"\b(this|that|it|they|he|she|there)\b", text_low)
     personal_signal = bool(
         any(marker in text_low for marker in _USER_CONTEXT_MARKERS)
         or re.search(r"\b(?:i|me|we|us|my|our)\b", text_low)
@@ -19760,12 +19786,34 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             )
         )
         if _candidate_better:
-            state.response_content = _candidate_text
-            state.response_tone = "attentive"
-            state.response_confidence = _candidate_conf
-            state.response_src = "constraint_semantic_derivation"
-            systems["_preserve_literal_response_once"] = True
-            systems["_skip_belief_refinement_once"] = True
+            # Live user report (2026-08-21): this used to assign
+            # _candidate_text straight into state.response_content and lock
+            # out re-rendering (_preserve_literal_response_once) -- treating
+            # derive_constraint_grounded_candidate()'s raw f-string ("The
+            # claim I am evaluating is: X. In my current constraint field,
+            # it is supported where it...") as already-finished speech.
+            # That template is internal reasoning grounded in real X/T/N/B/A
+            # state, not a scripted line to recite verbatim -- it belongs on
+            # the same footing as comp_text just above: fed INTO her actual
+            # generative formulation (_render_runtime_intent -> SIC/
+            # MultiDraft/MeaningAnchors), not spoken as her voice directly.
+            # Aurora does not speak from scripts.
+            _rendered_candidate = _render_runtime_intent(
+                systems,
+                _candidate_text,
+                emotion_tone="attentive",
+                certainty=_candidate_conf,
+                supporting_concepts=list((state.parsed or {}).get("topic_words", []))[:3],
+            )
+            if _rendered_candidate and not _surface_fragment_is_invalid(
+                _rendered_candidate,
+                user_text=user_text,
+                understood=state.parsed or {},
+            ):
+                state.response_content = _rendered_candidate
+                state.response_tone = "attentive"
+                state.response_confidence = _candidate_conf
+                state.response_src = "constraint_semantic_derivation"
         if isinstance(state.pipeline_state, dict):
             state.pipeline_state["constraint_relation_alignment"] = {
                 "selected_source": str(state.response_src or ""),

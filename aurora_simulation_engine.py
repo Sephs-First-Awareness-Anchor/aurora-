@@ -770,14 +770,37 @@ class ConsciousLearner:
             if not slug:
                 continue
             try:
+                # Live user report (2026-08-21): when `understanding` is
+                # _derive_understanding()'s internal shard-bookkeeping
+                # sentence ("earlier built connection when approached with
+                # warm acknowledgment -- it connects to chaos, curious
+                # (A-axis relief, depth 0.31)") -- identity/dedup notation
+                # for this learner's own shards, never natural language --
+                # add_node(meaning=...) and add_definition() both used to
+                # write it straight into node.definitions, which OTHER
+                # live-turn code (e.g. _build_comprehension_response's
+                # `best = node.definitions[0]['text']`) reads back and
+                # speaks near-verbatim as if it were a real word meaning.
+                # That bookkeeping template is the ONLY thing built by
+                # _derive_understanding(), which is exclusively called from
+                # observe_outcome() and always sets outcome_axis in the
+                # same call (see _outcome_axis() -- observe_outcome returns
+                # early when it comes back empty). propose_shard() (real
+                # externally-supplied content, e.g. SediMemory-compressed
+                # semantic claims) never sets outcome_axis, so that's the
+                # real, structural signal for "this understanding text is
+                # the mechanical template" rather than genuine content --
+                # not a shard-kind label that would have to be threaded
+                # through separately.
+                is_bookkeeping_template = bool(shard.outcome_axis)
                 node = web.add_node(
                     word=slug,
                     role="learned_behavior",
                     valence=min(0.9, shard.confidence),
-                    meaning=understanding,
+                    meaning="" if is_bookkeeping_template else understanding,
                     lineage=f"learner:{concept_name}",
                 )
-                if hasattr(node, "add_definition"):
+                if not is_bookkeeping_template and hasattr(node, "add_definition"):
                     node.add_definition(
                         understanding,
                         source="conscious_learner",
