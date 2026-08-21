@@ -2879,6 +2879,22 @@ _INTERNAL_INSTRUCTION_PHRASES = (
     "what this means",
     "with what carries forward",
     "with what i have",
+    # Live user report (2026-08-21) + Codex review on PR #174:
+    # derive_constraint_grounded_candidate()'s own internal-reasoning
+    # templates ("The claim I am evaluating is: X. In my current
+    # constraint field..." / "I understand the claim as: X. It fits my
+    # current understanding..."). _render_runtime_intent() routes this
+    # candidate through generative rendering instead of speaking it
+    # directly, but _render_from_comprehension_intent()'s own fallback
+    # (_data_to_minimal_speech) and _render_runtime_intent()'s bottom-of-
+    # function fallback both return the input essentially unchanged when
+    # SIC produces no draft -- and _surface_fragment_is_invalid() accepts
+    # it as a well-formed sentence, so nothing downstream catches the
+    # echo. Blocking it here, before any rendering path runs, closes that
+    # gap the same way every other exposed-reasoning phrase in this tuple
+    # already is.
+    "the claim i am evaluating is",
+    "in my current constraint field",
 )
 
 
