@@ -770,19 +770,28 @@ class ConsciousLearner:
             if not slug:
                 continue
             try:
+                # Live user report (2026-08-21): `understanding` is
+                # _derive_understanding()'s internal shard-bookkeeping
+                # sentence ("earlier built connection when approached with
+                # warm acknowledgment -- it connects to chaos, curious
+                # (A-axis relief, depth 0.31)") -- identity/dedup notation
+                # for this learner's own shards, never natural language.
+                # add_node(meaning=...) and add_definition() both write
+                # straight into node.definitions, which OTHER live-turn
+                # code (e.g. _build_comprehension_response's `best =
+                # node.definitions[0]['text']`) reads back and speaks
+                # near-verbatim as if it were a real word meaning -- that
+                # is exactly how this internal bookkeeping sentence reached
+                # a live reply. The node/lineage still gets created (so the
+                # concept she touched through reflection persists and
+                # accrues real relations over time), just without handing
+                # this sentence to anything that quotes definitions aloud.
                 node = web.add_node(
                     word=slug,
                     role="learned_behavior",
                     valence=min(0.9, shard.confidence),
-                    meaning=understanding,
                     lineage=f"learner:{concept_name}",
                 )
-                if hasattr(node, "add_definition"):
-                    node.add_definition(
-                        understanding,
-                        source="conscious_learner",
-                        confidence=shard.confidence,
-                    )
                 injected += 1
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
