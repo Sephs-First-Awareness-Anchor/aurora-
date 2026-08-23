@@ -1,2355 +1,473 @@
 {
-  "updated_at": 1785302143.260573,
+  "updated_at": 1787411455.01951,
   "events": [
     {
-      "timestamp": 1785301706.435138,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_866d587c7c",
-      "axis": "X",
-      "summary": "Manual code change in concepts/aurora_code_evolution_stack.py attached to X:CODE_LINEAGE_866d587c7c"
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "N:SENSORY_INTAKE",
+      "axis": "N",
+      "tags": [
+        "sensory",
+        "intake",
+        "energy",
+        "perception"
+      ],
+      "summary": ""
     },
     {
-      "timestamp": 1785301708.1522849,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_744eb9d88a",
-      "axis": "X",
-      "summary": "Manual code change in concepts/aurora_room.py attached to X:CODE_LINEAGE_744eb9d88a"
-    },
-    {
-      "timestamp": 1785301709.9750452,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_4651b2d50e",
-      "axis": "X",
-      "summary": "Manual code change in concepts/crystalzip_batch.py attached to X:CODE_LINEAGE_4651b2d50e"
-    },
-    {
-      "timestamp": 1785301711.7775652,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_2bf2d90a3f",
-      "axis": "X",
-      "summary": "Manual code change in concepts/dce_10state.py attached to X:CODE_LINEAGE_2bf2d90a3f"
-    },
-    {
-      "timestamp": 1785301713.6071055,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_20348525f6",
-      "axis": "X",
-      "summary": "Manual code change in concepts/dce_obligation_gate.py attached to X:CODE_LINEAGE_20348525f6"
-    },
-    {
-      "timestamp": 1785301715.4319344,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_827fe52b61",
-      "axis": "X",
-      "summary": "Manual code change in concepts/force_evolve.py attached to X:CODE_LINEAGE_827fe52b61"
-    },
-    {
-      "timestamp": 1785301717.128102,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_5096b34ed4",
-      "axis": "T",
-      "summary": "Manual code change in concepts/generate_phase_b.py attached to T:CODE_LINEAGE_5096b34ed4"
-    },
-    {
-      "timestamp": 1785301718.9300973,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_ba1a5003d1",
-      "axis": "X",
-      "summary": "Manual code change in concepts/poedex_intro.py attached to X:CODE_LINEAGE_ba1a5003d1"
-    },
-    {
-      "timestamp": 1785301720.7509022,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_53caa351d1",
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "B:SENSORY_CLUSTER",
       "axis": "B",
-      "summary": "Manual code change in concepts/quasiarch_bridge.py attached to B:CODE_LINEAGE_53caa351d1"
+      "tags": [
+        "sensory",
+        "cluster",
+        "boundary",
+        "perception"
+      ],
+      "summary": ""
     },
     {
-      "timestamp": 1785301722.585559,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_87810a0a57",
-      "axis": "X",
-      "summary": "Manual code change in concepts/quasiarch_diag.py attached to X:CODE_LINEAGE_87810a0a57"
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "A:SENSORY_PROMOTE",
+      "axis": "A",
+      "tags": [
+        "sensory",
+        "promote",
+        "agency",
+        "crystal"
+      ],
+      "summary": ""
     },
     {
-      "timestamp": 1785301724.4114661,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_32de575213",
-      "axis": "X",
-      "summary": "Manual code change in concepts/quasiarch_observer.py attached to X:CODE_LINEAGE_32de575213"
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "N:SENSORY_CROSS_MODAL",
+      "axis": "N",
+      "tags": [
+        "sensory",
+        "cross_modal",
+        "meaning",
+        "grounding"
+      ],
+      "summary": "nPMI cross-modal linking: tone\u2194hue, timbre\u2194shape, rhythm\u2194motion (gen=3, N-axis)"
     },
     {
-      "timestamp": 1785301726.279424,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b27ac3f6d3",
-      "axis": "X",
-      "summary": "Manual code change in concepts/sentinel.py attached to X:CODE_LINEAGE_b27ac3f6d3"
-    },
-    {
-      "timestamp": 1785301728.1200438,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_1856b103db",
-      "axis": "X",
-      "summary": "Manual code change in concepts/sentinel_gui.py attached to X:CODE_LINEAGE_1856b103db"
-    },
-    {
-      "timestamp": 1785301729.9743319,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_0fdd020ee8",
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "T:SENSORY_DISTILL",
       "axis": "T",
-      "summary": "Manual code change in constraint_evolutionary_sim.py attached to T:CODE_LINEAGE_0fdd020ee8"
+      "tags": [
+        "sensory",
+        "distill",
+        "wisdom",
+        "temporal"
+      ],
+      "summary": "Maturity-gated distillation + WisdomShard emission (sensory.distill, gen=3, T-axis)"
     },
     {
-      "timestamp": 1785301731.680315,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f4b88f6b80",
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "X:MAINTAIN_UNDERSTANDING_EXISTENCE",
       "axis": "X",
-      "summary": "Manual code change in corpus_runner.py attached to X:CODE_LINEAGE_f4b88f6b80"
+      "tags": [
+        "continuity_persistence",
+        "runtime_state_maintenance",
+        "meaning_survival",
+        "origin_primary:X",
+        "origin_secondary:T",
+        "origin_signature:X^1*T^1*B^1",
+        "root_slot:NC:X>T\u00d7NC:T>X",
+        "operation_lineage:OP:b4942711a7f2"
+      ],
+      "summary": "Preserve a coherent runtime state across turns so meaning and policy survive long enough to be corrected rather than reset."
     },
     {
-      "timestamp": 1785301733.49329,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_6fd18be35d",
-      "axis": "X",
-      "summary": "Manual code change in crystalzip.py attached to X:CODE_LINEAGE_6fd18be35d"
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "T:SEQUENCE_UNDERSTANDING_TRANSITIONS",
+      "axis": "T",
+      "tags": [
+        "turn_sequencing",
+        "observation_application_loop",
+        "transition_stability",
+        "origin_primary:X",
+        "origin_secondary:T",
+        "origin_signature:X^1*T^1*B^1",
+        "root_slot:NC:X>T\u00d7NC:T>X",
+        "operation_lineage:OP:bb7e4e4f881d"
+      ],
+      "summary": "Sequence observation, application, and correction as one continuous temporal loop instead of isolated turns."
     },
     {
-      "timestamp": 1785301735.3274047,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_f984ea53ea",
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "N:WEIGH_UNDERSTANDING_COST",
+      "axis": "N",
+      "tags": [
+        "coherence_cost",
+        "articulation_cost",
+        "contradiction_cost",
+        "policy_weighting",
+        "origin_primary:T",
+        "origin_secondary:N",
+        "origin_signature:T^1*N^1*B^1*A^1",
+        "root_slot:NC:T>N\u00d7NC:N>T"
+      ],
+      "summary": "Measure the runtime cost of speaking, clarifying, contradicting, or outsourcing articulation so policy can adapt under pressure."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "B:BOUND_MEANING_AND_PERSPECTIVE",
       "axis": "B",
-      "summary": "Manual code change in flutter_app/android/app/src/main/python/aurora_bridge.py attached to B:CODE_LINEAGE_f984ea53ea"
+      "tags": [
+        "meaning_boundary",
+        "speaker_ownership",
+        "perspective_separation",
+        "referent_bounding",
+        "origin_primary:X",
+        "origin_secondary:B",
+        "origin_signature:X^1*B^1*A^1",
+        "root_slot:NC:X>B\u00d7NC:B>X"
+      ],
+      "summary": "Bound meaning inside the correct speaker, referent, and self/world frame so Aurora does not flatten perspective."
     },
     {
-      "timestamp": 1785301737.1517098,
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "A:VALIDATE_UNDERSTANDING_ACCURACY",
+      "axis": "A",
+      "tags": [
+        "outcome_validation",
+        "accuracy_correction",
+        "policy_revision",
+        "meaning_update",
+        "origin_primary:T",
+        "origin_secondary:N",
+        "origin_signature:T^1*N^1*B^1*A^1",
+        "root_slot:NC:T>N\u00d7NC:N>T"
+      ],
+      "summary": "Judge whether outward application fit the resulting turn and feed that accuracy back into meaning and policy."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "CONTRACT:COHERENCE_GUARD",
+      "axis": "T",
+      "tags": [
+        "referent_continuity",
+        "conflict_stability",
+        "topic_carryover",
+        "causal_thread",
+        "origin_primary:X",
+        "origin_secondary:T",
+        "origin_signature:X^1*T^1*B^1",
+        "root_slot:NC:X>T\u00d7NC:T>X"
+      ],
+      "summary": "Promote identity and causal continuity across turns while penalizing fragmentation or drift in the thread."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "CONTRACT:COMMUNICATION_SEAM",
+      "axis": "B",
+      "tags": [
+        "articulation_fidelity",
+        "signal_preservation",
+        "expression_structure",
+        "origin_primary:N",
+        "origin_secondary:B",
+        "origin_signature:N^1*B^1*A^1",
+        "root_slot:NC:N>B\u00d7NC:B>N",
+        "operation_lineage:OP:c3ddfb2ff6bd"
+      ],
+      "summary": "Ensure what is carried inside is rendered outward without losing structure, penalizing distortion that just sounds plausible."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "CONTRACT:INTELLIGENCE_EVOLUTION",
+      "axis": "N",
+      "tags": [
+        "adaptive_gain",
+        "pressure_relief",
+        "generalization",
+        "manifold_navigation",
+        "origin_primary:T",
+        "origin_secondary:N",
+        "origin_signature:T^1*N^1*A^1",
+        "root_slot:NC:T>N\u00d7NC:N>T"
+      ],
+      "summary": "Reward structure-preserving adaptation under pressure and penalize shallow wins that don't deepen the organism."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "derived_ability",
+      "id": "A:LINK_L_2966bd9bd7",
+      "axis": "A",
+      "tags": [
+        "outlet",
+        "release",
+        "origin_primary:B",
+        "origin_secondary:A",
+        "origin_signature:B^1*A^1",
+        "root_slot:NC:B>A\u00d7NC:A>B",
+        "operation_lineage:OP:aafd2673d4ca",
+        "seed_lineage:true"
+      ],
+      "summary": ""
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "derived_ability",
+      "id": "A:LINK_L_d79d894f66",
+      "axis": "A",
+      "tags": [
+        "outlet",
+        "release",
+        "origin_primary:B",
+        "origin_secondary:A",
+        "origin_signature:B^1*A^1",
+        "root_slot:NC:B>A\u00d7NC:A>B",
+        "operation_lineage:OP:aafd2673d4ca",
+        "seed_lineage:true"
+      ],
+      "summary": ""
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "REFAB:X:OPERATOR:A:?:?:?:?",
+      "axis": "X",
+      "tags": [
+        "origin_primary:X",
+        "origin_secondary:X",
+        "origin_signature:X^1",
+        "root_slot:NC:X>X\u00d7NC:X>X",
+        "operation_lineage:OP:a96e75973154",
+        "seed_lineage:true",
+        "operator_action:operator_on_x",
+        "purpose_lane:intelligence"
+      ],
+      "summary": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "REFAB:T:OPERATOR:A:?:?:?:?",
+      "axis": "T",
+      "tags": [
+        "origin_primary:T",
+        "origin_secondary:T",
+        "origin_signature:T^1",
+        "root_slot:NC:T>T\u00d7NC:T>T",
+        "operation_lineage:OP:8b035faa4745",
+        "seed_lineage:true",
+        "operator_action:operator_on_t",
+        "purpose_lane:intelligence"
+      ],
+      "summary": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "REFAB:N:OPERATOR:A:?:?:?:?",
+      "axis": "N",
+      "tags": [
+        "origin_primary:N",
+        "origin_secondary:N",
+        "origin_signature:N^1",
+        "root_slot:NC:N>N\u00d7NC:N>N",
+        "operation_lineage:OP:b4c35a2e7f21",
+        "seed_lineage:true",
+        "operator_action:operator_on_n",
+        "purpose_lane:communication"
+      ],
+      "summary": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "REFAB:B:OPERATOR:A:?:?:?:?",
+      "axis": "B",
+      "tags": [
+        "origin_primary:B",
+        "origin_secondary:B",
+        "origin_signature:B^1",
+        "root_slot:NC:B>B\u00d7NC:B>B",
+        "operation_lineage:OP:009e951be0d7",
+        "seed_lineage:true",
+        "operator_action:operator_on_b",
+        "purpose_lane:meaning"
+      ],
+      "summary": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "ability",
+      "id": "REFAB:A:OPERATOR:A:?:?:?:?",
+      "axis": "A",
+      "tags": [
+        "origin_primary:A",
+        "origin_secondary:A",
+        "origin_signature:A^1",
+        "root_slot:NC:A>A\u00d7NC:A>A",
+        "operation_lineage:OP:e7087d5135ad",
+        "seed_lineage:true",
+        "operator_action:operator_on_a",
+        "purpose_lane:meaning"
+      ],
+      "summary": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "derived_ability",
+      "id": "B:LINK_L_65c2c9d0fa",
+      "axis": "B",
+      "tags": [
+        "origin_primary:B",
+        "origin_secondary:B",
+        "origin_signature:B^1",
+        "root_slot:NC:B>B\u00d7NC:B>B",
+        "operation_lineage:OP:009e951be0d7",
+        "seed_lineage:true",
+        "operator_action:operator_on_b",
+        "purpose_lane:meaning"
+      ],
+      "summary": ""
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "derived_ability",
+      "id": "A:LINK_L_fd5a9a1e6a",
+      "axis": "A",
+      "tags": [
+        "origin_primary:A",
+        "origin_secondary:A",
+        "origin_signature:A^1",
+        "root_slot:NC:A>A\u00d7NC:A>A",
+        "operation_lineage:OP:e7087d5135ad",
+        "seed_lineage:true",
+        "operator_action:operator_on_a",
+        "purpose_lane:meaning"
+      ],
+      "summary": ""
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "link",
+      "id": "L:2966bd9bd7",
+      "axis": "A",
+      "depth": 1,
+      "summary": "Promoted link at depth 1 with 18 relief observations."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "link",
+      "id": "L:d79d894f66",
+      "axis": "A",
+      "depth": 2,
+      "summary": "Promoted link at depth 2 with 28 relief observations."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "link",
+      "id": "L:65c2c9d0fa",
+      "axis": "B",
+      "depth": 1,
+      "summary": "Promoted link at depth 1 with 3 relief observations."
+    },
+    {
+      "timestamp": 1787388474.6228657,
+      "source": "runtime_turn:composer_unified",
+      "kind": "link",
+      "id": "L:fd5a9a1e6a",
+      "axis": "A",
+      "depth": 1,
+      "summary": "Promoted link at depth 1 with 4 relief observations."
+    },
+    {
+      "timestamp": 1787411452.0869687,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "X:CODE_LINEAGE_165ad81970",
+      "axis": "X",
+      "summary": "Manual code change in aurora.py attached to X:CODE_LINEAGE_165ad81970"
+    },
+    {
+      "timestamp": 1787411452.720337,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "X:CODE_LINEAGE_764c831a62",
+      "axis": "X",
+      "summary": "Manual code change in aurora_internal/aurora_communication_emergence.py formed X:CODE_LINEAGE_764c831a62"
+    },
+    {
+      "timestamp": 1787411453.0934963,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "A:CODE_LINEAGE_104d4a1a53",
+      "axis": "B",
+      "summary": "Manual code change in aurora_internal/aurora_constraint_semantic_continuity.py attached to A:CODE_LINEAGE_104d4a1a53"
+    },
+    {
+      "timestamp": 1787411453.4851165,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "X:CODE_LINEAGE_0f9d071e77",
+      "axis": "X",
+      "summary": "Manual code change in aurora_internal/aurora_understanding_contract.py attached to X:CODE_LINEAGE_0f9d071e77"
+    },
+    {
+      "timestamp": 1787411454.2286448,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "X:CODE_LINEAGE_b84d367d98",
       "axis": "X",
-      "summary": "Manual code change in flutter_app/android/app/src/main/python/cv2.py attached to X:CODE_LINEAGE_b84d367d98"
+      "summary": "Manual code change in flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py attached to X:CODE_LINEAGE_b84d367d98"
     },
     {
-      "timestamp": 1785301738.9785602,
+      "timestamp": 1787411454.6195612,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_fc6e0f1952",
+      "id": "X:CODE_LINEAGE_5d4961cf8a",
       "axis": "X",
-      "summary": "Manual code change in foundational_contract.py attached to X:CODE_LINEAGE_fc6e0f1952"
+      "summary": "Manual code change in tests/test_baseline_communication_apprenticeship.py formed X:CODE_LINEAGE_5d4961cf8a"
     },
     {
-      "timestamp": 1785301740.6817598,
+      "timestamp": 1787411455.019429,
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_8749014546",
-      "axis": "B",
-      "summary": "Manual code change in genealogy_signature_bridge.py attached to B:CODE_LINEAGE_8749014546"
-    },
-    {
-      "timestamp": 1785301742.5005555,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7e0e678d9e",
-      "axis": "X",
-      "summary": "Manual code change in geological_baseline.py attached to X:CODE_LINEAGE_7e0e678d9e"
-    },
-    {
-      "timestamp": 1785301744.4275486,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_501c097317",
-      "axis": "X",
-      "summary": "Manual code change in reply_aurora.py attached to X:CODE_LINEAGE_501c097317"
-    },
-    {
-      "timestamp": 1785301746.2470546,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_8c75c11ac5",
-      "axis": "X",
-      "summary": "Manual code change in run_aurora.py attached to X:CODE_LINEAGE_8c75c11ac5"
-    },
-    {
-      "timestamp": 1785301748.060439,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_d07d7daff2",
-      "axis": "T",
-      "summary": "Manual code change in run_chain.py attached to T:CODE_LINEAGE_d07d7daff2"
-    },
-    {
-      "timestamp": 1785301749.8826787,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b8687740ca",
-      "axis": "X",
-      "summary": "Manual code change in run_corpus.py attached to X:CODE_LINEAGE_b8687740ca"
-    },
-    {
-      "timestamp": 1785301751.7168412,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_ff3d3693ad",
-      "axis": "X",
-      "summary": "Manual code change in run_full_competency_gauntlet.py attached to X:CODE_LINEAGE_ff3d3693ad"
-    },
-    {
-      "timestamp": 1785301753.5626123,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_c52bb378e4",
-      "axis": "X",
-      "summary": "Manual code change in run_gauntlet.py attached to X:CODE_LINEAGE_c52bb378e4"
-    },
-    {
-      "timestamp": 1785301755.2605267,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_5576fe4b42",
-      "axis": "X",
-      "summary": "Manual code change in run_intensive_intervals.py attached to X:CODE_LINEAGE_5576fe4b42"
-    },
-    {
-      "timestamp": 1785301757.0605862,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b1138dfb77",
-      "axis": "X",
-      "summary": "Manual code change in run_probe_battery.py attached to X:CODE_LINEAGE_b1138dfb77"
-    },
-    {
-      "timestamp": 1785301758.8802736,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_5df1459d8d",
-      "axis": "X",
-      "summary": "Manual code change in scripts/append_to_doc.py attached to X:CODE_LINEAGE_5df1459d8d"
-    },
-    {
-      "timestamp": 1785301760.7055771,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_d635cfeb1a",
-      "axis": "T",
-      "summary": "Manual code change in scripts/audit_actual_runtime_turn.py attached to T:CODE_LINEAGE_d635cfeb1a"
-    },
-    {
-      "timestamp": 1785301762.5689583,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_50278d178e",
-      "axis": "X",
-      "summary": "Manual code change in scripts/audit_unified_response_regression.py attached to X:CODE_LINEAGE_50278d178e"
-    },
-    {
-      "timestamp": 1785301764.3087358,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f1c1e00020",
-      "axis": "X",
-      "summary": "Manual code change in scripts/aurora_ci_segment.py attached to X:CODE_LINEAGE_f1c1e00020"
-    },
-    {
-      "timestamp": 1785301766.1088505,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_fc757095f5",
-      "axis": "X",
-      "summary": "Manual code change in scripts/aurora_cold_archive.py attached to X:CODE_LINEAGE_fc757095f5"
-    },
-    {
-      "timestamp": 1785301767.9173179,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b038268c20",
-      "axis": "X",
-      "summary": "Manual code change in scripts/aurora_stack_exporter.py attached to X:CODE_LINEAGE_b038268c20"
-    },
-    {
-      "timestamp": 1785301769.7117808,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f3e58eaddc",
-      "axis": "X",
-      "summary": "Manual code change in scripts/aurora_state_compress.py attached to X:CODE_LINEAGE_f3e58eaddc"
-    },
-    {
-      "timestamp": 1785301771.5399847,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_e5a5b3631e",
-      "axis": "B",
-      "summary": "Manual code change in scripts/bridge_ledger_to_noncomps.py attached to B:CODE_LINEAGE_e5a5b3631e"
-    },
-    {
-      "timestamp": 1785301773.3474276,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_f7f886f780",
-      "axis": "B",
-      "summary": "Manual code change in scripts/bridge_tensor_occupancy_to_warp.py attached to B:CODE_LINEAGE_f7f886f780"
-    },
-    {
-      "timestamp": 1785301775.1808212,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_2362dcff39",
-      "axis": "T",
-      "summary": "Manual code change in scripts/chain_dossier_codec.py attached to T:CODE_LINEAGE_2362dcff39"
-    },
-    {
-      "timestamp": 1785301777.0175843,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b698256e01",
-      "axis": "X",
-      "summary": "Manual code change in scripts/characterize_pf16_residue.py attached to X:CODE_LINEAGE_b698256e01"
-    },
-    {
-      "timestamp": 1785301778.7342007,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_87d057ac86",
-      "axis": "X",
-      "summary": "Manual code change in scripts/chat_daemon.py attached to X:CODE_LINEAGE_87d057ac86"
-    },
-    {
-      "timestamp": 1785301780.5422451,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_df6408d431",
-      "axis": "X",
-      "summary": "Manual code change in scripts/chatscriber.py attached to X:CODE_LINEAGE_df6408d431"
-    },
-    {
-      "timestamp": 1785301782.3686023,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f1bd365b73",
-      "axis": "X",
-      "summary": "Manual code change in scripts/clean_corpus.py attached to X:CODE_LINEAGE_f1bd365b73"
-    },
-    {
-      "timestamp": 1785301784.1910064,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_59bd4a61a2",
-      "axis": "X",
-      "summary": "Manual code change in scripts/generate_nc_lineage_docs.py attached to X:CODE_LINEAGE_59bd4a61a2"
-    },
-    {
-      "timestamp": 1785301786.0498028,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_aad0288227",
-      "axis": "B",
-      "summary": "Manual code change in scripts/inject_math_forms_v2.py attached to B:CODE_LINEAGE_aad0288227"
-    },
-    {
-      "timestamp": 1785301787.7520952,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b7e22c90b8",
-      "axis": "X",
-      "summary": "Manual code change in scripts/m1_1a_tier1_backfill.py attached to X:CODE_LINEAGE_b7e22c90b8"
-    },
-    {
-      "timestamp": 1785301789.5529146,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f0129a707f",
-      "axis": "X",
-      "summary": "Manual code change in scripts/m1_2_provenance_hygiene.py attached to X:CODE_LINEAGE_f0129a707f"
-    },
-    {
-      "timestamp": 1785301791.361612,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_8c8a28fc4f",
-      "axis": "X",
-      "summary": "Manual code change in scripts/m1_3_v0_rerun.py attached to X:CODE_LINEAGE_8c8a28fc4f"
-    },
-    {
-      "timestamp": 1785301793.18926,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_4aa5c22a5b",
-      "axis": "X",
-      "summary": "Manual code change in scripts/noncomp_actuation_shadow_audit.py attached to X:CODE_LINEAGE_4aa5c22a5b"
-    },
-    {
-      "timestamp": 1785301795.0171225,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_ed4a4dffb7",
-      "axis": "X",
-      "summary": "Manual code change in scripts/pf1_0_attribution_run.py attached to X:CODE_LINEAGE_ed4a4dffb7"
-    },
-    {
-      "timestamp": 1785301796.8341436,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_8b9415a769",
-      "axis": "X",
-      "summary": "Manual code change in scripts/pf1_5_instrument_revalidation.py attached to X:CODE_LINEAGE_8b9415a769"
-    },
-    {
-      "timestamp": 1785301798.6637337,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_30ea21811f",
-      "axis": "X",
-      "summary": "Manual code change in scripts/pf1_6_acceptance.py attached to X:CODE_LINEAGE_30ea21811f"
-    },
-    {
-      "timestamp": 1785301800.501891,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_aee3ba8007",
-      "axis": "X",
-      "summary": "Manual code change in scripts/pf3_1_carryover_trace.py attached to X:CODE_LINEAGE_aee3ba8007"
-    },
-    {
-      "timestamp": 1785301802.207082,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_4acfd06cd0",
-      "axis": "X",
-      "summary": "Manual code change in scripts/pf3_1_context_keywords_trace.py attached to X:CODE_LINEAGE_4acfd06cd0"
-    },
-    {
-      "timestamp": 1785301804.0197725,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_3ae197bbca",
-      "axis": "X",
-      "summary": "Manual code change in scripts/pf3_1_frame_staleness_trace.py attached to X:CODE_LINEAGE_3ae197bbca"
-    },
-    {
-      "timestamp": 1785301805.823665,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_d1862459b5",
-      "axis": "X",
-      "summary": "Manual code change in scripts/pf3_3_descriptor_trace.py attached to X:CODE_LINEAGE_d1862459b5"
-    },
-    {
-      "timestamp": 1785301807.6609113,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f5030cef0d",
-      "axis": "X",
-      "summary": "Manual code change in scripts/pf3_3_frame_absence_trace.py attached to X:CODE_LINEAGE_f5030cef0d"
-    },
-    {
-      "timestamp": 1785301809.4644156,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_49401278cc",
-      "axis": "T",
-      "summary": "Manual code change in scripts/pf3_5_motif_watch_readout.py attached to T:CODE_LINEAGE_49401278cc"
-    },
-    {
-      "timestamp": 1785301811.1637528,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7cf0724f59",
-      "axis": "X",
-      "summary": "Manual code change in scripts/populate_fgae_semantics.py attached to X:CODE_LINEAGE_7cf0724f59"
-    },
-    {
-      "timestamp": 1785301812.9830608,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_fccaeab57a",
-      "axis": "X",
-      "summary": "Manual code change in scripts/process_docs.py attached to X:CODE_LINEAGE_fccaeab57a"
-    },
-    {
-      "timestamp": 1785301814.786726,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_5c5c3a8578",
-      "axis": "X",
-      "summary": "Manual code change in scripts/prove_learning.py attached to X:CODE_LINEAGE_5c5c3a8578"
-    },
-    {
-      "timestamp": 1785301816.5970676,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_86dc3510f0",
-      "axis": "X",
-      "summary": "Manual code change in scripts/run_growth_session.py attached to X:CODE_LINEAGE_86dc3510f0"
-    },
-    {
-      "timestamp": 1785301818.4321942,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_c338e2d09f",
-      "axis": "X",
-      "summary": "Manual code change in scripts/rw7_attribution_run.py attached to X:CODE_LINEAGE_c338e2d09f"
-    },
-    {
-      "timestamp": 1785301820.2450075,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_862ba7aebc",
-      "axis": "X",
-      "summary": "Manual code change in scripts/scan_lineage_25x25.py attached to X:CODE_LINEAGE_862ba7aebc"
-    },
-    {
-      "timestamp": 1785301822.061189,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_58f241fb9f",
-      "axis": "X",
-      "summary": "Manual code change in scripts/seed_abstract_regions_s1.py attached to X:CODE_LINEAGE_58f241fb9f"
-    },
-    {
-      "timestamp": 1785301823.8990712,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_fb5b461568",
-      "axis": "X",
-      "summary": "Manual code change in scripts/seed_oets_aurora_vocabulary.py attached to X:CODE_LINEAGE_fb5b461568"
-    },
-    {
-      "timestamp": 1785301825.602149,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_5adc37cf56",
-      "axis": "X",
-      "summary": "Manual code change in scripts/seed_sensory_crystals.py attached to X:CODE_LINEAGE_5adc37cf56"
-    },
-    {
-      "timestamp": 1785301827.395894,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_c1402ad3d0",
-      "axis": "X",
-      "summary": "Manual code change in scripts/source_conversation_corpora.py attached to X:CODE_LINEAGE_c1402ad3d0"
-    },
-    {
-      "timestamp": 1785301829.2035975,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_cd1e915503",
-      "axis": "X",
-      "summary": "Manual code change in scripts/stamp_authorship_headers.py attached to X:CODE_LINEAGE_cd1e915503"
-    },
-    {
-      "timestamp": 1785301831.0321057,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_2e0e7667e5",
-      "axis": "B",
-      "summary": "Manual code change in scripts/termux_voice_bridge.py attached to B:CODE_LINEAGE_2e0e7667e5"
-    },
-    {
-      "timestamp": 1785301832.854421,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_666233db74",
-      "axis": "X",
-      "summary": "Manual code change in scripts/trace_live_response_pipeline.py attached to X:CODE_LINEAGE_666233db74"
-    },
-    {
-      "timestamp": 1785301834.5461197,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_9614593ecd",
-      "axis": "X",
-      "summary": "Manual code change in scripts/w1_reentrancy_trace.py attached to X:CODE_LINEAGE_9614593ecd"
-    },
-    {
-      "timestamp": 1785301836.321631,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_a9b206d0cf",
-      "axis": "X",
-      "summary": "Manual code change in scripts/w1_thought_state_diagnostic.py attached to X:CODE_LINEAGE_a9b206d0cf"
-    },
-    {
-      "timestamp": 1785301838.1293216,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_c780e0c587",
-      "axis": "X",
-      "summary": "Manual code change in tensor_occupancy_hook.py attached to X:CODE_LINEAGE_c780e0c587"
-    },
-    {
-      "timestamp": 1785301839.9492867,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_ff000e2e37",
-      "axis": "B",
-      "summary": "Manual code change in tensor_occupancy_warp_bridge.py attached to B:CODE_LINEAGE_ff000e2e37"
-    },
-    {
-      "timestamp": 1785301841.7590997,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_3741d2ba6a",
-      "axis": "B",
-      "summary": "Manual code change in test_constraint_reasoner.py attached to B:CODE_LINEAGE_3741d2ba6a"
-    },
-    {
-      "timestamp": 1785301843.5742395,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_596bca61c8",
-      "axis": "X",
-      "summary": "Manual code change in tests/_engine_integration_test.py attached to X:CODE_LINEAGE_596bca61c8"
-    },
-    {
-      "timestamp": 1785301845.4442244,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_e8a7ef475c",
-      "axis": "X",
-      "summary": "Manual code change in tests/_pipeline_test.py attached to X:CODE_LINEAGE_e8a7ef475c"
-    },
-    {
-      "timestamp": 1785301847.2818305,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_25e33f0dfb",
-      "axis": "X",
-      "summary": "Manual code change in tests/run_intelligence_test_surface.py attached to X:CODE_LINEAGE_25e33f0dfb"
-    },
-    {
-      "timestamp": 1785301849.0481577,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_19ae8dfc7a",
-      "axis": "X",
-      "summary": "Manual code change in tests/run_interaction_test.py attached to X:CODE_LINEAGE_19ae8dfc7a"
-    },
-    {
-      "timestamp": 1785301850.831425,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "A:CODE_LINEAGE_aab4a95cb0",
-      "axis": "A",
-      "summary": "Manual code change in tests/test_alignment.py attached to A:CODE_LINEAGE_aab4a95cb0"
-    },
-    {
-      "timestamp": 1785301852.6486602,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7a4c0e4b78",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_articulation_semantic_strategy.py attached to X:CODE_LINEAGE_7a4c0e4b78"
-    },
-    {
-      "timestamp": 1785301854.4800146,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_093f5ec629",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_autoevolver_syntax_gate.py attached to X:CODE_LINEAGE_093f5ec629"
-    },
-    {
-      "timestamp": 1785301856.3074317,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_0302700d6c",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_b1_1_envelope_shadow.py attached to X:CODE_LINEAGE_0302700d6c"
-    },
-    {
-      "timestamp": 1785301858.019996,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_d144e667d4",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_battery_relevance_metric.py attached to X:CODE_LINEAGE_d144e667d4"
-    },
-    {
-      "timestamp": 1785301859.816867,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_e00345b49d",
-      "axis": "B",
-      "summary": "Manual code change in tests/test_cers_bridge_tensor_trace_integration.py attached to B:CODE_LINEAGE_e00345b49d"
-    },
-    {
-      "timestamp": 1785301861.621786,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_a77ced49c0",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_cers_conflict_monitoring_veto.py attached to X:CODE_LINEAGE_a77ced49c0"
-    },
-    {
-      "timestamp": 1785301863.440612,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_e3df64bce4",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_cers_geometry_deviation.py attached to X:CODE_LINEAGE_e3df64bce4"
-    },
-    {
-      "timestamp": 1785301865.2684534,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_a0587e8a9e",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_cers_shadow_error_logging.py attached to X:CODE_LINEAGE_a0587e8a9e"
-    },
-    {
-      "timestamp": 1785301867.091966,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7766cd1d94",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_cers_surface_salience.py attached to X:CODE_LINEAGE_7766cd1d94"
-    },
-    {
-      "timestamp": 1785301868.914594,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_5483b174e7",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_cers_tensor_locator.py attached to X:CODE_LINEAGE_5483b174e7"
-    },
-    {
-      "timestamp": 1785301870.6177952,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_6070b4e742",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_cers_topology_context.py attached to X:CODE_LINEAGE_6070b4e742"
-    },
-    {
-      "timestamp": 1785301872.4111812,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_29ff18491f",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_ci_segment_dev_index_rolling_cap.py attached to X:CODE_LINEAGE_29ff18491f"
-    },
-    {
-      "timestamp": 1785301874.2047637,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "A:CODE_LINEAGE_c2b10cf275",
-      "axis": "A",
-      "summary": "Manual code change in tests/test_classroom_behavior_modes_wiring.py attached to A:CODE_LINEAGE_c2b10cf275"
-    },
-    {
-      "timestamp": 1785301876.0230076,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_c4157c91e4",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_classroom_curriculum_seeding.py attached to X:CODE_LINEAGE_c4157c91e4"
-    },
-    {
-      "timestamp": 1785301877.8566093,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_39625555a3",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_classroom_divergence_cold_start.py attached to X:CODE_LINEAGE_39625555a3"
-    },
-    {
-      "timestamp": 1785301879.6727636,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_b0f19c093e",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_classroom_perspective_rotation_and_watchdog.py attached to T:CODE_LINEAGE_b0f19c093e"
-    },
-    {
-      "timestamp": 1785301881.369643,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_8d5879158f",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_composer_relevance_selection.py attached to X:CODE_LINEAGE_8d5879158f"
-    },
-    {
-      "timestamp": 1785301883.1705189,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_9191216c2b",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_concept_image_ingestion_import.py attached to X:CODE_LINEAGE_9191216c2b"
-    },
-    {
-      "timestamp": 1785301884.9730802,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7619914f4b",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_concept_imager_cycle.py attached to X:CODE_LINEAGE_7619914f4b"
-    },
-    {
-      "timestamp": 1785301886.7938716,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_80b0722d47",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_conversation_desktop.py attached to X:CODE_LINEAGE_80b0722d47"
-    },
-    {
-      "timestamp": 1785301888.615963,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_8e254b8677",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_correspondence_loop.py attached to X:CODE_LINEAGE_8e254b8677"
-    },
-    {
-      "timestamp": 1785301890.4272058,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_139e53808e",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_cpm.py attached to X:CODE_LINEAGE_139e53808e"
-    },
-    {
-      "timestamp": 1785301892.252234,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b415797ade",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_d1_device_path_attribution.py attached to X:CODE_LINEAGE_b415797ade"
-    },
-    {
-      "timestamp": 1785301893.9504254,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_c425a0c6ec",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_d2_2_corpus_fragment_nesting.py attached to X:CODE_LINEAGE_c425a0c6ec"
-    },
-    {
-      "timestamp": 1785301895.7372355,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_5939ba90aa",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_d2_2_live_turn_reentrancy_guard.py attached to X:CODE_LINEAGE_5939ba90aa"
-    },
-    {
-      "timestamp": 1785301897.533046,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_da97426d60",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_d2_3_delivery_boundary_telemetry_rejection.py attached to X:CODE_LINEAGE_da97426d60"
-    },
-    {
-      "timestamp": 1785301899.336616,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_9c570a9392",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_d2_4_probe_battery_measures_resp_a.py attached to X:CODE_LINEAGE_9c570a9392"
-    },
-    {
-      "timestamp": 1785301901.1617846,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_6a8ca3870c",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_d2_condition2_abstain_sanity.py attached to X:CODE_LINEAGE_6a8ca3870c"
-    },
-    {
-      "timestamp": 1785301902.9867527,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_83fb99210a",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_daemon_classroom_cycle.py attached to X:CODE_LINEAGE_83fb99210a"
-    },
-    {
-      "timestamp": 1785301904.6891427,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_11402cd1f3",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_daemon_subsurface_and_ambient.py attached to X:CODE_LINEAGE_11402cd1f3"
-    },
-    {
-      "timestamp": 1785301906.5050828,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_a614dd6948",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_direct_address_formulation.py attached to X:CODE_LINEAGE_a614dd6948"
-    },
-    {
-      "timestamp": 1785301908.3076568,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_9606c0e333",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_directed_training_corpus_cache_trust.py attached to X:CODE_LINEAGE_9606c0e333"
-    },
-    {
-      "timestamp": 1785301910.1198921,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_763f9f5e5e",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_emitter_crash.py attached to X:CODE_LINEAGE_763f9f5e5e"
-    },
-    {
-      "timestamp": 1785301911.9437864,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_14abc6978b",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_episode_to_entity_experience.py attached to T:CODE_LINEAGE_14abc6978b"
-    },
-    {
-      "timestamp": 1785301913.7522237,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_d73734ee7a",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_f5_register_exploration_plumbing.py attached to X:CODE_LINEAGE_d73734ee7a"
-    },
-    {
-      "timestamp": 1785301915.5751388,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_81176214ea",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_failure_shape_tracing.py attached to X:CODE_LINEAGE_81176214ea"
-    },
-    {
-      "timestamp": 1785301917.2709067,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_b4ea28d161",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_flow_audit_and_tcl_wiring.py attached to X:CODE_LINEAGE_b4ea28d161"
-    },
-    {
-      "timestamp": 1785301919.075076,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_0f0a2cb007",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_full_reasoning_pipeline.py attached to X:CODE_LINEAGE_0f0a2cb007"
-    },
-    {
-      "timestamp": 1785301920.8809834,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7724db79c9",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_function_word_gate_golden.py attached to X:CODE_LINEAGE_7724db79c9"
-    },
-    {
-      "timestamp": 1785301922.6891265,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_70f7da7332",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_genealogy_atomic_writes.py attached to X:CODE_LINEAGE_70f7da7332"
-    },
-    {
-      "timestamp": 1785301924.504271,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_bb5863ff74",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_generation_collapse_regression.py attached to X:CODE_LINEAGE_bb5863ff74"
-    },
-    {
-      "timestamp": 1785301926.3381805,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_72f2b6daa9",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_golden_transcript_validation.py attached to X:CODE_LINEAGE_72f2b6daa9"
-    },
-    {
-      "timestamp": 1785301928.03791,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_59b810ba21",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_governance_liveness.py attached to X:CODE_LINEAGE_59b810ba21"
-    },
-    {
-      "timestamp": 1785301929.8494136,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_c992e5c94e",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_grammar_motif_depletion_check.py attached to X:CODE_LINEAGE_c992e5c94e"
-    },
-    {
-      "timestamp": 1785301931.6407924,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_591d9a5d35",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_i_state_channel_reweighting.py attached to X:CODE_LINEAGE_591d9a5d35"
-    },
-    {
-      "timestamp": 1785301933.4539154,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_efcd1b5ed0",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_icc_ledger.py attached to X:CODE_LINEAGE_efcd1b5ed0"
-    },
-    {
-      "timestamp": 1785301935.2698934,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_716052eead",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_l1_skeleton_validity_gate.py attached to X:CODE_LINEAGE_716052eead"
-    },
-    {
-      "timestamp": 1785301937.0764642,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_d09e821b6d",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_l2_pos_gating.py attached to X:CODE_LINEAGE_d09e821b6d"
-    },
-    {
-      "timestamp": 1785301938.893787,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_e42617eec1",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_l3_conjugation_wiring.py attached to X:CODE_LINEAGE_e42617eec1"
-    },
-    {
-      "timestamp": 1785301940.5870018,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_845b3994ac",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_l3b_determiner_preposition_slots.py attached to X:CODE_LINEAGE_845b3994ac"
-    },
-    {
-      "timestamp": 1785301942.3881607,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_293a77e709",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_l4_grounded_motif_fitness.py attached to X:CODE_LINEAGE_293a77e709"
-    },
-    {
-      "timestamp": 1785301944.289218,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_cd04b690b6",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_layer_acyclicity.py attached to X:CODE_LINEAGE_cd04b690b6"
-    },
-    {
-      "timestamp": 1785301946.1002104,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_aa04ee52ef",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_lifecycle_catalog.py attached to X:CODE_LINEAGE_aa04ee52ef"
-    },
-    {
-      "timestamp": 1785301947.941404,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_a13b77411b",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_lineage_runtime_activation.py attached to X:CODE_LINEAGE_a13b77411b"
-    },
-    {
-      "timestamp": 1785301949.753511,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f541dd4be7",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_m1_1a_relation_pairs.py attached to X:CODE_LINEAGE_f541dd4be7"
-    },
-    {
-      "timestamp": 1785301951.4484458,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f4f3abc162",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_m1_2_provenance_hygiene.py attached to X:CODE_LINEAGE_f4f3abc162"
-    },
-    {
-      "timestamp": 1785301953.2396216,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_540176ba92",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_mobile_tools_aurora.py attached to X:CODE_LINEAGE_540176ba92"
-    },
-    {
-      "timestamp": 1785301955.0337005,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_63a5df91cd",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_mtsl_acceptance_report.py attached to X:CODE_LINEAGE_63a5df91cd"
-    },
-    {
-      "timestamp": 1785301956.8452387,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_e7facd65a9",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_mtsl_live_wiring.py attached to X:CODE_LINEAGE_e7facd65a9"
-    },
-    {
-      "timestamp": 1785301958.672777,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_d1ed0fff5b",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_mtsl_perturbation_live_wiring.py attached to X:CODE_LINEAGE_d1ed0fff5b"
-    },
-    {
-      "timestamp": 1785301960.468831,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_8ec8357862",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_mtsl_phase0_plumbing.py attached to T:CODE_LINEAGE_8ec8357862"
-    },
-    {
-      "timestamp": 1785301962.2728786,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_d87a54fb23",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_mtsl_phase7_extensions.py attached to T:CODE_LINEAGE_d87a54fb23"
-    },
-    {
-      "timestamp": 1785301963.9770076,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_416e06d17d",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_mtsl_warp_gap_proposal.py attached to X:CODE_LINEAGE_416e06d17d"
-    },
-    {
-      "timestamp": 1785301965.8315732,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_17b2c0154a",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_n21_hardened_reacceptance.py attached to X:CODE_LINEAGE_17b2c0154a"
-    },
-    {
-      "timestamp": 1785301967.6186535,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7165f4519b",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_n3_correspondence_daemon_wiring.py attached to X:CODE_LINEAGE_7165f4519b"
-    },
-    {
-      "timestamp": 1785301969.4335299,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_24e7b5ee9f",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_oets.py attached to X:CODE_LINEAGE_24e7b5ee9f"
-    },
-    {
-      "timestamp": 1785301971.2578764,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_440b6a24be",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_oets_comprehension_confidence_growth.py attached to X:CODE_LINEAGE_440b6a24be"
-    },
-    {
-      "timestamp": 1785301973.0646093,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_3691803c2c",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_oets_conf.py attached to X:CODE_LINEAGE_3691803c2c"
-    },
-    {
-      "timestamp": 1785301974.7492135,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_6f49eeaca7",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_operator_composer.py attached to X:CODE_LINEAGE_6f49eeaca7"
-    },
-    {
-      "timestamp": 1785301976.5499625,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_cf1adb1e33",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_p1_track_cp_contradiction.py attached to X:CODE_LINEAGE_cf1adb1e33"
-    },
-    {
-      "timestamp": 1785301978.342954,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_dbb2018dc0",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_perturbation_probe.py attached to X:CODE_LINEAGE_dbb2018dc0"
-    },
-    {
-      "timestamp": 1785301980.1557128,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_95a60e7e5d",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf1_1_proposition_frame.py attached to X:CODE_LINEAGE_95a60e7e5d"
-    },
-    {
-      "timestamp": 1785301981.9802375,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f8d405548a",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf1_2_transport.py attached to X:CODE_LINEAGE_f8d405548a"
-    },
-    {
-      "timestamp": 1785301983.791666,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7b70b2c8f2",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf1_3_motif_selection.py attached to X:CODE_LINEAGE_7b70b2c8f2"
-    },
-    {
-      "timestamp": 1785301985.6081853,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_9b8cfca648",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf1_4_slot_binding.py attached to X:CODE_LINEAGE_9b8cfca648"
-    },
-    {
-      "timestamp": 1785301987.3134477,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7acc15e1bb",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf1_5_instruments.py attached to X:CODE_LINEAGE_7acc15e1bb"
-    },
-    {
-      "timestamp": 1785301989.0992074,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_e7000032cd",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf3_1_carryover_isolation.py attached to X:CODE_LINEAGE_e7000032cd"
-    },
-    {
-      "timestamp": 1785301990.8915834,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_8053358387",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf3_1_cooccurrence_hub_leak.py attached to X:CODE_LINEAGE_8053358387"
-    },
-    {
-      "timestamp": 1785301992.692255,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_d830f2cc87",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf3_1_frame_staleness.py attached to X:CODE_LINEAGE_d830f2cc87"
-    },
-    {
-      "timestamp": 1785301994.5199232,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_bd346fa19a",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf3_2_pronoun_consumer_split.py attached to X:CODE_LINEAGE_bd346fa19a"
-    },
-    {
-      "timestamp": 1785301996.3556724,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7d5adc0966",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf3_3_descriptor_neighborhood.py attached to X:CODE_LINEAGE_7d5adc0966"
-    },
-    {
-      "timestamp": 1785301998.045499,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_2e44b3b7ee",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf3_3_frame_absence.py attached to X:CODE_LINEAGE_2e44b3b7ee"
-    },
-    {
-      "timestamp": 1785301999.8364315,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_430bead1e8",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pf3_4a_motif_thinning_guard.py attached to X:CODE_LINEAGE_430bead1e8"
-    },
-    {
-      "timestamp": 1785302001.6207383,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_2c1997a040",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_pf3_5_motif_watch_readout.py attached to T:CODE_LINEAGE_2c1997a040"
-    },
-    {
-      "timestamp": 1785302003.4337218,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_e926086abc",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_pipeline2.py attached to X:CODE_LINEAGE_e926086abc"
-    },
-    {
-      "timestamp": 1785302005.2639432,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_1be3b086b0",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_prediction_field_manifold.py attached to X:CODE_LINEAGE_1be3b086b0"
-    },
-    {
-      "timestamp": 1785302007.0694141,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_0778ef2cb4",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_ps1_2_persistence_arbitration.py attached to X:CODE_LINEAGE_0778ef2cb4"
-    },
-    {
-      "timestamp": 1785302008.8904226,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_59093a9557",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_reflexive_interpreter_deposition_integration.py attached to X:CODE_LINEAGE_59093a9557"
-    },
-    {
-      "timestamp": 1785302010.5780802,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_601fc5583e",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_round.py attached to X:CODE_LINEAGE_601fc5583e"
-    },
-    {
-      "timestamp": 1785302012.3685532,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_f29f937289",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_rw7_attribution_trace.py attached to X:CODE_LINEAGE_f29f937289"
-    },
-    {
-      "timestamp": 1785302014.1471047,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_82d256a78a",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_scheduled_run_state_persistence.py attached to X:CODE_LINEAGE_82d256a78a"
-    },
-    {
-      "timestamp": 1785302015.9527109,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_85c79e9b7b",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_scheduler_balance.py attached to X:CODE_LINEAGE_85c79e9b7b"
-    },
-    {
-      "timestamp": 1785302017.7763746,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "B:CODE_LINEAGE_743d969c41",
-      "axis": "B",
-      "summary": "Manual code change in tests/test_semantic_intention_bridge.py attached to B:CODE_LINEAGE_743d969c41"
-    },
-    {
-      "timestamp": 1785302019.5895758,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_7e37a31b78",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_semantic_probe_battery.py attached to X:CODE_LINEAGE_7e37a31b78"
-    },
-    {
-      "timestamp": 1785302021.2863376,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_512e0f179e",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_semantic_variant_registry.py attached to X:CODE_LINEAGE_512e0f179e"
-    },
-    {
-      "timestamp": 1785302023.0737543,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_853dcece19",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_strategic_horizon.py attached to X:CODE_LINEAGE_853dcece19"
-    },
-    {
-      "timestamp": 1785302024.8884008,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_8487158cef",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_stratified_wellformedness.py attached to X:CODE_LINEAGE_8487158cef"
-    },
-    {
-      "timestamp": 1785302026.7395225,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_d04afe6234",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_surface_boundary.py attached to X:CODE_LINEAGE_d04afe6234"
-    },
-    {
-      "timestamp": 1785302028.5613341,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_6afcddf61b",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_topological_semantic_coordinator.py attached to X:CODE_LINEAGE_6afcddf61b"
-    },
-    {
-      "timestamp": 1785302030.36925,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_6298d3887a",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_topology_cycle_decomposition.py attached to X:CODE_LINEAGE_6298d3887a"
-    },
-    {
-      "timestamp": 1785302032.183866,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_4ff0189b71",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_topology_frame.py attached to X:CODE_LINEAGE_4ff0189b71"
-    },
-    {
-      "timestamp": 1785302033.8826513,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_0158445334",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_topology_tracker.py attached to X:CODE_LINEAGE_0158445334"
-    },
-    {
-      "timestamp": 1785302035.6687691,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_3d274939b7",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_toroidal_circulation_layer.py attached to X:CODE_LINEAGE_3d274939b7"
-    },
-    {
-      "timestamp": 1785302037.4679377,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_898cc56049",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_understanding_sediment_overlay.py attached to X:CODE_LINEAGE_898cc56049"
-    },
-    {
-      "timestamp": 1785302039.2857482,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_9f1230ae5c",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_up.py attached to X:CODE_LINEAGE_9f1230ae5c"
-    },
-    {
-      "timestamp": 1785302041.109652,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_6545964560",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_variant_transition_predictor.py attached to X:CODE_LINEAGE_6545964560"
-    },
-    {
-      "timestamp": 1785302042.9300904,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_1f2ab935eb",
-      "axis": "X",
-      "summary": "Manual code change in tests/test_w1_turn_content_context.py attached to X:CODE_LINEAGE_1f2ab935eb"
-    },
-    {
-      "timestamp": 1785302044.6241815,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "X:CODE_LINEAGE_40845a8aaa",
+      "id": "X:CODE_LINEAGE_70b0cc2b12",
       "axis": "X",
-      "summary": "Manual code change in tests/test_w2_claim_gate_widening.py attached to X:CODE_LINEAGE_40845a8aaa"
-    },
-    {
-      "timestamp": 1785302046.4012823,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_4abea959db",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_warp_phase1_resonance_graph.py attached to T:CODE_LINEAGE_4abea959db"
-    },
-    {
-      "timestamp": 1785302048.1952329,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_b2ae703076",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_warp_phase2_confession_calls.py attached to T:CODE_LINEAGE_b2ae703076"
-    },
-    {
-      "timestamp": 1785302049.9989402,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_24dd9f00c3",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_warp_phase3a_language_field_confession.py attached to T:CODE_LINEAGE_24dd9f00c3"
-    },
-    {
-      "timestamp": 1785302051.7978728,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_f39c341fb9",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_warp_phase3b_resonant_lookup_confession.py attached to T:CODE_LINEAGE_f39c341fb9"
-    },
-    {
-      "timestamp": 1785302053.6022387,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_59739d0ca0",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_warp_phase3c_memory_recall_confession.py attached to T:CODE_LINEAGE_59739d0ca0"
-    },
-    {
-      "timestamp": 1785302055.4111235,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_d387d10e0e",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_warp_phase3d_parse_confidence_confession.py attached to T:CODE_LINEAGE_d387d10e0e"
-    },
-    {
-      "timestamp": 1785302057.104862,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_5b50e8e163",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_warp_phase4_resonant_trial_lifecycle.py attached to T:CODE_LINEAGE_5b50e8e163"
-    },
-    {
-      "timestamp": 1785302058.8953376,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "T:CODE_LINEAGE_cec6767245",
-      "axis": "T",
-      "summary": "Manual code change in tests/test_waveform_pressure.py attached to T:CODE_LINEAGE_cec6767245"
-    },
-    {
-      "timestamp": 1785302074.5137885,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_7e2082b938",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:17dda9dc0326d3; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302074.5137885,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_65b339490b",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:e1d77c7d225abf; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302074.5137885,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_7e427fcbb5",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:1954f791cac61f; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302083.2911828,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_62b41326b2",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_ciousnessengine_tick",
-        "mutation_status:rejected",
-        "mutation_score:0.924",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:87092302e12a53; accepted=False; operator_key=dream_surface_dispatch_ciousnessengine_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302083.2911828,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_3a2fe4e97c",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_d_constraintpressure",
-        "mutation_status:rejected",
-        "mutation_score:0.841",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:a93f0d00866a0e; accepted=False; operator_key=dream_surface_dispatch_d_constraintpressure; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302083.2911828,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_14a02affa4",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_ntime_chainsimbridge",
-        "mutation_status:rejected",
-        "mutation_score:0.827",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:17f92909c6d2ff; accepted=False; operator_key=dream_surface_dispatch_ntime_chainsimbridge; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302083.2911828,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_98c6b6ced2",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:e1d689ef3a6b94; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302083.2911828,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_f66e0c6e1e",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:3bbe6d45e1f1c6; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302083.2911828,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_acc846c579",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:bce53efe3baad7; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302090.420466,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_fec016dc0e",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_rocessingsystem_tick",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:f338c65caa70d1; accepted=False; operator_key=dream_surface_dispatch_rocessingsystem_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302090.420466,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_297de57f98",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_d_energydistribution",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:8d1cee673c7479; accepted=False; operator_key=dream_surface_dispatch_d_energydistribution; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302090.420466,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_0aaed64e67",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_im_epoch_fakeepisode",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:bdf3cf472c0049; accepted=False; operator_key=dream_surface_dispatch_im_epoch_fakeepisode; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302090.420466,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_8b32890387",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:559b8bf3bff68f; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302090.420466,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_b1fa18a739",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:e8c623c93deac6; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302099.6111045,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_e5da25a00a",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_ensionalsystems_tick",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:6e71d1e2f76efd; accepted=False; operator_key=dream_surface_dispatch_ensionalsystems_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302099.6111045,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_6d6cf777e5",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_sts_decay_constraint",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:d38fc2cc7bb705; accepted=False; operator_key=dream_surface_dispatch_sts_decay_constraint; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302099.6111045,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_79e97ef2d4",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_ngine_stabilitystate",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:704e7146a4cde2; accepted=False; operator_key=dream_surface_dispatch_ngine_stabilitystate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302099.6111045,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_8bbca24583",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:09db842ddb1ce4; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302099.6111045,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_d5a18b704c",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:f1b26ed6227f10; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302099.6111045,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_c987707dbf",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:4c81f58ac692ff; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302107.8142982,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_c72ae0caa0",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_roject_critical_tick",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:5f9f10743130c8; accepted=False; operator_key=dream_surface_dispatch_roject_critical_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302107.8142982,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_c59aba28a2",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_enealogy_pressurevec",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:4255fb1fe09b08; accepted=False; operator_key=dream_surface_dispatch_enealogy_pressurevec; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302107.8142982,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_e60d7b59e6",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_timedilationgovernor",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:117b2633ae249d; accepted=False; operator_key=dream_surface_dispatch_timedilationgovernor; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302107.8142982,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_1c252c31e8",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:f96710a39483c2; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302107.8142982,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_7be573d7ae",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:9c2927f1fa473d; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302115.1138818,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_231b417167",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_signal_urgency_ticks",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:d6ab41de691fda; accepted=False; operator_key=dream_surface_dispatch_signal_urgency_ticks; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302115.1138818,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_18763b868d",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_nealogy_reliefrecord",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:db964c4448f3ec; accepted=False; operator_key=dream_surface_dispatch_nealogy_reliefrecord; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302115.1138818,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_a995b90911",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_e_ingest_interaction",
-        "mutation_status:rejected",
-        "mutation_score:0.968",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:5cd445aa663982; accepted=False; operator_key=dream_surface_dispatch_e_ingest_interaction; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302115.1138818,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_a5adcfcfa4",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:bdb22e6877f2d1; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302115.1138818,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_35cdbae71d",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:2c0967519afd87; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302124.5364456,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_c0b4d7c23e",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_arychamber_run_chain",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:410bd6bf38dcc9; accepted=False; operator_key=dream_surface_dispatch_arychamber_run_chain; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302124.5364456,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_836b992796",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_stry_constraintstate",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:b2b2daf67d7e21; accepted=False; operator_key=dream_surface_dispatch_stry_constraintstate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302124.5364456,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_77ea0124ac",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch__actionabilitymapper",
-        "mutation_status:rejected",
-        "mutation_score:0.851",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:4cb5baa00576f5; accepted=False; operator_key=dream_surface_dispatch__actionabilitymapper; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302124.5364456,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_4b1e383ec8",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:72b492bea22136; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302124.5364456,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_0adc753fe7",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:9f2ad0bd862e68; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302124.5364456,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_1da8b96da0",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:84fbd48a1e708b; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302132.7900631,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_eb6698eddb",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_utionarychamber_tick",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:85c72bf243bf8c; accepted=False; operator_key=dream_surface_dispatch_utionarychamber_tick; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302132.7900631,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_7da5b84953",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_stemconstraintstates",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:ac2d225f935419; accepted=False; operator_key=dream_surface_dispatch_stemconstraintstates; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302132.7900631,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_b3ef9eb6cc",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch__chamber_actiontrace",
-        "mutation_status:rejected",
-        "mutation_score:0.811",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:eeccd06811c6c8; accepted=False; operator_key=dream_surface_dispatch__chamber_actiontrace; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302132.7900631,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_fd84f5844c",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:40f36959add968; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302132.7900631,
-      "source": "runtime_turn:composer_unified",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_d4fcbcc04c",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_dream_evidence",
-        "mutation_status:rejected",
-        "mutation_score:0.350",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:44609db874c57e; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35"
-    },
-    {
-      "timestamp": 1785302138.6901186,
-      "source": "aurora.save",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_afb8455f26",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_cord_ticks_remaining",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:08502b7c5b80e8; accepted=False; operator_key=dream_surface_dispatch_cord_ticks_remaining; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
-    },
-    {
-      "timestamp": 1785302138.6901186,
-      "source": "aurora.save",
-      "kind": "code_function",
-      "id": "A:CODE_EVOLVE_be0ad9dc2e",
-      "axis": "A",
-      "tags": [
-        "derived_operation",
-        "code_evolution",
-        "mutation_operator:dream_surface_dispatch_constraint_aggregate",
-        "mutation_status:rejected",
-        "mutation_score:1.000",
-        "mutation_pressure:0.000",
-        "mutation_targets:0",
-        "mutation_changed_files:0"
-      ],
-      "summary": "Code evolution outcome for mutation_id=DREAM:741dc8cc9ea94d; accepted=False; operator_key=dream_surface_dispatch_constraint_aggregate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; "
+      "summary": "Manual code change in tests/test_live_communicative_baseline.py formed X:CODE_LINEAGE_70b0cc2b12"
     }
   ],
   "seen_abilities": {
@@ -2652,6 +770,331 @@
         "seed_lineage:true"
       ],
       "notes": "Expels pressure through external outlet; relief only if outlet confirms effectiveness."
+    },
+    "A:CODE_LINEAGE_104d4a1a53": {
+      "id": "A:CODE_LINEAGE_104d4a1a53",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "manual_code_lineage",
+        "manual_change:constraint_semantic_continuity_v1",
+        "manual_source:native_constraint_architecture",
+        "manual_change_kind:new_derived_capability",
+        "rewrite_profile:constraint_relational_continuity",
+        "purpose_lane:constraint_complete_understanding",
+        "origin_signature:X^1*T^1*N^1*B^1*A^1"
+      ],
+      "notes": "Manual code lineage for change_id=constraint_semantic_continuity_v1; source=native_constraint_architecture; kind=new_derived_capability; rewrite_profile=constraint_relational_continuity; modules=aurora_internal.aurora_constraint_semantic_continuity,aurora_internal.aurora_utterance_parser,aurora_internal.aurora_proposit"
+    },
+    "N:SENSORY_INTAKE": {
+      "id": "N:SENSORY_INTAKE",
+      "axis": "N",
+      "tags": [
+        "sensory",
+        "intake",
+        "energy",
+        "perception"
+      ],
+      "notes": ""
+    },
+    "B:SENSORY_CLUSTER": {
+      "id": "B:SENSORY_CLUSTER",
+      "axis": "B",
+      "tags": [
+        "sensory",
+        "cluster",
+        "boundary",
+        "perception"
+      ],
+      "notes": ""
+    },
+    "A:SENSORY_PROMOTE": {
+      "id": "A:SENSORY_PROMOTE",
+      "axis": "A",
+      "tags": [
+        "sensory",
+        "promote",
+        "agency",
+        "crystal"
+      ],
+      "notes": ""
+    },
+    "N:SENSORY_CROSS_MODAL": {
+      "id": "N:SENSORY_CROSS_MODAL",
+      "axis": "N",
+      "tags": [
+        "sensory",
+        "cross_modal",
+        "meaning",
+        "grounding"
+      ],
+      "notes": "nPMI cross-modal linking: tone\u2194hue, timbre\u2194shape, rhythm\u2194motion (gen=3, N-axis)"
+    },
+    "T:SENSORY_DISTILL": {
+      "id": "T:SENSORY_DISTILL",
+      "axis": "T",
+      "tags": [
+        "sensory",
+        "distill",
+        "wisdom",
+        "temporal"
+      ],
+      "notes": "Maturity-gated distillation + WisdomShard emission (sensory.distill, gen=3, T-axis)"
+    },
+    "X:MAINTAIN_UNDERSTANDING_EXISTENCE": {
+      "id": "X:MAINTAIN_UNDERSTANDING_EXISTENCE",
+      "axis": "X",
+      "tags": [
+        "continuity_persistence",
+        "runtime_state_maintenance",
+        "meaning_survival",
+        "origin_primary:X",
+        "origin_secondary:T",
+        "origin_signature:X^1*T^1*B^1",
+        "root_slot:NC:X>T\u00d7NC:T>X",
+        "operation_lineage:OP:b4942711a7f2"
+      ],
+      "notes": "Preserve a coherent runtime state across turns so meaning and policy survive long enough to be corrected rather than reset."
+    },
+    "T:SEQUENCE_UNDERSTANDING_TRANSITIONS": {
+      "id": "T:SEQUENCE_UNDERSTANDING_TRANSITIONS",
+      "axis": "T",
+      "tags": [
+        "turn_sequencing",
+        "observation_application_loop",
+        "transition_stability",
+        "origin_primary:X",
+        "origin_secondary:T",
+        "origin_signature:X^1*T^1*B^1",
+        "root_slot:NC:X>T\u00d7NC:T>X",
+        "operation_lineage:OP:bb7e4e4f881d"
+      ],
+      "notes": "Sequence observation, application, and correction as one continuous temporal loop instead of isolated turns."
+    },
+    "N:WEIGH_UNDERSTANDING_COST": {
+      "id": "N:WEIGH_UNDERSTANDING_COST",
+      "axis": "N",
+      "tags": [
+        "coherence_cost",
+        "articulation_cost",
+        "contradiction_cost",
+        "policy_weighting",
+        "origin_primary:T",
+        "origin_secondary:N",
+        "origin_signature:T^1*N^1*B^1*A^1",
+        "root_slot:NC:T>N\u00d7NC:N>T"
+      ],
+      "notes": "Measure the runtime cost of speaking, clarifying, contradicting, or outsourcing articulation so policy can adapt under pressure."
+    },
+    "B:BOUND_MEANING_AND_PERSPECTIVE": {
+      "id": "B:BOUND_MEANING_AND_PERSPECTIVE",
+      "axis": "B",
+      "tags": [
+        "meaning_boundary",
+        "speaker_ownership",
+        "perspective_separation",
+        "referent_bounding",
+        "origin_primary:X",
+        "origin_secondary:B",
+        "origin_signature:X^1*B^1*A^1",
+        "root_slot:NC:X>B\u00d7NC:B>X"
+      ],
+      "notes": "Bound meaning inside the correct speaker, referent, and self/world frame so Aurora does not flatten perspective."
+    },
+    "A:VALIDATE_UNDERSTANDING_ACCURACY": {
+      "id": "A:VALIDATE_UNDERSTANDING_ACCURACY",
+      "axis": "A",
+      "tags": [
+        "outcome_validation",
+        "accuracy_correction",
+        "policy_revision",
+        "meaning_update",
+        "origin_primary:T",
+        "origin_secondary:N",
+        "origin_signature:T^1*N^1*B^1*A^1",
+        "root_slot:NC:T>N\u00d7NC:N>T"
+      ],
+      "notes": "Judge whether outward application fit the resulting turn and feed that accuracy back into meaning and policy."
+    },
+    "CONTRACT:COHERENCE_GUARD": {
+      "id": "CONTRACT:COHERENCE_GUARD",
+      "axis": "T",
+      "tags": [
+        "referent_continuity",
+        "conflict_stability",
+        "topic_carryover",
+        "causal_thread",
+        "origin_primary:X",
+        "origin_secondary:T",
+        "origin_signature:X^1*T^1*B^1",
+        "root_slot:NC:X>T\u00d7NC:T>X"
+      ],
+      "notes": "Promote identity and causal continuity across turns while penalizing fragmentation or drift in the thread."
+    },
+    "CONTRACT:COMMUNICATION_SEAM": {
+      "id": "CONTRACT:COMMUNICATION_SEAM",
+      "axis": "B",
+      "tags": [
+        "articulation_fidelity",
+        "signal_preservation",
+        "expression_structure",
+        "origin_primary:N",
+        "origin_secondary:B",
+        "origin_signature:N^1*B^1*A^1",
+        "root_slot:NC:N>B\u00d7NC:B>N",
+        "operation_lineage:OP:c3ddfb2ff6bd"
+      ],
+      "notes": "Ensure what is carried inside is rendered outward without losing structure, penalizing distortion that just sounds plausible."
+    },
+    "CONTRACT:INTELLIGENCE_EVOLUTION": {
+      "id": "CONTRACT:INTELLIGENCE_EVOLUTION",
+      "axis": "N",
+      "tags": [
+        "adaptive_gain",
+        "pressure_relief",
+        "generalization",
+        "manifold_navigation",
+        "origin_primary:T",
+        "origin_secondary:N",
+        "origin_signature:T^1*N^1*A^1",
+        "root_slot:NC:T>N\u00d7NC:N>T"
+      ],
+      "notes": "Reward structure-preserving adaptation under pressure and penalize shallow wins that don't deepen the organism."
+    },
+    "A:LINK_L_2966bd9bd7": {
+      "id": "A:LINK_L_2966bd9bd7",
+      "axis": "A",
+      "tags": [
+        "outlet",
+        "release",
+        "origin_primary:B",
+        "origin_secondary:A",
+        "origin_signature:B^1*A^1",
+        "root_slot:NC:B>A\u00d7NC:A>B",
+        "operation_lineage:OP:aafd2673d4ca",
+        "seed_lineage:true"
+      ],
+      "notes": ""
+    },
+    "A:LINK_L_d79d894f66": {
+      "id": "A:LINK_L_d79d894f66",
+      "axis": "A",
+      "tags": [
+        "outlet",
+        "release",
+        "origin_primary:B",
+        "origin_secondary:A",
+        "origin_signature:B^1*A^1",
+        "root_slot:NC:B>A\u00d7NC:A>B",
+        "operation_lineage:OP:aafd2673d4ca",
+        "seed_lineage:true"
+      ],
+      "notes": ""
+    },
+    "REFAB:X:OPERATOR:A:?:?:?:?": {
+      "id": "REFAB:X:OPERATOR:A:?:?:?:?",
+      "axis": "X",
+      "tags": [
+        "origin_primary:X",
+        "origin_secondary:X",
+        "origin_signature:X^1",
+        "root_slot:NC:X>X\u00d7NC:X>X",
+        "operation_lineage:OP:a96e75973154",
+        "seed_lineage:true",
+        "operator_action:operator_on_x",
+        "purpose_lane:intelligence"
+      ],
+      "notes": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    "REFAB:T:OPERATOR:A:?:?:?:?": {
+      "id": "REFAB:T:OPERATOR:A:?:?:?:?",
+      "axis": "T",
+      "tags": [
+        "origin_primary:T",
+        "origin_secondary:T",
+        "origin_signature:T^1",
+        "root_slot:NC:T>T\u00d7NC:T>T",
+        "operation_lineage:OP:8b035faa4745",
+        "seed_lineage:true",
+        "operator_action:operator_on_t",
+        "purpose_lane:intelligence"
+      ],
+      "notes": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    "REFAB:N:OPERATOR:A:?:?:?:?": {
+      "id": "REFAB:N:OPERATOR:A:?:?:?:?",
+      "axis": "N",
+      "tags": [
+        "origin_primary:N",
+        "origin_secondary:N",
+        "origin_signature:N^1",
+        "root_slot:NC:N>N\u00d7NC:N>N",
+        "operation_lineage:OP:b4c35a2e7f21",
+        "seed_lineage:true",
+        "operator_action:operator_on_n",
+        "purpose_lane:communication"
+      ],
+      "notes": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    "REFAB:B:OPERATOR:A:?:?:?:?": {
+      "id": "REFAB:B:OPERATOR:A:?:?:?:?",
+      "axis": "B",
+      "tags": [
+        "origin_primary:B",
+        "origin_secondary:B",
+        "origin_signature:B^1",
+        "root_slot:NC:B>B\u00d7NC:B>B",
+        "operation_lineage:OP:009e951be0d7",
+        "seed_lineage:true",
+        "operator_action:operator_on_b",
+        "purpose_lane:meaning"
+      ],
+      "notes": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    "REFAB:A:OPERATOR:A:?:?:?:?": {
+      "id": "REFAB:A:OPERATOR:A:?:?:?:?",
+      "axis": "A",
+      "tags": [
+        "origin_primary:A",
+        "origin_secondary:A",
+        "origin_signature:A^1",
+        "root_slot:NC:A>A\u00d7NC:A>A",
+        "operation_lineage:OP:e7087d5135ad",
+        "seed_lineage:true",
+        "operator_action:operator_on_a",
+        "purpose_lane:meaning"
+      ],
+      "notes": "Build 714 synthetic ability for a RepresentationalRef identity."
+    },
+    "B:LINK_L_65c2c9d0fa": {
+      "id": "B:LINK_L_65c2c9d0fa",
+      "axis": "B",
+      "tags": [
+        "origin_primary:B",
+        "origin_secondary:B",
+        "origin_signature:B^1",
+        "root_slot:NC:B>B\u00d7NC:B>B",
+        "operation_lineage:OP:009e951be0d7",
+        "seed_lineage:true",
+        "operator_action:operator_on_b",
+        "purpose_lane:meaning"
+      ],
+      "notes": ""
+    },
+    "A:LINK_L_fd5a9a1e6a": {
+      "id": "A:LINK_L_fd5a9a1e6a",
+      "axis": "A",
+      "tags": [
+        "origin_primary:A",
+        "origin_secondary:A",
+        "origin_signature:A^1",
+        "root_slot:NC:A>A\u00d7NC:A>A",
+        "operation_lineage:OP:e7087d5135ad",
+        "seed_lineage:true",
+        "operator_action:operator_on_a",
+        "purpose_lane:meaning"
+      ],
+      "notes": ""
     },
     "X:LINK_L_2c0c850b59": {
       "id": "X:LINK_L_2c0c850b59",
@@ -3040,21 +1483,6 @@
         "purpose_lane:meaning",
         "operator_grade:0.748",
         "purpose_grade:0.893"
-      ],
-      "notes": ""
-    },
-    "A:LINK_L_d79d894f66": {
-      "id": "A:LINK_L_d79d894f66",
-      "axis": "A",
-      "tags": [
-        "outlet",
-        "release",
-        "origin_primary:B",
-        "origin_secondary:A",
-        "origin_signature:B^1*A^1",
-        "root_slot:NC:B>A\u00d7NC:A>B",
-        "operation_lineage:OP:aafd2673d4ca",
-        "seed_lineage:true"
       ],
       "notes": ""
     },
@@ -10032,126 +8460,6 @@
         "origin_signature:T^1*N^1"
       ],
       "notes": "Manual code lineage for change_id=MC:525d52f1a3c1; source=aurora.boot; kind=modified; rewrite_profile=generic; modules=tests.test_waveform_pressure; axis_signature=T^1*N^1; manual_code_change=MC:296fbcc98f03; source=aurora.boot; kind=modified; matched_score=1.000; modules=tests.test_waveform_pressure; manual_code_chang"
-    },
-    "X:MAINTAIN_UNDERSTANDING_EXISTENCE": {
-      "id": "X:MAINTAIN_UNDERSTANDING_EXISTENCE",
-      "axis": "X",
-      "tags": [
-        "continuity_persistence",
-        "runtime_state_maintenance",
-        "meaning_survival",
-        "origin_primary:X",
-        "origin_secondary:T",
-        "origin_signature:X^1*T^1*B^1",
-        "root_slot:NC:X>T\u00d7NC:T>X",
-        "operation_lineage:OP:b4942711a7f2"
-      ],
-      "notes": "Preserve a coherent runtime state across turns so meaning and policy survive long enough to be corrected rather than reset."
-    },
-    "T:SEQUENCE_UNDERSTANDING_TRANSITIONS": {
-      "id": "T:SEQUENCE_UNDERSTANDING_TRANSITIONS",
-      "axis": "T",
-      "tags": [
-        "turn_sequencing",
-        "observation_application_loop",
-        "transition_stability",
-        "origin_primary:X",
-        "origin_secondary:T",
-        "origin_signature:X^1*T^1*B^1",
-        "root_slot:NC:X>T\u00d7NC:T>X",
-        "operation_lineage:OP:bb7e4e4f881d"
-      ],
-      "notes": "Sequence observation, application, and correction as one continuous temporal loop instead of isolated turns."
-    },
-    "N:WEIGH_UNDERSTANDING_COST": {
-      "id": "N:WEIGH_UNDERSTANDING_COST",
-      "axis": "N",
-      "tags": [
-        "coherence_cost",
-        "articulation_cost",
-        "contradiction_cost",
-        "policy_weighting",
-        "origin_primary:T",
-        "origin_secondary:N",
-        "origin_signature:T^1*N^1*B^1*A^1",
-        "root_slot:NC:T>N\u00d7NC:N>T"
-      ],
-      "notes": "Measure the runtime cost of speaking, clarifying, contradicting, or outsourcing articulation so policy can adapt under pressure."
-    },
-    "B:BOUND_MEANING_AND_PERSPECTIVE": {
-      "id": "B:BOUND_MEANING_AND_PERSPECTIVE",
-      "axis": "B",
-      "tags": [
-        "meaning_boundary",
-        "speaker_ownership",
-        "perspective_separation",
-        "referent_bounding",
-        "origin_primary:X",
-        "origin_secondary:B",
-        "origin_signature:X^1*B^1*A^1",
-        "root_slot:NC:X>B\u00d7NC:B>X"
-      ],
-      "notes": "Bound meaning inside the correct speaker, referent, and self/world frame so Aurora does not flatten perspective."
-    },
-    "A:VALIDATE_UNDERSTANDING_ACCURACY": {
-      "id": "A:VALIDATE_UNDERSTANDING_ACCURACY",
-      "axis": "A",
-      "tags": [
-        "outcome_validation",
-        "accuracy_correction",
-        "policy_revision",
-        "meaning_update",
-        "origin_primary:T",
-        "origin_secondary:N",
-        "origin_signature:T^1*N^1*B^1*A^1",
-        "root_slot:NC:T>N\u00d7NC:N>T"
-      ],
-      "notes": "Judge whether outward application fit the resulting turn and feed that accuracy back into meaning and policy."
-    },
-    "CONTRACT:COHERENCE_GUARD": {
-      "id": "CONTRACT:COHERENCE_GUARD",
-      "axis": "T",
-      "tags": [
-        "referent_continuity",
-        "conflict_stability",
-        "topic_carryover",
-        "causal_thread",
-        "origin_primary:X",
-        "origin_secondary:T",
-        "origin_signature:X^1*T^1*B^1",
-        "root_slot:NC:X>T\u00d7NC:T>X"
-      ],
-      "notes": "Promote identity and causal continuity across turns while penalizing fragmentation or drift in the thread."
-    },
-    "CONTRACT:COMMUNICATION_SEAM": {
-      "id": "CONTRACT:COMMUNICATION_SEAM",
-      "axis": "B",
-      "tags": [
-        "articulation_fidelity",
-        "signal_preservation",
-        "expression_structure",
-        "origin_primary:N",
-        "origin_secondary:B",
-        "origin_signature:N^1*B^1*A^1",
-        "root_slot:NC:N>B\u00d7NC:B>N",
-        "operation_lineage:OP:c3ddfb2ff6bd"
-      ],
-      "notes": "Ensure what is carried inside is rendered outward without losing structure, penalizing distortion that just sounds plausible."
-    },
-    "CONTRACT:INTELLIGENCE_EVOLUTION": {
-      "id": "CONTRACT:INTELLIGENCE_EVOLUTION",
-      "axis": "N",
-      "tags": [
-        "adaptive_gain",
-        "pressure_relief",
-        "generalization",
-        "manifold_navigation",
-        "origin_primary:T",
-        "origin_secondary:N",
-        "origin_signature:T^1*N^1*A^1",
-        "root_slot:NC:T>N\u00d7NC:N>T"
-      ],
-      "notes": "Reward structure-preserving adaptation under pressure and penalize shallow wins that don't deepen the organism."
     },
     "N:READ_PIPELINE_STATE": {
       "id": "N:READ_PIPELINE_STATE",
@@ -199722,9 +198030,83 @@
         "mutation_changed_files:0"
       ],
       "notes": "Code evolution outcome for mutation_id=DREAM:741dc8cc9ea94d; accepted=False; operator_key=dream_surface_dispatch_constraint_aggregate; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_abdc647b6d": {
+      "id": "A:CODE_EVOLVE_abdc647b6d",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_surface_dispatch_ne_avatarpersonality",
+        "mutation_status:rejected",
+        "mutation_score:0.851",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:eaa003e9dc942f; accepted=False; operator_key=dream_surface_dispatch_ne_avatarpersonality; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.650; temporal_overhead_penalty=0.000; targets=0; modules=none"
+    },
+    "A:CODE_EVOLVE_1bd2d2d8d3": {
+      "id": "A:CODE_EVOLVE_1bd2d2d8d3",
+      "axis": "A",
+      "tags": [
+        "derived_operation",
+        "code_evolution",
+        "mutation_operator:dream_dream_evidence",
+        "mutation_status:rejected",
+        "mutation_score:0.350",
+        "mutation_pressure:0.000",
+        "mutation_targets:0",
+        "mutation_changed_files:0"
+      ],
+      "notes": "Code evolution outcome for mutation_id=DREAM:3729119658dfe4; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.350; temporal_overhead_penalty=0.000; targets=0; modules=none"
     }
   },
   "seen_links": {
+    "L:2966bd9bd7": {
+      "id": "L:2966bd9bd7",
+      "axis": "A",
+      "depth": 1,
+      "count": 18,
+      "created_at_tick": 18,
+      "parents": [
+        "A:OUTLET_PUSH",
+        "B:INTERFACE_WEAKEN"
+      ]
+    },
+    "L:d79d894f66": {
+      "id": "L:d79d894f66",
+      "axis": "A",
+      "depth": 2,
+      "count": 28,
+      "created_at_tick": 46,
+      "parents": [
+        "L:2966bd9bd7",
+        "T:ADVANCE_TICK"
+      ]
+    },
+    "L:65c2c9d0fa": {
+      "id": "L:65c2c9d0fa",
+      "axis": "B",
+      "depth": 1,
+      "count": 3,
+      "created_at_tick": 645,
+      "parents": [
+        "REFAB:B:OPERATOR:A:?:?:?:?",
+        "HABITAT_CTX:self:mark_path:aurora:own"
+      ]
+    },
+    "L:fd5a9a1e6a": {
+      "id": "L:fd5a9a1e6a",
+      "axis": "A",
+      "depth": 1,
+      "count": 4,
+      "created_at_tick": 855,
+      "parents": [
+        "REFAB:A:OPERATOR:A:?:?:?:?",
+        "HABITAT_CTX:self:mark_path:aurora:own"
+      ]
+    },
     "L:2c0c850b59": {
       "id": "L:2c0c850b59",
       "axis": "X",
@@ -199945,17 +198327,6 @@
         "A:OUTLET_PUSH"
       ]
     },
-    "L:2966bd9bd7": {
-      "id": "L:2966bd9bd7",
-      "axis": "T",
-      "depth": 1,
-      "count": 21,
-      "created_at_tick": 357,
-      "parents": [
-        "A:OUTLET_PUSH",
-        "B:INTERFACE_WEAKEN"
-      ]
-    },
     "L:3a76b31489": {
       "id": "L:3a76b31489",
       "axis": "T",
@@ -200009,17 +198380,6 @@
       "parents": [
         "L:8820c847cf",
         "L:558009368c"
-      ]
-    },
-    "L:d79d894f66": {
-      "id": "L:d79d894f66",
-      "axis": "A",
-      "depth": 2,
-      "count": 19,
-      "created_at_tick": 287,
-      "parents": [
-        "L:2966bd9bd7",
-        "T:ADVANCE_TICK"
       ]
     },
     "L:091177dca4": {
@@ -203667,7 +202027,7 @@
         },
         {
           "module": "aurora_internal.aurora_sensory_crystal",
-          "qualname": "CrystalFacet.tick_promotion",
+          "qualname": "SensoryClusterFacet.tick_promotion",
           "stage_ids": [
             "sensory_concept_promotion"
           ],
@@ -203691,6 +202051,50 @@
             "genealogy"
           ],
           "notes": "N\u00d7A force: writes cross-modal links on promoted semantic nodes."
+        },
+        {
+          "module": "aurora_internal.aurora_sensory_crystal",
+          "qualname": "AuroraSensoryCrystal._inject_to_dps",
+          "stage_ids": [
+            "sensory_concept_promotion",
+            "cross_modal_grounding"
+          ],
+          "dominant_axis": "A",
+          "purpose_lane": "meaning",
+          "ripple_domains": [
+            "genealogy",
+            "pipeline"
+          ],
+          "notes": "Promoted sensory concepts are projected into the dimensional crystal ladder."
+        },
+        {
+          "module": "aurora_internal.aurora_sensory_crystal",
+          "qualname": "AuroraSensoryCrystal._inject_semantic_to_dps",
+          "stage_ids": [
+            "cross_modal_grounding"
+          ],
+          "dominant_axis": "N",
+          "purpose_lane": "meaning",
+          "ripple_domains": [
+            "genealogy",
+            "pipeline"
+          ],
+          "notes": "Cross-modal semantic nodes deepen the dimensional ladder as higher-order meaning crystals."
+        },
+        {
+          "module": "aurora_internal.aurora_sensory_crystal",
+          "qualname": "AuroraSensoryCrystal._sync_to_dps",
+          "stage_ids": [
+            "sensory_wisdom_distillation"
+          ],
+          "dominant_axis": "T",
+          "purpose_lane": "meaning",
+          "ripple_domains": [
+            "expression",
+            "genealogy",
+            "pipeline"
+          ],
+          "notes": "Session-bounded resynchronization lets sensory and semantic crystals accumulate lived reinforcement over time."
         },
         {
           "module": "aurora_internal.aurora_sensory_crystal",

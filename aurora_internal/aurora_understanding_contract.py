@@ -30,7 +30,7 @@ import os
 import re
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from aurora_persistence_utils import atomic_write_json
 
@@ -79,6 +79,63 @@ def _mean(values: List[float], default: float = 0.0) -> float:
 
 def _terms(text: Any) -> List[str]:
     return re.findall(r"[a-z0-9]{3,}", str(text or "").lower())
+
+
+def _structured_receiver_correction(understood: Optional[Mapping[str, Any]]) -> bool:
+    """Recognize a correction from the parsed relation, not a phrase list.
+
+    A receiver can report that an answer failed to preserve their question
+    without using words such as ``wrong``.  The semantic frame already carries
+    the relevant boundaries: an answer/response subject, a failure relation,
+    and the receiver's question/meaning as its object.
+    """
+    parsed = dict(understood or {})
+    frame = dict(parsed.get("relational_form") or {})
+    if not frame and any(key in parsed for key in ("subject", "relation", "obj")):
+        frame = parsed
+    if not frame:
+        return False
+    candidates = [frame]
+    candidates.extend(
+        dict(item or {})
+        for item in list(frame.get("clauses") or [])
+        if isinstance(item, Mapping)
+    )
+    failure_relations = {
+        "miss", "missed", "fail", "failed", "misunderstand", "misunderstood",
+        "ignore", "ignored", "lose", "lost", "distort", "distorted",
+    }
+    preservation_relations = {
+        "answer", "answered", "address", "addressed", "preserve", "preserved",
+        "reflect", "reflected", "follow", "followed",
+    }
+    for relation in candidates:
+        subject_terms = set(_terms(relation.get("subject", "")))
+        object_terms = set(
+            _terms(
+                " ".join(
+                    str(relation.get(key, "") or "")
+                    for key in ("obj", "object", "complement")
+                )
+            )
+        )
+        verb = str(relation.get("relation", "") or "").strip().lower()
+        response_subject = bool(
+            subject_terms & {"answer", "response", "reply", "explanation", "message"}
+        )
+        receiver_meaning_object = bool(
+            object_terms & {"question", "meaning", "request", "point", "intent", "asked"}
+        )
+        failed_relation = bool(
+            verb in failure_relations
+            or (
+                bool(relation.get("negated"))
+                and verb in preservation_relations
+            )
+        )
+        if response_subject and receiver_meaning_object and failed_relation:
+            return True
+    return False
 
 
 def _term_overlap(left: List[str], right: List[str]) -> float:
@@ -1837,6 +1894,7 @@ class RuntimeUnderstandingContract:
         is_correction = (
             _has_marker(correction_markers)
             or bool((understood or {}).get("is_contradiction"))
+            or _structured_receiver_correction(understood)
         )
 
         # Expression confusion is a negative receiver signal, even when the
@@ -1954,6 +2012,7 @@ class RuntimeUnderstandingContract:
             "clarification": bool(understood.get("is_clarification")),
             "correction": bool(
                 understood.get("is_contradiction")
+                or _structured_receiver_correction(understood)
                 or re.search(r"\b(?:wrong|not right|i mean|not what)\b", str(user_text or "").lower()) is not None
             ),
         }

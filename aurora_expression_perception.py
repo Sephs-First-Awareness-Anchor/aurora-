@@ -5448,10 +5448,33 @@ class ExpressionPerceptionEngine(WarpCapable):
                           i_state: str,
                           input_text: str = "") -> str:
         """Build expression text using SentenceComposer with OETS enrichment."""
-        # OETS: Enrich context keywords with semantically related concepts,
-        # and bridge studied knowledge into the lexicon so it can be spoken.
+        # OETS: bridge studied knowledge into the lexicon so it CAN be
+        # spoken -- this only makes vocabulary available, it does not
+        # prioritize it. Word selection itself stays entirely with
+        # aurora_constraint_emission.build_relevance_anchor_set, which
+        # already implements the correct one-hop derivation (via its own
+        # get_all_relations_for traversal, seeded from genuinely-direct
+        # content) and already caps co-occurrence-sourced edges at
+        # RELEVANCE_ONE_HOP_FLOOR (same pattern as FIX-A032).
+        #
+        # PF3.1 (2026-07-21) had partially patched this site by excluding
+        # co-occurrence relations from the words pulled here, but that
+        # dampening never mattered: ANY word pulled here (relation-sourced
+        # or, worse, entirely unfiltered definition-text words) was still
+        # being written straight into composer._context_keywords via
+        # set_context(), which build_relevance_anchor_set's
+        # direct_from_recent branch then treats as a full-strength DIRECT
+        # anchor -- skipping her own one-hop floor entirely regardless of
+        # how the word was filtered on the way in. Confirmed live (same
+        # turn, contaminated vs. fresh state): a real, correctly-grounded
+        # constraint_basis produced garbage output every time solely
+        # because of this bypass, not because grounding was fake.
+        #
+        # The fix is to stop feeding this call site's own expansion into
+        # _context_keywords at all, and let her real one-hop traversal do
+        # the one-hop derivation it already does correctly -- not to
+        # duplicate or hand-tune a second relevance formula here.
         if self.oets and self.composer._context_keywords:
-            enriched = list(self.composer._context_keywords)
             _oets_hits = 0
             _oets_checked = 0
             for keyword in self.composer._context_keywords[:5]:
@@ -5459,26 +5482,10 @@ class ExpressionPerceptionEngine(WarpCapable):
                 _oets_checked += 1
                 if node:
                     _oets_hits += 1
-                    # Pull words from relations. Co-occurrence-sourced
-                    # relations are excluded here -- PF3.1 (2026-07-21):
-                    # aurora_constraint_emission.build_relevance_anchor_set
-                    # already caps co-occurrence edge strength at the
-                    # one-hop floor with exactly this rationale ("86% of
-                    # this graph's relations are co-occurrence-sourced and
-                    # 84% of those sit at strength 1.0 -- a saturated
-                    # frequency proxy, not a semantic-relevance signal",
-                    # same pattern as FIX-A032), but that dampening never
-                    # reached this call site: words pulled in here get
-                    # written straight into composer._context_keywords,
-                    # which build_relevance_anchor_set then treats as
-                    # DIRECT anchors (relevance 1.0, full strength) via its
-                    # direct_from_recent branch -- bypassing the one-hop
-                    # cap entirely. Confirmed live: heavily-reinforced hub
-                    # words ("planning", usage_count 496+) rode a
-                    # co-occurrence edge from an unrelated turn's keyword
-                    # straight into context_keywords, then into the
-                    # anchor set at full strength, dominating slot
-                    # selection for turns that never mentioned them.
+                    # Bridge related words into the lexicon so they're
+                    # available to be chosen -- availability only, no
+                    # relevance boost; build_relevance_anchor_set decides
+                    # whether/how strongly each is actually used.
                     relevant_rels = [
                         rel for rel in node.relations.values()
                         if getattr(rel, "source_of_knowledge", "") != "co-occurrence"
@@ -5486,32 +5493,26 @@ class ExpressionPerceptionEngine(WarpCapable):
                     for rel in relevant_rels[:5]:
                         other = (rel.target_word if rel.source_word == keyword
                                  else rel.source_word)
-                        if other not in enriched:
-                            # Register in lexicon if missing  -- bridges study ' speech
-                            if other not in self.lexicon.entries:
-                                role = infer_word_role(other)
-                                valence = infer_word_valence(other, "neutral")
-                                self.lexicon.add_word(
-                                    other, f"oets:{keyword}", role,
-                                    valence=valence, lineage="oets"
-                                )
-                            enriched.append(other)
-                    # Pull content words from best definition
+                        if other not in self.lexicon.entries:
+                            role = infer_word_role(other)
+                            valence = infer_word_valence(other, "neutral")
+                            self.lexicon.add_word(
+                                other, f"oets:{keyword}", role,
+                                valence=valence, lineage="oets"
+                            )
+                    # Bridge content words from best definition, same
+                    # availability-only rationale.
                     if node.definitions:
                         best_def = node.definitions[0].get("text", "")
                         for raw in best_def.lower().split():
                             w = raw.strip(".,!;:'\"()-")
-                            if (len(w) >= 4 and w not in enriched and
-                                    w != keyword):
-                                if w not in self.lexicon.entries:
-                                    role = infer_word_role(w)
-                                    valence = infer_word_valence(w, "neutral")
-                                    self.lexicon.add_word(
-                                        w, f"def:{keyword}", role,
-                                        valence=valence, lineage="oets"
-                                    )
-                                enriched.append(w)
-            self.composer.set_context(enriched[:20])
+                            if len(w) >= 4 and w != keyword and w not in self.lexicon.entries:
+                                role = infer_word_role(w)
+                                valence = infer_word_valence(w, "neutral")
+                                self.lexicon.add_word(
+                                    w, f"def:{keyword}", role,
+                                    valence=valence, lineage="oets"
+                                )
 
             # Telemetry: OETS coverage → semantic_precision confidence
             try:

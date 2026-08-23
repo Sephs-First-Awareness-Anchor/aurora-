@@ -1,0 +1,746 @@
+{
+  "schema_version": 1,
+  "episode_id": "INT:6fc1cb16679875",
+  "started_at": 1787388473.8175225,
+  "completed_at": 1787388474.6359627,
+  "session_id": "mobile",
+  "turn_tick": 0,
+  "source": "aurora_sensory_pulse",
+  "user_input": "",
+  "steps": [
+    {
+      "step_id": "INT:6fc1cb16679875:S001",
+      "episode_id": "INT:6fc1cb16679875",
+      "sequence": 1,
+      "timestamp": 1787388473.8727584,
+      "function_id": "aurora._run_live_response_turn",
+      "stage": "utterance_parsing",
+      "inputs": {
+        "user_text": "''"
+      },
+      "derived": {
+        "parsed": "{'topic': '', 'topic_words': [], 'entities': [], 'time_ref': None, 'query_type': 'statement', 'search_query': '', 'pragmatic_signals': [], 'frame': 'asserting', 'stance': 'neutral', 'utterance_type': 'statement', 'full_phrase': '', 'negated': False, 'is_hypothetical': False, 'is_clarification': False, 'is_callback': False, 'is_experiential': False, 'is_opinion': False, 'is_imperative': False, 'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown"
+      },
+      "decision": "parsed",
+      "output": {
+        "topic": "''",
+        "topic_words": "[]",
+        "entities": "[]",
+        "time_ref": "None",
+        "query_type": "'statement'",
+        "search_query": "''",
+        "pragmatic_signals": "[]",
+        "frame": "'asserting'",
+        "stance": "'neutral'",
+        "utterance_type": "'statement'",
+        "full_phrase": "''",
+        "negated": "False",
+        "is_hypothetical": "False",
+        "is_clarification": "False",
+        "is_callback": "False",
+        "is_experiential": "False",
+        "is_opinion": "False",
+        "is_imperative": "False",
+        "relational_form": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation'}",
+        "raw_text": "''",
+        "strata_context": "{'mode': 'blended', 'thermal_load': None, 'sensory_maturity': 0.0}"
+      },
+      "reason": "UtteranceParser converted the live input into the turn's semantic frame",
+      "confidence": 0.94,
+      "tags": [
+        "'input'",
+        "'parser'",
+        "'meaning_boundary'"
+      ],
+      "anomaly": "",
+      "parent_step_id": "",
+      "source": {
+        "file": "'aurora.py'",
+        "line": "32621",
+        "end_line": "34696",
+        "signature": "'(systems, user_text, mode, *, auto_search_enabled=..., session_id=..., turn_tick=..., record_exchange=..., update_interactive_state=..., track_evolutionary_trace=..., run_periodic_maintenance=...)'"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S002",
+      "episode_id": "INT:6fc1cb16679875",
+      "sequence": 2,
+      "timestamp": 1787388473.9528842,
+      "function_id": "aurora_internal.aurora_constraint_semantic_continuity.extract_relational_form",
+      "stage": "constraint_relational_admission",
+      "inputs": {
+        "user_text": "''"
+      },
+      "derived": {
+        "relational_form": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation'}"
+      },
+      "decision": "preserved_for_root_constraint_derivation",
+      "output": {
+        "raw_text": "''",
+        "subject": "''",
+        "relation": "''",
+        "obj": "''",
+        "complement": "''",
+        "unknown_role": "''",
+        "unknown_token": "''",
+        "unknown_descriptor": "''",
+        "question": "False",
+        "negated": "False",
+        "modality": "''",
+        "owner": "''",
+        "alternatives": "[]",
+        "clauses": "[]",
+        "confidence": "0.0",
+        "source": "'utterance_relation'"
+      },
+      "reason": "X admits entities while B preserves their semantic roles before topic reduction",
+      "confidence": 0.0,
+      "tags": [
+        "'X'",
+        "'B'",
+        "'semantic_continuity'"
+      ],
+      "anomaly": "",
+      "parent_step_id": "",
+      "source": {
+        "file": "'aurora_internal/aurora_constraint_semantic_continuity.py'",
+        "line": "326",
+        "end_line": "504",
+        "signature": "'(text, parsed=...)'"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S003",
+      "episode_id": "INT:6fc1cb16679875",
+      "sequence": 3,
+      "timestamp": 1787388474.0213041,
+      "function_id": "aurora_internal.aurora_recursive_causal_reasoning_waveform.AuroraRecursiveCausalReasoningWaveform.prepare_semantic_state",
+      "stage": "recursive_causal_propagation",
+      "inputs": {
+        "raw_input": "''",
+        "provisional_interpretation": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation'}"
+      },
+      "derived": {
+        "wavelets": "[{'wavelet_id': 'RW:883428f69d8a61', 'primitive': 'existence_admission', 'roots': [\"'X'\", \"'B'\"], 'amplitude': 0.55, 'phase': 0.0, 'polarity': 1, 'target': 'entities', 'source': 'unresolved_structure', 'axis_profile': {}, 'evidence': {'unresolved': \"['entity', 'relation']\"}, 'parent_ids': [], 'status': 'transient', 'signed_effect': 0.55, 'canonical_signature': 'X^1*B^1'}, {'wavelet_id': 'RW:26883e7958005e', 'primitive': 'continuity_phase_lock', 'roots': [\"'X'\", \"'T'\", \"'B'\"], 'amplitude': 0.48, ",
+        "interference": "{'axis_before': {'X': 0.472947, 'T': 0.129113, 'N': 0.190219, 'B': 0.093309, 'A': 0.114411}, 'axis_after': {'X': 0.337876, 'T': 0.120741, 'N': 0.066744, 'B': 0.20467, 'A': 0.269969}, 'axis_delta': {'X': -0.135071, 'T': -0.008372, 'N': -0.123475, 'B': 0.111361, 'A': 0.155558}, 'contributions': [{'wavelet_id': \"'RW:883428f69d8a61'\", 'primitive': \"'existence_admission'\", 'roots': \"['X', 'B']\", 'signed_effect': '0.55', 'axis_effects': \"{'X': 0.275, 'B': 0.275}\", 'target': \"'entities'\"}, {'wavelet_id"
+      },
+      "decision": "backproject_global_understanding",
+      "output": {
+        "effective_interpretation": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': [\"'RW:883428f69d8a61'\", \"'RW:26883e7958005e'\", \"'RW:1c3d4b90b3c37b'\", \"'RIW:78264d7d609e7f'\"], 'operation': {'operation': ",
+        "global_understanding": "{'proposition_id': 'CSP:34bd729596bd13', 'effective_relation': {'subject': '', 'relation': '', 'object': '', 'complement': '', 'unknown_role': ''}, 'unresolved': ['relation', 'entity'], 'completeness': 0.25, 'coherence': 0.733081, 'causal_chain': [{'operation': \"'existence_admission'\", 'root_constraints': \"['X', 'B']\", 'canonical_signature': \"'X^1*B^1'\", 'targets': \"['entities', 'identity']\", 'description': \"'stabilize which entities or qualities are admitted to the active reality'\", 'payload': "
+      },
+      "reason": "the developed understanding recursively reconstructed its initiating disturbance without altering raw history",
+      "confidence": 0.443232,
+      "tags": [
+        "'X'",
+        "'T'",
+        "'N'",
+        "'B'",
+        "'A'",
+        "'recursive'",
+        "'causal'",
+        "'waveform'"
+      ],
+      "anomaly": "",
+      "parent_step_id": "",
+      "source": {
+        "file": "'aurora_internal/aurora_recursive_causal_reasoning_waveform.py'",
+        "line": "542",
+        "end_line": "660",
+        "signature": "'(self, semantic_state, *, raw_text, referent_map=..., claim_resolution=..., meaning_forms=..., axis_activation=..., systems=...)'"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S004",
+      "episode_id": "INT:6fc1cb16679875",
+      "sequence": 4,
+      "timestamp": 1787388474.0848231,
+      "function_id": "aurora_internal.aurora_constraint_semantic_continuity.derive_constraint_semantic_state",
+      "stage": "root_constraint_derivation",
+      "inputs": {
+        "relational_form": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': [\"'RW:883428f69d8a61'\", \"'RW:26883e7958005e'\", \"'RW:1c3d4b90b3c37b'\", \"'RIW:78264d7d609e7f'\"], 'operation': {'operation': ",
+        "axis_activation": "{'X': 0.337876, 'T': 0.120741, 'N': 0.066744, 'B': 0.20467, 'A': 0.269969}"
+      },
+      "derived": {
+        "axis_derivation": "{'X': {'operation': 'entity_admission', 'roots': [\"'X'\", \"'B'\"], 'signature': 'X^1*B^1', 'meaning': 'identity', 'description': 'admit a distinguishable entity or quality into the current reality boundary', 'canonical_profile': {'signature': \"'X^1*B^1'\", 'axes': \"('X', 'B')\", 'arity': '2', 'label': \"'identity'\", 'summary': \"'Existence bounded by a limit becomes this rather than that: an identifiable thing with a skin.'\", 'representation': \"'membrane'\", 'stage': \"'pair'\", 'aliases': \"('definition'",
+        "genealogy_trace": "{'root_constraints': ['X', 'T', 'N', 'B', 'A'], 'canonical_signature': 'X^1*T^1*N^1*B^1*A^1', 'orientation': {'X': 1.0, 'T': 1.0, 'N': 1.0, 'B': 0.8587, 'A': 1.0}, 'active_axis_signature': 'X^1*T^1*N^1*B^1*A^1', 'supporting_abilities': [{'id': \"'X:ADMIT'\", 'axis': \"'X'\", 'requires': \"['X']\", 'effect_tags': \"['admit_state', 'clear_block', 'origin_primary:X', 'origin_secondary:X', 'origin_signature:X^1', 'root_slot:NC:X>X\u00d7NC:X>X', 'operation_lineage:OP:4c6504574442', 'seed_lineage:true', 'operator"
+      },
+      "decision": "integrate_asserted_relation",
+      "output": {
+        "proposition_id": "'CSP:34bd729596bd13'",
+        "response_obligation": "{'operation': 'integrate_asserted_relation', 'unknown_role': '', 'unknown_descriptor': '', 'must_preserve': [], 'must_not_replace_with': [], 'alternatives': [], 'perspective_owner': '', 'derivation_signature': 'X^1*T^1*N^1*B^1*A^1'}"
+      },
+      "reason": "one proposition traversed X, T, N, B, and A with explicit root ancestry",
+      "confidence": 0.25,
+      "tags": [
+        "'X'",
+        "'T'",
+        "'N'",
+        "'B'",
+        "'A'",
+        "'genealogy'"
+      ],
+      "anomaly": "",
+      "parent_step_id": "",
+      "source": {
+        "file": "'aurora_internal/aurora_constraint_semantic_continuity.py'",
+        "line": "596",
+        "end_line": "740",
+        "signature": "'(form, *, axis_activation=..., genealogy=..., referent_map=..., claim_resolution=..., meaning_forms=...)'"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S005",
+      "episode_id": "INT:6fc1cb16679875",
+      "sequence": 5,
+      "timestamp": 1787388474.1774662,
+      "function_id": "aurora_internal.aurora_constraint_semantic_continuity.relation_alignment",
+      "stage": "constraint_relation_authority",
+      "inputs": {
+        "relational_form": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': [\"'RW:883428f69d8a61'\", \"'RW:26883e7958005e'\", \"'RW:1c3d4b90b3c37b'\", \"'RIW:78264d7d609e7f'\"], 'operation': {'operation': ",
+        "preexisting_response": "''",
+        "constraint_candidate": "''"
+      },
+      "derived": {
+        "preexisting_alignment": "{'score': 0.0}",
+        "candidate_alignment": "{}"
+      },
+      "decision": "retain_existing_candidate",
+      "output": {
+        "text": "''",
+        "source": "'chain'"
+      },
+      "reason": "response authority follows fidelity to the X/T/N/B/A-derived proposition",
+      "confidence": 0.5,
+      "tags": [
+        "'X'",
+        "'T'",
+        "'N'",
+        "'B'",
+        "'A'",
+        "'response_authority'"
+      ],
+      "anomaly": "",
+      "parent_step_id": "",
+      "source": {
+        "file": "'aurora_internal/aurora_constraint_semantic_continuity.py'",
+        "line": "1001",
+        "end_line": "1038",
+        "signature": "'(user_form, response_text)'"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S006",
+      "episode_id": "INT:6fc1cb16679875",
+      "sequence": 6,
+      "timestamp": 1787388474.4171095,
+      "function_id": "aurora_internal.aurora_proposition_frame.build_frame",
+      "stage": "proposition_frame_construction",
+      "inputs": {
+        "has_thought_state": "True",
+        "has_working_memory": "True"
+      },
+      "derived": {
+        "frame_source": "''",
+        "frame_subject": "''",
+        "frame_relation": "''",
+        "frame_object": "''",
+        "frame_complement": "''",
+        "frame_unknown_role": "''",
+        "frame_derivation_signature": "''"
+      },
+      "decision": "empty",
+      "output": null,
+      "reason": "no thought, claim, turn-local claim, or anchor rung produced a usable frame",
+      "confidence": 0.75,
+      "tags": [
+        "'proposition_frame'",
+        "'meaning_to_language'",
+        "'empty'"
+      ],
+      "anomaly": "",
+      "parent_step_id": "",
+      "source": {
+        "file": "'aurora_internal/aurora_proposition_frame.py'",
+        "line": "611",
+        "end_line": "659",
+        "signature": "'(systems, state)'"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S007",
+      "episode_id": "INT:6fc1cb16679875",
+      "sequence": 7,
+      "timestamp": 1787388474.4851553,
+      "function_id": "aurora_internal.aurora_proposition_frame.build_frame",
+      "stage": "proposition_frame_construction",
+      "inputs": {
+        "has_thought_state": "True",
+        "has_working_memory": "True"
+      },
+      "derived": {
+        "frame_source": "''",
+        "frame_subject": "''",
+        "frame_relation": "''",
+        "frame_object": "''",
+        "frame_complement": "''",
+        "frame_unknown_role": "''",
+        "frame_derivation_signature": "''"
+      },
+      "decision": "empty",
+      "output": null,
+      "reason": "no thought, claim, turn-local claim, or anchor rung produced a usable frame",
+      "confidence": 0.75,
+      "tags": [
+        "'proposition_frame'",
+        "'meaning_to_language'",
+        "'empty'"
+      ],
+      "anomaly": "",
+      "parent_step_id": "",
+      "source": {
+        "file": "'aurora_internal/aurora_proposition_frame.py'",
+        "line": "611",
+        "end_line": "659",
+        "signature": "'(systems, state)'"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S008",
+      "episode_id": "INT:6fc1cb16679875",
+      "sequence": 8,
+      "timestamp": 1787388474.5530097,
+      "function_id": "aurora_expression_perception.SentenceComposer.compose",
+      "stage": "composer_output",
+      "inputs": {
+        "input_text": "''",
+        "frame": "None",
+        "tone": "'neutral'",
+        "i_state": "'i_is'"
+      },
+      "derived": {
+        "motifs_used": "0",
+        "words_used": "['am', 'tones', \"here's\", 'orange']",
+        "word_sources": "{'am': {'tag': 'X:OPERATOR', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 925}, 'tones': {'tag': 'X:MAGNITUDE', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 0}, \"here's\": {'tag': 'X:OPERATOR', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 0}, 'orange': {'tag': 'X:MAGNITUDE', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 0}}",
+        "floor_failures": "[{'role': 'object', 'best_candidate': 'tones', 'best_score': 0.07500000000000001, 'floor': 0.1}, {'role': 'action', 'best_candidate': \"here's\", 'best_score': 0.07500000000000001, 'floor': 0.1}, {'role': 'object', 'best_candidate': 'orange', 'best_score': 0.07500000000000001, 'floor': 0.1}]"
+      },
+      "decision": "emitted",
+      "output": "I am tones. I here' orange.",
+      "reason": "composer completed motif and slot realization",
+      "confidence": 0.9,
+      "tags": [
+        "'composer'",
+        "'composition'",
+        "'visible_language'"
+      ],
+      "anomaly": "",
+      "parent_step_id": "",
+      "source": {
+        "file": "'aurora_expression_perception.py'",
+        "line": "2596",
+        "end_line": "2808",
+        "signature": "'(self, offspring, assembly, i_state, personality=..., sensory_context=..., input_text=...)'"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S009",
+      "episode_id": "INT:6fc1cb16679875",
+      "sequence": 9,
+      "timestamp": 1787388474.6096451,
+      "function_id": "aurora._finalize_articulation",
+      "stage": "response_arbitration",
+      "inputs": {
+        "user_text": "''",
+        "grounded_text": "''",
+        "grounded_confidence": "0.5",
+        "composer_text": "'I am tones'",
+        "composer_confidence": "0.6142"
+      },
+      "derived": {
+        "grounded_semantic_authority": "0.0",
+        "meaning_preserved": "True",
+        "rejection_reasons": "['no_grounded_candidate_to_compare']"
+      },
+      "decision": "selected",
+      "output": {
+        "text": "'I am tones'",
+        "source": "'composer_unified'",
+        "semantic_authority": "0.6142",
+        "articulation_quality": "0.6142",
+        "confidence": "0.6142",
+        "meaning_preserved": "True",
+        "rejection_reasons": "['no_grounded_candidate_to_compare']"
+      },
+      "reason": "final articulation authority selected the delivered candidate after semantic-fidelity and confidence separation",
+      "confidence": 0.6142,
+      "tags": [
+        "'articulation'",
+        "'arbitration'",
+        "'visible_language'"
+      ],
+      "anomaly": "",
+      "parent_step_id": "",
+      "source": {
+        "file": "'aurora.py'",
+        "line": "21471",
+        "end_line": "21816",
+        "signature": "'(resp_A, resp_B, state, systems, user_text)'"
+      }
+    }
+  ],
+  "final": {
+    "delivered_text": "I am tones",
+    "source": "composer_unified",
+    "confidence": 0.6142,
+    "wellformed": true
+  },
+  "existing_evidence": {
+    "articulation_arbitration": {
+      "text": "I am tones",
+      "source": "composer_unified",
+      "semantic_authority": 0.6142,
+      "articulation_quality": 0.6142,
+      "confidence": 0.6142,
+      "meaning_preserved": true,
+      "rejection_reasons": [
+        "'no_grounded_candidate_to_compare'"
+      ]
+    },
+    "validated_communication": {},
+    "gap_result": {},
+    "pipeline_state": {
+      "coherence": 0.0,
+      "stagnation": 0.0,
+      "novelty": 1.0,
+      "thermal_load": 0.0,
+      "spike_detected": false,
+      "presence": 1.0,
+      "dmm_alignment": 0.5,
+      "dmm_vitality": 1.0,
+      "dominant_axis": "boundary",
+      "paradoxes": [],
+      "thought_killed": false,
+      "kill_reason": "",
+      "assembly_quality": 0.0,
+      "comprehension_rendered": false,
+      "primary_emotion": "calm",
+      "intensity": 0.5,
+      "drive": "exploratory",
+      "passion": "passive",
+      "meaning_label": "tension",
+      "meaning_signature": "N^1*B^1",
+      "meaning_summary": "Potential meeting a limit becomes held pressure: a loaded structure ready to do work.",
+      "meaning_focus": "",
+      "meaning_semantic_pressure": 1.0,
+      "interaction_quasi": {
+        "selected": "False",
+        "quasi_id": "''",
+        "input_signature": "'interpretive_issue'",
+        "interpretive_issue": "'concept_cluster_activation'",
+        "processing_tier": "'expression_surface'",
+        "interaction_archetype": "''",
+        "primary_response_strategy": "''",
+        "secondary_response_strategy": "''",
+        "confidence": "0.0",
+        "match_score": "0.0",
+        "quasi_ready": "False",
+        "escalate": "True",
+        "reason": "'novel_interaction_outside_indexed_archetypes'",
+        "search_policy": "'allow'",
+        "wake_processing_tiers": "[]",
+        "failure_indicators": "[]",
+        "expected_effects": "[]",
+        "relic_bias": "{}",
+        "session_id": "''",
+        "turn_tick": "1"
+      },
+      "interaction_archetype": "",
+      "interaction_primary_strategy": "",
+      "interaction_secondary_strategy": "",
+      "interaction_confidence": 0.0,
+      "interaction_quasi_ready": false,
+      "interaction_route_reason": "novel_interaction_outside_indexed_archetypes",
+      "__truncated__": 1
+    },
+    "last_runtime_fault": {
+      "schema_version": 2,
+      "timestamp": 1787388473.8878648,
+      "subsystem": "aurora",
+      "operation": "exception_handler:aurora.py:12745",
+      "severity": "invariant_violation",
+      "exception_type": "TypeError",
+      "message": "float() argument must be a string or a real number, not 'dict'",
+      "traceback_hash": "1997e63f953940d4",
+      "context": {
+        "function": "'_extract_pipeline_signals'",
+        "handler_line": "12745",
+        "source_file": "'aurora.py'",
+        "module": "'aurora'"
+      }
+    },
+    "manual_code_lineage": {
+      "initialized": true,
+      "manifest_count": 652,
+      "history_count": 0,
+      "last_run_at": 1787388373.2404232,
+      "state_path": "/mnt/data/aurora_push_state/manual_code_lineage_state.json"
+    },
+    "understanding_contract": {
+      "A": {
+        "score": "0.5",
+        "label": "'unvalidated'",
+        "delta": "0.0",
+        "fit_reason": "''",
+        "projected_next": "0.3939"
+      },
+      "pending_validation": {
+        "response_id": "'U:d2cfc1d2bf6a'",
+        "action_type": "'grounded_response'",
+        "expected_observation": "'followup'",
+        "expected_topic": "''",
+        "expected_affect": "'calm'",
+        "expected_axis": "'X'",
+        "projected_accuracy": "0.3939",
+        "response_source": "'composer_unified'",
+        "summary": "'I am tones'",
+        "tone": "'neutral'",
+        "session_id": "'mobile'",
+        "contributors": "{'interaction_base_id': '1fa1d437-6c3a-470d-a0cc-394a8daacc5a', 'representation': {'component_id': \"'authored_seed'\", 'name': \"''\", 'internal_fidelity': '0.0', 'grammaticality': '0.0'}, 'interaction_route': {'input_signature': \"'interpretive_issue'\", 'interpretive_issue': \"'concept_cluster_activation'\"}, 'expression': {'response_source': \"''\", 'strategy': \"''\", 'internal_fidelity': '0.0', 'grammaticality': '0.0', 'rubric_scores': '{}'}, 'constraint_semantics': {'proposition_id': \"'CSP:34bd729596",
+        "pre_outcome_pressure": "{'X': 0.6385, 'T': 1.0, 'N': 0.2921, 'B': 0.545, 'A': 0.5}"
+      },
+      "last_validation": null,
+      "tensions": null
+    }
+  },
+  "diagnosis": {
+    "schema_version": 1,
+    "timestamp": 1787388474.6905415,
+    "episode_id": "INT:6fc1cb16679875",
+    "problem_type": "runtime_fault",
+    "problem_reasons": [
+      "float() argument must be a string or a real number, not 'dict'"
+    ],
+    "summary": "The strongest observed boundary is aurora._extract_pipeline_signals because float() argument must be a string or a real number, not 'dict'.",
+    "confidence": 0.96,
+    "likely_boundary": {
+      "function_id": "aurora._extract_pipeline_signals",
+      "file": "aurora.py",
+      "line": 16127,
+      "confidence": 0.96,
+      "reason": "float() argument must be a string or a real number, not 'dict'",
+      "step_id": "runtime_fault",
+      "decision": "exception",
+      "inputs": {
+        "function": "'_extract_pipeline_signals'",
+        "handler_line": "12745",
+        "source_file": "'aurora.py'",
+        "module": "'aurora'",
+        "reported_handler_line": "12745"
+      },
+      "derived": {
+        "exception_type": "'TypeError'",
+        "source_line_verified_from_ast": "True"
+      },
+      "output": null
+    },
+    "inspection_targets": [
+      {
+        "function_id": "'aurora._extract_pipeline_signals'",
+        "file": "'aurora.py'",
+        "line": "16127",
+        "confidence": "0.96",
+        "reason": "\"float() argument must be a string or a real number, not 'dict'\"",
+        "step_id": "'runtime_fault'",
+        "decision": "'exception'",
+        "inputs": "{'function': '_extract_pipeline_signals', 'handler_line': 12745, 'source_file': 'aurora.py', 'module': 'aurora', 'reported_handler_line': 12745}",
+        "derived": "{'exception_type': 'TypeError', 'source_line_verified_from_ast': True}",
+        "output": "None"
+      },
+      {
+        "function_id": "'aurora_internal.aurora_constraint_semantic_continuity.derive_constraint_semantic_state'",
+        "file": "'aurora_internal/aurora_constraint_semantic_continuity.py'",
+        "line": "596",
+        "confidence": "0.5673",
+        "reason": "'step evidence overlaps 4 problem terms'",
+        "step_id": "'INT:6fc1cb16679875:S004'",
+        "decision": "'integrate_asserted_relation'",
+        "inputs": "{'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': [\"'RW:883428f69d8a61'\", \"'RW:26883e7958005e'\", \"'RW:1c3d4b90b3c37b'\", \"'RIW:78264d7d609e7f'\"], 'operat",
+        "derived": "{'axis_derivation': {'X': {'operation': 'entity_admission', 'roots': [\"'X'\", \"'B'\"], 'signature': 'X^1*B^1', 'meaning': 'identity', 'description': 'admit a distinguishable entity or quality into the current reality boundary', 'canonical_profile': {'signature': \"'X^1*B^1'\", 'axes': \"('X', 'B')\", 'arity': '2', 'label': \"'identity'\", 'summary': \"'Existence bounded by a limit becomes this rather than that: an identifiable thing with a skin.'\", 'representation': \"'membrane'\", 'stage': \"'pair'\", 'alia",
+        "output": "{'proposition_id': 'CSP:34bd729596bd13', 'response_obligation': {'operation': 'integrate_asserted_relation', 'unknown_role': '', 'unknown_descriptor': '', 'must_preserve': [], 'must_not_replace_with': [], 'alternatives': [], 'perspective_owner': '', 'derivation_signature': 'X^1*T^1*N^1*B^1*A^1'}}"
+      },
+      {
+        "function_id": "'aurora_internal.aurora_recursive_causal_reasoning_waveform.AuroraRecursiveCausalReasoningWaveform.prepare_semantic_state'",
+        "file": "'aurora_internal/aurora_recursive_causal_reasoning_waveform.py'",
+        "line": "542",
+        "confidence": "0.4588",
+        "reason": "'step evidence overlaps 2 problem terms'",
+        "step_id": "'INT:6fc1cb16679875:S003'",
+        "decision": "'backproject_global_understanding'",
+        "inputs": "{'raw_input': '', 'provisional_interpretation': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation'}}",
+        "derived": "{'wavelets': [{'wavelet_id': 'RW:883428f69d8a61', 'primitive': 'existence_admission', 'roots': [\"'X'\", \"'B'\"], 'amplitude': 0.55, 'phase': 0.0, 'polarity': 1, 'target': 'entities', 'source': 'unresolved_structure', 'axis_profile': {}, 'evidence': {'unresolved': \"['entity', 'relation']\"}, 'parent_ids': [], 'status': 'transient', 'signed_effect': 0.55, 'canonical_signature': 'X^1*B^1'}, {'wavelet_id': 'RW:26883e7958005e', 'primitive': 'continuity_phase_lock', 'roots': [\"'X'\", \"'T'\", \"'B'\"], 'ampli",
+        "output": "{'effective_interpretation': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': [\"'RW:883428f69d8a61'\", \"'RW:26883e7958005e'\", \"'RW:1c3d4b90b3c37b'\", \"'RIW:78264d7d609e7f'\"]"
+      },
+      {
+        "function_id": "'aurora_expression_perception.SentenceComposer.compose'",
+        "file": "'aurora_expression_perception.py'",
+        "line": "2596",
+        "confidence": "0.4055",
+        "reason": "'step evidence overlaps 1 problem terms'",
+        "step_id": "'INT:6fc1cb16679875:S008'",
+        "decision": "'emitted'",
+        "inputs": "{'input_text': '', 'frame': None, 'tone': 'neutral', 'i_state': 'i_is'}",
+        "derived": "{'motifs_used': 0, 'words_used': ['am', 'tones', \"here's\", 'orange'], 'word_sources': {'am': {'tag': 'X:OPERATOR', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 925}, 'tones': {'tag': 'X:MAGNITUDE', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 0}, \"here's\": {'tag': 'X:OPERATOR', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 0}, 'orange': {'tag': 'X:MAGNITUDE', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 0}}, '",
+        "output": "\"I am tones. I here' orange.\""
+      },
+      {
+        "function_id": "'aurora_internal.aurora_constraint_semantic_continuity.relation_alignment'",
+        "file": "'aurora_internal/aurora_constraint_semantic_continuity.py'",
+        "line": "1001",
+        "confidence": "0.405",
+        "reason": "'step evidence overlaps 1 problem terms'",
+        "step_id": "'INT:6fc1cb16679875:S005'",
+        "decision": "'retain_existing_candidate'",
+        "inputs": "{'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': [\"'RW:883428f69d8a61'\", \"'RW:26883e7958005e'\", \"'RW:1c3d4b90b3c37b'\", \"'RIW:78264d7d609e7f'\"], 'operat",
+        "derived": "{'preexisting_alignment': {'score': 0.0}, 'candidate_alignment': {}}",
+        "output": "{'text': '', 'source': 'chain'}"
+      },
+      {
+        "function_id": "'aurora._finalize_articulation'",
+        "file": "'aurora.py'",
+        "line": "21471",
+        "confidence": "0.3515",
+        "reason": "''",
+        "step_id": "'INT:6fc1cb16679875:S009'",
+        "decision": "'selected'",
+        "inputs": "{'user_text': '', 'grounded_text': '', 'grounded_confidence': 0.5, 'composer_text': 'I am tones', 'composer_confidence': 0.6142}",
+        "derived": "{'grounded_semantic_authority': 0.0, 'meaning_preserved': True, 'rejection_reasons': ['no_grounded_candidate_to_compare']}",
+        "output": "{'text': 'I am tones', 'source': 'composer_unified', 'semantic_authority': 0.6142, 'articulation_quality': 0.6142, 'confidence': 0.6142, 'meaning_preserved': True, 'rejection_reasons': ['no_grounded_candidate_to_compare']}"
+      },
+      {
+        "function_id": "'aurora_internal.aurora_proposition_frame.build_frame'",
+        "file": "'aurora_internal/aurora_proposition_frame.py'",
+        "line": "611",
+        "confidence": "0.3512",
+        "reason": "''",
+        "step_id": "'INT:6fc1cb16679875:S007'",
+        "decision": "'empty'",
+        "inputs": "{'has_thought_state': True, 'has_working_memory': True}",
+        "derived": "{'frame_source': '', 'frame_subject': '', 'frame_relation': '', 'frame_object': '', 'frame_complement': '', 'frame_unknown_role': '', 'frame_derivation_signature': ''}",
+        "output": "None"
+      },
+      {
+        "function_id": "'aurora_internal.aurora_constraint_semantic_continuity.extract_relational_form'",
+        "file": "'aurora_internal/aurora_constraint_semantic_continuity.py'",
+        "line": "326",
+        "confidence": "0.3503",
+        "reason": "''",
+        "step_id": "'INT:6fc1cb16679875:S002'",
+        "decision": "'preserved_for_root_constraint_derivation'",
+        "inputs": "{'user_text': ''}",
+        "derived": "{'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation'}}",
+        "output": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation'}"
+      },
+      {
+        "function_id": "'aurora._run_live_response_turn'",
+        "file": "'aurora.py'",
+        "line": "32621",
+        "confidence": "0.3502",
+        "reason": "''",
+        "step_id": "'INT:6fc1cb16679875:S001'",
+        "decision": "'parsed'",
+        "inputs": "{'user_text': ''}",
+        "derived": "{'parsed': {'topic': '', 'topic_words': [], 'entities': [], 'time_ref': None, 'query_type': 'statement', 'search_query': '', 'pragmatic_signals': [], 'frame': 'asserting', 'stance': 'neutral', 'utterance_type': 'statement', 'full_phrase': '', 'negated': False, 'is_hypothetical': False, 'is_clarification': False, 'is_callback': False, 'is_experiential': False, 'is_opinion': False, 'is_imperative': False, 'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '",
+        "output": "{'topic': '', 'topic_words': [], 'entities': [], 'time_ref': None, 'query_type': 'statement', 'search_query': '', 'pragmatic_signals': [], 'frame': 'asserting', 'stance': 'neutral', 'utterance_type': 'statement', 'full_phrase': '', 'negated': False, 'is_hypothetical': False, 'is_clarification': False, 'is_callback': False, 'is_experiential': False, 'is_opinion': False, 'is_imperative': False, 'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown"
+      }
+    ],
+    "value_trail": [
+      {
+        "step_id": "'INT:6fc1cb16679875:S001'",
+        "function_id": "'aurora._run_live_response_turn'",
+        "decision": "'parsed'",
+        "inputs": "{'user_text': ''}",
+        "derived": "{'parsed': {'topic': '', 'topic_words': [], 'entities': [], 'time_ref': None, 'query_type': 'statement', 'search_query': '', 'pragmatic_signals': [], 'frame': 'asserting', 'stance': 'neutral', 'utterance_type': 'statement', 'full_phrase': '', 'negated': False, 'is_hypothetical': False, 'is_clarification': False, 'is_callback': False, 'is_experiential': False, 'is_opinion': False, 'is_imperative': False, 'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '",
+        "output": "{'topic': '', 'topic_words': [], 'entities': [], 'time_ref': None, 'query_type': 'statement', 'search_query': '', 'pragmatic_signals': [], 'frame': 'asserting', 'stance': 'neutral', 'utterance_type': 'statement', 'full_phrase': '', 'negated': False, 'is_hypothetical': False, 'is_clarification': False, 'is_callback': False, 'is_experiential': False, 'is_opinion': False, 'is_imperative': False, 'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown"
+      },
+      {
+        "step_id": "'INT:6fc1cb16679875:S002'",
+        "function_id": "'aurora_internal.aurora_constraint_semantic_continuity.extract_relational_form'",
+        "decision": "'preserved_for_root_constraint_derivation'",
+        "inputs": "{'user_text': ''}",
+        "derived": "{'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation'}}",
+        "output": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation'}"
+      },
+      {
+        "step_id": "'INT:6fc1cb16679875:S003'",
+        "function_id": "'aurora_internal.aurora_recursive_causal_reasoning_waveform.AuroraRecursiveCausalReasoningWaveform.prepare_semantic_state'",
+        "decision": "'backproject_global_understanding'",
+        "inputs": "{'raw_input': '', 'provisional_interpretation': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation'}}",
+        "derived": "{'wavelets': [{'wavelet_id': 'RW:883428f69d8a61', 'primitive': 'existence_admission', 'roots': [\"'X'\", \"'B'\"], 'amplitude': 0.55, 'phase': 0.0, 'polarity': 1, 'target': 'entities', 'source': 'unresolved_structure', 'axis_profile': {}, 'evidence': {'unresolved': \"['entity', 'relation']\"}, 'parent_ids': [], 'status': 'transient', 'signed_effect': 0.55, 'canonical_signature': 'X^1*B^1'}, {'wavelet_id': 'RW:26883e7958005e', 'primitive': 'continuity_phase_lock', 'roots': [\"'X'\", \"'T'\", \"'B'\"], 'ampli",
+        "output": "{'effective_interpretation': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': [\"'RW:883428f69d8a61'\", \"'RW:26883e7958005e'\", \"'RW:1c3d4b90b3c37b'\", \"'RIW:78264d7d609e7f'\"]"
+      },
+      {
+        "step_id": "'INT:6fc1cb16679875:S004'",
+        "function_id": "'aurora_internal.aurora_constraint_semantic_continuity.derive_constraint_semantic_state'",
+        "decision": "'integrate_asserted_relation'",
+        "inputs": "{'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': [\"'RW:883428f69d8a61'\", \"'RW:26883e7958005e'\", \"'RW:1c3d4b90b3c37b'\", \"'RIW:78264d7d609e7f'\"], 'operat",
+        "derived": "{'axis_derivation': {'X': {'operation': 'entity_admission', 'roots': [\"'X'\", \"'B'\"], 'signature': 'X^1*B^1', 'meaning': 'identity', 'description': 'admit a distinguishable entity or quality into the current reality boundary', 'canonical_profile': {'signature': \"'X^1*B^1'\", 'axes': \"('X', 'B')\", 'arity': '2', 'label': \"'identity'\", 'summary': \"'Existence bounded by a limit becomes this rather than that: an identifiable thing with a skin.'\", 'representation': \"'membrane'\", 'stage': \"'pair'\", 'alia",
+        "output": "{'proposition_id': 'CSP:34bd729596bd13', 'response_obligation': {'operation': 'integrate_asserted_relation', 'unknown_role': '', 'unknown_descriptor': '', 'must_preserve': [], 'must_not_replace_with': [], 'alternatives': [], 'perspective_owner': '', 'derivation_signature': 'X^1*T^1*N^1*B^1*A^1'}}"
+      },
+      {
+        "step_id": "'INT:6fc1cb16679875:S005'",
+        "function_id": "'aurora_internal.aurora_constraint_semantic_continuity.relation_alignment'",
+        "decision": "'retain_existing_candidate'",
+        "inputs": "{'relational_form': {'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': [\"'RW:883428f69d8a61'\", \"'RW:26883e7958005e'\", \"'RW:1c3d4b90b3c37b'\", \"'RIW:78264d7d609e7f'\"], 'operat",
+        "derived": "{'preexisting_alignment': {'score': 0.0}, 'candidate_alignment': {}}",
+        "output": "{'text': '', 'source': 'chain'}"
+      },
+      {
+        "step_id": "'INT:6fc1cb16679875:S006'",
+        "function_id": "'aurora_internal.aurora_proposition_frame.build_frame'",
+        "decision": "'empty'",
+        "inputs": "{'has_thought_state': True, 'has_working_memory': True}",
+        "derived": "{'frame_source': '', 'frame_subject': '', 'frame_relation': '', 'frame_object': '', 'frame_complement': '', 'frame_unknown_role': '', 'frame_derivation_signature': ''}",
+        "output": "None"
+      },
+      {
+        "step_id": "'INT:6fc1cb16679875:S007'",
+        "function_id": "'aurora_internal.aurora_proposition_frame.build_frame'",
+        "decision": "'empty'",
+        "inputs": "{'has_thought_state': True, 'has_working_memory': True}",
+        "derived": "{'frame_source': '', 'frame_subject': '', 'frame_relation': '', 'frame_object': '', 'frame_complement': '', 'frame_unknown_role': '', 'frame_derivation_signature': ''}",
+        "output": "None"
+      },
+      {
+        "step_id": "'INT:6fc1cb16679875:S008'",
+        "function_id": "'aurora_expression_perception.SentenceComposer.compose'",
+        "decision": "'emitted'",
+        "inputs": "{'input_text': '', 'frame': None, 'tone': 'neutral', 'i_state': 'i_is'}",
+        "derived": "{'motifs_used': 0, 'words_used': ['am', 'tones', \"here's\", 'orange'], 'word_sources': {'am': {'tag': 'X:OPERATOR', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 925}, 'tones': {'tag': 'X:MAGNITUDE', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 0}, \"here's\": {'tag': 'X:OPERATOR', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 0}, 'orange': {'tag': 'X:MAGNITUDE', 'candidate_source': 'find_by_noncomp', 'usage_count_at_selection': 0}}, '",
+        "output": "\"I am tones. I here' orange.\""
+      },
+      {
+        "step_id": "'INT:6fc1cb16679875:S009'",
+        "function_id": "'aurora._finalize_articulation'",
+        "decision": "'selected'",
+        "inputs": "{'user_text': '', 'grounded_text': '', 'grounded_confidence': 0.5, 'composer_text': 'I am tones', 'composer_confidence': 0.6142}",
+        "derived": "{'grounded_semantic_authority': 0.0, 'meaning_preserved': True, 'rejection_reasons': ['no_grounded_candidate_to_compare']}",
+        "output": "{'text': 'I am tones', 'source': 'composer_unified', 'semantic_authority': 0.6142, 'articulation_quality': 0.6142, 'confidence': 0.6142, 'meaning_preserved': True, 'rejection_reasons': ['no_grounded_candidate_to_compare']}"
+      }
+    ],
+    "delivered": {
+      "delivered_text": "I am tones",
+      "source": "composer_unified",
+      "confidence": 0.6142,
+      "wellformed": true
+    },
+    "source_map_status": {
+      "available": true,
+      "function_count": 9660,
+      "index_path": "/mnt/data/aurora_push_state/system_introspection_index.json",
+      "repo_root": "/mnt/data/aurora_continue_work/aurora--build-768",
+      "function_lineage_available": true,
+      "function_lineage_count": 9660,
+      "function_lineage_coverage": 1.0
+    }
+  }
+}

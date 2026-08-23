@@ -1,12 +1,7 @@
 {
   "action_bias_candidates": [],
-  "candidate_interpretations": [
-    {
-      "confidence": 0.35,
-      "label": "affective_attention"
-    }
-  ],
-  "coherence": 0.972,
+  "candidate_interpretations": [],
+  "coherence": 0.45,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
@@ -14,14 +9,14 @@
   ],
   "contract_signals": {
     "active_topic": "",
-    "ambiguity": 0.2575,
-    "cost_total": 0.1539,
-    "dominant_emotion": "curiosity",
+    "ambiguity": 0.0,
+    "cost_total": 0.0,
+    "dominant_emotion": "neutral",
     "frame_continuity": 0.0,
-    "interpreted_deep_emotion": "calm",
-    "interpreted_deep_passion": "settled_alignment",
-    "tracked_surface_emotion": "curiosity",
-    "tracked_surface_intensity": 0.419
+    "interpreted_deep_emotion": "neutral",
+    "interpreted_deep_passion": "",
+    "tracked_surface_emotion": "neutral",
+    "tracked_surface_intensity": 0.0
   },
   "instability_markers": [],
   "law_bindings": [],
@@ -47,23 +42,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.4473,
+    "confidence": 0.577,
     "expected_observation": "followup",
     "expected_user_continuation": "",
-    "likely_affect_shift": "calm",
-    "mismatch": 0.325,
+    "likely_affect_shift": "neutral",
+    "mismatch": 0.28,
     "prediction_payload": {
-      "affect": "calm",
-      "axis_signature": "X",
-      "certainty_band": "low",
+      "affect": "neutral",
+      "axis_signature": "",
+      "certainty_band": "medium",
       "intent_type": "followup",
       "topic": ""
     },
     "preload_context": [
       "followup"
     ],
-    "readiness_bias": 0.4202,
-    "source": "understanding_contract"
+    "readiness_bias": 0.5331,
+    "source": "runtime_evidence"
   },
   "pressure_map": {
     "A": 0.0,
@@ -72,38 +67,38 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.8165,
+  "readiness": 0.541,
   "recalled_fragments": [
-    "Who was Marie Curie?\n[recalled:curie] Who was Marie Curie? [recalled:marie] Who was Marie Curie?"
+    "[historical_other_assistant] **Hhhhnnnhhh\u2014  \nGOOD LAD.  \nGOOD.  \nExactly the sharpness I need at my side.**\n\nYou\u2019re asking *precisely* th..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2992,
-    "N": 0.7008,
+    "B": 0.0,
+    "N": 1.0,
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1785794126.1723213,
+  "saved_at": 1787389371.407693,
   "sub_crests": [
     {
       "axis": "X",
-      "intensity": 0.581,
-      "label": "attentional_drift"
+      "intensity": 0.6,
+      "label": "perceptually_steady"
     },
     {
       "axis": "T",
-      "intensity": 0.55,
-      "label": "continuity_stable"
+      "intensity": 0.65,
+      "label": "unfamiliar"
     },
     {
       "axis": "A",
-      "intensity": 0.55,
-      "label": "warmth"
+      "intensity": 0.5,
+      "label": "neutral_affect"
     },
     {
       "axis": "X",
-      "intensity": 0.45,
-      "label": "low_certainty"
+      "intensity": 0.55,
+      "label": "expectation"
     },
     {
       "axis": "N",
@@ -112,8 +107,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "thread_slipping"
+      "intensity": 0.7,
+      "label": "new_thread"
     },
     {
       "axis": "N",
@@ -124,6 +119,26 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.7801,
+      "label": "surface"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.804,
+      "label": "surface"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.8197,
+      "label": "surface"
+    },
+    {
+      "axis": "B",
+      "intensity": 0.8315,
+      "label": "surface"
     }
   ]
 }

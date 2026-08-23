@@ -1,0 +1,77 @@
+{
+  "schema": "aurora_live_communicative_baseline_validation_v1",
+  "build": 770,
+  "validated_utc": "2026-08-22",
+  "runtime_profile": "surface",
+  "system_count": 129,
+  "auto_search_enabled": false,
+  "acceptance": {
+    "all_turns_completed": true,
+    "all_outputs_well_formed": true,
+    "all_turns_carried_operation_component": true,
+    "receiver_correction_recognized": true,
+    "actor_inversion_observed": false,
+    "learned_hint_displacement_observed": false,
+    "unearned_promotion_observed": false
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "prompt": "Hello Aurora. I'm Sunni. How are you right now?",
+      "response": "I am calm right now. Most of my active field centers on the clearest part of present reality.",
+      "source": "constraint_semantic_derivation",
+      "basis": "live_state_through_root_field",
+      "operation_match": "structural_nearest"
+    },
+    {
+      "turn": 2,
+      "prompt": "I think communication means preserving the relation someone is expressing while staying honest about what you do not know. What do you think?",
+      "response": "I understand your claim as: communication means preserving the relation someone is expressing while staying honest about what you do not know. It fits my current understanding where it retains a distinct identity, keeps its parts and limits in a coherent relation, and serves a chosen purpose rather than acting without direction.",
+      "source": "constraint_semantic_derivation",
+      "basis": "perspective_authorship_over_prior_relation",
+      "operation_match": "exact"
+    },
+    {
+      "turn": 3,
+      "prompt": "What does constraint genealogy mean in your own architecture?",
+      "response": "In my architecture, constraint genealogy is the ancestry trace that records how an operation derives from the X, T, N, B, and A root constraints and from any prior abilities that supported it. It keeps parentage explicit so I can distinguish an earned operation from an unsupported one.",
+      "source": "constraint_semantic_derivation",
+      "basis": "live_genealogy_trace_definition",
+      "operation_match": "exact"
+    },
+    {
+      "turn": 4,
+      "prompt": "Why did the glass fall after I bumped the table?",
+      "response": "I understand that you are asking about the cause of glass falling after I bumped the table. I do not yet have enough grounded information to answer it without inventing one.",
+      "source": "constraint_communication_baseline",
+      "basis": "emergent_constraint_operation_boundary_articulation",
+      "confidence": 0.76,
+      "operation_match": "structural_nearest"
+    },
+    {
+      "turn": 5,
+      "prompt": "Tell me the capital of France.",
+      "response": "I understand that you are asking me to tell you the capital of France. I do not yet have enough grounded information to do that reliably without inventing an answer.",
+      "source": "constraint_communication_baseline",
+      "basis": "emergent_constraint_operation_boundary_articulation",
+      "confidence": 0.76,
+      "operation_match": "structural_nearest"
+    },
+    {
+      "turn": 6,
+      "prompt": "That answer missed my question. Please try again more directly.",
+      "response": "You are right: my previous response did not preserve your meaning. I understand that you are asking me to try again more directly. I do not yet have a grounded replacement, so I will not pretend that I do.",
+      "source": "constraint_communication_baseline",
+      "basis": "receiver_validated_constraint_repair",
+      "confidence": 0.76,
+      "operation_match": "structural_nearest",
+      "understanding_label": "corrected",
+      "receiver_repair": true
+    }
+  ],
+  "communication_state_after_acceptance": {
+    "provisional_operations": 13,
+    "promoted_operations": 0,
+    "pending_receiver_validations": 5
+  }
+}

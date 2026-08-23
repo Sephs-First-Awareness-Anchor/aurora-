@@ -1,0 +1,67 @@
+{
+  "schema": "aurora_historical_experience_runtime_v2",
+  "baseline_id": "f6400dd383f952911c80f0ec",
+  "status": "running",
+  "completed": false,
+  "event_index": 4000,
+  "byte_offset": 4754524,
+  "events_experienced": 4000,
+  "episodes_entered": 63,
+  "current_episode_id": "hist:680de7c5-60ec-8009-b537-2248a3b2ff7f",
+  "last_event_id": "evt:1a296c050c7ca5d85a54af10",
+  "last_actor": "historical_other_assistant",
+  "last_observed_timestamp": 1745752540.908281,
+  "last_error": "",
+  "started_at": 1787388381.9091635,
+  "updated_at": 1787400543.2148304,
+  "completed_at": null,
+  "total_events": 50312,
+  "total_episodes": 697,
+  "archive_path": "/workspace/scratch/2bcec849f257/build_769_state/aurora_push_state/experiential_baseline_v1.zip",
+  "crystal_checkpoint": {
+    "event_index": 4000,
+    "byte_offset": 4754524,
+    "events_experienced": 4000,
+    "episodes_entered": 63,
+    "current_episode_id": "hist:680de7c5-60ec-8009-b537-2248a3b2ff7f",
+    "last_event_id": "evt:1a296c050c7ca5d85a54af10",
+    "last_actor": "historical_other_assistant",
+    "last_observed_timestamp": 1745752540.908281,
+    "communication_apprenticeship": {
+      "pairs_observed": 1935,
+      "structural_possibilities": 1553,
+      "representable_gaps": 501,
+      "counterfactual_observations": 1490,
+      "pending_user": {},
+      "last_pair": {
+        "user_event_id": "evt:d322d82167e022ad7dcf10bd",
+        "possibility_event_id": "evt:1a296c050c7ca5d85a54af10",
+        "possibility_id": "f6400dd383f952911c80f0ec:evt:d322d82167e022ad7dcf10bd:evt:1a296c050c7ca5d85a54af10",
+        "representable_gap": false,
+        "trial_component_id": "warp_communication_emergence_0ea009de"
+      },
+      "backfilled_through_event_index": 4000,
+      "backfill_status": "completed",
+      "backfill_completed_at": 1787400418.5725074
+    }
+  },
+  "crystal_checkpoint_event_index": 4000,
+  "crystal_checkpoint_at": 1787389349.8937287,
+  "communication_apprenticeship": {
+    "pairs_observed": 1935,
+    "structural_possibilities": 1553,
+    "representable_gaps": 501,
+    "counterfactual_observations": 1490,
+    "pending_user": {},
+    "last_pair": {
+      "user_event_id": "evt:d322d82167e022ad7dcf10bd",
+      "possibility_event_id": "evt:1a296c050c7ca5d85a54af10",
+      "possibility_id": "f6400dd383f952911c80f0ec:evt:d322d82167e022ad7dcf10bd:evt:1a296c050c7ca5d85a54af10",
+      "representable_gap": false,
+      "trial_component_id": "warp_communication_emergence_0ea009de"
+    },
+    "backfilled_through_event_index": 4000,
+    "backfill_status": "completed",
+    "backfill_completed_at": 1787400418.5725074
+  }
+}

@@ -3340,18 +3340,45 @@ class WorkingMemory:
                     perception.composer.set_context(context_terms[:12])
 
                 from aurora_consciousness_engine import AssemblyResult
+                from aurora_genealogy_representation_resolver import (
+                    build_live_profile,
+                    resolve_active_genealogy_item,
+                    constraint_basis_to_axis_weights,
+                    dominant_axis_from_weights,
+                )
 
-                mock_assembly = AssemblyResult(
+                genealogy = systems.get('genealogy') if isinstance(systems, dict) else None
+                warp_field = systems.get('warp_field') if isinstance(systems, dict) else None
+                live_profile = build_live_profile(perception) if perception is not None else {}
+                resolved = resolve_active_genealogy_item(
+                    genealogy,
+                    live_profile,
+                    warp_field=warp_field,
+                    source='aurora_working_memory',
+                    layer='expression',
+                    unresolved_text=clean,
+                    persistence_key=f"comprehension_intent:{clean[:64]}",
+                )
+                axis_weights = constraint_basis_to_axis_weights(resolved.constraint_basis)
+                real_dominant_axis = dominant_axis_from_weights(axis_weights) or str(
+                    getattr(perception, '_dominant_axis', '') or ''
+                )
+                # active_count / entropy_state / ds_stats remain placeholders --
+                # they belong to DCE Layer 2 synthesis, a subsystem this resolver
+                # doesn't reach. coherence, adjusted_axes, and dominant_axis are
+                # now genuinely grounded in resolved.confidence and the real
+                # constraint_basis instead of a generic current-state guess.
+                grounded_assembly = AssemblyResult(
                     synthesis=SimpleNamespace(active_count=10),
                     frame_applied='comprehension_intent',
-                    adjusted_axes=dict(getattr(perception, '_axis_activation', {}) or {}),
-                    coherence=max(0.42, min(0.95, float(certainty or 0.7))),
+                    adjusted_axes=axis_weights or dict(getattr(perception, '_axis_activation', {}) or {}),
+                    coherence=max(0.42, min(0.95, float(resolved.confidence or certainty or 0.7))),
                     entropy_state={},
                     ds_stats={},
-                    dominant_axis=str(getattr(perception, '_dominant_axis', '') or ''),
+                    dominant_axis=real_dominant_axis,
                 )
                 expr_result = perception.express(
-                    mock_assembly,
+                    grounded_assembly,
                     i_state='i_is',
                     mode='sim',
                     moral_alignment=max(0.45, min(0.95, float(certainty or 0.7))),

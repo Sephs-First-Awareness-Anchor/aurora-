@@ -1,0 +1,44 @@
+{
+  "schema": "aurora_experiential_baseline_manifest_v1",
+  "purpose": "Chronological historical interaction environment. Preserves evidence and sequence without declaring historical assistant output, user output, generated titles, or adjacency to be truth.",
+  "source_exports": {
+    "conversations-001.json": {
+      "conversations_in_export": 100
+    },
+    "conversations-000.json": {
+      "conversations_in_export": 100
+    },
+    "conversations-004.json": {
+      "conversations_in_export": 100
+    },
+    "conversations-003.json": {
+      "conversations_in_export": 100
+    },
+    "conversations-008.json": {
+      "conversations_in_export": 100
+    },
+    "conversations-009.json": {
+      "conversations_in_export": 100
+    },
+    "conversations-010.json": {
+      "conversations_in_export": 98
+    }
+  },
+  "episode_count": 697,
+  "event_count": 50312,
+  "user_events": 24331,
+  "historical_other_assistant_events": 25981,
+  "first_event_utc": "2024-01-06T01:27:27.893504+00:00",
+  "last_event_utc": "2026-08-20T03:04:07.640619+00:00",
+  "branch_policy": "follow each conversation current_node back to root; exclude abandoned alternate branches",
+  "content_policy": "retain visible text and audio transcriptions; exclude system/tool/reasoning-only records",
+  "semantic_policy": {
+    "assistant_messages_are_truth": false,
+    "user_messages_are_timeless_facts": false,
+    "adjacency_proves_causality": false,
+    "titles_are_semantic_input": false,
+    "preclassify_constraints": false,
+    "preclassify_success_failure": false,
+    "aurora_should_infer_structure_from_experience": true
+  }
+}

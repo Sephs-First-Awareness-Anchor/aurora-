@@ -1,0 +1,50 @@
+{
+  "REFAB:A:OPERATOR:A:?:?:?:?:HABITAT_CTX:self:mark_path:aurora:own": {
+    "met": 2,
+    "missed": 0,
+    "held": 0,
+    "axis": "A",
+    "state": "developing",
+    "last_t": 1787389088.0970397
+  },
+  "A:OUTLET_PUSH:B:INTERFACE_WEAKEN": {
+    "met": 4,
+    "missed": 0,
+    "held": 0,
+    "axis": "A",
+    "state": "crystallised",
+    "last_t": 1787389088.0970397
+  },
+  "B:INTERFACE_WEAKEN:T:ADVANCE_TICK": {
+    "met": 4,
+    "missed": 0,
+    "held": 0,
+    "axis": "A",
+    "state": "crystallised",
+    "last_t": 1787389088.0970397
+  },
+  "L:2966bd9bd7:T:ADVANCE_TICK": {
+    "met": 2,
+    "missed": 0,
+    "held": 0,
+    "axis": "T",
+    "state": "developing",
+    "last_t": 1787389088.0970397
+  },
+  "REFAB:N:OPERATOR:A:?:?:?:?:HABITAT_CTX:self:mark_path:aurora:own": {
+    "met": 1,
+    "missed": 0,
+    "held": 0,
+    "axis": "A",
+    "state": "developing",
+    "last_t": 1787389088.0970397
+  },
+  "REFAB:X:OPERATOR:A:?:?:?:?:HABITAT_CTX:self:mark_path:aurora:own": {
+    "met": 1,
+    "missed": 0,
+    "held": 0,
+    "axis": "A",
+    "state": "developing",
+    "last_t": 1787389088.0970397
+  }
+}

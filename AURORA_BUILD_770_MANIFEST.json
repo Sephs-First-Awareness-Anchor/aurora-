@@ -1,0 +1,61 @@
+{
+  "build": 770,
+  "upgrade": "live_communicative_baseline_v3",
+  "created_utc": "2026-08-22",
+  "source_build": 769,
+  "lived_state_input": {
+    "artifact": "aurora--lived-baseline-state-4000.zip",
+    "sha256": "e9d5fb129e85e9182da0a825c75891c0c2e4158416b3f38daf22e85b5eb80b5a"
+  },
+  "constraint_signature": "X^1*T^1*N^1*B^1*A^1",
+  "external_language_model_added": false,
+  "modified_runtime_files": [
+    "aurora.py",
+    "aurora_internal/aurora_communication_emergence.py",
+    "aurora_internal/aurora_constraint_semantic_continuity.py",
+    "aurora_internal/aurora_understanding_contract.py"
+  ],
+  "added_files": [
+    "AURORA_BUILD_770_LIVE_COMMUNICATIVE_BASELINE.md",
+    "AURORA_BUILD_770_MANIFEST.json",
+    "tests/test_live_communicative_baseline.py"
+  ],
+  "verification": {
+    "new_zero_dependency_tests_passed": 11,
+    "existing_apprenticeship_tests_passed": 4,
+    "focused_pytest_checks_passed": 103,
+    "surface_runtime_systems": 129,
+    "clean_state_live_turns": 6,
+    "live_turns_with_operation_component": 6,
+    "malformed_live_outputs": 0,
+    "provisional_operations_after_acceptance": 13,
+    "promoted_operations_after_acceptance": 0,
+    "receiver_repair_observed": true
+  },
+  "github_merge_packaging": {
+    "authoritative_lived_state_artifact": "aurora--lived-baseline-state-4000-live-communicative.zip",
+    "authoritative_lived_state_sha256": "647000134e3785a92f2b9554ae39bb17e0e0f2b8aa7378be9e2b130c2195bb06",
+    "curated_state_files_committed": 209,
+    "runtime_log_files_committed": 2,
+    "habitat_motivation_journal": {
+      "storage": "appendable_gzip_jsonl",
+      "uncompressed_sha256": "ac395c83890270309f217a254012cbdf791e9ab3f525820382e982d776b5b893",
+      "legacy_uncompressed_loading_supported": true
+    },
+    "historical_event_state": {
+      "storage": "gzip_jsonl",
+      "uncompressed_sha256": "75948768fa23d772d0491c44d18b953bf079fd6ae78b00cb5d610c4be243c6fb",
+      "legacy_uncompressed_loading_supported": true
+    },
+    "genealogy_abilities_snapshot": {
+      "storage": "gzip_json",
+      "uncompressed_sha256": "858c84deff72974447bcb3d618dc12653ab87dab61e5c5559a7ca9cbfc047875",
+      "legacy_uncompressed_loading_supported": true
+    },
+    "historical_credential_redaction": {
+      "logical_occurrences_redacted": 17,
+      "unique_values_redacted": 5,
+      "canonical_ledger_and_packaged_baseline_sanitized": true
+    }
+  }
+}

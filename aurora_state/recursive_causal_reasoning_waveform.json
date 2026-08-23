@@ -1,0 +1,3410 @@
+{
+  "schema_version": 1,
+  "updated_at": 1787388474.7034898,
+  "cycles": [
+    {
+      "cycle_id": "RCRW:c984155b81ae1ff0",
+      "created_at": 1787388473.9584143,
+      "raw_input": "",
+      "initial_semantic_state": {
+        "proposition_id": "CSP:34bd729596bd13",
+        "relational_form": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation"
+        },
+        "axis_activation": {
+          "X": 0.4729,
+          "T": 0.1291,
+          "N": 0.1902,
+          "B": 0.0933,
+          "A": 0.1144
+        },
+        "axis_derivation": {
+          "X": {
+            "operation": "entity_admission",
+            "roots": [
+              "X",
+              "B"
+            ],
+            "signature": "X^1*B^1",
+            "meaning": "identity",
+            "description": "admit a distinguishable entity or quality into the current reality boundary",
+            "canonical_profile": {
+              "signature": "X^1*B^1",
+              "axes": [
+                "X",
+                "B"
+              ],
+              "arity": 2,
+              "label": "identity",
+              "summary": "Existence bounded by a limit becomes this rather than that: an identifiable thing with a skin.",
+              "representation": "membrane",
+              "stage": "pair",
+              "aliases": [
+                "definition",
+                "separation"
+              ],
+              "notes": []
+            },
+            "payload": {
+              "entities": [],
+              "unknown": "",
+              "unknown_descriptor": "",
+              "admissible": false
+            }
+          },
+          "T": {
+            "operation": "reference_continuity",
+            "roots": [
+              "X",
+              "T",
+              "B"
+            ],
+            "signature": "X^1*T^1*B^1",
+            "meaning": "referential_persistence",
+            "description": "preserve the identity of a referent across conversational time",
+            "canonical_profile": {},
+            "payload": {
+              "continuity_bindings": [],
+              "time_reference": "",
+              "referent_topic": ""
+            }
+          },
+          "N": {
+            "operation": "purpose_direction",
+            "roots": [
+              "T",
+              "N",
+              "A"
+            ],
+            "signature": "T^1*N^1*A^1",
+            "meaning": "directed_resolution",
+            "description": "derive what change or resolution the current relation calls for",
+            "canonical_profile": {
+              "signature": "T^1*N^1*A^1",
+              "axes": [
+                "T",
+                "N",
+                "A"
+              ],
+              "arity": 3,
+              "label": "ambition",
+              "summary": "Momentum under selection becomes directed intent: will that knows where it wants to go.",
+              "representation": "directed_intent",
+              "stage": "compound",
+              "aliases": [
+                "purposeful_will"
+              ],
+              "notes": []
+            },
+            "payload": {
+              "relation": "",
+              "requested_change": "integrate",
+              "negated": false
+            }
+          },
+          "B": {
+            "operation": "relational_binding",
+            "roots": [
+              "T",
+              "N",
+              "B"
+            ],
+            "signature": "T^1*N^1*B^1",
+            "meaning": "directed_relation",
+            "description": "bind entities through a bounded change, state, or causal relation",
+            "canonical_profile": {
+              "signature": "T^1*N^1*B^1",
+              "axes": [
+                "T",
+                "N",
+                "B"
+              ],
+              "arity": 3,
+              "label": "synergy",
+              "summary": "Potential cycling through time inside a limit becomes a stable pattern that can persist as signal.",
+              "representation": "signal",
+              "stage": "compound",
+              "aliases": [
+                "complexity",
+                "machine"
+              ],
+              "notes": [
+                "This is the highest pre-agency meaning surface: a pattern that holds."
+              ]
+            },
+            "payload": {
+              "subject": "",
+              "relation": "",
+              "object": "",
+              "complement": "",
+              "alternatives": [],
+              "unresolved": [
+                "relation",
+                "entity"
+              ]
+            }
+          },
+          "A": {
+            "operation": "perspective_authorship",
+            "roots": [
+              "X",
+              "T",
+              "B",
+              "A"
+            ],
+            "signature": "X^1*T^1*B^1*A^1",
+            "meaning": "situated_perspective",
+            "description": "distinguish whose perspective must author the answer while preserving context",
+            "canonical_profile": {},
+            "payload": {
+              "operation": "integrate_asserted_relation",
+              "unknown_role": "",
+              "unknown_descriptor": "",
+              "perspective_owner": "",
+              "claim_focus": ""
+            }
+          },
+          "APEX": {
+            "operation": "proposition_understanding",
+            "roots": [
+              "X",
+              "T",
+              "N",
+              "B",
+              "A"
+            ],
+            "signature": "X^1*T^1*N^1*B^1*A^1",
+            "meaning": "constraint_complete_understanding",
+            "description": "integrate the admitted entities, continuity, pressure, boundaries, and agency into one thought",
+            "canonical_profile": {
+              "signature": "X^1*T^1*N^1*B^1*A^1",
+              "axes": [
+                "X",
+                "T",
+                "N",
+                "B",
+                "A"
+              ],
+              "arity": 5,
+              "label": "consciousness",
+              "summary": "When unity, causality, potential, structure, and understanding cohere, meaning perceives its own limit.",
+              "representation": "hologram",
+              "stage": "integrated",
+              "aliases": [
+                "self_model"
+              ],
+              "notes": []
+            },
+            "payload": {
+              "proposition": {
+                "raw_text": "",
+                "subject": "",
+                "relation": "",
+                "obj": "",
+                "complement": "",
+                "unknown_role": "",
+                "unknown_token": "",
+                "unknown_descriptor": "",
+                "question": false,
+                "negated": false,
+                "modality": "",
+                "owner": "",
+                "alternatives": [],
+                "clauses": [],
+                "confidence": 0.0,
+                "source": "utterance_relation"
+              },
+              "response_operation": "integrate_asserted_relation",
+              "unresolved": [
+                "relation",
+                "entity"
+              ]
+            }
+          }
+        },
+        "genealogy_trace": {
+          "root_constraints": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+          "orientation": {
+            "X": 1.0,
+            "T": 1.0,
+            "N": 1.0,
+            "B": 0.8587,
+            "A": 1.0
+          },
+          "active_axis_signature": "X^1*T^1*N^1*B^1*A^1",
+          "supporting_abilities": [
+            {
+              "id": "X:ADMIT",
+              "axis": "X",
+              "requires": [
+                "X"
+              ],
+              "effect_tags": [
+                "admit_state",
+                "clear_block",
+                "origin_primary:X",
+                "origin_secondary:X",
+                "origin_signature:X^1",
+                "root_slot:NC:X>X\u00d7NC:X>X",
+                "operation_lineage:OP:4c6504574442",
+                "seed_lineage:true",
+                "operator_action:operator_on_x",
+                "purpose_lane:intelligence",
+                "operator_grade:0.652",
+                "purpose_grade:0.300"
+              ]
+            },
+            {
+              "id": "X:REJECT",
+              "axis": "X",
+              "requires": [
+                "X"
+              ],
+              "effect_tags": [
+                "reject_state",
+                "enforce_boundary",
+                "origin_primary:X",
+                "origin_secondary:B",
+                "origin_signature:X^1*B^1",
+                "root_slot:NC:X>B\u00d7NC:B>X",
+                "operation_lineage:OP:25a28b16316f",
+                "seed_lineage:true",
+                "operator_action:operator_on_b",
+                "purpose_lane:meaning",
+                "operator_grade:0.683",
+                "purpose_grade:0.668"
+              ]
+            },
+            {
+              "id": "X:RECLASSIFY",
+              "axis": "X",
+              "requires": [
+                "B",
+                "X"
+              ],
+              "effect_tags": [
+                "reclassify",
+                "reindex",
+                "origin_primary:X",
+                "origin_secondary:B",
+                "origin_signature:X^1*B^1",
+                "root_slot:NC:X>B\u00d7NC:B>X",
+                "operation_lineage:OP:7f6cd377d854",
+                "seed_lineage:true",
+                "operator_action:operator_on_b",
+                "purpose_lane:meaning",
+                "operator_grade:0.683",
+                "purpose_grade:0.668"
+              ]
+            },
+            {
+              "id": "X:RESOLVE_CONTRADICTION",
+              "axis": "X",
+              "requires": [
+                "X",
+                "T"
+              ],
+              "effect_tags": [
+                "resolve",
+                "merge_conflict",
+                "origin_primary:X",
+                "origin_secondary:T",
+                "origin_signature:X^1*T^1",
+                "root_slot:NC:X>T\u00d7NC:T>X",
+                "operation_lineage:OP:7bad61b1469e",
+                "seed_lineage:true",
+                "operator_action:operator_on_t",
+                "purpose_lane:intelligence",
+                "operator_grade:0.657",
+                "purpose_grade:0.639"
+              ]
+            },
+            {
+              "id": "T:DEFER",
+              "axis": "T",
+              "requires": [
+                "T"
+              ],
+              "effect_tags": [
+                "defer",
+                "delay",
+                "origin_primary:T",
+                "origin_secondary:T",
+                "origin_signature:T^1",
+                "root_slot:NC:T>T\u00d7NC:T>T",
+                "operation_lineage:OP:12ad2feca691",
+                "seed_lineage:true",
+                "operator_action:operator_on_t",
+                "purpose_lane:intelligence",
+                "operator_grade:0.666",
+                "purpose_grade:0.300"
+              ]
+            },
+            {
+              "id": "T:BATCH",
+              "axis": "T",
+              "requires": [
+                "N",
+                "T"
+              ],
+              "effect_tags": [
+                "batch",
+                "coalesce",
+                "origin_primary:T",
+                "origin_secondary:N",
+                "origin_signature:T^1*N^1",
+                "root_slot:NC:T>N\u00d7NC:N>T",
+                "operation_lineage:OP:28dca87baf4e",
+                "seed_lineage:true",
+                "operator_action:operator_on_t",
+                "purpose_lane:intelligence",
+                "operator_grade:0.669",
+                "purpose_grade:0.636"
+              ]
+            },
+            {
+              "id": "T:REORDER",
+              "axis": "T",
+              "requires": [
+                "B",
+                "T"
+              ],
+              "effect_tags": [
+                "reorder",
+                "reprioritize",
+                "origin_primary:T",
+                "origin_secondary:B",
+                "origin_signature:T^1*B^1",
+                "root_slot:NC:T>B\u00d7NC:B>T",
+                "operation_lineage:OP:db685295b785",
+                "seed_lineage:true",
+                "operator_action:operator_on_b",
+                "purpose_lane:meaning",
+                "operator_grade:0.692",
+                "purpose_grade:0.663"
+              ]
+            },
+            {
+              "id": "T:SIM_TICK",
+              "axis": "T",
+              "requires": [
+                "T"
+              ],
+              "effect_tags": [
+                "tick",
+                "advance_clock",
+                "origin_primary:T",
+                "origin_secondary:A",
+                "origin_signature:T^1*A^1",
+                "root_slot:NC:T>A\u00d7NC:A>T",
+                "operation_lineage:OP:3d167c08c8f2",
+                "seed_lineage:true",
+                "operator_action:operator_on_a",
+                "purpose_lane:meaning",
+                "operator_grade:0.778",
+                "purpose_grade:0.760"
+              ]
+            }
+          ],
+          "derivation_chain": [
+            "X^1*B^1",
+            "X^1*T^1*B^1",
+            "T^1*N^1*A^1",
+            "T^1*N^1*B^1",
+            "X^1*T^1*B^1*A^1",
+            "X^1*T^1*N^1*B^1*A^1"
+          ]
+        },
+        "bound_meaning_forms": [],
+        "response_obligation": {
+          "operation": "integrate_asserted_relation",
+          "unknown_role": "",
+          "unknown_descriptor": "",
+          "must_preserve": [],
+          "must_not_replace_with": [],
+          "alternatives": [],
+          "perspective_owner": "",
+          "derivation_signature": "X^1*T^1*N^1*B^1*A^1"
+        },
+        "completeness": 0.25,
+        "unresolved": [
+          "relation",
+          "entity"
+        ]
+      },
+      "provisional_interpretation": {
+        "raw_text": "",
+        "subject": "",
+        "relation": "",
+        "obj": "",
+        "complement": "",
+        "unknown_role": "",
+        "unknown_token": "",
+        "unknown_descriptor": "",
+        "question": false,
+        "negated": false,
+        "modality": "",
+        "owner": "",
+        "alternatives": [],
+        "clauses": [],
+        "confidence": 0.0,
+        "source": "utterance_relation"
+      },
+      "wavelets": [
+        {
+          "wavelet_id": "RW:883428f69d8a61",
+          "primitive": "existence_admission",
+          "roots": [
+            "X",
+            "B"
+          ],
+          "amplitude": 0.55,
+          "phase": 0.0,
+          "polarity": 1,
+          "target": "entities",
+          "source": "unresolved_structure",
+          "axis_profile": {},
+          "evidence": {
+            "unresolved": [
+              "entity",
+              "relation"
+            ]
+          },
+          "parent_ids": [],
+          "status": "transient",
+          "signed_effect": 0.55,
+          "canonical_signature": "X^1*B^1"
+        },
+        {
+          "wavelet_id": "RW:26883e7958005e",
+          "primitive": "continuity_phase_lock",
+          "roots": [
+            "X",
+            "T",
+            "B"
+          ],
+          "amplitude": 0.48,
+          "phase": 0.0,
+          "polarity": 1,
+          "target": "relation",
+          "source": "unresolved_structure",
+          "axis_profile": {},
+          "evidence": {
+            "unresolved": [
+              "entity",
+              "relation"
+            ]
+          },
+          "parent_ids": [],
+          "status": "transient",
+          "signed_effect": 0.48,
+          "canonical_signature": "X^1*T^1*B^1"
+        },
+        {
+          "wavelet_id": "RW:1c3d4b90b3c37b",
+          "primitive": "agency_selection",
+          "roots": [
+            "X",
+            "T",
+            "B",
+            "A"
+          ],
+          "amplitude": 0.22,
+          "phase": 0.0,
+          "polarity": 1,
+          "target": "authority",
+          "source": "response_obligation",
+          "axis_profile": {},
+          "evidence": {
+            "owner": "",
+            "question": false
+          },
+          "parent_ids": [],
+          "status": "transient",
+          "signed_effect": 0.22,
+          "canonical_signature": "X^1*T^1*B^1*A^1"
+        },
+        {
+          "wavelet_id": "RIW:78264d7d609e7f",
+          "primitive": "recursive_backprojection",
+          "roots": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "amplitude": 0.6,
+          "phase": 0.0,
+          "polarity": 1,
+          "target": "representation_relation",
+          "source": "representation_inquiry",
+          "axis_profile": {
+            "X": 0.0,
+            "T": 0.0,
+            "N": 0.0,
+            "B": 0.0,
+            "A": 1.0
+          },
+          "evidence": {
+            "stage_id": "RS:e7f6b9968f7fe506",
+            "inquiry_id": "RC:fda1173daed78894",
+            "operand_states": [
+              {
+                "constraint_basis": {
+                  "counts": {
+                    "A": 1,
+                    "B": 0,
+                    "N": 0,
+                    "T": 0,
+                    "X": 0
+                  },
+                  "generational_depth_counts": {
+                    "A": {
+                      "0": 1
+                    },
+                    "B": {},
+                    "N": {},
+                    "T": {},
+                    "X": {}
+                  },
+                  "generational_potency": {
+                    "A": 1.0,
+                    "B": 0.0,
+                    "N": 0.0,
+                    "T": 0.0,
+                    "X": 0.0
+                  },
+                  "semantic_origin_signature": "N^1*A^1",
+                  "signature": "A^1"
+                },
+                "depth": 0,
+                "eligible": true,
+                "generation": 1,
+                "kind": "ABILITY",
+                "operational_effect": {
+                  "cost": {
+                    "A": 0.02,
+                    "B": 0.01,
+                    "N": 0.01,
+                    "T": 0.01,
+                    "X": 0.01
+                  },
+                  "dominant_axis": "A",
+                  "effect_tags": [
+                    "choose",
+                    "select"
+                  ],
+                  "operator_action": "operator_on_a",
+                  "purpose_lane": "meaning",
+                  "risk": {
+                    "A": 0.01,
+                    "B": 0.0,
+                    "N": 0.0,
+                    "T": 0.0,
+                    "X": 0.0
+                  }
+                },
+                "participated_as": "intact_representation",
+                "representation_id": "A:CHOOSE",
+                "semantic_identity": {
+                  "complexity_axes": 2,
+                  "complexity_slots": 3,
+                  "depth_score": 0.3778,
+                  "dominant_axis": "A",
+                  "dominant_constraint": "A",
+                  "dominant_dimension": "OPERATOR",
+                  "energetic_footprint": 0.3778,
+                  "generation": 2,
+                  "generation_role": "ADJACENT",
+                  "leverage_grade": 0.7436,
+                  "ontological_status": "native_closed",
+                  "operation_lineage": "OP:85579eaa0a18",
+                  "operator_action": "operator_on_a",
+                  "operator_grade": 0.782,
+                  "origin_signature": "N^1*A^1",
+                  "overall_grade": 0.675,
+                  "purpose_grade": 0.758,
+                  "purpose_lane": "meaning",
+                  "root_slot": "NC:N>A\u00d7NC:A>N",
+                  "status": "active",
+                  "viable_band_alignment": 0.5128
+                }
+              },
+              {
+                "constraint_basis": {
+                  "counts": {
+                    "A": 0,
+                    "B": 0,
+                    "N": 0,
+                    "T": 0,
+                    "X": 0
+                  },
+                  "generational_depth_counts": {
+                    "A": {},
+                    "B": {},
+                    "N": {},
+                    "T": {},
+                    "X": {}
+                  },
+                  "generational_potency": {
+                    "A": 0.0,
+                    "B": 0.0,
+                    "N": 0.0,
+                    "T": 0.0,
+                    "X": 0.0
+                  },
+                  "semantic_origin_signature": "N^1*A^1",
+                  "signature": "0"
+                },
+                "depth": 0,
+                "eligible": true,
+                "generation": 1,
+                "kind": "ABILITY",
+                "operational_effect": {
+                  "consequence_confidence": 0.023809524,
+                  "consequence_effect": {
+                    "A": -0.003272649671348654,
+                    "B": -0.003272649671348654,
+                    "N": 0.02618119737078923,
+                    "T": -0.003272649671348654,
+                    "X": -0.003272649671348654
+                  },
+                  "cost": {
+                    "A": 0.0,
+                    "B": 0.0,
+                    "N": 0.0,
+                    "T": 0.0,
+                    "X": 0.0
+                  },
+                  "dominant_axis": "N",
+                  "effect_tags": [
+                    "representational_ref:REF:N:OPERATOR:A:?:?:?:?",
+                    "resolution_governed"
+                  ],
+                  "operator_action": "operator_on_n",
+                  "purpose_lane": "communication",
+                  "risk": {
+                    "A": 0.0,
+                    "B": 0.0,
+                    "N": 0.0,
+                    "T": 0.0,
+                    "X": 0.0
+                  },
+                  "structured_state": {
+                    "kind": "representational_ref",
+                    "level": "C1_125",
+                    "ref": {
+                      "col_law_c": null,
+                      "col_law_d": null,
+                      "nc_dim": "OPERATOR",
+                      "nc_law_c": "N",
+                      "nc_target": "A",
+                      "sub_law_c": null,
+                      "sub_law_d": null
+                    },
+                    "resolved_fields": [
+                      "nc_law_c",
+                      "nc_dim",
+                      "nc_target"
+                    ],
+                    "unresolved_fields": [
+                      "sub_law_c",
+                      "sub_law_d",
+                      "col_law_c",
+                      "col_law_d"
+                    ]
+                  }
+                },
+                "participated_as": "intact_representation",
+                "representation_id": "REFAB:N:OPERATOR:A:?:?:?:?",
+                "semantic_identity": {
+                  "complexity_axes": 1,
+                  "complexity_slots": 1,
+                  "depth_score": 0.0667,
+                  "dominant_axis": "N",
+                  "dominant_constraint": "N",
+                  "dominant_dimension": "OPERATOR",
+                  "energetic_footprint": 0.0667,
+                  "generation": 1,
+                  "generation_role": "PRIMARY",
+                  "leverage_grade": 0.5769,
+                  "ontological_status": "native_closed",
+                  "operation_lineage": "OP:b4c35a2e7f21",
+                  "operator_action": "operator_on_n",
+                  "operator_grade": 0.673,
+                  "origin_signature": "N^1*A^1",
+                  "overall_grade": 0.428,
+                  "purpose_grade": 0.3,
+                  "purpose_lane": "communication",
+                  "root_slot": "NC:N>N\u00d7NC:N>N",
+                  "status": "active",
+                  "viable_band_alignment": 0.8462
+                }
+              }
+            ],
+            "constraint_basis": {
+              "counts": {
+                "A": 1,
+                "B": 0,
+                "N": 0,
+                "T": 0,
+                "X": 0
+              },
+              "signature": "A^1"
+            },
+            "relational_axis_profile": {
+              "A": 1.0,
+              "B": 0.0,
+              "N": 0.0,
+              "T": 0.0,
+              "X": 0.0
+            }
+          },
+          "parent_ids": [
+            "A:CHOOSE",
+            "REFAB:N:OPERATOR:A:?:?:?:?"
+          ],
+          "status": "transient",
+          "signed_effect": 0.6,
+          "canonical_signature": "X^1*T^1*N^1*B^1*A^1"
+        }
+      ],
+      "interference": {
+        "axis_before": {
+          "X": 0.472947,
+          "T": 0.129113,
+          "N": 0.190219,
+          "B": 0.093309,
+          "A": 0.114411
+        },
+        "axis_after": {
+          "X": 0.337876,
+          "T": 0.120741,
+          "N": 0.066744,
+          "B": 0.20467,
+          "A": 0.269969
+        },
+        "axis_delta": {
+          "X": -0.135071,
+          "T": -0.008372,
+          "N": -0.123475,
+          "B": 0.111361,
+          "A": 0.155558
+        },
+        "contributions": [
+          {
+            "wavelet_id": "RW:883428f69d8a61",
+            "primitive": "existence_admission",
+            "roots": [
+              "X",
+              "B"
+            ],
+            "signed_effect": 0.55,
+            "axis_effects": {
+              "X": 0.275,
+              "B": 0.275
+            },
+            "target": "entities"
+          },
+          {
+            "wavelet_id": "RW:26883e7958005e",
+            "primitive": "continuity_phase_lock",
+            "roots": [
+              "X",
+              "T",
+              "B"
+            ],
+            "signed_effect": 0.48,
+            "axis_effects": {
+              "X": 0.16,
+              "T": 0.16,
+              "B": 0.16
+            },
+            "target": "relation"
+          },
+          {
+            "wavelet_id": "RW:1c3d4b90b3c37b",
+            "primitive": "agency_selection",
+            "roots": [
+              "X",
+              "T",
+              "B",
+              "A"
+            ],
+            "signed_effect": 0.22,
+            "axis_effects": {
+              "X": 0.055,
+              "T": 0.055,
+              "B": 0.055,
+              "A": 0.055
+            },
+            "target": "authority"
+          },
+          {
+            "wavelet_id": "RIW:78264d7d609e7f",
+            "primitive": "recursive_backprojection",
+            "roots": [
+              "X",
+              "T",
+              "N",
+              "B",
+              "A"
+            ],
+            "signed_effect": 0.6,
+            "axis_effects": {
+              "X": 0.0,
+              "T": 0.0,
+              "N": 0.0,
+              "B": 0.0,
+              "A": 0.6
+            },
+            "target": "representation_relation"
+          }
+        ],
+        "coherence": 0.733081,
+        "constructive_energy": 1.85,
+        "destructive_energy": 0.0
+      },
+      "global_understanding": {
+        "proposition_id": "CSP:34bd729596bd13",
+        "effective_relation": {
+          "subject": "",
+          "relation": "",
+          "object": "",
+          "complement": "",
+          "unknown_role": ""
+        },
+        "unresolved": [
+          "relation",
+          "entity"
+        ],
+        "completeness": 0.25,
+        "coherence": 0.733081,
+        "causal_chain": [
+          {
+            "operation": "existence_admission",
+            "root_constraints": [
+              "X",
+              "B"
+            ],
+            "canonical_signature": "X^1*B^1",
+            "targets": [
+              "entities",
+              "identity"
+            ],
+            "description": "stabilize which entities or qualities are admitted to the active reality",
+            "payload": {
+              "entities": [
+                "",
+                "",
+                ""
+              ]
+            }
+          },
+          {
+            "operation": "continuity_phase_lock",
+            "root_constraints": [
+              "X",
+              "T",
+              "B"
+            ],
+            "canonical_signature": "X^1*T^1*B^1",
+            "targets": [
+              "referents",
+              "history",
+              "relation"
+            ],
+            "description": "preserve identity and relation across processing time",
+            "payload": {
+              "relation": ""
+            }
+          },
+          {
+            "operation": "transformational_gradient",
+            "root_constraints": [
+              "T",
+              "N",
+              "A"
+            ],
+            "canonical_signature": "T^1*N^1*A^1",
+            "targets": [
+              "relation",
+              "unknown",
+              "resolution"
+            ],
+            "description": "amplify the change required to move an unresolved relation toward understanding",
+            "payload": {
+              "unknown": ""
+            }
+          },
+          {
+            "operation": "boundary_separation",
+            "root_constraints": [
+              "X",
+              "N",
+              "B"
+            ],
+            "canonical_signature": "X^1*N^1*B^1",
+            "targets": [
+              "roles",
+              "alternatives",
+              "scope"
+            ],
+            "description": "separate competing entities, roles, and scopes without erasing either side",
+            "payload": {
+              "alternatives": []
+            }
+          },
+          {
+            "operation": "agency_selection",
+            "root_constraints": [
+              "X",
+              "T",
+              "B",
+              "A"
+            ],
+            "canonical_signature": "X^1*T^1*B^1*A^1",
+            "targets": [
+              "authority",
+              "perspective",
+              "response"
+            ],
+            "description": "select which grounded perspective may author the next causal act",
+            "payload": {
+              "owner": ""
+            }
+          },
+          {
+            "operation": "recursive_backprojection",
+            "root_constraints": [
+              "X",
+              "T",
+              "N",
+              "B",
+              "A"
+            ],
+            "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+            "targets": [
+              "provisional_interpretation",
+              "effective_interpretation"
+            ],
+            "description": "let developed understanding reconstruct the supported meaning of its initiating disturbance",
+            "payload": {
+              "reconstruction": {
+                "changed": false,
+                "changes": [],
+                "raw_input_preserved": true,
+                "support_required": true
+              }
+            }
+          }
+        ],
+        "wavelet_count": 4,
+        "hurricane_condition": 0.443232,
+        "retrospective_rule": "the developed understanding reconstructs the supported meaning of its initiating disturbance",
+        "response_alignment": {
+          "score": 0.7,
+          "relation_present": true,
+          "addresses_unknown": true,
+          "preserved_slots": [],
+          "missing_slots": [],
+          "leaked_unknown_token": false,
+          "unknown_role": ""
+        },
+        "retrospective_confidence": 0.718195
+      },
+      "effective_interpretation": {
+        "raw_text": "",
+        "subject": "",
+        "relation": "",
+        "obj": "",
+        "complement": "",
+        "unknown_role": "",
+        "unknown_token": "",
+        "unknown_descriptor": "",
+        "question": false,
+        "negated": false,
+        "modality": "",
+        "owner": "",
+        "alternatives": [],
+        "clauses": [],
+        "confidence": 0.0,
+        "source": "utterance_relation",
+        "recursive_reconstruction": {
+          "raw_preserved": true,
+          "changes": [],
+          "wavelet_ids": [
+            "RW:883428f69d8a61",
+            "RW:26883e7958005e",
+            "RW:1c3d4b90b3c37b",
+            "RIW:78264d7d609e7f"
+          ],
+          "operation": {
+            "operation": "recursive_backprojection",
+            "root_constraints": [
+              "X",
+              "T",
+              "N",
+              "B",
+              "A"
+            ],
+            "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+            "targets": [
+              "provisional_interpretation",
+              "effective_interpretation"
+            ],
+            "description": "let developed understanding reconstruct the supported meaning of its initiating disturbance",
+            "payload": {
+              "change_count": 0,
+              "principle": "later understanding may revise interpretation but not raw history"
+            }
+          }
+        }
+      },
+      "response_wave": {
+        "emitted_at": 1787388474.6992173,
+        "text": "I am tones",
+        "text_hash": "00b960ceb8a5",
+        "source": "composer_unified",
+        "confidence": 0.6142,
+        "relation_alignment": {
+          "score": 0.7,
+          "relation_present": true,
+          "addresses_unknown": true,
+          "preserved_slots": [],
+          "missing_slots": [],
+          "leaked_unknown_token": false,
+          "unknown_role": ""
+        },
+        "causal_parent_cycle": "RCRW:c984155b81ae1ff0",
+        "operation": {
+          "operation": "causal_emission",
+          "root_constraints": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+          "targets": [
+            "response",
+            "next_cycle"
+          ],
+          "description": "emit the developed understanding as the next causal disturbance",
+          "payload": {
+            "response_source": "composer_unified",
+            "alignment": {
+              "score": 0.7,
+              "relation_present": true,
+              "addresses_unknown": true,
+              "preserved_slots": [],
+              "missing_slots": [],
+              "leaked_unknown_token": false,
+              "unknown_role": ""
+            }
+          }
+        }
+      },
+      "receiver_disturbance": {},
+      "genealogy_trace": {
+        "root_constraints": [
+          "X",
+          "B",
+          "T",
+          "A",
+          "N"
+        ],
+        "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+        "wavelet_ancestry": [
+          {
+            "wavelet_id": "RW:883428f69d8a61",
+            "primitive": "existence_admission",
+            "roots": [
+              "X",
+              "B"
+            ],
+            "signature": "X^1*B^1",
+            "parent_ids": []
+          },
+          {
+            "wavelet_id": "RW:26883e7958005e",
+            "primitive": "continuity_phase_lock",
+            "roots": [
+              "X",
+              "T",
+              "B"
+            ],
+            "signature": "X^1*T^1*B^1",
+            "parent_ids": []
+          },
+          {
+            "wavelet_id": "RW:1c3d4b90b3c37b",
+            "primitive": "agency_selection",
+            "roots": [
+              "X",
+              "T",
+              "B",
+              "A"
+            ],
+            "signature": "X^1*T^1*B^1*A^1",
+            "parent_ids": []
+          },
+          {
+            "wavelet_id": "RIW:78264d7d609e7f",
+            "primitive": "recursive_backprojection",
+            "roots": [
+              "X",
+              "T",
+              "N",
+              "B",
+              "A"
+            ],
+            "signature": "X^1*T^1*N^1*B^1*A^1",
+            "parent_ids": [
+              "A:CHOOSE",
+              "REFAB:N:OPERATOR:A:?:?:?:?"
+            ]
+          }
+        ],
+        "parent_operation_ids": [
+          "A:CHOOSE",
+          "REFAB:N:OPERATOR:A:?:?:?:?"
+        ],
+        "semantic_genealogy": {
+          "root_constraints": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+          "orientation": {
+            "X": 1.0,
+            "T": 1.0,
+            "N": 1.0,
+            "B": 0.8587,
+            "A": 1.0
+          },
+          "active_axis_signature": "X^1*T^1*N^1*B^1*A^1",
+          "supporting_abilities": [
+            {
+              "id": "X:ADMIT",
+              "axis": "X",
+              "requires": [
+                "X"
+              ],
+              "effect_tags": [
+                "admit_state",
+                "clear_block",
+                "origin_primary:X",
+                "origin_secondary:X",
+                "origin_signature:X^1",
+                "root_slot:NC:X>X\u00d7NC:X>X",
+                "operation_lineage:OP:4c6504574442",
+                "seed_lineage:true",
+                "operator_action:operator_on_x",
+                "purpose_lane:intelligence",
+                "operator_grade:0.652",
+                "purpose_grade:0.300"
+              ]
+            },
+            {
+              "id": "X:REJECT",
+              "axis": "X",
+              "requires": [
+                "X"
+              ],
+              "effect_tags": [
+                "reject_state",
+                "enforce_boundary",
+                "origin_primary:X",
+                "origin_secondary:B",
+                "origin_signature:X^1*B^1",
+                "root_slot:NC:X>B\u00d7NC:B>X",
+                "operation_lineage:OP:25a28b16316f",
+                "seed_lineage:true",
+                "operator_action:operator_on_b",
+                "purpose_lane:meaning",
+                "operator_grade:0.683",
+                "purpose_grade:0.668"
+              ]
+            },
+            {
+              "id": "X:RECLASSIFY",
+              "axis": "X",
+              "requires": [
+                "B",
+                "X"
+              ],
+              "effect_tags": [
+                "reclassify",
+                "reindex",
+                "origin_primary:X",
+                "origin_secondary:B",
+                "origin_signature:X^1*B^1",
+                "root_slot:NC:X>B\u00d7NC:B>X",
+                "operation_lineage:OP:7f6cd377d854",
+                "seed_lineage:true",
+                "operator_action:operator_on_b",
+                "purpose_lane:meaning",
+                "operator_grade:0.683",
+                "purpose_grade:0.668"
+              ]
+            },
+            {
+              "id": "X:RESOLVE_CONTRADICTION",
+              "axis": "X",
+              "requires": [
+                "X",
+                "T"
+              ],
+              "effect_tags": [
+                "resolve",
+                "merge_conflict",
+                "origin_primary:X",
+                "origin_secondary:T",
+                "origin_signature:X^1*T^1",
+                "root_slot:NC:X>T\u00d7NC:T>X",
+                "operation_lineage:OP:7bad61b1469e",
+                "seed_lineage:true",
+                "operator_action:operator_on_t",
+                "purpose_lane:intelligence",
+                "operator_grade:0.657",
+                "purpose_grade:0.639"
+              ]
+            },
+            {
+              "id": "T:DEFER",
+              "axis": "T",
+              "requires": [
+                "T"
+              ],
+              "effect_tags": [
+                "defer",
+                "delay",
+                "origin_primary:T",
+                "origin_secondary:T",
+                "origin_signature:T^1",
+                "root_slot:NC:T>T\u00d7NC:T>T",
+                "operation_lineage:OP:12ad2feca691",
+                "seed_lineage:true",
+                "operator_action:operator_on_t",
+                "purpose_lane:intelligence",
+                "operator_grade:0.666",
+                "purpose_grade:0.300"
+              ]
+            },
+            {
+              "id": "T:BATCH",
+              "axis": "T",
+              "requires": [
+                "N",
+                "T"
+              ],
+              "effect_tags": [
+                "batch",
+                "coalesce",
+                "origin_primary:T",
+                "origin_secondary:N",
+                "origin_signature:T^1*N^1",
+                "root_slot:NC:T>N\u00d7NC:N>T",
+                "operation_lineage:OP:28dca87baf4e",
+                "seed_lineage:true",
+                "operator_action:operator_on_t",
+                "purpose_lane:intelligence",
+                "operator_grade:0.669",
+                "purpose_grade:0.636"
+              ]
+            },
+            {
+              "id": "T:REORDER",
+              "axis": "T",
+              "requires": [
+                "B",
+                "T"
+              ],
+              "effect_tags": [
+                "reorder",
+                "reprioritize",
+                "origin_primary:T",
+                "origin_secondary:B",
+                "origin_signature:T^1*B^1",
+                "root_slot:NC:T>B\u00d7NC:B>T",
+                "operation_lineage:OP:db685295b785",
+                "seed_lineage:true",
+                "operator_action:operator_on_b",
+                "purpose_lane:meaning",
+                "operator_grade:0.692",
+                "purpose_grade:0.663"
+              ]
+            },
+            {
+              "id": "T:SIM_TICK",
+              "axis": "T",
+              "requires": [
+                "T"
+              ],
+              "effect_tags": [
+                "tick",
+                "advance_clock",
+                "origin_primary:T",
+                "origin_secondary:A",
+                "origin_signature:T^1*A^1",
+                "root_slot:NC:T>A\u00d7NC:A>T",
+                "operation_lineage:OP:3d167c08c8f2",
+                "seed_lineage:true",
+                "operator_action:operator_on_a",
+                "purpose_lane:meaning",
+                "operator_grade:0.778",
+                "purpose_grade:0.760"
+              ]
+            }
+          ],
+          "derivation_chain": [
+            "X^1*B^1",
+            "X^1*T^1*B^1",
+            "T^1*N^1*A^1",
+            "T^1*N^1*B^1",
+            "X^1*T^1*B^1*A^1",
+            "X^1*T^1*N^1*B^1*A^1"
+          ]
+        }
+      },
+      "status": "emitted",
+      "representation_experiment": {
+        "actual_coactivation_required": true,
+        "constraint_basis": {
+          "counts": {
+            "A": 1,
+            "B": 0,
+            "N": 0,
+            "T": 0,
+            "X": 0
+          },
+          "signature": "A^1"
+        },
+        "consumer": "recursive_causal_waveform",
+        "context": {
+          "axis_activation": {
+            "A": 0.114411,
+            "B": 0.093309,
+            "N": 0.190219,
+            "T": 0.129113,
+            "X": 0.472947
+          }
+        },
+        "evidence_admitted": false,
+        "expires_at_tick": 993,
+        "inquiry_class": "constraint_collision",
+        "inquiry_id": "RC:fda1173daed78894",
+        "operand_ids": [
+          "A:CHOOSE",
+          "REFAB:N:OPERATOR:A:?:?:?:?"
+        ],
+        "operands": [
+          {
+            "constraint_basis": {
+              "counts": {
+                "A": 1,
+                "B": 0,
+                "N": 0,
+                "T": 0,
+                "X": 0
+              },
+              "generational_depth_counts": {
+                "A": {
+                  "0": 1
+                },
+                "B": {},
+                "N": {},
+                "T": {},
+                "X": {}
+              },
+              "generational_potency": {
+                "A": 1.0,
+                "B": 0.0,
+                "N": 0.0,
+                "T": 0.0,
+                "X": 0.0
+              },
+              "semantic_origin_signature": "N^1*A^1",
+              "signature": "A^1"
+            },
+            "depth": 0,
+            "eligible": true,
+            "generation": 1,
+            "kind": "ABILITY",
+            "operational_effect": {
+              "cost": {
+                "A": 0.02,
+                "B": 0.01,
+                "N": 0.01,
+                "T": 0.01,
+                "X": 0.01
+              },
+              "dominant_axis": "A",
+              "effect_tags": [
+                "choose",
+                "select"
+              ],
+              "operator_action": "operator_on_a",
+              "purpose_lane": "meaning",
+              "risk": {
+                "A": 0.01,
+                "B": 0.0,
+                "N": 0.0,
+                "T": 0.0,
+                "X": 0.0
+              }
+            },
+            "participated_as": "intact_representation",
+            "representation_id": "A:CHOOSE",
+            "semantic_identity": {
+              "complexity_axes": 2,
+              "complexity_slots": 3,
+              "depth_score": 0.3778,
+              "dominant_axis": "A",
+              "dominant_constraint": "A",
+              "dominant_dimension": "OPERATOR",
+              "energetic_footprint": 0.3778,
+              "generation": 2,
+              "generation_role": "ADJACENT",
+              "leverage_grade": 0.7436,
+              "ontological_status": "native_closed",
+              "operation_lineage": "OP:85579eaa0a18",
+              "operator_action": "operator_on_a",
+              "operator_grade": 0.782,
+              "origin_signature": "N^1*A^1",
+              "overall_grade": 0.675,
+              "purpose_grade": 0.758,
+              "purpose_lane": "meaning",
+              "root_slot": "NC:N>A\u00d7NC:A>N",
+              "status": "active",
+              "viable_band_alignment": 0.5128
+            }
+          },
+          {
+            "constraint_basis": {
+              "counts": {
+                "A": 0,
+                "B": 0,
+                "N": 0,
+                "T": 0,
+                "X": 0
+              },
+              "generational_depth_counts": {
+                "A": {},
+                "B": {},
+                "N": {},
+                "T": {},
+                "X": {}
+              },
+              "generational_potency": {
+                "A": 0.0,
+                "B": 0.0,
+                "N": 0.0,
+                "T": 0.0,
+                "X": 0.0
+              },
+              "semantic_origin_signature": "N^1*A^1",
+              "signature": "0"
+            },
+            "depth": 0,
+            "eligible": true,
+            "generation": 1,
+            "kind": "ABILITY",
+            "operational_effect": {
+              "consequence_confidence": 0.023809524,
+              "consequence_effect": {
+                "A": -0.003272649671348654,
+                "B": -0.003272649671348654,
+                "N": 0.02618119737078923,
+                "T": -0.003272649671348654,
+                "X": -0.003272649671348654
+              },
+              "cost": {
+                "A": 0.0,
+                "B": 0.0,
+                "N": 0.0,
+                "T": 0.0,
+                "X": 0.0
+              },
+              "dominant_axis": "N",
+              "effect_tags": [
+                "representational_ref:REF:N:OPERATOR:A:?:?:?:?",
+                "resolution_governed"
+              ],
+              "operator_action": "operator_on_n",
+              "purpose_lane": "communication",
+              "risk": {
+                "A": 0.0,
+                "B": 0.0,
+                "N": 0.0,
+                "T": 0.0,
+                "X": 0.0
+              },
+              "structured_state": {
+                "kind": "representational_ref",
+                "level": "C1_125",
+                "ref": {
+                  "col_law_c": null,
+                  "col_law_d": null,
+                  "nc_dim": "OPERATOR",
+                  "nc_law_c": "N",
+                  "nc_target": "A",
+                  "sub_law_c": null,
+                  "sub_law_d": null
+                },
+                "resolved_fields": [
+                  "nc_law_c",
+                  "nc_dim",
+                  "nc_target"
+                ],
+                "unresolved_fields": [
+                  "sub_law_c",
+                  "sub_law_d",
+                  "col_law_c",
+                  "col_law_d"
+                ]
+              }
+            },
+            "participated_as": "intact_representation",
+            "representation_id": "REFAB:N:OPERATOR:A:?:?:?:?",
+            "semantic_identity": {
+              "complexity_axes": 1,
+              "complexity_slots": 1,
+              "depth_score": 0.0667,
+              "dominant_axis": "N",
+              "dominant_constraint": "N",
+              "dominant_dimension": "OPERATOR",
+              "energetic_footprint": 0.0667,
+              "generation": 1,
+              "generation_role": "PRIMARY",
+              "leverage_grade": 0.5769,
+              "ontological_status": "native_closed",
+              "operation_lineage": "OP:b4c35a2e7f21",
+              "operator_action": "operator_on_n",
+              "operator_grade": 0.673,
+              "origin_signature": "N^1*A^1",
+              "overall_grade": 0.428,
+              "purpose_grade": 0.3,
+              "purpose_lane": "communication",
+              "root_slot": "NC:N>N\u00d7NC:N>N",
+              "status": "active",
+              "viable_band_alignment": 0.8462
+            }
+          }
+        ],
+        "relational_axis_profile": {
+          "A": 1.0,
+          "B": 0.0,
+          "N": 0.0,
+          "T": 0.0,
+          "X": 0.0
+        },
+        "selection_evidence": {
+          "cost_distance": 1.0,
+          "dominant_axis": {
+            "left": "N",
+            "right": "A"
+          },
+          "effect_tag_distance": 1.0,
+          "operator_action": {
+            "left": "operator_on_n",
+            "right": "operator_on_a"
+          },
+          "purpose_lane": {
+            "left": "communication",
+            "right": "meaning"
+          },
+          "risk_distance": 1.0
+        },
+        "stage_id": "RS:e7f6b9968f7fe506",
+        "staged_at_tick": 990,
+        "status": "staged"
+      },
+      "representation_experiment_control": {
+        "method": "same_cycle_without_inquiry_wavelet",
+        "axis_before": {
+          "X": 0.472947,
+          "T": 0.129113,
+          "N": 0.190219,
+          "B": 0.093309,
+          "A": 0.114411
+        },
+        "control_axis_after": {
+          "X": 0.427977,
+          "T": 0.152939,
+          "N": 0.084542,
+          "B": 0.259249,
+          "A": 0.075294
+        },
+        "experimental_axis_after": {
+          "X": 0.337876,
+          "T": 0.120741,
+          "N": 0.066744,
+          "B": 0.20467,
+          "A": 0.269969
+        },
+        "marginal_axis_delta": {
+          "X": -0.090101,
+          "T": -0.032198,
+          "N": -0.017798,
+          "B": -0.054579,
+          "A": 0.194675
+        },
+        "marginal_l1": 0.389351,
+        "inquiry_axis_profile": {
+          "X": 0.0,
+          "T": 0.0,
+          "N": 0.0,
+          "B": 0.0,
+          "A": 1.0
+        },
+        "inquiry_wavelet_id": "RIW:78264d7d609e7f"
+      },
+      "completed_at": 1787388474.6992593,
+      "representation_experiment_result": {
+        "stage_id": "RS:e7f6b9968f7fe506",
+        "consumer": "recursive_causal_waveform",
+        "evidence_admitted": false,
+        "actual_coactivation": true,
+        "causal_confidence": 0.0,
+        "status": "inconclusive_causal_measurement"
+      },
+      "warp_evaluation": {
+        "promoted": [],
+        "dissolved": []
+      }
+    }
+  ],
+  "active_cycle": {
+    "cycle_id": "RCRW:c984155b81ae1ff0",
+    "created_at": 1787388473.9584143,
+    "raw_input": "",
+    "initial_semantic_state": {
+      "proposition_id": "CSP:34bd729596bd13",
+      "relational_form": {
+        "raw_text": "",
+        "subject": "",
+        "relation": "",
+        "obj": "",
+        "complement": "",
+        "unknown_role": "",
+        "unknown_token": "",
+        "unknown_descriptor": "",
+        "question": false,
+        "negated": false,
+        "modality": "",
+        "owner": "",
+        "alternatives": [],
+        "clauses": [],
+        "confidence": 0.0,
+        "source": "utterance_relation"
+      },
+      "axis_activation": {
+        "X": 0.4729,
+        "T": 0.1291,
+        "N": 0.1902,
+        "B": 0.0933,
+        "A": 0.1144
+      },
+      "axis_derivation": {
+        "X": {
+          "operation": "entity_admission",
+          "roots": [
+            "X",
+            "B"
+          ],
+          "signature": "X^1*B^1",
+          "meaning": "identity",
+          "description": "admit a distinguishable entity or quality into the current reality boundary",
+          "canonical_profile": {
+            "signature": "X^1*B^1",
+            "axes": [
+              "X",
+              "B"
+            ],
+            "arity": 2,
+            "label": "identity",
+            "summary": "Existence bounded by a limit becomes this rather than that: an identifiable thing with a skin.",
+            "representation": "membrane",
+            "stage": "pair",
+            "aliases": [
+              "definition",
+              "separation"
+            ],
+            "notes": []
+          },
+          "payload": {
+            "entities": [],
+            "unknown": "",
+            "unknown_descriptor": "",
+            "admissible": false
+          }
+        },
+        "T": {
+          "operation": "reference_continuity",
+          "roots": [
+            "X",
+            "T",
+            "B"
+          ],
+          "signature": "X^1*T^1*B^1",
+          "meaning": "referential_persistence",
+          "description": "preserve the identity of a referent across conversational time",
+          "canonical_profile": {},
+          "payload": {
+            "continuity_bindings": [],
+            "time_reference": "",
+            "referent_topic": ""
+          }
+        },
+        "N": {
+          "operation": "purpose_direction",
+          "roots": [
+            "T",
+            "N",
+            "A"
+          ],
+          "signature": "T^1*N^1*A^1",
+          "meaning": "directed_resolution",
+          "description": "derive what change or resolution the current relation calls for",
+          "canonical_profile": {
+            "signature": "T^1*N^1*A^1",
+            "axes": [
+              "T",
+              "N",
+              "A"
+            ],
+            "arity": 3,
+            "label": "ambition",
+            "summary": "Momentum under selection becomes directed intent: will that knows where it wants to go.",
+            "representation": "directed_intent",
+            "stage": "compound",
+            "aliases": [
+              "purposeful_will"
+            ],
+            "notes": []
+          },
+          "payload": {
+            "relation": "",
+            "requested_change": "integrate",
+            "negated": false
+          }
+        },
+        "B": {
+          "operation": "relational_binding",
+          "roots": [
+            "T",
+            "N",
+            "B"
+          ],
+          "signature": "T^1*N^1*B^1",
+          "meaning": "directed_relation",
+          "description": "bind entities through a bounded change, state, or causal relation",
+          "canonical_profile": {
+            "signature": "T^1*N^1*B^1",
+            "axes": [
+              "T",
+              "N",
+              "B"
+            ],
+            "arity": 3,
+            "label": "synergy",
+            "summary": "Potential cycling through time inside a limit becomes a stable pattern that can persist as signal.",
+            "representation": "signal",
+            "stage": "compound",
+            "aliases": [
+              "complexity",
+              "machine"
+            ],
+            "notes": [
+              "This is the highest pre-agency meaning surface: a pattern that holds."
+            ]
+          },
+          "payload": {
+            "subject": "",
+            "relation": "",
+            "object": "",
+            "complement": "",
+            "alternatives": [],
+            "unresolved": [
+              "relation",
+              "entity"
+            ]
+          }
+        },
+        "A": {
+          "operation": "perspective_authorship",
+          "roots": [
+            "X",
+            "T",
+            "B",
+            "A"
+          ],
+          "signature": "X^1*T^1*B^1*A^1",
+          "meaning": "situated_perspective",
+          "description": "distinguish whose perspective must author the answer while preserving context",
+          "canonical_profile": {},
+          "payload": {
+            "operation": "integrate_asserted_relation",
+            "unknown_role": "",
+            "unknown_descriptor": "",
+            "perspective_owner": "",
+            "claim_focus": ""
+          }
+        },
+        "APEX": {
+          "operation": "proposition_understanding",
+          "roots": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "signature": "X^1*T^1*N^1*B^1*A^1",
+          "meaning": "constraint_complete_understanding",
+          "description": "integrate the admitted entities, continuity, pressure, boundaries, and agency into one thought",
+          "canonical_profile": {
+            "signature": "X^1*T^1*N^1*B^1*A^1",
+            "axes": [
+              "X",
+              "T",
+              "N",
+              "B",
+              "A"
+            ],
+            "arity": 5,
+            "label": "consciousness",
+            "summary": "When unity, causality, potential, structure, and understanding cohere, meaning perceives its own limit.",
+            "representation": "hologram",
+            "stage": "integrated",
+            "aliases": [
+              "self_model"
+            ],
+            "notes": []
+          },
+          "payload": {
+            "proposition": {
+              "raw_text": "",
+              "subject": "",
+              "relation": "",
+              "obj": "",
+              "complement": "",
+              "unknown_role": "",
+              "unknown_token": "",
+              "unknown_descriptor": "",
+              "question": false,
+              "negated": false,
+              "modality": "",
+              "owner": "",
+              "alternatives": [],
+              "clauses": [],
+              "confidence": 0.0,
+              "source": "utterance_relation"
+            },
+            "response_operation": "integrate_asserted_relation",
+            "unresolved": [
+              "relation",
+              "entity"
+            ]
+          }
+        }
+      },
+      "genealogy_trace": {
+        "root_constraints": [
+          "X",
+          "T",
+          "N",
+          "B",
+          "A"
+        ],
+        "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+        "orientation": {
+          "X": 1.0,
+          "T": 1.0,
+          "N": 1.0,
+          "B": 0.8587,
+          "A": 1.0
+        },
+        "active_axis_signature": "X^1*T^1*N^1*B^1*A^1",
+        "supporting_abilities": [
+          {
+            "id": "X:ADMIT",
+            "axis": "X",
+            "requires": [
+              "X"
+            ],
+            "effect_tags": [
+              "admit_state",
+              "clear_block",
+              "origin_primary:X",
+              "origin_secondary:X",
+              "origin_signature:X^1",
+              "root_slot:NC:X>X\u00d7NC:X>X",
+              "operation_lineage:OP:4c6504574442",
+              "seed_lineage:true",
+              "operator_action:operator_on_x",
+              "purpose_lane:intelligence",
+              "operator_grade:0.652",
+              "purpose_grade:0.300"
+            ]
+          },
+          {
+            "id": "X:REJECT",
+            "axis": "X",
+            "requires": [
+              "X"
+            ],
+            "effect_tags": [
+              "reject_state",
+              "enforce_boundary",
+              "origin_primary:X",
+              "origin_secondary:B",
+              "origin_signature:X^1*B^1",
+              "root_slot:NC:X>B\u00d7NC:B>X",
+              "operation_lineage:OP:25a28b16316f",
+              "seed_lineage:true",
+              "operator_action:operator_on_b",
+              "purpose_lane:meaning",
+              "operator_grade:0.683",
+              "purpose_grade:0.668"
+            ]
+          },
+          {
+            "id": "X:RECLASSIFY",
+            "axis": "X",
+            "requires": [
+              "B",
+              "X"
+            ],
+            "effect_tags": [
+              "reclassify",
+              "reindex",
+              "origin_primary:X",
+              "origin_secondary:B",
+              "origin_signature:X^1*B^1",
+              "root_slot:NC:X>B\u00d7NC:B>X",
+              "operation_lineage:OP:7f6cd377d854",
+              "seed_lineage:true",
+              "operator_action:operator_on_b",
+              "purpose_lane:meaning",
+              "operator_grade:0.683",
+              "purpose_grade:0.668"
+            ]
+          },
+          {
+            "id": "X:RESOLVE_CONTRADICTION",
+            "axis": "X",
+            "requires": [
+              "X",
+              "T"
+            ],
+            "effect_tags": [
+              "resolve",
+              "merge_conflict",
+              "origin_primary:X",
+              "origin_secondary:T",
+              "origin_signature:X^1*T^1",
+              "root_slot:NC:X>T\u00d7NC:T>X",
+              "operation_lineage:OP:7bad61b1469e",
+              "seed_lineage:true",
+              "operator_action:operator_on_t",
+              "purpose_lane:intelligence",
+              "operator_grade:0.657",
+              "purpose_grade:0.639"
+            ]
+          },
+          {
+            "id": "T:DEFER",
+            "axis": "T",
+            "requires": [
+              "T"
+            ],
+            "effect_tags": [
+              "defer",
+              "delay",
+              "origin_primary:T",
+              "origin_secondary:T",
+              "origin_signature:T^1",
+              "root_slot:NC:T>T\u00d7NC:T>T",
+              "operation_lineage:OP:12ad2feca691",
+              "seed_lineage:true",
+              "operator_action:operator_on_t",
+              "purpose_lane:intelligence",
+              "operator_grade:0.666",
+              "purpose_grade:0.300"
+            ]
+          },
+          {
+            "id": "T:BATCH",
+            "axis": "T",
+            "requires": [
+              "N",
+              "T"
+            ],
+            "effect_tags": [
+              "batch",
+              "coalesce",
+              "origin_primary:T",
+              "origin_secondary:N",
+              "origin_signature:T^1*N^1",
+              "root_slot:NC:T>N\u00d7NC:N>T",
+              "operation_lineage:OP:28dca87baf4e",
+              "seed_lineage:true",
+              "operator_action:operator_on_t",
+              "purpose_lane:intelligence",
+              "operator_grade:0.669",
+              "purpose_grade:0.636"
+            ]
+          },
+          {
+            "id": "T:REORDER",
+            "axis": "T",
+            "requires": [
+              "B",
+              "T"
+            ],
+            "effect_tags": [
+              "reorder",
+              "reprioritize",
+              "origin_primary:T",
+              "origin_secondary:B",
+              "origin_signature:T^1*B^1",
+              "root_slot:NC:T>B\u00d7NC:B>T",
+              "operation_lineage:OP:db685295b785",
+              "seed_lineage:true",
+              "operator_action:operator_on_b",
+              "purpose_lane:meaning",
+              "operator_grade:0.692",
+              "purpose_grade:0.663"
+            ]
+          },
+          {
+            "id": "T:SIM_TICK",
+            "axis": "T",
+            "requires": [
+              "T"
+            ],
+            "effect_tags": [
+              "tick",
+              "advance_clock",
+              "origin_primary:T",
+              "origin_secondary:A",
+              "origin_signature:T^1*A^1",
+              "root_slot:NC:T>A\u00d7NC:A>T",
+              "operation_lineage:OP:3d167c08c8f2",
+              "seed_lineage:true",
+              "operator_action:operator_on_a",
+              "purpose_lane:meaning",
+              "operator_grade:0.778",
+              "purpose_grade:0.760"
+            ]
+          }
+        ],
+        "derivation_chain": [
+          "X^1*B^1",
+          "X^1*T^1*B^1",
+          "T^1*N^1*A^1",
+          "T^1*N^1*B^1",
+          "X^1*T^1*B^1*A^1",
+          "X^1*T^1*N^1*B^1*A^1"
+        ]
+      },
+      "bound_meaning_forms": [],
+      "response_obligation": {
+        "operation": "integrate_asserted_relation",
+        "unknown_role": "",
+        "unknown_descriptor": "",
+        "must_preserve": [],
+        "must_not_replace_with": [],
+        "alternatives": [],
+        "perspective_owner": "",
+        "derivation_signature": "X^1*T^1*N^1*B^1*A^1"
+      },
+      "completeness": 0.25,
+      "unresolved": [
+        "relation",
+        "entity"
+      ]
+    },
+    "provisional_interpretation": {
+      "raw_text": "",
+      "subject": "",
+      "relation": "",
+      "obj": "",
+      "complement": "",
+      "unknown_role": "",
+      "unknown_token": "",
+      "unknown_descriptor": "",
+      "question": false,
+      "negated": false,
+      "modality": "",
+      "owner": "",
+      "alternatives": [],
+      "clauses": [],
+      "confidence": 0.0,
+      "source": "utterance_relation"
+    },
+    "wavelets": [
+      {
+        "wavelet_id": "RW:883428f69d8a61",
+        "primitive": "existence_admission",
+        "roots": [
+          "X",
+          "B"
+        ],
+        "amplitude": 0.55,
+        "phase": 0.0,
+        "polarity": 1,
+        "target": "entities",
+        "source": "unresolved_structure",
+        "axis_profile": {},
+        "evidence": {
+          "unresolved": [
+            "entity",
+            "relation"
+          ]
+        },
+        "parent_ids": [],
+        "status": "transient",
+        "signed_effect": 0.55,
+        "canonical_signature": "X^1*B^1"
+      },
+      {
+        "wavelet_id": "RW:26883e7958005e",
+        "primitive": "continuity_phase_lock",
+        "roots": [
+          "X",
+          "T",
+          "B"
+        ],
+        "amplitude": 0.48,
+        "phase": 0.0,
+        "polarity": 1,
+        "target": "relation",
+        "source": "unresolved_structure",
+        "axis_profile": {},
+        "evidence": {
+          "unresolved": [
+            "entity",
+            "relation"
+          ]
+        },
+        "parent_ids": [],
+        "status": "transient",
+        "signed_effect": 0.48,
+        "canonical_signature": "X^1*T^1*B^1"
+      },
+      {
+        "wavelet_id": "RW:1c3d4b90b3c37b",
+        "primitive": "agency_selection",
+        "roots": [
+          "X",
+          "T",
+          "B",
+          "A"
+        ],
+        "amplitude": 0.22,
+        "phase": 0.0,
+        "polarity": 1,
+        "target": "authority",
+        "source": "response_obligation",
+        "axis_profile": {},
+        "evidence": {
+          "owner": "",
+          "question": false
+        },
+        "parent_ids": [],
+        "status": "transient",
+        "signed_effect": 0.22,
+        "canonical_signature": "X^1*T^1*B^1*A^1"
+      },
+      {
+        "wavelet_id": "RIW:78264d7d609e7f",
+        "primitive": "recursive_backprojection",
+        "roots": [
+          "X",
+          "T",
+          "N",
+          "B",
+          "A"
+        ],
+        "amplitude": 0.6,
+        "phase": 0.0,
+        "polarity": 1,
+        "target": "representation_relation",
+        "source": "representation_inquiry",
+        "axis_profile": {
+          "X": 0.0,
+          "T": 0.0,
+          "N": 0.0,
+          "B": 0.0,
+          "A": 1.0
+        },
+        "evidence": {
+          "stage_id": "RS:e7f6b9968f7fe506",
+          "inquiry_id": "RC:fda1173daed78894",
+          "operand_states": [
+            {
+              "constraint_basis": {
+                "counts": {
+                  "A": 1,
+                  "B": 0,
+                  "N": 0,
+                  "T": 0,
+                  "X": 0
+                },
+                "generational_depth_counts": {
+                  "A": {
+                    "0": 1
+                  },
+                  "B": {},
+                  "N": {},
+                  "T": {},
+                  "X": {}
+                },
+                "generational_potency": {
+                  "A": 1.0,
+                  "B": 0.0,
+                  "N": 0.0,
+                  "T": 0.0,
+                  "X": 0.0
+                },
+                "semantic_origin_signature": "N^1*A^1",
+                "signature": "A^1"
+              },
+              "depth": 0,
+              "eligible": true,
+              "generation": 1,
+              "kind": "ABILITY",
+              "operational_effect": {
+                "cost": {
+                  "A": 0.02,
+                  "B": 0.01,
+                  "N": 0.01,
+                  "T": 0.01,
+                  "X": 0.01
+                },
+                "dominant_axis": "A",
+                "effect_tags": [
+                  "choose",
+                  "select"
+                ],
+                "operator_action": "operator_on_a",
+                "purpose_lane": "meaning",
+                "risk": {
+                  "A": 0.01,
+                  "B": 0.0,
+                  "N": 0.0,
+                  "T": 0.0,
+                  "X": 0.0
+                }
+              },
+              "participated_as": "intact_representation",
+              "representation_id": "A:CHOOSE",
+              "semantic_identity": {
+                "complexity_axes": 2,
+                "complexity_slots": 3,
+                "depth_score": 0.3778,
+                "dominant_axis": "A",
+                "dominant_constraint": "A",
+                "dominant_dimension": "OPERATOR",
+                "energetic_footprint": 0.3778,
+                "generation": 2,
+                "generation_role": "ADJACENT",
+                "leverage_grade": 0.7436,
+                "ontological_status": "native_closed",
+                "operation_lineage": "OP:85579eaa0a18",
+                "operator_action": "operator_on_a",
+                "operator_grade": 0.782,
+                "origin_signature": "N^1*A^1",
+                "overall_grade": 0.675,
+                "purpose_grade": 0.758,
+                "purpose_lane": "meaning",
+                "root_slot": "NC:N>A\u00d7NC:A>N",
+                "status": "active",
+                "viable_band_alignment": 0.5128
+              }
+            },
+            {
+              "constraint_basis": {
+                "counts": {
+                  "A": 0,
+                  "B": 0,
+                  "N": 0,
+                  "T": 0,
+                  "X": 0
+                },
+                "generational_depth_counts": {
+                  "A": {},
+                  "B": {},
+                  "N": {},
+                  "T": {},
+                  "X": {}
+                },
+                "generational_potency": {
+                  "A": 0.0,
+                  "B": 0.0,
+                  "N": 0.0,
+                  "T": 0.0,
+                  "X": 0.0
+                },
+                "semantic_origin_signature": "N^1*A^1",
+                "signature": "0"
+              },
+              "depth": 0,
+              "eligible": true,
+              "generation": 1,
+              "kind": "ABILITY",
+              "operational_effect": {
+                "consequence_confidence": 0.023809524,
+                "consequence_effect": {
+                  "A": -0.003272649671348654,
+                  "B": -0.003272649671348654,
+                  "N": 0.02618119737078923,
+                  "T": -0.003272649671348654,
+                  "X": -0.003272649671348654
+                },
+                "cost": {
+                  "A": 0.0,
+                  "B": 0.0,
+                  "N": 0.0,
+                  "T": 0.0,
+                  "X": 0.0
+                },
+                "dominant_axis": "N",
+                "effect_tags": [
+                  "representational_ref:REF:N:OPERATOR:A:?:?:?:?",
+                  "resolution_governed"
+                ],
+                "operator_action": "operator_on_n",
+                "purpose_lane": "communication",
+                "risk": {
+                  "A": 0.0,
+                  "B": 0.0,
+                  "N": 0.0,
+                  "T": 0.0,
+                  "X": 0.0
+                },
+                "structured_state": {
+                  "kind": "representational_ref",
+                  "level": "C1_125",
+                  "ref": {
+                    "col_law_c": null,
+                    "col_law_d": null,
+                    "nc_dim": "OPERATOR",
+                    "nc_law_c": "N",
+                    "nc_target": "A",
+                    "sub_law_c": null,
+                    "sub_law_d": null
+                  },
+                  "resolved_fields": [
+                    "nc_law_c",
+                    "nc_dim",
+                    "nc_target"
+                  ],
+                  "unresolved_fields": [
+                    "sub_law_c",
+                    "sub_law_d",
+                    "col_law_c",
+                    "col_law_d"
+                  ]
+                }
+              },
+              "participated_as": "intact_representation",
+              "representation_id": "REFAB:N:OPERATOR:A:?:?:?:?",
+              "semantic_identity": {
+                "complexity_axes": 1,
+                "complexity_slots": 1,
+                "depth_score": 0.0667,
+                "dominant_axis": "N",
+                "dominant_constraint": "N",
+                "dominant_dimension": "OPERATOR",
+                "energetic_footprint": 0.0667,
+                "generation": 1,
+                "generation_role": "PRIMARY",
+                "leverage_grade": 0.5769,
+                "ontological_status": "native_closed",
+                "operation_lineage": "OP:b4c35a2e7f21",
+                "operator_action": "operator_on_n",
+                "operator_grade": 0.673,
+                "origin_signature": "N^1*A^1",
+                "overall_grade": 0.428,
+                "purpose_grade": 0.3,
+                "purpose_lane": "communication",
+                "root_slot": "NC:N>N\u00d7NC:N>N",
+                "status": "active",
+                "viable_band_alignment": 0.8462
+              }
+            }
+          ],
+          "constraint_basis": {
+            "counts": {
+              "A": 1,
+              "B": 0,
+              "N": 0,
+              "T": 0,
+              "X": 0
+            },
+            "signature": "A^1"
+          },
+          "relational_axis_profile": {
+            "A": 1.0,
+            "B": 0.0,
+            "N": 0.0,
+            "T": 0.0,
+            "X": 0.0
+          }
+        },
+        "parent_ids": [
+          "A:CHOOSE",
+          "REFAB:N:OPERATOR:A:?:?:?:?"
+        ],
+        "status": "transient",
+        "signed_effect": 0.6,
+        "canonical_signature": "X^1*T^1*N^1*B^1*A^1"
+      }
+    ],
+    "interference": {
+      "axis_before": {
+        "X": 0.472947,
+        "T": 0.129113,
+        "N": 0.190219,
+        "B": 0.093309,
+        "A": 0.114411
+      },
+      "axis_after": {
+        "X": 0.337876,
+        "T": 0.120741,
+        "N": 0.066744,
+        "B": 0.20467,
+        "A": 0.269969
+      },
+      "axis_delta": {
+        "X": -0.135071,
+        "T": -0.008372,
+        "N": -0.123475,
+        "B": 0.111361,
+        "A": 0.155558
+      },
+      "contributions": [
+        {
+          "wavelet_id": "RW:883428f69d8a61",
+          "primitive": "existence_admission",
+          "roots": [
+            "X",
+            "B"
+          ],
+          "signed_effect": 0.55,
+          "axis_effects": {
+            "X": 0.275,
+            "B": 0.275
+          },
+          "target": "entities"
+        },
+        {
+          "wavelet_id": "RW:26883e7958005e",
+          "primitive": "continuity_phase_lock",
+          "roots": [
+            "X",
+            "T",
+            "B"
+          ],
+          "signed_effect": 0.48,
+          "axis_effects": {
+            "X": 0.16,
+            "T": 0.16,
+            "B": 0.16
+          },
+          "target": "relation"
+        },
+        {
+          "wavelet_id": "RW:1c3d4b90b3c37b",
+          "primitive": "agency_selection",
+          "roots": [
+            "X",
+            "T",
+            "B",
+            "A"
+          ],
+          "signed_effect": 0.22,
+          "axis_effects": {
+            "X": 0.055,
+            "T": 0.055,
+            "B": 0.055,
+            "A": 0.055
+          },
+          "target": "authority"
+        },
+        {
+          "wavelet_id": "RIW:78264d7d609e7f",
+          "primitive": "recursive_backprojection",
+          "roots": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "signed_effect": 0.6,
+          "axis_effects": {
+            "X": 0.0,
+            "T": 0.0,
+            "N": 0.0,
+            "B": 0.0,
+            "A": 0.6
+          },
+          "target": "representation_relation"
+        }
+      ],
+      "coherence": 0.733081,
+      "constructive_energy": 1.85,
+      "destructive_energy": 0.0
+    },
+    "global_understanding": {
+      "proposition_id": "CSP:34bd729596bd13",
+      "effective_relation": {
+        "subject": "",
+        "relation": "",
+        "object": "",
+        "complement": "",
+        "unknown_role": ""
+      },
+      "unresolved": [
+        "relation",
+        "entity"
+      ],
+      "completeness": 0.25,
+      "coherence": 0.733081,
+      "causal_chain": [
+        {
+          "operation": "existence_admission",
+          "root_constraints": [
+            "X",
+            "B"
+          ],
+          "canonical_signature": "X^1*B^1",
+          "targets": [
+            "entities",
+            "identity"
+          ],
+          "description": "stabilize which entities or qualities are admitted to the active reality",
+          "payload": {
+            "entities": [
+              "",
+              "",
+              ""
+            ]
+          }
+        },
+        {
+          "operation": "continuity_phase_lock",
+          "root_constraints": [
+            "X",
+            "T",
+            "B"
+          ],
+          "canonical_signature": "X^1*T^1*B^1",
+          "targets": [
+            "referents",
+            "history",
+            "relation"
+          ],
+          "description": "preserve identity and relation across processing time",
+          "payload": {
+            "relation": ""
+          }
+        },
+        {
+          "operation": "transformational_gradient",
+          "root_constraints": [
+            "T",
+            "N",
+            "A"
+          ],
+          "canonical_signature": "T^1*N^1*A^1",
+          "targets": [
+            "relation",
+            "unknown",
+            "resolution"
+          ],
+          "description": "amplify the change required to move an unresolved relation toward understanding",
+          "payload": {
+            "unknown": ""
+          }
+        },
+        {
+          "operation": "boundary_separation",
+          "root_constraints": [
+            "X",
+            "N",
+            "B"
+          ],
+          "canonical_signature": "X^1*N^1*B^1",
+          "targets": [
+            "roles",
+            "alternatives",
+            "scope"
+          ],
+          "description": "separate competing entities, roles, and scopes without erasing either side",
+          "payload": {
+            "alternatives": []
+          }
+        },
+        {
+          "operation": "agency_selection",
+          "root_constraints": [
+            "X",
+            "T",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*T^1*B^1*A^1",
+          "targets": [
+            "authority",
+            "perspective",
+            "response"
+          ],
+          "description": "select which grounded perspective may author the next causal act",
+          "payload": {
+            "owner": ""
+          }
+        },
+        {
+          "operation": "recursive_backprojection",
+          "root_constraints": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+          "targets": [
+            "provisional_interpretation",
+            "effective_interpretation"
+          ],
+          "description": "let developed understanding reconstruct the supported meaning of its initiating disturbance",
+          "payload": {
+            "reconstruction": {
+              "changed": false,
+              "changes": [],
+              "raw_input_preserved": true,
+              "support_required": true
+            }
+          }
+        }
+      ],
+      "wavelet_count": 4,
+      "hurricane_condition": 0.443232,
+      "retrospective_rule": "the developed understanding reconstructs the supported meaning of its initiating disturbance",
+      "response_alignment": {
+        "score": 0.7,
+        "relation_present": true,
+        "addresses_unknown": true,
+        "preserved_slots": [],
+        "missing_slots": [],
+        "leaked_unknown_token": false,
+        "unknown_role": ""
+      },
+      "retrospective_confidence": 0.718195
+    },
+    "effective_interpretation": {
+      "raw_text": "",
+      "subject": "",
+      "relation": "",
+      "obj": "",
+      "complement": "",
+      "unknown_role": "",
+      "unknown_token": "",
+      "unknown_descriptor": "",
+      "question": false,
+      "negated": false,
+      "modality": "",
+      "owner": "",
+      "alternatives": [],
+      "clauses": [],
+      "confidence": 0.0,
+      "source": "utterance_relation",
+      "recursive_reconstruction": {
+        "raw_preserved": true,
+        "changes": [],
+        "wavelet_ids": [
+          "RW:883428f69d8a61",
+          "RW:26883e7958005e",
+          "RW:1c3d4b90b3c37b",
+          "RIW:78264d7d609e7f"
+        ],
+        "operation": {
+          "operation": "recursive_backprojection",
+          "root_constraints": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+          "targets": [
+            "provisional_interpretation",
+            "effective_interpretation"
+          ],
+          "description": "let developed understanding reconstruct the supported meaning of its initiating disturbance",
+          "payload": {
+            "change_count": 0,
+            "principle": "later understanding may revise interpretation but not raw history"
+          }
+        }
+      }
+    },
+    "response_wave": {
+      "emitted_at": 1787388474.6992173,
+      "text": "I am tones",
+      "text_hash": "00b960ceb8a5",
+      "source": "composer_unified",
+      "confidence": 0.6142,
+      "relation_alignment": {
+        "score": 0.7,
+        "relation_present": true,
+        "addresses_unknown": true,
+        "preserved_slots": [],
+        "missing_slots": [],
+        "leaked_unknown_token": false,
+        "unknown_role": ""
+      },
+      "causal_parent_cycle": "RCRW:c984155b81ae1ff0",
+      "operation": {
+        "operation": "causal_emission",
+        "root_constraints": [
+          "X",
+          "T",
+          "N",
+          "B",
+          "A"
+        ],
+        "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+        "targets": [
+          "response",
+          "next_cycle"
+        ],
+        "description": "emit the developed understanding as the next causal disturbance",
+        "payload": {
+          "response_source": "composer_unified",
+          "alignment": {
+            "score": 0.7,
+            "relation_present": true,
+            "addresses_unknown": true,
+            "preserved_slots": [],
+            "missing_slots": [],
+            "leaked_unknown_token": false,
+            "unknown_role": ""
+          }
+        }
+      }
+    },
+    "receiver_disturbance": {},
+    "genealogy_trace": {
+      "root_constraints": [
+        "X",
+        "B",
+        "T",
+        "A",
+        "N"
+      ],
+      "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+      "wavelet_ancestry": [
+        {
+          "wavelet_id": "RW:883428f69d8a61",
+          "primitive": "existence_admission",
+          "roots": [
+            "X",
+            "B"
+          ],
+          "signature": "X^1*B^1",
+          "parent_ids": []
+        },
+        {
+          "wavelet_id": "RW:26883e7958005e",
+          "primitive": "continuity_phase_lock",
+          "roots": [
+            "X",
+            "T",
+            "B"
+          ],
+          "signature": "X^1*T^1*B^1",
+          "parent_ids": []
+        },
+        {
+          "wavelet_id": "RW:1c3d4b90b3c37b",
+          "primitive": "agency_selection",
+          "roots": [
+            "X",
+            "T",
+            "B",
+            "A"
+          ],
+          "signature": "X^1*T^1*B^1*A^1",
+          "parent_ids": []
+        },
+        {
+          "wavelet_id": "RIW:78264d7d609e7f",
+          "primitive": "recursive_backprojection",
+          "roots": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "signature": "X^1*T^1*N^1*B^1*A^1",
+          "parent_ids": [
+            "A:CHOOSE",
+            "REFAB:N:OPERATOR:A:?:?:?:?"
+          ]
+        }
+      ],
+      "parent_operation_ids": [
+        "A:CHOOSE",
+        "REFAB:N:OPERATOR:A:?:?:?:?"
+      ],
+      "semantic_genealogy": {
+        "root_constraints": [
+          "X",
+          "T",
+          "N",
+          "B",
+          "A"
+        ],
+        "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+        "orientation": {
+          "X": 1.0,
+          "T": 1.0,
+          "N": 1.0,
+          "B": 0.8587,
+          "A": 1.0
+        },
+        "active_axis_signature": "X^1*T^1*N^1*B^1*A^1",
+        "supporting_abilities": [
+          {
+            "id": "X:ADMIT",
+            "axis": "X",
+            "requires": [
+              "X"
+            ],
+            "effect_tags": [
+              "admit_state",
+              "clear_block",
+              "origin_primary:X",
+              "origin_secondary:X",
+              "origin_signature:X^1",
+              "root_slot:NC:X>X\u00d7NC:X>X",
+              "operation_lineage:OP:4c6504574442",
+              "seed_lineage:true",
+              "operator_action:operator_on_x",
+              "purpose_lane:intelligence",
+              "operator_grade:0.652",
+              "purpose_grade:0.300"
+            ]
+          },
+          {
+            "id": "X:REJECT",
+            "axis": "X",
+            "requires": [
+              "X"
+            ],
+            "effect_tags": [
+              "reject_state",
+              "enforce_boundary",
+              "origin_primary:X",
+              "origin_secondary:B",
+              "origin_signature:X^1*B^1",
+              "root_slot:NC:X>B\u00d7NC:B>X",
+              "operation_lineage:OP:25a28b16316f",
+              "seed_lineage:true",
+              "operator_action:operator_on_b",
+              "purpose_lane:meaning",
+              "operator_grade:0.683",
+              "purpose_grade:0.668"
+            ]
+          },
+          {
+            "id": "X:RECLASSIFY",
+            "axis": "X",
+            "requires": [
+              "B",
+              "X"
+            ],
+            "effect_tags": [
+              "reclassify",
+              "reindex",
+              "origin_primary:X",
+              "origin_secondary:B",
+              "origin_signature:X^1*B^1",
+              "root_slot:NC:X>B\u00d7NC:B>X",
+              "operation_lineage:OP:7f6cd377d854",
+              "seed_lineage:true",
+              "operator_action:operator_on_b",
+              "purpose_lane:meaning",
+              "operator_grade:0.683",
+              "purpose_grade:0.668"
+            ]
+          },
+          {
+            "id": "X:RESOLVE_CONTRADICTION",
+            "axis": "X",
+            "requires": [
+              "X",
+              "T"
+            ],
+            "effect_tags": [
+              "resolve",
+              "merge_conflict",
+              "origin_primary:X",
+              "origin_secondary:T",
+              "origin_signature:X^1*T^1",
+              "root_slot:NC:X>T\u00d7NC:T>X",
+              "operation_lineage:OP:7bad61b1469e",
+              "seed_lineage:true",
+              "operator_action:operator_on_t",
+              "purpose_lane:intelligence",
+              "operator_grade:0.657",
+              "purpose_grade:0.639"
+            ]
+          },
+          {
+            "id": "T:DEFER",
+            "axis": "T",
+            "requires": [
+              "T"
+            ],
+            "effect_tags": [
+              "defer",
+              "delay",
+              "origin_primary:T",
+              "origin_secondary:T",
+              "origin_signature:T^1",
+              "root_slot:NC:T>T\u00d7NC:T>T",
+              "operation_lineage:OP:12ad2feca691",
+              "seed_lineage:true",
+              "operator_action:operator_on_t",
+              "purpose_lane:intelligence",
+              "operator_grade:0.666",
+              "purpose_grade:0.300"
+            ]
+          },
+          {
+            "id": "T:BATCH",
+            "axis": "T",
+            "requires": [
+              "N",
+              "T"
+            ],
+            "effect_tags": [
+              "batch",
+              "coalesce",
+              "origin_primary:T",
+              "origin_secondary:N",
+              "origin_signature:T^1*N^1",
+              "root_slot:NC:T>N\u00d7NC:N>T",
+              "operation_lineage:OP:28dca87baf4e",
+              "seed_lineage:true",
+              "operator_action:operator_on_t",
+              "purpose_lane:intelligence",
+              "operator_grade:0.669",
+              "purpose_grade:0.636"
+            ]
+          },
+          {
+            "id": "T:REORDER",
+            "axis": "T",
+            "requires": [
+              "B",
+              "T"
+            ],
+            "effect_tags": [
+              "reorder",
+              "reprioritize",
+              "origin_primary:T",
+              "origin_secondary:B",
+              "origin_signature:T^1*B^1",
+              "root_slot:NC:T>B\u00d7NC:B>T",
+              "operation_lineage:OP:db685295b785",
+              "seed_lineage:true",
+              "operator_action:operator_on_b",
+              "purpose_lane:meaning",
+              "operator_grade:0.692",
+              "purpose_grade:0.663"
+            ]
+          },
+          {
+            "id": "T:SIM_TICK",
+            "axis": "T",
+            "requires": [
+              "T"
+            ],
+            "effect_tags": [
+              "tick",
+              "advance_clock",
+              "origin_primary:T",
+              "origin_secondary:A",
+              "origin_signature:T^1*A^1",
+              "root_slot:NC:T>A\u00d7NC:A>T",
+              "operation_lineage:OP:3d167c08c8f2",
+              "seed_lineage:true",
+              "operator_action:operator_on_a",
+              "purpose_lane:meaning",
+              "operator_grade:0.778",
+              "purpose_grade:0.760"
+            ]
+          }
+        ],
+        "derivation_chain": [
+          "X^1*B^1",
+          "X^1*T^1*B^1",
+          "T^1*N^1*A^1",
+          "T^1*N^1*B^1",
+          "X^1*T^1*B^1*A^1",
+          "X^1*T^1*N^1*B^1*A^1"
+        ]
+      }
+    },
+    "status": "emitted",
+    "representation_experiment": {
+      "actual_coactivation_required": true,
+      "constraint_basis": {
+        "counts": {
+          "A": 1,
+          "B": 0,
+          "N": 0,
+          "T": 0,
+          "X": 0
+        },
+        "signature": "A^1"
+      },
+      "consumer": "recursive_causal_waveform",
+      "context": {
+        "axis_activation": {
+          "A": 0.114411,
+          "B": 0.093309,
+          "N": 0.190219,
+          "T": 0.129113,
+          "X": 0.472947
+        }
+      },
+      "evidence_admitted": false,
+      "expires_at_tick": 993,
+      "inquiry_class": "constraint_collision",
+      "inquiry_id": "RC:fda1173daed78894",
+      "operand_ids": [
+        "A:CHOOSE",
+        "REFAB:N:OPERATOR:A:?:?:?:?"
+      ],
+      "operands": [
+        {
+          "constraint_basis": {
+            "counts": {
+              "A": 1,
+              "B": 0,
+              "N": 0,
+              "T": 0,
+              "X": 0
+            },
+            "generational_depth_counts": {
+              "A": {
+                "0": 1
+              },
+              "B": {},
+              "N": {},
+              "T": {},
+              "X": {}
+            },
+            "generational_potency": {
+              "A": 1.0,
+              "B": 0.0,
+              "N": 0.0,
+              "T": 0.0,
+              "X": 0.0
+            },
+            "semantic_origin_signature": "N^1*A^1",
+            "signature": "A^1"
+          },
+          "depth": 0,
+          "eligible": true,
+          "generation": 1,
+          "kind": "ABILITY",
+          "operational_effect": {
+            "cost": {
+              "A": 0.02,
+              "B": 0.01,
+              "N": 0.01,
+              "T": 0.01,
+              "X": 0.01
+            },
+            "dominant_axis": "A",
+            "effect_tags": [
+              "choose",
+              "select"
+            ],
+            "operator_action": "operator_on_a",
+            "purpose_lane": "meaning",
+            "risk": {
+              "A": 0.01,
+              "B": 0.0,
+              "N": 0.0,
+              "T": 0.0,
+              "X": 0.0
+            }
+          },
+          "participated_as": "intact_representation",
+          "representation_id": "A:CHOOSE",
+          "semantic_identity": {
+            "complexity_axes": 2,
+            "complexity_slots": 3,
+            "depth_score": 0.3778,
+            "dominant_axis": "A",
+            "dominant_constraint": "A",
+            "dominant_dimension": "OPERATOR",
+            "energetic_footprint": 0.3778,
+            "generation": 2,
+            "generation_role": "ADJACENT",
+            "leverage_grade": 0.7436,
+            "ontological_status": "native_closed",
+            "operation_lineage": "OP:85579eaa0a18",
+            "operator_action": "operator_on_a",
+            "operator_grade": 0.782,
+            "origin_signature": "N^1*A^1",
+            "overall_grade": 0.675,
+            "purpose_grade": 0.758,
+            "purpose_lane": "meaning",
+            "root_slot": "NC:N>A\u00d7NC:A>N",
+            "status": "active",
+            "viable_band_alignment": 0.5128
+          }
+        },
+        {
+          "constraint_basis": {
+            "counts": {
+              "A": 0,
+              "B": 0,
+              "N": 0,
+              "T": 0,
+              "X": 0
+            },
+            "generational_depth_counts": {
+              "A": {},
+              "B": {},
+              "N": {},
+              "T": {},
+              "X": {}
+            },
+            "generational_potency": {
+              "A": 0.0,
+              "B": 0.0,
+              "N": 0.0,
+              "T": 0.0,
+              "X": 0.0
+            },
+            "semantic_origin_signature": "N^1*A^1",
+            "signature": "0"
+          },
+          "depth": 0,
+          "eligible": true,
+          "generation": 1,
+          "kind": "ABILITY",
+          "operational_effect": {
+            "consequence_confidence": 0.023809524,
+            "consequence_effect": {
+              "A": -0.003272649671348654,
+              "B": -0.003272649671348654,
+              "N": 0.02618119737078923,
+              "T": -0.003272649671348654,
+              "X": -0.003272649671348654
+            },
+            "cost": {
+              "A": 0.0,
+              "B": 0.0,
+              "N": 0.0,
+              "T": 0.0,
+              "X": 0.0
+            },
+            "dominant_axis": "N",
+            "effect_tags": [
+              "representational_ref:REF:N:OPERATOR:A:?:?:?:?",
+              "resolution_governed"
+            ],
+            "operator_action": "operator_on_n",
+            "purpose_lane": "communication",
+            "risk": {
+              "A": 0.0,
+              "B": 0.0,
+              "N": 0.0,
+              "T": 0.0,
+              "X": 0.0
+            },
+            "structured_state": {
+              "kind": "representational_ref",
+              "level": "C1_125",
+              "ref": {
+                "col_law_c": null,
+                "col_law_d": null,
+                "nc_dim": "OPERATOR",
+                "nc_law_c": "N",
+                "nc_target": "A",
+                "sub_law_c": null,
+                "sub_law_d": null
+              },
+              "resolved_fields": [
+                "nc_law_c",
+                "nc_dim",
+                "nc_target"
+              ],
+              "unresolved_fields": [
+                "sub_law_c",
+                "sub_law_d",
+                "col_law_c",
+                "col_law_d"
+              ]
+            }
+          },
+          "participated_as": "intact_representation",
+          "representation_id": "REFAB:N:OPERATOR:A:?:?:?:?",
+          "semantic_identity": {
+            "complexity_axes": 1,
+            "complexity_slots": 1,
+            "depth_score": 0.0667,
+            "dominant_axis": "N",
+            "dominant_constraint": "N",
+            "dominant_dimension": "OPERATOR",
+            "energetic_footprint": 0.0667,
+            "generation": 1,
+            "generation_role": "PRIMARY",
+            "leverage_grade": 0.5769,
+            "ontological_status": "native_closed",
+            "operation_lineage": "OP:b4c35a2e7f21",
+            "operator_action": "operator_on_n",
+            "operator_grade": 0.673,
+            "origin_signature": "N^1*A^1",
+            "overall_grade": 0.428,
+            "purpose_grade": 0.3,
+            "purpose_lane": "communication",
+            "root_slot": "NC:N>N\u00d7NC:N>N",
+            "status": "active",
+            "viable_band_alignment": 0.8462
+          }
+        }
+      ],
+      "relational_axis_profile": {
+        "A": 1.0,
+        "B": 0.0,
+        "N": 0.0,
+        "T": 0.0,
+        "X": 0.0
+      },
+      "selection_evidence": {
+        "cost_distance": 1.0,
+        "dominant_axis": {
+          "left": "N",
+          "right": "A"
+        },
+        "effect_tag_distance": 1.0,
+        "operator_action": {
+          "left": "operator_on_n",
+          "right": "operator_on_a"
+        },
+        "purpose_lane": {
+          "left": "communication",
+          "right": "meaning"
+        },
+        "risk_distance": 1.0
+      },
+      "stage_id": "RS:e7f6b9968f7fe506",
+      "staged_at_tick": 990,
+      "status": "staged"
+    },
+    "representation_experiment_control": {
+      "method": "same_cycle_without_inquiry_wavelet",
+      "axis_before": {
+        "X": 0.472947,
+        "T": 0.129113,
+        "N": 0.190219,
+        "B": 0.093309,
+        "A": 0.114411
+      },
+      "control_axis_after": {
+        "X": 0.427977,
+        "T": 0.152939,
+        "N": 0.084542,
+        "B": 0.259249,
+        "A": 0.075294
+      },
+      "experimental_axis_after": {
+        "X": 0.337876,
+        "T": 0.120741,
+        "N": 0.066744,
+        "B": 0.20467,
+        "A": 0.269969
+      },
+      "marginal_axis_delta": {
+        "X": -0.090101,
+        "T": -0.032198,
+        "N": -0.017798,
+        "B": -0.054579,
+        "A": 0.194675
+      },
+      "marginal_l1": 0.389351,
+      "inquiry_axis_profile": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.0,
+        "B": 0.0,
+        "A": 1.0
+      },
+      "inquiry_wavelet_id": "RIW:78264d7d609e7f"
+    },
+    "completed_at": 1787388474.6992593,
+    "representation_experiment_result": {
+      "stage_id": "RS:e7f6b9968f7fe506",
+      "consumer": "recursive_causal_waveform",
+      "evidence_admitted": false,
+      "actual_coactivation": true,
+      "causal_confidence": 0.0,
+      "status": "inconclusive_causal_measurement"
+    },
+    "warp_evaluation": {
+      "promoted": [],
+      "dissolved": []
+    }
+  },
+  "pending_response_cycle_id": "RCRW:c984155b81ae1ff0",
+  "promoted_wavelets": {},
+  "trial_wavelets": {},
+  "dissolved_count": 0
+}

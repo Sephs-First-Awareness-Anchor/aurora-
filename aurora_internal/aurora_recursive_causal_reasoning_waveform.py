@@ -167,6 +167,11 @@ class CausalWavelet:
     polarity: int
     target: str
     source: str
+    # Optional per-axis distribution for wavelets whose total intervention
+    # energy is scalar but whose operational orientation is not uniform.
+    # Empty preserves the historical equal-share behavior for every existing
+    # wavelet.
+    axis_profile: Dict[str, float] = field(default_factory=dict)
     evidence: Dict[str, Any] = field(default_factory=dict)
     parent_ids: List[str] = field(default_factory=list)
     status: str = "transient"
@@ -517,6 +522,12 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
             polarity=1,
             target="representation_relation",
             source="representation_inquiry",
+            # The staged relation already carries its own consequence-derived
+            # X/T/N/B/A orientation.  Preserve that operational distinction in
+            # the interference itself rather than carrying it as metadata while
+            # perturbing every inquiry identically.  Total trial energy remains
+            # constant; only its native axis distribution differs.
+            axis_profile=_normalize_axes(profile),
             evidence={
                 "stage_id": str(stage.get("stage_id", "")),
                 "inquiry_id": str(stage.get("inquiry_id", "")),
@@ -553,9 +564,38 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
             claim_resolution=claim_resolution,
         )
         representation_stage = self._maybe_stage_representation_inquiry(axes)
+        representation_control: Optional[Dict[str, Any]] = None
         if representation_stage is not None:
-            wavelets = list(wavelets) + [self._representation_inquiry_wavelet(representation_stage)]
+            # Exact within-RCRW control: the same initiating semantic state and
+            # same naturally generated wavelets, differing only by the staged
+            # representation-inquiry intervention.  This does not author a
+            # second response or touch live state; it isolates what the inquiry
+            # itself changes in the recursive causal field.
+            control_interference = self._interfere(axes, wavelets)
+            inquiry_wavelet = self._representation_inquiry_wavelet(representation_stage)
+            wavelets = list(wavelets) + [inquiry_wavelet]
         interference = self._interfere(axes, wavelets)
+        if representation_stage is not None:
+            control_after = dict(control_interference.get("axis_after") or {})
+            experimental_after = dict(interference.get("axis_after") or {})
+            marginal_delta = {
+                ax: round(
+                    float(experimental_after.get(ax, 0.0) or 0.0)
+                    - float(control_after.get(ax, 0.0) or 0.0),
+                    9,
+                )
+                for ax in AXES
+            }
+            representation_control = {
+                "method": "same_cycle_without_inquiry_wavelet",
+                "axis_before": _clone(dict(axes)),
+                "control_axis_after": _clone(control_after),
+                "experimental_axis_after": _clone(experimental_after),
+                "marginal_axis_delta": marginal_delta,
+                "marginal_l1": round(sum(abs(v) for v in marginal_delta.values()), 9),
+                "inquiry_axis_profile": _clone(dict(inquiry_wavelet.axis_profile or {})),
+                "inquiry_wavelet_id": inquiry_wavelet.wavelet_id,
+            }
         effective_form, reconstruction = self._backproject(
             provisional,
             referent_map=referent_map,
@@ -596,6 +636,7 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
             status="understood",
         ).to_dict()
         cycle["representation_experiment"] = representation_stage
+        cycle["representation_experiment_control"] = representation_control
         self._active_cycle = cycle
         self._cycles.append(cycle)
         self._cycles = self._cycles[-_MAX_CYCLES:]
@@ -625,6 +666,8 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
         response_source: str,
         confidence: float,
         systems: Optional[Mapping[str, Any]] = None,
+        pressure_before: Optional[Mapping[str, Any]] = None,
+        pressure_after: Optional[Mapping[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Emit W1 and let H retrospectively evaluate W0.
 
@@ -665,7 +708,11 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
         self._pending_response_cycle_id = str(cycle.get("cycle_id", "") or "")
         self._update_wavelet_evidence(cycle, alignment)
         self._confess_gap_if_needed(cycle, alignment)
-        self._complete_representation_experiment_for_cycle(cycle, alignment)
+        self._complete_representation_experiment_for_cycle(
+            cycle, alignment,
+            pressure_before=pressure_before,
+            pressure_after=pressure_after,
+        )
         promoted, dissolved = self.evaluate_warp_trials()
         cycle["warp_evaluation"] = {"promoted": promoted, "dissolved": dissolved}
         self._publish_completion(cycle)
@@ -674,40 +721,109 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
         return _clone(cycle)
 
     def _complete_representation_experiment_for_cycle(
-        self, cycle: MutableMapping[str, Any], alignment: Mapping[str, Any],
+        self,
+        cycle: MutableMapping[str, Any],
+        alignment: Mapping[str, Any],
+        *,
+        pressure_before: Optional[Mapping[str, Any]] = None,
+        pressure_after: Optional[Mapping[str, Any]] = None,
     ) -> None:
-        """If this cycle staged a representational inquiry, this is the
-        real response-bearing completion that lets genealogy verify actual
-        ordered co-activation. Before/after pressure is derived from the
-        cycle's own initial completeness and this cycle's resulting
-        coherence/retrospective confidence -- no separate scoring channel,
-        no answer about what the relation means."""
+        """Complete a staged relation only from consequence evidence that is
+        both lived and attributable enough to admit.
+
+        The staged inquiry already has an exact internal control captured at
+        prepare time: the same RCRW state without the inquiry wavelet.  Here we
+        combine that isolated marginal intervention with the app turn's native
+        operator-pressure snapshots.  No response-quality score is converted
+        into synthetic X/T/N/B/A relief.  Missing measurements are explicitly
+        inconclusive rather than treated as either success or failure.
+        """
         stage = dict(cycle.get("representation_experiment") or {})
         if not stage or not stage.get("stage_id"):
             return
         genealogy = self.genealogy
         if genealogy is None or not hasattr(genealogy, "complete_representation_experiment"):
             return
-        initial = dict(cycle.get("initial_semantic_state") or {})
-        completeness_before = max(0.0, min(1.0, float(initial.get("completeness", 0.0) or 0.0)))
+
+        control = dict(cycle.get("representation_experiment_control") or {})
+        marginal_delta = {
+            ax: float(dict(control.get("marginal_axis_delta") or {}).get(ax, 0.0) or 0.0)
+            for ax in AXES
+        }
+        marginal_abs = {ax: abs(v) for ax, v in marginal_delta.items()}
+        marginal_l1 = sum(marginal_abs.values())
+
+        before_ops_raw = dict(dict(pressure_before or {}).get("operator_gradients") or {})
+        after_ops_raw = dict(dict(pressure_after or {}).get("operator_gradients") or {})
+        snapshots_valid = bool(before_ops_raw) and bool(after_ops_raw) and all(
+            ax in before_ops_raw and ax in after_ops_raw for ax in AXES
+        )
+
+        before_pressure = {ax: abs(float(before_ops_raw.get(ax, 0.0) or 0.0)) for ax in AXES}
+        after_pressure = {ax: abs(float(after_ops_raw.get(ax, 0.0) or 0.0)) for ax in AXES}
+        observed_relief = {
+            ax: max(0.0, before_pressure[ax] - after_pressure[ax]) for ax in AXES
+        }
+
+        axis_before = {
+            ax: float(dict(control.get("axis_before") or {}).get(ax, 0.0) or 0.0) for ax in AXES
+        }
+        control_after = {
+            ax: float(dict(control.get("control_axis_after") or {}).get(ax, 0.0) or 0.0) for ax in AXES
+        }
+        control_change_l1 = sum(abs(control_after[ax] - axis_before[ax]) for ax in AXES)
+        intervention_fraction = (
+            marginal_l1 / (marginal_l1 + control_change_l1)
+            if marginal_l1 > _EPS else 0.0
+        )
+
+        max_marginal = max(marginal_abs.values()) if marginal_abs else 0.0
+        axis_gate = {
+            ax: (marginal_abs[ax] / max_marginal if max_marginal > _EPS else 0.0)
+            for ax in AXES
+        }
+        attributable_relief = {
+            ax: observed_relief[ax] * axis_gate[ax] * intervention_fraction
+            for ax in AXES
+        }
+
+        observed_total = sum(observed_relief.values())
+        if marginal_l1 > _EPS and observed_total > _EPS:
+            marginal_dist = {ax: marginal_abs[ax] / marginal_l1 for ax in AXES}
+            relief_dist = {ax: observed_relief[ax] / observed_total for ax in AXES}
+            axis_overlap = sum(min(marginal_dist[ax], relief_dist[ax]) for ax in AXES)
+        else:
+            axis_overlap = 0.0
+        causal_confidence = max(0.0, min(1.0, intervention_fraction * axis_overlap))
+        causal_evidence_valid = bool(snapshots_valid and marginal_l1 > _EPS)
+
         coherence = float(cycle.get("interference", {}).get("coherence", 0.0) or 0.0)
         retrospective_confidence = float(
             cycle.get("global_understanding", {}).get("retrospective_confidence", 0.0) or 0.0
         )
-        pressure_before = {a: (1.0 - completeness_before) for a in AXES}
-        pressure_after = {
-            a: max(0.0, (1.0 - completeness_before) * (1.0 - max(0.0, min(1.0, retrospective_confidence))))
-            for a in AXES
-        }
+
         try:
             result = genealogy.complete_representation_experiment(
                 str(stage.get("stage_id", "")),
                 consumer="recursive_causal_waveform",
                 coactivated_ids=list(stage.get("operand_ids", []) or []),
-                pressure_before=pressure_before,
-                pressure_after=pressure_after,
+                # PressureVec uses higher=worse.  Pass only the portion of
+                # measured pressure decrease that overlaps axes the controlled
+                # inquiry intervention actually changed.
+                pressure_before=attributable_relief,
+                pressure_after={ax: 0.0 for ax in AXES},
                 outcome={
                     "actual_coactivation": True,
+                    "causal_evidence_valid": causal_evidence_valid,
+                    "causal_evidence_mode": "controlled_rcrw_marginal_x_lived_operator_pressure",
+                    "causal_confidence": round(causal_confidence, 9),
+                    "intervention_fraction": round(intervention_fraction, 9),
+                    "axis_overlap": round(axis_overlap, 9),
+                    "marginal_axis_delta": {ax: round(v, 9) for ax, v in marginal_delta.items()},
+                    "observed_operator_pressure_before": {ax: round(v, 9) for ax, v in before_pressure.items()},
+                    "observed_operator_pressure_after": {ax: round(v, 9) for ax, v in after_pressure.items()},
+                    "observed_positive_relief": {ax: round(v, 9) for ax, v in observed_relief.items()},
+                    "attributable_relief": {ax: round(v, 9) for ax, v in attributable_relief.items()},
                     "response_alignment": _clone(dict(alignment or {})),
                     "coherence": round(coherence, 6),
                     "retrospective_confidence": round(retrospective_confidence, 6),
@@ -819,14 +935,26 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
         contributions: List[Dict[str, Any]] = []
         for wave in wavelets:
             effect = wave.signed_effect()
-            share = effect / max(1, len(wave.roots))
-            for ax in wave.roots:
-                raw[ax] = max(0.0, raw.get(ax, 0.0) + share)
+            profile_raw = {
+                ax: max(0.0, float(dict(wave.axis_profile or {}).get(ax, 0.0) or 0.0))
+                for ax in wave.roots
+            }
+            profile_total = sum(profile_raw.values())
+            if profile_total > _EPS:
+                axis_effects = {
+                    ax: effect * (profile_raw[ax] / profile_total) for ax in wave.roots
+                }
+            else:
+                share = effect / max(1, len(wave.roots))
+                axis_effects = {ax: share for ax in wave.roots}
+            for ax, axis_effect in axis_effects.items():
+                raw[ax] = max(0.0, raw.get(ax, 0.0) + axis_effect)
             contributions.append({
                 "wavelet_id": wave.wavelet_id,
                 "primitive": wave.primitive,
                 "roots": list(wave.roots),
                 "signed_effect": round(effect, 6),
+                "axis_effects": {ax: round(v, 9) for ax, v in axis_effects.items()},
                 "target": wave.target,
             })
         after = _normalize_axes(raw)

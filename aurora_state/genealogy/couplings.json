@@ -1,4 +1,5 @@
 {
+  "representation_schema_version": 2,
   "persistent_pressure_root": "A^1*N^1*T^1",
   "persistent_pressure_root_ema": 1.0864894443461597e-07,
   "coupling_events": 51661,
@@ -49309,168 +49310,10 @@
     "(X^2*T^1*N^1)x(X^4*T^2)": 4,
     "(X^4*T^2)x(N^1)": 4
   },
+  "representation_relations": {},
+  "representation_collisions": {},
   "experiments": {
     "trials": [
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b3416d542ab9",
-        "shape": "generic",
-        "target_modules": [
-          "flutter_app.android.app.src.main.python.aurora_bridge"
-        ],
-        "target_files": [
-          "flutter_app/android/app/src/main/python/aurora_bridge.py"
-        ],
-        "matched_ability_id": "B:CODE_LINEAGE_f984ea53ea",
-        "matched_score": 1.0,
-        "ability_id": "B:CODE_LINEAGE_f984ea53ea",
-        "adopted": true
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6eea4d326442",
-        "shape": "generic",
-        "target_modules": [
-          "flutter_app.android.app.src.main.python.cv2"
-        ],
-        "target_files": [
-          "flutter_app/android/app/src/main/python/cv2.py"
-        ],
-        "matched_ability_id": "X:CODE_LINEAGE_b84d367d98",
-        "matched_score": 1.0,
-        "ability_id": "X:CODE_LINEAGE_b84d367d98",
-        "adopted": true
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:1238079a6f67",
-        "shape": "generic",
-        "target_modules": [
-          "foundational_contract"
-        ],
-        "target_files": [
-          "foundational_contract.py"
-        ],
-        "matched_ability_id": "X:CODE_LINEAGE_fc6e0f1952",
-        "matched_score": 1.0,
-        "ability_id": "X:CODE_LINEAGE_fc6e0f1952",
-        "adopted": true
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:6b3887ab9c52",
-        "shape": "generic",
-        "target_modules": [
-          "genealogy_signature_bridge"
-        ],
-        "target_files": [
-          "genealogy_signature_bridge.py"
-        ],
-        "matched_ability_id": "B:CODE_LINEAGE_8749014546",
-        "matched_score": 1.0,
-        "ability_id": "B:CODE_LINEAGE_8749014546",
-        "adopted": true
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:aa9fe8bc1ddd",
-        "shape": "generic",
-        "target_modules": [
-          "geological_baseline"
-        ],
-        "target_files": [
-          "geological_baseline.py"
-        ],
-        "matched_ability_id": "X:CODE_LINEAGE_7e0e678d9e",
-        "matched_score": 1.0,
-        "ability_id": "X:CODE_LINEAGE_7e0e678d9e",
-        "adopted": true
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:b4b154d1e4a0",
-        "shape": "generic",
-        "target_modules": [
-          "reply_aurora"
-        ],
-        "target_files": [
-          "reply_aurora.py"
-        ],
-        "matched_ability_id": "X:CODE_LINEAGE_501c097317",
-        "matched_score": 1.0,
-        "ability_id": "X:CODE_LINEAGE_501c097317",
-        "adopted": true
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:273bc79cbb05",
-        "shape": "generic",
-        "target_modules": [
-          "run_aurora"
-        ],
-        "target_files": [
-          "run_aurora.py"
-        ],
-        "matched_ability_id": "X:CODE_LINEAGE_8c75c11ac5",
-        "matched_score": 1.0,
-        "ability_id": "X:CODE_LINEAGE_8c75c11ac5",
-        "adopted": true
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:630645f75ab1",
-        "shape": "generic",
-        "target_modules": [
-          "run_chain"
-        ],
-        "target_files": [
-          "run_chain.py"
-        ],
-        "matched_ability_id": "T:CODE_LINEAGE_d07d7daff2",
-        "matched_score": 1.0,
-        "ability_id": "T:CODE_LINEAGE_d07d7daff2",
-        "adopted": true
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2ebbbcbf297f",
-        "shape": "generic",
-        "target_modules": [
-          "run_corpus"
-        ],
-        "target_files": [
-          "run_corpus.py"
-        ],
-        "matched_ability_id": "X:CODE_LINEAGE_b8687740ca",
-        "matched_score": 1.0,
-        "ability_id": "X:CODE_LINEAGE_b8687740ca",
-        "adopted": true
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f79cff348cb0",
-        "shape": "generic",
-        "target_modules": [
-          "run_full_competency_gauntlet"
-        ],
-        "target_files": [
-          "run_full_competency_gauntlet.py"
-        ],
-        "matched_ability_id": "X:CODE_LINEAGE_ff3d3693ad",
-        "matched_score": 1.0,
-        "ability_id": "X:CODE_LINEAGE_ff3d3693ad",
-        "adopted": true
-      },
       {
         "tick": 132642,
         "trigger_mode": "manual_code_assimilation",
@@ -53661,119 +53504,177 @@
         "temporal_overhead_penalty": 0.0,
         "ability_id": "A:CODE_EVOLVE_1bd2d2d8d3",
         "adopted": false
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "constraint_semantic_continuity_v1",
+        "shape": "constraint_relational_continuity",
+        "target_modules": [
+          "aurora_internal.aurora_constraint_semantic_continuity",
+          "aurora_internal.aurora_utterance_parser",
+          "aurora_internal.aurora_proposition_frame",
+          "aurora_internal.aurora_turn_chain",
+          "aurora"
+        ],
+        "target_files": [
+          "aurora_internal/aurora_constraint_semantic_continuity.py",
+          "aurora_internal/aurora_utterance_parser.py",
+          "aurora_internal/aurora_proposition_frame.py",
+          "aurora_internal/aurora_turn_chain.py",
+          "aurora.py"
+        ],
+        "ability_id": "A:CODE_LINEAGE_104d4a1a53",
+        "adopted": true
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:b779e9b53375",
+        "shape": "generic",
+        "target_modules": [
+          "aurora"
+        ],
+        "target_files": [
+          "aurora.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_165ad81970",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_165ad81970",
+        "adopted": true
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:086315a5f8fe",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.aurora_communication_emergence"
+        ],
+        "target_files": [
+          "aurora_internal/aurora_communication_emergence.py"
+        ],
+        "ability_id": "X:CODE_LINEAGE_764c831a62",
+        "adopted": true
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:c51a628a859e",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.aurora_constraint_semantic_continuity"
+        ],
+        "target_files": [
+          "aurora_internal/aurora_constraint_semantic_continuity.py"
+        ],
+        "matched_ability_id": "A:CODE_LINEAGE_104d4a1a53",
+        "matched_score": 1.0,
+        "ability_id": "A:CODE_LINEAGE_104d4a1a53",
+        "adopted": true
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:4eb186f9e5e6",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.aurora_understanding_contract"
+        ],
+        "target_files": [
+          "aurora_internal/aurora_understanding_contract.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_0f9d071e77",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_0f9d071e77",
+        "adopted": true
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:93d5c5b058df",
+        "shape": "generic",
+        "target_modules": [
+          "flutter_app.android.app.src.main.python.aurora_historical_experience_environment"
+        ],
+        "target_files": [
+          "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+        ],
+        "matched_ability_id": "X:CODE_LINEAGE_b84d367d98",
+        "matched_score": 1.0,
+        "ability_id": "X:CODE_LINEAGE_b84d367d98",
+        "adopted": true
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:742330c19f17",
+        "shape": "generic",
+        "target_modules": [
+          "tests.test_baseline_communication_apprenticeship"
+        ],
+        "target_files": [
+          "tests/test_baseline_communication_apprenticeship.py"
+        ],
+        "ability_id": "X:CODE_LINEAGE_5d4961cf8a",
+        "adopted": true
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:eb5e8de7294a",
+        "shape": "generic",
+        "target_modules": [
+          "tests.test_live_communicative_baseline"
+        ],
+        "target_files": [
+          "tests/test_live_communicative_baseline.py"
+        ],
+        "ability_id": "X:CODE_LINEAGE_70b0cc2b12",
+        "adopted": true
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "baseline_communication_apprenticeship_v2",
+        "shape": "possibility_to_constraint_communication_apprenticeship",
+        "target_modules": [
+          "aurora_internal.aurora_communication_emergence",
+          "aurora_internal.aurora_constraint_semantic_continuity",
+          "aurora_historical_experience_environment",
+          "aurora"
+        ],
+        "target_files": [
+          "aurora_internal/aurora_communication_emergence.py",
+          "aurora_internal/aurora_constraint_semantic_continuity.py",
+          "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py",
+          "aurora.py"
+        ],
+        "ability_id": "B:CODE_LINEAGE_3a8860b553",
+        "adopted": true
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "live_communicative_baseline_v3",
+        "shape": "genealogy_bound_live_communicative_baseline",
+        "target_modules": [
+          "aurora_internal.aurora_communication_emergence",
+          "aurora_internal.aurora_constraint_semantic_continuity",
+          "aurora_internal.aurora_understanding_contract",
+          "aurora"
+        ],
+        "target_files": [
+          "aurora_internal/aurora_communication_emergence.py",
+          "aurora_internal/aurora_constraint_semantic_continuity.py",
+          "aurora_internal/aurora_understanding_contract.py",
+          "aurora.py"
+        ],
+        "ability_id": "B:CODE_LINEAGE_0c2e7b12ea",
+        "adopted": true
       }
     ],
     "adoptions": [
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:5a34231a73a5",
-        "shape": "generic",
-        "target_modules": [
-          "scripts.termux_voice_bridge"
-        ],
-        "ability_id": "B:CODE_LINEAGE_2e0e7667e5",
-        "score": 1.0
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:01c176a9744d",
-        "shape": "generic",
-        "target_modules": [
-          "scripts.trace_live_response_pipeline"
-        ],
-        "ability_id": "X:CODE_LINEAGE_666233db74",
-        "score": 1.0
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:466cabe0bbf7",
-        "shape": "generic",
-        "target_modules": [
-          "scripts.w1_reentrancy_trace"
-        ],
-        "ability_id": "X:CODE_LINEAGE_9614593ecd",
-        "score": 1.0
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:f4a12cc339b8",
-        "shape": "generic",
-        "target_modules": [
-          "scripts.w1_thought_state_diagnostic"
-        ],
-        "ability_id": "X:CODE_LINEAGE_a9b206d0cf",
-        "score": 1.0
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:30fcceffda74",
-        "shape": "generic",
-        "target_modules": [
-          "tensor_occupancy_hook"
-        ],
-        "ability_id": "X:CODE_LINEAGE_c780e0c587",
-        "score": 1.0
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2a77a9c41714",
-        "shape": "generic",
-        "target_modules": [
-          "tensor_occupancy_warp_bridge"
-        ],
-        "ability_id": "B:CODE_LINEAGE_ff000e2e37",
-        "score": 1.0
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:1ead225eb6cb",
-        "shape": "generic",
-        "target_modules": [
-          "test_constraint_reasoner"
-        ],
-        "ability_id": "B:CODE_LINEAGE_3741d2ba6a",
-        "score": 1.0
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:ce7f9fa34e8a",
-        "shape": "generic",
-        "target_modules": [
-          "tests._engine_integration_test"
-        ],
-        "ability_id": "X:CODE_LINEAGE_596bca61c8",
-        "score": 1.0
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a7c0c80551c1",
-        "shape": "generic",
-        "target_modules": [
-          "tests._pipeline_test"
-        ],
-        "ability_id": "X:CODE_LINEAGE_e8a7ef475c",
-        "score": 1.0
-      },
-      {
-        "tick": 132642,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:a4615d9606c2",
-        "shape": "generic",
-        "target_modules": [
-          "tests.run_intelligence_test_surface"
-        ],
-        "ability_id": "X:CODE_LINEAGE_25e33f0dfb",
-        "score": 1.0
-      },
       {
         "tick": 132642,
         "trigger_mode": "manual_code_assimilation",
@@ -55071,7 +54972,133 @@
         ],
         "ability_id": "T:CODE_LINEAGE_cec6767245",
         "score": 1.0
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "constraint_semantic_continuity_v1",
+        "shape": "constraint_relational_continuity",
+        "target_modules": [
+          "aurora_internal.aurora_constraint_semantic_continuity",
+          "aurora_internal.aurora_utterance_parser",
+          "aurora_internal.aurora_proposition_frame",
+          "aurora_internal.aurora_turn_chain",
+          "aurora"
+        ],
+        "ability_id": "A:CODE_LINEAGE_104d4a1a53",
+        "score": 0.72
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:b779e9b53375",
+        "shape": "generic",
+        "target_modules": [
+          "aurora"
+        ],
+        "ability_id": "X:CODE_LINEAGE_165ad81970",
+        "score": 1.0
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:086315a5f8fe",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.aurora_communication_emergence"
+        ],
+        "ability_id": "X:CODE_LINEAGE_764c831a62",
+        "score": 0.72
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:c51a628a859e",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.aurora_constraint_semantic_continuity"
+        ],
+        "ability_id": "A:CODE_LINEAGE_104d4a1a53",
+        "score": 1.0
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:4eb186f9e5e6",
+        "shape": "generic",
+        "target_modules": [
+          "aurora_internal.aurora_understanding_contract"
+        ],
+        "ability_id": "X:CODE_LINEAGE_0f9d071e77",
+        "score": 1.0
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:93d5c5b058df",
+        "shape": "generic",
+        "target_modules": [
+          "flutter_app.android.app.src.main.python.aurora_historical_experience_environment"
+        ],
+        "ability_id": "X:CODE_LINEAGE_b84d367d98",
+        "score": 1.0
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:742330c19f17",
+        "shape": "generic",
+        "target_modules": [
+          "tests.test_baseline_communication_apprenticeship"
+        ],
+        "ability_id": "X:CODE_LINEAGE_5d4961cf8a",
+        "score": 0.72
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:eb5e8de7294a",
+        "shape": "generic",
+        "target_modules": [
+          "tests.test_live_communicative_baseline"
+        ],
+        "ability_id": "X:CODE_LINEAGE_70b0cc2b12",
+        "score": 0.72
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "baseline_communication_apprenticeship_v2",
+        "shape": "possibility_to_constraint_communication_apprenticeship",
+        "target_modules": [
+          "aurora_internal.aurora_communication_emergence",
+          "aurora_internal.aurora_constraint_semantic_continuity",
+          "aurora_historical_experience_environment",
+          "aurora"
+        ],
+        "ability_id": "B:CODE_LINEAGE_3a8860b553",
+        "score": 0.72
+      },
+      {
+        "tick": 132827,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "live_communicative_baseline_v3",
+        "shape": "genealogy_bound_live_communicative_baseline",
+        "target_modules": [
+          "aurora_internal.aurora_communication_emergence",
+          "aurora_internal.aurora_constraint_semantic_continuity",
+          "aurora_internal.aurora_understanding_contract",
+          "aurora"
+        ],
+        "ability_id": "B:CODE_LINEAGE_0c2e7b12ea",
+        "score": 0.72
       }
     ]
+  },
+  "representation_inquiry_runtime": {
+    "active_stages": {},
+    "history": [],
+    "consumer_cycles": {},
+    "consumer_engagement_cycles": {}
   }
 }

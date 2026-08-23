@@ -1,0 +1,38 @@
+[
+  {
+    "event_id": "9d825eafbca2411c887775faf20e4f8a",
+    "kind": "turn_open",
+    "turn_id": "turn_dba0d7b07a6d41c2a88876f45db1ca6e",
+    "created_at": 1787388473.8157246,
+    "raw_input": "",
+    "sensory_ref": null,
+    "session_id": "mobile",
+    "prior_frame_ref": null,
+    "source_label": "aurora_sensory_pulse",
+    "consumed": true
+  },
+  {
+    "event_id": "cb974afbc4594d9ab457cc182e49298c",
+    "kind": "interpreted_turn",
+    "turn_id": "turn_dba0d7b07a6d41c2a88876f45db1ca6e",
+    "created_at": 1787388474.1779842,
+    "interpreted_meaning": "",
+    "inferred_purpose": "statement",
+    "current_topic": "",
+    "resolved_referents": [],
+    "unresolved_ambiguity": [],
+    "interpretation_confidence": 1.0,
+    "response_confidence": 0.5,
+    "dominant_constraints": {
+      "X": 0.337876,
+      "T": 0.120741,
+      "N": 0.066744,
+      "B": 0.20467,
+      "A": 0.269969
+    },
+    "representation_refs": [],
+    "knowledge_gaps": [],
+    "response_fit_pressure": 0.5,
+    "consumed": true
+  }
+]

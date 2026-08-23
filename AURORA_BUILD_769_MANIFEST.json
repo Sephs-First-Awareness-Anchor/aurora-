@@ -1,0 +1,35 @@
+{
+  "build": 769,
+  "upgrade": "baseline_communication_apprenticeship_v2",
+  "created_utc": "2026-08-22",
+  "source": {
+    "artifact": "aurora--build-768-experiential-crystal-continuity.zip",
+    "sha256": "63ed03cd953e3f88ddbeceb242cecaa638349ce794963cf491b4ba3960fc3820"
+  },
+  "lived_state_input": {
+    "artifact": "aurora--lived-baseline-state-4000.zip",
+    "sha256": "e9d5fb129e85e9182da0a825c75891c0c2e4158416b3f38daf22e85b5eb80b5a"
+  },
+  "constraint_signature": "X^1*T^1*N^1*B^1*A^1",
+  "modified_runtime_files": [
+    "aurora.py",
+    "aurora_internal/aurora_communication_emergence.py",
+    "aurora_internal/aurora_constraint_semantic_continuity.py",
+    "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py"
+  ],
+  "added_files": [
+    "AURORA_BUILD_769_BASELINE_COMMUNICATION_UPGRADE.md",
+    "tests/test_baseline_communication_apprenticeship.py"
+  ],
+  "checkpoint_validation": {
+    "events": 4000,
+    "paired_exchanges": 1935,
+    "structural_possibilities": 1553,
+    "representable_gaps": 501,
+    "provisional_operations": 13,
+    "operations_with_genealogy_parents": 13,
+    "historical_promotions": 0,
+    "historical_receiver_validations": 0,
+    "verbatim_observed_assistant_surfaces_retained": 0
+  }
+}

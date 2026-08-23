@@ -19,6 +19,7 @@ Launch:
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
+import gzip
 import os
 import sys
 import json
@@ -39,6 +40,13 @@ from aurora_internal.dual_strata.sensory_control_channel import (
 # ---------------------------------------------------------------------------
 _BASE_DIR   = Path(__file__).parent
 _STATE_DIR  = _BASE_DIR / "aurora_state"
+
+
+def _read_json_with_gzip_fallback(path: Path) -> Any:
+    source = path if path.exists() else Path(str(path) + ".gz")
+    opener = gzip.open if source.suffix == ".gz" else open
+    with opener(source, "rt", encoding="utf-8") as handle:
+        return json.load(handle)
 
 _DAEMON_STATUS      = _STATE_DIR / "daemon_status.json"
 _ROOM_MSGS          = _STATE_DIR / "aurora_room_messages.json"
@@ -1014,8 +1022,8 @@ class StateReader:
             pass
         try:
             p = gen_dir / "abilities.json"
-            if p.exists():
-                abilities = json.loads(p.read_text())
+            if p.exists() or Path(str(p) + ".gz").exists():
+                abilities = _read_json_with_gzip_fallback(p)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -1186,9 +1194,9 @@ class StateReader:
         ax_abilities: Dict[str, int] = {}
         try:
             p = gen_dir / "abilities.json"
-            if p.exists():
+            if p.exists() or Path(str(p) + ".gz").exists():
                 from collections import Counter as _Counter
-                data = json.loads(p.read_text())
+                data = _read_json_with_gzip_fallback(p)
                 cnt = _Counter(v.get("axis", "?") for v in data.values())
                 ax_abilities = {k: cnt[k] for k in ("X", "T", "N", "B", "A")}
         except Exception as _aurora_boundary_exc:
