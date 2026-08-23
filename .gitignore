@@ -28,6 +28,7 @@ CrystalZip_Archives/
 
 # Archives
 *.zip
+!flutter_app/android/app/src/main/assets/aurora_experiential_baseline_v1.zip
 *.tar.gz
 *.rar
 *.7z

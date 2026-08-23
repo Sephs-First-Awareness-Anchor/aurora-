@@ -44,6 +44,7 @@ Architecture integrity rules this module exists to honor (spec section
 """
 from __future__ import annotations
 
+import gzip
 import json
 import os
 import time
@@ -176,7 +177,8 @@ def _atomic_write_json(path: Path, payload: Any) -> None:
 
 def _append_jsonl(path: Path, record: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as f:
+    opener = gzip.open if path.suffix == ".gz" else open
+    with opener(path, "at", encoding="utf-8") as f:
         f.write(json.dumps(record, sort_keys=True) + "\n")
 
 
@@ -430,6 +432,12 @@ class HabitatRuntime:
         return self.root / "entity_lineage.jsonl"
 
     def _motivation_events_path(self) -> Path:
+        # This developmental journal can grow beyond GitHub's per-file limit.
+        # Keep the active journal compressed while retaining transparent
+        # restart compatibility with pre-upgrade, uncompressed state.
+        return self.root / "habitat_motivation_events.jsonl.gz"
+
+    def _legacy_motivation_events_path(self) -> Path:
         return self.root / "habitat_motivation_events.jsonl"
 
     def _load(self) -> None:
@@ -451,9 +459,15 @@ class HabitatRuntime:
                 except Exception:
                     continue
         self._recent_events = self._load_jsonl_tail(self._events_path(), _RECENT_EVENTS_MAXLEN)
-        self._recent_motivation_events = self._load_jsonl_tail(
+        legacy_motivation_events = self._load_jsonl_tail(
+            self._legacy_motivation_events_path(), _RECENT_EVENTS_MAXLEN,
+        )
+        compressed_motivation_events = self._load_jsonl_tail(
             self._motivation_events_path(), _RECENT_EVENTS_MAXLEN,
         )
+        self._recent_motivation_events = (
+            legacy_motivation_events + compressed_motivation_events
+        )[-_RECENT_EVENTS_MAXLEN:]
         # human_response is an index over the persisted causal_parent facts.
         # Rebuild it after restart instead of pretending that an in-memory
         # mutation of an earlier JSONL line was durable.
@@ -469,7 +483,8 @@ class HabitatRuntime:
             return []
         records: deque = deque(maxlen=max(1, int(limit)))
         try:
-            with path.open("r", encoding="utf-8") as handle:
+            opener = gzip.open if path.suffix == ".gz" else open
+            with opener(path, "rt", encoding="utf-8") as handle:
                 for line in handle:
                     if not line.strip():
                         continue

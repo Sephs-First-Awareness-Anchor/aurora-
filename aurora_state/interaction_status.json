@@ -1,24 +1,35 @@
 {
-  "selected": false,
-  "quasi_id": "",
-  "input_signature": "",
-  "interpretive_issue": "",
-  "processing_tier": "",
-  "interaction_archetype": "",
-  "primary_response_strategy": "",
-  "secondary_response_strategy": "",
-  "confidence": 0.0,
-  "match_score": 0.0,
-  "quasi_ready": false,
-  "escalate": true,
-  "reason": "novel_interaction_outside_indexed_archetypes",
-  "search_policy": "allow",
-  "wake_processing_tiers": [],
-  "failure_indicators": [],
-  "expected_effects": [],
-  "relic_bias": {},
-  "session_id": "",
-  "turn_tick": 1,
-  "updated_at": 1785302135.1433756,
-  "stage": "pre_route"
+  "base_count": 1,
+  "composite_count": 0,
+  "higher_count": 0,
+  "quasi_count": 0,
+  "relic_count": 0,
+  "ghost_relics": 0,
+  "latest_archetype": "",
+  "latest_strategy": "",
+  "latest_confidence": 0.0,
+  "lineage_signature": "XTNBA",
+  "runtime_regime": {
+    "axes": {
+      "X": 0.20833333333333334,
+      "T": 0.18,
+      "N": 0.1925,
+      "B": 0.22,
+      "A": 0.22
+    },
+    "dominant_axis": "B",
+    "governor_weight": 1.0
+  },
+  "language_projection": {
+    "existence_mode": "AGENTIC",
+    "language_register": "enacted",
+    "anchor_pole": "aurora",
+    "secondary_pole": "sunni",
+    "noun_bias": 0.839,
+    "verb_bias": 0.109,
+    "flat_web": true,
+    "relation_type_dominant": "related_to"
+  },
+  "updated_at": 1787411451.7839248,
+  "stage": "boot"
 }

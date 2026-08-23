@@ -365,6 +365,16 @@ def _boot(out_dir: str, run_id: str, cfg_overrides: Optional[Dict[str, Any]] = N
                     genealogy._representation_inquiry_consumer_cycle = {
                         str(k): int(v or 0) for k, v in consumer_cycles.items()
                     }
+                engagement_cycles = inquiry_runtime.get("consumer_engagement_cycles", {})
+                if isinstance(engagement_cycles, dict):
+                    genealogy._representation_inquiry_consumer_cycle_engagements = {
+                        str(k): int(v or 0) for k, v in engagement_cycles.items()
+                    }
+                for _consumer, _last_stage_cycle in genealogy._representation_inquiry_consumer_cycle.items():
+                    genealogy._representation_inquiry_consumer_cycle_engagements[_consumer] = max(
+                        int(genealogy._representation_inquiry_consumer_cycle_engagements.get(_consumer, 0) or 0),
+                        int(_last_stage_cycle or 0),
+                    )
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),

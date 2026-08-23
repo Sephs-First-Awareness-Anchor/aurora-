@@ -1,0 +1,1809 @@
+{
+  "entities": {
+    "e_113f6ef898a4": {
+      "content": {},
+      "created_at": 1787388534.9457293,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_113f6ef898a4",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 4,
+        "origin_action_id": "hact_ebb91eecbca9",
+        "parent_ids": [
+          "e_b662b5bba2fa"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388534.9457293,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_17f0bc00d05b": {
+      "content": {},
+      "created_at": 1787388413.5215917,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_17f0bc00d05b",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 1,
+        "origin_action_id": "hact_56f2e1c545cc",
+        "parent_ids": [
+          "e_938e2c5ab9f6"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388413.5215917,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_1c4a7acc6800": {
+      "content": {},
+      "created_at": 1787388595.2420716,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_1c4a7acc6800",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 6,
+        "origin_action_id": "hact_6e32bcaa16f0",
+        "parent_ids": [
+          "e_f63b6cbca7c5"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388595.2420716,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_239d2b83f059": {
+      "content": {},
+      "created_at": 1787388615.3633404,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_239d2b83f059",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 1,
+        "origin_action_id": "hact_2b7d5e553ea8",
+        "parent_ids": [
+          "e_938e2c5ab9f6"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388615.3633404,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_2ad9e5b763a9": {
+      "content": {},
+      "created_at": 1787389110.6873825,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_2ad9e5b763a9",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 5,
+        "origin_action_id": "hact_d1dd3acc7e04",
+        "parent_ids": [
+          "e_7a2f70bf9be9"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389110.6873825,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_2b91d1dfa354": {
+      "content": {},
+      "created_at": 1787388514.8695765,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_2b91d1dfa354",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 2,
+        "origin_action_id": "hact_6c3f9394d973",
+        "parent_ids": [
+          "e_17f0bc00d05b"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388514.8695765,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_32bfb31edaef": {
+      "content": {},
+      "created_at": 1787389348.587108,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_32bfb31edaef",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 8,
+        "origin_action_id": "hact_aef80c7cc522",
+        "parent_ids": [
+          "e_5475efb8bdcc"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389348.587108,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_35fa038118bc": {
+      "content": {},
+      "created_at": 1787388795.2525,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_35fa038118bc",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 5,
+        "origin_action_id": "hact_4672655b9499",
+        "parent_ids": [
+          "e_113f6ef898a4"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388795.2525,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_36886e33ab2b": {
+      "content": {},
+      "created_at": 1787388473.7712626,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_36886e33ab2b",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 4,
+        "origin_action_id": "hact_ef5c48ee5541",
+        "parent_ids": [
+          "e_d178ad163e47"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388473.7712626,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_5245963a9032": {
+      "content": {},
+      "created_at": 1787388575.1324635,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_5245963a9032",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 4,
+        "origin_action_id": "hact_e5236c856e97",
+        "parent_ids": [
+          "e_b662b5bba2fa"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388575.1324635,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_5475efb8bdcc": {
+      "content": {},
+      "created_at": 1787389070.369195,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_5475efb8bdcc",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 7,
+        "origin_action_id": "hact_b0748a8eedea",
+        "parent_ids": [
+          "e_7cf59f94df88"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389070.369195,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_5592a002acc0": {
+      "content": {},
+      "created_at": 1787388756.5607812,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_5592a002acc0",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 3,
+        "origin_action_id": "hact_c7de8871db14",
+        "parent_ids": [
+          "e_2b91d1dfa354"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388756.5607812,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_59f42e8ca246": {
+      "content": {},
+      "created_at": 1787388881.4075544,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_59f42e8ca246",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 10,
+        "origin_action_id": "hact_36965039a8dc",
+        "parent_ids": [
+          "e_70bca878e890"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388881.4075544,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_5c64871a3141": {
+      "content": {},
+      "created_at": 1787388901.6608472,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_5c64871a3141",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 5,
+        "origin_action_id": "hact_6218de332864",
+        "parent_ids": [
+          "e_36886e33ab2b"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388901.6608472,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_5df68027867b": {
+      "content": {},
+      "created_at": 1787389216.9372423,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_5df68027867b",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 9,
+        "origin_action_id": "hact_0c0b7dc6bfcb",
+        "parent_ids": [
+          "e_acba3ceacf24"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389216.9372423,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_5f5cee7057b5": {
+      "content": {},
+      "created_at": 1787388736.3965971,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_5f5cee7057b5",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 8,
+        "origin_action_id": "hact_b01c9c18e4d2",
+        "parent_ids": [
+          "e_95411414840f"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388736.3965971,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_641dd2425c18": {
+      "content": {},
+      "created_at": 1787389261.8949754,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_641dd2425c18",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 9,
+        "origin_action_id": "hact_e25ebbfc1086",
+        "parent_ids": [
+          "e_5f5cee7057b5"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389261.8949754,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_70bca878e890": {
+      "content": {},
+      "created_at": 1787388840.3556006,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_70bca878e890",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 9,
+        "origin_action_id": "hact_eea7e4b1bf58",
+        "parent_ids": [
+          "e_acba3ceacf24"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388840.3556006,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_765c706ed858": {
+      "content": {},
+      "created_at": 1787389090.5248463,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_765c706ed858",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 4,
+        "origin_action_id": "hact_f3be1ae1cd3f",
+        "parent_ids": [
+          "e_5592a002acc0"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389090.5248463,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_77879ac000ab": {
+      "content": {},
+      "created_at": 1787389153.6265607,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_77879ac000ab",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 6,
+        "origin_action_id": "hact_2e90b0199390",
+        "parent_ids": [
+          "e_a2bda0d22cc5"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389153.6265607,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_7a2f70bf9be9": {
+      "content": {},
+      "created_at": 1787388655.7114534,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_7a2f70bf9be9",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 4,
+        "origin_action_id": "hact_3169cfa89e78",
+        "parent_ids": [
+          "e_dee3bcc5b7b5"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388655.7114534,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_7cf59f94df88": {
+      "content": {},
+      "created_at": 1787389050.2150002,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_7cf59f94df88",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 6,
+        "origin_action_id": "hact_8c4146cdabfe",
+        "parent_ids": [
+          "e_35fa038118bc"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389050.2150002,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_7e5dcb4fd288": {
+      "content": {},
+      "created_at": 1787388716.2425933,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_7e5dcb4fd288",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 6,
+        "origin_action_id": "hact_3ca7217f3849",
+        "parent_ids": [
+          "e_f63b6cbca7c5"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388716.2425933,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_81806ed71d4b": {
+      "content": {},
+      "created_at": 1787389174.793873,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_81806ed71d4b",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 11,
+        "origin_action_id": "hact_a2819d30354c",
+        "parent_ids": [
+          "e_59f42e8ca246"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389174.793873,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_8237a3a6576e": {
+      "content": {},
+      "created_at": 1787388860.5244482,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_8237a3a6576e",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 4,
+        "origin_action_id": "hact_0272044f0ba5",
+        "parent_ids": [
+          "e_d178ad163e47"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388860.5244482,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_938e2c5ab9f6": {
+      "content": {},
+      "created_at": 1787388393.4778845,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_938e2c5ab9f6",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 0,
+        "origin_action_id": "hact_6c68ac846fe4",
+        "parent_ids": []
+      },
+      "links": [],
+      "modified_at": 1787388393.477885,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_95411414840f": {
+      "content": {},
+      "created_at": 1787388675.9003894,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_95411414840f",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 7,
+        "origin_action_id": "hact_674664a214c3",
+        "parent_ids": [
+          "e_1c4a7acc6800"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388675.9003894,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_9aa9ff66887d": {
+      "content": {},
+      "created_at": 1787389132.7106025,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_9aa9ff66887d",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 5,
+        "origin_action_id": "hact_1a9c25bab1e6",
+        "parent_ids": [
+          "e_8237a3a6576e"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389132.7106025,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_a2bda0d22cc5": {
+      "content": {},
+      "created_at": 1787388923.531268,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_a2bda0d22cc5",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 5,
+        "origin_action_id": "hact_e4b09782fdce",
+        "parent_ids": [
+          "e_5245963a9032"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388923.531268,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_acba3ceacf24": {
+      "content": {},
+      "created_at": 1787388819.8357923,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_acba3ceacf24",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 8,
+        "origin_action_id": "hact_051e95c9c629",
+        "parent_ids": [
+          "e_95411414840f"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388819.8357923,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_b094f502c4f6": {
+      "content": {},
+      "created_at": 1787389327.9005075,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_b094f502c4f6",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 11,
+        "origin_action_id": "hact_1661b1693b50",
+        "parent_ids": [
+          "e_59f42e8ca246"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389327.9005075,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_b0b8b46fd585": {
+      "content": {},
+      "created_at": 1787388433.5453105,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_b0b8b46fd585",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 2,
+        "origin_action_id": "hact_7f96b06e8d97",
+        "parent_ids": [
+          "e_17f0bc00d05b"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388433.5453105,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_b662b5bba2fa": {
+      "content": {},
+      "created_at": 1787388494.7530591,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_b662b5bba2fa",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 3,
+        "origin_action_id": "hact_f5796e01ccea",
+        "parent_ids": [
+          "e_b0b8b46fd585"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388494.7530591,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_b7369a2fb28c": {
+      "content": {},
+      "created_at": 1787388696.0271578,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_b7369a2fb28c",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 7,
+        "origin_action_id": "hact_96f879cec5a5",
+        "parent_ids": [
+          "e_1c4a7acc6800"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388696.0271578,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_b8c897552f9b": {
+      "content": {},
+      "created_at": 1787389282.3913221,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_b8c897552f9b",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 5,
+        "origin_action_id": "hact_2ccb917b7c00",
+        "parent_ids": [
+          "e_8237a3a6576e"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389282.3913221,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_bb260286bf43": {
+      "content": {},
+      "created_at": 1787389306.133264,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_bb260286bf43",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 6,
+        "origin_action_id": "hact_f6b8e3126ddd",
+        "parent_ids": [
+          "e_b8c897552f9b"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389306.133264,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_d178ad163e47": {
+      "content": {},
+      "created_at": 1787388453.5863712,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_d178ad163e47",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 3,
+        "origin_action_id": "hact_a43af71d2b9f",
+        "parent_ids": [
+          "e_b0b8b46fd585"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388453.5863712,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_d1d06f42b58a": {
+      "content": {},
+      "created_at": 1787389369.0650003,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_d1d06f42b58a",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 12,
+        "origin_action_id": "hact_25e2f3313b84",
+        "parent_ids": [
+          "e_81806ed71d4b"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389369.0650003,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_db83ab1be342": {
+      "content": {},
+      "created_at": 1787389237.2004085,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_db83ab1be342",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 8,
+        "origin_action_id": "hact_d69129c2c7d9",
+        "parent_ids": [
+          "e_5475efb8bdcc"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389237.2004085,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_dbf9327b1609": {
+      "content": {},
+      "created_at": 1787389196.4015498,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_dbf9327b1609",
+      "interaction_count": 0,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 4,
+        "origin_action_id": "hact_c36b7efa12c2",
+        "parent_ids": [
+          "e_5592a002acc0"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787389196.4015498,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_dee3bcc5b7b5": {
+      "content": {},
+      "created_at": 1787388635.4786005,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_dee3bcc5b7b5",
+      "interaction_count": 1,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 3,
+        "origin_action_id": "hact_62ef36208cfd",
+        "parent_ids": [
+          "e_2b91d1dfa354"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388635.4786005,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    },
+    "e_f63b6cbca7c5": {
+      "content": {},
+      "created_at": 1787388555.018952,
+      "creator": "aurora",
+      "deleted": false,
+      "dimensions": [
+        0.5,
+        0.5
+      ],
+      "entity_type": "mark_path",
+      "group_membership": null,
+      "id": "e_f63b6cbca7c5",
+      "interaction_count": 2,
+      "interaction_permissions": {
+        "modifiable_by_aurora": true,
+        "modifiable_by_human": false,
+        "transferable": true,
+        "visible_to_aurora": true,
+        "visible_to_human": true
+      },
+      "layer": 0,
+      "lineage": {
+        "generation": 5,
+        "origin_action_id": "hact_729bfb4527ad",
+        "parent_ids": [
+          "e_113f6ef898a4"
+        ]
+      },
+      "links": [],
+      "modified_at": 1787388555.018952,
+      "orientation": 342.81,
+      "owner": "aurora",
+      "position": [
+        0.5104,
+        0.9046
+      ],
+      "revision_count": 0,
+      "temporal_properties": {},
+      "territory": "self",
+      "visual_properties": {
+        "color": "yellow"
+      }
+    }
+  },
+  "saved_at": 1787389369.065894
+}

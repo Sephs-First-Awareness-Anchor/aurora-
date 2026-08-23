@@ -1,0 +1,109 @@
+{
+  "elapsed_s": 4.068,
+  "genealogy_restored": {
+    "abilities": 13160,
+    "links": 356,
+    "events": 67323,
+    "consequence_contexts": 0,
+    "pair_stats": 1370
+  },
+  "genealogy_ability_count": 13160,
+  "genealogy_link_count": 356,
+  "environment": {
+    "pairs_observed": 1935,
+    "structural_possibilities": 1553,
+    "representable_gaps": 501,
+    "counterfactual_observations": 1490,
+    "pending_user": {},
+    "last_pair": {
+      "user_event_id": "evt:d322d82167e022ad7dcf10bd",
+      "possibility_event_id": "evt:1a296c050c7ca5d85a54af10",
+      "possibility_id": "f6400dd383f952911c80f0ec:evt:d322d82167e022ad7dcf10bd:evt:1a296c050c7ca5d85a54af10",
+      "representable_gap": false,
+      "trial_component_id": "warp_communication_emergence_0ea009de"
+    },
+    "backfilled_through_event_index": 4000,
+    "backfill_status": "completed",
+    "backfill_completed_at": 1787400418.5725074
+  },
+  "communication": {
+    "observations": 800,
+    "environmental_possibility_observations": 800,
+    "environmental_possibilities_seen": 1935,
+    "pending_receiver_validation": 0,
+    "gap_families": 118,
+    "trial_operations": 13,
+    "promoted_operations": 0,
+    "dissolved_operations": 0
+  },
+  "active_operation_count": 13,
+  "operations_with_genealogy_parents": 13,
+  "backfill_idempotence": {
+    "communication_hash_unchanged_on_second_prepare": true,
+    "backfilled_through_event_index": 4000
+  },
+  "historical_surface_retention": {
+    "assistant_surfaces_checked": 2001,
+    "verbatim_surfaces_retained": 0
+  },
+  "baseline_candidate_coverage": {
+    "user_configurations": 1973,
+    "candidate_before": 128,
+    "candidate_after": 1374,
+    "aligned_075_before": 87,
+    "aligned_075_after": 1302
+  },
+  "sample_lineage": [
+    {
+      "component_id": "warp_communication_emergence_eb5f1a91",
+      "signature": "X^1*T^1*N^1*B^1",
+      "parents": [
+        "root_pressure:B:REC_DEEP",
+        "root_pressure:B:REC_MODERATE",
+        "root_pressure:N:REC_DEEP",
+        "X:ADMIT",
+        "X:REJECT",
+        "X:RECLASSIFY",
+        "X:RESOLVE_CONTRADICTION",
+        "T:DEFER",
+        "T:BATCH",
+        "T:REORDER",
+        "T:SIM_TICK"
+      ]
+    },
+    {
+      "component_id": "warp_communication_emergence_d1df1958",
+      "signature": "N^1*B^1*A^1",
+      "parents": [
+        "root_pressure:N:REC_DEEP",
+        "root_pressure:A:REC_DEEP",
+        "root_pressure:N:REC_CORE",
+        "X:ADMIT",
+        "X:REJECT",
+        "X:RECLASSIFY",
+        "X:RESOLVE_CONTRADICTION",
+        "T:DEFER",
+        "T:BATCH",
+        "T:REORDER",
+        "T:SIM_TICK"
+      ]
+    },
+    {
+      "component_id": "warp_communication_emergence_67a21b7b",
+      "signature": "N^1*B^1*A^1",
+      "parents": [
+        "root_pressure:N:REC_DEEP",
+        "root_pressure:A:REC_DEEP",
+        "root_pressure:N:REC_CORE",
+        "X:ADMIT",
+        "X:REJECT",
+        "X:RECLASSIFY",
+        "X:RESOLVE_CONTRADICTION",
+        "T:DEFER",
+        "T:BATCH",
+        "T:REORDER",
+        "T:SIM_TICK"
+      ]
+    }
+  ]
+}

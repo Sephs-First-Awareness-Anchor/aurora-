@@ -1,0 +1,1933 @@
+{
+  "schema_version": 1,
+  "timestamp": 1787388474.6905415,
+  "episode_id": "INT:6fc1cb16679875",
+  "problem_type": "runtime_fault",
+  "problem_reasons": [
+    "float() argument must be a string or a real number, not 'dict'"
+  ],
+  "summary": "The strongest observed boundary is aurora._extract_pipeline_signals because float() argument must be a string or a real number, not 'dict'.",
+  "confidence": 0.96,
+  "likely_boundary": {
+    "function_id": "aurora._extract_pipeline_signals",
+    "file": "aurora.py",
+    "line": 16127,
+    "confidence": 0.96,
+    "reason": "float() argument must be a string or a real number, not 'dict'",
+    "step_id": "runtime_fault",
+    "decision": "exception",
+    "inputs": {
+      "function": "_extract_pipeline_signals",
+      "handler_line": 12745,
+      "source_file": "aurora.py",
+      "module": "aurora",
+      "reported_handler_line": 12745
+    },
+    "derived": {
+      "exception_type": "TypeError",
+      "source_line_verified_from_ast": true
+    },
+    "output": null
+  },
+  "inspection_targets": [
+    {
+      "function_id": "aurora._extract_pipeline_signals",
+      "file": "aurora.py",
+      "line": 16127,
+      "confidence": 0.96,
+      "reason": "float() argument must be a string or a real number, not 'dict'",
+      "step_id": "runtime_fault",
+      "decision": "exception",
+      "inputs": {
+        "function": "_extract_pipeline_signals",
+        "handler_line": 12745,
+        "source_file": "aurora.py",
+        "module": "aurora",
+        "reported_handler_line": 12745
+      },
+      "derived": {
+        "exception_type": "TypeError",
+        "source_line_verified_from_ast": true
+      },
+      "output": null
+    },
+    {
+      "function_id": "aurora_internal.aurora_constraint_semantic_continuity.derive_constraint_semantic_state",
+      "file": "aurora_internal/aurora_constraint_semantic_continuity.py",
+      "line": 596,
+      "confidence": 0.5673,
+      "reason": "step evidence overlaps 4 problem terms",
+      "step_id": "INT:6fc1cb16679875:S004",
+      "decision": "integrate_asserted_relation",
+      "inputs": {
+        "relational_form": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation",
+          "recursive_reconstruction": {
+            "raw_preserved": true,
+            "changes": [],
+            "wavelet_ids": [
+              "'RW:883428f69d8a61'",
+              "'RW:26883e7958005e'",
+              "'RW:1c3d4b90b3c37b'",
+              "'RIW:78264d7d609e7f'"
+            ],
+            "operation": {
+              "operation": "'recursive_backprojection'",
+              "root_constraints": "['X', 'T', 'N', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "targets": "['provisional_interpretation', 'effective_interpretation']",
+              "description": "'let developed understanding reconstruct the supported meaning of its initiating disturbance'",
+              "payload": "{'change_count': 0, 'principle': 'later understanding may revise interpretation but not raw history'}"
+            }
+          }
+        },
+        "axis_activation": {
+          "X": 0.337876,
+          "T": 0.120741,
+          "N": 0.066744,
+          "B": 0.20467,
+          "A": 0.269969
+        }
+      },
+      "derived": {
+        "axis_derivation": {
+          "X": {
+            "operation": "entity_admission",
+            "roots": [
+              "'X'",
+              "'B'"
+            ],
+            "signature": "X^1*B^1",
+            "meaning": "identity",
+            "description": "admit a distinguishable entity or quality into the current reality boundary",
+            "canonical_profile": {
+              "signature": "'X^1*B^1'",
+              "axes": "('X', 'B')",
+              "arity": "2",
+              "label": "'identity'",
+              "summary": "'Existence bounded by a limit becomes this rather than that: an identifiable thing with a skin.'",
+              "representation": "'membrane'",
+              "stage": "'pair'",
+              "aliases": "('definition', 'separation')",
+              "notes": "()"
+            },
+            "payload": {
+              "entities": "[]",
+              "unknown": "''",
+              "unknown_descriptor": "''",
+              "admissible": "False"
+            }
+          },
+          "T": {
+            "operation": "reference_continuity",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'B'"
+            ],
+            "signature": "X^1*T^1*B^1",
+            "meaning": "referential_persistence",
+            "description": "preserve the identity of a referent across conversational time",
+            "canonical_profile": {},
+            "payload": {
+              "continuity_bindings": "[]",
+              "time_reference": "''",
+              "referent_topic": "''"
+            }
+          },
+          "N": {
+            "operation": "purpose_direction",
+            "roots": [
+              "'T'",
+              "'N'",
+              "'A'"
+            ],
+            "signature": "T^1*N^1*A^1",
+            "meaning": "directed_resolution",
+            "description": "derive what change or resolution the current relation calls for",
+            "canonical_profile": {
+              "signature": "'T^1*N^1*A^1'",
+              "axes": "('T', 'N', 'A')",
+              "arity": "3",
+              "label": "'ambition'",
+              "summary": "'Momentum under selection becomes directed intent: will that knows where it wants to go.'",
+              "representation": "'directed_intent'",
+              "stage": "'compound'",
+              "aliases": "('purposeful_will',)",
+              "notes": "()"
+            },
+            "payload": {
+              "relation": "''",
+              "requested_change": "'integrate'",
+              "negated": "False"
+            }
+          },
+          "B": {
+            "operation": "relational_binding",
+            "roots": [
+              "'T'",
+              "'N'",
+              "'B'"
+            ],
+            "signature": "T^1*N^1*B^1",
+            "meaning": "directed_relation",
+            "description": "bind entities through a bounded change, state, or causal relation",
+            "canonical_profile": {
+              "signature": "'T^1*N^1*B^1'",
+              "axes": "('T', 'N', 'B')",
+              "arity": "3",
+              "label": "'synergy'",
+              "summary": "'Potential cycling through time inside a limit becomes a stable pattern that can persist as signal.'",
+              "representation": "'signal'",
+              "stage": "'compound'",
+              "aliases": "('complexity', 'machine')",
+              "notes": "('This is the highest pre-agency meaning surface: a pattern that holds.',)"
+            },
+            "payload": {
+              "subject": "''",
+              "relation": "''",
+              "object": "''",
+              "complement": "''",
+              "alternatives": "[]",
+              "unresolved": "['relation', 'entity']"
+            }
+          },
+          "A": {
+            "operation": "perspective_authorship",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'B'",
+              "'A'"
+            ],
+            "signature": "X^1*T^1*B^1*A^1",
+            "meaning": "situated_perspective",
+            "description": "distinguish whose perspective must author the answer while preserving context",
+            "canonical_profile": {},
+            "payload": {
+              "operation": "'integrate_asserted_relation'",
+              "unknown_role": "''",
+              "unknown_descriptor": "''",
+              "perspective_owner": "''",
+              "claim_focus": "''"
+            }
+          },
+          "APEX": {
+            "operation": "proposition_understanding",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'N'",
+              "'B'",
+              "'A'"
+            ],
+            "signature": "X^1*T^1*N^1*B^1*A^1",
+            "meaning": "constraint_complete_understanding",
+            "description": "integrate the admitted entities, continuity, pressure, boundaries, and agency into one thought",
+            "canonical_profile": {
+              "signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "axes": "('X', 'T', 'N', 'B', 'A')",
+              "arity": "5",
+              "label": "'consciousness'",
+              "summary": "'When unity, causality, potential, structure, and understanding cohere, meaning perceives its own limit.'",
+              "representation": "'hologram'",
+              "stage": "'integrated'",
+              "aliases": "('self_model',)",
+              "notes": "()"
+            },
+            "payload": {
+              "proposition": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': ['RW:883428f69d8a61', 'RW:26883e7958005e', 'RW:1c3d4b90b3c37b', 'RIW:78264d7d609e7f'], 'operation': {'operation': 'recursi",
+              "response_operation": "'integrate_asserted_relation'",
+              "unresolved": "['relation', 'entity']"
+            }
+          }
+        },
+        "genealogy_trace": {
+          "root_constraints": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+          "orientation": {
+            "X": 1.0,
+            "T": 1.0,
+            "N": 1.0,
+            "B": 0.8587,
+            "A": 1.0
+          },
+          "active_axis_signature": "X^1*T^1*N^1*B^1*A^1",
+          "supporting_abilities": [
+            {
+              "id": "'X:ADMIT'",
+              "axis": "'X'",
+              "requires": "['X']",
+              "effect_tags": "['admit_state', 'clear_block', 'origin_primary:X', 'origin_secondary:X', 'origin_signature:X^1', 'root_slot:NC:X>X\u00d7NC:X>X', 'operation_lineage:OP:4c6504574442', 'seed_lineage:true', 'operator_action:operator_on_x', 'purpose_lane:intelligence', 'operator_grade:0.652', 'purpose_grade:0.300']"
+            },
+            {
+              "id": "'X:REJECT'",
+              "axis": "'X'",
+              "requires": "['X']",
+              "effect_tags": "['reject_state', 'enforce_boundary', 'origin_primary:X', 'origin_secondary:B', 'origin_signature:X^1*B^1', 'root_slot:NC:X>B\u00d7NC:B>X', 'operation_lineage:OP:25a28b16316f', 'seed_lineage:true', 'operator_action:operator_on_b', 'purpose_lane:meaning', 'operator_grade:0.683', 'purpose_grade:0.668']"
+            },
+            {
+              "id": "'X:RECLASSIFY'",
+              "axis": "'X'",
+              "requires": "['B', 'X']",
+              "effect_tags": "['reclassify', 'reindex', 'origin_primary:X', 'origin_secondary:B', 'origin_signature:X^1*B^1', 'root_slot:NC:X>B\u00d7NC:B>X', 'operation_lineage:OP:7f6cd377d854', 'seed_lineage:true', 'operator_action:operator_on_b', 'purpose_lane:meaning', 'operator_grade:0.683', 'purpose_grade:0.668']"
+            },
+            {
+              "id": "'X:RESOLVE_CONTRADICTION'",
+              "axis": "'X'",
+              "requires": "['X', 'T']",
+              "effect_tags": "['resolve', 'merge_conflict', 'origin_primary:X', 'origin_secondary:T', 'origin_signature:X^1*T^1', 'root_slot:NC:X>T\u00d7NC:T>X', 'operation_lineage:OP:7bad61b1469e', 'seed_lineage:true', 'operator_action:operator_on_t', 'purpose_lane:intelligence', 'operator_grade:0.657', 'purpose_grade:0.639']"
+            },
+            {
+              "id": "'T:DEFER'",
+              "axis": "'T'",
+              "requires": "['T']",
+              "effect_tags": "['defer', 'delay', 'origin_primary:T', 'origin_secondary:T', 'origin_signature:T^1', 'root_slot:NC:T>T\u00d7NC:T>T', 'operation_lineage:OP:12ad2feca691', 'seed_lineage:true', 'operator_action:operator_on_t', 'purpose_lane:intelligence', 'operator_grade:0.666', 'purpose_grade:0.300']"
+            },
+            {
+              "id": "'T:BATCH'",
+              "axis": "'T'",
+              "requires": "['N', 'T']",
+              "effect_tags": "['batch', 'coalesce', 'origin_primary:T', 'origin_secondary:N', 'origin_signature:T^1*N^1', 'root_slot:NC:T>N\u00d7NC:N>T', 'operation_lineage:OP:28dca87baf4e', 'seed_lineage:true', 'operator_action:operator_on_t', 'purpose_lane:intelligence', 'operator_grade:0.669', 'purpose_grade:0.636']"
+            },
+            {
+              "id": "'T:REORDER'",
+              "axis": "'T'",
+              "requires": "['B', 'T']",
+              "effect_tags": "['reorder', 'reprioritize', 'origin_primary:T', 'origin_secondary:B', 'origin_signature:T^1*B^1', 'root_slot:NC:T>B\u00d7NC:B>T', 'operation_lineage:OP:db685295b785', 'seed_lineage:true', 'operator_action:operator_on_b', 'purpose_lane:meaning', 'operator_grade:0.692', 'purpose_grade:0.663']"
+            },
+            {
+              "id": "'T:SIM_TICK'",
+              "axis": "'T'",
+              "requires": "['T']",
+              "effect_tags": "['tick', 'advance_clock', 'origin_primary:T', 'origin_secondary:A', 'origin_signature:T^1*A^1', 'root_slot:NC:T>A\u00d7NC:A>T', 'operation_lineage:OP:3d167c08c8f2', 'seed_lineage:true', 'operator_action:operator_on_a', 'purpose_lane:meaning', 'operator_grade:0.778', 'purpose_grade:0.760']"
+            }
+          ],
+          "derivation_chain": [
+            "X^1*B^1",
+            "X^1*T^1*B^1",
+            "T^1*N^1*A^1",
+            "T^1*N^1*B^1",
+            "X^1*T^1*B^1*A^1",
+            "X^1*T^1*N^1*B^1*A^1"
+          ]
+        }
+      },
+      "output": {
+        "proposition_id": "CSP:34bd729596bd13",
+        "response_obligation": {
+          "operation": "integrate_asserted_relation",
+          "unknown_role": "",
+          "unknown_descriptor": "",
+          "must_preserve": [],
+          "must_not_replace_with": [],
+          "alternatives": [],
+          "perspective_owner": "",
+          "derivation_signature": "X^1*T^1*N^1*B^1*A^1"
+        }
+      }
+    },
+    {
+      "function_id": "aurora_internal.aurora_recursive_causal_reasoning_waveform.AuroraRecursiveCausalReasoningWaveform.prepare_semantic_state",
+      "file": "aurora_internal/aurora_recursive_causal_reasoning_waveform.py",
+      "line": 542,
+      "confidence": 0.4588,
+      "reason": "step evidence overlaps 2 problem terms",
+      "step_id": "INT:6fc1cb16679875:S003",
+      "decision": "backproject_global_understanding",
+      "inputs": {
+        "raw_input": "",
+        "provisional_interpretation": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation"
+        }
+      },
+      "derived": {
+        "wavelets": [
+          {
+            "wavelet_id": "RW:883428f69d8a61",
+            "primitive": "existence_admission",
+            "roots": [
+              "'X'",
+              "'B'"
+            ],
+            "amplitude": 0.55,
+            "phase": 0.0,
+            "polarity": 1,
+            "target": "entities",
+            "source": "unresolved_structure",
+            "axis_profile": {},
+            "evidence": {
+              "unresolved": "['entity', 'relation']"
+            },
+            "parent_ids": [],
+            "status": "transient",
+            "signed_effect": 0.55,
+            "canonical_signature": "X^1*B^1"
+          },
+          {
+            "wavelet_id": "RW:26883e7958005e",
+            "primitive": "continuity_phase_lock",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'B'"
+            ],
+            "amplitude": 0.48,
+            "phase": 0.0,
+            "polarity": 1,
+            "target": "relation",
+            "source": "unresolved_structure",
+            "axis_profile": {},
+            "evidence": {
+              "unresolved": "['entity', 'relation']"
+            },
+            "parent_ids": [],
+            "status": "transient",
+            "signed_effect": 0.48,
+            "canonical_signature": "X^1*T^1*B^1"
+          },
+          {
+            "wavelet_id": "RW:1c3d4b90b3c37b",
+            "primitive": "agency_selection",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'B'",
+              "'A'"
+            ],
+            "amplitude": 0.22,
+            "phase": 0.0,
+            "polarity": 1,
+            "target": "authority",
+            "source": "response_obligation",
+            "axis_profile": {},
+            "evidence": {
+              "owner": "''",
+              "question": "False"
+            },
+            "parent_ids": [],
+            "status": "transient",
+            "signed_effect": 0.22,
+            "canonical_signature": "X^1*T^1*B^1*A^1"
+          },
+          {
+            "wavelet_id": "RIW:78264d7d609e7f",
+            "primitive": "recursive_backprojection",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'N'",
+              "'B'",
+              "'A'"
+            ],
+            "amplitude": 0.6,
+            "phase": 0.0,
+            "polarity": 1,
+            "target": "representation_relation",
+            "source": "representation_inquiry",
+            "axis_profile": {
+              "X": "0.0",
+              "T": "0.0",
+              "N": "0.0",
+              "B": "0.0",
+              "A": "1.0"
+            },
+            "evidence": {
+              "stage_id": "'RS:e7f6b9968f7fe506'",
+              "inquiry_id": "'RC:fda1173daed78894'",
+              "operand_states": "[{'constraint_basis': {'counts': {'A': 1, 'B': 0, 'N': 0, 'T': 0, 'X': 0}, 'generational_depth_counts': {'A': {'0': 1}, 'B': {}, 'N': {}, 'T': {}, 'X': {}}, 'generational_potency': {'A': 1.0, 'B': 0.0, 'N': 0.0, 'T': 0.0, 'X': 0.0}, 'semantic_origin_signature': 'N^1*A^1', 'signature': 'A^1'}, 'depth': 0, 'eligible': True, 'generation': 1, 'kind': 'ABILITY', 'operational_effect': {'cost': {'A': 0.02, 'B': 0.01, 'N': 0.01, 'T': 0.01, 'X': 0.01}, 'dominant_axis': 'A', 'effect_tags': ['choose', 'sel",
+              "constraint_basis": "{'counts': {'A': 1, 'B': 0, 'N': 0, 'T': 0, 'X': 0}, 'signature': 'A^1'}",
+              "relational_axis_profile": "{'A': 1.0, 'B': 0.0, 'N': 0.0, 'T': 0.0, 'X': 0.0}"
+            },
+            "parent_ids": [
+              "'A:CHOOSE'",
+              "'REFAB:N:OPERATOR:A:?:?:?:?'"
+            ],
+            "status": "transient",
+            "signed_effect": 0.6,
+            "canonical_signature": "X^1*T^1*N^1*B^1*A^1"
+          }
+        ],
+        "interference": {
+          "axis_before": {
+            "X": 0.472947,
+            "T": 0.129113,
+            "N": 0.190219,
+            "B": 0.093309,
+            "A": 0.114411
+          },
+          "axis_after": {
+            "X": 0.337876,
+            "T": 0.120741,
+            "N": 0.066744,
+            "B": 0.20467,
+            "A": 0.269969
+          },
+          "axis_delta": {
+            "X": -0.135071,
+            "T": -0.008372,
+            "N": -0.123475,
+            "B": 0.111361,
+            "A": 0.155558
+          },
+          "contributions": [
+            {
+              "wavelet_id": "'RW:883428f69d8a61'",
+              "primitive": "'existence_admission'",
+              "roots": "['X', 'B']",
+              "signed_effect": "0.55",
+              "axis_effects": "{'X': 0.275, 'B': 0.275}",
+              "target": "'entities'"
+            },
+            {
+              "wavelet_id": "'RW:26883e7958005e'",
+              "primitive": "'continuity_phase_lock'",
+              "roots": "['X', 'T', 'B']",
+              "signed_effect": "0.48",
+              "axis_effects": "{'X': 0.16, 'T': 0.16, 'B': 0.16}",
+              "target": "'relation'"
+            },
+            {
+              "wavelet_id": "'RW:1c3d4b90b3c37b'",
+              "primitive": "'agency_selection'",
+              "roots": "['X', 'T', 'B', 'A']",
+              "signed_effect": "0.22",
+              "axis_effects": "{'X': 0.055, 'T': 0.055, 'B': 0.055, 'A': 0.055}",
+              "target": "'authority'"
+            },
+            {
+              "wavelet_id": "'RIW:78264d7d609e7f'",
+              "primitive": "'recursive_backprojection'",
+              "roots": "['X', 'T', 'N', 'B', 'A']",
+              "signed_effect": "0.6",
+              "axis_effects": "{'X': 0.0, 'T': 0.0, 'N': 0.0, 'B': 0.0, 'A': 0.6}",
+              "target": "'representation_relation'"
+            }
+          ],
+          "coherence": 0.733081,
+          "constructive_energy": 1.85,
+          "destructive_energy": 0.0
+        }
+      },
+      "output": {
+        "effective_interpretation": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation",
+          "recursive_reconstruction": {
+            "raw_preserved": true,
+            "changes": [],
+            "wavelet_ids": [
+              "'RW:883428f69d8a61'",
+              "'RW:26883e7958005e'",
+              "'RW:1c3d4b90b3c37b'",
+              "'RIW:78264d7d609e7f'"
+            ],
+            "operation": {
+              "operation": "'recursive_backprojection'",
+              "root_constraints": "['X', 'T', 'N', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "targets": "['provisional_interpretation', 'effective_interpretation']",
+              "description": "'let developed understanding reconstruct the supported meaning of its initiating disturbance'",
+              "payload": "{'change_count': 0, 'principle': 'later understanding may revise interpretation but not raw history'}"
+            }
+          }
+        },
+        "global_understanding": {
+          "proposition_id": "CSP:34bd729596bd13",
+          "effective_relation": {
+            "subject": "",
+            "relation": "",
+            "object": "",
+            "complement": "",
+            "unknown_role": ""
+          },
+          "unresolved": [
+            "relation",
+            "entity"
+          ],
+          "completeness": 0.25,
+          "coherence": 0.733081,
+          "causal_chain": [
+            {
+              "operation": "'existence_admission'",
+              "root_constraints": "['X', 'B']",
+              "canonical_signature": "'X^1*B^1'",
+              "targets": "['entities', 'identity']",
+              "description": "'stabilize which entities or qualities are admitted to the active reality'",
+              "payload": "{'entities': ['', '', '']}"
+            },
+            {
+              "operation": "'continuity_phase_lock'",
+              "root_constraints": "['X', 'T', 'B']",
+              "canonical_signature": "'X^1*T^1*B^1'",
+              "targets": "['referents', 'history', 'relation']",
+              "description": "'preserve identity and relation across processing time'",
+              "payload": "{'relation': ''}"
+            },
+            {
+              "operation": "'transformational_gradient'",
+              "root_constraints": "['T', 'N', 'A']",
+              "canonical_signature": "'T^1*N^1*A^1'",
+              "targets": "['relation', 'unknown', 'resolution']",
+              "description": "'amplify the change required to move an unresolved relation toward understanding'",
+              "payload": "{'unknown': ''}"
+            },
+            {
+              "operation": "'boundary_separation'",
+              "root_constraints": "['X', 'N', 'B']",
+              "canonical_signature": "'X^1*N^1*B^1'",
+              "targets": "['roles', 'alternatives', 'scope']",
+              "description": "'separate competing entities, roles, and scopes without erasing either side'",
+              "payload": "{'alternatives': []}"
+            },
+            {
+              "operation": "'agency_selection'",
+              "root_constraints": "['X', 'T', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*B^1*A^1'",
+              "targets": "['authority', 'perspective', 'response']",
+              "description": "'select which grounded perspective may author the next causal act'",
+              "payload": "{'owner': ''}"
+            },
+            {
+              "operation": "'recursive_backprojection'",
+              "root_constraints": "['X', 'T', 'N', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "targets": "['provisional_interpretation', 'effective_interpretation']",
+              "description": "'let developed understanding reconstruct the supported meaning of its initiating disturbance'",
+              "payload": "{'reconstruction': {'changed': False, 'changes': [], 'raw_input_preserved': True, 'support_required': True}}"
+            }
+          ],
+          "wavelet_count": 4,
+          "hurricane_condition": 0.443232,
+          "retrospective_rule": "the developed understanding reconstructs the supported meaning of its initiating disturbance"
+        }
+      }
+    },
+    {
+      "function_id": "aurora_expression_perception.SentenceComposer.compose",
+      "file": "aurora_expression_perception.py",
+      "line": 2596,
+      "confidence": 0.4055,
+      "reason": "step evidence overlaps 1 problem terms",
+      "step_id": "INT:6fc1cb16679875:S008",
+      "decision": "emitted",
+      "inputs": {
+        "input_text": "",
+        "frame": null,
+        "tone": "neutral",
+        "i_state": "i_is"
+      },
+      "derived": {
+        "motifs_used": 0,
+        "words_used": [
+          "am",
+          "tones",
+          "here's",
+          "orange"
+        ],
+        "word_sources": {
+          "am": {
+            "tag": "X:OPERATOR",
+            "candidate_source": "find_by_noncomp",
+            "usage_count_at_selection": 925
+          },
+          "tones": {
+            "tag": "X:MAGNITUDE",
+            "candidate_source": "find_by_noncomp",
+            "usage_count_at_selection": 0
+          },
+          "here's": {
+            "tag": "X:OPERATOR",
+            "candidate_source": "find_by_noncomp",
+            "usage_count_at_selection": 0
+          },
+          "orange": {
+            "tag": "X:MAGNITUDE",
+            "candidate_source": "find_by_noncomp",
+            "usage_count_at_selection": 0
+          }
+        },
+        "floor_failures": [
+          {
+            "role": "object",
+            "best_candidate": "tones",
+            "best_score": 0.07500000000000001,
+            "floor": 0.1
+          },
+          {
+            "role": "action",
+            "best_candidate": "here's",
+            "best_score": 0.07500000000000001,
+            "floor": 0.1
+          },
+          {
+            "role": "object",
+            "best_candidate": "orange",
+            "best_score": 0.07500000000000001,
+            "floor": 0.1
+          }
+        ]
+      },
+      "output": "I am tones. I here' orange."
+    },
+    {
+      "function_id": "aurora_internal.aurora_constraint_semantic_continuity.relation_alignment",
+      "file": "aurora_internal/aurora_constraint_semantic_continuity.py",
+      "line": 1001,
+      "confidence": 0.405,
+      "reason": "step evidence overlaps 1 problem terms",
+      "step_id": "INT:6fc1cb16679875:S005",
+      "decision": "retain_existing_candidate",
+      "inputs": {
+        "relational_form": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation",
+          "recursive_reconstruction": {
+            "raw_preserved": true,
+            "changes": [],
+            "wavelet_ids": [
+              "'RW:883428f69d8a61'",
+              "'RW:26883e7958005e'",
+              "'RW:1c3d4b90b3c37b'",
+              "'RIW:78264d7d609e7f'"
+            ],
+            "operation": {
+              "operation": "'recursive_backprojection'",
+              "root_constraints": "['X', 'T', 'N', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "targets": "['provisional_interpretation', 'effective_interpretation']",
+              "description": "'let developed understanding reconstruct the supported meaning of its initiating disturbance'",
+              "payload": "{'change_count': 0, 'principle': 'later understanding may revise interpretation but not raw history'}"
+            }
+          }
+        },
+        "preexisting_response": "",
+        "constraint_candidate": ""
+      },
+      "derived": {
+        "preexisting_alignment": {
+          "score": 0.0
+        },
+        "candidate_alignment": {}
+      },
+      "output": {
+        "text": "",
+        "source": "chain"
+      }
+    },
+    {
+      "function_id": "aurora._finalize_articulation",
+      "file": "aurora.py",
+      "line": 21471,
+      "confidence": 0.3515,
+      "reason": "",
+      "step_id": "INT:6fc1cb16679875:S009",
+      "decision": "selected",
+      "inputs": {
+        "user_text": "",
+        "grounded_text": "",
+        "grounded_confidence": 0.5,
+        "composer_text": "I am tones",
+        "composer_confidence": 0.6142
+      },
+      "derived": {
+        "grounded_semantic_authority": 0.0,
+        "meaning_preserved": true,
+        "rejection_reasons": [
+          "no_grounded_candidate_to_compare"
+        ]
+      },
+      "output": {
+        "text": "I am tones",
+        "source": "composer_unified",
+        "semantic_authority": 0.6142,
+        "articulation_quality": 0.6142,
+        "confidence": 0.6142,
+        "meaning_preserved": true,
+        "rejection_reasons": [
+          "no_grounded_candidate_to_compare"
+        ]
+      }
+    },
+    {
+      "function_id": "aurora_internal.aurora_proposition_frame.build_frame",
+      "file": "aurora_internal/aurora_proposition_frame.py",
+      "line": 611,
+      "confidence": 0.3512,
+      "reason": "",
+      "step_id": "INT:6fc1cb16679875:S007",
+      "decision": "empty",
+      "inputs": {
+        "has_thought_state": true,
+        "has_working_memory": true
+      },
+      "derived": {
+        "frame_source": "",
+        "frame_subject": "",
+        "frame_relation": "",
+        "frame_object": "",
+        "frame_complement": "",
+        "frame_unknown_role": "",
+        "frame_derivation_signature": ""
+      },
+      "output": null
+    },
+    {
+      "function_id": "aurora_internal.aurora_constraint_semantic_continuity.extract_relational_form",
+      "file": "aurora_internal/aurora_constraint_semantic_continuity.py",
+      "line": 326,
+      "confidence": 0.3503,
+      "reason": "",
+      "step_id": "INT:6fc1cb16679875:S002",
+      "decision": "preserved_for_root_constraint_derivation",
+      "inputs": {
+        "user_text": ""
+      },
+      "derived": {
+        "relational_form": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation"
+        }
+      },
+      "output": {
+        "raw_text": "",
+        "subject": "",
+        "relation": "",
+        "obj": "",
+        "complement": "",
+        "unknown_role": "",
+        "unknown_token": "",
+        "unknown_descriptor": "",
+        "question": false,
+        "negated": false,
+        "modality": "",
+        "owner": "",
+        "alternatives": [],
+        "clauses": [],
+        "confidence": 0.0,
+        "source": "utterance_relation"
+      }
+    },
+    {
+      "function_id": "aurora._run_live_response_turn",
+      "file": "aurora.py",
+      "line": 32621,
+      "confidence": 0.3502,
+      "reason": "",
+      "step_id": "INT:6fc1cb16679875:S001",
+      "decision": "parsed",
+      "inputs": {
+        "user_text": ""
+      },
+      "derived": {
+        "parsed": {
+          "topic": "",
+          "topic_words": [],
+          "entities": [],
+          "time_ref": null,
+          "query_type": "statement",
+          "search_query": "",
+          "pragmatic_signals": [],
+          "frame": "asserting",
+          "stance": "neutral",
+          "utterance_type": "statement",
+          "full_phrase": "",
+          "negated": false,
+          "is_hypothetical": false,
+          "is_clarification": false,
+          "is_callback": false,
+          "is_experiential": false,
+          "is_opinion": false,
+          "is_imperative": false,
+          "relational_form": {
+            "raw_text": "",
+            "subject": "",
+            "relation": "",
+            "obj": "",
+            "complement": "",
+            "unknown_role": "",
+            "unknown_token": "",
+            "unknown_descriptor": "",
+            "question": false,
+            "negated": false,
+            "modality": "",
+            "owner": "",
+            "alternatives": [],
+            "clauses": [],
+            "confidence": 0.0,
+            "source": "utterance_relation"
+          },
+          "raw_text": "",
+          "strata_context": {
+            "mode": "blended",
+            "thermal_load": null,
+            "sensory_maturity": 0.0
+          }
+        }
+      },
+      "output": {
+        "topic": "",
+        "topic_words": [],
+        "entities": [],
+        "time_ref": null,
+        "query_type": "statement",
+        "search_query": "",
+        "pragmatic_signals": [],
+        "frame": "asserting",
+        "stance": "neutral",
+        "utterance_type": "statement",
+        "full_phrase": "",
+        "negated": false,
+        "is_hypothetical": false,
+        "is_clarification": false,
+        "is_callback": false,
+        "is_experiential": false,
+        "is_opinion": false,
+        "is_imperative": false,
+        "relational_form": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation"
+        },
+        "raw_text": "",
+        "strata_context": {
+          "mode": "blended",
+          "thermal_load": null,
+          "sensory_maturity": 0.0
+        }
+      }
+    }
+  ],
+  "value_trail": [
+    {
+      "step_id": "INT:6fc1cb16679875:S001",
+      "function_id": "aurora._run_live_response_turn",
+      "decision": "parsed",
+      "inputs": {
+        "user_text": ""
+      },
+      "derived": {
+        "parsed": {
+          "topic": "",
+          "topic_words": [],
+          "entities": [],
+          "time_ref": null,
+          "query_type": "statement",
+          "search_query": "",
+          "pragmatic_signals": [],
+          "frame": "asserting",
+          "stance": "neutral",
+          "utterance_type": "statement",
+          "full_phrase": "",
+          "negated": false,
+          "is_hypothetical": false,
+          "is_clarification": false,
+          "is_callback": false,
+          "is_experiential": false,
+          "is_opinion": false,
+          "is_imperative": false,
+          "relational_form": {
+            "raw_text": "",
+            "subject": "",
+            "relation": "",
+            "obj": "",
+            "complement": "",
+            "unknown_role": "",
+            "unknown_token": "",
+            "unknown_descriptor": "",
+            "question": false,
+            "negated": false,
+            "modality": "",
+            "owner": "",
+            "alternatives": [],
+            "clauses": [],
+            "confidence": 0.0,
+            "source": "utterance_relation"
+          },
+          "raw_text": "",
+          "strata_context": {
+            "mode": "blended",
+            "thermal_load": null,
+            "sensory_maturity": 0.0
+          }
+        }
+      },
+      "output": {
+        "topic": "",
+        "topic_words": [],
+        "entities": [],
+        "time_ref": null,
+        "query_type": "statement",
+        "search_query": "",
+        "pragmatic_signals": [],
+        "frame": "asserting",
+        "stance": "neutral",
+        "utterance_type": "statement",
+        "full_phrase": "",
+        "negated": false,
+        "is_hypothetical": false,
+        "is_clarification": false,
+        "is_callback": false,
+        "is_experiential": false,
+        "is_opinion": false,
+        "is_imperative": false,
+        "relational_form": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation"
+        },
+        "raw_text": "",
+        "strata_context": {
+          "mode": "blended",
+          "thermal_load": null,
+          "sensory_maturity": 0.0
+        }
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S002",
+      "function_id": "aurora_internal.aurora_constraint_semantic_continuity.extract_relational_form",
+      "decision": "preserved_for_root_constraint_derivation",
+      "inputs": {
+        "user_text": ""
+      },
+      "derived": {
+        "relational_form": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation"
+        }
+      },
+      "output": {
+        "raw_text": "",
+        "subject": "",
+        "relation": "",
+        "obj": "",
+        "complement": "",
+        "unknown_role": "",
+        "unknown_token": "",
+        "unknown_descriptor": "",
+        "question": false,
+        "negated": false,
+        "modality": "",
+        "owner": "",
+        "alternatives": [],
+        "clauses": [],
+        "confidence": 0.0,
+        "source": "utterance_relation"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S003",
+      "function_id": "aurora_internal.aurora_recursive_causal_reasoning_waveform.AuroraRecursiveCausalReasoningWaveform.prepare_semantic_state",
+      "decision": "backproject_global_understanding",
+      "inputs": {
+        "raw_input": "",
+        "provisional_interpretation": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation"
+        }
+      },
+      "derived": {
+        "wavelets": [
+          {
+            "wavelet_id": "RW:883428f69d8a61",
+            "primitive": "existence_admission",
+            "roots": [
+              "'X'",
+              "'B'"
+            ],
+            "amplitude": 0.55,
+            "phase": 0.0,
+            "polarity": 1,
+            "target": "entities",
+            "source": "unresolved_structure",
+            "axis_profile": {},
+            "evidence": {
+              "unresolved": "['entity', 'relation']"
+            },
+            "parent_ids": [],
+            "status": "transient",
+            "signed_effect": 0.55,
+            "canonical_signature": "X^1*B^1"
+          },
+          {
+            "wavelet_id": "RW:26883e7958005e",
+            "primitive": "continuity_phase_lock",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'B'"
+            ],
+            "amplitude": 0.48,
+            "phase": 0.0,
+            "polarity": 1,
+            "target": "relation",
+            "source": "unresolved_structure",
+            "axis_profile": {},
+            "evidence": {
+              "unresolved": "['entity', 'relation']"
+            },
+            "parent_ids": [],
+            "status": "transient",
+            "signed_effect": 0.48,
+            "canonical_signature": "X^1*T^1*B^1"
+          },
+          {
+            "wavelet_id": "RW:1c3d4b90b3c37b",
+            "primitive": "agency_selection",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'B'",
+              "'A'"
+            ],
+            "amplitude": 0.22,
+            "phase": 0.0,
+            "polarity": 1,
+            "target": "authority",
+            "source": "response_obligation",
+            "axis_profile": {},
+            "evidence": {
+              "owner": "''",
+              "question": "False"
+            },
+            "parent_ids": [],
+            "status": "transient",
+            "signed_effect": 0.22,
+            "canonical_signature": "X^1*T^1*B^1*A^1"
+          },
+          {
+            "wavelet_id": "RIW:78264d7d609e7f",
+            "primitive": "recursive_backprojection",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'N'",
+              "'B'",
+              "'A'"
+            ],
+            "amplitude": 0.6,
+            "phase": 0.0,
+            "polarity": 1,
+            "target": "representation_relation",
+            "source": "representation_inquiry",
+            "axis_profile": {
+              "X": "0.0",
+              "T": "0.0",
+              "N": "0.0",
+              "B": "0.0",
+              "A": "1.0"
+            },
+            "evidence": {
+              "stage_id": "'RS:e7f6b9968f7fe506'",
+              "inquiry_id": "'RC:fda1173daed78894'",
+              "operand_states": "[{'constraint_basis': {'counts': {'A': 1, 'B': 0, 'N': 0, 'T': 0, 'X': 0}, 'generational_depth_counts': {'A': {'0': 1}, 'B': {}, 'N': {}, 'T': {}, 'X': {}}, 'generational_potency': {'A': 1.0, 'B': 0.0, 'N': 0.0, 'T': 0.0, 'X': 0.0}, 'semantic_origin_signature': 'N^1*A^1', 'signature': 'A^1'}, 'depth': 0, 'eligible': True, 'generation': 1, 'kind': 'ABILITY', 'operational_effect': {'cost': {'A': 0.02, 'B': 0.01, 'N': 0.01, 'T': 0.01, 'X': 0.01}, 'dominant_axis': 'A', 'effect_tags': ['choose', 'sel",
+              "constraint_basis": "{'counts': {'A': 1, 'B': 0, 'N': 0, 'T': 0, 'X': 0}, 'signature': 'A^1'}",
+              "relational_axis_profile": "{'A': 1.0, 'B': 0.0, 'N': 0.0, 'T': 0.0, 'X': 0.0}"
+            },
+            "parent_ids": [
+              "'A:CHOOSE'",
+              "'REFAB:N:OPERATOR:A:?:?:?:?'"
+            ],
+            "status": "transient",
+            "signed_effect": 0.6,
+            "canonical_signature": "X^1*T^1*N^1*B^1*A^1"
+          }
+        ],
+        "interference": {
+          "axis_before": {
+            "X": 0.472947,
+            "T": 0.129113,
+            "N": 0.190219,
+            "B": 0.093309,
+            "A": 0.114411
+          },
+          "axis_after": {
+            "X": 0.337876,
+            "T": 0.120741,
+            "N": 0.066744,
+            "B": 0.20467,
+            "A": 0.269969
+          },
+          "axis_delta": {
+            "X": -0.135071,
+            "T": -0.008372,
+            "N": -0.123475,
+            "B": 0.111361,
+            "A": 0.155558
+          },
+          "contributions": [
+            {
+              "wavelet_id": "'RW:883428f69d8a61'",
+              "primitive": "'existence_admission'",
+              "roots": "['X', 'B']",
+              "signed_effect": "0.55",
+              "axis_effects": "{'X': 0.275, 'B': 0.275}",
+              "target": "'entities'"
+            },
+            {
+              "wavelet_id": "'RW:26883e7958005e'",
+              "primitive": "'continuity_phase_lock'",
+              "roots": "['X', 'T', 'B']",
+              "signed_effect": "0.48",
+              "axis_effects": "{'X': 0.16, 'T': 0.16, 'B': 0.16}",
+              "target": "'relation'"
+            },
+            {
+              "wavelet_id": "'RW:1c3d4b90b3c37b'",
+              "primitive": "'agency_selection'",
+              "roots": "['X', 'T', 'B', 'A']",
+              "signed_effect": "0.22",
+              "axis_effects": "{'X': 0.055, 'T': 0.055, 'B': 0.055, 'A': 0.055}",
+              "target": "'authority'"
+            },
+            {
+              "wavelet_id": "'RIW:78264d7d609e7f'",
+              "primitive": "'recursive_backprojection'",
+              "roots": "['X', 'T', 'N', 'B', 'A']",
+              "signed_effect": "0.6",
+              "axis_effects": "{'X': 0.0, 'T': 0.0, 'N': 0.0, 'B': 0.0, 'A': 0.6}",
+              "target": "'representation_relation'"
+            }
+          ],
+          "coherence": 0.733081,
+          "constructive_energy": 1.85,
+          "destructive_energy": 0.0
+        }
+      },
+      "output": {
+        "effective_interpretation": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation",
+          "recursive_reconstruction": {
+            "raw_preserved": true,
+            "changes": [],
+            "wavelet_ids": [
+              "'RW:883428f69d8a61'",
+              "'RW:26883e7958005e'",
+              "'RW:1c3d4b90b3c37b'",
+              "'RIW:78264d7d609e7f'"
+            ],
+            "operation": {
+              "operation": "'recursive_backprojection'",
+              "root_constraints": "['X', 'T', 'N', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "targets": "['provisional_interpretation', 'effective_interpretation']",
+              "description": "'let developed understanding reconstruct the supported meaning of its initiating disturbance'",
+              "payload": "{'change_count': 0, 'principle': 'later understanding may revise interpretation but not raw history'}"
+            }
+          }
+        },
+        "global_understanding": {
+          "proposition_id": "CSP:34bd729596bd13",
+          "effective_relation": {
+            "subject": "",
+            "relation": "",
+            "object": "",
+            "complement": "",
+            "unknown_role": ""
+          },
+          "unresolved": [
+            "relation",
+            "entity"
+          ],
+          "completeness": 0.25,
+          "coherence": 0.733081,
+          "causal_chain": [
+            {
+              "operation": "'existence_admission'",
+              "root_constraints": "['X', 'B']",
+              "canonical_signature": "'X^1*B^1'",
+              "targets": "['entities', 'identity']",
+              "description": "'stabilize which entities or qualities are admitted to the active reality'",
+              "payload": "{'entities': ['', '', '']}"
+            },
+            {
+              "operation": "'continuity_phase_lock'",
+              "root_constraints": "['X', 'T', 'B']",
+              "canonical_signature": "'X^1*T^1*B^1'",
+              "targets": "['referents', 'history', 'relation']",
+              "description": "'preserve identity and relation across processing time'",
+              "payload": "{'relation': ''}"
+            },
+            {
+              "operation": "'transformational_gradient'",
+              "root_constraints": "['T', 'N', 'A']",
+              "canonical_signature": "'T^1*N^1*A^1'",
+              "targets": "['relation', 'unknown', 'resolution']",
+              "description": "'amplify the change required to move an unresolved relation toward understanding'",
+              "payload": "{'unknown': ''}"
+            },
+            {
+              "operation": "'boundary_separation'",
+              "root_constraints": "['X', 'N', 'B']",
+              "canonical_signature": "'X^1*N^1*B^1'",
+              "targets": "['roles', 'alternatives', 'scope']",
+              "description": "'separate competing entities, roles, and scopes without erasing either side'",
+              "payload": "{'alternatives': []}"
+            },
+            {
+              "operation": "'agency_selection'",
+              "root_constraints": "['X', 'T', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*B^1*A^1'",
+              "targets": "['authority', 'perspective', 'response']",
+              "description": "'select which grounded perspective may author the next causal act'",
+              "payload": "{'owner': ''}"
+            },
+            {
+              "operation": "'recursive_backprojection'",
+              "root_constraints": "['X', 'T', 'N', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "targets": "['provisional_interpretation', 'effective_interpretation']",
+              "description": "'let developed understanding reconstruct the supported meaning of its initiating disturbance'",
+              "payload": "{'reconstruction': {'changed': False, 'changes': [], 'raw_input_preserved': True, 'support_required': True}}"
+            }
+          ],
+          "wavelet_count": 4,
+          "hurricane_condition": 0.443232,
+          "retrospective_rule": "the developed understanding reconstructs the supported meaning of its initiating disturbance"
+        }
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S004",
+      "function_id": "aurora_internal.aurora_constraint_semantic_continuity.derive_constraint_semantic_state",
+      "decision": "integrate_asserted_relation",
+      "inputs": {
+        "relational_form": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation",
+          "recursive_reconstruction": {
+            "raw_preserved": true,
+            "changes": [],
+            "wavelet_ids": [
+              "'RW:883428f69d8a61'",
+              "'RW:26883e7958005e'",
+              "'RW:1c3d4b90b3c37b'",
+              "'RIW:78264d7d609e7f'"
+            ],
+            "operation": {
+              "operation": "'recursive_backprojection'",
+              "root_constraints": "['X', 'T', 'N', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "targets": "['provisional_interpretation', 'effective_interpretation']",
+              "description": "'let developed understanding reconstruct the supported meaning of its initiating disturbance'",
+              "payload": "{'change_count': 0, 'principle': 'later understanding may revise interpretation but not raw history'}"
+            }
+          }
+        },
+        "axis_activation": {
+          "X": 0.337876,
+          "T": 0.120741,
+          "N": 0.066744,
+          "B": 0.20467,
+          "A": 0.269969
+        }
+      },
+      "derived": {
+        "axis_derivation": {
+          "X": {
+            "operation": "entity_admission",
+            "roots": [
+              "'X'",
+              "'B'"
+            ],
+            "signature": "X^1*B^1",
+            "meaning": "identity",
+            "description": "admit a distinguishable entity or quality into the current reality boundary",
+            "canonical_profile": {
+              "signature": "'X^1*B^1'",
+              "axes": "('X', 'B')",
+              "arity": "2",
+              "label": "'identity'",
+              "summary": "'Existence bounded by a limit becomes this rather than that: an identifiable thing with a skin.'",
+              "representation": "'membrane'",
+              "stage": "'pair'",
+              "aliases": "('definition', 'separation')",
+              "notes": "()"
+            },
+            "payload": {
+              "entities": "[]",
+              "unknown": "''",
+              "unknown_descriptor": "''",
+              "admissible": "False"
+            }
+          },
+          "T": {
+            "operation": "reference_continuity",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'B'"
+            ],
+            "signature": "X^1*T^1*B^1",
+            "meaning": "referential_persistence",
+            "description": "preserve the identity of a referent across conversational time",
+            "canonical_profile": {},
+            "payload": {
+              "continuity_bindings": "[]",
+              "time_reference": "''",
+              "referent_topic": "''"
+            }
+          },
+          "N": {
+            "operation": "purpose_direction",
+            "roots": [
+              "'T'",
+              "'N'",
+              "'A'"
+            ],
+            "signature": "T^1*N^1*A^1",
+            "meaning": "directed_resolution",
+            "description": "derive what change or resolution the current relation calls for",
+            "canonical_profile": {
+              "signature": "'T^1*N^1*A^1'",
+              "axes": "('T', 'N', 'A')",
+              "arity": "3",
+              "label": "'ambition'",
+              "summary": "'Momentum under selection becomes directed intent: will that knows where it wants to go.'",
+              "representation": "'directed_intent'",
+              "stage": "'compound'",
+              "aliases": "('purposeful_will',)",
+              "notes": "()"
+            },
+            "payload": {
+              "relation": "''",
+              "requested_change": "'integrate'",
+              "negated": "False"
+            }
+          },
+          "B": {
+            "operation": "relational_binding",
+            "roots": [
+              "'T'",
+              "'N'",
+              "'B'"
+            ],
+            "signature": "T^1*N^1*B^1",
+            "meaning": "directed_relation",
+            "description": "bind entities through a bounded change, state, or causal relation",
+            "canonical_profile": {
+              "signature": "'T^1*N^1*B^1'",
+              "axes": "('T', 'N', 'B')",
+              "arity": "3",
+              "label": "'synergy'",
+              "summary": "'Potential cycling through time inside a limit becomes a stable pattern that can persist as signal.'",
+              "representation": "'signal'",
+              "stage": "'compound'",
+              "aliases": "('complexity', 'machine')",
+              "notes": "('This is the highest pre-agency meaning surface: a pattern that holds.',)"
+            },
+            "payload": {
+              "subject": "''",
+              "relation": "''",
+              "object": "''",
+              "complement": "''",
+              "alternatives": "[]",
+              "unresolved": "['relation', 'entity']"
+            }
+          },
+          "A": {
+            "operation": "perspective_authorship",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'B'",
+              "'A'"
+            ],
+            "signature": "X^1*T^1*B^1*A^1",
+            "meaning": "situated_perspective",
+            "description": "distinguish whose perspective must author the answer while preserving context",
+            "canonical_profile": {},
+            "payload": {
+              "operation": "'integrate_asserted_relation'",
+              "unknown_role": "''",
+              "unknown_descriptor": "''",
+              "perspective_owner": "''",
+              "claim_focus": "''"
+            }
+          },
+          "APEX": {
+            "operation": "proposition_understanding",
+            "roots": [
+              "'X'",
+              "'T'",
+              "'N'",
+              "'B'",
+              "'A'"
+            ],
+            "signature": "X^1*T^1*N^1*B^1*A^1",
+            "meaning": "constraint_complete_understanding",
+            "description": "integrate the admitted entities, continuity, pressure, boundaries, and agency into one thought",
+            "canonical_profile": {
+              "signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "axes": "('X', 'T', 'N', 'B', 'A')",
+              "arity": "5",
+              "label": "'consciousness'",
+              "summary": "'When unity, causality, potential, structure, and understanding cohere, meaning perceives its own limit.'",
+              "representation": "'hologram'",
+              "stage": "'integrated'",
+              "aliases": "('self_model',)",
+              "notes": "()"
+            },
+            "payload": {
+              "proposition": "{'raw_text': '', 'subject': '', 'relation': '', 'obj': '', 'complement': '', 'unknown_role': '', 'unknown_token': '', 'unknown_descriptor': '', 'question': False, 'negated': False, 'modality': '', 'owner': '', 'alternatives': [], 'clauses': [], 'confidence': 0.0, 'source': 'utterance_relation', 'recursive_reconstruction': {'raw_preserved': True, 'changes': [], 'wavelet_ids': ['RW:883428f69d8a61', 'RW:26883e7958005e', 'RW:1c3d4b90b3c37b', 'RIW:78264d7d609e7f'], 'operation': {'operation': 'recursi",
+              "response_operation": "'integrate_asserted_relation'",
+              "unresolved": "['relation', 'entity']"
+            }
+          }
+        },
+        "genealogy_trace": {
+          "root_constraints": [
+            "X",
+            "T",
+            "N",
+            "B",
+            "A"
+          ],
+          "canonical_signature": "X^1*T^1*N^1*B^1*A^1",
+          "orientation": {
+            "X": 1.0,
+            "T": 1.0,
+            "N": 1.0,
+            "B": 0.8587,
+            "A": 1.0
+          },
+          "active_axis_signature": "X^1*T^1*N^1*B^1*A^1",
+          "supporting_abilities": [
+            {
+              "id": "'X:ADMIT'",
+              "axis": "'X'",
+              "requires": "['X']",
+              "effect_tags": "['admit_state', 'clear_block', 'origin_primary:X', 'origin_secondary:X', 'origin_signature:X^1', 'root_slot:NC:X>X\u00d7NC:X>X', 'operation_lineage:OP:4c6504574442', 'seed_lineage:true', 'operator_action:operator_on_x', 'purpose_lane:intelligence', 'operator_grade:0.652', 'purpose_grade:0.300']"
+            },
+            {
+              "id": "'X:REJECT'",
+              "axis": "'X'",
+              "requires": "['X']",
+              "effect_tags": "['reject_state', 'enforce_boundary', 'origin_primary:X', 'origin_secondary:B', 'origin_signature:X^1*B^1', 'root_slot:NC:X>B\u00d7NC:B>X', 'operation_lineage:OP:25a28b16316f', 'seed_lineage:true', 'operator_action:operator_on_b', 'purpose_lane:meaning', 'operator_grade:0.683', 'purpose_grade:0.668']"
+            },
+            {
+              "id": "'X:RECLASSIFY'",
+              "axis": "'X'",
+              "requires": "['B', 'X']",
+              "effect_tags": "['reclassify', 'reindex', 'origin_primary:X', 'origin_secondary:B', 'origin_signature:X^1*B^1', 'root_slot:NC:X>B\u00d7NC:B>X', 'operation_lineage:OP:7f6cd377d854', 'seed_lineage:true', 'operator_action:operator_on_b', 'purpose_lane:meaning', 'operator_grade:0.683', 'purpose_grade:0.668']"
+            },
+            {
+              "id": "'X:RESOLVE_CONTRADICTION'",
+              "axis": "'X'",
+              "requires": "['X', 'T']",
+              "effect_tags": "['resolve', 'merge_conflict', 'origin_primary:X', 'origin_secondary:T', 'origin_signature:X^1*T^1', 'root_slot:NC:X>T\u00d7NC:T>X', 'operation_lineage:OP:7bad61b1469e', 'seed_lineage:true', 'operator_action:operator_on_t', 'purpose_lane:intelligence', 'operator_grade:0.657', 'purpose_grade:0.639']"
+            },
+            {
+              "id": "'T:DEFER'",
+              "axis": "'T'",
+              "requires": "['T']",
+              "effect_tags": "['defer', 'delay', 'origin_primary:T', 'origin_secondary:T', 'origin_signature:T^1', 'root_slot:NC:T>T\u00d7NC:T>T', 'operation_lineage:OP:12ad2feca691', 'seed_lineage:true', 'operator_action:operator_on_t', 'purpose_lane:intelligence', 'operator_grade:0.666', 'purpose_grade:0.300']"
+            },
+            {
+              "id": "'T:BATCH'",
+              "axis": "'T'",
+              "requires": "['N', 'T']",
+              "effect_tags": "['batch', 'coalesce', 'origin_primary:T', 'origin_secondary:N', 'origin_signature:T^1*N^1', 'root_slot:NC:T>N\u00d7NC:N>T', 'operation_lineage:OP:28dca87baf4e', 'seed_lineage:true', 'operator_action:operator_on_t', 'purpose_lane:intelligence', 'operator_grade:0.669', 'purpose_grade:0.636']"
+            },
+            {
+              "id": "'T:REORDER'",
+              "axis": "'T'",
+              "requires": "['B', 'T']",
+              "effect_tags": "['reorder', 'reprioritize', 'origin_primary:T', 'origin_secondary:B', 'origin_signature:T^1*B^1', 'root_slot:NC:T>B\u00d7NC:B>T', 'operation_lineage:OP:db685295b785', 'seed_lineage:true', 'operator_action:operator_on_b', 'purpose_lane:meaning', 'operator_grade:0.692', 'purpose_grade:0.663']"
+            },
+            {
+              "id": "'T:SIM_TICK'",
+              "axis": "'T'",
+              "requires": "['T']",
+              "effect_tags": "['tick', 'advance_clock', 'origin_primary:T', 'origin_secondary:A', 'origin_signature:T^1*A^1', 'root_slot:NC:T>A\u00d7NC:A>T', 'operation_lineage:OP:3d167c08c8f2', 'seed_lineage:true', 'operator_action:operator_on_a', 'purpose_lane:meaning', 'operator_grade:0.778', 'purpose_grade:0.760']"
+            }
+          ],
+          "derivation_chain": [
+            "X^1*B^1",
+            "X^1*T^1*B^1",
+            "T^1*N^1*A^1",
+            "T^1*N^1*B^1",
+            "X^1*T^1*B^1*A^1",
+            "X^1*T^1*N^1*B^1*A^1"
+          ]
+        }
+      },
+      "output": {
+        "proposition_id": "CSP:34bd729596bd13",
+        "response_obligation": {
+          "operation": "integrate_asserted_relation",
+          "unknown_role": "",
+          "unknown_descriptor": "",
+          "must_preserve": [],
+          "must_not_replace_with": [],
+          "alternatives": [],
+          "perspective_owner": "",
+          "derivation_signature": "X^1*T^1*N^1*B^1*A^1"
+        }
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S005",
+      "function_id": "aurora_internal.aurora_constraint_semantic_continuity.relation_alignment",
+      "decision": "retain_existing_candidate",
+      "inputs": {
+        "relational_form": {
+          "raw_text": "",
+          "subject": "",
+          "relation": "",
+          "obj": "",
+          "complement": "",
+          "unknown_role": "",
+          "unknown_token": "",
+          "unknown_descriptor": "",
+          "question": false,
+          "negated": false,
+          "modality": "",
+          "owner": "",
+          "alternatives": [],
+          "clauses": [],
+          "confidence": 0.0,
+          "source": "utterance_relation",
+          "recursive_reconstruction": {
+            "raw_preserved": true,
+            "changes": [],
+            "wavelet_ids": [
+              "'RW:883428f69d8a61'",
+              "'RW:26883e7958005e'",
+              "'RW:1c3d4b90b3c37b'",
+              "'RIW:78264d7d609e7f'"
+            ],
+            "operation": {
+              "operation": "'recursive_backprojection'",
+              "root_constraints": "['X', 'T', 'N', 'B', 'A']",
+              "canonical_signature": "'X^1*T^1*N^1*B^1*A^1'",
+              "targets": "['provisional_interpretation', 'effective_interpretation']",
+              "description": "'let developed understanding reconstruct the supported meaning of its initiating disturbance'",
+              "payload": "{'change_count': 0, 'principle': 'later understanding may revise interpretation but not raw history'}"
+            }
+          }
+        },
+        "preexisting_response": "",
+        "constraint_candidate": ""
+      },
+      "derived": {
+        "preexisting_alignment": {
+          "score": 0.0
+        },
+        "candidate_alignment": {}
+      },
+      "output": {
+        "text": "",
+        "source": "chain"
+      }
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S006",
+      "function_id": "aurora_internal.aurora_proposition_frame.build_frame",
+      "decision": "empty",
+      "inputs": {
+        "has_thought_state": true,
+        "has_working_memory": true
+      },
+      "derived": {
+        "frame_source": "",
+        "frame_subject": "",
+        "frame_relation": "",
+        "frame_object": "",
+        "frame_complement": "",
+        "frame_unknown_role": "",
+        "frame_derivation_signature": ""
+      },
+      "output": null
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S007",
+      "function_id": "aurora_internal.aurora_proposition_frame.build_frame",
+      "decision": "empty",
+      "inputs": {
+        "has_thought_state": true,
+        "has_working_memory": true
+      },
+      "derived": {
+        "frame_source": "",
+        "frame_subject": "",
+        "frame_relation": "",
+        "frame_object": "",
+        "frame_complement": "",
+        "frame_unknown_role": "",
+        "frame_derivation_signature": ""
+      },
+      "output": null
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S008",
+      "function_id": "aurora_expression_perception.SentenceComposer.compose",
+      "decision": "emitted",
+      "inputs": {
+        "input_text": "",
+        "frame": null,
+        "tone": "neutral",
+        "i_state": "i_is"
+      },
+      "derived": {
+        "motifs_used": 0,
+        "words_used": [
+          "am",
+          "tones",
+          "here's",
+          "orange"
+        ],
+        "word_sources": {
+          "am": {
+            "tag": "X:OPERATOR",
+            "candidate_source": "find_by_noncomp",
+            "usage_count_at_selection": 925
+          },
+          "tones": {
+            "tag": "X:MAGNITUDE",
+            "candidate_source": "find_by_noncomp",
+            "usage_count_at_selection": 0
+          },
+          "here's": {
+            "tag": "X:OPERATOR",
+            "candidate_source": "find_by_noncomp",
+            "usage_count_at_selection": 0
+          },
+          "orange": {
+            "tag": "X:MAGNITUDE",
+            "candidate_source": "find_by_noncomp",
+            "usage_count_at_selection": 0
+          }
+        },
+        "floor_failures": [
+          {
+            "role": "object",
+            "best_candidate": "tones",
+            "best_score": 0.07500000000000001,
+            "floor": 0.1
+          },
+          {
+            "role": "action",
+            "best_candidate": "here's",
+            "best_score": 0.07500000000000001,
+            "floor": 0.1
+          },
+          {
+            "role": "object",
+            "best_candidate": "orange",
+            "best_score": 0.07500000000000001,
+            "floor": 0.1
+          }
+        ]
+      },
+      "output": "I am tones. I here' orange."
+    },
+    {
+      "step_id": "INT:6fc1cb16679875:S009",
+      "function_id": "aurora._finalize_articulation",
+      "decision": "selected",
+      "inputs": {
+        "user_text": "",
+        "grounded_text": "",
+        "grounded_confidence": 0.5,
+        "composer_text": "I am tones",
+        "composer_confidence": 0.6142
+      },
+      "derived": {
+        "grounded_semantic_authority": 0.0,
+        "meaning_preserved": true,
+        "rejection_reasons": [
+          "no_grounded_candidate_to_compare"
+        ]
+      },
+      "output": {
+        "text": "I am tones",
+        "source": "composer_unified",
+        "semantic_authority": 0.6142,
+        "articulation_quality": 0.6142,
+        "confidence": 0.6142,
+        "meaning_preserved": true,
+        "rejection_reasons": [
+          "no_grounded_candidate_to_compare"
+        ]
+      }
+    }
+  ],
+  "delivered": {
+    "delivered_text": "I am tones",
+    "source": "composer_unified",
+    "confidence": 0.6142,
+    "wellformed": true
+  },
+  "source_map_status": {
+    "available": true,
+    "function_count": 9660,
+    "index_path": "/mnt/data/aurora_push_state/system_introspection_index.json",
+    "repo_root": "/mnt/data/aurora_continue_work/aurora--build-768",
+    "function_lineage_available": true,
+    "function_lineage_count": 9660,
+    "function_lineage_coverage": 1.0
+  }
+}

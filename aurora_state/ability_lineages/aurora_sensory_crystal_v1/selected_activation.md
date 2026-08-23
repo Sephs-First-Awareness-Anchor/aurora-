@@ -7,6 +7,9 @@
 ## Bound Operations
 
 - `aurora_internal.aurora_sensory_crystal.AuroraSensoryCrystal.observe_frame` -> `N` / `meaning` / `sensory_intake_seed, sensory_crystal_clustering, cross_modal_grounding`
-- `aurora_internal.aurora_sensory_crystal.CrystalFacet.tick_promotion` -> `A` / `meaning` / `sensory_concept_promotion`
+- `aurora_internal.aurora_sensory_crystal.SensoryClusterFacet.tick_promotion` -> `A` / `meaning` / `sensory_concept_promotion`
 - `aurora_internal.aurora_sensory_crystal.AuroraSensoryCrystal._tick_semantic_promotion` -> `N` / `meaning` / `cross_modal_grounding`
+- `aurora_internal.aurora_sensory_crystal.AuroraSensoryCrystal._inject_to_dps` -> `A` / `meaning` / `sensory_concept_promotion, cross_modal_grounding`
+- `aurora_internal.aurora_sensory_crystal.AuroraSensoryCrystal._inject_semantic_to_dps` -> `N` / `meaning` / `cross_modal_grounding`
+- `aurora_internal.aurora_sensory_crystal.AuroraSensoryCrystal._sync_to_dps` -> `T` / `meaning` / `sensory_wisdom_distillation`
 - `aurora_internal.aurora_sensory_crystal.AuroraSensoryCrystal.end_session` -> `T` / `meaning` / `sensory_wisdom_distillation, sensory_concept_promotion`

@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "node_id": "1fa1d437-6c3a-470d-a0cc-394a8daacc5a",
+      "order": "BASE",
+      "payload": {
+        "input_signature": "interpretive_issue",
+        "interpretive_issue": "concept_cluster_activation",
+        "processing_tier": "expression_surface",
+        "response_action": "defer_to_live_gradient",
+        "intended_effect": "answer_from_live_state_and_pressure",
+        "observed_effect": "resolved_partially"
+      },
+      "point_scores": {
+        "input_signature__interpretive_issue": 1.0,
+        "interpretive_issue__processing_tier": 1.0,
+        "processing_tier__response_action": 0.6,
+        "response_action__intended_effect": 1.0,
+        "intended_effect__observed_effect": 0.65,
+        "observed_effect__interpretive_issue": 0.65,
+        "input_signature__processing_tier": 1.0,
+        "input_signature__response_action": 1.0,
+        "interpretive_issue__response_action": 1.0,
+        "interpretive_issue__intended_effect": 0.45,
+        "processing_tier__observed_effect": 0.8,
+        "input_signature__observed_effect": 0.65
+      },
+      "resolution_fidelity": 0.65,
+      "base_event_ids": [
+        "1fa1d437-6c3a-470d-a0cc-394a8daacc5a"
+      ],
+      "parent_ids": [],
+      "child_ids": [],
+      "tags": [
+        "runtime",
+        "phase:aurora_sensory_pulse",
+        "response:composer_unified",
+        "strategy:",
+        "interaction_base",
+        "interpretive_issue",
+        "concept_cluster_activation",
+        "expression_surface"
+      ],
+      "quasi_inner_strata": null,
+      "lineage_meta": {
+        "family_key": "interaction_family::concept_cluster_activation",
+        "issue_category": "concept_cluster_activation",
+        "stage": "BASE",
+        "interaction_context": {
+          "input_signature": "interpretive_issue",
+          "interpretive_issue": "concept_cluster_activation",
+          "processing_tier": "expression_surface",
+          "response_action": "defer_to_live_gradient",
+          "intended_effect": "answer_from_live_state_and_pressure",
+          "observed_effect": "resolved_partially",
+          "session_id": "mobile",
+          "turn_id": "mobile:1",
+          "pipeline_stage": "expression_surface",
+          "distribution_context_hint": "multi_stage__same_turn",
+          "emotion_load": 2.0411,
+          "tone": "neutral",
+          "passion": "observant",
+          "drive": "steady",
+          "search_gate": "allow",
+          "oets_cluster": "",
+          "text": ""
+        }
+      },
+      "execution_surface": {},
+      "created_at": "2026-08-22T08:47:54.626537+00:00",
+      "persisted_at": 1787388474.6267023,
+      "is_relic": false,
+      "checksum": "3c906c9a44154be725e768db1f65be0d"
+    }
+  ]
+}

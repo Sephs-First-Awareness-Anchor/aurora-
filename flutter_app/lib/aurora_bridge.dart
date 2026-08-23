@@ -214,6 +214,7 @@ class AuroraBridge {
     int    _i(String key) { final m = RegExp('"$key"\\s*:\\s*(\\d+)').firstMatch(json); return m != null ? (int.tryParse(m.group(1)!) ?? 0) : 0; }
     double _d(String key) { final m = RegExp('"$key"\\s*:\\s*([0-9.]+)').firstMatch(json); return m != null ? (double.tryParse(m.group(1)!) ?? 0.0) : 0.0; }
     bool   _b(String key) => json.contains('"$key":true');
+    String _s(String key) { final m = RegExp('"$key"\\s*:\\s*"([^"]*)"').firstMatch(json); return m?.group(1) ?? ''; }
     return {
       'lsa_paths':          _i('lsa_paths'),
       'avg_n_cost':         _d('avg_n_cost'),
@@ -231,6 +232,10 @@ class AuroraBridge {
       'noncomp_loaded':     _i('noncomp_loaded'),
       'noncomp_diagonal_live': _i('noncomp_diagonal_live'),
       'turn_count':         _i('turn_count'),
+      'historical_events_experienced': _i('historical_events_experienced'),
+      'historical_total_events': _i('historical_total_events'),
+      'historical_progress': _d('historical_progress'),
+      'historical_status': _s('historical_status'),
       // Axis pressures nested
       'X': _d('X'), 'T': _d('T'), 'N': _d('N'), 'B': _d('B'), 'A': _d('A'),
     };

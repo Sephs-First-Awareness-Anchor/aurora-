@@ -355,20 +355,10 @@ def ingest_tool_result(
         identity_relevance=identity_relevance,
     )
 
-    # 1. Pass result_axes through genealogy.observe()
-    try:
-        genealogy = systems.get("genealogy")
-        if genealogy and hasattr(genealogy, "observe"):
-            genealogy.observe(result_axes, source=f"tool:{intention.tool_name}")
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_tool_mind.py:313",
-            exc=_aurora_boundary_exc,
-            context={"function": "ingest_tool_result", "handler_line": 313, "source_file": "aurora_tool_mind.py"},
-        )
-        pass
+    # 1. Tool result relevance is not itself measured genealogical consequence.
+    # Keep the result in Aurora's constraint/identity pathways below; genealogy
+    # receives evidence only from paths that can supply real participating trace
+    # and before/after consequence rather than fabricating causal credit here.
 
     # 2. Pass to field_map.update()
     try:

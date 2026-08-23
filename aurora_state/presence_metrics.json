@@ -1,0 +1,85 @@
+{
+  "presence_runtime": {
+    "captured_at": 1787389370.3438606,
+    "role": "presence_runtime",
+    "governor_mode": "open",
+    "process_rss_mb": 815.73,
+    "mem_available_mb": 4565.1,
+    "load_ratio": 0.2195,
+    "surface_turn_latency_ms": {
+      "count": 0,
+      "p50": 0.0,
+      "p95": 0.0,
+      "max": 0.0
+    },
+    "subsurface_presence_frame_age_ms": 896083.5468769073,
+    "subsurface_heartbeat_gap_ms": 0.6127357482910156,
+    "subsurface_main_loop_block_ms": {
+      "count": 0,
+      "p50": 0.0,
+      "p95": 0.0,
+      "max": 0.0
+    },
+    "scout_dispatch_ms": {
+      "count": 0,
+      "p50": 0.0
+    },
+    "scout_roundtrip_ms": {
+      "count": 0,
+      "p50": 0.0,
+      "p95": 0.0
+    },
+    "scout_integration_ms": {
+      "count": 0,
+      "p50": 0.0
+    },
+    "scout_queue_depth": 0,
+    "scout_active_count": 0,
+    "surface_direct_retrieval_count": 0,
+    "subsurface_direct_retrieval_count": 0,
+    "turn_open_latency_ms": {
+      "count": 0,
+      "p50": 0.0,
+      "p95": 0.0
+    },
+    "interpreted_turn_latency_ms": {
+      "count": 0,
+      "p50": 0.0,
+      "p95": 0.0
+    },
+    "presence_processing_latency_ms": {
+      "count": 200,
+      "p50": 83.54,
+      "p95": 160.98
+    },
+    "presence_event_queue_depth": 0,
+    "response_fit_pressure": {
+      "count": 0,
+      "p50": 0.0,
+      "max": 0.0
+    },
+    "knowledge_gap_pressure": {
+      "count": 0,
+      "p50": 0.0,
+      "max": 0.0
+    },
+    "scout_dispatch_reason": {},
+    "scout_request_kind": {},
+    "scout_backend": {},
+    "binding_integration_ms": {
+      "count": 0,
+      "p50": 0.0
+    },
+    "same_turn_wait_ms": {
+      "count": 0,
+      "p50": 0.0,
+      "p95": 0.0
+    },
+    "same_turn_binding_used_count": 0,
+    "same_turn_binding_unused_count": 0,
+    "abstain_before_scout_count": 0,
+    "abstain_after_scout_count": 0,
+    "abstain_rescue_attempted_count": 0,
+    "abstain_rescue_succeeded_count": 0
+  }
+}

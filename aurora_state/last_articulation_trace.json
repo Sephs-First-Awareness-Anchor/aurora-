@@ -1,39 +1,15 @@
 {
-  "original": "I was curie. I was curie.",
-  "candidate": "",
-  "selected": "I was curie. I was curie.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.5,
-  "candidate_score": 0.0,
-  "original_pressure": 0.36,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.64,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "Who was Marie Curie?",
-    "input_interpretation": {
-      "raw_prompt": "Who was Marie Curie?",
-      "intent_hint": "question",
-      "topic_terms": [
-        "marie",
-        "curie"
-      ],
-      "entities": [
-        "Who",
-        "Marie",
-        "Curie"
-      ]
-    },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1785794126.2009168,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0,
-    "expression_context": {
-      "semantic_strategy": "observe",
-      "semantic_confidence": 0.0,
-      "semantic_strategy_applied": true
-    }
+  "final_delivered": {
+    "user_text": "",
+    "delivered_text": "I am tones",
+    "source": "composer_unified",
+    "semantic_authority": 0.6142,
+    "articulation_quality": 0.6142,
+    "confidence": 0.6142,
+    "meaning_preserved": true,
+    "rejection_reasons": [
+      "no_grounded_candidate_to_compare"
+    ],
+    "timestamp": 1787388474.6098034
   }
 }

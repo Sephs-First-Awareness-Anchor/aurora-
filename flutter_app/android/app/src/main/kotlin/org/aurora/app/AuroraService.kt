@@ -703,6 +703,35 @@ class AuroraService : Service() {
             markStage("aurora module loaded, initializing cognitive systems")
 
             val stateDir = filesDir.absolutePath + "/aurora_state"
+
+            // Ship the chronological historical-experience archive with the
+            // app and materialize it into Aurora's writable state directory.
+            // Python treats it as witnessed environmental history, never as
+            // USER_INPUT or an answer-key corpus.  Copy-once preserves the
+            // runtime cursor and extracted state across ordinary app upgrades.
+            try {
+                val stateRoot = File(stateDir)
+                stateRoot.mkdirs()
+                val baselineFile = File(stateRoot, "experiential_baseline_v1.zip")
+                if (!baselineFile.exists() || baselineFile.length() == 0L) {
+                    val tempFile = File(stateRoot, "experiential_baseline_v1.zip.tmp")
+                    assets.open("aurora_experiential_baseline_v1.zip").use { input ->
+                        tempFile.outputStream().use { output -> input.copyTo(output) }
+                    }
+                    if (baselineFile.exists()) baselineFile.delete()
+                    if (!tempFile.renameTo(baselineFile)) {
+                        tempFile.copyTo(baselineFile, overwrite = true)
+                        tempFile.delete()
+                    }
+                    Log.i(TAG, "Historical experience baseline materialized: ${baselineFile.length()} bytes")
+                }
+            } catch (e: Exception) {
+                // Baseline availability is developmental, not boot-fatal.
+                // Python exposes a separate status surface if the asset could
+                // not be materialized; Aurora's live app path still boots.
+                Log.w(TAG, "Historical experience baseline unavailable: ${e.message}")
+            }
+
             val status   = bridge.callAttr("initialize", stateDir).toString()
             Log.i(TAG, "Aurora bridge init: $status")
 
