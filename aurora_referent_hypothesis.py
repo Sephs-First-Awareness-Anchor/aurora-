@@ -67,9 +67,16 @@ _CORRECTION_MARKERS = (
 # "no," -- a plain "No." or "No" (the single most common way to reject a
 # checkable guess) has no trailing comma, so none of the markers matched
 # and the reply fell through to "confirmed", logging a rejected guess as
-# accepted. Word-boundary match "no" as the reply's leading word instead,
-# independent of what punctuation (if any) follows it.
-_BARE_NEGATIVE_LEAD = re.compile(r"^\s*no\b")
+# accepted. Match "no" as the reply's leading word instead, independent of
+# what punctuation (if any) follows it.
+#
+# Codex review, PR #177: a bare \b word boundary after "no" also matched
+# "No doubt, that's what I mean" and "No problem, that's correct" --
+# idioms where "no" doesn't negate anything, so a genuine CONFIRMATION got
+# logged as "corrected". Require "no" to be immediately followed by
+# terminating punctuation or the end of the reply -- an actual standalone
+# negative -- rather than any word boundary at all.
+_BARE_NEGATIVE_LEAD = re.compile(r"^\s*no\s*([,.!?]|$)")
 
 
 def gather_recent_anchor_candidates(
