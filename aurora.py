@@ -19766,6 +19766,21 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                     or ("basis=" in _top_hint and "target=" in _top_hint)
                     or _top_hint.startswith("[CODE]")
                     or _top_hint.startswith("[PRESSURE]")
+                    # Live coherence check (2026-08-26): ConsciousLearner.
+                    # _derive_understanding()'s shard-bookkeeping sentence
+                    # ("earlier built connection when approached with
+                    # thoughtful reflection -- it connects to evidence,
+                    # spared (A-axis relief -- 'earlier' still shallow in
+                    # my web)") was reaching this exact fallback verbatim --
+                    # none of the _is_meta/_is_diagnostic patterns above
+                    # match its shape. " when approached with " is that
+                    # generator's own literal, unique-enough phrase (see
+                    # aurora_simulation_engine.py's _derive_understanding),
+                    # so reject anything carrying it rather than adding
+                    # another one-off startswith check for its next
+                    # variant.
+                    or " when approached with " in _hint_lower
+                    or "still shallow in my web" in _hint_lower
                 )
                 if not _is_meta and not _is_diagnostic and len(_top_hint.split()) >= 6:
                     state.response_content = _top_hint
@@ -33759,8 +33774,17 @@ def _run_live_response_turn(
         use_search=wants_search,
         auto_search_enabled=auto_search_enabled,
     )
-    # Clean up the pressure-before scratch key so it doesn't leak to other turns
-    systems.pop("_pressure_before", None)
+    # Codex review, PR #176: this used to pop "_pressure_before" here,
+    # before process_external_user_turn's RCRW completion block (further
+    # down the call chain, after this function returns) ever got a chance
+    # to read it -- so complete_cycle() always received an empty
+    # pressure_before, snapshots_valid was always False, and staged
+    # representational experiments could never admit evidence on a normal
+    # live turn. process_external_user_turn now pops this key itself,
+    # right after it copies the value out for RCRW -- see there. The
+    # snapshot is recaptured fresh at the top of every call to this
+    # function regardless, so leaving it set a little longer here is not
+    # a staleness risk.
 
     # Build 613 (Reflective-Introspection Misrouting Repair D): the core
     # delivery invariant. A response authored as reflective_introspection
@@ -35477,7 +35501,17 @@ def process_external_user_turn(
                 # snapshot so staged representational inquiry is judged from
                 # lived constraint consequences, not response confidence
                 # translated into synthetic pressure.
+                #
+                # Codex review, PR #176: _run_live_response_turn used to pop
+                # "_pressure_before" itself before returning, so it was
+                # always already gone by the time this line ran -- every
+                # staged representational experiment saw an empty
+                # pressure_before, snapshots_valid was always False, and no
+                # experiment could ever admit causal evidence on a normal
+                # live turn. The scratch key is copied out and cleared here
+                # instead, right where it's actually consumed.
                 _rcrw_pressure_before = dict(systems.get("_pressure_before") or {})
+                systems.pop("_pressure_before", None)
                 _rcrw_pressure_after = _capture_pressure_snapshot(systems)
                 _rcrw_record = dict(_recursive_causal.complete_cycle(
                     delivered_text=str(getattr(_rcrw_resp, "content", "") or ""),
@@ -35501,6 +35535,11 @@ def process_external_user_turn(
                     exc=_aurora_boundary_exc,
                     context={"function": "process_external_user_turn", "source_file": "aurora.py"},
                 )
+        else:
+            # RCRW isn't wired this boot -- nothing will consume the scratch
+            # key, so clear it here instead of leaving it for the next
+            # _run_live_response_turn call to silently overwrite.
+            systems.pop("_pressure_before", None)
 
         # Complete any active reflective trial, then preserve this turn as the
         # next reasoning episode Aurora may consciously re-enter.
