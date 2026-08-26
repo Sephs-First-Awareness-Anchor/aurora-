@@ -366,6 +366,16 @@ class PragmaticSignal:
     span: str           # The text that triggered this signal
     position: int       # Character position in the utterance
     is_phrase: bool = False  # True if this is a multi-word phrase signal
+    # Build 771 (Constraint-Native Lexical Grounding): every signal here is
+    # currently produced by the hand-authored _WORD_ROLES/_PHRASE_ROLES
+    # lookup below -- provisional scaffolding, not something Aurora derived
+    # from her own consequence evidence. This field records that origin
+    # explicitly rather than letting the scaffold's output silently pass as
+    # ground truth. "inherited_scaffold" is the only value this parser ever
+    # writes; a value of "consequence_earned" would mean some other system
+    # (not yet built here) supplied the role instead. This field is
+    # observational for now -- nothing reads it yet.
+    provenance: str = "inherited_scaffold"
 
 
 # ============================================================================
@@ -419,6 +429,12 @@ class UtteranceIntent:
             'search_query':       self.search_query,
             # New
             'pragmatic_signals':  [(s.role.value, s.span) for s in self.pragmatic_signals],
+            # Build 771: parallel provenance record, keyed by span rather than
+            # appended to the pragmatic_signals tuples above -- several
+            # existing call sites unpack those as exactly (role, span), so
+            # widening that tuple would break them. Observational only for
+            # now; see PragmaticSignal.provenance's own docstring.
+            'pragmatic_provenance': {s.span: s.provenance for s in self.pragmatic_signals},
             'frame':              self.frame.value,
             'stance':             self.stance,
             'utterance_type':     self.utterance_type,

@@ -343,6 +343,15 @@ class RelationalForm:
     clauses: List[Dict[str, str]] = field(default_factory=list)
     confidence: float = 0.0
     source: str = "utterance_relation"
+    # Build 771 (Constraint-Native Lexical Grounding): the relation binding
+    # above comes entirely from _RELATION_VERBS/_AUX/_MODAL/etc -- hand-
+    # authored scaffolding, not something Aurora derived from her own
+    # consequence evidence. This records that origin explicitly. Every
+    # caller of extract_relational_form() writes "inherited_scaffold" today;
+    # "consequence_earned" would mean some other system (not yet built here)
+    # supplied the binding instead. Observational only for now -- nothing
+    # reads it yet.
+    relation_provenance: str = "inherited_scaffold"
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
