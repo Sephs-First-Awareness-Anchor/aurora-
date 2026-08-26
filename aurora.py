@@ -33759,8 +33759,17 @@ def _run_live_response_turn(
         use_search=wants_search,
         auto_search_enabled=auto_search_enabled,
     )
-    # Clean up the pressure-before scratch key so it doesn't leak to other turns
-    systems.pop("_pressure_before", None)
+    # Codex review, PR #176: this used to pop "_pressure_before" here,
+    # before process_external_user_turn's RCRW completion block (further
+    # down the call chain, after this function returns) ever got a chance
+    # to read it -- so complete_cycle() always received an empty
+    # pressure_before, snapshots_valid was always False, and staged
+    # representational experiments could never admit evidence on a normal
+    # live turn. process_external_user_turn now pops this key itself,
+    # right after it copies the value out for RCRW -- see there. The
+    # snapshot is recaptured fresh at the top of every call to this
+    # function regardless, so leaving it set a little longer here is not
+    # a staleness risk.
 
     # Build 613 (Reflective-Introspection Misrouting Repair D): the core
     # delivery invariant. A response authored as reflective_introspection
@@ -35477,7 +35486,17 @@ def process_external_user_turn(
                 # snapshot so staged representational inquiry is judged from
                 # lived constraint consequences, not response confidence
                 # translated into synthetic pressure.
+                #
+                # Codex review, PR #176: _run_live_response_turn used to pop
+                # "_pressure_before" itself before returning, so it was
+                # always already gone by the time this line ran -- every
+                # staged representational experiment saw an empty
+                # pressure_before, snapshots_valid was always False, and no
+                # experiment could ever admit causal evidence on a normal
+                # live turn. The scratch key is copied out and cleared here
+                # instead, right where it's actually consumed.
                 _rcrw_pressure_before = dict(systems.get("_pressure_before") or {})
+                systems.pop("_pressure_before", None)
                 _rcrw_pressure_after = _capture_pressure_snapshot(systems)
                 _rcrw_record = dict(_recursive_causal.complete_cycle(
                     delivered_text=str(getattr(_rcrw_resp, "content", "") or ""),
@@ -35501,6 +35520,11 @@ def process_external_user_turn(
                     exc=_aurora_boundary_exc,
                     context={"function": "process_external_user_turn", "source_file": "aurora.py"},
                 )
+        else:
+            # RCRW isn't wired this boot -- nothing will consume the scratch
+            # key, so clear it here instead of leaving it for the next
+            # _run_live_response_turn call to silently overwrite.
+            systems.pop("_pressure_before", None)
 
         # Complete any active reflective trial, then preserve this turn as the
         # next reasoning episode Aurora may consciously re-enter.
