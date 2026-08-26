@@ -245,7 +245,12 @@ class MainActivity : FlutterActivity() {
                 when (call.method) {
                     "sendMessage" -> {
                         val text = call.argument<String>("text") ?: ""
-                        AuroraService.sendMessage(text) { reply ->
+                        // Build 769 directive, Sec 3: forwarded straight through
+                        // from Dart's own admission-window bookkeeping -- not
+                        // computed or reinterpreted here.
+                        val admissionPath = call.argument<String>("admissionPath") ?: ""
+                        val turnsSinceWake = call.argument<Int>("turnsSinceWake") ?: 0
+                        AuroraService.sendMessage(text, admissionPath, turnsSinceWake) { reply ->
                             runOnUiThread { result.success(reply) }
                         }
                     }

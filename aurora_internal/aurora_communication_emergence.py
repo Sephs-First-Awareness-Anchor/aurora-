@@ -52,8 +52,11 @@ from aurora_internal.aurora_constraint_semantic_continuity import (
     AXES,
     DERIVED_OPERATIONS,
     bind_referential_continuity,
+    derive_constraint_grounded_candidate,
     derive_constraint_semantic_state,
+    extract_relational_form,
     relation_alignment,
+    relational_axis_vector,
 )
 from aurora_internal.aurora_meaning_evolution import canonical_signature
 
@@ -83,6 +86,7 @@ _MAX_OBSERVATIONS = 800
 _MAX_FAMILIES = 240
 _MAX_PENDING = 300
 _PENDING_TTL_SECONDS = 24 * 60 * 60
+_MAX_SEEN_POSSIBILITIES = 60000
 
 
 @dataclass
@@ -103,6 +107,9 @@ class CommunicationGapObservation:
     response_confidence: float
     trial_component_id: str = ""
     receiver_outcome: Dict[str, Any] = field(default_factory=dict)
+    observation_context: str = "live"
+    receiver_validation_eligible: bool = True
+    possibility_evidence: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -120,6 +127,7 @@ class EmergentCommunicationOperation:
     parent_ids: List[str]
     invariants: List[Dict[str, Any]]
     axis_gain: Dict[str, float]
+    applicability_shape: Dict[str, Any] = field(default_factory=dict)
     status: str = "trial"
     created_at: float = field(default_factory=time.time)
     evidence: List[Dict[str, Any]] = field(default_factory=list)
@@ -177,6 +185,53 @@ def _applicability_shape(form: Mapping[str, Any]) -> Dict[str, Any]:
         "negated": bool(rel.get("negated")),
         "unresolved_references": bool(rel.get("unresolved_references")),
     }
+
+
+def _applicability_similarity(
+    current: Mapping[str, Any], candidate: Mapping[str, Any]
+) -> float:
+    """Compare two lexical-free proposition configurations.
+
+    Exact family identity remains preferred.  This bounded similarity exists
+    for configurations that differ in one still-unlearned slot (for example a
+    causal unknown instead of an object unknown) while requiring the same
+    root operations.  It never compares words or imports response content.
+    """
+    left = dict(current or {})
+    right = dict(candidate or {})
+    if not left or not right:
+        return 0.0
+    # Questions and assertions impose different agency obligations; never
+    # borrow an operation across that boundary merely because their nouns fit.
+    if bool(left.get("question")) != bool(right.get("question")):
+        return 0.0
+
+    weights = {
+        "question": 0.22,
+        "has_subject": 0.12,
+        "has_relation": 0.14,
+        "has_object": 0.12,
+        "has_complement": 0.10,
+        "has_owner": 0.06,
+        "has_alternatives": 0.06,
+        "negated": 0.04,
+        "unresolved_references": 0.04,
+    }
+    score = sum(
+        weight
+        for key, weight in weights.items()
+        if bool(left.get(key)) == bool(right.get(key))
+    )
+    left_unknown = str(left.get("unknown_role", "") or "")
+    right_unknown = str(right.get("unknown_role", "") or "")
+    if left_unknown == right_unknown:
+        score += 0.10
+    elif left_unknown and right_unknown:
+        # Both configurations localize a missing slot even when its precise
+        # role differs.  Unknown localization is the shared operation; the
+        # current proposition retains the actual role.
+        score += 0.06
+    return round(max(0.0, min(1.0, score)), 6)
 
 
 def _relational_shape(form: Mapping[str, Any], alignment: Mapping[str, Any]) -> Dict[str, Any]:
@@ -352,7 +407,13 @@ class AuroraCommunicationEmergence(WarpCapable):
         self._pending: Dict[str, Dict[str, Any]] = {}
         self._families: Dict[str, Dict[str, Any]] = {}
         self._profile_family: Dict[str, str] = {}
+        self._seen_possibilities: Dict[str, float] = {}
         self._tick: int = 0
+        # Historical/counterfactual observations are checkpointed by their
+        # owning environment.  Suspending eager writes while one is admitted
+        # keeps the communication ledger and the historical cursor on the same
+        # durable boundary after an interrupted Android process.
+        self._persistence_suspended: int = 0
         self._init_warp(genealogy=genealogy)
         self._load()
 
@@ -405,13 +466,21 @@ class AuroraCommunicationEmergence(WarpCapable):
             # was restored without the ephemeral profile index.
             roots = [ax for ax in AXES if float(gap.axis_profile.get(_NEGATIVE_ISTATE[ax], 0.0) or 0.0) > 0.10]
         sequence = _minimal_primitive_cover(roots)
+        genealogy_parent_ids = [
+            str(item or "")
+            for item in list(family_rec.get("genealogy_supporting_ability_ids") or [])
+            if str(item or "")
+        ]
+        lineage_parents = list(dict.fromkeys(list(parent_ids or []) + genealogy_parent_ids))[:18]
         return {
             "structural_family": family,
             "applicability_family": str(family_rec.get("applicability_family", "") or ""),
             "root_constraints": roots,
             "canonical_signature": canonical_signature(roots or AXES),
             "primitive_sequence": sequence,
-            "parent_ids": list(parent_ids or []),
+            "parent_ids": lineage_parents,
+            "genealogy_supporting_ability_ids": genealogy_parent_ids[:16],
+            "genealogy_orientation": dict(family_rec.get("genealogy_orientation") or {}),
             "invariants": self._derive_invariants(family_rec),
             "axis_gain": {ax: round(float(root_pressure.get(ax, 0.0) or 0.0) * 0.22, 6) for ax in AXES},
             "surface_diversity_at_birth": int(len(set(family_rec.get("surface_hashes") or []))),
@@ -422,6 +491,7 @@ class AuroraCommunicationEmergence(WarpCapable):
     def _integrate_warp(self, component: WarpComponent) -> None:
         params = dict(component.parameters or {})
         family = str(params.get("structural_family", "") or "")
+        family_rec = dict(self._families.get(family, {}) or {})
         op_id = "COMM:" + _stable_hash(
             {
                 "component": component.component_id,
@@ -438,9 +508,16 @@ class AuroraCommunicationEmergence(WarpCapable):
             root_constraints=list(params.get("root_constraints") or []),
             canonical_signature=str(params.get("canonical_signature", "") or canonical_signature(AXES)),
             primitive_sequence=list(params.get("primitive_sequence") or []),
-            parent_ids=list(component.parent_ids or []),
+            # Warp's geometric parents and genealogy's proven operational
+            # parents are both legitimate ancestry.  Preserve the cross-domain
+            # lineage rather than discarding the genealogy support after it
+            # influenced profile synthesis.
+            parent_ids=list(dict.fromkeys(
+                list(component.parent_ids or []) + list(params.get("parent_ids") or [])
+            )),
             invariants=list(params.get("invariants") or []),
             axis_gain={ax: float(dict(params.get("axis_gain") or {}).get(ax, 0.0) or 0.0) for ax in AXES},
+            applicability_shape=dict(family_rec.get("applicability_shape") or {}),
         )
         self._operations[component.component_id] = operation
         self._persist()
@@ -477,6 +554,187 @@ class AuroraCommunicationEmergence(WarpCapable):
     # Structural observation and trial influence
     # ------------------------------------------------------------------
 
+    def _possibility_activation(self, form: Mapping[str, Any]) -> Dict[str, float]:
+        """Blend the present relation with proven genealogical orientation.
+
+        The utterance configuration remains dominant.  Genealogy supplies a
+        bounded orientation from previously relieved X/T/N/B/A pressure; it
+        never supplies lexical content or an answer.
+        """
+        relation_profile = relational_axis_vector(form)
+        genealogy = self.systems.get("genealogy") or getattr(self, "_warp_genealogy", None)
+        orientation: Dict[str, float] = {}
+        if genealogy is not None and hasattr(genealogy, "pressure_orientation"):
+            try:
+                orientation = {
+                    ax: max(0.0, float(value or 0.0))
+                    for ax, value in dict(genealogy.pressure_orientation() or {}).items()
+                    if ax in AXES
+                }
+            except Exception:
+                orientation = {}
+        if not any(orientation.values()):
+            return dict(relation_profile)
+        genealogy_profile = _normalise_axis_profile(orientation)
+        return _normalise_axis_profile({
+            ax: 0.76 * float(relation_profile.get(ax, 0.0) or 0.0)
+                + 0.24 * float(genealogy_profile.get(ax, 0.0) or 0.0)
+            for ax in AXES
+        })
+
+    def observe_structural_possibility(
+        self,
+        *,
+        raw_text: str,
+        observed_response_text: str,
+        possibility_id: str = "",
+        observed_source: str = "environmental_other",
+        epistemic_status: str = "observation_not_truth",
+        causal_status: str = "sequence_observed_causality_not_asserted",
+        defer_persistence: bool = False,
+    ) -> Dict[str, Any]:
+        """Let an observed exchange expose a representable communication gap.
+
+        The observed response is held only as a *possibility*: Aurora compares
+        its relational alignment with the response she can currently derive.
+        It is never treated as a correct answer, copied into a candidate, or
+        accepted as receiver validation.  A sufficiently clearer structural
+        possibility can prove that a gap is representable and route Aurora's
+        own counterfactual failure through WARP.  Only later live use and real
+        receiver consequence can promote the resulting trial into genealogy.
+        """
+        raw = str(raw_text or "").strip()
+        observed = str(observed_response_text or "").strip()
+        if not raw or not observed:
+            return {
+                "admitted": False,
+                "reason": "exchange_requires_two_nonempty_surfaces",
+                "representable_gap": False,
+            }
+
+        resolved_possibility_id = str(possibility_id or "POSS:" + _stable_hash({
+            "u": _surface_hash(raw),
+            "o": _surface_hash(observed),
+        }, 16))
+        if resolved_possibility_id in self._seen_possibilities:
+            return {
+                "admitted": False,
+                "duplicate": True,
+                "reason": "possibility_already_observed",
+                "possibility_id": resolved_possibility_id,
+                "representable_gap": False,
+            }
+        self._seen_possibilities[resolved_possibility_id] = time.time()
+        if len(self._seen_possibilities) > _MAX_SEEN_POSSIBILITIES:
+            oldest = sorted(self._seen_possibilities, key=self._seen_possibilities.get)
+            for key in oldest[: len(self._seen_possibilities) - _MAX_SEEN_POSSIBILITIES]:
+                self._seen_possibilities.pop(key, None)
+
+        if defer_persistence:
+            self._persistence_suspended += 1
+        try:
+            form = extract_relational_form(raw)
+            if not form:
+                return {
+                    "admitted": False,
+                    "reason": "no_relational_configuration",
+                    "representable_gap": False,
+                }
+            activation = self._possibility_activation(form)
+            semantic = derive_constraint_semantic_state(
+                form,
+                axis_activation=activation,
+                genealogy=self.systems.get("genealogy") or getattr(self, "_warp_genealogy", None),
+            )
+            prepared = self.prepare_semantic_state(
+                semantic,
+                raw_text=raw,
+                axis_activation=activation,
+            )
+            candidate = dict(derive_constraint_grounded_candidate(prepared) or {})
+            candidate_text = str(candidate.get("text", "") or "")
+            candidate_alignment = relation_alignment(form, candidate_text)
+            observed_alignment = relation_alignment(form, observed)
+            candidate_score = _clip01(candidate_alignment.get("score", 0.0))
+            observed_score = _clip01(observed_alignment.get("score", 0.0))
+
+            # A surface is only useful as possibility evidence when it holds a
+            # meaningful part of the active relation.  Its truth, helpfulness,
+            # and causal role remain explicitly undecided.
+            structural_support = bool(
+                observed_score >= 0.55
+                and not bool(observed_alignment.get("leaked_unknown_token", False))
+            )
+            representable_gap = bool(
+                structural_support
+                and (
+                    not candidate_text
+                    or candidate_score < 0.55
+                    or observed_score - candidate_score >= 0.12
+                )
+            )
+            active_trial = str(
+                dict(prepared.get("emergent_operation") or {}).get("component_id", "") or ""
+            )
+            possibility = {
+                "possibility_id": resolved_possibility_id,
+                "observed_source": str(observed_source or "environmental_other"),
+                "epistemic_status": str(epistemic_status or "observation_not_truth"),
+                "causal_status": str(causal_status or "sequence_observed_causality_not_asserted"),
+                "observed_surface_hash": _surface_hash(observed),
+                "observed_alignment": dict(observed_alignment),
+                "candidate_alignment": dict(candidate_alignment),
+                "alignment_delta": round(observed_score - candidate_score, 4),
+                "structural_support": structural_support,
+                "representable_gap": representable_gap,
+                "truth_assumed": False,
+                "receiver_validation_assumed": False,
+            }
+
+            # Once a matching trial exists, each further possibility supplies
+            # counterfactual performance evidence even if the trial has closed
+            # the original gap.  It remains deliberately unvalidated.
+            if not representable_gap and not (active_trial and structural_support):
+                return {
+                    "admitted": False,
+                    "reason": "no_representable_constraint_gap",
+                    "representable_gap": False,
+                    "structural_support": structural_support,
+                    "candidate_alignment": candidate_alignment,
+                    "observed_alignment": observed_alignment,
+                    "trial_component_id": active_trial,
+                }
+
+            rid = "COMM-POSS:" + _stable_hash({
+                "id": possibility["possibility_id"],
+                "proposition": prepared.get("proposition_id", ""),
+            }, 18)
+            result = self.observe_turn(
+                semantic_state=prepared,
+                raw_text=raw,
+                response_text=candidate_text,
+                response_source=str(candidate.get("source") or "constraint_possibility_counterfactual"),
+                response_confidence=float(candidate.get("confidence", 0.0) or 0.0),
+                response_id=rid,
+                receiver_validation_eligible=False,
+                observation_context="environmental_counterfactual",
+                possibility_evidence=possibility,
+                persist_response_text=False,
+            )
+            result.update({
+                "admitted": True,
+                "representable_gap": representable_gap,
+                "structural_support": structural_support,
+                "candidate_available": bool(candidate_text),
+                "candidate_alignment": candidate_alignment,
+                "observed_alignment": observed_alignment,
+                "possibility_id": possibility["possibility_id"],
+            })
+            return result
+        finally:
+            if defer_persistence:
+                self._persistence_suspended = max(0, self._persistence_suspended - 1)
+
     def prepare_semantic_state(
         self,
         semantic_state: Mapping[str, Any],
@@ -505,7 +763,7 @@ class AuroraCommunicationEmergence(WarpCapable):
         }
         shape = _relational_shape(form, provisional_alignment)
         applicability_family = self._applicability_family(form)
-        operation = self._select_operation(applicability_family)
+        operation, operation_match = self._select_operation(form)
         if operation is None:
             return state
 
@@ -550,6 +808,10 @@ class AuroraCommunicationEmergence(WarpCapable):
             "canonical_signature": operation.canonical_signature,
             "structural_family": operation.structural_family,
             "applicability_family": operation.applicability_family,
+            "applicability_shape": dict(operation.applicability_shape or {}),
+            "match_kind": str(operation_match.get("kind", "") or ""),
+            "match_score": float(operation_match.get("score", 0.0) or 0.0),
+            "current_applicability_family": applicability_family,
         }
         return rebuilt
 
@@ -562,7 +824,16 @@ class AuroraCommunicationEmergence(WarpCapable):
         response_source: str,
         response_confidence: float,
         response_id: str = "",
+        receiver_validation_eligible: bool = True,
+        observation_context: str = "live",
+        possibility_evidence: Optional[Mapping[str, Any]] = None,
+        persist_response_text: bool = True,
     ) -> Dict[str, Any]:
+        if not str(raw_text or "").strip():
+            # Boot emissions and other unaddressed articulation are not
+            # communication trials.  Without a receiver proposition there is
+            # no relational configuration to preserve or validate.
+            return {}
         state = dict(semantic_state or {})
         form = dict(state.get("relational_form") or {})
         if not form:
@@ -593,9 +864,12 @@ class AuroraCommunicationEmergence(WarpCapable):
             deficits=deficits,
             relation_alignment=alignment,
             response_source=str(response_source or ""),
-            response_text=str(response_text or "")[:500],
+            response_text=str(response_text or "")[:500] if persist_response_text else "",
             response_confidence=_clip01(response_confidence),
             trial_component_id=str(dict(state.get("emergent_operation") or {}).get("component_id", "") or ""),
+            observation_context=str(observation_context or "live"),
+            receiver_validation_eligible=bool(receiver_validation_eligible),
+            possibility_evidence=dict(possibility_evidence or {}),
         )
         record = observation.to_dict()
         self._observations.append(record)
@@ -604,7 +878,7 @@ class AuroraCommunicationEmergence(WarpCapable):
         # exposed a communication gap or exercised an active trial operation.
         # Ordinary coherent turns remain in the observation history but do not
         # accumulate indefinitely in the pending validation ledger.
-        if deficits or observation.trial_component_id:
+        if observation.receiver_validation_eligible and (deficits or observation.trial_component_id):
             self._pending[rid] = record
             self._prune_pending()
 
@@ -620,6 +894,35 @@ class AuroraCommunicationEmergence(WarpCapable):
             family_rec["surface_hashes"] = list(dict.fromkeys(hashes))[-80:]
             family_rec["last_seen"] = time.time()
             family_rec["last_deficits"] = list(deficits)
+            genealogy_trace = dict(state.get("genealogy_trace") or {})
+            genealogy_ids = list(family_rec.get("genealogy_supporting_ability_ids") or [])
+            genealogy_ids.extend(
+                str(item.get("id", "") or "")
+                for item in list(genealogy_trace.get("supporting_abilities") or [])
+                if isinstance(item, Mapping) and str(item.get("id", "") or "")
+            )
+            family_rec["genealogy_supporting_ability_ids"] = list(
+                dict.fromkeys(genealogy_ids)
+            )[-24:]
+            family_rec["genealogy_orientation"] = dict(
+                genealogy_trace.get("orientation") or {}
+            )
+            family_rec["genealogy_signature"] = str(
+                genealogy_trace.get("canonical_signature", "") or canonical_signature(AXES)
+            )
+            if observation.possibility_evidence:
+                family_rec["possibility_support_count"] = int(
+                    family_rec.get("possibility_support_count", 0) or 0
+                ) + 1
+                possibility_hashes = list(family_rec.get("possibility_surface_hashes") or [])
+                possibility_hash = str(
+                    observation.possibility_evidence.get("observed_surface_hash", "") or ""
+                )
+                if possibility_hash:
+                    possibility_hashes.append(possibility_hash)
+                family_rec["possibility_surface_hashes"] = list(
+                    dict.fromkeys(possibility_hashes)
+                )[-80:]
             self._families[family] = family_rec
             if len(self._families) > _MAX_FAMILIES:
                 oldest = sorted(self._families, key=lambda key: float(self._families[key].get("last_seen", 0.0) or 0.0))
@@ -639,8 +942,13 @@ class AuroraCommunicationEmergence(WarpCapable):
                     "surface_hash": observation.raw_text_hash,
                     "relation_alignment": float(alignment.get("score", 0.0) or 0.0),
                     "validated": False,
-                    "outcome_kind": "pending",
+                    "outcome_kind": (
+                        "pending" if observation.receiver_validation_eligible
+                        else "unvalidated_possibility"
+                    ),
                     "receiver_score": 0.0,
+                    "observation_context": observation.observation_context,
+                    "possibility_evidence": dict(observation.possibility_evidence or {}),
                 })
                 operation.evidence = operation.evidence[-160:]
 
@@ -655,6 +963,8 @@ class AuroraCommunicationEmergence(WarpCapable):
             "deficits": deficits,
             "relation_alignment": alignment,
             "trial_component_id": observation.trial_component_id,
+            "observation_context": observation.observation_context,
+            "receiver_validation_eligible": observation.receiver_validation_eligible,
             "warp_status": self.warp_status(),
         }
 
@@ -670,6 +980,8 @@ class AuroraCommunicationEmergence(WarpCapable):
         live: Dict[str, Dict[str, Any]] = {}
         for response_id, item in dict(self._pending or {}).items():
             rec = dict(item or {})
+            if str(rec.get("raw_text_hash", "") or "") == _surface_hash(""):
+                continue
             timestamp = float(rec.get("timestamp", 0.0) or 0.0)
             if timestamp > 0.0 and now - timestamp > _PENDING_TTL_SECONDS:
                 continue
@@ -743,6 +1055,12 @@ class AuroraCommunicationEmergence(WarpCapable):
     def status(self) -> Dict[str, Any]:
         return {
             "observations": len(self._observations),
+            "environmental_possibility_observations": sum(
+                1 for item in self._observations
+                if str(dict(item or {}).get("observation_context", "") or "")
+                    == "environmental_counterfactual"
+            ),
+            "environmental_possibilities_seen": len(self._seen_possibilities),
             "pending_receiver_validation": len(self._pending),
             "gap_families": len(self._families),
             "trial_operations": sum(1 for op in self._operations.values() if op.status == "trial"),
@@ -788,15 +1106,56 @@ class AuroraCommunicationEmergence(WarpCapable):
     def _applicability_family(self, form: Mapping[str, Any]) -> str:
         return "CAFAM:" + _stable_hash(_applicability_shape(form), 14)
 
-    def _select_operation(self, applicability_family: str) -> Optional[EmergentCommunicationOperation]:
+    def _select_operation(
+        self, form: Mapping[str, Any]
+    ) -> Tuple[Optional[EmergentCommunicationOperation], Dict[str, Any]]:
+        applicability_family = self._applicability_family(form)
         candidates = [
             op for op in self._operations.values()
             if op.applicability_family == applicability_family and op.status in {"trial", "promoted"}
         ]
-        if not candidates:
-            return None
-        candidates.sort(key=lambda op: (op.status == "promoted", len(op.evidence), op.created_at), reverse=True)
-        return candidates[0]
+        if candidates:
+            candidates.sort(
+                key=lambda op: (
+                    op.status == "promoted",
+                    len(op.evidence),
+                    op.created_at,
+                ),
+                reverse=True,
+            )
+            return candidates[0], {"kind": "exact", "score": 1.0}
+
+        current_shape = _applicability_shape(form)
+        ranked: List[Tuple[float, EmergentCommunicationOperation]] = []
+        for operation in self._operations.values():
+            if operation.status not in {"trial", "promoted"}:
+                continue
+            operation_shape = dict(operation.applicability_shape or {})
+            if not operation_shape:
+                operation_shape = dict(
+                    dict(self._families.get(operation.structural_family) or {}).get(
+                        "applicability_shape"
+                    )
+                    or {}
+                )
+            score = _applicability_similarity(current_shape, operation_shape)
+            if score > 0.0:
+                ranked.append((score, operation))
+        if not ranked:
+            return None, {"kind": "none", "score": 0.0}
+        ranked.sort(
+            key=lambda item: (
+                item[0],
+                item[1].status == "promoted",
+                len(item[1].evidence),
+                item[1].created_at,
+            ),
+            reverse=True,
+        )
+        score, operation = ranked[0]
+        if score < 0.72:
+            return None, {"kind": "below_threshold", "score": score}
+        return operation, {"kind": "structural_nearest", "score": score}
 
     def _submit_gap(self, observation: CommunicationGapObservation) -> None:
         if not observation.warp_profile:
@@ -876,6 +1235,11 @@ class AuroraCommunicationEmergence(WarpCapable):
             self._pending = dict(raw.get("pending") or {})
             self._prune_pending()
             self._families = dict(raw.get("families") or {})
+            self._profile_family = dict(raw.get("profile_family") or {})
+            self._seen_possibilities = {
+                str(key): float(value or 0.0)
+                for key, value in dict(raw.get("seen_possibilities") or {}).items()
+            }
             self._tick = int(raw.get("tick", 0) or 0)
             for component_id, item in dict(raw.get("operations") or {}).items():
                 rec = dict(item or {})
@@ -890,33 +1254,82 @@ class AuroraCommunicationEmergence(WarpCapable):
                     parent_ids=list(rec.get("parent_ids") or []),
                     invariants=list(rec.get("invariants") or []),
                     axis_gain={ax: float(dict(rec.get("axis_gain") or {}).get(ax, 0.0) or 0.0) for ax in AXES},
+                    applicability_shape=dict(
+                        rec.get("applicability_shape")
+                        or dict(self._families.get(str(rec.get("structural_family", "") or "")) or {}).get(
+                            "applicability_shape"
+                        )
+                        or {}
+                    ),
                     status=str(rec.get("status", "trial") or "trial"),
                     created_at=float(rec.get("created_at", time.time()) or time.time()),
                     evidence=list(rec.get("evidence") or []),
                     genealogy_ability_id=str(rec.get("genealogy_ability_id", "") or ""),
                 )
                 self._operations[op.component_id] = op
+            self._warp_trials = {
+                str(component_id): self._restore_warp_component(item)
+                for component_id, item in dict(raw.get("warp_trials") or {}).items()
+            }
+            self._warp_promoted = {
+                str(component_id): self._restore_warp_component(item)
+                for component_id, item in dict(raw.get("warp_promoted") or {}).items()
+            }
+            self._gap_counter = {
+                str(key): int(value or 0)
+                for key, value in dict(raw.get("warp_gap_counter") or {}).items()
+            }
+            self._warp_dissolved_count = int(raw.get("warp_dissolved_count", 0) or 0)
         except Exception:
             self._operations = {}
             self._observations = []
             self._pending = {}
             self._families = {}
 
-    def _persist(self) -> None:
-        if not self.persist:
-            return
+    @staticmethod
+    def _restore_warp_component(item: Mapping[str, Any]) -> WarpComponent:
+        rec = dict(item or {})
+        return WarpComponent(
+            component_id=str(rec.get("component_id", "") or ""),
+            level=str(rec.get("level", "communication_emergence") or "communication_emergence"),
+            axis_profile={str(k): float(v or 0.0) for k, v in dict(rec.get("axis_profile") or {}).items()},
+            parent_ids=list(rec.get("parent_ids") or []),
+            name=str(rec.get("name", "") or "") or None,
+            parameters=dict(rec.get("parameters") or {}),
+            trial_tick=int(rec.get("trial_tick", 0) or 0),
+            trial_score_ema=float(rec.get("trial_score_ema", 0.0) or 0.0),
+            promoted=bool(rec.get("promoted", False)),
+            dissolved=bool(rec.get("dissolved", False)),
+            created_at=float(rec.get("created_at", time.time()) or time.time()),
+            sixth_axis_signal=float(rec.get("sixth_axis_signal", 0.0) or 0.0),
+            topology_gap_ref=rec.get("topology_gap_ref"),
+        )
+
+    def save(self) -> bool:
+        """Persist the complete communication/WARP lifecycle at a checkpoint."""
+        return self._persist(force=True)
+
+    def _persist(self, *, force: bool = False) -> bool:
+        if not self.persist or (self._persistence_suspended > 0 and not force):
+            return False
         payload = {
-            "schema_version": 1,
+            "schema_version": 3,
             "tick": self._tick,
             "observations": self._observations[-_MAX_OBSERVATIONS:],
             "pending": self._pending,
             "families": self._families,
+            "profile_family": self._profile_family,
+            "seen_possibilities": dict(self._seen_possibilities),
             "operations": {cid: op.to_dict() for cid, op in self._operations.items()},
+            "warp_trials": {cid: asdict(comp) for cid, comp in self._warp_trials.items()},
+            "warp_promoted": {cid: asdict(comp) for cid, comp in self._warp_promoted.items()},
+            "warp_gap_counter": dict(self._gap_counter),
+            "warp_dissolved_count": int(getattr(self, "_warp_dissolved_count", 0) or 0),
             "warp_status": self.warp_status(),
             "saved_at": time.time(),
         }
         try:
             Path(self.state_dir).mkdir(parents=True, exist_ok=True)
-            atomic_write_json(Path(self.storage_path), payload, indent=2, default=str)
+            return bool(atomic_write_json(Path(self.storage_path), payload, indent=2, default=str))
         except Exception:
-            pass
+            return False

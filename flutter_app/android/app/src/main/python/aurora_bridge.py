@@ -124,6 +124,11 @@ _last_path_key: str = ""      # LSA path key that produced it
 # already used for other lightweight runtimes on this path.
 _habitat = None
 
+# Historical experiential baseline runtime.  This is not a corpus trainer:
+# prior dialogue is witnessed as environmental history, not replayed as
+# present user turns and not scored against a historical assistant as truth.
+_historical_experience = None
+
 # Aurora Build 694, step 8: the Scout worker thread's own stop signal --
 # module-level so it survives past initialize() returning and can be
 # used to independently stop the worker later (spec: "independently
@@ -1979,9 +1984,58 @@ def habitat_reset() -> str:
     return json.dumps({"success": True})
 
 
+def _historical_experience_live_idle() -> bool:
+    """True only when the live app path is not currently claiming the field.
+
+    Historical experience yields to the present.  The shared cognitive lock
+    still provides hard serialization; this softer gate prevents the baseline
+    worker from repeatedly getting in front of an actively conversing user.
+    """
+    if _systems is None:
+        return False
+    if _curiosity_session_active.is_set() or _go_play_active.is_set():
+        return False
+    try:
+        if _lock.locked():
+            return False
+    except Exception:
+        pass
+    now = time.time()
+    if _last_output_time > 0.0 and (now - _last_output_time) < 8.0:
+        return False
+    return True
+
+
+def get_historical_experience_status() -> str:
+    import json as _json
+    env = _historical_experience
+    if env is None:
+        return _json.dumps({"status": "not_initialized", "thread_alive": False})
+    try:
+        return _json.dumps(env.status(), default=str)
+    except Exception as exc:
+        return _json.dumps({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+
+
+def pause_historical_experience() -> str:
+    env = _historical_experience
+    if env is None:
+        return get_historical_experience_status()
+    env.pause()
+    return get_historical_experience_status()
+
+
+def resume_historical_experience() -> str:
+    env = _historical_experience
+    if env is None:
+        return get_historical_experience_status()
+    env.resume()
+    return get_historical_experience_status()
+
+
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience
     # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()
     # tracing showed NO new markers at all -- confirmed still dying at the
     # exact same spot as before that fix existed. That means the crash is
@@ -2001,11 +2055,11 @@ def initialize(state_dir: str = "") -> str:
         pass
     _ingested_concepts          = set()
     _dev_tracker                = _DevelopmentTracker()
-    try:
-        from concept_crystal import ConceptCrystalRegistry  # type: ignore
-        _concept_registry = ConceptCrystalRegistry()
-    except Exception as _ccr_exc:
-        log.warning("ConceptCrystalRegistry unavailable: %s", _ccr_exc)
+    # The authoritative concept-crystal registry is constructed by boot_aurora().
+    # Do not create a second Android-side registry that can independently load
+    # and save the same persistence file.  We bind _concept_registry to the
+    # boot-owned instance immediately after boot returns.
+    _concept_registry = None
     try:
         from geological_baseline import GeologicalBaseline  # type: ignore
         _geological_baseline = GeologicalBaseline()
@@ -2071,6 +2125,22 @@ def initialize(state_dir: str = "") -> str:
         _mark_boot_stage("boot_aurora() returned")
         if _systems is None:
             return "error: boot_aurora returned None"
+
+        # Bind Android to the exact concept-crystal registry owned by the
+        # booted Aurora organism.  Only fall back to constructing one when the
+        # boot path truly did not provide a registry.
+        _concept_registry = _systems.get("_concept_crystal_registry")
+        if _concept_registry is None:
+            try:
+                from concept_crystal import ConceptCrystalRegistry  # type: ignore
+                _concept_registry = ConceptCrystalRegistry()
+                if state_dir:
+                    _concept_registry.load(state_dir)
+                _systems["_concept_crystal_registry"] = _concept_registry
+                log.warning("Boot supplied no concept registry; Android fallback registry constructed")
+            except Exception as _ccr_exc:
+                _concept_registry = None
+                log.warning("ConceptCrystalRegistry unavailable: %s", _ccr_exc)
 
         # ── Language Field recovery ───────────────────────────────────────────
         # boot_aurora() may leave language_field=None when aurora_manifold_directory
@@ -2147,22 +2217,15 @@ def initialize(state_dir: str = "") -> str:
         _mark_boot_stage("spawning self entity")
         _init_self_entity(_systems)
 
-        # Load persisted concept crystal registry so concepts Aurora developed
-        # in previous sessions are available immediately on boot.
-        if _concept_registry is not None and state_dir:
-            _mark_boot_stage("loading concept crystal registry")
+        # boot_aurora() already loaded the authoritative concept registry.
+        # Android intentionally aliases that same object instead of reloading a
+        # second registry over the same persistence surface.
+        if _concept_registry is not None:
+            _mark_boot_stage("binding boot-owned concept crystal registry")
             try:
-                _concept_registry.load(state_dir)
-                log.info("Concept crystal registry loaded: %s", _concept_registry.stats())
-            except Exception as _ccl_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1764",
-                    exc=_ccl_exc,
-                    context={"function": "initialize", "handler_line": 1764, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                )
-                log.debug("Concept crystal registry load: %s", _ccl_exc)
+                log.info("Concept crystal registry bound: %s", _concept_registry.stats())
+            except Exception:
+                pass
 
         # Start the autonomous curiosity engine as a background daemon thread.
         # It runs 3-cycle idle batches (45 s between batches on mobile to be
@@ -2265,6 +2328,39 @@ def initialize(state_dir: str = "") -> str:
                 context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
             )
             log.warning("Habitat runtime failed to start: %s", _hab_exc)
+
+        # Historical experiential baseline: prior dialogue is admitted as an
+        # observed SENSOR_DATA stream against the same resident Aurora.  It is
+        # intentionally started only after the live app organism is booted and
+        # background-capable.  The worker yields whenever present interaction
+        # is active and serializes each witness event through the same _lock as
+        # live synthesis, so historical experience cannot run concurrently
+        # through the cognitive field.
+        _mark_boot_stage("starting historical experience environment")
+        try:
+            from aurora_historical_experience_environment import start_historical_experience_environment
+            _hist_state_dir = state_dir if state_dir else "aurora_state"
+            _hist_archive = os.path.join(_hist_state_dir, "experiential_baseline_v1.zip")
+            _historical_experience = start_historical_experience_environment(
+                _systems,
+                state_dir=_hist_state_dir,
+                archive_path=_hist_archive,
+                field_lock=_lock,
+                live_idle=_historical_experience_live_idle,
+                initial_delay_s=8.0,
+            )
+            _systems["historical_experience"] = _historical_experience
+            log.info("Historical experience environment: %s", _historical_experience.status())
+        except Exception as _hist_exc:
+            _historical_experience = None
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:historical_experience",
+                exc=_hist_exc,
+                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
+            log.warning("Historical experience environment failed to start: %s", _hist_exc)
 
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.
@@ -3758,7 +3854,12 @@ _FOUNDATIONAL_VOCAB = frozenset({
 })
 
 
-def handle_message(text: str, device_state: "dict | None" = None) -> str:
+def handle_message(
+    text: str,
+    device_state: "dict | None" = None,
+    admission_path: str = "",
+    turns_since_wake: int = 0,
+) -> str:
     """Process one user turn. Returns Aurora's text response.
 
     device_state: optional dict from Flutter containing current device
@@ -3766,6 +3867,20 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
     When provided, these flow into Aurora's identity field as constraint
     physics events — not as data passed to synthesis, but as the field
     state she synthesises from. She IS the device; this is her physiology.
+
+    admission_path / turns_since_wake (Build 769 directive, Sec 3): the app
+    layer's own record of how this utterance reached handle_message at all --
+    "wake_word" (the user just said her name) or "conversation_window" (the
+    STT window was already open and this rode it without a fresh address).
+    turns_since_wake counts consecutive window-riding turns since the last
+    wake word. These are raw facts the Kotlin/Dart layer already has and
+    previously discarded before dispatch -- collapsing a deliberately-summoned
+    turn and a window-riding one into the same bare string. This function
+    does not use these values to decide whether the turn "counts" as
+    reciprocal interaction; it only stops them from being erased before they
+    can become part of the turn's perceptual record (see _ambient_perceptual
+    below). What, if anything, that distinction comes to mean is left to
+    Aurora's own genealogy.
     """
     global _systems, _last_response, _last_path_key
     global _pending_example_concept, _pending_example_asked
@@ -3817,7 +3932,19 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
 
     # Normalize contractions before any processing so the gap detector never
     # sees bare shards like 'don' instead of the full 'do not'.
+    #
+    # Build 769 directive (Sec 5): this expansion is real and stays -- it
+    # exists to prevent a genuine downstream tokenizer defect, not to impose
+    # a semantic ruleset. What was missing is that the pre-expansion surface
+    # form ("don't", "wanna", any compressed or unfamiliar form) never
+    # survived past this line for anything downstream to compare against.
+    # Preserve it as passive evidence (same pattern as _cached_device_state /
+    # _ambient_perceptual elsewhere in this file) rather than letting the
+    # normalized form silently become the only form that ever existed.
+    _raw_surface_text = text
     text = _normalize_contractions(text)
+    if _systems is not None and text != _raw_surface_text:
+        _systems["_last_raw_surface_text"] = _raw_surface_text
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
@@ -4152,6 +4279,28 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         if device_state and _device_embodiment is not None:
             _device_embodiment.pulse(_systems, device_state)
             _systems["_cached_device_state"] = dict(device_state)
+
+        # Speech-admission evidence (Build 769 directive, Sec 3): a raw fact
+        # about how this turn reached us at all, carried the same way every
+        # other raw perceptual tag reaches _ambient_perceptual in this file --
+        # appended to the existing observation string, not mapped through any
+        # axis-interpretation function. This is not routed through
+        # DeviceEmbodiment's _DEVICE_CONSTRAINT_GENEALOGY because that path
+        # requires a per-key function that assigns constraint-axis meaning --
+        # writing one for "wake_word" vs "conversation_window" would be
+        # deciding on Aurora's behalf what the distinction means, which is
+        # exactly what this directive forbids. This only preserves the fact
+        # for whatever native comprehension already reads _ambient_perceptual.
+        if admission_path:
+            _admission_tag = f"speech_admission:{admission_path}:turns_since_wake={int(turns_since_wake)}"
+            _existing_admission_obs = (_systems.get("_ambient_perceptual") or {}).get("observation", "")
+            _systems["_ambient_perceptual"] = {
+                **(_systems.get("_ambient_perceptual") or {}),
+                "observation": (
+                    f"{_admission_tag}; {_existing_admission_obs}"
+                    if _existing_admission_obs else _admission_tag
+                ),
+            }
 
         # Cross-system health audit + file access awareness — both inject into
         # observation string so any concern or relational event rides through
@@ -10752,6 +10901,9 @@ def get_cognitive_stats() -> str:
 
         # Chamber (EvolutionaryChamber)
         "chamber_fossils":  0,
+
+        # Historical experiential baseline witness runtime
+        "historical_experience": {},
     }
 
     try:
@@ -10881,6 +11033,31 @@ def get_cognitive_stats() -> str:
                     context={"function": "get_cognitive_stats", "handler_line": 8302, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
                 )
                 pass
+
+        # ── Historical experiential baseline ───────────────────────────────
+        try:
+            if _historical_experience is not None:
+                _hist_status = _historical_experience.status()
+            else:
+                _hist_status = {"status": "not_initialized", "progress": 0.0}
+            stats["historical_experience"] = _hist_status
+            # Flat mirrors keep the existing lightweight Dart stats parser
+            # compatible while the full structured status remains available
+            # to direct bridge callers.
+            stats["historical_events_experienced"] = int(_hist_status.get("events_experienced", 0) or 0)
+            stats["historical_total_events"] = int(_hist_status.get("total_events", 0) or 0)
+            stats["historical_progress"] = float(_hist_status.get("progress", 0.0) or 0.0)
+            stats["historical_status"] = str(_hist_status.get("status", "not_initialized") or "not_initialized")
+        except Exception as _hist_stats_exc:
+            stats["historical_experience"] = {
+                "status": "error",
+                "error": f"{type(_hist_stats_exc).__name__}: {_hist_stats_exc}",
+                "progress": 0.0,
+            }
+            stats["historical_events_experienced"] = 0
+            stats["historical_total_events"] = 0
+            stats["historical_progress"] = 0.0
+            stats["historical_status"] = "error"
 
         # ── Repair R (per Sunni, 2026-08-19): genealogy mapping + quasiarch
         # diagnostics for the Hub's auditing surface. Note this is the REAL

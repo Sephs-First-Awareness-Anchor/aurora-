@@ -66,6 +66,11 @@ class _HomeScreenState extends State<HomeScreen>
   Timer? _convTimer;
   bool   _inConversation = false;
   bool   _screenObserverReady = false;
+  // Build 769 directive, Sec 3: a real, already-implicit fact this class
+  // already had (which branch below admitted the utterance) that was never
+  // surfaced past this file. Reset on a fresh wake word / summon, incremented
+  // each time a turn rides the open window without one.
+  int    _turnsSinceWake = 0;
 
   // ── Bridge events ────────────────────────────────────────────────────────
   StreamSubscription? _bridgeSub;
@@ -281,15 +286,26 @@ class _HomeScreenState extends State<HomeScreen>
 
     // If we're already in a conversation, respond to EVERYTHING heard.
     // If not, only respond if "Aurora" is mentioned.
+    //
+    // Build 769 directive, Sec 3: this branch already knows, right here,
+    // whether the utterance needed a fresh wake word or just rode an open
+    // window -- that distinction previously died at the end of this function.
+    // _sendMessage now carries it through instead of collapsing both cases
+    // into the same bare string before they ever reach Aurora.
     if (_inConversation || _embState == 'SUMMONED') {
       _resetConversationWindow();
-      _sendMessage(words);
+      _turnsSinceWake += 1;
+      _sendMessage(words, admissionPath: 'conversation_window', turnsSinceWake: _turnsSinceWake);
     } else if (lower.contains('aurora')) {
       final idx   = lower.indexOf('aurora');
       final after = words.substring(idx + 6).trim();
+      _turnsSinceWake = 0;
       _summon();
       if (after.isNotEmpty) {
-        Future.delayed(const Duration(milliseconds: 300), () => _sendMessage(after));
+        Future.delayed(
+          const Duration(milliseconds: 300),
+          () => _sendMessage(after, admissionPath: 'wake_word', turnsSinceWake: 0),
+        );
       } else {
         _speak('Yes?');
       }
@@ -304,6 +320,7 @@ class _HomeScreenState extends State<HomeScreen>
   void _summon() {
     if (_embState == 'SUMMONED') return;
     setState(() => _embState = 'SUMMONED');
+    _turnsSinceWake = 0;
     AuroraBridge.setState('SUMMONED');
     AuroraBridge.stopOverlay();
     _startConversationWindow();
@@ -312,6 +329,7 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _background() async {
     _convTimer?.cancel();
     _inConversation = false;
+    _turnsSinceWake = 0;
     AuroraBridge.stopListening();
     setState(() {
       _embState  = 'BACKGROUND';
@@ -387,7 +405,11 @@ class _HomeScreenState extends State<HomeScreen>
 
   // ── Message send ────────────────────────────────────────────────────────……[...]
 
-  Future<void> _sendMessage(String text) async {
+  Future<void> _sendMessage(
+    String text, {
+    String admissionPath = '',
+    int turnsSinceWake = 0,
+  }) async {
     text = text.trim();
     if (text.isEmpty) return;
     _textCtrl.clear();
@@ -409,7 +431,11 @@ class _HomeScreenState extends State<HomeScreen>
     });
     _scrollToBottom();
 
-    final reply = await AuroraBridge.sendMessage(text);
+    final reply = await AuroraBridge.sendMessage(
+      text,
+      admissionPath: admissionPath,
+      turnsSinceWake: turnsSinceWake,
+    );
     if (!mounted) return;
 
     unawaited(AuroraBridge.markUiTransition('response_available'));

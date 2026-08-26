@@ -32,6 +32,7 @@ Created: February 2026
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
+import gzip
 import hashlib
 import json
 import math
@@ -3906,10 +3907,10 @@ class ConstraintGenealogyLogger:
         privileged:
           - "staged_experiment": this observe() call originated from
             complete_representation_experiment() (self._active_relation_
-            context["representation_inquiry_experiment"] is True) --
-            controlled-participation evidence, the strongest tier,
-            attributed at CONSEQUENCE_STAGED_EXPERIMENT_WEIGHT regardless
-            of how crowded the tick looked to the activity registry.
+            context["representation_inquiry_experiment"] is True).  The
+            configured staged weight is multiplied by the caller's measured
+            causal-confidence term; controlled participation alone no longer
+            grants full-strength causal credit.
           - otherwise, the activity registry's isolation_confidence() for
             this id at this tick: 1.0 when naturally isolated, decaying as
             more distinct OTHER representations were also active this
@@ -3965,7 +3966,13 @@ class ConstraintGenealogyLogger:
             return
         relief_dict = relief.to_dict()
         staged = bool(self._active_relation_context.get("representation_inquiry_experiment", False))
-        staged_weight = float(getattr(self.cfg, "CONSEQUENCE_STAGED_EXPERIMENT_WEIGHT", 1.0) or 1.0)
+        staged_causal_weight = max(0.0, min(1.0, float(
+            self._active_relation_context.get("representation_inquiry_causal_weight", 1.0) or 0.0
+        )))
+        staged_weight = (
+            float(getattr(self.cfg, "CONSEQUENCE_STAGED_EXPERIMENT_WEIGHT", 1.0) or 1.0)
+            * staged_causal_weight
+        )
         window = max(0, int(getattr(self.cfg, "CONSEQUENCE_ISOLATION_WINDOW", 3) or 3))
         ema_rate = max(0.0, min(1.0, float(getattr(self.cfg, "CONSEQUENCE_EMA_RATE", 0.12) or 0.12)))
         min_samples = max(1, int(getattr(self.cfg, "CONSEQUENCE_MIN_SAMPLES_FOR_CONFIDENCE", 5) or 5))
@@ -4021,10 +4028,11 @@ class ConstraintGenealogyLogger:
 
             # Sunni & Cael: confidence has two independent paths, matching
             # the evidence hierarchy directly rather than flattening it
-            # into one blended number. Isolated/staged evidence carries no
-            # attribution ambiguity by construction -- there is no OTHER
-            # co-active representation it could be mistaken for -- so
-            # accumulated CLEAN weight alone can earn full confidence.
+            # into one blended number. Isolated evidence is naturally clean;
+            # staged evidence is admitted to the clean channel only at its
+            # measured causal weight.  Thus a controlled intervention can
+            # accumulate confidence without pretending participation alone
+            # established full causality.
             # Ambiguous (co_activated) evidence DOES carry that risk (the
             # effect might really belong to whichever else was active), so
             # it additionally needs "recurrence across differing contexts"
@@ -5039,6 +5047,7 @@ class ConstraintGenealogyLogger:
             "consumer": str(consumer),
             "evidence_admitted": False,
             "actual_coactivation": bool(outcome.get("actual_coactivation", False)),
+            "causal_confidence": max(0.0, min(1.0, float(outcome.get("causal_confidence", 1.0) or 0.0))),
         }
         if stage is None:
             base_result["status"] = "unknown_stage"
@@ -5055,9 +5064,36 @@ class ConstraintGenealogyLogger:
             return base_result
 
         # A genuine co-activation attempt is happening now -- the stage's
-        # purpose is fulfilled either way (helpful or not), so it is
-        # consumed here rather than on the earlier peek.
+        # purpose is fulfilled either way, so it is consumed here rather
+        # than on the earlier peek.  Whether CONSEQUENCE evidence is admitted
+        # is decided separately below.
         self._representation_experiment_stages.pop(str(stage_id), None)
+
+        inquiry_id = str(stage.get("inquiry_id", ""))
+        stored = self._representation_collisions.get(inquiry_id)
+        if not bool(outcome.get("causal_evidence_valid", True)):
+            # Participation without an attributable consequence is neither
+            # success nor failure.  Return the inquiry to unresolved and undo
+            # this stage's attempt debit so missing instrumentation cannot
+            # eventually exhaust REPRESENTATION_INQUIRY_MAX_ATTEMPTS.
+            base_result["status"] = "inconclusive_causal_measurement"
+            base_result["causal_confidence"] = float(outcome.get("causal_confidence", 0.0) or 0.0)
+            if stored is not None:
+                stored["status"] = "unresolved"
+                stored["attempts"] = max(0, int(stored.get("attempts", 0) or 0) - 1)
+            self._record_representation_experiment_history(
+                stage, base_result,
+                {
+                    "stage_id": str(stage_id),
+                    "inquiry_id": inquiry_id,
+                    "consumer": str(consumer),
+                    "operand_ids": list(stage.get("operand_ids", []) or []),
+                    "outcome": self._json_clone(outcome),
+                    "helpful": None,
+                    "tick": int(self.tick_count),
+                },
+            )
+            return base_result
 
         left_id, right_id = str(stage["operand_ids"][0]), str(stage["operand_ids"][1])
         left_kind = self._representation_kind(left_id)
@@ -5067,13 +5103,15 @@ class ConstraintGenealogyLogger:
         before_vec = PressureVec(**{a: float(pressure_before.get(a, 0.0) or 0.0) for a in AXES})
         after_vec = PressureVec(**{a: float(pressure_after.get(a, 0.0) or 0.0) for a in AXES})
 
-        inquiry_id = str(stage.get("inquiry_id", ""))
         self._active_relation_context = {
             "collision_ids": [inquiry_id] if inquiry_id else [],
             "difference_values": {},
             "active_concepts": [],
             "representation_inquiry_experiment": True,
             "representation_inquiry_stage_id": str(stage_id),
+            "representation_inquiry_causal_weight": max(0.0, min(1.0, float(
+                outcome.get("causal_confidence", 1.0) or 0.0
+            ))),
         }
         try:
             relief_record = self.observe(
@@ -5096,7 +5134,6 @@ class ConstraintGenealogyLogger:
             "tick": int(self.tick_count),
         }
 
-        stored = self._representation_collisions.get(inquiry_id)
         if helpful:
             base_result["status"] = "helpful"
             base_result["evidence_admitted"] = True
@@ -5134,6 +5171,7 @@ class ConstraintGenealogyLogger:
                 self._json_clone(rec) for rec in self._representation_experiment_history[-16:]
             ],
             "consumer_cycles": dict(self._representation_inquiry_consumer_cycle),
+            "consumer_engagement_cycles": dict(self._representation_inquiry_consumer_cycle_engagements),
             "last_search": dict(self._last_representation_search or {}),
         }
 
@@ -8883,8 +8921,10 @@ class ConstraintGenealogyLogger:
         # Merge abilities from disk — preserve any entries written by another
         # process (e.g. corpus runner) that aren't yet in this instance's memory.
         try:
-            if os.path.exists(path):
-                with open(path, "r", encoding="utf-8") as fh:
+            source_path = path if os.path.exists(path) else path + ".gz"
+            if os.path.exists(source_path):
+                opener = gzip.open if source_path.endswith(".gz") else open
+                with opener(source_path, "rt", encoding="utf-8") as fh:
                     on_disk = json.load(fh)
                 for aid, adict in on_disk.items():
                     if aid not in data:
@@ -8952,6 +8992,9 @@ class ConstraintGenealogyLogger:
                 "active_stages": dict(self._representation_experiment_stages),
                 "history": list(self._representation_experiment_history[-512:]),
                 "consumer_cycles": dict(self._representation_inquiry_consumer_cycle),
+                # Refractory is measured in engagement cycles, so persist the
+                # clock itself as well as the last successful stage on it.
+                "consumer_engagement_cycles": dict(self._representation_inquiry_consumer_cycle_engagements),
             },
         }
         from pathlib import Path

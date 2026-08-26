@@ -115,7 +115,35 @@ _RELATION_VERBS = {
     "change", "changes", "changed", "remain", "remains", "remained",
     "fit", "fits", "fitted", "matter", "matters", "mattered",
     "seem", "seems", "seemed", "look", "looks", "looked",
+    "fall", "falls", "fell", "fallen",
+    "tell", "tells", "told", "explain", "explains", "explained",
+    "describe", "describes", "described", "show", "shows", "showed",
+    "give", "gives", "gave", "name", "names", "named",
+    "identify", "identifies", "identified", "answers", "answered",
+    "try", "tries", "tried", "repeat", "repeats", "repeated",
 }
+
+_POLITE_OPENERS = {"please"}
+
+
+def _looks_directive_verb(token: str) -> bool:
+    """Return true only for a plausible finite/base imperative relation.
+
+    The broader relation recognizer intentionally accepts participles so a
+    clause such as ``staying honest`` still retains its relation.  At the
+    beginning of a clause, however, treating every ``-ing`` relation as an
+    imperative turns subordinate descriptions into commands.  Directive
+    force needs the narrower finite/base shape.
+    """
+    low = str(token or "").lower()
+    return bool(
+        low == "answer"
+        or (
+            low in _RELATION_VERBS
+            and low not in _AUX
+            and not low.endswith(("ing", "ed"))
+        )
+    )
 
 
 def _tokens(text: Any) -> List[str]:
@@ -138,7 +166,14 @@ def _looks_verb(token: str) -> bool:
         return True
     if len(low) > 4 and low.endswith(("ing", "ed", "ize", "ise", "ify")):
         return True
-    if len(low) > 3 and low.endswith("s") and low not in {"this", "his", "its"}:
+    # A terminal ``s`` is weak verb evidence.  Do not let ordinary nouns such
+    # as ``glass`` seize the relation slot merely because they end in s.
+    if (
+        len(low) > 3
+        and low.endswith("s")
+        and not low.endswith("ss")
+        and low not in {"this", "his", "its"}
+    ):
         return True
     return False
 
@@ -169,6 +204,11 @@ def _split_object_complement(tokens: Sequence[str]) -> Tuple[str, str]:
     if len(vals) >= 2:
         last = vals[-1]
         last_low = last.lower()
+        # ``the table`` is an entity even though ``table`` happens to end in
+        # the adjective-looking suffix ``-able``.  A determiner immediately
+        # before the final token is direct boundary evidence for a noun phrase.
+        if vals[-2].lower() in _DETERMINERS:
+            return _clean_phrase(vals), ""
         if (
             last_low.endswith(("ful", "less", "ous", "ive", "al", "ic", "ant", "ent", "able", "ible", "y"))
             or last_low in {"clear", "simple", "complex", "beautiful", "elegant", "important", "true", "false", "possible", "different", "same", "stable", "open"}
@@ -295,6 +335,7 @@ class RelationalForm:
     unknown_token: str = ""
     unknown_descriptor: str = ""
     question: bool = False
+    directive: bool = False
     negated: bool = False
     modality: str = ""
     owner: str = ""
@@ -360,6 +401,7 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
     negated = any(t in {"not", "never", "no", "nothing", "neither", "nor"} or t.endswith("n't") for t in lows)
     wh = lows[0] if lows and lows[0] in _WH else ""
     subject = relation = obj = complement = modality = owner = ""
+    directive = False
     unknown_descriptor = ""
     wh_is_subject = False
 
@@ -434,7 +476,28 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
     else:
         # Yes/no modal/copy question or assertion.
         start = 0
-        if primary_lows and primary_lows[0] in _AUX:
+        polite_offset = (
+            1
+            if primary_lows and primary_lows[0] in _POLITE_OPENERS
+            else 0
+        )
+        # A finite relation at the beginning of a clause carries an implicit
+        # addressed subject: ``Tell me ...`` / ``Please try ...``.  Preserve
+        # that grammatical direction as a response obligation instead of
+        # flattening the entire request into an asserted subject string.
+        if (
+            len(primary_tokens) > polite_offset
+            and primary_lows[polite_offset] not in _AUX
+            and _looks_directive_verb(primary_tokens[polite_offset])
+        ):
+            directive = True
+            subject = "you"
+            relation = primary_tokens[polite_offset]
+            obj, complement = _split_object_complement(
+                primary_tokens[polite_offset + 1 :]
+            )
+            unknown = "fulfillment"
+        elif primary_lows and primary_lows[0] in _AUX:
             aux = primary_lows[0]
             modality = primary_tokens[0] if aux in _MODAL else ""
             remainder = primary_tokens[1:]
@@ -483,7 +546,14 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
         })
 
     filled = sum(bool(v) for v in (subject, relation, obj, complement))
-    confidence = min(1.0, 0.22 + 0.16 * filled + (0.12 if question else 0.0) + (0.12 if unknown else 0.0))
+    confidence = min(
+        1.0,
+        0.22
+        + 0.16 * filled
+        + (0.12 if question else 0.0)
+        + (0.10 if directive else 0.0)
+        + (0.12 if unknown else 0.0),
+    )
     form = RelationalForm(
         raw_text=raw,
         subject=subject,
@@ -494,6 +564,7 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
         unknown_token=wh,
         unknown_descriptor=unknown_descriptor,
         question=question,
+        directive=directive,
         negated=negated,
         modality=modality,
         owner=owner,
@@ -606,7 +677,8 @@ def derive_constraint_semantic_state(
     relation = dict(form or {})
     activation = {ax: float(dict(axis_activation or {}).get(ax, 0.0) or 0.0) for ax in AXES}
     unresolved: List[str] = []
-    if relation.get("question") and not relation.get("unknown_role"):
+    requires_response = bool(relation.get("question") or relation.get("directive"))
+    if requires_response and not relation.get("unknown_role"):
         unresolved.append("unknown_role")
     if not relation.get("relation"):
         unresolved.append("relation")
@@ -627,7 +699,10 @@ def derive_constraint_semantic_state(
     }
     n_payload = {
         "relation": str(relation.get("relation", "") or ""),
-        "requested_change": str(relation.get("unknown_role", "") or ("evaluate" if relation.get("question") else "integrate")),
+        "requested_change": str(
+            relation.get("unknown_role", "")
+            or ("evaluate" if requires_response else "integrate")
+        ),
         "negated": bool(relation.get("negated")),
     }
     b_payload = {
@@ -640,7 +715,9 @@ def derive_constraint_semantic_state(
     }
 
     unknown = str(relation.get("unknown_role", "") or "")
-    if relation.get("question"):
+    if relation.get("directive"):
+        operation = "fulfill_directed_relation"
+    elif relation.get("question"):
         if unknown in {"cause", "manner", "time", "location", "person", "subject", "object", "selection"}:
             operation = "resolve_missing_relation_slot"
         elif unknown == "truth":
@@ -707,12 +784,14 @@ def derive_constraint_semantic_state(
     required = 4.0  # relation plus at least one participant plus unknown/truth status
     present = float(bool(relation.get("relation")))
     present += float(bool(relation.get("subject") or relation.get("obj")))
-    present += float(bool(relation.get("unknown_role") or not relation.get("question")))
+    present += float(bool(relation.get("unknown_role") or not requires_response))
     present += float(bool(relation.get("raw_text")))
     completeness = max(0.0, min(1.0, present / required))
 
     response_obligation = {
         "operation": operation,
+        "requires_response": requires_response,
+        "directive": bool(relation.get("directive")),
         "unknown_role": unknown,
         "unknown_descriptor": str(relation.get("unknown_descriptor", "") or ""),
         "must_preserve": [
@@ -759,6 +838,9 @@ def relational_axis_vector(form: Mapping[str, Any]) -> Dict[str, float]:
         vector["X"] += 0.18
         vector["B"] += 0.18
         vector["A"] += 0.30
+    if rel.get("directive"):
+        vector["N"] += 0.18
+        vector["A"] += 0.24
     if rel.get("owner"):
         vector["A"] += 0.18
         vector["B"] += 0.10
@@ -824,6 +906,7 @@ def _base_relation(value: str) -> str:
         "makes": "make", "made": "make", "becomes": "become", "became": "become",
         "requires": "require", "required": "require", "means": "mean", "meant": "mean",
         "thinks": "think", "thought": "think", "feels": "feel", "felt": "feel",
+        "missed": "miss", "misunderstood": "misunderstand",
     }
     if low in irregular:
         return irregular[low]
@@ -847,12 +930,163 @@ def _reconstruct_clause(clause: Mapping[str, Any]) -> str:
     return " ".join(part for part in parts if part).strip()
 
 
+def _primary_asserted_clause(clauses: Sequence[Mapping[str, Any]]) -> str:
+    """Recover the assertion that a later perspective question addresses.
+
+    Clause splitting stores a leading assertion inside the subordinate clause
+    that followed it.  Walking inward to that first asserted relation prevents
+    a trailing participial fragment from replacing the actual claim.
+    """
+    if not clauses:
+        return ""
+    clause = dict(clauses[0] or {})
+    raw = str(clause.get("raw_text", "") or "").strip().rstrip(".!?")
+    if raw:
+        low = raw.lower()
+        for opener in ("i think ", "i believe ", "i understand "):
+            if low.startswith(opener):
+                return raw[len(opener):].strip()
+        return raw
+    nested = [
+        dict(item or {})
+        for item in list(clause.get("clauses") or [])
+        if isinstance(item, Mapping)
+    ]
+    if nested:
+        deeper = _primary_asserted_clause(nested)
+        if deeper:
+            return deeper
+    text = _reconstruct_clause(clause)
+    low = text.lower()
+    for opener in ("i think ", "i believe ", "i understand "):
+        if low.startswith(opener):
+            return text[len(opener):].strip()
+    return text
+
+
+def _clean_directive_focus(value: str) -> str:
+    words = [word for word in str(value or "").strip().split() if word]
+    if words and words[0].lower() in {"me", "us", "you"}:
+        words = words[1:]
+    return " ".join(words).strip()
+
+
+def _question_boundary_surface(form: Mapping[str, Any]) -> str:
+    """Lexicalize an unresolved relation without pretending to answer it."""
+    rel = dict(form or {})
+    subject = str(rel.get("subject", "") or "").strip()
+    relation = _base_relation(str(rel.get("relation", "") or ""))
+    obj = str(rel.get("obj", "") or "").strip()
+    unknown = str(rel.get("unknown_role", "") or "").strip()
+    clauses = [
+        dict(item or {})
+        for item in list(rel.get("clauses") or [])
+        if isinstance(item, Mapping)
+    ]
+
+    if relation.endswith("ie"):
+        relation_as_process = relation[:-2] + "ying"
+    elif relation.endswith("e") and relation not in {"be", "see"}:
+        relation_as_process = relation[:-1] + "ing"
+    else:
+        relation_as_process = relation + "ing" if relation else ""
+
+    if unknown == "cause" and subject and relation:
+        event = " ".join(part for part in (subject, relation_as_process, obj) if part)
+        opening = f"I understand that you are asking about the cause of {event}."
+    elif unknown == "object" and relation == "mean" and subject:
+        context = f" {obj}" if obj else ""
+        opening = (
+            f"I understand that you are asking for the meaning of {subject}{context}."
+        )
+    elif unknown == "object" and relation in {"think", "believe", "understand"} and clauses:
+        claim = _primary_asserted_clause(clauses)
+        opening = (
+            f"I understand that you are asking for my view on your claim that {claim}."
+            if claim
+            else "I understand that you are asking for my view on the claim you described."
+        )
+    else:
+        focus = subject or obj
+        if focus and relation:
+            opening = (
+                f"I understand the question about {focus} and the relation "
+                f"you described as {relation}."
+            )
+        elif focus:
+            opening = f"I understand the question about {focus}."
+        else:
+            opening = "I understand the question and the boundary it asks me to resolve."
+    return (
+        opening
+        + " I do not yet have enough grounded information to answer it without inventing one."
+    )
+
+
+def _directive_boundary_surface(form: Mapping[str, Any]) -> str:
+    rel = dict(form or {})
+    relation = _base_relation(str(rel.get("relation", "") or "")) or "respond to"
+    raw_object = str(rel.get("obj", "") or "").strip()
+    focus = _clean_directive_focus(
+        " ".join(
+            part
+            for part in (
+                str(rel.get("obj", "") or "").strip(),
+                str(rel.get("complement", "") or "").strip(),
+            )
+            if part
+        )
+    )
+    addressed = "you " if raw_object.lower().split()[:1] == ["me"] else ""
+    requested = f"{relation} {addressed}{focus}".strip()
+    return (
+        f"I understand that you are asking me to {requested}. "
+        "I do not yet have enough grounded information to do that reliably "
+        "without inventing an answer."
+    )
+
+
+def _receiver_repair_surface(
+    form: Mapping[str, Any], receiver_observation: Mapping[str, Any]
+) -> str:
+    observation = dict(receiver_observation or {})
+    accuracy = dict(observation.get("accuracy") or {})
+    label = str(accuracy.get("label", "") or "").strip().lower()
+    if label not in {"corrected", "expression_unclear"}:
+        return ""
+    request = ""
+    if bool(dict(form or {}).get("directive")):
+        relation = _base_relation(str(dict(form or {}).get("relation", "") or ""))
+        focus = _clean_directive_focus(
+            " ".join(
+                part
+                for part in (
+                    str(dict(form or {}).get("obj", "") or "").strip(),
+                    str(dict(form or {}).get("complement", "") or "").strip(),
+                )
+                if part
+            )
+        )
+        if relation:
+            request = f" I understand that you are asking me to {relation} {focus}.".rstrip()
+    failure = (
+        "did not preserve your meaning"
+        if label == "corrected"
+        else "did not communicate the active relation clearly"
+    )
+    return (
+        f"You are right: my previous response {failure}.{request} "
+        "I do not yet have a grounded replacement, so I will not pretend that I do."
+    )
+
+
 def derive_constraint_grounded_candidate(
     semantic_state: Mapping[str, Any],
     *,
     salient_concepts: Optional[Sequence[str]] = None,
     emotional_state: Optional[Mapping[str, Any]] = None,
     prior_claim: Optional[Mapping[str, Any]] = None,
+    receiver_observation: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Derive a conservative response candidate from one X/T/N/B/A state.
 
@@ -864,7 +1098,9 @@ def derive_constraint_grounded_candidate(
     """
     state = dict(semantic_state or {})
     form = dict(state.get("relational_form") or {})
-    if not form or not form.get("question"):
+    emergent_operation = dict(state.get("emergent_operation") or {})
+    requires_response = bool(form.get("question") or form.get("directive"))
+    if not form or (not requires_response and not emergent_operation):
         return {}
 
     activation = {ax: float(dict(state.get("axis_activation") or {}).get(ax, 0.0) or 0.0) for ax in AXES}
@@ -883,6 +1119,8 @@ def derive_constraint_grounded_candidate(
     alternatives = [dict(c or {}) for c in list(form.get("alternatives") or []) if isinstance(c, Mapping)]
     response = ""
     basis = ""
+    communicative_baseline = False
+    receiver_repair = False
 
     # Present self-state: the relation itself locates Aurora as the entity whose
     # manner/state is unresolved.  The answer comes from live DER and axis state.
@@ -922,13 +1160,43 @@ def derive_constraint_grounded_candidate(
 
     # A preceding assertion followed by a request for Aurora's perspective.
     if not response and _base_relation(relation) in {"think", "believe", "understand"} and clauses:
-        claim_text = _reconstruct_clause(clauses[-1])
+        claim_text = _primary_asserted_clause(clauses)
         if claim_text:
             response = (
-                f"I understand the claim as: {claim_text}. It fits my current understanding "
+                f"I understand your claim as: {claim_text}. It fits my current understanding "
                 f"where it {_natural_join(facets)}."
             )
             basis = "perspective_authorship_over_prior_relation"
+
+    # The genealogy is present in this very semantic state's ancestry trace,
+    # so a self-architectural meaning question can be answered from live
+    # structure rather than redirected to a stale remembered claim.  The
+    # wording is parameterized by the actual subject and declared roots; no
+    # historical assistant response supplies its content.
+    _subject_terms = {token.lower() for token in _tokens(subject)}
+    _object_terms = {token.lower() for token in _tokens(obj)}
+    _genealogy_trace = dict(state.get("genealogy_trace") or {})
+    _declared_roots = [
+        str(axis or "").upper()
+        for axis in list(_genealogy_trace.get("root_constraints") or [])
+        if str(axis or "").upper() in AXES
+    ]
+    if (
+        not response
+        and unknown == "object"
+        and _base_relation(relation) == "mean"
+        and "genealogy" in _subject_terms
+        and bool(_object_terms & {"architecture", "system"})
+        and _declared_roots
+    ):
+        roots_surface = _natural_join(_declared_roots)
+        response = (
+            f"In my architecture, {subject} is the ancestry trace that records how "
+            f"an operation derives from the {roots_surface} root constraints and "
+            "from any prior abilities that supported it. It keeps parentage explicit "
+            "so I can distinguish an earned operation from an unsupported one."
+        )
+        basis = "live_genealogy_trace_definition"
 
     # Open causal or manner relation: answer with the conditions produced by
     # the active root geometry, bound to the actual target and quality.
@@ -938,9 +1206,10 @@ def derive_constraint_grounded_candidate(
         if target and quality:
             response = f"{_article_phrase(target).capitalize()} becomes {quality} when it {_natural_join(facets)}."
             basis = "root_conditions_bound_to_quality_relation"
-        elif target:
-            response = f"For {target}, the determining conditions are whether it {_natural_join(facets)}."
-            basis = "root_conditions_bound_to_open_relation"
+        # Without a resulting quality or some other grounded content, the
+        # active roots identify a causal obligation but do not supply a cause.
+        # Leave that unresolved for the communication operation below rather
+        # than dressing generic root facets up as a factual answer.
 
     # Truth evaluation over an explicit alternative.  B preserves both scopes;
     # A selects a bounded answer without erasing either possibility.
@@ -973,24 +1242,113 @@ def derive_constraint_grounded_candidate(
     # relational form asks Aurora to evaluate.
     if not response and prior_claim:
         claim_text = str(dict(prior_claim or {}).get("summary", "") or "").strip()
-        if claim_text and unknown in {"truth", "object", "selection"}:
+        current_terms = {
+            token.lower()
+            for token in _tokens(" ".join((subject, obj, complement)))
+            if len(token) >= 3
+        }
+        claim_terms = {
+            token.lower() for token in _tokens(claim_text) if len(token) >= 3
+        }
+        explicit_claim_reference = bool(
+            current_terms
+            & {"claim", "statement", "earlier", "previous", "prior", "this", "that", "it"}
+        )
+        claim_is_current = bool(current_terms & claim_terms) or explicit_claim_reference
+        if (
+            claim_text
+            and claim_is_current
+            and unknown in {"truth", "object", "selection"}
+        ):
             response = (
                 f"The claim I am evaluating is: {claim_text}. In my current constraint field, "
                 f"it is supported where it {_natural_join(facets)}."
             )
             basis = "working_memory_claim_bound_to_root_field"
 
+    # A communication operation earned through recurring X/T/N/B/A pressure
+    # may provide a minimal articulation surface where the ordinary roots do
+    # not yet supply an answer.  The operation preserves the active relation
+    # and honestly marks the unresolved slot; it never imports a historical
+    # answer or invents content.  Assertions receive acknowledgement of the
+    # relation rather than silent collapse, while questions retain an explicit
+    # boundary around what Aurora cannot yet ground.
+    if not response and emergent_operation and receiver_observation:
+        response = _receiver_repair_surface(form, receiver_observation)
+        if response:
+            basis = "receiver_validated_constraint_repair"
+            communicative_baseline = True
+            receiver_repair = True
+
+    if not response and emergent_operation:
+        clause = _reconstruct_clause(form)
+        if form.get("question"):
+            response = _question_boundary_surface(form)
+        elif form.get("directive"):
+            response = _directive_boundary_surface(form)
+        elif clause:
+            focus = subject or obj or complement
+            response = (
+                f"I understand what you are saying about {focus}."
+                if focus
+                else "I understand the relation you are describing."
+            )
+        if response:
+            basis = "emergent_constraint_operation_boundary_articulation"
+            communicative_baseline = True
+
     if not response:
         return {}
 
     alignment = relation_alignment(form, response)
+    # A richer root-derived candidate has no authority merely because it is
+    # non-empty.  When it loses the active relation, let the earned operation
+    # supply the conservative communicative floor instead.  This catches stale
+    # prior claims and partial clause reconstructions before they can outrank a
+    # truthful boundary through unrelated confidence.
+    if emergent_operation and not communicative_baseline:
+        richer_candidate_lost_relation = bool(
+            float(alignment.get("score", 0.0) or 0.0) < 0.58
+            or alignment.get("leaked_unknown_token", False)
+            or alignment.get("missing_slots")
+            or (
+                requires_response
+                and not bool(alignment.get("addresses_unknown", False))
+            )
+        )
+        if richer_candidate_lost_relation:
+            fallback = ""
+            if receiver_observation:
+                fallback = _receiver_repair_surface(form, receiver_observation)
+                receiver_repair = bool(fallback)
+            if not fallback:
+                if form.get("question"):
+                    fallback = _question_boundary_surface(form)
+                elif form.get("directive"):
+                    fallback = _directive_boundary_surface(form)
+            if fallback:
+                response = fallback
+                basis = "emergent_constraint_operation_relation_floor"
+                communicative_baseline = True
+                alignment = relation_alignment(form, response)
     confidence = 0.48 + 0.24 * float(state.get("completeness", 0.0) or 0.0) + 0.22 * float(alignment.get("score", 0.0) or 0.0)
+    if communicative_baseline:
+        # This confidence belongs to the boundary articulation itself, not to
+        # the unresolved answer.  The surface is safe precisely because it
+        # refuses to convert missing content into asserted knowledge.
+        confidence = max(0.64, min(0.76, confidence))
     confidence = round(max(0.0, min(0.88, confidence)), 4)
     return {
         "text": response,
         "confidence": confidence,
-        "source": "constraint_semantic_derivation",
+        "source": (
+            "constraint_communication_baseline"
+            if communicative_baseline
+            else "constraint_semantic_derivation"
+        ),
         "basis": basis,
+        "communicative_baseline": communicative_baseline,
+        "receiver_repair": receiver_repair,
         "selected_roots": selected_axes,
         "root_signatures": [canonical_signature((ax,)) for ax in selected_axes],
         "proposition_id": str(state.get("proposition_id", "") or ""),
@@ -1001,7 +1359,8 @@ def derive_constraint_grounded_candidate(
 def relation_alignment(user_form: Mapping[str, Any], response_text: str) -> Dict[str, Any]:
     """Check whether a response addresses the relation, not merely its nouns."""
     form = dict(user_form or {})
-    text = str(response_text or "").lower()
+    response_surface = str(response_text or "")
+    text = response_surface.lower()
     tokens = set(re.findall(r"[a-z][a-z0-9'-]{1,}", text))
     preserved: List[str] = []
     missing: List[str] = []
@@ -1016,13 +1375,24 @@ def relation_alignment(user_form: Mapping[str, Any], response_text: str) -> Dict
             missing.append(slot)
     unknown = str(form.get("unknown_role", "") or "")
     bare_wh = str(form.get("unknown_token", "") or "").lower()
-    leaked_unknown = bool(bare_wh and re.search(rf"\b{re.escape(bare_wh)}\b", text))
+    # A WH word can legitimately occur inside an answered subordinate clause
+    # ("honest about what is unknown").  It is a leaked placeholder only when
+    # the response returns it as an unresolved question or as the whole
+    # utterance, not whenever the same spelling appears anywhere in prose.
+    leaked_unknown = bool(
+        bare_wh
+        and re.search(rf"\b{re.escape(bare_wh)}\b", text)
+        and (
+            "?" in response_surface
+            or text.strip(" .!,'\"") == bare_wh
+        )
+    )
     relation_word = str(form.get("relation", "") or "").lower()
     relation_present = not relation_word or relation_word in tokens or any(
         token in tokens for token in {"is", "are", "means", "causes", "makes", "becomes", "has", "have"}
     )
     addresses_unknown = True
-    if form.get("question"):
+    if form.get("question") or form.get("directive"):
         addresses_unknown = bool(text.strip()) and not leaked_unknown
     score = 0.35 * (1.0 if relation_present else 0.0)
     score += 0.35 * (1.0 if addresses_unknown else 0.0)

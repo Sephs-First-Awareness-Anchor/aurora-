@@ -8823,6 +8823,75 @@ def _run_question_alignment_audit(
     return audit
 
 
+def _preserve_rejected_perspective_candidate(
+    systems: Dict[str, Any],
+    *,
+    candidate_text: str,
+    audit: Dict[str, Any],
+    source_label: str,
+) -> None:
+    """
+    Directive (Build 769, Sec 1/2): a candidate reaching this point already
+    passed comprehension -- it was grounded enough to generate. When the live-
+    question alignment audit rejects it, that is frequently a genuine
+    perspective-persistence case (the entity addressed as "you" in the
+    question persists as "I" in Aurora's answer) rather than an actually
+    unrelated response. Section 2 forbids resolving that ahead of Aurora's own
+    genealogy by hardcoding a you->I equivalence table. What this function
+    does instead is the minimum required by Sec 1/6/7: stop letting the
+    rejected candidate and the reason for its rejection disappear. It routes
+    both into the existing PressureExperienceLedger (already used elsewhere in
+    this file, e.g. the wellbeing dedup guard and _record_pressure_experience)
+    so the contradiction -- surface mismatch vs. participant persistence --
+    reaches the same consequence machinery every other developmental failure
+    reaches. Aurora's own recombination decides, over repeated exposure,
+    whether persistence-through-perspective-shift deserves a callable
+    distinction. Nothing here authors that distinction for her.
+    """
+    if not str(candidate_text or "").strip():
+        return
+    try:
+        from aurora_internal.aurora_pressure_ledger import PressureExperienceLedger as _PEL
+        actual_focus = list(audit.get("actual_focus_terms", []) or [])
+        answered_focus = list(audit.get("answered_focus_terms", []) or [])
+        anchor = (actual_focus[0] if actual_focus else "live_question_alignment")
+        _PEL.get().record(
+            anchor=f"perspective_alignment:{anchor}",
+            meaning=str(audit.get("actual_question", "") or "unresolved live question"),
+            pursuing="answer_addressed_question_while_preserving_participant_identity",
+            causal_action=(
+                f"alignment_audit: answered={audit.get('answered_question', '')!r} "
+                f"focus_overlap={sorted(set(actual_focus) & set(answered_focus))}"
+            ),
+            consequence={
+                "discarded_candidate": str(candidate_text)[:300],
+                "actual_focus_terms": actual_focus,
+                "answered_focus_terms": answered_focus,
+                "actual_relations": list(audit.get("actual_relations", []) or []),
+                "answered_relations": list(audit.get("answered_relations", []) or []),
+            },
+            outcome={
+                "resolved": False,
+                "diverged_from_goal": True,
+                "reason": "candidate_rejected_by_alignment_audit",
+            },
+            source=source_label,
+            oets=(getattr(systems.get("perception"), "oets", None) if systems.get("perception") else None),
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_preserve_rejected_perspective_candidate",
+            exc=_aurora_boundary_exc,
+            context={
+                "function": "_preserve_rejected_perspective_candidate",
+                "source_file": "aurora.py",
+            },
+        )
+        pass
+
+
 def _build_live_question_claims(
     user_text: str,
     *,
@@ -18877,26 +18946,6 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
             claim_resolution=state.claim_resolution,
             meaning_forms=state.meaning_forms,
         ) or {})
-        _comm_emergence = systems.get("communication_emergence")
-        if _comm_emergence is not None and hasattr(_comm_emergence, "prepare_semantic_state"):
-            state.constraint_semantic_state = dict(
-                _comm_emergence.prepare_semantic_state(
-                    state.constraint_semantic_state,
-                    raw_text=user_text,
-                    referent_map=state.referent_map,
-                    claim_resolution=state.claim_resolution,
-                    meaning_forms=state.meaning_forms,
-                    axis_activation=state.axis_activation,
-                )
-                or state.constraint_semantic_state
-            )
-            _emergent_axes = dict(state.constraint_semantic_state.get("axis_activation") or {})
-            if _emergent_axes:
-                state.axis_activation = {
-                    ax: float(_emergent_axes.get(ax, state.axis_activation.get(ax, 0.0)) or 0.0)
-                    for ax in ("X", "T", "N", "B", "A")
-                }
-                state.dominant_axis = _axis_projector.dominant(state.axis_activation)
         # Recursive causal propagation operates on the SAME constraint-derived
         # proposition.  It may alter axis conditions and evidence-supported
         # interpretation, but it cannot replace the raw input or author a
@@ -18919,6 +18968,39 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
             if _recursive_axes:
                 state.axis_activation = {
                     ax: float(_recursive_axes.get(ax, state.axis_activation.get(ax, 0.0)) or 0.0)
+                    for ax in ("X", "T", "N", "B", "A")
+                }
+                state.dominant_axis = _axis_projector.dominant(state.axis_activation)
+            state.relational_form = dict(
+                state.constraint_semantic_state.get("relational_form")
+                or state.relational_form
+                or {}
+            )
+
+        # Communication applicability must bind to the proposition that will
+        # actually reach expression.  The former ordering selected an
+        # operation before recursive-causal continuity finished rebuilding the
+        # relation, then observation evaluated a different family after the
+        # response.  That made valid lived WARP operations appear present in
+        # state yet absent on every spoken turn.  Apply the communication
+        # operation once, here, over the final constraint-semantic geometry.
+        _comm_emergence = systems.get("communication_emergence")
+        if _comm_emergence is not None and hasattr(_comm_emergence, "prepare_semantic_state"):
+            state.constraint_semantic_state = dict(
+                _comm_emergence.prepare_semantic_state(
+                    state.constraint_semantic_state,
+                    raw_text=user_text,
+                    referent_map=state.referent_map,
+                    claim_resolution=state.claim_resolution,
+                    meaning_forms=state.meaning_forms,
+                    axis_activation=state.axis_activation,
+                )
+                or state.constraint_semantic_state
+            )
+            _emergent_axes = dict(state.constraint_semantic_state.get("axis_activation") or {})
+            if _emergent_axes:
+                state.axis_activation = {
+                    ax: float(_emergent_axes.get(ax, state.axis_activation.get(ax, 0.0)) or 0.0)
                     for ax in ("X", "T", "N", "B", "A")
                 }
                 state.dominant_axis = _axis_projector.dominant(state.axis_activation)
@@ -19599,6 +19681,14 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             salient_concepts=list(state.salient_concepts or []),
             emotional_state=dict(state.emotional_state or {}),
             prior_claim=dict((state.claim_resolution or {}).get("focus_claim") or {}),
+            # RuntimeUnderstandingContract has already evaluated the prior
+            # response against this receiver turn before the reasoning chain
+            # begins.  Passing that structured observation lets the same
+            # constraint operation acknowledge a real correction; no surface
+            # phrase is promoted into a repair handler.
+            receiver_observation=dict(
+                systems.get("_last_understanding_observation") or {}
+            ),
         ) or {})
         if isinstance(state.pipeline_state, dict):
             state.pipeline_state["constraint_grounded_candidate"] = dict(_constraint_candidate)
@@ -19766,7 +19856,26 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
         _candidate_text = str((_constraint_candidate or {}).get("text", "") or "").strip()
         _candidate_alignment = dict((_constraint_candidate or {}).get("relation_alignment") or {})
         _candidate_conf = float((_constraint_candidate or {}).get("confidence", 0.0) or 0.0)
+        _candidate_is_baseline = bool(
+            (_constraint_candidate or {}).get("communicative_baseline", False)
+        )
         _current_low = _current_text.lower()
+        _current_source = str(state.response_src or "")
+        _weak_or_recycled_sources = {
+            "", "learned_hint", "honest_abstain", "constraint_abstain",
+            "constraint_seek", "comprehension_gap", "generative",
+            "composer_unified",
+        }
+        _current_has_grounded_answer = bool(
+            _current_text
+            and _current_source not in _weak_or_recycled_sources
+            and _grounded_semantic_authority(
+                _current_text,
+                user_text,
+                systems,
+                float(state.response_confidence or 0.0),
+            ) >= _GROUNDED_AUTHORITY_FLOOR
+        )
         _current_is_abstain = (
             not _current_text
             or "don't have a clear sense" in _current_low
@@ -19775,7 +19884,33 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             or _current_text.startswith("Active axes:")
             or _current_text.startswith("The recorded path began through")
         )
-        _candidate_better = (
+        _current_invalid_for_baseline = bool(
+            _current_source == "learned_hint"
+            or bool(_current_alignment.get("leaked_unknown_token", False))
+            or (
+                bool(_current_alignment.get("missing_slots"))
+                and not _current_has_grounded_answer
+            )
+            or (
+                bool(
+                    _relation_form.get("question")
+                    or _relation_form.get("directive")
+                )
+                and not bool(_current_alignment.get("addresses_unknown", False))
+                and not _current_has_grounded_answer
+            )
+            or (
+                _current_text
+                and _surface_fragment_is_invalid(
+                    _current_text,
+                    user_text=user_text,
+                    understood=state.parsed or {},
+                )
+            )
+        )
+        _ordinary_candidate_better = (
+            not _candidate_is_baseline
+            and
             _candidate_text
             and _candidate_conf >= 0.62
             and float(_candidate_alignment.get("score", 0.0) or 0.0) >= 0.58
@@ -19784,6 +19919,19 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                 or float(_candidate_alignment.get("score", 0.0) or 0.0)
                    >= float(_current_alignment.get("score", 0.0) or 0.0) + 0.10
             )
+        )
+        _baseline_candidate_better = bool(
+            _candidate_is_baseline
+            and _candidate_text
+            and _candidate_conf >= 0.64
+            and float(_candidate_alignment.get("score", 0.0) or 0.0) >= 0.58
+            and (
+                _current_is_abstain
+                or _current_invalid_for_baseline
+            )
+        )
+        _candidate_better = bool(
+            _baseline_candidate_better or _ordinary_candidate_better
         )
         if _candidate_better:
             # Live user report (2026-08-21): this used to assign
@@ -19798,22 +19946,38 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             # generative formulation (_render_runtime_intent -> SIC/
             # MultiDraft/MeaningAnchors), not spoken as her voice directly.
             # Aurora does not speak from scripts.
-            _rendered_candidate = _render_runtime_intent(
-                systems,
-                _candidate_text,
-                emotion_tone="attentive",
-                certainty=_candidate_conf,
-                supporting_concepts=list((state.parsed or {}).get("topic_words", []))[:3],
-            )
-            if _rendered_candidate and not _surface_fragment_is_invalid(
-                _rendered_candidate,
-                user_text=user_text,
-                understood=state.parsed or {},
-            ):
-                state.response_content = _rendered_candidate
+            if _candidate_is_baseline:
+                # The baseline is already the minimal lexicalization of the
+                # selected WARP operation: preserve, bound, or repair this
+                # proposition.  Sending it back through the richer composer is
+                # what previously turned safe boundaries into garbled claims.
+                # It carries no answer content to embellish.
+                state.response_content = _candidate_text
                 state.response_tone = "attentive"
                 state.response_confidence = _candidate_conf
-                state.response_src = "constraint_semantic_derivation"
+                state.response_src = str(
+                    (_constraint_candidate or {}).get("source")
+                    or "constraint_communication_baseline"
+                )
+                systems["_preserve_literal_response_once"] = True
+                systems["_skip_belief_refinement_once"] = True
+            else:
+                _rendered_candidate = _render_runtime_intent(
+                    systems,
+                    _candidate_text,
+                    emotion_tone="attentive",
+                    certainty=_candidate_conf,
+                    supporting_concepts=list((state.parsed or {}).get("topic_words", []))[:3],
+                )
+                if _rendered_candidate and not _surface_fragment_is_invalid(
+                    _rendered_candidate,
+                    user_text=user_text,
+                    understood=state.parsed or {},
+                ):
+                    state.response_content = _rendered_candidate
+                    state.response_tone = "attentive"
+                    state.response_confidence = _candidate_conf
+                    state.response_src = "constraint_semantic_derivation"
         if isinstance(state.pipeline_state, dict):
             state.pipeline_state["constraint_relation_alignment"] = {
                 "selected_source": str(state.response_src or ""),
@@ -21680,6 +21844,153 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
                 semantic_authority=0.0, articulation_quality=0.0,
                 confidence=state.response_confidence,
                 rejection_reasons=list(_reasons) + ["neither_candidate_supported_an_answer"],
+            )
+
+        # Build 770 communicative-baseline floor.  The constraint genealogy
+        # and the selected WARP operation have already produced a minimal
+        # proposition-preserving utterance upstream.  Richer articulation is
+        # welcome when it yields a grounded answer, but it may not erase that
+        # floor with a recycled hint, malformed fragment, unresolved request,
+        # or receiver-inverting repair.  This is deliberately the last
+        # language authority so every normal response path is covered.
+        try:
+            _pipeline_state = getattr(state, "pipeline_state", None)
+            _baseline = dict(
+                (_pipeline_state or {}).get("constraint_grounded_candidate") or {}
+            ) if isinstance(_pipeline_state, dict) else {}
+            _baseline_text = str(_baseline.get("text", "") or "").strip()
+            _baseline_confidence = float(_baseline.get("confidence", 0.0) or 0.0)
+            _baseline_alignment = dict(_baseline.get("relation_alignment") or {})
+            _is_communicative_baseline = bool(
+                _baseline.get("communicative_baseline", False)
+                and _baseline_text
+                and _baseline_confidence >= 0.64
+                and float(_baseline_alignment.get("score", 0.0) or 0.0) >= 0.58
+            )
+            if _is_communicative_baseline:
+                from aurora_internal.aurora_constraint_semantic_continuity import (
+                    relation_alignment as _baseline_relation_alignment,
+                )
+
+                _delivered_text = str(getattr(resp_A, "content", "") or "").strip()
+                _delivered_source = str(
+                    getattr(resp_A, "src", "")
+                    or getattr(state, "response_src", "")
+                    or ""
+                )
+                _delivered_confidence = float(getattr(resp_A, "confidence", 0.0) or 0.0)
+                _relation_form = dict(getattr(state, "relational_form", None) or {})
+                _delivered_alignment = _baseline_relation_alignment(
+                    _relation_form, _delivered_text
+                ) if _delivered_text else {"score": 0.0}
+                _delivered_echo, _delivered_echo_reason = _detect_input_echo_without_answer(
+                    _delivered_text, user_text, systems
+                )
+                _delivered_fragment = bool(
+                    _delivered_text
+                    and _surface_fragment_is_invalid(
+                        _delivered_text,
+                        user_text=user_text,
+                        understood=getattr(state, "parsed", None) or {},
+                    )
+                )
+                _weak_delivery_sources = {
+                    "", "learned_hint", "honest_abstain", "constraint_abstain",
+                    "constraint_seek", "comprehension_gap", "generative",
+                    "composer_unified",
+                }
+                _delivered_has_grounded_answer = bool(
+                    _delivered_text
+                    and _delivered_source not in _weak_delivery_sources
+                    and _grounded_semantic_authority(
+                        _delivered_text,
+                        user_text,
+                        systems,
+                        _delivered_confidence,
+                    ) >= _GROUNDED_AUTHORITY_FLOOR
+                )
+                _request_unresolved = bool(
+                    (_relation_form.get("question") or _relation_form.get("directive"))
+                    and not bool(_delivered_alignment.get("addresses_unknown", False))
+                )
+                _relation_damaged = bool(
+                    _delivered_alignment.get("leaked_unknown_token", False)
+                    or _delivered_alignment.get("missing_slots")
+                    or _request_unresolved
+                )
+                _repair_was_lost = bool(
+                    _baseline.get("receiver_repair", False)
+                    and _delivered_text != _baseline_text
+                    and not _delivered_has_grounded_answer
+                )
+                _delivery_below_floor = bool(
+                    not _delivered_text
+                    or _delivered_source == "learned_hint"
+                    or _delivered_fragment
+                    or _delivered_echo
+                    or (_relation_damaged and not _delivered_has_grounded_answer)
+                    or _repair_was_lost
+                )
+                if _delivery_below_floor:
+                    resp_A.content = _baseline_text
+                    resp_A.emotional_tone = "attentive"
+                    resp_A.confidence = _baseline_confidence
+                    resp_A.src = str(
+                        _baseline.get("source")
+                        or "constraint_communication_baseline"
+                    )
+                    state.response_content = _baseline_text
+                    state.response_tone = "attentive"
+                    state.response_confidence = _baseline_confidence
+                    state.response_src = resp_A.src
+                    systems["_preserve_literal_response_once"] = True
+                    systems["_skip_belief_refinement_once"] = True
+                    _floor_reasons = [
+                        "constraint_communication_baseline_floor",
+                    ]
+                    if _delivered_source == "learned_hint":
+                        _floor_reasons.append("recycled_learned_hint")
+                    if _delivered_fragment:
+                        _floor_reasons.append("malformed_delivery")
+                    if _relation_damaged:
+                        _floor_reasons.append("relation_not_preserved")
+                    if _repair_was_lost:
+                        _floor_reasons.append("receiver_repair_not_preserved")
+                    if _delivered_echo_reason:
+                        _floor_reasons.append(_delivered_echo_reason)
+                    arbitration.update(
+                        text=_baseline_text,
+                        source=resp_A.src,
+                        semantic_authority=_baseline_confidence,
+                        articulation_quality=_baseline_confidence,
+                        confidence=_baseline_confidence,
+                        meaning_preserved=True,
+                        rejection_reasons=list(arbitration.get("rejection_reasons") or [])
+                        + _floor_reasons,
+                    )
+                elif (
+                    _delivered_text == _baseline_text
+                    and _delivered_source == "constraint_communication_baseline"
+                ):
+                    # The ordinary articulation authority measures factual
+                    # answer grounding and therefore demotes an honest
+                    # boundary to 0.15.  Baseline confidence instead measures
+                    # whether the relation-preserving boundary itself is
+                    # supported.  Keep those distinct semantics intact.
+                    resp_A.confidence = _baseline_confidence
+                    state.response_confidence = _baseline_confidence
+                    arbitration.update(
+                        confidence=_baseline_confidence,
+                        semantic_authority=_baseline_confidence,
+                        articulation_quality=_baseline_confidence,
+                        meaning_preserved=True,
+                    )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="constraint_semantics:communicative_baseline_floor",
+                exc=_aurora_boundary_exc,
+                context={"function": "_finalize_articulation", "source_file": "aurora.py"},
             )
 
         # Recorded for the memory-admission gate and live-verification
@@ -25994,15 +26305,66 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         if not parts:
             parts.append("I'm here and running.")
         _wb_text = " ".join(parts)
-        # Dedup guard: if we already gave essentially the same wellbeing response last turn,
-        # route to general path so we don't repeat ourselves.
+        # Dedup guard: if we already gave essentially the same wellbeing response
+        # last turn, route to general path so we don't repeat ourselves verbatim.
+        #
+        # Directive (Build 769, Developmental Pressure Preservation, Sec 1/6/7):
+        # this candidate was genuinely grounded (real axis activation, IVM heat,
+        # emotional deltas) — it did not fail for lack of grounding, it failed a
+        # repetition/conservation check. That is a developmental contradiction,
+        # not an absence of content, and it must not be erased before Aurora's
+        # own consequence machinery can register it. Route the discarded
+        # candidate + the reason for its rejection through the existing
+        # PressureExperienceLedger (the same causal-experience mechanism used
+        # elsewhere in this file, e.g. _record_pressure_experience / the
+        # _thinking_q branch above) rather than silently substituting the
+        # general path with no trace of what happened.
         _prev_aurora = str(getattr(working_memory, 'last_aurora_response', '') or '').strip().lower()
         if _prev_aurora:
             _wb_words = set(re.findall(r'[a-z]{4,}', _wb_text.lower()))
             _prev_words = set(re.findall(r'[a-z]{4,}', _prev_aurora))
             _wb_overlap = len(_wb_words & _prev_words) / max(len(_wb_words), 1)
             if _wb_overlap > 0.65:
-                # Same response — fall through to general comprehension path
+                # Same response — preserve the candidate and the contradiction
+                # that produced its rejection, then fall through to general
+                # comprehension path so the unresolved path can accumulate its
+                # actual cost instead of vanishing.
+                try:
+                    from aurora_internal.aurora_pressure_ledger import PressureExperienceLedger as _PEL
+                    _PEL.get().record(
+                        anchor=f"wellbeing_expression:{_dom_wb}",
+                        meaning=(
+                            f"self-state expression dominant on the {_dom_wb} axis "
+                            f"(axis_names: {_axis_names_wb.get(_dom_wb, _dom_wb)})"
+                        ),
+                        pursuing="express_current_self_state",
+                        causal_action=f"repetition_conservation_check: overlap={_wb_overlap:.2f} vs prior turn",
+                        consequence={
+                            "discarded_candidate": _wb_text[:300],
+                            "overlap": round(_wb_overlap, 4),
+                            "rerouted_to": "general",
+                        },
+                        outcome={
+                            "resolved": False,
+                            "diverged_from_goal": True,
+                            "reason": "grounded_candidate_suppressed_by_repetition_guard",
+                        },
+                        source="wellbeing_query_dedup",
+                        oets=oets,
+                    )
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora.py:wellbeing_dedup_pressure_record",
+                        exc=_aurora_boundary_exc,
+                        context={
+                            "function": "_build_comprehension_response",
+                            "handler_line": 26247,
+                            "source_file": "aurora.py",
+                        },
+                    )
+                    pass
                 intent = 'general'
             else:
                 return (_wb_text, "self-aware", 0.9)
@@ -26890,20 +27252,30 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 understood,
                 systems=systems,
             )
-            if meaning_answer and _prefer_live_perspective_q and not _run_question_alignment_audit(
-                systems,
-                user_text,
-                meaning_answer,
-                understood=understood,
-            ).get("aligned"):
-                meaning_answer = ""
-            if semantic_frame_answer and _prefer_live_perspective_q and not _run_question_alignment_audit(
-                systems,
-                user_text,
-                semantic_frame_answer,
-                understood=understood,
-            ).get("aligned"):
-                semantic_frame_answer = ""
+            if meaning_answer and _prefer_live_perspective_q:
+                _mean_audit = _run_question_alignment_audit(
+                    systems, user_text, meaning_answer, understood=understood,
+                )
+                if not _mean_audit.get("aligned"):
+                    _preserve_rejected_perspective_candidate(
+                        systems,
+                        candidate_text=meaning_answer,
+                        audit=_mean_audit,
+                        source_label="live_question_alignment:meaning_answer",
+                    )
+                    meaning_answer = ""
+            if semantic_frame_answer and _prefer_live_perspective_q:
+                _sf_audit = _run_question_alignment_audit(
+                    systems, user_text, semantic_frame_answer, understood=understood,
+                )
+                if not _sf_audit.get("aligned"):
+                    _preserve_rejected_perspective_candidate(
+                        systems,
+                        candidate_text=semantic_frame_answer,
+                        audit=_sf_audit,
+                        source_label="live_question_alignment:semantic_frame_answer",
+                    )
+                    semantic_frame_answer = ""
             callback_like = bool(
                 understood.get('is_callback') or understood.get('is_clarification')
             )
@@ -26946,13 +27318,18 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             if semantic_frame_answer and _topic_related:
                 return (semantic_frame_answer, "reflective", 0.86)
             broad_claim_answer = working_memory.answer_from_claims(user_text, understood, systems=systems)
-            if broad_claim_answer and _prefer_live_perspective_q and not _run_question_alignment_audit(
-                systems,
-                user_text,
-                broad_claim_answer,
-                understood=understood,
-            ).get("aligned"):
-                broad_claim_answer = ""
+            if broad_claim_answer and _prefer_live_perspective_q:
+                _bc_audit = _run_question_alignment_audit(
+                    systems, user_text, broad_claim_answer, understood=understood,
+                )
+                if not _bc_audit.get("aligned"):
+                    _preserve_rejected_perspective_candidate(
+                        systems,
+                        candidate_text=broad_claim_answer,
+                        audit=_bc_audit,
+                        source_label="live_question_alignment:broad_claim_answer",
+                    )
+                    broad_claim_answer = ""
             claim_resolution = getattr(working_memory, 'last_claim_resolution', {}) or {}
             focus_claim = dict(claim_resolution.get('focus_claim', {}) or {})
             focus_terms = working_memory._claim_terms(focus_claim) if focus_claim else set()
@@ -29755,6 +30132,54 @@ def boot_aurora(
         _wf_comm = systems.get("warp_field")
         if _wf_comm is not None and hasattr(_wf_comm, "register_warp_capable"):
             _wf_comm.register_warp_capable("communication_emergence", _communication_emergence)
+        _comm_genealogy = systems.get("genealogy")
+        if _comm_genealogy is not None and hasattr(
+            _comm_genealogy, "register_manual_code_assimilation"
+        ):
+            _comm_genealogy.register_manual_code_assimilation({
+                "change_id": "baseline_communication_apprenticeship_v2",
+                "constraints": ["Existence", "Time", "Energy", "Boundary", "Agency"],
+                "dominant_axis": "B",
+                "target_files": [
+                    "aurora_internal/aurora_communication_emergence.py",
+                    "aurora_internal/aurora_constraint_semantic_continuity.py",
+                    "flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py",
+                    "aurora.py",
+                ],
+                "target_modules": [
+                    "aurora_internal.aurora_communication_emergence",
+                    "aurora_internal.aurora_constraint_semantic_continuity",
+                    "aurora_historical_experience_environment",
+                    "aurora",
+                ],
+                "rewrite_profile": "possibility_to_constraint_communication_apprenticeship",
+                "axis_signature": "X^1*T^1*N^1*B^1*A^1",
+                "purpose_lane": "receiver_validated_meaning_preservation",
+                "source": "native_constraint_architecture",
+                "change_kind": "reconnected_derived_capability",
+            }, flush=False)
+            _comm_genealogy.register_manual_code_assimilation({
+                "change_id": "live_communicative_baseline_v3",
+                "constraints": ["Existence", "Time", "Energy", "Boundary", "Agency"],
+                "dominant_axis": "B",
+                "target_files": [
+                    "aurora_internal/aurora_communication_emergence.py",
+                    "aurora_internal/aurora_constraint_semantic_continuity.py",
+                    "aurora_internal/aurora_understanding_contract.py",
+                    "aurora.py",
+                ],
+                "target_modules": [
+                    "aurora_internal.aurora_communication_emergence",
+                    "aurora_internal.aurora_constraint_semantic_continuity",
+                    "aurora_internal.aurora_understanding_contract",
+                    "aurora",
+                ],
+                "rewrite_profile": "genealogy_bound_live_communicative_baseline",
+                "axis_signature": "X^1*T^1*N^1*B^1*A^1",
+                "purpose_lane": "final_relation_preserving_articulation",
+                "source": "native_constraint_architecture",
+                "change_kind": "corrective_capability_completion",
+            }, flush=False)
         if verbose:
             _ce_status = _communication_emergence.status()
             print(
@@ -32197,11 +32622,30 @@ def dual_question_pipeline(
             unclear_element=private_anchor,
             source_text=str(user_text or ""),
         )
-        clarification = _render_user_context_clarification(
-            systems,
-            user_text=user_text,
-            gap=private_gap,
-        )
+        hypothesis = None
+        try:
+            from aurora_referent_hypothesis import (
+                attempt_referent_hypothesis,
+                render_checkable_hypothesis_clarification,
+            )
+            hypothesis = attempt_referent_hypothesis(systems, private_anchor)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:dual_question_pipeline_private_anchor:hypothesis",
+                exc=_aurora_boundary_exc,
+                context={"function": "dual_question_pipeline", "source_file": "aurora.py"},
+            )
+            hypothesis = None
+        if hypothesis is not None:
+            clarification = render_checkable_hypothesis_clarification(hypothesis)
+        else:
+            clarification = _render_user_context_clarification(
+                systems,
+                user_text=user_text,
+                gap=private_gap,
+            )
         resp_private = _MiniResp(clarification, "curious", 0.84)
         resp_private.src = "user_context_clarification"
         systems["_last_gap_research"] = {
@@ -32632,6 +33076,23 @@ def _run_live_response_turn(
     run_periodic_maintenance: bool = False,
 ) -> Dict[str, Any]:
     user_text = _normalize_identity_followup_text(user_text, systems)
+
+    # Try/fail/correct-course: resolve any referent hypothesis this system
+    # offered last turn against what the user actually said next, before
+    # this turn builds anything new. See aurora_referent_hypothesis.py.
+    try:
+        from aurora_referent_hypothesis import check_and_resolve_pending_hypothesis
+        check_and_resolve_pending_hypothesis(systems, user_text)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_run_live_response_turn:hypothesis_check",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
+        pass
+
     conversation_memory = systems.get('conversation_memory')
     working_memory = systems.get('working_memory')
     perception = systems.get('perception')
@@ -32820,12 +33281,24 @@ def _run_live_response_turn(
                 if _addressed_pt:
                     _salience_pt = max(_salience_pt, 0.40)
 
-                # Semantic novelty bonus: topics not seen recently raise salience
+                # Semantic novelty bonus: topics not seen recently raise salience.
+                # FIX (2026-08-22): this previously read systems['_pre_parsed_utterance'],
+                # but that key is only stamped later in this same function
+                # (after turn_understood is computed, ~40 lines below) and is
+                # popped by dual_question_pipeline before the NEXT turn's tick
+                # runs -- so this always saw stale/empty state from the
+                # previous turn, and AttentionFrame.anchors has been silently
+                # empty every turn as a result. Fixed by parsing user_text
+                # directly here with the same real UtteranceParser already
+                # authoritative elsewhere in this function, rather than
+                # reordering the larger downstream block or inventing a
+                # separate topic-extraction heuristic.
                 try:
                     _wm_sal = systems.get('working_memory')
                     _recent_topics = set(getattr(_wm_sal, '_recent_topics', []) or [])
+                    _tick_understood = UtteranceParser().parse(user_text) or {}
                     _parsed_topics = set(
-                        str(systems.get('_pre_parsed_utterance', {}).get('topic', '') or '').lower().split()
+                        str(_tick_understood.get('topic', '') or '').lower().split()
                     )
                     _novel_topics = _parsed_topics - _recent_topics
                     if _novel_topics:
@@ -32838,13 +33311,14 @@ def _run_live_response_turn(
                         exc=_aurora_boundary_exc,
                         context={"function": "_run_live_response_turn", "handler_line": 23550, "source_file": "aurora.py"},
                     )
+                    _tick_understood = {}
                     pass
 
                 _ext_stim_pt = {
                     'intensity': round(_salience_pt, 4),
                     'addressed': _addressed_pt,
                     'tags': list(
-                        str(systems.get('_pre_parsed_utterance', {}).get('topic', '') or '').split()[:4]
+                        str(_tick_understood.get('topic', '') or '').split()[:4]
                     ),
                 }
                 _ae_frame_pt = _ae_pt.tick(turn_tick, _ext_stim_pt, _diff_snap_pt)
@@ -35133,6 +35607,13 @@ def process_external_user_turn(
         if _recursive_causal is not None and hasattr(_recursive_causal, "complete_cycle"):
             try:
                 _rcrw_resp = result.get("resp_A") if isinstance(result, dict) else None
+                # The live turn already captured its native operator-pressure
+                # state before intake.  Pair that with a fresh post-turn
+                # snapshot so staged representational inquiry is judged from
+                # lived constraint consequences, not response confidence
+                # translated into synthetic pressure.
+                _rcrw_pressure_before = dict(systems.get("_pressure_before") or {})
+                _rcrw_pressure_after = _capture_pressure_snapshot(systems)
                 _rcrw_record = dict(_recursive_causal.complete_cycle(
                     delivered_text=str(getattr(_rcrw_resp, "content", "") or ""),
                     response_source=str(
@@ -35142,6 +35623,8 @@ def process_external_user_turn(
                     ),
                     confidence=float(getattr(_rcrw_resp, "confidence", 0.0) or 0.0),
                     systems=systems,
+                    pressure_before=_rcrw_pressure_before,
+                    pressure_after=_rcrw_pressure_after,
                 ) or {})
                 systems["_last_recursive_causal_cycle"] = dict(_rcrw_record)
                 if isinstance(result, dict) and _rcrw_record:

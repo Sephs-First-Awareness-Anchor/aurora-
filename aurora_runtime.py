@@ -79,6 +79,7 @@ from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
 import argparse
+import gzip
 import hashlib
 import json
 import math
@@ -734,9 +735,14 @@ def _restore_genealogy_state(
 
     # abilities.json
     abilities_path = os.path.join(output_dir, getattr(logger.cfg, "ABILITIES_FILE", "abilities.json"))
-    if os.path.exists(abilities_path):
+    compressed_abilities_path = abilities_path + ".gz"
+    abilities_source_path = (
+        abilities_path if os.path.exists(abilities_path) else compressed_abilities_path
+    )
+    if os.path.exists(abilities_source_path):
         try:
-            with open(abilities_path, "r", encoding="utf-8") as fh:
+            opener = gzip.open if abilities_source_path.endswith(".gz") else open
+            with opener(abilities_source_path, "rt", encoding="utf-8") as fh:
                 raw = json.load(fh)
             loaded: Dict[str, AbilityProfile] = {}
             for aid, rec in (raw or {}).items():
@@ -894,6 +900,21 @@ def _restore_genealogy_state(
                     logger._representation_inquiry_consumer_cycle = {
                         str(k): int(v or 0) for k, v in consumer_cycles.items()
                     }
+                engagement_cycles = inquiry_runtime.get("consumer_engagement_cycles", {})
+                if isinstance(engagement_cycles, dict):
+                    logger._representation_inquiry_consumer_cycle_engagements = {
+                        str(k): int(v or 0) for k, v in engagement_cycles.items()
+                    }
+                # Backward compatibility for Build-768 state written before
+                # the engagement clock itself was persisted: the last staged
+                # cycle is a hard lower bound on how far that clock had already
+                # advanced.  Never wake a consumer numerically before its own
+                # remembered stage.
+                for _consumer, _last_stage_cycle in logger._representation_inquiry_consumer_cycle.items():
+                    logger._representation_inquiry_consumer_cycle_engagements[_consumer] = max(
+                        int(logger._representation_inquiry_consumer_cycle_engagements.get(_consumer, 0) or 0),
+                        int(_last_stage_cycle or 0),
+                    )
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),

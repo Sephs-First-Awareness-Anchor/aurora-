@@ -444,6 +444,10 @@ class _HubScreenState extends State<HubScreen> {
     final coh    = _stats['coherence_index']     as double? ?? 0.0;
     final grd    = _stats['grounding_index']     as double? ?? 0.0;
     final tpc    = _stats['topic_tracking']      as double? ?? 0.0;
+    final histDone = _stats['historical_events_experienced'] as int? ?? 0;
+    final histTotal = _stats['historical_total_events'] as int? ?? 0;
+    final histProgress = _stats['historical_progress'] as double? ?? 0.0;
+    final histStatus = (_stats['historical_status'] as String?)?.replaceAll('_', ' ') ?? 'not initialized';
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _sectionTitle('COGNITIVE FIELD'),
@@ -471,6 +475,14 @@ class _HubScreenState extends State<HubScreen> {
         _statRow('Coherence',     coh.toStringAsFixed(3),  valueColor: _cyan),
         _statRow('Grounding',     grd.toStringAsFixed(3),  valueColor: _amber),
         _statRow('Topic Tracking',tpc.toStringAsFixed(3),  valueColor: _purple),
+        const Divider(color: _border, height: 20),
+        _statRow(
+          'Historical Experience',
+          histTotal > 0
+              ? '$histDone / $histTotal (${(histProgress * 100).toStringAsFixed(1)}%) · $histStatus'
+              : histStatus,
+          valueColor: histStatus == 'completed' ? _green : _cyan,
+        ),
       ])),
     ]);
   }

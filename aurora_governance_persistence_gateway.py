@@ -980,6 +980,17 @@ class NSpaceGateway:
             'tone': packet.metadata.get('tone', 'neutral'),
             'stream_type': packet.stream_type.value,
         }
+        # Preserve source-provided observation context as evidence without
+        # translating it into Aurora's axes here.  This is especially
+        # important for historical/environmental observations whose actor,
+        # chronology, provenance, and epistemic status are part of what was
+        # observed, but whose meaning belongs to Aurora's own downstream
+        # physics.  Namespaced so existing evidence keys keep their authority.
+        if packet.metadata:
+            try:
+                evidence['source_metadata'] = dict(packet.metadata)
+            except Exception:
+                evidence['source_metadata'] = {}
 
         # Layer evidence based on requested mode
         if mode >= ExistenceMode.TRANSIENT:

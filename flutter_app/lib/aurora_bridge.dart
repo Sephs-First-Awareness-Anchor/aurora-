@@ -81,8 +81,16 @@ class AuroraBridge {
     return m != null ? double.tryParse(m.group(1)!) : null;
   }
 
-  static Future<String> sendMessage(String text) async {
-    final result = await _channel.invokeMethod<String>('sendMessage', {'text': text});
+  static Future<String> sendMessage(
+    String text, {
+    String admissionPath = '',
+    int turnsSinceWake = 0,
+  }) async {
+    final result = await _channel.invokeMethod<String>('sendMessage', {
+      'text': text,
+      'admissionPath': admissionPath,
+      'turnsSinceWake': turnsSinceWake,
+    });
     return result ?? '';
   }
 
@@ -211,9 +219,47 @@ class AuroraBridge {
   }
 
   static Map<String, dynamic> _parseCognitiveStats(String json) {
-    int    _i(String key) { final m = RegExp('"$key"\\s*:\\s*(\\d+)').firstMatch(json); return m != null ? (int.tryParse(m.group(1)!) ?? 0) : 0; }
-    double _d(String key) { final m = RegExp('"$key"\\s*:\\s*([0-9.]+)').firstMatch(json); return m != null ? (double.tryParse(m.group(1)!) ?? 0.0) : 0.0; }
-    bool   _b(String key) => json.contains('"$key":true');
+    // Build 769 directive, Sec 10: this used to be a hand-rolled regex
+    // extractor that only knew an older, smaller field set. get_cognitive_stats()
+    // on the Python side already computes real, live genealogy/WARP/Quasiarch/
+    // Concept-Crystal values (confirmed by reading that function directly) --
+    // they were simply never extracted here, or extracted under the wrong
+    // name (crystal_maturity/crystal_nodes vs. the concept_crystal_* names
+    // hub_screen.dart actually reads), so the Hub silently showed defaults
+    // for data that genuinely existed. The backing call always emits
+    // well-formed JSON via json.dumps, so decoding it for real -- instead of
+    // re-deriving a parser by hand -- is strictly more correct, not a new
+    // decision being introduced.
+    Map<String, dynamic> decoded;
+    try {
+      decoded = jsonDecode(json) as Map<String, dynamic>;
+    } catch (_) {
+      decoded = {};
+    }
+
+    int _i(String key) {
+      final v = decoded[key];
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return 0;
+    }
+
+    double _d(String key) {
+      final v = decoded[key];
+      if (v is num) return v.toDouble();
+      return 0.0;
+    }
+
+    bool _b(String key) => decoded[key] == true;
+
+    String _s(String key) => decoded[key] is String ? decoded[key] as String : '';
+
+    final axisPressures = (decoded['axis_pressures'] as Map<String, dynamic>?) ?? const {};
+    double _axis(String ax) {
+      final v = axisPressures[ax];
+      return v is num ? v.toDouble() : 0.10;
+    }
+
     return {
       'lsa_paths':          _i('lsa_paths'),
       'avg_n_cost':         _d('avg_n_cost'),
@@ -225,14 +271,33 @@ class AuroraBridge {
       'grounding_index':    _d('grounding_index'),
       'topic_tracking':     _d('topic_tracking'),
       'sedimemory_depth':   _i('sedimemory_depth'),
-      'crystal_maturity':   _d('crystal_maturity'),
-      'crystal_nodes':      _i('crystal_nodes'),
+      // Concept Crystal developmental registry -- real names hub_screen.dart
+      // actually reads, not the old un-prefixed ones nothing consumed.
+      'concept_crystal_maturity':  _d('concept_crystal_maturity'),
+      'concept_crystal_nodes':     _i('concept_crystal_nodes'),
+      'concept_crystal_promoted':  _i('concept_crystal_promoted'),
+      'concept_crystal_grounded':  _i('concept_crystal_grounded'),
       'chamber_fossils':    _i('chamber_fossils'),
       'noncomp_loaded':     _i('noncomp_loaded'),
       'noncomp_diagonal_live': _i('noncomp_diagonal_live'),
       'turn_count':         _i('turn_count'),
-      // Axis pressures nested
-      'X': _d('X'), 'T': _d('T'), 'N': _d('N'), 'B': _d('B'), 'A': _d('A'),
+      'historical_events_experienced': _i('historical_events_experienced'),
+      'historical_total_events': _i('historical_total_events'),
+      'historical_progress': _d('historical_progress'),
+      'historical_status': _s('historical_status'),
+      // Genealogy -- previously never extracted at all.
+      'genealogy_ability_count':    _i('genealogy_ability_count'),
+      'genealogy_axis_counts':      (decoded['genealogy_axis_counts'] as Map<String, dynamic>?) ?? const {},
+      'genealogy_recent_abilities': (decoded['genealogy_recent_abilities'] as List<dynamic>?) ?? const [],
+      // WARP -- previously never extracted at all.
+      'warp_actuator_count':  _i('warp_actuator_count'),
+      'warp_recent_demands':  (decoded['warp_recent_demands'] as List<dynamic>?) ?? const [],
+      // Quasiarch -- previously never extracted at all.
+      'quasiarch_event_count':          _i('quasiarch_event_count'),
+      'quasiarch_recent_interventions': (decoded['quasiarch_recent_interventions'] as List<dynamic>?) ?? const [],
+      // Axis pressures -- flattened from the nested object Python actually
+      // returns them in, matching how hub_screen.dart reads _stats[ax].
+      'X': _axis('X'), 'T': _axis('T'), 'N': _axis('N'), 'B': _axis('B'), 'A': _axis('A'),
     };
   }
 

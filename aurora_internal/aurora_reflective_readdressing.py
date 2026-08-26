@@ -276,7 +276,7 @@ class AuroraReflectiveReaddressing:
                 "goal_stack": _safe(pipeline.get("goal_stack") or []),
                 "resolved_referent_topic": str(pipeline.get("resolved_referent_topic", "") or "")[:300],
                 "resolved_claim": str(pipeline.get("resolved_claim", "") or "")[:_MAX_TEXT],
-                "response_revisions": _safe(pipeline.get("response_revisions") or []),
+                "response_revisions": _safe(pipeline.get("_response_revision_trace") or []),
                 "interaction_strategy": str(pipeline.get("interaction_primary_strategy", "") or ""),
             },
             "introspection": {

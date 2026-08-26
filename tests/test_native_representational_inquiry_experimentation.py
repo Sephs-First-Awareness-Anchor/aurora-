@@ -412,6 +412,8 @@ def test_recursive_causal_cycle_is_the_native_consumer_and_actual_experiment(tmp
         response_source="constraint_semantic_derivation",
         confidence=0.9,
         systems=systems,
+        pressure_before={"operator_gradients": {a: 1.0 for a in AXES}},
+        pressure_after={"operator_gradients": {a: 0.2 for a in AXES}},
     )
     result = completed["representation_experiment_result"]
     assert result["actual_coactivation"] is True

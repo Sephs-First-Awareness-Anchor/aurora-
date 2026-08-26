@@ -347,6 +347,31 @@ class ConstraintEmitter:
     One emission path. No anchor fallback. No meta-narration. No echo.
     """
 
+    def _check_referent_correction_priority(self, ctx: EmissionContext) -> Optional[EmissionResult]:
+        """See aurora_referent_hypothesis.py. wm._last_referent_correction is
+        a one-turn signal, consumed here regardless of outcome so it can't
+        leak into a later turn. Only a genuine correction needs to
+        preempt normal routing -- that's the case that actually misfired
+        live (a stale open vocabulary flag winning over the fresh
+        correction). A confirmed guess didn't cause any problem, so it
+        just falls through to normal processing untouched."""
+        wm = ctx.working_memory
+        if wm is None:
+            return None
+        outcome = getattr(wm, "_last_referent_correction", None)
+        try:
+            wm._last_referent_correction = None
+        except Exception:
+            pass
+        if not outcome or not outcome.get("corrected"):
+            return None
+        target = str(outcome.get("target", "") or "that").strip()
+        return EmissionResult(
+            text=f"Got it — thank you for the correction. What did {target} actually refer to?",
+            speech_act=SpeechAct.REPAIR,
+            axis_signature=self._axis_signature(ctx),
+        )
+
     def emit(self, ctx: EmissionContext) -> EmissionResult:
         # 0. Integration check — advance any open seeking flag before new output (§7).
         # Per Sunni: the seeking protocol now has real stages (meaning -> example ->
@@ -1462,7 +1487,24 @@ class ConstraintEmitter:
         this immediately rather than reprocessing the same text as
         unrelated new input. Returns None when nothing was open or nothing
         matched, and the turn proceeds through emit()'s normal pipeline.
+
+        Checked first, ahead of any open seeking flag: a referent-
+        hypothesis correction that just resolved THIS turn (see
+        aurora_referent_hypothesis.py). Confirmed live: without this, an
+        older open vocabulary flag from an earlier turn won this turn's
+        routing over a fresh, more relevant correction, purely because
+        the topic-substring/statement-shape match below doesn't know or
+        care what else just happened. This doesn't touch or close that
+        flag -- it stays open, genuinely, for a later turn -- it just
+        means the fresher event isn't silently outranked by an older one.
+        This method has two real callers (emit()'s own step 0, and a
+        direct call at aurora.py:5272) -- putting the check here, not in
+        emit(), covers both.
         """
+        referent_result = self._check_referent_correction_priority(ctx)
+        if referent_result is not None:
+            return referent_result
+
         wm = ctx.working_memory
         if wm is None or not hasattr(wm, "seeking_flags"):
             return None

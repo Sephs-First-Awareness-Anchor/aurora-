@@ -77,7 +77,12 @@ class AuroraService : Service() {
             }
         }
 
-        fun sendMessage(text: String, callback: (String) -> Unit) {
+        fun sendMessage(
+            text: String,
+            admissionPath: String = "",
+            turnsSinceWake: Int = 0,
+            callback: (String) -> Unit,
+        ) {
             // Sunni & Cael, review follow-up: the UI observation journal's
             // timeline previously only ever recorded 3 of the 5 promised
             // stages (input_submitted / response_available /
@@ -96,7 +101,14 @@ class AuroraService : Service() {
                 markUiTransition("python_processing_begins")
 
                 val reply = try {
-                    bridge.callAttr("handle_message", text).toString()
+                    // Build 769 directive, Sec 3: admissionPath/turnsSinceWake
+                    // are real facts Dart already computed about how this
+                    // utterance reached us (wake word vs. an already-open
+                    // listening window) -- previously dropped at this call.
+                    // device_state stays null; unrelated to device physiology.
+                    bridge.callAttr(
+                        "handle_message", text, null, admissionPath, turnsSinceWake
+                    ).toString()
                 } catch (e: Exception) {
                     Log.e(TAG, "sendMessage error: ${e.message}")
                     "I encountered an error: ${e.message}"
@@ -703,6 +715,35 @@ class AuroraService : Service() {
             markStage("aurora module loaded, initializing cognitive systems")
 
             val stateDir = filesDir.absolutePath + "/aurora_state"
+
+            // Ship the chronological historical-experience archive with the
+            // app and materialize it into Aurora's writable state directory.
+            // Python treats it as witnessed environmental history, never as
+            // USER_INPUT or an answer-key corpus.  Copy-once preserves the
+            // runtime cursor and extracted state across ordinary app upgrades.
+            try {
+                val stateRoot = File(stateDir)
+                stateRoot.mkdirs()
+                val baselineFile = File(stateRoot, "experiential_baseline_v1.zip")
+                if (!baselineFile.exists() || baselineFile.length() == 0L) {
+                    val tempFile = File(stateRoot, "experiential_baseline_v1.zip.tmp")
+                    assets.open("aurora_experiential_baseline_v1.zip").use { input ->
+                        tempFile.outputStream().use { output -> input.copyTo(output) }
+                    }
+                    if (baselineFile.exists()) baselineFile.delete()
+                    if (!tempFile.renameTo(baselineFile)) {
+                        tempFile.copyTo(baselineFile, overwrite = true)
+                        tempFile.delete()
+                    }
+                    Log.i(TAG, "Historical experience baseline materialized: ${baselineFile.length()} bytes")
+                }
+            } catch (e: Exception) {
+                // Baseline availability is developmental, not boot-fatal.
+                // Python exposes a separate status surface if the asset could
+                // not be materialized; Aurora's live app path still boots.
+                Log.w(TAG, "Historical experience baseline unavailable: ${e.message}")
+            }
+
             val status   = bridge.callAttr("initialize", stateDir).toString()
             Log.i(TAG, "Aurora bridge init: $status")
 
