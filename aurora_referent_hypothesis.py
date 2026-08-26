@@ -53,6 +53,7 @@ no-op-ing. Flagging for the known_fixes_registry; out of scope for this
 change.
 """
 
+import re
 from typing import Any, Dict, List, Optional
 
 from aurora_constraint_emission import _ANCHOR_TOKEN_STOPWORDS
@@ -61,6 +62,14 @@ _CORRECTION_MARKERS = (
     "no,", "not that", "not what i meant", "that's not it",
     "i meant", "actually i", "wrong", "that's wrong",
 )
+
+# Codex review, PR #176: _CORRECTION_MARKERS' only bare-negative entry is
+# "no," -- a plain "No." or "No" (the single most common way to reject a
+# checkable guess) has no trailing comma, so none of the markers matched
+# and the reply fell through to "confirmed", logging a rejected guess as
+# accepted. Word-boundary match "no" as the reply's leading word instead,
+# independent of what punctuation (if any) follows it.
+_BARE_NEGATIVE_LEAD = re.compile(r"^\s*no\b")
 
 
 def gather_recent_anchor_candidates(
@@ -156,7 +165,10 @@ def check_and_resolve_pending_hypothesis(
     systems['_pending_referent_hypothesis'] = None
 
     text_low = str(new_user_text or '').lower()
-    was_corrected = any(marker in text_low for marker in _CORRECTION_MARKERS)
+    was_corrected = (
+        any(marker in text_low for marker in _CORRECTION_MARKERS)
+        or bool(_BARE_NEGATIVE_LEAD.match(text_low))
+    )
 
     outcome = dict(pending)
     outcome['corrected'] = was_corrected

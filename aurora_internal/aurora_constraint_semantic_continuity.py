@@ -485,10 +485,29 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
         # addressed subject: ``Tell me ...`` / ``Please try ...``.  Preserve
         # that grammatical direction as a response obligation instead of
         # flattening the entire request into an asserted subject string.
+        #
+        # Codex review, PR #176: a word in _RELATION_VERBS is not always a
+        # verb -- ``work``, ``change``, and ``experience`` are also ordinary
+        # nouns, and _looks_directive_verb only checks spelling. ``Work
+        # matters.`` / ``Change happens.`` / ``Experience matters.`` all
+        # have that noun as the clause's actual SUBJECT, with the second
+        # word carrying the real (finite, 3rd-person-singular) verb -- not
+        # a directive at all. A directive's second word is the object of
+        # the command (``Try this``, ``Explain the plan``), never itself a
+        # bare finite relation-verb form; a following word that IS one
+        # signals subject-verb agreement instead, so treat that as
+        # disqualifying evidence rather than assuming imperative force from
+        # the first word's spelling alone.
+        _next_tok_low = (
+            primary_lows[polite_offset + 1]
+            if len(primary_lows) > polite_offset + 1 else ""
+        )
+        _next_tok_is_finite_verb = _next_tok_low in _RELATION_VERBS and _next_tok_low not in _AUX
         if (
             len(primary_tokens) > polite_offset
             and primary_lows[polite_offset] not in _AUX
             and _looks_directive_verb(primary_tokens[polite_offset])
+            and not _next_tok_is_finite_verb
         ):
             directive = True
             subject = "you"

@@ -215,12 +215,36 @@ class HistoricalExperienceEnvironment:
                     continue
                 if name == "events.jsonl" and compressed_target.exists() and compressed_target.stat().st_size > 0:
                     continue
-                with zf.open(name, "r") as src, target.open("wb") as dst:
+                # Codex review, PR #176: extracting straight to `target`
+                # meant that if the process died mid-extraction (Android
+                # can kill it at any time), a nonempty but truncated file
+                # was left behind -- and the check above ("exists and
+                # size > 0") would then treat that truncated file as
+                # already-extracted on the next boot forever, silently
+                # dropping the rest of the baseline. Extract to a sibling
+                # temp file, verify its size against the archive's own
+                # record of the uncompressed member size, and only then
+                # atomically rename it into place -- `target` never exists
+                # in a partially-written state.
+                expected_size = zf.getinfo(name).file_size
+                tmp_target = target.with_suffix(target.suffix + ".part")
+                with zf.open(name, "r") as src, tmp_target.open("wb") as dst:
                     while True:
                         chunk = src.read(1024 * 1024)
                         if not chunk:
                             break
                         dst.write(chunk)
+                actual_size = tmp_target.stat().st_size
+                if actual_size != expected_size:
+                    try:
+                        tmp_target.unlink()
+                    except OSError:
+                        pass
+                    raise ValueError(
+                        f"historical baseline extraction incomplete for {name}: "
+                        f"expected {expected_size} bytes, got {actual_size}"
+                    )
+                tmp_target.replace(target)
 
         self._manifest = json.loads((self.extract_dir / "manifest.json").read_text(encoding="utf-8"))
         self._baseline_id = _stable_baseline_id(self._manifest, self.archive_path)
