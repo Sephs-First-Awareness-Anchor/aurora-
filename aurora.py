@@ -19766,6 +19766,21 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                     or ("basis=" in _top_hint and "target=" in _top_hint)
                     or _top_hint.startswith("[CODE]")
                     or _top_hint.startswith("[PRESSURE]")
+                    # Live coherence check (2026-08-26): ConsciousLearner.
+                    # _derive_understanding()'s shard-bookkeeping sentence
+                    # ("earlier built connection when approached with
+                    # thoughtful reflection -- it connects to evidence,
+                    # spared (A-axis relief -- 'earlier' still shallow in
+                    # my web)") was reaching this exact fallback verbatim --
+                    # none of the _is_meta/_is_diagnostic patterns above
+                    # match its shape. " when approached with " is that
+                    # generator's own literal, unique-enough phrase (see
+                    # aurora_simulation_engine.py's _derive_understanding),
+                    # so reject anything carrying it rather than adding
+                    # another one-off startswith check for its next
+                    # variant.
+                    or " when approached with " in _hint_lower
+                    or "still shallow in my web" in _hint_lower
                 )
                 if not _is_meta and not _is_diagnostic and len(_top_hint.split()) >= 6:
                     state.response_content = _top_hint

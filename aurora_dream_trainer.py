@@ -4304,7 +4304,16 @@ class DreamTrainer:
             if (raw.startswith("125-layer manifold:")
                     or ("basis=" in raw and "target=" in raw)
                     or raw.startswith("[CODE]")
-                    or raw.startswith("[PRESSURE]")):
+                    or raw.startswith("[PRESSURE]")
+                    # Live coherence check (2026-08-26): ConsciousLearner.
+                    # _derive_understanding()'s shard-bookkeeping template
+                    # ("X built connection when approached with Y -- it
+                    # connects to Z (A-axis relief, depth 0.3)") reached a
+                    # live reply through this exact hint path -- filter its
+                    # distinctive, generator-unique phrasing at the source
+                    # too, not just at aurora.py's own consumption filter.
+                    or " when approached with " in raw.lower()
+                    or "still shallow in my web" in raw.lower()):
                 continue
             # Reject SentenceComposer slot-fill artifacts already in retention
             _rt = raw.lower().split()
