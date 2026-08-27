@@ -52,6 +52,15 @@ class GapType(Enum):
     ELLIPSIS      = "ellipsis"       # Something clearly implied but not stated
     METAPHOR      = "metaphor"       # Figurative meaning that doesn't parse literally
     VOLATILITY    = "volatility"     # Multiple ambiguities at once — high uncertainty
+    # Build 771 PR 6: a word Aurora has real consequence-earned grounding
+    # for, where more than one materially-different, similarly-supported
+    # candidate could plausibly apply to THIS turn -- distinct from
+    # VOCABULARY (word Aurora has never seen at all). Codex review, PR
+    # #183: without its own gap type, ambiguity could only ever surface by
+    # piggybacking on an unrelated gap already present in the same turn,
+    # making it unreachable on an otherwise clean, structurally-complete
+    # sentence.
+    LEXICAL_AMBIGUITY = "lexical_ambiguity"
 
 
 # ============================================================================
@@ -328,6 +337,18 @@ class ComprehensionGapDetector:
         "What's the part you left implied? I want to understand the whole picture.",
     ]
 
+    # Build 771 PR 6: deliberately does not name what the competing
+    # candidates ARE -- Aurora has no English label for either of them
+    # (LexicalCandidate carries axis_profile/geometry, never a gloss), so
+    # the honest question is "I've understood this word differently
+    # before and I'm not sure which applies," not a multiple-choice
+    # between descriptions she doesn't actually have.
+    _AMBIGUITY_QUESTIONS = [
+        "I've understood '{word}' differently before, and I'm not sure which applies here. Could you say that another way?",
+        "'{word}' could mean more than one thing to me in this sentence. What are you meaning by it?",
+        "I've learned '{word}' two different ways and this one isn't clear yet — could you clarify?",
+    ]
+
     def detect_gaps(self, text: str, volatility_report: Dict[str, Any],
                     working_memory=None) -> List[ComprehensionGap]:
         """
@@ -411,7 +432,65 @@ class ComprehensionGapDetector:
                     question=q,
                 ))
 
+        # Priority 6 (Build 771 PR 6): promoted-candidate ambiguity. Checked
+        # unconditionally, not gated on "no other gap yet" -- this is a
+        # genuinely independent reason to ask (a word Aurora HAS real
+        # grounding for, where that grounding itself hasn't resolved),
+        # distinct from every gap type above (words she has none for at
+        # all). Codex review, PR #183: without its own gap, this could only
+        # ever surface by piggybacking on an unrelated gap already present
+        # in the same turn -- unreachable on an otherwise clean sentence.
+        ambiguous_word = self._ambiguous_promoted_word(t)
+        if ambiguous_word:
+            q = random.choice(self._AMBIGUITY_QUESTIONS).format(word=ambiguous_word)
+            gaps.append(ComprehensionGap(
+                gap_id=str(uuid.uuid4())[:8],
+                gap_type=GapType.LEXICAL_AMBIGUITY,
+                unclear_element=ambiguous_word,
+                source_text=t,
+                question=q,
+            ))
+
         return gaps
+
+    def _ambiguous_promoted_word(self, text: str) -> Optional[str]:
+        """Build 771 PR 6: find the turn's relation word and check whether
+        AuroraLexicalGrounding has multiple PROMOTED, materially different,
+        similarly-supported candidates applicable to THIS turn's own
+        structural geometry (promoted_candidates_near() -- exact family
+        match or >= 0.72 similarity only, never the word's whole promotion
+        history, which could span totally unrelated past contexts).
+        "Materially different" is automatic here: two independently
+        promoted candidates for one word always carry distinct
+        applicability_family by construction (WarpGenerator's own
+        dedup prevents two components from sharing an identity). "Similarly
+        supported": no candidate's evidence volume dominates -- a runaway
+        leader means Aurora already has a working answer, not genuine
+        ambiguity (PR 2's own directive line: don't convert ordinary
+        lexical uncertainty into repetitive questions when the surrounding
+        field already supplies enough evidence for a reasonable
+        interpretation).
+        """
+        if not text.strip():
+            return None
+        try:
+            from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
+            from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
+            form = extract_relational_form(text)
+            relation = str(form.get('relation', '') or '').strip().lower()
+            if not relation:
+                return None
+            candidates = get_lexical_grounding().promoted_candidates_near(relation, form)
+        except Exception:
+            return None
+        if len(candidates) < 2:
+            return None
+        counts = sorted((len(c.evidence) for c in candidates), reverse=True)
+        if counts[0] <= 0:
+            return None
+        if counts[1] >= 0.5 * counts[0]:
+            return relation
+        return None
 
     def should_ask(self, volatility_report: Dict[str, Any],
                    gaps: List[ComprehensionGap],
@@ -445,16 +524,18 @@ class ComprehensionGapDetector:
             if not self._has_structural_fallback(volatility_report, word_gaps):
                 return True
 
-        # Build 771 PR 6 (clarification-gating slice 2): even when the
-        # turn has a structural fallback (so the check above didn't force
-        # an ask), genuine multi-candidate ambiguity is still grounds to
-        # ask -- the directive's own bar: "only ask when multiple
-        # materially-different, similarly-supported candidates remain AND
-        # the choice changes the response." This is a DIFFERENT reason to
-        # ask than "word is unfamiliar" -- it fires even for a word Aurora
-        # has real consequence-earned grounding for, when that grounding
-        # itself hasn't resolved to one answer yet.
-        if self._has_ambiguous_promoted_candidates(volatility_report):
+        # Build 771 PR 6 (clarification-gating slice 2): genuine multi-
+        # candidate ambiguity is grounds to ask even when the turn has a
+        # structural fallback -- the directive's own bar: "only ask when
+        # multiple materially-different, similarly-supported candidates
+        # remain AND the choice changes the response." This is a DIFFERENT
+        # reason to ask than "word is unfamiliar": it fires for a word
+        # Aurora has real consequence-earned grounding for, when that
+        # grounding itself hasn't resolved to one answer yet.
+        # _ambiguous_promoted_word() already did the actual detection (and
+        # the geometry-scoped comparison it requires) when building `gaps`
+        # -- this only checks whether that detection produced a gap.
+        if any(g.gap_type == GapType.LEXICAL_AMBIGUITY for g in gaps):
             return True
 
         score = volatility_report.get('volatility_score', 0)
@@ -462,57 +543,6 @@ class ComprehensionGapDetector:
         # answerable questions (challenges, identity, coherence concepts).
         # 0.25 was too aggressive: triggered on normal introspective questions.
         return score >= 0.45
-
-    def _has_ambiguous_promoted_candidates(self, volatility_report: Dict[str, Any]) -> bool:
-        """Build 771 PR 6: True when the turn's relation word has multiple
-        PROMOTED, materially different, similarly-supported candidates --
-        genuine evidence-gated ambiguity Aurora cannot silently resolve on
-        her own, not "word is unfamiliar" (PR 2's separate concern above).
-
-        "Materially different": distinct applicability_family -- different
-        structural geometry, the actual polysemy signal this build exists
-        to grow (the "since" case: temporal-shaped vs causal-shaped
-        candidates, each promoted independently, never handed the English
-        distinction between them).
-
-        "Similarly supported": no candidate's evidence volume dominates.
-        A runaway leader among several promoted candidates means Aurora
-        already has a working answer -- that is exactly the case PR 2's
-        directive line warns against: "do not permit the comprehension-gap
-        system to convert ordinary lexical uncertainty into repetitive
-        questions when the surrounding relational field supplies enough
-        evidence for a reasonable provisional interpretation." Plurality
-        of PROMOTED candidates alone is not ambiguity; a close contest is.
-
-        Depends on PR 5's consumption path actually having grown promoted
-        candidates -- with _CONSUME_LEXICAL_GROUNDING at its PR 5 default
-        (off) or before any candidate has earned promotion, this always
-        returns False by construction (no promoted candidates exist to
-        compare), so this method changes nothing until that migration is
-        actually underway.
-        """
-        text = str(volatility_report.get('original_text', '') or '')
-        if not text.strip():
-            return False
-        try:
-            from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
-            from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
-            form = extract_relational_form(text)
-            relation = str(form.get('relation', '') or '').strip().lower()
-            if not relation:
-                return False
-            candidates = get_lexical_grounding().promoted_candidates_for_word(relation)
-        except Exception:
-            return False
-        if len(candidates) < 2:
-            return False
-        families = {c.applicability_family for c in candidates}
-        if len(families) < 2:
-            return False
-        counts = sorted((len(c.evidence) for c in candidates), reverse=True)
-        if counts[0] <= 0:
-            return False
-        return counts[1] >= 0.5 * counts[0]
 
     def _has_structural_fallback(
         self, volatility_report: Dict[str, Any], word_gaps: List["ComprehensionGap"]
@@ -1594,6 +1624,60 @@ def run_tests():
         _vr["unknown_words"] = [_slang_word]
         _gaps = cgd.detect_gaps(_slang_word, _vr)
         check(f"Should ask about bare -ed/-suffixed slang ({_slang_word!r})", cgd.should_ask(_vr, _gaps))
+
+    # Build 771 PR 6: promoted-candidate ambiguity must fire as its OWN
+    # gap on an otherwise clean sentence (Codex review: unreachable
+    # without piggybacking on an unrelated gap), and must NOT fire on
+    # candidates from unrelated historical contexts (Codex review: must
+    # compare only candidates applicable to today's own geometry).
+    from aurora_internal.aurora_lexical_grounding import (
+        AuroraLexicalGrounding, install_lexical_grounding, LexicalCandidate,
+        _lexical_geometry, _applicability_family,
+    )
+    from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
+
+    _grounding = AuroraLexicalGrounding(persist=False)
+    install_lexical_grounding(_grounding)
+    _amb_text = "The machine matters."
+    _amb_form = extract_relational_form(_amb_text)
+    _amb_geom = _lexical_geometry("matters", _amb_form, {})
+    _amb_family = _applicability_family(_amb_geom)
+    _grounding._candidates["amb-c1"] = LexicalCandidate(
+        candidate_id="LEX:amb-c1", word="matters", component_id="amb-c1", axis_profile={},
+        applicability_family=_amb_family, parent_ids=[], structural_geometry=_amb_geom,
+        status="promoted", evidence=[{"x": 1}] * 5,
+    )
+    _grounding._candidates["amb-c2"] = LexicalCandidate(
+        candidate_id="LEX:amb-c2", word="matters", component_id="amb-c2", axis_profile={},
+        applicability_family=_amb_family + "X", parent_ids=[], structural_geometry=_amb_geom,
+        status="promoted", evidence=[{"x": 1}] * 4,
+    )
+    _amb_vr = vd.detect(_amb_text)
+    _amb_gaps = cgd.detect_gaps(_amb_text, _amb_vr)
+    check(
+        "Ambiguity gap fires alone on an otherwise clean sentence",
+        len(_amb_gaps) == 1 and _amb_gaps[0].gap_type == GapType.LEXICAL_AMBIGUITY,
+    )
+    check("should_ask() is True for promoted-candidate ambiguity", cgd.should_ask(_amb_vr, _amb_gaps))
+
+    _grounding._candidates.clear()
+    _grounding._candidates["unrel-c1"] = LexicalCandidate(
+        candidate_id="LEX:unrel-c1", word="matters", component_id="unrel-c1", axis_profile={},
+        applicability_family="LEXFAM:unrelated-context-A", parent_ids=[],
+        structural_geometry={"slot": "relation", "dominant_axis": "A", "question": True, "participant_count": 3},
+        status="promoted", evidence=[{"x": 1}] * 5,
+    )
+    _grounding._candidates["unrel-c2"] = LexicalCandidate(
+        candidate_id="LEX:unrel-c2", word="matters", component_id="unrel-c2", axis_profile={},
+        applicability_family="LEXFAM:unrelated-context-B", parent_ids=[],
+        structural_geometry={"slot": "subject", "dominant_axis": "N", "question": False, "participant_count": 0},
+        status="promoted", evidence=[{"x": 1}] * 4,
+    )
+    _unrel_gaps = cgd.detect_gaps(_amb_text, vd.detect(_amb_text))
+    check(
+        "No false ambiguity from candidates in unrelated historical contexts",
+        not any(g.gap_type == GapType.LEXICAL_AMBIGUITY for g in _unrel_gaps),
+    )
 
     # ---- ClarificationMemory ----
     print("\nClarificationMemory:")

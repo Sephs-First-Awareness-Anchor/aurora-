@@ -921,6 +921,49 @@ class AuroraLexicalGrounding(WarpCapable):
             return []
         return [c for c in self._candidates.values() if c.word == word_key and c.status == "promoted"]
 
+    def promoted_candidates_near(
+        self,
+        word: str,
+        relational_form: Mapping[str, Any],
+        axis_activation: Optional[Mapping[str, float]] = None,
+    ) -> List[LexicalCandidate]:
+        """Build 771 PR 6 fix (Codex review, PR #183): the geometry-scoped
+        sibling of promoted_candidates_for_word() that ambiguity comparison
+        actually needs. promoted_candidates_for_word() returns every
+        candidate a word has EVER earned across its whole history --
+        comparing those directly treats two candidates from totally
+        unrelated past contexts (declarative "is" vs. interrogative "is",
+        a word promoted once in a discarded structural shape) as if they
+        were both live options for THIS turn, which is not what "multiple
+        materially-different, similarly-supported candidates remain" is
+        supposed to mean.
+
+        Returns only candidates whose OWN geometry is either an exact
+        applicability_family match to today's turn, or scores >= 0.72
+        similarity against it (the identical threshold
+        _select_candidate() itself uses to decide two geometries are close
+        enough to be the same live option) -- so only candidates that
+        could plausibly BOTH apply to this exact utterance are ever
+        compared as competing.
+        """
+        word_key = str(word or "").strip().lower()
+        if not word_key:
+            return []
+        form = dict(relational_form or {})
+        activation = {ax: _clip01(dict(axis_activation or {}).get(ax, 0.0)) for ax in AXES}
+        geometry = _lexical_geometry(word_key, form, activation)
+        family = _applicability_family(geometry)
+        near: List[LexicalCandidate] = []
+        for candidate in self._candidates.values():
+            if candidate.word != word_key or candidate.status != "promoted":
+                continue
+            if candidate.applicability_family == family:
+                near.append(candidate)
+                continue
+            if _geometry_similarity(geometry, candidate.structural_geometry) >= 0.72:
+                near.append(candidate)
+        return near
+
 
 # ─── Global singleton, mirroring aurora_warp_protocol.get_warp_field()/
 # install_warp_field() exactly ──────────────────────────────────────────
