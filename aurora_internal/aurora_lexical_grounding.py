@@ -344,6 +344,16 @@ class AuroraLexicalGrounding(WarpCapable):
         # until its own explicit save() runs, keeping this substrate from
         # ever advancing ahead of a sibling substrate between checkpoints.
         self._persistence_suspended: int = 0
+        # Consequence-closure follow-up: transient, unpersisted record of
+        # which (candidate_id, evidence_id) pairs observe_lexical_context()
+        # touched since the last drain -- the turn's own causal trace for
+        # this module. Never written to disk (drain_turn_consumption_trace()
+        # is read-and-clear, called once per emitted response by aurora.py's
+        # _build_communication_contributors()), so a restart mid-turn simply
+        # loses an in-flight turn's attribution the same way every other
+        # contributor's own "_last_*" breadcrumb already does -- not a new
+        # durability requirement invented for this module.
+        self._turn_consumption_trace: List[Dict[str, str]] = []
         self._init_warp(genealogy=genealogy)
         self._load()
 
@@ -543,6 +553,18 @@ class AuroraLexicalGrounding(WarpCapable):
             "validated": False,
             **extra_evidence,
         })
+        # Consequence-closure follow-up: the founding pair is just as much
+        # a live participant in this turn's causal chain as any later
+        # matched pair against the same candidate -- see the identical note
+        # (including the historical-replay exclusion) in
+        # observe_lexical_context()'s matched branch.
+        if str(params.get("provenance", "") or "") != "historical_possibility":
+            self._turn_consumption_trace.append({
+                "candidate_id": candidate_id,
+                "evidence_id": founding_evidence_id,
+                "word": word,
+                "applicability_family": str(params.get("applicability_family", "") or ""),
+            })
         self._candidates[component.component_id] = candidate
         if len(self._candidates) > _MAX_CANDIDATES:
             oldest = sorted(self._candidates.values(), key=lambda c: c.created_at)[: len(self._candidates) - _MAX_CANDIDATES]
@@ -551,11 +573,24 @@ class AuroraLexicalGrounding(WarpCapable):
         self._persist()
 
     def _score_trial(self, component: WarpComponent) -> float:
+        """Delegates to candidate_support() -- see that method for the
+        actual scoring logic. Kept as a thin WarpCapable-protocol adapter
+        (component -> candidate lookup) so candidate_support() itself can
+        be called directly with a LexicalCandidate by callers that never
+        touch a WarpComponent, e.g. comprehension-gap ambiguity comparison
+        (Build 771 consequence-closure follow-up)."""
+        candidate = self._candidates.get(component.component_id)
+        if candidate is None:
+            return 0.0
+        return self.candidate_support(candidate)
+
+    def candidate_support(self, candidate: "LexicalCandidate") -> float:
         """Build 771 PR 4: evidence-derived score, gated on BOTH sample
-        volume AND surface diversity AMONG VALIDATED EVIDENCE ONLY --
-        mirrors aurora_communication_emergence.py's own _score_trial()
-        exactly (`validated = [e for e in evidence if e.get("validated")]`,
-        filtered before any volume/diversity check runs).
+        volume AND surface diversity AMONG VALIDATED, POSITIVELY-OUTCOMED
+        EVIDENCE ONLY -- mirrors aurora_communication_emergence.py's own
+        _score_trial() exactly (`validated = [e for e in evidence if
+        e.get("validated")]`, filtered before any volume/diversity check
+        runs), extended by the consequence-closure follow-up below.
 
         Codex review, PR #181/#182: the first version of this method
         scored ALL evidence -- volume and surface diversity alone, with no
@@ -571,32 +606,43 @@ class AuroraLexicalGrounding(WarpCapable):
         committed it despite its own docstring saying it wouldn't.
 
         Fixed: only evidence entries with validated=True (set by
-        record_evidence_outcome() -- called by a live caller that actually
-        observed whether a provisional interpretation was confirmed or
-        corrected, not by mere recurrence) count toward the volume+
-        diversity floor. No live call site reports outcomes yet (that
-        wiring is beyond this PR's scope), so today this means -- by
-        deliberate construction, not by accident -- nothing can be
-        promoted from evidence alone. That is the honest state until a
-        real validation-reporting caller exists; it is not a regression
-        from a working mechanism, it is the removal of a mechanism that
-        was never actually earning what it claimed to.
+        record_evidence_outcome()) count toward the volume+diversity
+        floor.
+
+        Consequence-closure follow-up: validated=True alone was still not
+        enough. record_evidence_outcome() marks an entry validated=True
+        whenever ANY real downstream consequence reached it -- confirmed
+        OR corrected -- because "validated" means "consequence was
+        actually checked," not "consequence was favorable." Counting a
+        CORRECTED evidence entry toward promotion the same as a CONFIRMED
+        one would let a wrong interpretation's own correction feed its
+        promotion -- the same frequency-is-not-understanding failure in a
+        new shape. Only evidence whose outcome_kind is specifically
+        "positive" (the exact label aurora.py's _finalize_validated_
+        communication() already uses for a genuinely confirmed receiver
+        outcome, never invented here) counts as a discriminating success;
+        a corrected entry stays validated (so it is never re-attributed
+        or double-counted) but simply does not help the floor. No penalty
+        machinery is added on top of that -- an unhelped trial dissolves
+        on WarpCapable's own existing TRIAL_TICKS timeout, the same
+        tick-bounded path every trial already goes through.
 
         If this candidate already has a registered genealogy ability with
         its own measured consequence_profile (only possible after a prior
         promotion cycle), that confidence-weighted reading takes
-        precedence once it exists.
+        precedence once it exists -- genealogy's own consequence
+        attribution is the authoritative post-promotion signal.
         """
-        candidate = self._candidates.get(component.component_id)
-        if candidate is None:
-            return 0.0
         genealogy = self.systems.get("genealogy") or getattr(self, "_warp_genealogy", None)
         if candidate.genealogy_ability_id and genealogy is not None:
             ability = dict(getattr(genealogy, "abilities", {}) or {}).get(candidate.genealogy_ability_id)
             consequence = getattr(ability, "consequence_profile", None) if ability is not None else None
             if consequence:
                 return _clip01(dict(consequence).get("confidence", 0.0))
-        validated = [e for e in candidate.evidence if e.get("validated") is True]
+        validated = [
+            e for e in candidate.evidence
+            if e.get("validated") is True and str(e.get("outcome_kind") or "") == "positive"
+        ]
         evidence_count = len(validated)
         distinct_surfaces = len({str(e.get("surface_hash", "") or "") for e in validated if e.get("surface_hash")})
         if evidence_count < _MIN_EVIDENCE or distinct_surfaces < _MIN_DISTINCT_SURFACES:
@@ -611,14 +657,27 @@ class AuroraLexicalGrounding(WarpCapable):
         outcome_kind: str = "indeterminate",
         observed_effect: str = "",
     ) -> Dict[str, Any]:
-        """The validation-reporting entrance _score_trial() actually gates
-        on -- mirrors aurora_communication_emergence.py's own
+        """The validation-reporting entrance candidate_support() actually
+        gates on -- mirrors aurora_communication_emergence.py's own
         record_receiver_outcome() exactly: marks ONE specific evidence
         entry (identified by the evidence_id stamped on it when it was
         recorded) validated=True, with an outcome_kind describing what
-        was actually observed. No live caller invokes this yet (that is
-        future work, beyond this PR's scope) -- this only builds the
-        mechanism honestly, it does not fabricate a caller for it.
+        was actually observed.
+
+        Consequence-closure follow-up: called from aurora.py's
+        _finalize_validated_communication(), the SAME existing fan-out
+        that already routes a receiver's next-turn outcome to every other
+        contributor (concept_crystal, representation, communication_
+        emergence, ...) -- a lexical candidate is just one more
+        attributable participant in that same causal chain, reached via
+        contributors["lexical_grounding"] entries drain_turn_consumption_
+        trace() supplied when this candidate's evidence was created. No
+        lexical-specific success oracle is introduced here: outcome_kind
+        is always exactly the "positive"/"negative"/"indeterminate" label
+        that fan-out already derived for every other contributor from the
+        SAME receiver signal (confirmation, correction, or an existing
+        relational-preservation/failure surface) -- never a new judgment
+        invented for this module alone.
         """
         # self._candidates is keyed by component_id, not candidate_id --
         # candidate_id is the LexicalCandidate's own identity field, the
@@ -635,6 +694,28 @@ class AuroraLexicalGrounding(WarpCapable):
                 self._persist()
                 return {"recorded": True, "candidate_id": candidate_id, "evidence_id": evidence_id}
         return {"recorded": False, "reason": "unknown_evidence_id"}
+
+    def drain_turn_consumption_trace(self) -> List[Dict[str, str]]:
+        """Read-and-clear: returns every (candidate_id, evidence_id) pair
+        touched since the last drain, then empties the internal list.
+
+        Consequence-closure follow-up: called once per emitted response by
+        aurora.py's _build_communication_contributors() -- the SAME point
+        that already captures every other contributor's own breadcrumb
+        (concept_crystal, representation, language_field, ...) into that
+        turn's contributors dict. Drain-on-read rather than an explicit
+        per-turn reset call: it cannot leak a stale entry across turns even
+        if some caller forgets to reset it, and it naturally scopes to
+        "everything touched since the last time this was read" regardless
+        of how many nested calls into observe_lexical_context() happened
+        underneath. Never persisted -- this is turn-scoped runtime
+        bookkeeping, not durable state; an interrupted turn simply loses
+        its own in-flight attribution the same way every other
+        contributor's own "_last_*" breadcrumb already does.
+        """
+        trace = list(self._turn_consumption_trace)
+        self._turn_consumption_trace = []
+        return trace
 
     def _dissolve_warp(self, component_id: str) -> None:
         candidate = self._candidates.get(component_id)
@@ -761,9 +842,29 @@ class AuroraLexicalGrounding(WarpCapable):
                 **dict(extra_evidence or {}),
             })
             self._persist()
+            # Consequence-closure follow-up: this evidence entry is now a
+            # live participant in THIS turn's causal chain -- remember its
+            # (candidate_id, evidence_id) identity so drain_turn_consumption_
+            # trace() can hand it to aurora.py's contributor fan-out, the
+            # same existing mechanism that already routes a receiver's
+            # eventual outcome to every other contributor. Historical replay
+            # (observe_historical_lexical_possibility(), always tagged
+            # provenance="historical_possibility") is explicitly excluded --
+            # it runs on a background thread with no live receiver turn to
+            # eventually attribute an outcome from, and its own epistemic
+            # hedging (truth_assumed=False) already marks it as never
+            # receiver-validated by design.
+            if str(provenance or "") != "historical_possibility":
+                self._turn_consumption_trace.append({
+                    "candidate_id": candidate.candidate_id,
+                    "evidence_id": evidence_id,
+                    "word": word_key,
+                    "applicability_family": family,
+                })
             return {
                 "action": "matched",
                 "candidate_id": candidate.candidate_id,
+                "evidence_id": evidence_id,
                 "applicability_family": family,
                 "selection": selection,
             }
