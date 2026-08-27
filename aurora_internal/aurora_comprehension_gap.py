@@ -440,8 +440,9 @@ class ComprehensionGapDetector:
         """
         if not gaps:
             return False
-        if any(g.gap_type in (GapType.VOCABULARY, GapType.SLANG) for g in gaps):
-            if not self._has_structural_fallback(volatility_report):
+        word_gaps = [g for g in gaps if g.gap_type in (GapType.VOCABULARY, GapType.SLANG)]
+        if word_gaps:
+            if not self._has_structural_fallback(volatility_report, word_gaps):
                 return True
         score = volatility_report.get('volatility_score', 0)
         # Otherwise ask only above threshold — 0.45 prevents firing on clear,
@@ -449,7 +450,9 @@ class ComprehensionGapDetector:
         # 0.25 was too aggressive: triggered on normal introspective questions.
         return score >= 0.45
 
-    def _has_structural_fallback(self, volatility_report: Dict[str, Any]) -> bool:
+    def _has_structural_fallback(
+        self, volatility_report: Dict[str, Any], word_gaps: List["ComprehensionGap"]
+    ) -> bool:
         """Build 771: True when extract_relational_form() found a bound
         RELATION in this turn's text -- a provisional interpretation
         Aurora can proceed on instead of asking about an unfamiliar word
@@ -465,6 +468,15 @@ class ComprehensionGapDetector:
         relation="") -- that's the ask-worthy case, not the fall-back-able
         one, so subject alone must not count as structural fallback here.
 
+        Codex review, PR #180: extract_relational_form()'s _looks_verb()
+        heuristic treats a bare -ed/-ing-suffixed token as a verb purely by
+        its spelling ("based", "wicked", "goated" alone all bind
+        relation=<that exact word>, with nothing else bound around it) --
+        for a single-word unknown-slang input with truly nothing around
+        it, the gap word itself would otherwise masquerade as "surrounding
+        structure". A relation only counts as real structural fallback
+        when it is not simply the unclear word restating itself.
+
         Purely syntactic and provisional -- this does not decide what the
         unfamiliar word MEANS, only whether the turn has enough surrounding
         structure to proceed without asking first.
@@ -477,7 +489,13 @@ class ComprehensionGapDetector:
             form = extract_relational_form(text)
         except Exception:
             return False
-        return bool(str(form.get('relation', '') or '').strip())
+        relation = str(form.get('relation', '') or '').strip().lower()
+        if not relation:
+            return False
+        unclear_words = {str(getattr(g, 'unclear_element', '') or '').strip().lower() for g in word_gaps}
+        if relation in unclear_words:
+            return False
+        return True
 
 
 # ============================================================================
@@ -1501,6 +1519,17 @@ def run_tests():
     vr_glorp["unknown_words"] = ["glorp"]
     gaps_glorp = cgd.detect_gaps("A glorp is heavier than a cup.", vr_glorp)
     check("Should NOT ask about an unknown noun bound in a comparative relation (glorp)", not cgd.should_ask(vr_glorp, gaps_glorp))
+
+    # Codex review, PR #180: extract_relational_form()'s _looks_verb()
+    # heuristic treats a bare -ed-suffixed token as a verb purely by its
+    # spelling, so a single unknown slang word like "based" binds
+    # relation="based" with nothing else around it -- the gap word
+    # masquerading as its own surrounding structure. That must still ask.
+    for _slang_word in ("based", "wicked", "goated"):
+        _vr = vd.detect(_slang_word)
+        _vr["unknown_words"] = [_slang_word]
+        _gaps = cgd.detect_gaps(_slang_word, _vr)
+        check(f"Should ask about bare -ed/-suffixed slang ({_slang_word!r})", cgd.should_ask(_vr, _gaps))
 
     # ---- ClarificationMemory ----
     print("\nClarificationMemory:")
