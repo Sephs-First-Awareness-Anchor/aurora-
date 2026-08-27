@@ -321,6 +321,9 @@ class HistoricalExperienceEnvironment:
                 "communication_apprenticeship": dict(
                     durable.get("communication_apprenticeship") or {}
                 ),
+                "lexical_grounding_backfill": dict(
+                    durable.get("lexical_grounding_backfill") or {}
+                ),
                 "completed": False,
             }
 
@@ -356,10 +359,26 @@ class HistoricalExperienceEnvironment:
                     "pending_user": {},
                 }
             ),
+            # Build 771 PR 7 (Codex review, PR #184): tracked with its OWN
+            # backfilled_through_event_index, independent of
+            # communication_apprenticeship's cursor above. An installation
+            # that already completed the communication backfill before this
+            # hook existed must still get its full already-witnessed prefix
+            # submitted to lexical grounding -- sharing the communication
+            # cursor would make _backfill_communication_apprenticeship()'s
+            # own early-return (backfilled >= durable_index) silently skip
+            # lexical grounding forever on such an installation.
+            "lexical_grounding_backfill": dict(
+                previous.get("lexical_grounding_backfill") or {
+                    "pairs_observed": 0,
+                    "pending_user": {},
+                }
+            ),
         }
         self._persist_state()
         self._prepared = True
         self._backfill_communication_apprenticeship()
+        self._backfill_lexical_grounding()
 
     def _backfill_communication_apprenticeship(self) -> None:
         """Migrate an already-witnessed prefix into communication development.
@@ -483,6 +502,121 @@ class HistoricalExperienceEnvironment:
         self._state["updated_at"] = time.time()
         self._persist_state()
 
+    def _backfill_lexical_grounding(self) -> None:
+        """Migrate an already-witnessed prefix into lexical grounding.
+
+        Build 771 PR 7 (Codex review, PR #184): kept as its own pass with
+        its own cursor (lexical_grounding_backfill.backfilled_through_event_index)
+        rather than folding into _backfill_communication_apprenticeship()'s
+        loop, specifically so an installation that already finished THAT
+        backfill under an older build (before this hook existed) still gets
+        its full already-witnessed prefix submitted here -- reusing the
+        communication cursor would make that method's own early return
+        (backfilled >= durable_index) skip lexical grounding on such an
+        installation permanently. Mirrors that method's pairing/idempotency
+        approach exactly; possibility IDs are durable and idempotent inside
+        AuroraLexicalGrounding the same way.
+        """
+        lexical_grounding = self.systems.get("lexical_grounding")
+        if lexical_grounding is None or not hasattr(lexical_grounding, "observe_historical_lexical_possibility"):
+            return
+        state = dict(self._state.get("lexical_grounding_backfill") or {})
+        durable_index = int(self._state.get("event_index", 0) or 0)
+        backfilled = int(state.get("backfilled_through_event_index", 0) or 0)
+        if durable_index <= 0 or backfilled >= durable_index:
+            return
+
+        pending: Dict[str, Any] = dict(state.get("pending_user") or {}) if backfilled else {}
+        pairs = int(state.get("pairs_observed", 0) or 0)
+        last_pair: Dict[str, Any] = dict(state.get("last_pair") or {})
+        processed = 0
+        try:
+            with self._open_events() as fh:
+                for index, line in enumerate(fh):
+                    if index >= durable_index:
+                        break
+                    if index < backfilled or not line.strip():
+                        continue
+                    try:
+                        event = dict(json.loads(line) or {})
+                    except Exception:
+                        continue
+                    processed = index + 1
+                    actor = self._actor_label(str(event.get("actor", "") or ""))
+                    episode_id = str(event.get("episode_id", "") or "")
+                    if pending and str(pending.get("episode_id", "") or "") != episode_id:
+                        pending = {}
+                    if actor == "historical_user":
+                        raw = str(event.get("text", "") or "").strip()
+                        pending = {
+                            "event_id": str(event.get("event_id", "") or ""),
+                            "episode_id": episode_id,
+                            "text": raw[:_MAX_PENDING_USER_TEXT],
+                            "observed_timestamp": event.get("timestamp"),
+                        } if raw else {}
+                        continue
+                    if actor != "historical_other_assistant" or not pending:
+                        continue
+                    pairs += 1
+                    event_id = str(event.get("event_id", "") or "")
+                    result = dict(lexical_grounding.observe_historical_lexical_possibility(
+                        raw_text=str(pending.get("text", "") or ""),
+                        observed_response_text=str(event.get("text", "") or ""),
+                        possibility_id=(
+                            f"{self._baseline_id}:{pending.get('event_id', '')}:{event_id}"
+                        ),
+                        observed_source="historical_other_assistant",
+                        epistemic_status=str(
+                            event.get("epistemic_status", "observation_not_truth")
+                            or "observation_not_truth"
+                        ),
+                        causal_status=str(
+                            event.get("causal_status", "sequence_observed_causality_not_asserted")
+                            or "sequence_observed_causality_not_asserted"
+                        ),
+                        defer_persistence=True,
+                    ) or {})
+                    last_pair = {
+                        "user_event_id": str(pending.get("event_id", "") or ""),
+                        "possibility_event_id": event_id,
+                        "possibility_id": str(result.get("possibility_id", "") or ""),
+                        "word": str(result.get("word", "") or ""),
+                    }
+                    pending = {}
+        except Exception as exc:
+            state["backfill_error"] = f"{type(exc).__name__}: {exc}"[:240]
+            self._state["lexical_grounding_backfill"] = state
+            return
+
+        # Same durability discipline as the communication backfill above:
+        # commit the lexical-grounding substrate before claiming the prefix,
+        # so a mid-write crash leaves the idempotent possibility IDs as the
+        # only source of truth for what still needs replaying.
+        try:
+            saved = bool(lexical_grounding.save()) if hasattr(lexical_grounding, "save") else False
+        except Exception:
+            saved = False
+        if not saved:
+            state["backfill_error"] = "lexical grounding checkpoint failed"
+            self._state["lexical_grounding_backfill"] = state
+            return
+
+        state.update({
+            "pairs_observed": pairs,
+            "pending_user": pending,
+            "last_pair": last_pair,
+            "backfilled_through_event_index": max(backfilled, processed),
+            "backfill_status": "completed",
+            "backfill_completed_at": time.time(),
+        })
+        state.pop("backfill_error", None)
+        self._state["lexical_grounding_backfill"] = state
+        durable = dict(self._state.get("crystal_checkpoint") or {})
+        durable["lexical_grounding_backfill"] = dict(state)
+        self._state["crystal_checkpoint"] = durable
+        self._state["updated_at"] = time.time()
+        self._persist_state()
+
     def _durable_checkpoint_from_state(self) -> Dict[str, Any]:
         return {
             "event_index": int(self._state.get("event_index", 0) or 0),
@@ -495,6 +629,9 @@ class HistoricalExperienceEnvironment:
             "last_observed_timestamp": self._state.get("last_observed_timestamp"),
             "communication_apprenticeship": dict(
                 self._state.get("communication_apprenticeship") or {}
+            ),
+            "lexical_grounding_backfill": dict(
+                self._state.get("lexical_grounding_backfill") or {}
             ),
         }
 
@@ -529,6 +666,21 @@ class HistoricalExperienceEnvironment:
             saved_any = True
             try:
                 success = bool(communication.save()) and success
+            except Exception:
+                success = False
+
+        # Build 771 PR 7 (Codex review, PR #184): the observe_historical_
+        # lexical_possibility() call above defers its own persistence
+        # (defer_persistence=True) precisely so this explicit save() is the
+        # only place lexical-grounding state actually reaches disk here --
+        # without it that state would never checkpoint at all during
+        # historical replay, only whenever some unrelated live turn
+        # happened to persist it.
+        lexical_grounding = self.systems.get("lexical_grounding")
+        if lexical_grounding is not None and hasattr(lexical_grounding, "save"):
+            saved_any = True
+            try:
+                success = bool(lexical_grounding.save()) and success
             except Exception:
                 success = False
 
@@ -729,6 +881,12 @@ class HistoricalExperienceEnvironment:
                     event.get("causal_status", "sequence_observed_causality_not_asserted")
                     or "sequence_observed_causality_not_asserted"
                 ),
+                # Same reasoning as the communication_emergence call above:
+                # this environment checkpoints all its durable substrates
+                # together, so lexical-grounding state must not advance
+                # ahead of the historical replay cursor between checkpoint
+                # boundaries either.
+                defer_persistence=True,
             )
         except Exception:
             pass
