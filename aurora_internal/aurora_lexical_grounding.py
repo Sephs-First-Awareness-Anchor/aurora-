@@ -53,6 +53,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -64,6 +65,7 @@ from aurora_warp_protocol import (
     WarpComponent,
     WarpTrigger,
     axes_to_istates,
+    istates_to_axes,
     warp_guard,
 )
 from aurora_internal.aurora_constraint_semantic_continuity import AXES
@@ -72,12 +74,20 @@ _NEGATIVE_ISTATE = {"X": "I_ISNT", "T": "I_CANNOT", "N": "I_DONOT", "B": "I_SOUG
 _POSITIVE_ISTATE = {"X": "I_IS", "T": "I_CAN", "N": "I_DO", "B": "I_SAW", "A": "I_DID"}
 _RECURSION_DIMS = ("REC_SURFACE", "REC_SHALLOW", "REC_MODERATE", "REC_DEEP", "REC_CORE")
 
-# _score_trial()'s inert PR-3 placeholder floor. Deliberately well below
-# aurora_warp_protocol.PROMOTION_SCORE (0.60) so nothing can be promoted by
-# this module alone yet -- PR 4 replaces this with genealogy's own
-# consequence-attribution scoring (consequence_profile's confidence-
-# weighted EMA), never a frequency/usage counter.
+# _score_trial()'s floor for a candidate that hasn't yet cleared the
+# evidence-diversity minimums below. Deliberately well below
+# aurora_warp_protocol.PROMOTION_SCORE (0.60).
 _INERT_TRIAL_FLOOR = 0.34
+
+# Build 771 PR 4: promotion requires BOTH minimums -- recurrence alone
+# (evidence_count) is never sufficient; it must also recur across
+# genuinely different surface wording (distinct_surfaces -- see
+# _surface_hash()'s own docstring for why surface, not structural slot, is
+# the diversity axis available within one matched candidate). Mirrors
+# aurora_communication_emergence.py's _MIN_VALIDATED_TRIALS/
+# _MIN_DISTINCT_SURFACES pattern exactly.
+_MIN_EVIDENCE = 4
+_MIN_DISTINCT_SURFACES = 2
 
 _MAX_CANDIDATES = 4000
 _MAX_PENDING_CONTEXT = 500
@@ -96,6 +106,24 @@ def _stable_hash(payload: Any, length: int = 14) -> str:
     except Exception:
         raw = str(payload)
     return hashlib.sha1(raw.encode("utf-8", errors="ignore")).hexdigest()[:length]
+
+
+def _surface_hash(raw_text: str) -> str:
+    """Build 771 PR 4's diversity signal, mirroring
+    aurora_communication_emergence.py's own _surface_hash()/
+    distinct_surfaces precedent exactly. An exact applicability_family
+    match always shares identical structural geometry by construction (two
+    observations only match exactly when their geometry hash is the same),
+    so structural fields can never vary WITHIN one candidate's own
+    evidence -- they cannot be this candidate's recurrence-across-context
+    signal. Different literal sentences CAN share one structural geometry
+    while differing in surface wording ("A glorp is heavier than a cup."
+    vs "A glorp weighs more than a mug." could both bind the same
+    subject/relation/object shape) -- that surface diversity, not
+    structural-slot diversity, is what "the same word recurring across
+    genuinely different exchanges" actually looks like at this layer."""
+    normalized = re.sub(r"\s+", " ", str(raw_text or "").strip().lower())
+    return _stable_hash(normalized, 12)
 
 
 def _expand_to_15d(axis_profile: Mapping[str, float]) -> Dict[str, float]:
@@ -261,6 +289,13 @@ class LexicalCandidate:
     applicability_family: str
     parent_ids: List[str]
     structural_geometry: Dict[str, Any] = field(default_factory=dict)
+    # The 5-axis constraints this candidate's axis_profile actually leans
+    # on, derived once at integration time (istates_to_axes() thresholded)
+    # -- stored rather than re-derived at registration, mirroring
+    # EmergentCommunicationOperation.root_constraints being computed once
+    # and read later by _register_genealogy(), never recomputed from a
+    # possibly-drifted live profile.
+    dominant_constraints: List[str] = field(default_factory=list)
     status: str = "trial"
     created_at: float = field(default_factory=time.time)
     evidence: List[Dict[str, Any]] = field(default_factory=list)
@@ -317,9 +352,11 @@ class AuroraLexicalGrounding(WarpCapable):
         return "lexical_role_grounding"
 
     def evaluate_warp_trials(self) -> Tuple[List[str], List[str]]:
-        """Override purely to persist AFTER WarpCapable's own dict mutation
-        completes. WarpCapable.evaluate_warp_trials() calls _dissolve_warp()
-        (or moves a component into _warp_promoted) BEFORE removing it from
+        """Override for two reasons:
+
+        1. Persist AFTER WarpCapable's own dict mutation completes.
+        WarpCapable.evaluate_warp_trials() calls _dissolve_warp() (or moves
+        a component into _warp_promoted) BEFORE removing it from
         self._warp_trials -- persisting only from inside _dissolve_warp(),
         as this module's other hooks do (matching
         aurora_communication_emergence.py's own precedent), saves a
@@ -327,13 +364,90 @@ class AuroraLexicalGrounding(WarpCapable):
         Codex review, PR #179: "Restarting immediately therefore resurrects
         the dissolved component as an active WARP trial." This second
         persist, once the base class has actually returned, guarantees the
-        saved state matches the real in-memory state -- and covers
-        promotion the same way, which has the identical timing gap.
+        saved state matches the real in-memory state.
+
+        2. Build 771 PR 4: WarpCapable has no promotion callback at all (it
+        moves a component into self._warp_promoted directly, with nothing
+        for a subclass to hook), so this is also the only point where a
+        freshly-promoted candidate's status can be updated and its
+        consequence-earned grounding registered into genealogy + written
+        back into OETS -- mirrors aurora_communication_emergence.py's own
+        evaluate_development() wrapper exactly.
         """
         promoted, dissolved = super().evaluate_warp_trials()
+        for component_id in promoted:
+            candidate = self._candidates.get(component_id)
+            if candidate is None:
+                continue
+            candidate.status = "promoted"
+            candidate.genealogy_ability_id = self._register_genealogy(candidate, self._warp_promoted.get(component_id))
+            self._write_back_oets(candidate)
         if promoted or dissolved:
             self._persist()
         return promoted, dissolved
+
+    def _register_genealogy(self, candidate: "LexicalCandidate", component: Optional[WarpComponent]) -> str:
+        """Mirrors aurora_communication_emergence.py's own
+        _register_genealogy() precedent exactly: builds the registration
+        payload from the candidate's own already-computed fields (never
+        re-derives ancestry from a possibly-drifted live profile), calls
+        genealogy's registration method, and returns the resulting
+        ability_id (empty string on any failure -- registration is
+        best-effort and must never break the WARP promotion it's
+        reacting to)."""
+        genealogy = self.systems.get("genealogy") or getattr(self, "_warp_genealogy", None)
+        if genealogy is None:
+            return ""
+        distinct_surfaces = len({str(e.get("surface_hash", "") or "") for e in candidate.evidence if e.get("surface_hash")})
+        payload = {
+            "word": candidate.word,
+            "component_id": candidate.component_id,
+            "applicability_family": candidate.applicability_family,
+            "constraints": list(candidate.dominant_constraints),
+            "parent_ids": list(candidate.parent_ids),
+            "trial_score": float(getattr(component, "trial_score_ema", 0.0) or 0.0),
+            "evidence_count": len(candidate.evidence),
+            "distinct_surfaces": distinct_surfaces,
+        }
+        if hasattr(genealogy, "register_emergent_lexical_grounding"):
+            try:
+                result = dict(genealogy.register_emergent_lexical_grounding(payload) or {})
+                return str(result.get("ability_id", "") or "")
+            except Exception:
+                return ""
+        return ""
+
+    def _write_back_oets(self, candidate: "LexicalCandidate") -> None:
+        """On promotion, write the consequence-earned grounding back into
+        OETS (the single word address book -- no parallel index kept
+        here). gloss stays empty: nothing reads it as authority, it is
+        never anything but a human-debug label, and this build's whole
+        point is that the meaning is the axis_profile/applicability_family/
+        lineage, not an English string. source="constraint_earned" is the
+        one value PR 1 reserved specifically for this moment. Best-effort
+        and silent on failure -- OETS may not be wired into self.systems
+        in every boot context, and that must never break WARP promotion.
+        """
+        if not candidate.genealogy_ability_id:
+            return
+        oets = self.systems.get("oets")
+        web = getattr(oets, "web", None) if oets is not None else None
+        if web is None or not hasattr(web, "nodes"):
+            return
+        try:
+            node = web.nodes.get(candidate.word)
+            if node is None or not hasattr(node, "add_sense"):
+                return
+            sense_id = f"{candidate.word}.{candidate.applicability_family}"
+            node.add_sense(
+                sense_id=sense_id,
+                gloss="",
+                source="constraint_earned",
+                confidence=0.5,
+                grounded_ability_id=candidate.genealogy_ability_id,
+            )
+        except Exception:
+            pass
 
     def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:
         # A minimal per-axis coverage baseline, mirroring
@@ -373,6 +487,14 @@ class AuroraLexicalGrounding(WarpCapable):
             {"word": word, "component": component.component_id, "family": params.get("applicability_family", "")},
             14,
         )
+        # Recover the 5-axis constraints this candidate's 15D axis_profile
+        # actually leans on, once, at birth -- mirrors
+        # aurora_communication_emergence.py's own `roots` derivation
+        # (threshold 0.12) and is stored on the candidate rather than
+        # re-derived later, same precedent as EmergentCommunicationOperation
+        # .root_constraints being computed once at integration time.
+        axes_5d = istates_to_axes(dict(component.axis_profile or {}))
+        dominant_constraints = [ax for ax in AXES if float(axes_5d.get(ax, 0.0) or 0.0) >= 0.12] or list(AXES)
         candidate = LexicalCandidate(
             candidate_id=candidate_id,
             word=word,
@@ -381,6 +503,7 @@ class AuroraLexicalGrounding(WarpCapable):
             applicability_family=str(params.get("applicability_family", "") or ""),
             parent_ids=list(dict.fromkeys(list(component.parent_ids or []) + list(params.get("parent_ids") or []))),
             structural_geometry=dict(params.get("structural_geometry") or {}),
+            dominant_constraints=dominant_constraints,
         )
         self._candidates[component.component_id] = candidate
         if len(self._candidates) > _MAX_CANDIDATES:
@@ -390,13 +513,43 @@ class AuroraLexicalGrounding(WarpCapable):
         self._persist()
 
     def _score_trial(self, component: WarpComponent) -> float:
-        """PR 3 placeholder: a fixed neutral floor, deliberately inert.
-        PR 4 replaces this with genealogy's own consequence attribution
-        (consequence_profile's confidence-weighted EMA) -- never a raw
-        evidence/frequency count (frequency is not understanding)."""
-        if component.component_id not in self._candidates:
+        """Build 771 PR 4: evidence-derived score, gated on BOTH sample
+        volume AND surface diversity -- mirroring the philosophy behind
+        constraint_genealogy.py's AbilityProfile.consequence_profile
+        ("confidence requires BOTH sample volume and context diversity...
+        a representation that only ever fires alongside the same one
+        other thing never reaches high confidence no matter how many
+        times it fires"). Recurrence across DIFFERENT surface wording (see
+        _surface_hash()) is discriminating evidence; recurrence in the
+        identical wording repeatedly is not -- directly the directive's
+        own "a word occurring ten thousand times without discriminating
+        consequences is weaker evidence than a smaller number of
+        experiences that clearly distinguish competing interpretations."
+
+        This module has no live call site yet that reports back whether a
+        provisional interpretation was actually confirmed or corrected by
+        a real downstream consequence (that wiring is PR 5's job) -- so
+        this deliberately does not fabricate a "validated" signal nothing
+        has earned. If this candidate already has a registered genealogy
+        ability with its own measured consequence_profile (only possible
+        after a prior promotion cycle), that confidence-weighted reading
+        takes precedence once it exists -- the literal "genealogy's own
+        consequence attribution" this PR is scoped to wire.
+        """
+        candidate = self._candidates.get(component.component_id)
+        if candidate is None:
             return 0.0
-        return _INERT_TRIAL_FLOOR
+        genealogy = self.systems.get("genealogy") or getattr(self, "_warp_genealogy", None)
+        if candidate.genealogy_ability_id and genealogy is not None:
+            ability = dict(getattr(genealogy, "abilities", {}) or {}).get(candidate.genealogy_ability_id)
+            consequence = getattr(ability, "consequence_profile", None) if ability is not None else None
+            if consequence:
+                return _clip01(dict(consequence).get("confidence", 0.0))
+        evidence_count = len(candidate.evidence)
+        distinct_surfaces = len({str(e.get("surface_hash", "") or "") for e in candidate.evidence if e.get("surface_hash")})
+        if evidence_count < _MIN_EVIDENCE or distinct_surfaces < _MIN_DISTINCT_SURFACES:
+            return _INERT_TRIAL_FLOOR
+        return _clip01(0.55 + 0.06 * distinct_surfaces)
 
     def _dissolve_warp(self, component_id: str) -> None:
         candidate = self._candidates.get(component_id)
@@ -510,6 +663,7 @@ class AuroraLexicalGrounding(WarpCapable):
                 "provenance": str(provenance or "inherited_scaffold"),
                 "slot": geometry.get("slot", "unbound"),
                 "selection_kind": selection.get("kind", ""),
+                "surface_hash": _surface_hash(str(form.get("raw_text", "") or "")),
                 "tick": self._tick,
             })
             self._persist()
@@ -570,6 +724,7 @@ class AuroraLexicalGrounding(WarpCapable):
                     applicability_family=str(rec.get("applicability_family", "") or ""),
                     parent_ids=list(rec.get("parent_ids") or []),
                     structural_geometry=dict(rec.get("structural_geometry") or {}),
+                    dominant_constraints=list(rec.get("dominant_constraints") or []),
                     status=str(rec.get("status", "trial") or "trial"),
                     created_at=float(rec.get("created_at", time.time()) or time.time()),
                     evidence=list(rec.get("evidence") or []),
