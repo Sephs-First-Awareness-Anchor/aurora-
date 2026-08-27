@@ -587,6 +587,13 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
             "object": str(alt.get("obj", "") or ""),
             "complement": str(alt.get("complement", "") or ""),
             "unknown_role": str(alt.get("unknown_role", "") or ""),
+            # Codex review, PR #178: the alternate clause is itself a full
+            # extract_relational_form() call and carries its own
+            # relation_provenance -- this hand-built dict was dropping it,
+            # leaving a consumer that reads alternatives[0]["relation"] with
+            # no way to tell it came from the same _RELATION_VERBS
+            # scaffolding as the primary relation.
+            "relation_provenance": str(alt.get("relation_provenance", "") or ""),
         })
 
     filled = sum(bool(v) for v in (subject, relation, obj, complement))
