@@ -967,7 +967,19 @@ class AuroraLexicalGrounding(WarpCapable):
         try:
             try:
                 from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
-                form = extract_relational_form(raw)
+                # Codex review, PR #186: feed_lexical_grounding=False --
+                # without it, this parse-only call would ALSO trigger
+                # extract_relational_form()'s own live-feed side effect
+                # (tagged "inherited_scaffold", the default) before the
+                # observe_lexical_context() call below ever runs with the
+                # correct provenance="historical_possibility". That would
+                # create two evidence entries for the same historical pair,
+                # with the first bypassing both the intended provenance tag
+                # and _turn_consumption_trace's historical-replay exclusion
+                # -- letting a background-thread replay get swept into and
+                # validated by whatever unrelated LIVE turn is finalized
+                # next.
+                form = extract_relational_form(raw, feed_lexical_grounding=False)
             except Exception:
                 return {"admitted": False, "reason": "relational_form_unavailable", "possibility_id": resolved_possibility_id}
 

@@ -428,12 +428,35 @@ class ConstraintSemanticState:
         return asdict(self)
 
 
-def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
+def extract_relational_form(
+    text: str,
+    parsed: Optional[Mapping[str, Any]] = None,
+    *,
+    feed_lexical_grounding: bool = True,
+) -> Dict[str, Any]:
     """Preserve the clause relation before topic reduction.
 
     This is a syntax-preservation step.  It does not decide what kind of human
     request is present.  It records the entities, relation, complement, and the
     unresolved slot that X/T/N/B/A will later interpret.
+
+    feed_lexical_grounding (Codex review, PR #186): defaults True, preserving
+    every existing live call site's behavior unchanged. Set False only by
+    observe_historical_lexical_possibility() (aurora_lexical_grounding.py),
+    which must parse a historical exchange's relational form WITHOUT this
+    function's own side-effect feed firing first under its default
+    "inherited_scaffold" provenance -- that feed would otherwise create a
+    SECOND, differently-provenanced evidence entry for the identical text,
+    one that bypasses observe_historical_lexical_possibility()'s own
+    provenance="historical_possibility" tagging and therefore also bypasses
+    _turn_consumption_trace's historical-replay exclusion, letting a
+    background-thread replay contaminate whatever LIVE turn's receiver
+    outcome happens to be finalized next. Threaded through this function's
+    own recursive self-calls (multi-clause segmentation, the "or"
+    alternative-clause parse) so a suppressed top-level call stays
+    suppressed all the way down -- those recursive calls remain feed=True
+    by default for every genuine live parse, since each clause/alternative
+    is a real, distinct textual relation worth its own observation.
     """
     raw = str(text or "").strip()
     # Preserve earlier asserted clauses while allowing the final question to
@@ -448,7 +471,10 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
         # boundary was found -- one clause back means nothing changes.
         segments = _split_intra_sentence_clauses(segments[0])
     if len(segments) > 1:
-        parsed_segments = [extract_relational_form(seg, parsed={}) for seg in segments]
+        parsed_segments = [
+            extract_relational_form(seg, parsed={}, feed_lexical_grounding=feed_lexical_grounding)
+            for seg in segments
+        ]
         active_index = next((i for i in range(len(parsed_segments) - 1, -1, -1) if parsed_segments[i].get("question")), len(parsed_segments) - 1)
         active = dict(parsed_segments[active_index])
         active["raw_text"] = raw
@@ -635,7 +661,11 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
     # Parse the alternate clause independently but do not recurse indefinitely.
     if alternate_tokens:
         alt_text = " ".join(alternate_tokens)
-        alt = extract_relational_form(alt_text + ("?" if question else ""), parsed={})
+        alt = extract_relational_form(
+            alt_text + ("?" if question else ""),
+            parsed={},
+            feed_lexical_grounding=feed_lexical_grounding,
+        )
         alternatives.append({
             "subject": str(alt.get("subject", "") or ""),
             "relation": str(alt.get("relation", "") or ""),
@@ -687,7 +717,7 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
     # _CONSUME_LEXICAL_GROUNDING); best-effort and silent on failure, same
     # discipline as every other WARP confession call site -- this must
     # never affect what extract_relational_form() returns.
-    if _CONSUME_LEXICAL_GROUNDING and relation:
+    if _CONSUME_LEXICAL_GROUNDING and relation and feed_lexical_grounding:
         try:
             from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
             get_lexical_grounding().observe_lexical_context(
