@@ -464,12 +464,27 @@ class ComprehensionGapDetector:
         promoted candidates for one word always carry distinct
         applicability_family by construction (WarpGenerator's own
         dedup prevents two components from sharing an identity). "Similarly
-        supported": no candidate's evidence volume dominates -- a runaway
-        leader means Aurora already has a working answer, not genuine
-        ambiguity (PR 2's own directive line: don't convert ordinary
-        lexical uncertainty into repetitive questions when the surrounding
-        field already supplies enough evidence for a reasonable
-        interpretation).
+        supported": no candidate's CONSEQUENCE-DERIVED support dominates --
+        a runaway leader means Aurora already has a working answer, not
+        genuine ambiguity (PR 2's own directive line: don't convert
+        ordinary lexical uncertainty into repetitive questions when the
+        surrounding field already supplies enough evidence for a
+        reasonable interpretation).
+
+        Consequence-closure follow-up: this used to compare raw
+        len(c.evidence) -- how many times each candidate had merely been
+        OBSERVED, not how many of those observations were ever confirmed
+        by a real downstream consequence. That let a candidate which
+        simply got parsed more often, never one that was actually
+        RIGHT more often, read as "more supported" -- frequency sneaking
+        back in through the ambiguity check after candidate_support()
+        (née _score_trial()) was already carefully fixed to require
+        genuine discriminating successes for promotion itself. Compares
+        candidate_support() -- the SAME consequence-derived reading
+        promotion itself gates on (genealogy consequence_profile.
+        confidence when it exists, else validated+positive evidence
+        volume/diversity) -- so "similarly supported" means the same
+        thing here as it means everywhere else in this module.
         """
         if not text.strip():
             return None
@@ -480,15 +495,19 @@ class ComprehensionGapDetector:
             relation = str(form.get('relation', '') or '').strip().lower()
             if not relation:
                 return None
-            candidates = get_lexical_grounding().promoted_candidates_near(relation, form)
+            grounding = get_lexical_grounding()
+            candidates = grounding.promoted_candidates_near(relation, form)
         except Exception:
             return None
         if len(candidates) < 2:
             return None
-        counts = sorted((len(c.evidence) for c in candidates), reverse=True)
-        if counts[0] <= 0:
+        try:
+            supports = sorted((grounding.candidate_support(c) for c in candidates), reverse=True)
+        except Exception:
             return None
-        if counts[1] >= 0.5 * counts[0]:
+        if supports[0] <= 0:
+            return None
+        if supports[1] >= 0.5 * supports[0]:
             return relation
         return None
 

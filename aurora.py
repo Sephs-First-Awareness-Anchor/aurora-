@@ -6766,6 +6766,28 @@ def _build_communication_contributors(
             "emergent_operation": dict(_constraint_semantics.get("emergent_operation") or {}),
             "completeness": float(_constraint_semantics.get("completeness", 0.0) or 0.0),
         }
+
+    # Build 771 consequence-closure follow-up: drain whatever (candidate_id,
+    # evidence_id) pairs AuroraLexicalGrounding touched while producing this
+    # response -- a lexical candidate provisionally consumed this turn is
+    # just one more attributable participant in the same causal chain every
+    # other contributor above already joins. Read-and-clear so it can never
+    # leak into a later turn's contributors even on an unexpected early exit.
+    lexical_grounding = systems.get("lexical_grounding")
+    if lexical_grounding is not None and hasattr(lexical_grounding, "drain_turn_consumption_trace"):
+        try:
+            lexical_trace = list(lexical_grounding.drain_turn_consumption_trace() or [])
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:_build_communication_contributors_lexical_grounding",
+                exc=_aurora_boundary_exc,
+                context={"function": "_build_communication_contributors", "source_file": "aurora.py"},
+            )
+            lexical_trace = []
+        if lexical_trace:
+            contributors["lexical_grounding"] = lexical_trace
     return contributors
 
 
@@ -7089,6 +7111,44 @@ def _finalize_validated_communication(
                     context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
                 )
                 finalized["concept_crystal"] = False
+
+        # Build 771 consequence-closure follow-up: route this SAME receiver
+        # outcome to every lexical candidate provisionally consumed while
+        # producing the response -- no lexical-specific success oracle, just
+        # one more attributable participant fed from the identical kind/
+        # effect every other contributor above already receives. Gated on
+        # (positive or meaning_issue) like concept_crystal/semantic_variant
+        # above: a word's structural-role interpretation is a MEANING-level
+        # attribute, not an expression-clarity one.
+        lexical_entries = list(contributors.get("lexical_grounding") or [])
+        if lexical_entries and (positive or meaning_issue):
+            lexical_grounding = systems.get("lexical_grounding")
+            if lexical_grounding is not None and hasattr(lexical_grounding, "record_evidence_outcome"):
+                applied_lexical = []
+                for _lex_entry in lexical_entries:
+                    _lex_entry = dict(_lex_entry or {})
+                    _lex_candidate_id = str(_lex_entry.get("candidate_id") or "")
+                    _lex_evidence_id = str(_lex_entry.get("evidence_id") or "")
+                    if not _lex_candidate_id or not _lex_evidence_id:
+                        continue
+                    try:
+                        _lex_result = lexical_grounding.record_evidence_outcome(
+                            candidate_id=_lex_candidate_id,
+                            evidence_id=_lex_evidence_id,
+                            outcome_kind=kind,
+                            observed_effect=effect,
+                        )
+                        applied_lexical.append(bool(dict(_lex_result or {}).get("recorded")))
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora.py:_finalize_validated_communication_lexical_grounding",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_finalize_validated_communication", "source_file": "aurora.py"},
+                        )
+                        applied_lexical.append(False)
+                finalized["lexical_grounding"] = applied_lexical
 
     # Cross-pipeline concepts/frames are only candidates until this exact
     # response receives a receiver outcome.  Resolve them here, alongside the
