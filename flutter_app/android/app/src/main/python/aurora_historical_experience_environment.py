@@ -705,6 +705,34 @@ class HistoricalExperienceEnvironment:
                 "possibility_event_id": event_id,
             }
 
+        # Build 771 PR 7: a second, independent observer of the SAME
+        # chronological pair the call above just processed -- not a
+        # parallel pipeline (it reuses AuroraLexicalGrounding's own
+        # observe_lexical_context() entrance internally), and never
+        # gated on whether communication_emergence found this pair
+        # representable. Best-effort and silent on failure: a missing or
+        # misbehaving lexical-grounding system must never disturb the
+        # communication-emergence bookkeeping this method exists to do.
+        try:
+            from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
+            lexical_grounding = self.systems.get("lexical_grounding") or get_lexical_grounding()
+            lexical_grounding.observe_historical_lexical_possibility(
+                raw_text=str(pending.get("text", "") or ""),
+                observed_response_text=text,
+                possibility_id=f"{self._baseline_id}:{pending.get('event_id', '')}:{event_id}",
+                observed_source="historical_other_assistant",
+                epistemic_status=str(
+                    event.get("epistemic_status", "observation_not_truth")
+                    or "observation_not_truth"
+                ),
+                causal_status=str(
+                    event.get("causal_status", "sequence_observed_causality_not_asserted")
+                    or "sequence_observed_causality_not_asserted"
+                ),
+            )
+        except Exception:
+            pass
+
         if bool(result.get("structural_support", False)):
             state["structural_possibilities"] = int(
                 state.get("structural_possibilities", 0) or 0
