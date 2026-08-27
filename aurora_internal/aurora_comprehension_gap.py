@@ -423,20 +423,79 @@ class ComprehensionGapDetector:
           - Volatility is high enough that guessing would likely fail
           - There's at least one specific, resolvable gap
           - She hasn't asked in the last 2 turns (don't interrogate)
+
+        Build 771 (Constraint-Native Lexical Grounding): a VOCABULARY/SLANG
+        gap used to force an ask unconditionally, on the theory that an
+        unfamiliar word is always the clearest, most-resolvable gap. That
+        conflated "word Aurora hasn't seen" with "word Aurora can't do
+        anything with" -- an unfamiliar word sitting inside an otherwise
+        structurally intelligible sentence (extract_relational_form() finds
+        a bound subject/relation/object/complement around it -- e.g. "A
+        glorp is heavier than a cup.", where "glorp" is unknown but bound as
+        the subject of a comparative relation) carries enough surrounding
+        evidence to proceed on a provisional interpretation instead of
+        interrogating the user about a single word. Ask on a word gap now
+        only when the turn has NO usable structural context anywhere to
+        fall back on -- genuinely nothing bound in the sentence at all.
         """
         if not gaps:
             return False
-        # A genuinely unknown WORD is the clearest, most-resolvable gap she can have —
-        # asking "what does X mean?" is exactly right and always answerable. Ask on it
-        # regardless of the general volatility threshold (which is tuned for fuzzier
-        # structural / intent gaps, not a concrete missing word).
-        if any(g.gap_type in (GapType.VOCABULARY, GapType.SLANG) for g in gaps):
-            return True
+        word_gaps = [g for g in gaps if g.gap_type in (GapType.VOCABULARY, GapType.SLANG)]
+        if word_gaps:
+            if not self._has_structural_fallback(volatility_report, word_gaps):
+                return True
         score = volatility_report.get('volatility_score', 0)
         # Otherwise ask only above threshold — 0.45 prevents firing on clear,
         # answerable questions (challenges, identity, coherence concepts).
         # 0.25 was too aggressive: triggered on normal introspective questions.
         return score >= 0.45
+
+    def _has_structural_fallback(
+        self, volatility_report: Dict[str, Any], word_gaps: List["ComprehensionGap"]
+    ) -> bool:
+        """Build 771: True when extract_relational_form() found a bound
+        RELATION in this turn's text -- a provisional interpretation
+        Aurora can proceed on instead of asking about an unfamiliar word
+        ("A glorp is heavier than a cup." binds relation="is" around the
+        unknown "glorp", which is exactly the case that should NOT force a
+        question). False when there is no bound relation at all, i.e.
+        genuinely nothing to fall back on.
+
+        Deliberately keyed on `relation` specifically, not merely on
+        `subject` being non-empty: extract_relational_form()'s bare-
+        fragment fallback (no relation-verb found) still sets `subject` to
+        whatever text there was ("bussin" alone -> subject="bussin",
+        relation="") -- that's the ask-worthy case, not the fall-back-able
+        one, so subject alone must not count as structural fallback here.
+
+        Codex review, PR #180: extract_relational_form()'s _looks_verb()
+        heuristic treats a bare -ed/-ing-suffixed token as a verb purely by
+        its spelling ("based", "wicked", "goated" alone all bind
+        relation=<that exact word>, with nothing else bound around it) --
+        for a single-word unknown-slang input with truly nothing around
+        it, the gap word itself would otherwise masquerade as "surrounding
+        structure". A relation only counts as real structural fallback
+        when it is not simply the unclear word restating itself.
+
+        Purely syntactic and provisional -- this does not decide what the
+        unfamiliar word MEANS, only whether the turn has enough surrounding
+        structure to proceed without asking first.
+        """
+        text = str(volatility_report.get('original_text', '') or '')
+        if not text.strip():
+            return False
+        try:
+            from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
+            form = extract_relational_form(text)
+        except Exception:
+            return False
+        relation = str(form.get('relation', '') or '').strip().lower()
+        if not relation:
+            return False
+        unclear_words = {str(getattr(g, 'unclear_element', '') or '').strip().lower() for g in word_gaps}
+        if relation in unclear_words:
+            return False
+        return True
 
 
 # ============================================================================
@@ -1438,8 +1497,39 @@ def run_tests():
     gaps_clean = cgd.detect_gaps("The cat sat on the mat.", vr_clean)
     check("No gaps for clean simple sentence", len(gaps_clean) == 0)
 
-    check("Should ask for slang", cgd.should_ask(vr_slang, gaps))
+    # Build 771: "ngl that was bussin fr" DOES bind a relation ("was") around
+    # the unfamiliar terms, so it now falls into the same provisional-
+    # interpretation path as the "glorp" case below instead of forcing a
+    # question -- this intentionally replaces the pre-771 "always ask on any
+    # slang/vocabulary gap" contract this test used to assert.
+    check("Should NOT force-ask when a relation is bound (slang case)", not cgd.should_ask(vr_slang, gaps))
     check("Should not ask with no gaps", not cgd.should_ask(vr_clean, gaps_clean))
+
+    # A genuinely bare, relation-less fragment is the actual "nothing to
+    # fall back on" case -- that one should still ask.
+    vr_bare = vd.detect("bussin")
+    vr_bare["unknown_words"] = ["bussin"]
+    gaps_bare = cgd.detect_gaps("bussin", vr_bare)
+    check("Should ask when there is no bound relation at all", cgd.should_ask(vr_bare, gaps_bare))
+
+    # The "glorp" case from Build 771's own directive: an unknown NOUN bound
+    # into an otherwise-intelligible comparative relation must not halt
+    # comprehension or force a question.
+    vr_glorp = vd.detect("A glorp is heavier than a cup.")
+    vr_glorp["unknown_words"] = ["glorp"]
+    gaps_glorp = cgd.detect_gaps("A glorp is heavier than a cup.", vr_glorp)
+    check("Should NOT ask about an unknown noun bound in a comparative relation (glorp)", not cgd.should_ask(vr_glorp, gaps_glorp))
+
+    # Codex review, PR #180: extract_relational_form()'s _looks_verb()
+    # heuristic treats a bare -ed-suffixed token as a verb purely by its
+    # spelling, so a single unknown slang word like "based" binds
+    # relation="based" with nothing else around it -- the gap word
+    # masquerading as its own surrounding structure. That must still ask.
+    for _slang_word in ("based", "wicked", "goated"):
+        _vr = vd.detect(_slang_word)
+        _vr["unknown_words"] = [_slang_word]
+        _gaps = cgd.detect_gaps(_slang_word, _vr)
+        check(f"Should ask about bare -ed/-suffixed slang ({_slang_word!r})", cgd.should_ask(_vr, _gaps))
 
     # ---- ClarificationMemory ----
     print("\nClarificationMemory:")
@@ -1499,7 +1589,11 @@ def run_tests():
     print("\nComprehensionGapSystem (end-to-end):")
     cgs = ComprehensionGapSystem()
 
-    result = cgs.process("ngl that was bussin fr", {}, turn_count=1)
+    # Build 771: "ngl that was bussin fr" (used above) now binds a relation
+    # around "bussin" and no longer forces an ask on its own -- this
+    # end-to-end flow needs an input with no bound relation at all so it
+    # still exercises the ask -> answer -> apply path.
+    result = cgs.process("ngl bussin", {}, turn_count=1)
     check("System detects gap in slang text", result is not None)
     check("Action is 'ask'", result and result['action'] == 'ask')
     check("Question is present", result and len(result['content']) > 10)
