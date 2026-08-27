@@ -521,27 +521,40 @@ class AuroraLexicalGrounding(WarpCapable):
 
     def _score_trial(self, component: WarpComponent) -> float:
         """Build 771 PR 4: evidence-derived score, gated on BOTH sample
-        volume AND surface diversity -- mirroring the philosophy behind
-        constraint_genealogy.py's AbilityProfile.consequence_profile
-        ("confidence requires BOTH sample volume and context diversity...
-        a representation that only ever fires alongside the same one
-        other thing never reaches high confidence no matter how many
-        times it fires"). Recurrence across DIFFERENT surface wording (see
-        _surface_hash()) is discriminating evidence; recurrence in the
-        identical wording repeatedly is not -- directly the directive's
-        own "a word occurring ten thousand times without discriminating
-        consequences is weaker evidence than a smaller number of
-        experiences that clearly distinguish competing interpretations."
+        volume AND surface diversity AMONG VALIDATED EVIDENCE ONLY --
+        mirrors aurora_communication_emergence.py's own _score_trial()
+        exactly (`validated = [e for e in evidence if e.get("validated")]`,
+        filtered before any volume/diversity check runs).
 
-        This module has no live call site yet that reports back whether a
-        provisional interpretation was actually confirmed or corrected by
-        a real downstream consequence (that wiring is PR 5's job) -- so
-        this deliberately does not fabricate a "validated" signal nothing
-        has earned. If this candidate already has a registered genealogy
-        ability with its own measured consequence_profile (only possible
-        after a prior promotion cycle), that confidence-weighted reading
-        takes precedence once it exists -- the literal "genealogy's own
-        consequence attribution" this PR is scoped to wire.
+        Codex review, PR #181/#182: the first version of this method
+        scored ALL evidence -- volume and surface diversity alone, with no
+        requirement that any observation was ever actually confirmed or
+        corrected by a real downstream consequence. That let repeated
+        SCAFFOLD-DRIVEN parses (recorded as evidence purely because a
+        word occupied a slot, never because anyone checked whether that
+        interpretation held up) accumulate enough volume+diversity to
+        promote on their own -- "varied repetitions of an incorrect
+        interpretation are sufficient to grant semantic authority" is
+        exactly the frequency-is-not-understanding failure this whole
+        build exists to prevent, and the first version of this method
+        committed it despite its own docstring saying it wouldn't.
+
+        Fixed: only evidence entries with validated=True (set by
+        record_evidence_outcome() -- called by a live caller that actually
+        observed whether a provisional interpretation was confirmed or
+        corrected, not by mere recurrence) count toward the volume+
+        diversity floor. No live call site reports outcomes yet (that
+        wiring is beyond this PR's scope), so today this means -- by
+        deliberate construction, not by accident -- nothing can be
+        promoted from evidence alone. That is the honest state until a
+        real validation-reporting caller exists; it is not a regression
+        from a working mechanism, it is the removal of a mechanism that
+        was never actually earning what it claimed to.
+
+        If this candidate already has a registered genealogy ability with
+        its own measured consequence_profile (only possible after a prior
+        promotion cycle), that confidence-weighted reading takes
+        precedence once it exists.
         """
         candidate = self._candidates.get(component.component_id)
         if candidate is None:
@@ -552,11 +565,45 @@ class AuroraLexicalGrounding(WarpCapable):
             consequence = getattr(ability, "consequence_profile", None) if ability is not None else None
             if consequence:
                 return _clip01(dict(consequence).get("confidence", 0.0))
-        evidence_count = len(candidate.evidence)
-        distinct_surfaces = len({str(e.get("surface_hash", "") or "") for e in candidate.evidence if e.get("surface_hash")})
+        validated = [e for e in candidate.evidence if e.get("validated") is True]
+        evidence_count = len(validated)
+        distinct_surfaces = len({str(e.get("surface_hash", "") or "") for e in validated if e.get("surface_hash")})
         if evidence_count < _MIN_EVIDENCE or distinct_surfaces < _MIN_DISTINCT_SURFACES:
             return _INERT_TRIAL_FLOOR
         return _clip01(0.55 + 0.06 * distinct_surfaces)
+
+    def record_evidence_outcome(
+        self,
+        *,
+        candidate_id: str,
+        evidence_id: str,
+        outcome_kind: str = "indeterminate",
+        observed_effect: str = "",
+    ) -> Dict[str, Any]:
+        """The validation-reporting entrance _score_trial() actually gates
+        on -- mirrors aurora_communication_emergence.py's own
+        record_receiver_outcome() exactly: marks ONE specific evidence
+        entry (identified by the evidence_id stamped on it when it was
+        recorded) validated=True, with an outcome_kind describing what
+        was actually observed. No live caller invokes this yet (that is
+        future work, beyond this PR's scope) -- this only builds the
+        mechanism honestly, it does not fabricate a caller for it.
+        """
+        # self._candidates is keyed by component_id, not candidate_id --
+        # candidate_id is the LexicalCandidate's own identity field, the
+        # natural thing an external caller would hold onto, so search by
+        # it rather than exposing the internal component_id keying.
+        candidate = next((c for c in self._candidates.values() if c.candidate_id == candidate_id), None)
+        if candidate is None:
+            return {"recorded": False, "reason": "unknown_candidate"}
+        for evidence in reversed(candidate.evidence):
+            if str(evidence.get("evidence_id", "") or "") == str(evidence_id or ""):
+                evidence["validated"] = True
+                evidence["outcome_kind"] = str(outcome_kind or "indeterminate")
+                evidence["observed_effect"] = str(observed_effect or "")
+                self._persist()
+                return {"recorded": True, "candidate_id": candidate_id, "evidence_id": evidence_id}
+        return {"recorded": False, "reason": "unknown_evidence_id"}
 
     def _dissolve_warp(self, component_id: str) -> None:
         candidate = self._candidates.get(component_id)
@@ -671,12 +718,15 @@ class AuroraLexicalGrounding(WarpCapable):
 
         candidate, selection = self._select_candidate(word_key, geometry, family)
         if candidate is not None:
+            evidence_id = _stable_hash({"candidate": candidate.candidate_id, "tick": self._tick, "n": len(candidate.evidence)}, 12)
             candidate.evidence.append({
+                "evidence_id": evidence_id,
                 "provenance": str(provenance or "inherited_scaffold"),
                 "slot": geometry.get("slot", "unbound"),
                 "selection_kind": selection.get("kind", ""),
                 "surface_hash": _surface_hash(str(form.get("raw_text", "") or "")),
                 "tick": self._tick,
+                "validated": False,
                 **dict(extra_evidence or {}),
             })
             self._persist()
