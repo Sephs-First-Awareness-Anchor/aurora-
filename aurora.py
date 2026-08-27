@@ -30072,6 +30072,45 @@ def boot_aurora(
         if verbose:
             print(f"  [COMM-EMERGE] unavailable: {_comm_emergence_e}")
 
+    # Build 771 (Constraint-Native Lexical Grounding): lexical role
+    # grounding field. Cultivates consequence-earned word-role candidates
+    # as their own WARP trials, sitting alongside -- never replacing --
+    # the hand-authored scaffolding in aurora_utterance_parser.py and
+    # aurora_constraint_semantic_continuity.py. Codex review, PR #182:
+    # without installing this as the global singleton at boot, the
+    # consumption call sites in aurora_constraint_semantic_continuity.py
+    # would each lazily create their own unattached, persist=False
+    # instance on first use -- never loading promoted candidates, never
+    # persisting new ones, and never participating in the registered WARP
+    # lifecycle. Installing the real, systems-attached instance here is
+    # what makes _CONSUME_LEXICAL_GROUNDING (currently off by default)
+    # meaningful once it is eventually enabled.
+    systems["lexical_grounding"] = None
+    try:
+        from aurora_internal.aurora_lexical_grounding import AuroraLexicalGrounding, install_lexical_grounding
+        _lexical_grounding = AuroraLexicalGrounding(
+            state_dir=state_dir,
+            persist=True,
+            genealogy=systems.get("genealogy"),
+        )
+        _lexical_grounding.attach_systems(systems)
+        install_lexical_grounding(_lexical_grounding)
+        systems["lexical_grounding"] = _lexical_grounding
+        _wf_lex = systems.get("warp_field")
+        if _wf_lex is not None and hasattr(_wf_lex, "register_warp_capable"):
+            _wf_lex.register_warp_capable("lexical_grounding", _lexical_grounding)
+        if verbose:
+            _lex_status = _lexical_grounding.status()
+            print(
+                "  [LEX-GROUND] Constraint-native lexical grounding active "
+                f"(trials={_lex_status.get('trial_count', 0)}, "
+                f"promoted={_lex_status.get('promoted_count', 0)})"
+            )
+    except Exception as _lexical_grounding_e:
+        systems["lexical_grounding"] = None
+        if verbose:
+            print(f"  [LEX-GROUND] unavailable: {_lexical_grounding_e}")
+
     # Operational synthesis chamber: composes previously missing pure
     # operations from X/T/N/B/A-rooted primitives, quarantines them as WARP
     # trials, and admits only unseen-case-validated programs to genealogy.
