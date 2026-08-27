@@ -119,6 +119,39 @@ def _profile_key(axis_profile: Mapping[str, float]) -> str:
     return _stable_hash(normalized, 16)
 
 
+def _identity_axis_profile(
+    word: str, applicability_family: str, axis_activation: Mapping[str, float]
+) -> Dict[str, float]:
+    """The axis profile WarpGenerator derives BOTH the gap-persistence
+    signature (_gap_signature) AND the resulting component_id (_make_id)
+    from -- purely numeric axis coordinates, with no notion of "word" or
+    "family" built into either. When real axis_activation is supplied, it
+    is used directly (the genuine live pressure reading). When it is not
+    (the common case with no live comprehension call site wired yet, and
+    the default this module falls back to), returning one flat profile for
+    every word would collapse every word's gap-persistence counter and
+    generated component_id onto the same identity -- Codex review, PR
+    #179: "observing three different words starts a trial for only the
+    third word". WarpGenerator has no other notion of "these are different
+    things" to fall back on, so this derives a deterministic, word+family-
+    keyed synthetic profile instead: one axis (chosen by hash) pushed
+    clearly above AxisCoverageChecker's dominance floor (0.40) -- clearly
+    above even after axes_to_istates()'s neutral-polarity split halves it.
+    This carries NO semantic content -- it is an identity discriminator,
+    never a claim about the word's actual constraint pressure -- and the
+    SAME (word, family) pair always produces the SAME profile, which is
+    required for GAP_PERSISTENCE_REQUIRED's repeat-observation counting to
+    ever fire at all.
+    """
+    real = {ax: _clip01(dict(axis_activation or {}).get(ax, 0.0)) for ax in AXES}
+    if any(real.values()):
+        return real
+    digest = hashlib.sha1(f"{word}:{applicability_family}".encode("utf-8")).digest()
+    dominant = AXES[digest[0] % len(AXES)]
+    magnitude = 0.85 + 0.13 * (digest[1] / 255.0)
+    return {ax: (magnitude if ax == dominant else 0.05) for ax in AXES}
+
+
 def _word_slot(word: str, form: Mapping[str, Any]) -> str:
     """Which structural slot (if any) extract_relational_form() actually
     bound this word into -- observed placement, not a grammar-theory
@@ -283,6 +316,25 @@ class AuroraLexicalGrounding(WarpCapable):
     def _warp_level_name(self) -> str:
         return "lexical_role_grounding"
 
+    def evaluate_warp_trials(self) -> Tuple[List[str], List[str]]:
+        """Override purely to persist AFTER WarpCapable's own dict mutation
+        completes. WarpCapable.evaluate_warp_trials() calls _dissolve_warp()
+        (or moves a component into _warp_promoted) BEFORE removing it from
+        self._warp_trials -- persisting only from inside _dissolve_warp(),
+        as this module's other hooks do (matching
+        aurora_communication_emergence.py's own precedent), saves a
+        snapshot where a just-dissolved trial is still listed as active.
+        Codex review, PR #179: "Restarting immediately therefore resurrects
+        the dissolved component as an active WARP trial." This second
+        persist, once the base class has actually returned, guarantees the
+        saved state matches the real in-memory state -- and covers
+        promotion the same way, which has the identical timing gap.
+        """
+        promoted, dissolved = super().evaluate_warp_trials()
+        if promoted or dissolved:
+            self._persist()
+        return promoted, dissolved
+
     def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:
         # A minimal per-axis coverage baseline, mirroring
         # aurora_communication_emergence.py's own root-pressure seeding:
@@ -411,7 +463,19 @@ class AuroraLexicalGrounding(WarpCapable):
         except Exception:
             pass
         self._tick += 1
-        return self.check_and_extend(dict(axis_profile), source="lexical_grounding", tick=self._tick)
+        component = self.check_and_extend(dict(axis_profile), source="lexical_grounding", tick=self._tick)
+        if component is not None:
+            # check_and_extend() calls _integrate_warp() (whose own
+            # _persist() runs) BEFORE inserting the new component into
+            # self._warp_trials -- that insertion happens after
+            # _integrate_warp() returns, here, inside check_and_extend()
+            # itself. Persisting again now that check_and_extend() has
+            # actually returned guarantees the saved warp_trials dict
+            # includes this trial. Codex review, PR #179: without this,
+            # "the candidate reloads as a trial but its WarpComponent does
+            # not, so it can never be evaluated, promoted, or dissolved."
+            self._persist()
+        return component
 
     def observe_lexical_context(
         self,
@@ -456,7 +520,7 @@ class AuroraLexicalGrounding(WarpCapable):
                 "selection": selection,
             }
 
-        axis_profile = dict(activation) if any(activation.values()) else {ax: 0.2 for ax in AXES}
+        axis_profile = _identity_axis_profile(word_key, family, activation)
         profile_key = _profile_key(_expand_to_15d(axis_profile))
         self._pending_context[profile_key] = {
             "word": word_key,
