@@ -759,6 +759,14 @@ def _restore_genealogy_state(
                     structured_state=(dict(rec["structured_state"]) if isinstance(rec.get("structured_state"), dict) else None),
                     consequence_profile=(dict(rec["consequence_profile"]) if isinstance(rec.get("consequence_profile"), dict) else None),
                     origin_axis=(str(rec["origin_axis"]) if rec.get("origin_axis") is not None else None),
+                    # Codex review, PR #178: origin_kind is meant to be the
+                    # same immutable "set once at birth, never overwritten"
+                    # field as origin_axis immediately above -- but this
+                    # restore path only read origin_axis, so every persisted
+                    # ability came back with origin_kind=None on every
+                    # restart, silently erasing scaffold-vs-earned birth
+                    # provenance the moment the process reloaded state.
+                    origin_kind=(str(rec["origin_kind"]) if rec.get("origin_kind") is not None else None),
                 )
             if loaded:
                 logger.abilities = loaded
