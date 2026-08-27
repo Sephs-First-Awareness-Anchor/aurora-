@@ -1,0 +1,645 @@
+"""
+aurora_lexical_grounding.py
+============================
+
+Build 771 (Constraint-Native Lexical Grounding), PR 3.
+
+This module gives Aurora a place to grow her OWN, consequence-earned
+interpretation of a word's structural role, sitting alongside -- never
+replacing -- the hand-authored scaffolding in aurora_utterance_parser.py
+(_WORD_ROLES / _PHRASE_ROLES) and aurora_constraint_semantic_continuity.py
+(_RELATION_VERBS). Those lookups remain the working communicative baseline;
+nothing in this module deletes or bypasses them (PR 1 tagged their output
+"inherited_scaffold" so it can be told apart from what grows here).
+
+Two things this module deliberately does NOT do, because doing either would
+quietly reintroduce the same problem this build exists to remove:
+
+1. It never stores an English label as a word's meaning. A LexicalCandidate
+   carries an axis_profile, a structural applicability_family, and lineage --
+   never a gloss. "because = causal relation" is not grounding; it just
+   presumes the reader already understands "causal" and "relation".
+
+2. `applicability_family` -- the key candidates are discovered and compared
+   under -- is built ONLY from observable structural geometry: which slot
+   (subject/relation/object/complement) the word occupies in
+   extract_relational_form()'s output, what else is bound around it, live
+   axis activation, continuity/negation/question shape, participant count,
+   and already-earned ancestry. Never a semantic category name ("temporal",
+   "causal", "comparative"). Two candidates for the same word in two
+   genuinely different structural contexts may go on to earn two different
+   consequence-derived meanings -- but the family they're discovered under
+   never smuggles that distinction in ahead of time.
+
+This is a new sibling WarpCapable surface (own trial pool, own promotion
+gate), modeled directly on aurora_communication_emergence.py, NOT an
+extension of it -- that module is lexical-blind by design (see its own
+comments), so lexical grounding needs its own purpose-built trial pool
+rather than repurposing one built to be lexical-free. OETS
+(aurora_ontological_scaffolding.py) remains the single word address book;
+this module reads/writes its SemanticNode/senses store by word key rather
+than keeping a parallel index.
+
+PR 3 scope: this module is additive and unconsumed. Nothing in the live
+comprehension path calls observe_lexical_context() yet, and nothing
+consumes a promoted LexicalCandidate as an authority over scaffolding --
+that migration is PR 5's job, gated on PR 4's genealogy-consequence
+scoring. _score_trial() here is a deliberately inert placeholder (a fixed
+neutral floor, mirroring OETS's own "insufficient evidence" floor) so
+nothing can reach "promoted" status from this module alone yet.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import time
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Mapping, Optional, Tuple
+
+from aurora_persistence_utils import atomic_write_json
+from aurora_warp_protocol import (
+    WarpCapable,
+    WarpComponent,
+    WarpTrigger,
+    axes_to_istates,
+    warp_guard,
+)
+from aurora_internal.aurora_constraint_semantic_continuity import AXES
+
+_NEGATIVE_ISTATE = {"X": "I_ISNT", "T": "I_CANNOT", "N": "I_DONOT", "B": "I_SOUGHT", "A": "I_DIDNT"}
+_POSITIVE_ISTATE = {"X": "I_IS", "T": "I_CAN", "N": "I_DO", "B": "I_SAW", "A": "I_DID"}
+_RECURSION_DIMS = ("REC_SURFACE", "REC_SHALLOW", "REC_MODERATE", "REC_DEEP", "REC_CORE")
+
+# _score_trial()'s inert PR-3 placeholder floor. Deliberately well below
+# aurora_warp_protocol.PROMOTION_SCORE (0.60) so nothing can be promoted by
+# this module alone yet -- PR 4 replaces this with genealogy's own
+# consequence-attribution scoring (consequence_profile's confidence-
+# weighted EMA), never a frequency/usage counter.
+_INERT_TRIAL_FLOOR = 0.34
+
+_MAX_CANDIDATES = 4000
+_MAX_PENDING_CONTEXT = 500
+
+
+def _clip01(value: Any) -> float:
+    try:
+        return max(0.0, min(1.0, float(value)))
+    except Exception:
+        return 0.0
+
+
+def _stable_hash(payload: Any, length: int = 14) -> str:
+    try:
+        raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    except Exception:
+        raw = str(payload)
+    return hashlib.sha1(raw.encode("utf-8", errors="ignore")).hexdigest()[:length]
+
+
+def _expand_to_15d(axis_profile: Mapping[str, float]) -> Dict[str, float]:
+    """Mirror AxisCoverageChecker._ensure_full_dims()'s own expansion of a
+    legacy 5-axis dict, so a pending-context lookup keyed by this exact
+    expansion matches the CoverageGap's own axis_profile (which is always
+    the post-expansion 15D form -- see AxisCoverageChecker.check())."""
+    profile = dict(axis_profile or {})
+    if any(k in _NEGATIVE_ISTATE.values() or k in _POSITIVE_ISTATE.values() for k in profile):
+        result = dict(profile)
+    else:
+        result = axes_to_istates({ax: float(profile.get(ax, 0.0) or 0.0) for ax in AXES}, ivm_polarity=None)
+    for dim in _RECURSION_DIMS:
+        result.setdefault(dim, 0.0)
+    return result
+
+
+def _profile_key(axis_profile: Mapping[str, float]) -> str:
+    dims = list(_NEGATIVE_ISTATE.values()) + list(_POSITIVE_ISTATE.values()) + list(_RECURSION_DIMS)
+    normalized = {dim: round(float(dict(axis_profile or {}).get(dim, 0.0) or 0.0), 3) for dim in dims}
+    return _stable_hash(normalized, 16)
+
+
+def _identity_axis_profile(
+    word: str, applicability_family: str, axis_activation: Mapping[str, float]
+) -> Dict[str, float]:
+    """The axis profile WarpGenerator derives BOTH the gap-persistence
+    signature (_gap_signature) AND the resulting component_id (_make_id)
+    from -- purely numeric axis coordinates, with no notion of "word" or
+    "family" built into either. When real axis_activation is supplied, it
+    is used directly (the genuine live pressure reading). When it is not
+    (the common case with no live comprehension call site wired yet, and
+    the default this module falls back to), returning one flat profile for
+    every word would collapse every word's gap-persistence counter and
+    generated component_id onto the same identity -- Codex review, PR
+    #179: "observing three different words starts a trial for only the
+    third word". WarpGenerator has no other notion of "these are different
+    things" to fall back on, so this derives a deterministic, word+family-
+    keyed synthetic profile instead: one axis (chosen by hash) pushed
+    clearly above AxisCoverageChecker's dominance floor (0.40) -- clearly
+    above even after axes_to_istates()'s neutral-polarity split halves it.
+    This carries NO semantic content -- it is an identity discriminator,
+    never a claim about the word's actual constraint pressure -- and the
+    SAME (word, family) pair always produces the SAME profile, which is
+    required for GAP_PERSISTENCE_REQUIRED's repeat-observation counting to
+    ever fire at all.
+    """
+    real = {ax: _clip01(dict(axis_activation or {}).get(ax, 0.0)) for ax in AXES}
+    if any(real.values()):
+        return real
+    digest = hashlib.sha1(f"{word}:{applicability_family}".encode("utf-8")).digest()
+    dominant = AXES[digest[0] % len(AXES)]
+    magnitude = 0.85 + 0.13 * (digest[1] / 255.0)
+    return {ax: (magnitude if ax == dominant else 0.05) for ax in AXES}
+
+
+def _word_slot(word: str, form: Mapping[str, Any]) -> str:
+    """Which structural slot (if any) extract_relational_form() actually
+    bound this word into -- observed placement, not a grammar-theory
+    prediction of where it "should" go. Purely structural: this reads
+    which of the already-bound subject/relation/obj/complement strings
+    contains the word, nothing about what the word means.
+    """
+    w = str(word or "").strip().lower()
+    if not w:
+        return "unbound"
+    for slot in ("relation", "subject", "obj", "complement"):
+        value = str(form.get(slot, "") or "").lower()
+        if value and w in value.split():
+            return slot
+    return "unbound"
+
+
+def _lexical_geometry(
+    word: str,
+    form: Mapping[str, Any],
+    axis_activation: Mapping[str, float],
+    parent_ids: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """The ONLY inputs a family may legitimately be built from (Build 771
+    invariant 5): clause topology (slot), position/neighboring bindings,
+    live axis activation, continuity characteristics, relation direction
+    (which slot -- subject vs object carries opposite directional roles),
+    participant configuration, pressure geometry, and already-earned
+    ancestry. No semantic category ever appears here.
+    """
+    rel = dict(form or {})
+    slot = _word_slot(word, rel)
+    neighbors = {
+        "subject_bound": bool(rel.get("subject")) and slot != "subject",
+        "relation_bound": bool(rel.get("relation")) and slot != "relation",
+        "object_bound": bool(rel.get("obj")) and slot != "obj",
+        "complement_bound": bool(rel.get("complement")) and slot != "complement",
+    }
+    participant_count = sum(1 for k in ("subject", "relation", "obj", "complement") if rel.get(k))
+    continuity = bool(rel.get("continuity_bindings")) or bool(rel.get("unresolved_references"))
+    activation = {ax: _clip01(dict(axis_activation or {}).get(ax, 0.0)) for ax in AXES}
+    dominant_axis = ""
+    if any(activation.values()):
+        dominant_axis = max(AXES, key=lambda ax: activation[ax])
+    return {
+        "slot": slot,
+        "question": bool(rel.get("question")),
+        "directive": bool(rel.get("directive")),
+        "negated": bool(rel.get("negated")),
+        "neighbors": neighbors,
+        "participant_count": int(participant_count),
+        "continuity": continuity,
+        "dominant_axis": dominant_axis,
+        "axis_bucket": {ax: round(activation[ax], 1) for ax in AXES},
+        "ancestry": sorted(str(p) for p in (parent_ids or [])),
+    }
+
+
+def _applicability_family(geometry: Mapping[str, Any]) -> str:
+    return "LEXFAM:" + _stable_hash(dict(geometry or {}), 14)
+
+
+def _geometry_similarity(current: Mapping[str, Any], candidate: Mapping[str, Any]) -> float:
+    """Bounded structural similarity between two word-in-context geometries
+    for the SAME word (see _select_candidate) -- never a comparison of
+    words or meanings, only of clause topology/neighbors/axis/continuity.
+    """
+    left, right = dict(current or {}), dict(candidate or {})
+    if not left or not right:
+        return 0.0
+    if bool(left.get("question")) != bool(right.get("question")):
+        return 0.0
+    score = 0.0
+    if left.get("slot") == right.get("slot"):
+        score += 0.30
+    if bool(left.get("directive")) == bool(right.get("directive")):
+        score += 0.06
+    if bool(left.get("negated")) == bool(right.get("negated")):
+        score += 0.06
+    if bool(left.get("continuity")) == bool(right.get("continuity")):
+        score += 0.10
+    if left.get("dominant_axis") and left.get("dominant_axis") == right.get("dominant_axis"):
+        score += 0.18
+    if left.get("participant_count") == right.get("participant_count"):
+        score += 0.10
+    ln, rn = dict(left.get("neighbors") or {}), dict(right.get("neighbors") or {})
+    if ln and rn:
+        matches = sum(1 for k in ln if ln.get(k) == rn.get(k))
+        score += 0.20 * (matches / max(1, len(ln)))
+    return round(_clip01(score), 6)
+
+
+@dataclass
+class LexicalCandidate:
+    """One Aurora-native representational hypothesis for how a word
+    participates in a structural configuration -- deliberately no `gloss`
+    field. structural_geometry mirrors EmergentCommunicationOperation's own
+    applicability_shape field: the raw structural signals the
+    applicability_family hash was built from, kept for similarity
+    comparison and (in PR 4) genealogy tagging -- never an English
+    definition.
+    """
+    candidate_id: str
+    word: str
+    component_id: str
+    axis_profile: Dict[str, float]
+    applicability_family: str
+    parent_ids: List[str]
+    structural_geometry: Dict[str, Any] = field(default_factory=dict)
+    status: str = "trial"
+    created_at: float = field(default_factory=time.time)
+    evidence: List[Dict[str, Any]] = field(default_factory=list)
+    genealogy_ability_id: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+class AuroraLexicalGrounding(WarpCapable):
+    """Cultivates consequence-earned lexical role candidates through
+    Aurora's own X/T/N/B/A roots -- a sibling surface to
+    AuroraCommunicationEmergence, not an extension of it."""
+
+    def __init__(
+        self,
+        *,
+        state_dir: str = "aurora_state",
+        persist: bool = True,
+        genealogy: Any = None,
+    ) -> None:
+        self.state_dir = str(state_dir or "aurora_state")
+        self.persist = bool(persist)
+        self.storage_path = os.path.join(self.state_dir, "lexical_grounding_state.json")
+        self.systems: Dict[str, Any] = {}
+        self._candidates: Dict[str, LexicalCandidate] = {}
+        # profile_key(15D axis profile) -> pending word/family context,
+        # written just before check_and_extend() so _warp_params()/
+        # _integrate_warp() (which only ever receive the gap's own
+        # axis_profile) can recover which word/geometry spawned it. Mirrors
+        # aurora_communication_emergence.py's _profile_family side channel.
+        self._pending_context: Dict[str, Dict[str, Any]] = {}
+        self._tick: int = 0
+        self._init_warp(genealogy=genealogy)
+        self._load()
+
+    def attach_systems(self, systems: Mapping[str, Any]) -> None:
+        self.systems = dict(systems or {}) if not isinstance(systems, dict) else systems
+        genealogy = self.systems.get("genealogy")
+        if genealogy is not None:
+            self.set_warp_genealogy(genealogy)
+        sedi = self.systems.get("sedimemory")
+        if sedi is not None:
+            try:
+                self.connect_sedimemory(sedi)
+            except Exception:
+                pass
+
+    # ------------------------------------------------------------------
+    # WarpCapable implementation
+    # ------------------------------------------------------------------
+
+    def _warp_level_name(self) -> str:
+        return "lexical_role_grounding"
+
+    def evaluate_warp_trials(self) -> Tuple[List[str], List[str]]:
+        """Override purely to persist AFTER WarpCapable's own dict mutation
+        completes. WarpCapable.evaluate_warp_trials() calls _dissolve_warp()
+        (or moves a component into _warp_promoted) BEFORE removing it from
+        self._warp_trials -- persisting only from inside _dissolve_warp(),
+        as this module's other hooks do (matching
+        aurora_communication_emergence.py's own precedent), saves a
+        snapshot where a just-dissolved trial is still listed as active.
+        Codex review, PR #179: "Restarting immediately therefore resurrects
+        the dissolved component as an active WARP trial." This second
+        persist, once the base class has actually returned, guarantees the
+        saved state matches the real in-memory state -- and covers
+        promotion the same way, which has the identical timing gap.
+        """
+        promoted, dissolved = super().evaluate_warp_trials()
+        if promoted or dissolved:
+            self._persist()
+        return promoted, dissolved
+
+    def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:
+        # A minimal per-axis coverage baseline, mirroring
+        # aurora_communication_emergence.py's own root-pressure seeding:
+        # AxisCoverageChecker.check() vacuously returns "no gap" when its
+        # component dict is empty, so without SOME existing profile a
+        # genuinely novel word-in-context signature could never even be
+        # recognized as new. These five entries are a stable floor, not a
+        # claim that any axis is itself "resolved" for lexical purposes.
+        profiles: Dict[str, Dict[str, float]] = {
+            f"lexical_root_pressure:{ax}": {_NEGATIVE_ISTATE[ax]: 1.0, _POSITIVE_ISTATE[ax]: 0.15}
+            for ax in AXES
+        }
+        for candidate in self._candidates.values():
+            if candidate.status == "promoted":
+                comp = self._warp_promoted.get(candidate.component_id)
+                if comp is not None:
+                    profiles[candidate.component_id] = dict(comp.axis_profile)
+        return profiles
+
+    def _warp_params(self, gap: Any, parent_ids: List[str]) -> Dict[str, Any]:
+        context = dict(self._pending_context.get(_profile_key(gap.axis_profile), {}) or {})
+        return {
+            "word": str(context.get("word", "") or ""),
+            "applicability_family": str(context.get("applicability_family", "") or ""),
+            "structural_geometry": dict(context.get("geometry") or {}),
+            "provenance": str(context.get("provenance", "inherited_scaffold") or "inherited_scaffold"),
+            "parent_ids": list(dict.fromkeys(list(parent_ids or []) + list(context.get("parent_ids") or []))),
+        }
+
+    def _integrate_warp(self, component: WarpComponent) -> None:
+        params = dict(component.parameters or {})
+        word = str(params.get("word", "") or "")
+        if not word:
+            return
+        candidate_id = "LEX:" + _stable_hash(
+            {"word": word, "component": component.component_id, "family": params.get("applicability_family", "")},
+            14,
+        )
+        candidate = LexicalCandidate(
+            candidate_id=candidate_id,
+            word=word,
+            component_id=component.component_id,
+            axis_profile=dict(component.axis_profile),
+            applicability_family=str(params.get("applicability_family", "") or ""),
+            parent_ids=list(dict.fromkeys(list(component.parent_ids or []) + list(params.get("parent_ids") or []))),
+            structural_geometry=dict(params.get("structural_geometry") or {}),
+        )
+        self._candidates[component.component_id] = candidate
+        if len(self._candidates) > _MAX_CANDIDATES:
+            oldest = sorted(self._candidates.values(), key=lambda c: c.created_at)[: len(self._candidates) - _MAX_CANDIDATES]
+            for stale in oldest:
+                self._candidates.pop(stale.component_id, None)
+        self._persist()
+
+    def _score_trial(self, component: WarpComponent) -> float:
+        """PR 3 placeholder: a fixed neutral floor, deliberately inert.
+        PR 4 replaces this with genealogy's own consequence attribution
+        (consequence_profile's confidence-weighted EMA) -- never a raw
+        evidence/frequency count (frequency is not understanding)."""
+        if component.component_id not in self._candidates:
+            return 0.0
+        return _INERT_TRIAL_FLOOR
+
+    def _dissolve_warp(self, component_id: str) -> None:
+        candidate = self._candidates.get(component_id)
+        if candidate is not None:
+            candidate.status = "dissolved"
+        self._persist()
+
+    # ------------------------------------------------------------------
+    # Observation entrance
+    # ------------------------------------------------------------------
+
+    def _select_candidate(
+        self, word: str, geometry: Mapping[str, Any], applicability_family: str
+    ) -> Tuple[Optional[LexicalCandidate], Dict[str, Any]]:
+        """Mirrors AuroraCommunicationEmergence._select_operation()'s
+        exact-match-then-similarity-with-threshold pattern, scoped to
+        candidates for THIS word only -- a lexical candidate is always
+        word-keyed, so "similar enough" is judged only among a word's own
+        prior candidates, never borrowed across words."""
+        same_word = [c for c in self._candidates.values() if c.word == word and c.status in {"trial", "promoted"}]
+        exact = [c for c in same_word if c.applicability_family == applicability_family]
+        if exact:
+            exact.sort(key=lambda c: (c.status == "promoted", len(c.evidence), c.created_at), reverse=True)
+            return exact[0], {"kind": "exact", "score": 1.0}
+
+        ranked: List[Tuple[float, LexicalCandidate]] = []
+        for candidate in same_word:
+            score = _geometry_similarity(geometry, candidate.structural_geometry)
+            if score > 0.0:
+                ranked.append((score, candidate))
+        if not ranked:
+            return None, {"kind": "none", "score": 0.0}
+        ranked.sort(key=lambda item: (item[0], item[1].status == "promoted", len(item[1].evidence), item[1].created_at), reverse=True)
+        score, candidate = ranked[0]
+        if score < 0.72:
+            return None, {"kind": "below_threshold", "score": score}
+        return candidate, {"kind": "structural_nearest", "score": score}
+
+    def _submit_gap(
+        self,
+        *,
+        word: str,
+        axis_profile: Mapping[str, float],
+        applicability_family: str,
+    ) -> Optional[WarpComponent]:
+        """Fires the universal confession (warp_guard) for observability,
+        then grows this module's own local trial pool via
+        check_and_extend() -- modeled on aurora_language_field.py's
+        _confess_comparison_uncertainty precedent for the warp_guard call,
+        and kept unconditional (not gated behind whether a global warp_field
+        is wired into self.systems) so this module stays testable in
+        isolation, per PR 3's scope.
+        """
+        try:
+            warp_guard(
+                source="lexical_grounding",
+                layer="word_role_resolution",
+                trigger=WarpTrigger.NO_LANGUAGE_FORM,
+                unresolved_text=word,
+                profile=dict(axis_profile),
+                severity=0.4,
+                persistence_key=f"lexical:{word}:{applicability_family}",
+            )
+        except Exception:
+            pass
+        self._tick += 1
+        component = self.check_and_extend(dict(axis_profile), source="lexical_grounding", tick=self._tick)
+        if component is not None:
+            # check_and_extend() calls _integrate_warp() (whose own
+            # _persist() runs) BEFORE inserting the new component into
+            # self._warp_trials -- that insertion happens after
+            # _integrate_warp() returns, here, inside check_and_extend()
+            # itself. Persisting again now that check_and_extend() has
+            # actually returned guarantees the saved warp_trials dict
+            # includes this trial. Codex review, PR #179: without this,
+            # "the candidate reloads as a trial but its WarpComponent does
+            # not, so it can never be evaluated, promoted, or dissolved."
+            self._persist()
+        return component
+
+    def observe_lexical_context(
+        self,
+        *,
+        word: str,
+        relational_form: Mapping[str, Any],
+        axis_activation: Optional[Mapping[str, float]] = None,
+        provenance: str = "inherited_scaffold",
+    ) -> Dict[str, Any]:
+        """Entrance: observe one word sitting in one turn's structural
+        context. Purely observational plumbing -- does not decide what the
+        word MEANS, does not touch or alter any scaffold lookup, and (per
+        PR 3's scope) is not yet called from any live comprehension path;
+        PR 5 wires a real call site and the authority migration that goes
+        with it.
+
+        Returns a dict describing what happened this call: {"action":
+        "matched" | "trial_started" | "trial_continuing" | "no_signal", ...}
+        """
+        word_key = str(word or "").strip().lower()
+        if not word_key:
+            return {"action": "no_signal", "reason": "empty_word"}
+
+        form = dict(relational_form or {})
+        activation = {ax: _clip01(dict(axis_activation or {}).get(ax, 0.0)) for ax in AXES}
+        geometry = _lexical_geometry(word_key, form, activation)
+        family = _applicability_family(geometry)
+
+        candidate, selection = self._select_candidate(word_key, geometry, family)
+        if candidate is not None:
+            candidate.evidence.append({
+                "provenance": str(provenance or "inherited_scaffold"),
+                "slot": geometry.get("slot", "unbound"),
+                "selection_kind": selection.get("kind", ""),
+                "tick": self._tick,
+            })
+            self._persist()
+            return {
+                "action": "matched",
+                "candidate_id": candidate.candidate_id,
+                "applicability_family": family,
+                "selection": selection,
+            }
+
+        axis_profile = _identity_axis_profile(word_key, family, activation)
+        profile_key = _profile_key(_expand_to_15d(axis_profile))
+        self._pending_context[profile_key] = {
+            "word": word_key,
+            "applicability_family": family,
+            "geometry": geometry,
+            "provenance": str(provenance or "inherited_scaffold"),
+            "parent_ids": list(geometry.get("ancestry") or []),
+        }
+        if len(self._pending_context) > _MAX_PENDING_CONTEXT:
+            for stale_key in list(self._pending_context.keys())[: len(self._pending_context) - _MAX_PENDING_CONTEXT]:
+                self._pending_context.pop(stale_key, None)
+
+        component = self._submit_gap(word=word_key, axis_profile=axis_profile, applicability_family=family)
+        if component is not None:
+            return {
+                "action": "trial_started",
+                "component_id": component.component_id,
+                "applicability_family": family,
+            }
+        existing_trial = next(
+            (c for c in self._candidates.values() if c.word == word_key and c.applicability_family == family and c.status == "trial"),
+            None,
+        )
+        if existing_trial is not None:
+            return {"action": "trial_continuing", "candidate_id": existing_trial.candidate_id, "applicability_family": family}
+        return {"action": "no_signal", "applicability_family": family}
+
+    # ------------------------------------------------------------------
+    # Persistence
+    # ------------------------------------------------------------------
+
+    def _load(self) -> None:
+        if not self.persist or not os.path.exists(self.storage_path):
+            return
+        try:
+            with open(self.storage_path, "r", encoding="utf-8") as handle:
+                raw = dict(json.load(handle) or {})
+            self._tick = int(raw.get("tick", 0) or 0)
+            self._pending_context = dict(raw.get("pending_context") or {})
+            for component_id, item in dict(raw.get("candidates") or {}).items():
+                rec = dict(item or {})
+                candidate = LexicalCandidate(
+                    candidate_id=str(rec.get("candidate_id", "") or ""),
+                    word=str(rec.get("word", "") or ""),
+                    component_id=str(rec.get("component_id", component_id) or component_id),
+                    axis_profile={str(k): float(v or 0.0) for k, v in dict(rec.get("axis_profile") or {}).items()},
+                    applicability_family=str(rec.get("applicability_family", "") or ""),
+                    parent_ids=list(rec.get("parent_ids") or []),
+                    structural_geometry=dict(rec.get("structural_geometry") or {}),
+                    status=str(rec.get("status", "trial") or "trial"),
+                    created_at=float(rec.get("created_at", time.time()) or time.time()),
+                    evidence=list(rec.get("evidence") or []),
+                    genealogy_ability_id=str(rec.get("genealogy_ability_id", "") or ""),
+                )
+                self._candidates[candidate.component_id] = candidate
+            self._warp_trials = {
+                str(component_id): self._restore_warp_component(item)
+                for component_id, item in dict(raw.get("warp_trials") or {}).items()
+            }
+            self._warp_promoted = {
+                str(component_id): self._restore_warp_component(item)
+                for component_id, item in dict(raw.get("warp_promoted") or {}).items()
+            }
+            self._gap_counter = {
+                str(key): int(value or 0)
+                for key, value in dict(raw.get("warp_gap_counter") or {}).items()
+            }
+            self._warp_dissolved_count = int(raw.get("warp_dissolved_count", 0) or 0)
+        except Exception:
+            self._candidates = {}
+            self._pending_context = {}
+
+    @staticmethod
+    def _restore_warp_component(item: Mapping[str, Any]) -> WarpComponent:
+        rec = dict(item or {})
+        return WarpComponent(
+            component_id=str(rec.get("component_id", "") or ""),
+            level=str(rec.get("level", "lexical_role_grounding") or "lexical_role_grounding"),
+            axis_profile={str(k): float(v or 0.0) for k, v in dict(rec.get("axis_profile") or {}).items()},
+            parent_ids=list(rec.get("parent_ids") or []),
+            name=str(rec.get("name", "") or "") or None,
+            parameters=dict(rec.get("parameters") or {}),
+            trial_tick=int(rec.get("trial_tick", 0) or 0),
+            trial_score_ema=float(rec.get("trial_score_ema", 0.0) or 0.0),
+            promoted=bool(rec.get("promoted", False)),
+            dissolved=bool(rec.get("dissolved", False)),
+            created_at=float(rec.get("created_at", time.time()) or time.time()),
+            sixth_axis_signal=float(rec.get("sixth_axis_signal", 0.0) or 0.0),
+            topology_gap_ref=rec.get("topology_gap_ref"),
+        )
+
+    def save(self) -> bool:
+        return self._persist(force=True)
+
+    def _persist(self, *, force: bool = False) -> bool:
+        if not self.persist:
+            return False
+        payload = {
+            "schema_version": 1,
+            "tick": self._tick,
+            "pending_context": self._pending_context,
+            "candidates": {cid: cand.to_dict() for cid, cand in self._candidates.items()},
+            "warp_trials": {cid: asdict(comp) for cid, comp in self._warp_trials.items()},
+            "warp_promoted": {cid: asdict(comp) for cid, comp in self._warp_promoted.items()},
+            "warp_gap_counter": dict(self._gap_counter),
+            "warp_dissolved_count": int(getattr(self, "_warp_dissolved_count", 0) or 0),
+            "warp_status": self.warp_status(),
+            "saved_at": time.time(),
+        }
+        try:
+            Path(self.state_dir).mkdir(parents=True, exist_ok=True)
+            return bool(atomic_write_json(Path(self.storage_path), payload, indent=2, default=str))
+        except Exception:
+            return False
+
+    def status(self) -> Dict[str, Any]:
+        return {
+            "candidate_count": len(self._candidates),
+            "trial_count": len(self._warp_trials),
+            "promoted_count": len(self._warp_promoted),
+            "warp_status": self.warp_status(),
+        }
