@@ -91,6 +91,7 @@ _MIN_DISTINCT_SURFACES = 2
 
 _MAX_CANDIDATES = 4000
 _MAX_PENDING_CONTEXT = 500
+_MAX_SEEN_HISTORICAL_POSSIBILITIES = 60000
 
 
 def _clip01(value: Any) -> float:
@@ -329,6 +330,20 @@ class AuroraLexicalGrounding(WarpCapable):
         # aurora_communication_emergence.py's _profile_family side channel.
         self._pending_context: Dict[str, Dict[str, Any]] = {}
         self._tick: int = 0
+        # Build 771 PR 7: dedup for observe_historical_lexical_possibility()
+        # -- mirrors aurora_communication_emergence.py's own
+        # _seen_possibilities exactly, so replaying the same historical
+        # episode (checkpoint restore, re-processed baseline) never feeds
+        # the same exchange pair twice.
+        self._seen_historical_possibilities: Dict[str, float] = {}
+        # Build 771 PR 7 (Codex review, PR #184): mirrors
+        # aurora_communication_emergence.py's own _persistence_suspended
+        # exactly, so a caller checkpointing multiple durable substrates
+        # together (see aurora_historical_experience_environment.py's
+        # _save_crystal_substrate()) can hold this module's writes back
+        # until its own explicit save() runs, keeping this substrate from
+        # ever advancing ahead of a sibling substrate between checkpoints.
+        self._persistence_suspended: int = 0
         self._init_warp(genealogy=genealogy)
         self._load()
 
@@ -476,6 +491,8 @@ class AuroraLexicalGrounding(WarpCapable):
             "structural_geometry": dict(context.get("geometry") or {}),
             "provenance": str(context.get("provenance", "inherited_scaffold") or "inherited_scaffold"),
             "parent_ids": list(dict.fromkeys(list(parent_ids or []) + list(context.get("parent_ids") or []))),
+            "surface_hash": str(context.get("surface_hash", "") or ""),
+            "extra_evidence": dict(context.get("extra_evidence") or {}),
         }
 
     def _integrate_warp(self, component: WarpComponent) -> None:
@@ -505,6 +522,27 @@ class AuroraLexicalGrounding(WarpCapable):
             structural_geometry=dict(params.get("structural_geometry") or {}),
             dominant_constraints=dominant_constraints,
         )
+        # Codex review, PR #184: the pair that FOUNDS a trial (the first
+        # observation of a genuinely novel word/family combination) must
+        # get its own evidence entry too, seeded from the same extra_evidence
+        # observe_lexical_context()'s MATCHED branch already threads through
+        # -- otherwise a founding historical pair's provenance
+        # (possibility_id, epistemic hedging) is silently dropped, and only
+        # LATER matched pairs against this candidate ever carry it.
+        extra_evidence = dict(params.get("extra_evidence") or {})
+        founding_evidence_id = _stable_hash(
+            {"candidate": candidate_id, "component": component.component_id, "founding": True}, 12
+        )
+        candidate.evidence.append({
+            "evidence_id": founding_evidence_id,
+            "provenance": str(params.get("provenance", "inherited_scaffold") or "inherited_scaffold"),
+            "slot": dict(params.get("structural_geometry") or {}).get("slot", "unbound"),
+            "selection_kind": "trial_founding",
+            "surface_hash": str(params.get("surface_hash", "") or ""),
+            "tick": component.trial_tick,
+            "validated": False,
+            **extra_evidence,
+        })
         self._candidates[component.component_id] = candidate
         if len(self._candidates) > _MAX_CANDIDATES:
             oldest = sorted(self._candidates.values(), key=lambda c: c.created_at)[: len(self._candidates) - _MAX_CANDIDATES]
@@ -684,13 +722,18 @@ class AuroraLexicalGrounding(WarpCapable):
         relational_form: Mapping[str, Any],
         axis_activation: Optional[Mapping[str, float]] = None,
         provenance: str = "inherited_scaffold",
+        extra_evidence: Optional[Mapping[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Entrance: observe one word sitting in one turn's structural
         context. Purely observational plumbing -- does not decide what the
-        word MEANS, does not touch or alter any scaffold lookup, and (per
-        PR 3's scope) is not yet called from any live comprehension path;
-        PR 5 wires a real call site and the authority migration that goes
-        with it.
+        word MEANS, does not touch or alter any scaffold lookup.
+
+        extra_evidence (Build 771 PR 7): optional fields merged into the
+        evidence entry on a match -- used by
+        observe_historical_lexical_possibility() to carry its epistemic
+        hedging (truth_assumed, receiver_validation_assumed, ...) into the
+        evidence trail without this method needing to know anything about
+        historical exchanges. Every live call site simply omits it.
 
         Returns a dict describing what happened this call: {"action":
         "matched" | "trial_started" | "trial_continuing" | "no_signal", ...}
@@ -715,6 +758,7 @@ class AuroraLexicalGrounding(WarpCapable):
                 "surface_hash": _surface_hash(str(form.get("raw_text", "") or "")),
                 "tick": self._tick,
                 "validated": False,
+                **dict(extra_evidence or {}),
             })
             self._persist()
             return {
@@ -732,6 +776,13 @@ class AuroraLexicalGrounding(WarpCapable):
             "geometry": geometry,
             "provenance": str(provenance or "inherited_scaffold"),
             "parent_ids": list(geometry.get("ancestry") or []),
+            "surface_hash": _surface_hash(str(form.get("raw_text", "") or "")),
+            # Codex review, PR #184: without this, a NOVEL relation/family
+            # loses extra_evidence entirely -- the pair that FOUNDS a trial
+            # via _integrate_warp() never got an evidence entry at all, so
+            # historical provenance (possibility_id, epistemic hedging) only
+            # ever reached later MATCHED pairs, never the founding one.
+            "extra_evidence": dict(extra_evidence or {}),
         }
         if len(self._pending_context) > _MAX_PENDING_CONTEXT:
             for stale_key in list(self._pending_context.keys())[: len(self._pending_context) - _MAX_PENDING_CONTEXT]:
@@ -752,6 +803,101 @@ class AuroraLexicalGrounding(WarpCapable):
             return {"action": "trial_continuing", "candidate_id": existing_trial.candidate_id, "applicability_family": family}
         return {"action": "no_signal", "applicability_family": family}
 
+    def observe_historical_lexical_possibility(
+        self,
+        *,
+        raw_text: str,
+        observed_response_text: str,
+        possibility_id: str = "",
+        observed_source: str = "historical_other_assistant",
+        epistemic_status: str = "observation_not_truth",
+        causal_status: str = "sequence_observed_causality_not_asserted",
+        defer_persistence: bool = False,
+    ) -> Dict[str, Any]:
+        """Build 771 PR 7: let one historical (user, other-assistant)
+        exchange pair pressure this same lexical-grounding mapping --
+        mirrors aurora_communication_emergence.py's own
+        observe_structural_possibility() epistemic hedging exactly
+        (truth_assumed: False, receiver_validation_assumed: False,
+        receiver_validation_eligible=False equivalent), and is a second
+        OBSERVER of the same event that method already processes, not a
+        parallel pipeline: it reuses observe_lexical_context() as its own
+        entrance rather than reimplementing candidate selection/growth.
+
+        The historical assistant's response is never treated as truth, a
+        definition, a demonstration, or receiver validation of anything --
+        it is admitted only as evidence that the relation word in the
+        user's own utterance sits in a structurally intelligible position,
+        the same epistemic status live use already assigns to a scaffold-
+        bound relation (provenance="historical_possibility" here,
+        distinct from both "inherited_scaffold" and "consequence_earned"
+        so this evidence's origin stays traceable). Live experience stays
+        authoritative for stabilization -- this only ever supplies
+        additional evidence entries a real trial's own promotion gate
+        (PR 4's evidence+diversity floor) must still clear independently.
+
+        defer_persistence mirrors observe_structural_possibility()'s own
+        flag exactly: while set, this call's own writes are held back so a
+        caller checkpointing multiple durable substrates together (see
+        aurora_historical_experience_environment.py's
+        _save_crystal_substrate()) can flush them all at one explicit
+        save() boundary, never letting this substrate advance ahead of a
+        sibling substrate between checkpoints.
+        """
+        raw = str(raw_text or "").strip()
+        observed = str(observed_response_text or "").strip()
+        if not raw or not observed:
+            return {"admitted": False, "reason": "exchange_requires_two_nonempty_surfaces"}
+
+        resolved_possibility_id = str(possibility_id or "LEXPOSS:" + _stable_hash({
+            "u": _surface_hash(raw),
+            "o": _surface_hash(observed),
+        }, 16))
+        if resolved_possibility_id in self._seen_historical_possibilities:
+            return {"admitted": False, "duplicate": True, "reason": "possibility_already_observed", "possibility_id": resolved_possibility_id}
+        self._seen_historical_possibilities[resolved_possibility_id] = time.time()
+        if len(self._seen_historical_possibilities) > _MAX_SEEN_HISTORICAL_POSSIBILITIES:
+            oldest = sorted(self._seen_historical_possibilities, key=self._seen_historical_possibilities.get)
+            for key in oldest[: len(self._seen_historical_possibilities) - _MAX_SEEN_HISTORICAL_POSSIBILITIES]:
+                self._seen_historical_possibilities.pop(key, None)
+
+        if defer_persistence:
+            self._persistence_suspended += 1
+        try:
+            try:
+                from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
+                form = extract_relational_form(raw)
+            except Exception:
+                return {"admitted": False, "reason": "relational_form_unavailable", "possibility_id": resolved_possibility_id}
+
+            relation = str(dict(form or {}).get("relation", "") or "").strip().lower()
+            if not relation:
+                return {"admitted": False, "reason": "no_relational_configuration", "possibility_id": resolved_possibility_id}
+
+            observation = self.observe_lexical_context(
+                word=relation,
+                relational_form=form,
+                provenance="historical_possibility",
+                extra_evidence={
+                    "possibility_id": resolved_possibility_id,
+                    "observed_source": str(observed_source or "historical_other_assistant"),
+                    "epistemic_status": str(epistemic_status or "observation_not_truth"),
+                    "causal_status": str(causal_status or "sequence_observed_causality_not_asserted"),
+                    "observed_surface_hash": _surface_hash(observed),
+                    "truth_assumed": False,
+                    "receiver_validation_assumed": False,
+                },
+            )
+            return {
+                "admitted": True,
+                "possibility_id": resolved_possibility_id,
+                "word": relation,
+                **observation,
+            }
+        finally:
+            if defer_persistence:
+                self._persistence_suspended = max(0, self._persistence_suspended - 1)
+
     # ------------------------------------------------------------------
     # Persistence
     # ------------------------------------------------------------------
@@ -764,6 +910,10 @@ class AuroraLexicalGrounding(WarpCapable):
                 raw = dict(json.load(handle) or {})
             self._tick = int(raw.get("tick", 0) or 0)
             self._pending_context = dict(raw.get("pending_context") or {})
+            self._seen_historical_possibilities = {
+                str(key): float(value or 0.0)
+                for key, value in dict(raw.get("seen_historical_possibilities") or {}).items()
+            }
             for component_id, item in dict(raw.get("candidates") or {}).items():
                 rec = dict(item or {})
                 candidate = LexicalCandidate(
@@ -821,12 +971,13 @@ class AuroraLexicalGrounding(WarpCapable):
         return self._persist(force=True)
 
     def _persist(self, *, force: bool = False) -> bool:
-        if not self.persist:
+        if not self.persist or (self._persistence_suspended > 0 and not force):
             return False
         payload = {
             "schema_version": 1,
             "tick": self._tick,
             "pending_context": self._pending_context,
+            "seen_historical_possibilities": dict(self._seen_historical_possibilities),
             "candidates": {cid: cand.to_dict() for cid, cand in self._candidates.items()},
             "warp_trials": {cid: asdict(comp) for cid, comp in self._warp_trials.items()},
             "warp_promoted": {cid: asdict(comp) for cid, comp in self._warp_promoted.items()},
