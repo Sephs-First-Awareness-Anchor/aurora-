@@ -679,6 +679,25 @@ class AbilityProfile:
     # See ability_provenance_view() below for the explicit, queryable
     # ancestral-vs-operational split this field exists to make possible.
     origin_axis: Optional[str] = None
+    # Build 771 (Constraint-Native Lexical Grounding): same "set once at
+    # birth, never overwritten" contract as origin_axis immediately above,
+    # but recording a different fact -- not WHICH axis this ability was
+    # born under, but WHETHER it was born from human-authored scaffolding
+    # ("inherited_scaffold") or from Aurora's own consequence-derived WARP
+    # promotion ("consequence_earned"). Unlike origin_axis, this function
+    # (_augment_ability_profile_with_origin) has no generic way to *infer*
+    # which one is true for an arbitrary AbilityProfile passing through --
+    # so it only ever carries forward whatever the raw AbilityProfile
+    # already had set at construction (same non-dropping guarantee this
+    # function already makes for topology_id/semantic_variant_id/
+    # structured_state/consequence_profile), never fabricates a value. A
+    # future consequence-earned registration (e.g.
+    # register_emergent_lexical_grounding) is responsible for setting
+    # origin_kind="consequence_earned" itself at the one construction site
+    # where that's actually known to be true. None means "not yet
+    # classified" -- an honest degrade for every ability that predates
+    # this field, not an assumption either way.
+    origin_kind: Optional[str] = None
 
     def x_risk(self) -> float:
         """Return the X (existence admissibility) risk component."""
@@ -726,6 +745,8 @@ class AbilityProfile:
             d["consequence_profile"] = dict(self.consequence_profile)
         if self.origin_axis is not None:
             d["origin_axis"] = self.origin_axis
+        if self.origin_kind is not None:
+            d["origin_kind"] = self.origin_kind
         return d
 
     def ability_provenance_view(self) -> Dict[str, Any]:
@@ -746,6 +767,7 @@ class AbilityProfile:
             "ancestral": {
                 "id": self.id,
                 "origin_axis": self.origin_axis if self.origin_axis is not None else self.axis,
+                "origin_kind": self.origin_kind,
                 "topology_id": self.topology_id,
                 "semantic_variant_id": self.semantic_variant_id,
             },
@@ -1090,6 +1112,13 @@ def _augment_ability_profile_with_origin(ap: AbilityProfile) -> AbilityProfile:
         # SET this field; every other caller only ever carries it forward
         # unchanged via dataclasses.replace().
         origin_axis=birth_axis,
+        # Build 771: pure carry-forward, same non-dropping guarantee as
+        # topology_id/semantic_variant_id/structured_state/consequence_
+        # profile above -- this function has no basis to infer scaffold-
+        # vs-earned for an arbitrary ability, so it only ever preserves
+        # whatever origin_kind the raw AbilityProfile already had (set, if
+        # at all, at its one real construction site) rather than guessing.
+        origin_kind=ap.origin_kind,
     )
 
 

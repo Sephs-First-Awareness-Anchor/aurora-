@@ -343,6 +343,15 @@ class RelationalForm:
     clauses: List[Dict[str, str]] = field(default_factory=list)
     confidence: float = 0.0
     source: str = "utterance_relation"
+    # Build 771 (Constraint-Native Lexical Grounding): the relation binding
+    # above comes entirely from _RELATION_VERBS/_AUX/_MODAL/etc -- hand-
+    # authored scaffolding, not something Aurora derived from her own
+    # consequence evidence. This records that origin explicitly. Every
+    # caller of extract_relational_form() writes "inherited_scaffold" today;
+    # "consequence_earned" would mean some other system (not yet built here)
+    # supplied the binding instead. Observational only for now -- nothing
+    # reads it yet.
+    relation_provenance: str = "inherited_scaffold"
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -578,6 +587,13 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
             "object": str(alt.get("obj", "") or ""),
             "complement": str(alt.get("complement", "") or ""),
             "unknown_role": str(alt.get("unknown_role", "") or ""),
+            # Codex review, PR #178: the alternate clause is itself a full
+            # extract_relational_form() call and carries its own
+            # relation_provenance -- this hand-built dict was dropping it,
+            # leaving a consumer that reads alternatives[0]["relation"] with
+            # no way to tell it came from the same _RELATION_VERBS
+            # scaffolding as the primary relation.
+            "relation_provenance": str(alt.get("relation_provenance", "") or ""),
         })
 
     filled = sum(bool(v) for v in (subject, relation, obj, complement))

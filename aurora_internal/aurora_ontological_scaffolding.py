@@ -245,10 +245,28 @@ class SemanticRelation:
 
 @dataclass
 class SenseRecord:
-    """One word sense (a specific meaning) of a concept."""
+    """One word sense (a specific meaning) of a concept.
+
+    Build 771 (Constraint-Native Lexical Grounding): `gloss` is a literal
+    English string, and every real caller of add_sense() today writes it
+    from scaffolding (a hand-authored rule) or from a live user's own
+    explanation -- never from Aurora's own consequence-derived evidence.
+    `source` is the existing, already-real provenance record for that (no
+    new field needed) -- confirmed live values in use: "use_expansion"
+    (aurora.py, a live user teaching a new sense during conversation --
+    genuine lived evidence, not scaffolding) and "test"/"mock" (test
+    fixtures). Nothing here changes those. The one thing this build adds is
+    a name for the previously-implicit "nobody said where this came from"
+    case: the default is now "inherited_scaffold" rather than the vaguer
+    "inferred", since an unattributed sense is exactly the "provisional
+    evidence, not earned" case this directive is about. A future
+    consequence-earned grounding (constraint_genealogy-registered, no gloss
+    read by any selection logic) would write "constraint_earned" here --
+    not built by this record alone; see aurora_lexical_grounding.py.
+    """
     sense_id:    str          # e.g. "mean.cruel", "mean.average", "mean.intend"
     gloss:       str          # short definition of this sense
-    source:      str = "inferred"
+    source:      str = "inherited_scaffold"
     confidence:  float = 0.3
     context_clues: List[str] = field(default_factory=list)  # tokens that activate this sense
     times_activated: int = 0
