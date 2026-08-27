@@ -856,6 +856,21 @@ class AuroraLexicalGrounding(WarpCapable):
             for candidate in self._candidates.values()
         )
 
+    def promoted_candidates_for_word(self, word: str) -> List[LexicalCandidate]:
+        """Build 771 PR 6: every PROMOTED candidate for this word, across
+        every applicability_family it has earned one under. This is the
+        polysemy surface -- a word can legitimately hold several
+        consequence-earned candidates at once (the "since" case: temporal-
+        shaped vs causal-shaped geometry, each promoted independently).
+        Read-only; deciding whether that plurality is genuine ambiguity
+        worth asking about is comprehension-gap policy, not this module's
+        concern -- see aurora_comprehension_gap.py's own consumer.
+        """
+        word_key = str(word or "").strip().lower()
+        if not word_key:
+            return []
+        return [c for c in self._candidates.values() if c.word == word_key and c.status == "promoted"]
+
 
 # ─── Global singleton, mirroring aurora_warp_protocol.get_warp_field()/
 # install_warp_field() exactly ──────────────────────────────────────────

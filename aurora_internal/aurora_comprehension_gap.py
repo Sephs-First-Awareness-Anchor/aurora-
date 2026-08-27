@@ -444,11 +444,75 @@ class ComprehensionGapDetector:
         if word_gaps:
             if not self._has_structural_fallback(volatility_report, word_gaps):
                 return True
+
+        # Build 771 PR 6 (clarification-gating slice 2): even when the
+        # turn has a structural fallback (so the check above didn't force
+        # an ask), genuine multi-candidate ambiguity is still grounds to
+        # ask -- the directive's own bar: "only ask when multiple
+        # materially-different, similarly-supported candidates remain AND
+        # the choice changes the response." This is a DIFFERENT reason to
+        # ask than "word is unfamiliar" -- it fires even for a word Aurora
+        # has real consequence-earned grounding for, when that grounding
+        # itself hasn't resolved to one answer yet.
+        if self._has_ambiguous_promoted_candidates(volatility_report):
+            return True
+
         score = volatility_report.get('volatility_score', 0)
         # Otherwise ask only above threshold — 0.45 prevents firing on clear,
         # answerable questions (challenges, identity, coherence concepts).
         # 0.25 was too aggressive: triggered on normal introspective questions.
         return score >= 0.45
+
+    def _has_ambiguous_promoted_candidates(self, volatility_report: Dict[str, Any]) -> bool:
+        """Build 771 PR 6: True when the turn's relation word has multiple
+        PROMOTED, materially different, similarly-supported candidates --
+        genuine evidence-gated ambiguity Aurora cannot silently resolve on
+        her own, not "word is unfamiliar" (PR 2's separate concern above).
+
+        "Materially different": distinct applicability_family -- different
+        structural geometry, the actual polysemy signal this build exists
+        to grow (the "since" case: temporal-shaped vs causal-shaped
+        candidates, each promoted independently, never handed the English
+        distinction between them).
+
+        "Similarly supported": no candidate's evidence volume dominates.
+        A runaway leader among several promoted candidates means Aurora
+        already has a working answer -- that is exactly the case PR 2's
+        directive line warns against: "do not permit the comprehension-gap
+        system to convert ordinary lexical uncertainty into repetitive
+        questions when the surrounding relational field supplies enough
+        evidence for a reasonable provisional interpretation." Plurality
+        of PROMOTED candidates alone is not ambiguity; a close contest is.
+
+        Depends on PR 5's consumption path actually having grown promoted
+        candidates -- with _CONSUME_LEXICAL_GROUNDING at its PR 5 default
+        (off) or before any candidate has earned promotion, this always
+        returns False by construction (no promoted candidates exist to
+        compare), so this method changes nothing until that migration is
+        actually underway.
+        """
+        text = str(volatility_report.get('original_text', '') or '')
+        if not text.strip():
+            return False
+        try:
+            from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
+            from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
+            form = extract_relational_form(text)
+            relation = str(form.get('relation', '') or '').strip().lower()
+            if not relation:
+                return False
+            candidates = get_lexical_grounding().promoted_candidates_for_word(relation)
+        except Exception:
+            return False
+        if len(candidates) < 2:
+            return False
+        families = {c.applicability_family for c in candidates}
+        if len(families) < 2:
+            return False
+        counts = sorted((len(c.evidence) for c in candidates), reverse=True)
+        if counts[0] <= 0:
+            return False
+        return counts[1] >= 0.5 * counts[0]
 
     def _has_structural_fallback(
         self, volatility_report: Dict[str, Any], word_gaps: List["ComprehensionGap"]
