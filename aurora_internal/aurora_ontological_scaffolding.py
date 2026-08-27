@@ -271,6 +271,14 @@ class SenseRecord:
     context_clues: List[str] = field(default_factory=list)  # tokens that activate this sense
     times_activated: int = 0
     last_activated:  float = field(default_factory=time.time)
+    # Build 771 PR 4: pointer to the constraint_genealogy AbilityProfile
+    # this sense's consequence-earned grounding was registered under (via
+    # aurora_lexical_grounding.py's register_emergent_lexical_grounding()),
+    # set only when source == "constraint_earned". gloss itself is never
+    # read by any selection/scoring logic -- this pointer is how a
+    # consequence-earned sense's real ancestry is actually traced, not the
+    # English string.
+    grounded_ability_id: str = ""
 
     def activate(self, context_tokens: List[str] = None):
         self.times_activated += 1
@@ -365,18 +373,29 @@ class SemanticNode:
     _rel_contribution_sum: float = field(default=0.0, repr=False, compare=False)
 
     def add_sense(self, sense_id: str, gloss: str, source: str = "inferred",
-                  confidence: float = 0.3, context_clues: List[str] = None):
-        """Add or reinforce a word sense."""
+                  confidence: float = 0.3, context_clues: List[str] = None,
+                  grounded_ability_id: str = ""):
+        """Add or reinforce a word sense.
+
+        grounded_ability_id (Build 771 PR 4): optional pointer to the
+        constraint_genealogy AbilityProfile this sense's grounding was
+        registered under. Only aurora_lexical_grounding.py's promotion
+        write-back passes this; every other existing caller omits it and
+        gets the prior behavior unchanged.
+        """
         if sense_id in self.senses:
             sr = self.senses[sense_id]
             sr.confidence = min(1.0, sr.confidence + 0.05)
             if context_clues:
                 sr.activate(context_clues)
+            if grounded_ability_id:
+                sr.grounded_ability_id = grounded_ability_id
         else:
             self.senses[sense_id] = SenseRecord(
                 sense_id=sense_id, gloss=gloss, source=source,
                 confidence=confidence,
                 context_clues=context_clues or [],
+                grounded_ability_id=grounded_ability_id,
             )
         self._update_uncertainty()
 

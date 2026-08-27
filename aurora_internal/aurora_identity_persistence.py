@@ -518,6 +518,27 @@ class OETSPersistence:
                     "research_priority": node.research_priority,
                     "scaffolding_level": node.scaffolding_level,
                     "cluster_ids": list(node.cluster_ids),
+                    # Build 771 PR 4: word-sense disambiguation was never
+                    # serialized at all -- every SenseRecord (scaffold-
+                    # sourced, live-user-taught via "use_expansion", or now
+                    # constraint-earned) silently vanished on restart.
+                    # Codex review, PR #181: the promoted-candidate write-
+                    # back this build adds depends on this surviving.
+                    "senses": {
+                        sid: {
+                            "sense_id": sr.sense_id,
+                            "gloss": sr.gloss,
+                            "source": sr.source,
+                            "confidence": sr.confidence,
+                            "context_clues": list(sr.context_clues),
+                            "times_activated": sr.times_activated,
+                            "last_activated": sr.last_activated,
+                            "grounded_ability_id": sr.grounded_ability_id,
+                        }
+                        for sid, sr in node.senses.items()
+                    },
+                    "primary_sense_id": node.primary_sense_id,
+                    "uncertain_token": node.uncertain_token,
                     "times_encountered": node.times_encountered,
                     "times_used_in_expression": node.times_used_in_expression,
                     "times_researched": node.times_researched,
@@ -676,7 +697,7 @@ class OETSPersistence:
         try:
             # Need imports from the scaffolding module
             from aurora_internal.aurora_ontological_scaffolding import (
-                SemanticNode, SemanticRelation, UsageExample, RelationType
+                SemanticNode, SemanticRelation, UsageExample, RelationType, SenseRecord
             )
 
             web = oets_engine.web
@@ -724,6 +745,24 @@ class OETSPersistence:
                 node.times_researched = ndata.get("times_researched", 0)
                 node.first_encountered = ndata.get("first_encountered", time.time())
                 node.last_accessed = ndata.get("last_accessed", time.time())
+
+                # Build 771 PR 4: restore word-sense disambiguation --
+                # senses predating this fix simply won't be present in
+                # older saved files, which is an honest degrade (empty
+                # senses dict), not a crash.
+                for sid, sdata in dict(ndata.get("senses") or {}).items():
+                    node.senses[sid] = SenseRecord(
+                        sense_id=sdata.get("sense_id", sid),
+                        gloss=sdata.get("gloss", ""),
+                        source=sdata.get("source", "inherited_scaffold"),
+                        confidence=sdata.get("confidence", 0.3),
+                        context_clues=list(sdata.get("context_clues", []) or []),
+                        times_activated=sdata.get("times_activated", 0),
+                        last_activated=sdata.get("last_activated", time.time()),
+                        grounded_ability_id=sdata.get("grounded_ability_id", ""),
+                    )
+                node.primary_sense_id = ndata.get("primary_sense_id", "")
+                node.uncertain_token = bool(ndata.get("uncertain_token", False))
 
                 web.nodes[word] = node
                 web._nodes_by_role[node.role].add(word)

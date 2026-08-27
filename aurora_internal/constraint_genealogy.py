@@ -6626,6 +6626,115 @@ class ConstraintGenealogyLogger:
         self.flush_files()
         return {"registered": True, "ability_id": ability_id}
 
+    def register_emergent_lexical_grounding(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Register a consequence-earned lexical role candidate as genealogy.
+
+        Build 771 (Constraint-Native Lexical Grounding), PR 4. Modeled
+        line-for-line on register_emergent_communication_operation()
+        immediately above: the candidate is admitted only after
+        AuroraLexicalGrounding's own WARP trial has cleared its promotion
+        gate. This method does not invent the candidate and does not
+        promote it independently; it preserves its structural ancestry,
+        parent lineage, and evidence as an AbilityProfile so future
+        derivations can trace back to X/T/N/B/A -- and stamps
+        origin_kind="consequence_earned" (never "inherited_scaffold"),
+        since a candidate reaching this method is precisely the case Build
+        771 exists to grow: semantic authority earned through Aurora's own
+        consequence evidence, never an English label treated as the
+        meaning (no gloss/definition field appears anywhere in this
+        payload or the resulting AbilityProfile).
+        """
+        rec = dict(payload or {})
+        word = str(rec.get("word", "") or "").strip().lower()
+        component_id = str(rec.get("component_id", "") or "").strip()
+        if not word or not component_id:
+            return {"registered": False, "reason": "missing_lexical_identity"}
+
+        constraints = tuple(
+            ax for ax in (
+                _canonical_axis_token(str(raw or ""))
+                for raw in list(rec.get("constraints") or [])
+            )
+            if ax
+        )
+        constraints = tuple(dict.fromkeys(constraints or tuple(AXES)))
+        axis = self._code_evolution_axis(constraints)
+        applicability_family = str(rec.get("applicability_family", "") or "")
+        parents = [str(x) for x in list(rec.get("parent_ids") or []) if str(x)]
+        evidence_count = max(0, int(rec.get("evidence_count", 0) or 0))
+        distinct_surfaces = max(0, int(rec.get("distinct_surfaces", 0) or 0))
+        trial_score = max(0.0, min(1.0, float(rec.get("trial_score", 0.0) or 0.0)))
+        digest = hashlib.sha1(
+            f"{word}:{component_id}:{applicability_family}".encode()
+        ).hexdigest()[:12]
+        ability_id = f"{axis}:LEX_GROUND_{digest}"
+        if ability_id in self.abilities:
+            return {"registered": False, "reason": "already_registered", "ability_id": ability_id}
+
+        base = 0.0005 + (0.00015 * max(1, evidence_count))
+        # Lexical role candidates are typically B/X-facing (structural
+        # binding, entity admission) but their cost remains defined across
+        # all five roots so no ability becomes detached from Aurora's
+        # reality physics -- same convention as communication_emergence's
+        # own registration immediately above.
+        cost = {
+            "X": base * (0.70 if "X" in constraints else 0.20),
+            "T": base * (0.35 if "T" in constraints else 0.18),
+            "N": base * (0.40 if "N" in constraints else 0.18),
+            "B": base * (0.80 if "B" in constraints else 0.22),
+            "A": base * (0.30 if "A" in constraints else 0.16),
+        }
+        risk = {a: 0.0 for a in AXES}
+        risk["X"] = max(0.01, 0.12 * (1.0 - trial_score))
+        risk["T"] = max(0.0, 0.06 * (1.0 - min(1.0, distinct_surfaces / 4.0)))
+
+        tags = [
+            "derived_operation",
+            "lexical_role_grounding",
+            f"word:{word}",
+            f"applicability_family:{applicability_family or 'unknown'}",
+            "origin_kind:consequence_earned",
+            f"warp_component:{component_id}",
+            f"trial_score:{trial_score:.4f}",
+            f"evidence_count:{evidence_count}",
+            f"distinct_surfaces:{distinct_surfaces}",
+        ]
+        tags.extend(f"parent:{parent}" for parent in parents[:8])
+        ability = _augment_ability_profile_with_origin(AbilityProfile(
+            id=ability_id,
+            axis=axis,
+            requires=constraints,
+            cost=cost,
+            risk=risk,
+            effect_tags=tuple(dict.fromkeys(tags)),
+            notes=(
+                f"Consequence-earned lexical role candidate for '{word}' derived "
+                f"by WARP from applicability family {applicability_family or 'unknown'}; "
+                f"parents={','.join(parents) or 'none'}; evidence={evidence_count}; "
+                f"distinct_surfaces={distinct_surfaces}."
+            ),
+            origin_kind="consequence_earned",
+        ))
+        self.abilities[ability_id] = ability
+        trial_record = {
+            "tick": int(self.tick_count),
+            "trigger_mode": "lexical_role_grounding",
+            "word": word,
+            "component_id": component_id,
+            "applicability_family": applicability_family,
+            "constraints": list(constraints),
+            "parent_ids": parents,
+            "trial_score": round(trial_score, 6),
+            "evidence_count": evidence_count,
+            "distinct_surfaces": distinct_surfaces,
+            "ability_id": ability_id,
+            "adopted": True,
+        }
+        self._experiment_trials.append(dict(trial_record))
+        self._experiment_adoptions.append(dict(trial_record))
+        self.flush_files()
+        return {"registered": True, "ability_id": ability_id}
+
     def register_emergent_operational_synthesis(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Admit a validated synthesized operation into constraint genealogy.
 
