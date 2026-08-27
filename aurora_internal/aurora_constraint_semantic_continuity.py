@@ -200,20 +200,32 @@ def _looks_verb(token: str) -> bool:
         and low not in {"this", "his", "its"}
     ):
         return True
-    # Build 771 PR 5: extension only -- a word that fails every scaffold
-    # heuristic above but that Aurora has already promoted a consequence-
-    # earned candidate for occupying the relation slot. Never overrides a
-    # word the checks above already recognized; off by default (see
-    # _CONSUME_LEXICAL_GROUNDING).
-    if _CONSUME_LEXICAL_GROUNDING and _has_promoted_relation_role(low):
-        return True
     return False
 
 
 def _first_relation_index(tokens: Sequence[str], start: int = 0) -> int:
+    # Build 771 PR 5: scaffold heuristics run first, across the WHOLE
+    # remaining span, before consumption gets any say at all. Codex review,
+    # PR #182: has_promoted_relation_role() has no notion of today's
+    # context (it can only ask "has this word EVER been promoted for the
+    # relation slot," not "is it the relation HERE") -- folding it into
+    # _looks_verb() directly let a word promoted as relation in one past
+    # context outrank a genuine scaffold verb sitting later in THIS
+    # sentence ("Glorp is blue": a prior "glorp"-as-relation promotion
+    # would have made this pick "Glorp" over the real relation "is").
+    # Scanning the scaffold-only pass across the entire span first means a
+    # real verb anywhere in the clause always wins; consumption only gets
+    # a turn on a second pass, and only when the scaffold found NOTHING
+    # anywhere in the span to work with -- still extension only, but
+    # scoped to "nothing else in this sentence could occupy the slot",
+    # not "this exact token already lost to the scaffold once."
     for idx in range(max(0, start), len(tokens)):
         if _looks_verb(tokens[idx]):
             return idx
+    if _CONSUME_LEXICAL_GROUNDING:
+        for idx in range(max(0, start), len(tokens)):
+            if _has_promoted_relation_role(str(tokens[idx] or "").lower()):
+                return idx
     return -1
 
 
