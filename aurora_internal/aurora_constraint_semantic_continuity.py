@@ -125,6 +125,31 @@ _RELATION_VERBS = {
 
 _POLITE_OPENERS = {"please"}
 
+# Build 771 PR 5 (Constraint-Native Lexical Grounding): the authority-
+# migration switch. Off by default -- everything in this module behaves
+# EXACTLY as before this PR until a caller explicitly flips this on
+# (matching the plan's own suggested mitigation for this PR's "highest
+# care" risk level: no live-boot corpus exists yet to validate consumption
+# against real accumulated promoted candidates, since nothing has run live
+# with PRs 1-4 in place). When True, _looks_verb() below also recognizes a
+# word Aurora has promoted a consequence-earned "relation" candidate for,
+# and extract_relational_form() feeds every scaffold-bound relation back
+# into AuroraLexicalGrounding as a WARP observation.
+_CONSUME_LEXICAL_GROUNDING = False
+
+
+def _has_promoted_relation_role(word: str) -> bool:
+    """Best-effort bridge to the AuroraLexicalGrounding singleton -- see
+    aurora_lexical_grounding.py's own module-level docstring for why a
+    singleton, not a threaded parameter. Never raises: a missing or
+    misbehaving grounding system must never break relation-verb detection,
+    which every relational parse depends on."""
+    try:
+        from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
+        return bool(get_lexical_grounding().has_promoted_relation_role(word))
+    except Exception:
+        return False
+
 
 def _looks_directive_verb(token: str) -> bool:
     """Return true only for a plausible finite/base imperative relation.
@@ -174,6 +199,13 @@ def _looks_verb(token: str) -> bool:
         and not low.endswith("ss")
         and low not in {"this", "his", "its"}
     ):
+        return True
+    # Build 771 PR 5: extension only -- a word that fails every scaffold
+    # heuristic above but that Aurora has already promoted a consequence-
+    # earned candidate for occupying the relation slot. Never overrides a
+    # word the checks above already recognized; off by default (see
+    # _CONSUME_LEXICAL_GROUNDING).
+    if _CONSUME_LEXICAL_GROUNDING and _has_promoted_relation_role(low):
         return True
     return False
 
@@ -623,7 +655,27 @@ def extract_relational_form(text: str, parsed: Optional[Mapping[str, Any]] = Non
         clauses=[],
         confidence=round(confidence, 4),
     )
-    return form.to_dict()
+    result = form.to_dict()
+
+    # Build 771 PR 5: "every scaffold-driven resolution is simultaneously
+    # a WARP-feeding observation" -- feed the word that ended up bound in
+    # the relation slot back to AuroraLexicalGrounding, tagged with this
+    # form's own relation_provenance. Off by default (see
+    # _CONSUME_LEXICAL_GROUNDING); best-effort and silent on failure, same
+    # discipline as every other WARP confession call site -- this must
+    # never affect what extract_relational_form() returns.
+    if _CONSUME_LEXICAL_GROUNDING and relation:
+        try:
+            from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
+            get_lexical_grounding().observe_lexical_context(
+                word=relation,
+                relational_form=result,
+                provenance=result.get("relation_provenance", "inherited_scaffold"),
+            )
+        except Exception:
+            pass
+
+    return result
 
 
 def _root_record(operation: str, payload: Mapping[str, Any]) -> Dict[str, Any]:

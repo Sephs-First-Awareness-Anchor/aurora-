@@ -798,3 +798,92 @@ class AuroraLexicalGrounding(WarpCapable):
             "promoted_count": len(self._warp_promoted),
             "warp_status": self.warp_status(),
         }
+
+    # ------------------------------------------------------------------
+    # Build 771 PR 5: consumption query surface
+    # ------------------------------------------------------------------
+
+    def resolve_promoted_role(
+        self,
+        word: str,
+        relational_form: Mapping[str, Any],
+        axis_activation: Optional[Mapping[str, float]] = None,
+    ) -> Optional[LexicalCandidate]:
+        """Read-only query: is there a PROMOTED candidate for this exact
+        (word, structural geometry)? This is the one authority-migration
+        query surface PR 5's consumption call sites are allowed to read
+        from -- returns None for anything short of a promoted,
+        consequence-earned candidate, never a trial, never merely high
+        evidence_count (a trial candidate has cleared no gate at all; only
+        "promoted" has cleared _score_trial()'s evidence+diversity floor
+        and PROMOTION_SCORE). Exact applicability_family match only -- no
+        similarity fallback here, since consumption is where an incorrect
+        guess would actually reach the user, not just get compared
+        internally.
+        """
+        word_key = str(word or "").strip().lower()
+        if not word_key:
+            return None
+        form = dict(relational_form or {})
+        activation = {ax: _clip01(dict(axis_activation or {}).get(ax, 0.0)) for ax in AXES}
+        geometry = _lexical_geometry(word_key, form, activation)
+        family = _applicability_family(geometry)
+        for candidate in self._candidates.values():
+            if candidate.word == word_key and candidate.applicability_family == family and candidate.status == "promoted":
+                return candidate
+        return None
+
+    def has_promoted_relation_role(self, word: str) -> bool:
+        """Coarser sibling of resolve_promoted_role(): has Aurora, in ANY
+        past structural context, promoted a candidate for this word whose
+        geometry shows it occupying the "relation" slot? Unlike
+        resolve_promoted_role(), this does not require reconstructing
+        today's exact applicability_family (which extract_relational_
+        form()'s own _looks_verb() cannot do -- it decides relation-verb-
+        hood word-by-word, before any RelationalForm exists to derive a
+        geometry from). This is a deliberately structural question ("does
+        this word ever occupy this slot"), never a semantic one ("what
+        does this word mean") -- consistent with _RELATION_VERBS itself
+        being a binary structural test, not a category assignment.
+        """
+        word_key = str(word or "").strip().lower()
+        if not word_key:
+            return False
+        return any(
+            candidate.word == word_key
+            and candidate.status == "promoted"
+            and dict(candidate.structural_geometry or {}).get("slot") == "relation"
+            for candidate in self._candidates.values()
+        )
+
+
+# ─── Global singleton, mirroring aurora_warp_protocol.get_warp_field()/
+# install_warp_field() exactly ──────────────────────────────────────────
+# aurora_utterance_parser.py and aurora_constraint_semantic_continuity.py
+# are pure text-in/dict-out functions with no `systems` or instance handle
+# threaded through their public signatures (PR 2's should_ask() precedent:
+# "same public signature, so callers need no change"). A lazily-created
+# global singleton is the only way PR 5's consumption call sites can reach
+# a live AuroraLexicalGrounding without widening either module's public
+# API or its callers, which span too much of the codebase to safely touch
+# here.
+
+_global_lexical_grounding: Optional["AuroraLexicalGrounding"] = None
+
+
+def get_lexical_grounding() -> "AuroraLexicalGrounding":
+    """Return the global AuroraLexicalGrounding, creating it lazily
+    (persist=False) if boot never installed a real, systems-attached
+    instance. Mirrors get_warp_field() exactly."""
+    global _global_lexical_grounding
+    if _global_lexical_grounding is None:
+        _global_lexical_grounding = AuroraLexicalGrounding(persist=False)
+    return _global_lexical_grounding
+
+
+def install_lexical_grounding(instance: "AuroraLexicalGrounding") -> None:
+    """Install the system's AuroraLexicalGrounding as the global singleton.
+    Call once at boot after creating it with attach_systems() wired.
+    Mirrors install_warp_field() exactly."""
+    global _global_lexical_grounding
+    _global_lexical_grounding = instance
