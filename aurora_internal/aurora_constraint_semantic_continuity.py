@@ -126,16 +126,27 @@ _RELATION_VERBS = {
 _POLITE_OPENERS = {"please"}
 
 # Build 771 PR 5 (Constraint-Native Lexical Grounding): the authority-
-# migration switch. Off by default -- everything in this module behaves
-# EXACTLY as before this PR until a caller explicitly flips this on
-# (matching the plan's own suggested mitigation for this PR's "highest
-# care" risk level: no live-boot corpus exists yet to validate consumption
-# against real accumulated promoted candidates, since nothing has run live
-# with PRs 1-4 in place). When True, _looks_verb() below also recognizes a
-# word Aurora has promoted a consequence-earned "relation" candidate for,
-# and extract_relational_form() feeds every scaffold-bound relation back
-# into AuroraLexicalGrounding as a WARP observation.
-_CONSUME_LEXICAL_GROUNDING = False
+# migration switch. Was off by default through PR 5-7 -- everything in
+# this module behaved EXACTLY as before those PRs until a caller
+# explicitly flipped this on (matching the plan's own suggested
+# mitigation for PR 5's "highest care" risk level: no live-boot corpus
+# existed yet to validate consumption against real accumulated promoted
+# candidates). When True, _looks_verb() below also recognizes a word
+# Aurora has promoted a consequence-earned "relation" candidate for, and
+# extract_relational_form() feeds every scaffold-bound relation back into
+# AuroraLexicalGrounding as a WARP observation.
+#
+# Turned on following the consequence-closure follow-up (aurora.py's
+# _build_communication_contributors()/_finalize_validated_communication()
+# now route a receiver's actual next-turn outcome back into
+# record_evidence_outcome() for every candidate this module feeds): the
+# missing piece that mitigation was waiting on -- a live receiver
+# consequence actually completing the loop, not just accumulating raw
+# observation volume -- now exists. Promotion still requires genuine
+# validated+positive evidence across distinct surfaces (candidate_
+# support()); this flag only opens the entrance observation and
+# consumption pass through, it does not relax that gate.
+_CONSUME_LEXICAL_GROUNDING = True
 
 
 def _has_promoted_relation_role(word: str) -> bool:
