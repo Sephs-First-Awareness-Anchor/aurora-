@@ -158,6 +158,31 @@ class HistoricalExperienceEnvironment:
         done = int(state.get("events_experienced", 0) or 0)
         state["total_events"] = total
         state["progress"] = round(done / total, 6) if total else 0.0
+
+        # Build 772: readiness DIAGNOSTIC, not a readiness gate -- nothing
+        # here is read by _wait_until_available()/_run()/pause()/resume()
+        # or any other control-flow path. Lets a caller tell "Aurora is
+        # ready" (thread_alive, no error) apart from "Aurora has only
+        # processed a small fraction of her developmental baseline"
+        # (progress, plus how much of that witnessed prefix has actually
+        # been offered to lexical grounding and what came of it).
+        try:
+            lexical_grounding = self.systems.get("lexical_grounding")
+            if lexical_grounding is not None and hasattr(lexical_grounding, "status"):
+                lg_status = dict(lexical_grounding.status())
+                state["lexical_grounding_diagnostics"] = {
+                    "total_archive_events": total,
+                    "events_witnessed": done,
+                    "lexical_backfill_examined_through_event_index": int(
+                        dict(state.get("lexical_grounding_backfill") or {}).get(
+                            "backfilled_through_event_index", 0
+                        ) or 0
+                    ),
+                    "promoted_lexical_candidates": int(lg_status.get("promoted_count", 0) or 0),
+                    **dict(lg_status.get("historical") or {}),
+                }
+        except Exception:
+            pass
         return state
 
     # ------------------------------------------------------------------
