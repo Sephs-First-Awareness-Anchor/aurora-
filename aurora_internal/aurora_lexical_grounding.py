@@ -471,9 +471,119 @@ class AuroraLexicalGrounding(WarpCapable):
             candidate.status = "promoted"
             candidate.genealogy_ability_id = self._register_genealogy(candidate, self._warp_promoted.get(component_id))
             self._write_back_oets(candidate)
+            # Build 772: observability-only tallies -- never read by any
+            # scoring/gating path.
+            if any(str(e.get("evidence_source") or "") == "historical" for e in candidate.evidence):
+                self._historical_diag["candidates_promoted_with_historical_contribution"] += 1
+            if any(str(e.get("provenance") or "") == "developmental_replay" for e in candidate.evidence):
+                self._historical_diag["promotions_from_replay"] += 1
+            try:
+                self._trigger_developmental_replay(candidate)
+            except Exception:
+                pass
         if promoted or dissolved:
             self._persist()
         return promoted, dissolved
+
+    def _trigger_developmental_replay(self, candidate: "LexicalCandidate") -> None:
+        """Build 772 PR 3: pressure-driven, resolution-sensitive replay --
+        fires once per promotion (never periodic, never a blind restart
+        of the archive). Looks up historical pairs previously implicated
+        for, or blocked on, this candidate's word, cheaply re-derives
+        each one's relation/family with the CURRENT representational
+        machinery, and only re-enters observe_historical_lexical_
+        possibility() -- producing a genuinely NEW evidence entry, never
+        a mutation of the original -- when that re-derivation differs
+        from what was recorded at original observation time. Bounded to
+        _MAX_REPLAY_PER_PROMOTION per promotion; each (pair, word)
+        combination is attempted at most once (entry["replayed_for_
+        words"]), so this can never re-inflate the same non-result
+        twice, though a genuinely different future promotion may still
+        legitimately reconsider the same pair.
+
+        Two populations, both indexed by word: _historical_implications
+        (pairs that DID resolve a relation for this word -- geometry may
+        now differ) and _historical_unresolved (pairs where no relation
+        was ever derived -- the "unknown noun inside an otherwise-
+        understandable relation" case, now possibly resolvable). Neither
+        population is re-seeked from the archive -- both already hold
+        the truncated raw pair text this build stored at original
+        observation time (PR 2), so no random-access-by-index capability
+        is added anywhere.
+        """
+        word = candidate.word
+        if not word:
+            return
+        attempted = 0
+
+        for pid in list(self._historical_implications_by_word.get(word, [])):
+            if attempted >= _MAX_REPLAY_PER_PROMOTION:
+                break
+            entry = self._historical_implications.get(pid)
+            if entry is None or word in (entry.get("replayed_for_words") or []):
+                continue
+            attempted += 1
+            entry.setdefault("replayed_for_words", []).append(word)
+            raw = str(entry.get("raw_text_trunc") or "")
+            new_relation, new_form = self._derive_relation_and_form(raw)
+            if not new_relation:
+                continue
+            activation = {ax: 0.0 for ax in AXES}
+            new_geometry = _lexical_geometry(new_relation, dict(new_form or {}), activation)
+            new_family = _applicability_family(new_geometry)
+            if new_relation == entry.get("word") and new_family == entry.get("applicability_family_at_observation"):
+                continue  # identical resolution -- nothing new, nothing recorded
+            self._replay_one(entry, pid, word, candidate)
+
+        for pid in list(self._historical_unresolved_by_word.get(word, [])):
+            if attempted >= _MAX_REPLAY_PER_PROMOTION:
+                break
+            entry = self._historical_unresolved.get(pid)
+            if entry is None or word in (entry.get("replayed_for_words") or []):
+                continue
+            attempted += 1
+            entry.setdefault("replayed_for_words", []).append(word)
+            raw = str(entry.get("raw_text_trunc") or "")
+            new_relation, _new_form = self._derive_relation_and_form(raw)
+            if not new_relation:
+                continue  # still unresolved -- nothing new, nothing recorded
+            self._replay_one(entry, pid, word, candidate)
+
+    def _replay_one(
+        self, entry: Dict[str, Any], original_possibility_id: str,
+        enabling_word: str, enabling_candidate: "LexicalCandidate",
+    ) -> None:
+        """The one place a replay actually re-enters observe_historical_
+        lexical_possibility() -- only called once the caller has already
+        confirmed a genuine distinction exists. extra_evidence carries
+        full ancestry back to both the original evidence and the newly
+        enabling representation, satisfying "record the new derived
+        consequence/representation with ancestry back to the original
+        historical evidence and the newly enabling representation." The
+        original entry is never mutated -- this always writes under a
+        distinct possibility_id, so _seen_historical_possibilities'
+        existing dedup treats it as legitimately new rather than
+        short-circuiting."""
+        self._historical_diag["replayed_observations"] += 1
+        try:
+            result = self.observe_historical_lexical_possibility(
+                raw_text=str(entry.get("raw_text_trunc") or ""),
+                observed_response_text=str(entry.get("observed_response_trunc") or ""),
+                possibility_id=f"{original_possibility_id}:replay:{enabling_word}",
+                observed_source=str(entry.get("observed_source") or ""),
+                provenance="developmental_replay",
+                extra_evidence={
+                    "replay_of_possibility_id": original_possibility_id,
+                    "enabling_candidate_id": enabling_candidate.candidate_id,
+                    "enabling_genealogy_ability_id": enabling_candidate.genealogy_ability_id,
+                },
+            )
+        except Exception:
+            return
+        if result.get("admitted") and result.get("action") in ("matched", "trial_started"):
+            self._historical_diag["new_distinctions_from_replay"] += 1
+            if result.get("action") == "trial_started":
+                self._historical_diag["lexical_candidates_formed_historical"] += 1
 
     def _register_genealogy(self, candidate: "LexicalCandidate", component: Optional[WarpComponent]) -> str:
         """Mirrors aurora_communication_emergence.py's own
@@ -621,8 +731,10 @@ class AuroraLexicalGrounding(WarpCapable):
         # a live participant in this turn's causal chain as any later
         # matched pair against the same candidate -- see the identical note
         # (including the historical-replay exclusion) in
-        # observe_lexical_context()'s matched branch.
-        if str(params.get("provenance", "") or "") != "historical_possibility":
+        # observe_lexical_context()'s matched branch. Build 772 PR 3:
+        # developmental_replay is excluded for the same reason -- it also
+        # runs on the background thread with no live receiver turn.
+        if str(params.get("provenance", "") or "") not in ("historical_possibility", "developmental_replay"):
             self._turn_consumption_trace.append({
                 "candidate_id": candidate_id,
                 "evidence_id": founding_evidence_id,
@@ -959,7 +1071,7 @@ class AuroraLexicalGrounding(WarpCapable):
             # eventually attribute an outcome from, and its own epistemic
             # hedging (truth_assumed=False) already marks it as never
             # receiver-validated by design.
-            if str(provenance or "") != "historical_possibility":
+            if str(provenance or "") not in ("historical_possibility", "developmental_replay"):
                 self._turn_consumption_trace.append({
                     "candidate_id": candidate.candidate_id,
                     "evidence_id": evidence_id,
