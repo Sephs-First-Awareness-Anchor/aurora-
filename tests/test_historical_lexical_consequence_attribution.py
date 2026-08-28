@@ -31,7 +31,7 @@ from aurora_internal.aurora_lexical_grounding import (
     _INERT_TRIAL_FLOOR,
 )
 from aurora_internal import aurora_lexical_grounding as lex_mod
-from aurora_warp_protocol import PROMOTION_SCORE
+from aurora_warp_protocol import PROMOTION_SCORE, TRIAL_TICKS
 
 
 def _fresh(tmp_path) -> AuroraLexicalGrounding:
@@ -79,20 +79,29 @@ def test_repeated_occurrence_without_discrimination_does_not_promote(tmp_path):
 
 def test_historical_assistant_output_alone_does_not_validate(tmp_path):
     """Adversarial test 2: historical assistant output alone must not
-    validate. A single historical observation, with nothing subsequent to
-    compare it against, must leave its evidence entry validated=False --
-    "validated" only ever means a real consequence was checked."""
+    validate AS TRUE. record_evidence_outcome() marks an entry
+    validated=True whenever ANY consequence check ran -- confirmed,
+    corrected, or merely inconclusive (see candidate_support()'s own
+    docstring) -- so a lone historical observation with nothing in the
+    window to compare against can legitimately end up validated=True
+    with an "unresolved_continuation"/indeterminate assessment. What
+    must never happen is that lone observation earning outcome_kind=
+    "positive": only a genuine downstream discrimination (Tests 4/6) may
+    ever do that. Primed with enough prior observations to guarantee a
+    real candidate_id/evidence_id exists (GAP_PERSISTENCE_REQUIRED), so
+    this assertion is actually exercised rather than short-circuited."""
     lg = _fresh(tmp_path)
-    result = lg.observe_historical_lexical_possibility(
-        raw_text="Aurora believe cat stories",
-        observed_response_text="the cat does believe stories",
-        possibility_id="POSS-LONE",
+    touched = _observe_many(
+        lg,
+        "Aurora believe cat stories variant {i}",
+        "the cat does believe stories variant {i}",
+        n=7,
     )
-    if not result.get("candidate_id"):
-        return  # gap persistence not yet crossed on a single call -- nothing to check
+    assert touched
+    result = touched[-1]
     candidate = next(c for c in lg._candidates.values() if c.candidate_id == result["candidate_id"])
     evidence = next(e for e in candidate.evidence if e["evidence_id"] == result["evidence_id"])
-    assert evidence["validated"] is False
+    assert evidence.get("outcome_kind") != "positive"
 
 
 def test_lack_of_correction_does_not_equal_truth(tmp_path):
@@ -180,9 +189,10 @@ def test_two_contextual_senses_remain_independently_supportable(tmp_path):
     """Adversarial test 6: two contextual senses of the same word must
     remain independently supportable. Two geometrically distinct pairs
     for the same word, each independently fed sufficient positive
-    discriminating evidence, must both reach status="promoted" as
-    separate LexicalCandidate objects -- WARP's existing no-winner-take-
-    all trial pool, untouched by this build."""
+    discriminating evidence and driven through the full TRIAL_TICKS
+    lifecycle, must both reach status="promoted" as separate
+    LexicalCandidate objects -- WARP's existing no-winner-take-all trial
+    pool, untouched by this build."""
     lg = _fresh(tmp_path)
     touched_a = _observe_many(
         lg,
@@ -205,10 +215,13 @@ def test_two_contextual_senses_remain_independently_supportable(tmp_path):
         lg.record_evidence_outcome(candidate_id=entry["candidate_id"], evidence_id=entry["evidence_id"], outcome_kind="positive")
     for entry in touched_b:
         lg.record_evidence_outcome(candidate_id=entry["candidate_id"], evidence_id=entry["evidence_id"], outcome_kind="positive")
-    promoted, _dissolved = lg.evaluate_warp_trials()
+    for _ in range(TRIAL_TICKS + 1):
+        lg.evaluate_warp_trials()
     candidate_a = next(c for c in lg._candidates.values() if c.candidate_id == touched_a[0]["candidate_id"])
     candidate_b = next(c for c in lg._candidates.values() if c.candidate_id == touched_b[0]["candidate_id"])
     assert candidate_a.candidate_id != candidate_b.candidate_id
+    assert candidate_a.status == "promoted"
+    assert candidate_b.status == "promoted"
 
 
 def test_identical_resolution_replay_does_not_increase_support(tmp_path):
