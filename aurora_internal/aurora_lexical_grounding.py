@@ -93,6 +93,37 @@ _MAX_CANDIDATES = 4000
 _MAX_PENDING_CONTEXT = 500
 _MAX_SEEN_HISTORICAL_POSSIBILITIES = 60000
 
+# Build 772 (Historical Lexical Consequence Attribution): bounded storage for
+# the causal-attribution/replay index -- mirrors _pending_context's own
+# capped, oldest-evicted pattern exactly. See aurora_internal/
+# aurora_lexical_grounding.py's module docstring extension below for why
+# these exist.
+_MAX_HISTORICAL_IMPLICATIONS = 30000
+_MAX_HISTORICAL_UNRESOLVED = 10000
+_MAX_PER_WORD_IMPLICATIONS = 50
+_MAX_REPLAY_PER_PROMOTION = 25
+
+# Build 772: record_evidence_outcome()'s outcome_kind stays exactly the same
+# 3 values aurora.py's live receiver-outcome fan-out already uses
+# ("positive"/"negative"/"indeterminate") -- candidate_support() never reads
+# anything else. discrimination_kind is a SEPARATE, purely descriptive field
+# for observability (never read by scoring) that names WHAT KIND of
+# historical signal produced a given outcome_kind. This mapping is the one
+# place that decision is made, so "does X count toward promotion" is always
+# answerable by reading one table, never by re-deriving it ad hoc at each
+# call site. Every discrimination_kind that could plausibly recur many times
+# without ever being a genuine discriminating consequence (continuation,
+# conservation, unresolved) maps to "indeterminate" -- candidate_support()
+# treats that identically to unvalidated, however many times it recurs.
+_DISCRIMINATION_TO_OUTCOME = {
+    "explicit_correction": "negative",
+    "contradiction": "negative",
+    "differentiation_supported": "positive",
+    "successful_relational_continuation": "indeterminate",
+    "repeated_contextual_conservation": "indeterminate",
+    "unresolved_continuation": "indeterminate",
+}
+
 
 def _clip01(value: Any) -> float:
     try:
@@ -354,6 +385,39 @@ class AuroraLexicalGrounding(WarpCapable):
         # contributor's own "_last_*" breadcrumb already does -- not a new
         # durability requirement invented for this module.
         self._turn_consumption_trace: List[Dict[str, str]] = []
+        # Build 772 (Historical Lexical Consequence Attribution): the
+        # causal-attribution/replay index -- one structure serving two
+        # purposes at once: (1) "preserve enough causal attribution to
+        # revisit that candidate when subsequent chronological events
+        # arrive" for correction/contradiction/continuation detection
+        # (PR 2), and (2) the index developmental replay (PR 3) uses to
+        # find which historical pairs are worth re-deriving once a new
+        # promotion improves what Aurora can resolve. Bounded and
+        # oldest-evicted, mirroring _pending_context's own pattern exactly
+        # -- persisted so a restart never loses causal attribution that
+        # was already durably retained, but never grows unbounded across
+        # a 50k-event archive.
+        self._historical_implications: Dict[str, Dict[str, Any]] = {}
+        self._historical_implications_by_word: Dict[str, List[str]] = {}
+        self._historical_unresolved: Dict[str, Dict[str, Any]] = {}
+        self._historical_unresolved_by_word: Dict[str, List[str]] = {}
+        self._historical_diag: Dict[str, int] = {
+            "historical_pairs_examined": 0,
+            "lexical_candidates_formed_historical": 0,
+            "historical_outcomes_attributed": 0,
+            "explicit_corrections_detected": 0,
+            "discriminating_historical_consequences": 0,
+            "candidates_promoted_with_historical_contribution": 0,
+            "unresolved_historical_lexical_gaps": 0,
+            "replay_eligible_observations": 0,
+            "replayed_observations": 0,
+            "new_distinctions_from_replay": 0,
+            "promotions_from_replay": 0,
+        }
+        # (loaded_at, pairs) -- aurora_oets_web.json's opposite_of relations,
+        # cached rather than re-read from disk on every one of a 50k-event
+        # archive's historical pairs (see _load_contradicts_pairs() at PR 2).
+        self._contradicts_pairs_cache: Tuple[float, set] = (0.0, set())
         self._init_warp(genealogy=genealogy)
         self._load()
 
@@ -622,10 +686,26 @@ class AuroraLexicalGrounding(WarpCapable):
         communication() already uses for a genuinely confirmed receiver
         outcome, never invented here) counts as a discriminating success;
         a corrected entry stays validated (so it is never re-attributed
-        or double-counted) but simply does not help the floor. No penalty
-        machinery is added on top of that -- an unhelped trial dissolves
-        on WarpCapable's own existing TRIAL_TICKS timeout, the same
-        tick-bounded path every trial already goes through.
+        or double-counted) but does not help the floor on its own.
+
+        Build 772 (Historical Lexical Consequence Attribution): "no penalty
+        machinery" stopped being the honest description once historical
+        chronology could supply EXPLICIT corrections/contradictions against
+        an already-promotable trial (see record_evidence_outcome()'s
+        discrimination_kind param) -- the directive's own bar is "explicit
+        correction must be capable of WEAKENING the implicated
+        interpretation," which merely not-helping can never do once the
+        floor is already cleared. Once the volume+diversity minimums are
+        met, a `regression_penalty` mirrors aurora_communication_emergence.
+        py's own _score_trial() exactly (`min(0.55, 0.18 * len(negative))`)
+        -- the identical established shape for how negative evidence should
+        suppress a sibling module's trial score, not a new formula invented
+        for this one. A candidate that has ALREADY been promoted is
+        unaffected by this (its score comes from genealogy's consequence_
+        profile below, never re-derived from raw evidence again) --
+        promotion is never retracted; a genuinely different sense of the
+        same word earns its own independent promotion via WARP's existing
+        no-winner-take-all trial pool instead.
 
         If this candidate already has a registered genealogy ability with
         its own measured consequence_profile (only possible after a prior
@@ -647,7 +727,12 @@ class AuroraLexicalGrounding(WarpCapable):
         distinct_surfaces = len({str(e.get("surface_hash", "") or "") for e in validated if e.get("surface_hash")})
         if evidence_count < _MIN_EVIDENCE or distinct_surfaces < _MIN_DISTINCT_SURFACES:
             return _INERT_TRIAL_FLOOR
-        return _clip01(0.55 + 0.06 * distinct_surfaces)
+        negative = [
+            e for e in candidate.evidence
+            if e.get("validated") is True and str(e.get("outcome_kind") or "") == "negative"
+        ]
+        regression_penalty = min(0.55, 0.18 * len(negative))
+        return _clip01(0.55 + 0.06 * distinct_surfaces - regression_penalty)
 
     def record_evidence_outcome(
         self,
@@ -656,6 +741,8 @@ class AuroraLexicalGrounding(WarpCapable):
         evidence_id: str,
         outcome_kind: str = "indeterminate",
         observed_effect: str = "",
+        discrimination_kind: str = "",
+        evidence_source: str = "live",
     ) -> Dict[str, Any]:
         """The validation-reporting entrance candidate_support() actually
         gates on -- mirrors aurora_communication_emergence.py's own
@@ -678,6 +765,21 @@ class AuroraLexicalGrounding(WarpCapable):
         SAME receiver signal (confirmation, correction, or an existing
         relational-preservation/failure surface) -- never a new judgment
         invented for this module alone.
+
+        Build 772 (Historical Lexical Consequence Attribution):
+        discrimination_kind and evidence_source are the "only as necessary"
+        extension the directive asks for -- both purely descriptive,
+        neither read by candidate_support()'s scoring (which only ever
+        reads outcome_kind). discrimination_kind names WHICH historical
+        signal (see _DISCRIMINATION_TO_OUTCOME) produced this outcome_kind,
+        e.g. "explicit_correction"/"repeated_contextual_conservation";
+        evidence_source distinguishes "live"/"historical"/"developmental_
+        replay" provenance for the historical diagnostics counters. Every
+        existing call site (aurora.py's live receiver-outcome fan-out)
+        omits both, so live behavior is byte-for-byte unchanged -- this is
+        not a second promotion mechanism, just finer-grained tagging on
+        the exact same evidence entries the existing mechanism already
+        writes.
         """
         # self._candidates is keyed by component_id, not candidate_id --
         # candidate_id is the LexicalCandidate's own identity field, the
@@ -691,6 +793,9 @@ class AuroraLexicalGrounding(WarpCapable):
                 evidence["validated"] = True
                 evidence["outcome_kind"] = str(outcome_kind or "indeterminate")
                 evidence["observed_effect"] = str(observed_effect or "")
+                if discrimination_kind:
+                    evidence["discrimination_kind"] = str(discrimination_kind)
+                evidence["evidence_source"] = str(evidence_source or "live")
                 self._persist()
                 return {"recorded": True, "candidate_id": candidate_id, "evidence_id": evidence_id}
         return {"recorded": False, "reason": "unknown_evidence_id"}
@@ -1057,6 +1162,24 @@ class AuroraLexicalGrounding(WarpCapable):
                 for key, value in dict(raw.get("warp_gap_counter") or {}).items()
             }
             self._warp_dissolved_count = int(raw.get("warp_dissolved_count", 0) or 0)
+            # Build 772: missing-key-safe -- a state file saved before this
+            # build existed simply has none of these keys, and every dict.get
+            # below falls back to empty, exactly like a fresh install.
+            self._historical_implications = dict(raw.get("historical_implications") or {})
+            self._historical_implications_by_word = {
+                str(word): list(ids or [])
+                for word, ids in dict(raw.get("historical_implications_by_word") or {}).items()
+            }
+            self._historical_unresolved = dict(raw.get("historical_unresolved") or {})
+            self._historical_unresolved_by_word = {
+                str(word): list(ids or [])
+                for word, ids in dict(raw.get("historical_unresolved_by_word") or {}).items()
+            }
+            self._historical_diag.update({
+                str(key): int(value or 0)
+                for key, value in dict(raw.get("historical_diag") or {}).items()
+                if key in self._historical_diag
+            })
         except Exception:
             self._candidates = {}
             self._pending_context = {}
@@ -1097,6 +1220,11 @@ class AuroraLexicalGrounding(WarpCapable):
             "warp_gap_counter": dict(self._gap_counter),
             "warp_dissolved_count": int(getattr(self, "_warp_dissolved_count", 0) or 0),
             "warp_status": self.warp_status(),
+            "historical_implications": self._historical_implications,
+            "historical_implications_by_word": self._historical_implications_by_word,
+            "historical_unresolved": self._historical_unresolved,
+            "historical_unresolved_by_word": self._historical_unresolved_by_word,
+            "historical_diag": dict(self._historical_diag),
             "saved_at": time.time(),
         }
         try:
@@ -1111,6 +1239,9 @@ class AuroraLexicalGrounding(WarpCapable):
             "trial_count": len(self._warp_trials),
             "promoted_count": len(self._warp_promoted),
             "warp_status": self.warp_status(),
+            # Build 772: observability only -- nothing in this module or its
+            # callers reads "historical" back into any scoring/gating path.
+            "historical": dict(self._historical_diag),
         }
 
     # ------------------------------------------------------------------
