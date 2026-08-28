@@ -1009,6 +1009,25 @@ class AuroraLexicalGrounding(WarpCapable):
             return {"action": "trial_continuing", "candidate_id": existing_trial.candidate_id, "applicability_family": family}
         return {"action": "no_signal", "applicability_family": family}
 
+    def _derive_relation_and_form(self, raw_text: str) -> Tuple[str, Optional[Dict[str, Any]]]:
+        """Parse-only: recovers (relation_word, relational_form) for
+        raw_text without ever triggering extract_relational_form()'s own
+        live-feed side effect (feed_lexical_grounding=False). Shared by
+        observe_historical_lexical_possibility()'s original-observation
+        path and _trigger_developmental_replay()'s non-inflation
+        pre-check (Build 772 PR 3), so both read the CURRENT
+        representational machinery identically. Returns (relation, None)
+        only when extract_relational_form() itself raised -- a valid
+        parse with no relation found returns (relation="", form=dict),
+        distinguishable from a genuine parse failure."""
+        try:
+            from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
+            form = extract_relational_form(raw_text, feed_lexical_grounding=False)
+        except Exception:
+            return "", None
+        relation = str(dict(form or {}).get("relation", "") or "").strip().lower()
+        return relation, dict(form or {})
+
     def observe_historical_lexical_possibility(
         self,
         *,
@@ -1019,6 +1038,8 @@ class AuroraLexicalGrounding(WarpCapable):
         epistemic_status: str = "observation_not_truth",
         causal_status: str = "sequence_observed_causality_not_asserted",
         defer_persistence: bool = False,
+        provenance: str = "historical_possibility",
+        extra_evidence: Optional[Mapping[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Build 771 PR 7: let one historical (user, other-assistant)
         exchange pair pressure this same lexical-grounding mapping --
@@ -1049,6 +1070,20 @@ class AuroraLexicalGrounding(WarpCapable):
         _save_crystal_substrate()) can flush them all at one explicit
         save() boundary, never letting this substrate advance ahead of a
         sibling substrate between checkpoints.
+
+        Build 772 (Historical Lexical Consequence Attribution): provenance
+        and extra_evidence are the re-entrance surface Developmental
+        Replay (PR 3) uses to reinterpret an already-observed pair under
+        improved representational resolution, tagged provenance=
+        "developmental_replay" instead of the default. Every genuinely
+        NEW original observation keeps the default "historical_possibility"
+        -- ONLY original observations feed the discrimination-detection
+        pass below (_attribute_historical_discrimination) and the causal-
+        attribution index it writes to; a replay re-entrance never
+        re-triggers discrimination detection against itself or double-logs
+        the same underlying pair as a second independent chronological
+        event, matching "a replay is a reinterpretation of existing
+        evidence, not a new environmental event."
         """
         raw = str(raw_text or "").strip()
         observed = str(observed_response_text or "").strip()
@@ -1070,32 +1105,18 @@ class AuroraLexicalGrounding(WarpCapable):
         if defer_persistence:
             self._persistence_suspended += 1
         try:
-            try:
-                from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
-                # Codex review, PR #186: feed_lexical_grounding=False --
-                # without it, this parse-only call would ALSO trigger
-                # extract_relational_form()'s own live-feed side effect
-                # (tagged "inherited_scaffold", the default) before the
-                # observe_lexical_context() call below ever runs with the
-                # correct provenance="historical_possibility". That would
-                # create two evidence entries for the same historical pair,
-                # with the first bypassing both the intended provenance tag
-                # and _turn_consumption_trace's historical-replay exclusion
-                # -- letting a background-thread replay get swept into and
-                # validated by whatever unrelated LIVE turn is finalized
-                # next.
-                form = extract_relational_form(raw, feed_lexical_grounding=False)
-            except Exception:
+            relation, form = self._derive_relation_and_form(raw)
+            if form is None:
                 return {"admitted": False, "reason": "relational_form_unavailable", "possibility_id": resolved_possibility_id}
-
-            relation = str(dict(form or {}).get("relation", "") or "").strip().lower()
             if not relation:
+                if provenance == "historical_possibility":
+                    self._record_historical_unresolved(resolved_possibility_id, raw, observed, observed_source)
                 return {"admitted": False, "reason": "no_relational_configuration", "possibility_id": resolved_possibility_id}
 
             observation = self.observe_lexical_context(
                 word=relation,
                 relational_form=form,
-                provenance="historical_possibility",
+                provenance=provenance,
                 extra_evidence={
                     "possibility_id": resolved_possibility_id,
                     "observed_source": str(observed_source or "historical_other_assistant"),
@@ -1104,8 +1125,14 @@ class AuroraLexicalGrounding(WarpCapable):
                     "observed_surface_hash": _surface_hash(observed),
                     "truth_assumed": False,
                     "receiver_validation_assumed": False,
+                    **dict(extra_evidence or {}),
                 },
             )
+            if provenance == "historical_possibility":
+                self._attribute_historical_discrimination(
+                    relation=relation, raw=raw, observed=observed, observation=observation,
+                    possibility_id=resolved_possibility_id, observed_source=observed_source,
+                )
             return {
                 "admitted": True,
                 "possibility_id": resolved_possibility_id,
@@ -1115,6 +1142,221 @@ class AuroraLexicalGrounding(WarpCapable):
         finally:
             if defer_persistence:
                 self._persistence_suspended = max(0, self._persistence_suspended - 1)
+
+    def _get_contradicts_pairs(self) -> set:
+        """Cached wrapper over aurora_contradiction_perception.py's own
+        _load_contradicts_pairs() -- that function re-reads
+        aurora_oets_web.json from disk on every call, which is fine for a
+        live turn but not for a backfill pass over tens of thousands of
+        historical pairs. Refreshed at most every 300s; OETS antonym
+        relations changing mid-backfill is not a correctness concern this
+        cache needs to chase precisely."""
+        loaded_at, pairs = self._contradicts_pairs_cache
+        if time.time() - loaded_at > 300:
+            try:
+                from aurora_internal.aurora_contradiction_perception import _load_contradicts_pairs
+                pairs = _load_contradicts_pairs(self.state_dir)
+            except Exception:
+                pairs = set()
+            self._contradicts_pairs_cache = (time.time(), pairs)
+        return pairs
+
+    def _record_historical_unresolved(self, possibility_id: str, raw: str, observed: str, observed_source: str) -> None:
+        """Build 772 PR 2: preserve the 'unknown noun inside an otherwise-
+        understandable relation' case instead of silently discarding it on
+        the no_relational_configuration early return -- this is the
+        population _trigger_developmental_replay() (PR 3) later checks
+        once a promotion might newly resolve one of these words' blocking
+        terms. Keyed by every salient content word in the pair (not just
+        one), since any of them promoting later could be what unblocks
+        this specific pair. Bounded/oldest-evicted, mirrors
+        _record_historical_implication()'s own pattern."""
+        try:
+            from aurora_internal.aurora_relation_pairs import WORD_RE, STOPWORDS
+            words = {w for w in WORD_RE.findall(raw.lower()) if w not in STOPWORDS}
+        except Exception:
+            words = set()
+        if not words:
+            return
+        self._historical_implications.pop(possibility_id, None)
+        self._historical_unresolved[possibility_id] = {
+            "possibility_id": possibility_id,
+            "raw_text_trunc": raw[:400],
+            "observed_response_trunc": observed[:400],
+            "observed_source": str(observed_source or ""),
+            "replayed_for_words": [],
+        }
+        for word in words:
+            ids = self._historical_unresolved_by_word.setdefault(word, [])
+            ids.append(possibility_id)
+            if len(ids) > _MAX_PER_WORD_IMPLICATIONS:
+                del ids[: len(ids) - _MAX_PER_WORD_IMPLICATIONS]
+        if len(self._historical_unresolved) > _MAX_HISTORICAL_UNRESOLVED:
+            oldest = list(self._historical_unresolved.keys())[: len(self._historical_unresolved) - _MAX_HISTORICAL_UNRESOLVED]
+            for stale_pid in oldest:
+                self._historical_unresolved.pop(stale_pid, None)
+        self._historical_diag["unresolved_historical_lexical_gaps"] = len(self._historical_unresolved)
+        self._historical_diag["replay_eligible_observations"] += 1
+
+    def _record_historical_implication(
+        self, *, possibility_id: str, word: str, applicability_family_at_observation: str,
+        candidate_id: str, evidence_id: str, joints: List[Dict[str, Any]],
+        raw: str, observed: str, observed_source: str,
+    ) -> None:
+        """Build 772 PR 2/3: the causal-attribution/replay-index entry for
+        ONE historical pair that resolved a relation for `word`. Preserved
+        regardless of whether this pair triggered a collision this turn --
+        a future pair (or a future promotion, per PR 3) may still need to
+        compare against it. Bounded per-word (oldest evicted) and globally
+        (oldest evicted), mirroring _pending_context's own pattern."""
+        self._historical_unresolved.pop(possibility_id, None)
+        self._historical_implications[possibility_id] = {
+            "possibility_id": possibility_id,
+            "word": word,
+            "applicability_family_at_observation": applicability_family_at_observation,
+            "candidate_id": candidate_id,
+            "evidence_id": evidence_id,
+            "joints": list(joints or []),
+            "raw_text_trunc": raw[:400],
+            "observed_response_trunc": observed[:400],
+            "observed_source": str(observed_source or ""),
+            "replayed_for_words": [],
+        }
+        ids = self._historical_implications_by_word.setdefault(word, [])
+        ids.append(possibility_id)
+        if len(ids) > _MAX_PER_WORD_IMPLICATIONS:
+            evicted, ids[:] = ids[: len(ids) - _MAX_PER_WORD_IMPLICATIONS], ids[len(ids) - _MAX_PER_WORD_IMPLICATIONS:]
+            for old_pid in evicted:
+                self._historical_implications.pop(old_pid, None)
+        if len(self._historical_implications) > _MAX_HISTORICAL_IMPLICATIONS:
+            oldest = list(self._historical_implications.keys())[: len(self._historical_implications) - _MAX_HISTORICAL_IMPLICATIONS]
+            for stale_pid in oldest:
+                self._historical_implications.pop(stale_pid, None)
+        self._historical_diag["replay_eligible_observations"] += 1
+
+    def _attribute_historical_discrimination(
+        self, *, relation: str, raw: str, observed: str,
+        observation: Mapping[str, Any], possibility_id: str, observed_source: str,
+    ) -> None:
+        """Build 772 PR 2: compares THIS pair's relation word against
+        recently implicated candidates for the SAME word, using the same
+        narrow, fail-quiet collision primitives aurora_contradiction_
+        perception.py already uses for live turns (negation-flip,
+        closed-set conflict, OETS antonym conflict) -- applied here to a
+        window of prior HISTORICAL implications for this word rather than
+        a live rolling turn window. The evidence source is always the
+        TRANSITION between two observed pairs, never an assumption that
+        either participant possessed semantic authority: a collision
+        against a prior implicated candidate weakens THAT candidate
+        (negative), and only ever strengthens an ALTERNATIVE Aurora
+        already structurally represents before this call (never a
+        candidate invented from the correction's own wording). Absent a
+        collision, at most an indeterminate signal is recorded -- silence,
+        repetition, and mere continuation are never promotion-eligible
+        (see _DISCRIMINATION_TO_OUTCOME).
+        """
+        self._historical_diag["historical_pairs_examined"] += 1
+        action = str(observation.get("action") or "")
+        candidate_id = str(observation.get("candidate_id") or "")
+        evidence_id = str(observation.get("evidence_id") or "")
+        if action == "trial_started" and not evidence_id:
+            # The founding evidence entry's id never reaches this method's
+            # caller directly (observe_lexical_context()'s trial_started
+            # branch returns only component_id) -- recover it from the
+            # freshly-founded candidate's own (necessarily singleton at
+            # this instant) evidence list.
+            component_id = str(observation.get("component_id") or "")
+            founding = self._candidates.get(component_id)
+            if founding is not None and founding.evidence:
+                candidate_id = founding.candidate_id
+                evidence_id = str(founding.evidence[-1].get("evidence_id") or "")
+            self._historical_diag["lexical_candidates_formed_historical"] += 1
+        family = str(observation.get("applicability_family") or "")
+        if not candidate_id or not evidence_id:
+            return
+
+        today_joints: List[Dict[str, Any]] = []
+        try:
+            import aurora_expression_perception as aep
+            from aurora_internal.aurora_relation_pairs import extract_joints, is_negated_near
+            raw_low = raw.lower()
+            today_joints = [
+                {"operator_relation": op, "argument_word": arg, "negated": is_negated_near(raw_low, arg.lower())}
+                for op, arg, _pattern in extract_joints(raw, aep.infer_word_role)
+                if op == relation
+            ]
+        except Exception:
+            today_joints = []
+
+        if today_joints:
+            window_pairs: List[Dict[str, Any]] = []
+            for prior_pid in list(self._historical_implications_by_word.get(relation, []))[-6:]:
+                prior_entry = self._historical_implications.get(prior_pid)
+                if not prior_entry:
+                    continue
+                for joint in prior_entry.get("joints") or []:
+                    window_pairs.append({**joint, "possibility_id": prior_pid})
+
+            collision_kind = ""
+            if window_pairs:
+                try:
+                    from aurora_internal.aurora_contradiction_perception import find_collisions
+                    collisions = find_collisions(today_joints, window_pairs, self._get_contradicts_pairs())
+                except Exception:
+                    collisions = []
+                # Only the first collision is acted on -- bounded, and
+                # avoids one pair spamming outcome-records across every
+                # stale implication still sitting in the window.
+                if collisions:
+                    _new_pair, prior_pair, reason = collisions[0]
+                    prior_pid = str(prior_pair.get("possibility_id") or "")
+                    prior_entry = self._historical_implications.get(prior_pid)
+                    if prior_entry and prior_entry.get("candidate_id") and prior_entry.get("evidence_id"):
+                        collision_kind = "explicit_correction" if reason == "negation_flip" else "contradiction"
+                        self.record_evidence_outcome(
+                            candidate_id=prior_entry["candidate_id"], evidence_id=prior_entry["evidence_id"],
+                            outcome_kind=_DISCRIMINATION_TO_OUTCOME[collision_kind],
+                            observed_effect=f"historical_{reason}",
+                            discrimination_kind=collision_kind, evidence_source="historical",
+                        )
+                        self._historical_diag["historical_outcomes_attributed"] += 1
+                        self._historical_diag["discriminating_historical_consequences"] += 1
+                        if collision_kind == "explicit_correction":
+                            self._historical_diag["explicit_corrections_detected"] += 1
+                        # Q3 gate: the alternative must already be a
+                        # candidate Aurora structurally represented BEFORE
+                        # this call (action == "matched"), never one this
+                        # same call just opened, and never invented from
+                        # the correction's own English wording.
+                        if action == "matched" and candidate_id != prior_entry["candidate_id"]:
+                            self.record_evidence_outcome(
+                                candidate_id=candidate_id, evidence_id=evidence_id,
+                                outcome_kind="positive",
+                                observed_effect=f"historical_{reason}_differentiation",
+                                discrimination_kind="differentiation_supported", evidence_source="historical",
+                            )
+                            self._historical_diag["historical_outcomes_attributed"] += 1
+
+            if not collision_kind:
+                repeated = any(
+                    wp.get("operator_relation") == j["operator_relation"]
+                    and wp.get("argument_word") == j["argument_word"]
+                    and bool(wp.get("negated")) == j["negated"]
+                    for j in today_joints for wp in window_pairs
+                )
+                weak_kind = "repeated_contextual_conservation" if repeated else "unresolved_continuation"
+                self.record_evidence_outcome(
+                    candidate_id=candidate_id, evidence_id=evidence_id,
+                    outcome_kind=_DISCRIMINATION_TO_OUTCOME[weak_kind], observed_effect="",
+                    discrimination_kind=weak_kind, evidence_source="historical",
+                )
+                self._historical_diag["historical_outcomes_attributed"] += 1
+
+        self._record_historical_implication(
+            possibility_id=possibility_id, word=relation, applicability_family_at_observation=family,
+            candidate_id=candidate_id, evidence_id=evidence_id, joints=today_joints,
+            raw=raw, observed=observed, observed_source=observed_source,
+        )
 
     # ------------------------------------------------------------------
     # Persistence
