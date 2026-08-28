@@ -499,9 +499,6 @@ class _HubScreenState extends State<HubScreen> {
     final histTotal   = _stats['historical_total_events'] as int? ?? 0;
     final histWitnessed = _stats['historical_events_experienced'] as int? ?? 0;
     final backfillThrough = _stats['lexical_backfill_examined_through_event_index'] as int? ?? 0;
-    final backfillFraction = histWitnessed > 0
-        ? (backfillThrough / histWitnessed).clamp(0.0, 1.0)
-        : 0.0;
 
     final pairsExamined      = _stats['historical_pairs_examined'] as int? ?? 0;
     final outcomesAttributed = _stats['historical_outcomes_attributed'] as int? ?? 0;
@@ -529,24 +526,28 @@ class _HubScreenState extends State<HubScreen> {
               style: const TextStyle(color: _text, fontSize: 11, fontWeight: FontWeight.w600)),
         ]),
         const SizedBox(height: 6),
-        // Lexical backfill position within the witnessed prefix -- always
-        // <= histWitnessed, since a pair can only reach lexical grounding
-        // once it has actually been witnessed.
+        // Codex review, PR #193: backfilled_through_event_index only ever
+        // advances inside the one-time _backfill_lexical_grounding() catch-
+        // up pass at boot -- every event witnessed LIVE after that also
+        // reaches lexical grounding (via _observe_communication_possibility's
+        // own direct call), but through a path that never touches this
+        // cursor. So this is a one-time migration marker, not an ongoing
+        // coverage fraction -- showing it as "$backfillThrough / $histWitnessed"
+        // with a progress bar would read as live progress and then appear
+        // stuck once the migration pass finishes, even while every new pair
+        // keeps reaching lexical grounding untracked by this number.
         Row(children: [
-          Text('Lexical backfill', style: const TextStyle(color: _textDim, fontSize: 11)),
+          Text('Lexical backfill (migration)', style: const TextStyle(color: _textDim, fontSize: 11)),
           const Spacer(),
-          Text(histWitnessed > 0 ? '$backfillThrough / $histWitnessed' : '—',
+          Text('$backfillThrough events',
               style: const TextStyle(color: _cyan, fontSize: 11, fontWeight: FontWeight.w600)),
         ]),
-        const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: LinearProgressIndicator(
-            value: backfillFraction,
-            minHeight: 5,
-            backgroundColor: _border,
-            valueColor: const AlwaysStoppedAnimation(_cyan),
-          ),
+        const SizedBox(height: 2),
+        Text(
+          'One-time catch-up over already-witnessed history at boot. '
+          'New pairs reach lexical grounding live as they\'re witnessed, '
+          'independent of this count.',
+          style: const TextStyle(color: _textDim, fontSize: 9, height: 1.4),
         ),
         const Divider(color: _border, height: 20),
         Align(
