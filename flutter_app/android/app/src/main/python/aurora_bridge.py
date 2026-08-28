@@ -10995,6 +10995,31 @@ def get_cognitive_stats() -> str:
             stats["historical_total_events"] = int(_hist_status.get("total_events", 0) or 0)
             stats["historical_progress"] = float(_hist_status.get("progress", 0.0) or 0.0)
             stats["historical_status"] = str(_hist_status.get("status", "not_initialized") or "not_initialized")
+
+            # Build 772 (Historical Lexical Consequence Attribution): flat
+            # mirrors of _hist_status["lexical_grounding_diagnostics"] --
+            # same lightweight-Dart-parser convention as the historical_*
+            # fields just above. Key names are passed through verbatim from
+            # HistoricalExperienceEnvironment.status() (itself just
+            # AuroraLexicalGrounding.status()["historical"] plus the
+            # backfill cursor/promoted count) -- this exposes what Build
+            # 772 already produces, it computes nothing new.
+            _lex_diag = dict(_hist_status.get("lexical_grounding_diagnostics") or {})
+            stats["lexical_backfill_examined_through_event_index"] = int(
+                _lex_diag.get("lexical_backfill_examined_through_event_index", 0) or 0)
+            stats["promoted_lexical_candidates"] = int(_lex_diag.get("promoted_lexical_candidates", 0) or 0)
+            stats["lexical_candidates_formed_historical"] = int(_lex_diag.get("lexical_candidates_formed_historical", 0) or 0)
+            stats["historical_pairs_examined"] = int(_lex_diag.get("historical_pairs_examined", 0) or 0)
+            stats["historical_outcomes_attributed"] = int(_lex_diag.get("historical_outcomes_attributed", 0) or 0)
+            stats["explicit_corrections_detected"] = int(_lex_diag.get("explicit_corrections_detected", 0) or 0)
+            stats["discriminating_historical_consequences"] = int(_lex_diag.get("discriminating_historical_consequences", 0) or 0)
+            stats["candidates_promoted_with_historical_contribution"] = int(
+                _lex_diag.get("candidates_promoted_with_historical_contribution", 0) or 0)
+            stats["unresolved_historical_lexical_gaps"] = int(_lex_diag.get("unresolved_historical_lexical_gaps", 0) or 0)
+            stats["replay_eligible_observations"] = int(_lex_diag.get("replay_eligible_observations", 0) or 0)
+            stats["replayed_observations"] = int(_lex_diag.get("replayed_observations", 0) or 0)
+            stats["new_distinctions_from_replay"] = int(_lex_diag.get("new_distinctions_from_replay", 0) or 0)
+            stats["promotions_from_replay"] = int(_lex_diag.get("promotions_from_replay", 0) or 0)
         except Exception as _hist_stats_exc:
             stats["historical_experience"] = {
                 "status": "error",
@@ -11005,6 +11030,19 @@ def get_cognitive_stats() -> str:
             stats["historical_total_events"] = 0
             stats["historical_progress"] = 0.0
             stats["historical_status"] = "error"
+            stats["lexical_backfill_examined_through_event_index"] = 0
+            stats["promoted_lexical_candidates"] = 0
+            stats["lexical_candidates_formed_historical"] = 0
+            stats["historical_pairs_examined"] = 0
+            stats["historical_outcomes_attributed"] = 0
+            stats["explicit_corrections_detected"] = 0
+            stats["discriminating_historical_consequences"] = 0
+            stats["candidates_promoted_with_historical_contribution"] = 0
+            stats["unresolved_historical_lexical_gaps"] = 0
+            stats["replay_eligible_observations"] = 0
+            stats["replayed_observations"] = 0
+            stats["new_distinctions_from_replay"] = 0
+            stats["promotions_from_replay"] = 0
 
         # ── Repair R (per Sunni, 2026-08-19): genealogy mapping + quasiarch
         # diagnostics for the Hub's auditing surface. Note this is the REAL

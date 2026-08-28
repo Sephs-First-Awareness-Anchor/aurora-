@@ -376,6 +376,7 @@ class _HubScreenState extends State<HubScreen> {
                   _buildHeader(),
                   _buildAxisPanel(),
                   _buildCognitivePanel(),
+                  _buildDevelopmentPanel(),
                   _buildEvolutionPanel(),
                   _buildGenealogyPanel(),
                   _buildQuasiarchPanel(),
@@ -483,6 +484,125 @@ class _HubScreenState extends State<HubScreen> {
               : histStatus,
           valueColor: histStatus == 'completed' ? _green : _cyan,
         ),
+      ])),
+    ]);
+  }
+
+  // Build 772 (Historical Lexical Consequence Attribution and
+  // Developmental Replay): live surface for the diagnostics that build
+  // already produces -- AuroraLexicalGrounding.status()["historical"]
+  // plus the historical environment's own backfill cursor and promoted
+  // count, flat-mirrored by get_cognitive_stats(). Observability only,
+  // same as the QUASIARCH/HABITAT panels above: raw counts, no
+  // developmental judgment invented at this layer.
+  Widget _buildDevelopmentPanel() {
+    final histTotal   = _stats['historical_total_events'] as int? ?? 0;
+    final histWitnessed = _stats['historical_events_experienced'] as int? ?? 0;
+    final backfillThrough = _stats['lexical_backfill_examined_through_event_index'] as int? ?? 0;
+
+    final pairsExamined      = _stats['historical_pairs_examined'] as int? ?? 0;
+    final outcomesAttributed = _stats['historical_outcomes_attributed'] as int? ?? 0;
+    final corrections        = _stats['explicit_corrections_detected'] as int? ?? 0;
+    final discriminating     = _stats['discriminating_historical_consequences'] as int? ?? 0;
+
+    final candidatesFormed   = _stats['lexical_candidates_formed_historical'] as int? ?? 0;
+    final candidatesPromoted = _stats['candidates_promoted_with_historical_contribution'] as int? ?? 0;
+    final promotedTotal      = _stats['promoted_lexical_candidates'] as int? ?? 0;
+    final unresolvedGaps     = _stats['unresolved_historical_lexical_gaps'] as int? ?? 0;
+
+    final replayEligible     = _stats['replay_eligible_observations'] as int? ?? 0;
+    final replayed           = _stats['replayed_observations'] as int? ?? 0;
+    final newDistinctions    = _stats['new_distinctions_from_replay'] as int? ?? 0;
+    final promotionsFromReplay = _stats['promotions_from_replay'] as int? ?? 0;
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionTitle('DEVELOPMENT', color: _cyan),
+      _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Historical witnessing position (events witnessed / archive total).
+        Row(children: [
+          Text('Historical witness', style: const TextStyle(color: _textDim, fontSize: 11)),
+          const Spacer(),
+          Text(histTotal > 0 ? '$histWitnessed / $histTotal' : '—',
+              style: const TextStyle(color: _text, fontSize: 11, fontWeight: FontWeight.w600)),
+        ]),
+        const SizedBox(height: 6),
+        // Codex review, PR #193: backfilled_through_event_index only ever
+        // advances inside the one-time _backfill_lexical_grounding() catch-
+        // up pass at boot -- every event witnessed LIVE after that also
+        // reaches lexical grounding (via _observe_communication_possibility's
+        // own direct call), but through a path that never touches this
+        // cursor. So this is a one-time migration marker, not an ongoing
+        // coverage fraction -- showing it as "$backfillThrough / $histWitnessed"
+        // with a progress bar would read as live progress and then appear
+        // stuck once the migration pass finishes, even while every new pair
+        // keeps reaching lexical grounding untracked by this number.
+        Row(children: [
+          Text('Lexical backfill (migration)', style: const TextStyle(color: _textDim, fontSize: 11)),
+          const Spacer(),
+          Text('$backfillThrough events',
+              style: const TextStyle(color: _cyan, fontSize: 11, fontWeight: FontWeight.w600)),
+        ]),
+        const SizedBox(height: 2),
+        Text(
+          'One-time catch-up over already-witnessed history at boot. '
+          'New pairs reach lexical grounding live as they\'re witnessed, '
+          'independent of this count.',
+          style: const TextStyle(color: _textDim, fontSize: 9, height: 1.4),
+        ),
+        const Divider(color: _border, height: 20),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text('CONSEQUENCE ATTRIBUTION',
+              style: TextStyle(color: _textDim, fontSize: 10, letterSpacing: 1.2)),
+        ),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _miniStat('Pairs Examined', '$pairsExamined', _text)),
+          const SizedBox(width: 10),
+          Expanded(child: _miniStat('Outcomes Attributed', '$outcomesAttributed', _purple)),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _miniStat('Corrections Detected', '$corrections', _amber)),
+          const SizedBox(width: 10),
+          Expanded(child: _miniStat('Discriminating', '$discriminating', _green)),
+        ]),
+        const Divider(color: _border, height: 20),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text('CANDIDATES & GAPS',
+              style: TextStyle(color: _textDim, fontSize: 10, letterSpacing: 1.2)),
+        ),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _miniStat('Formed (historical)', '$candidatesFormed', _text)),
+          const SizedBox(width: 10),
+          Expanded(child: _miniStat('Promoted (historical)', '$candidatesPromoted', _green)),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _miniStat('Promoted (total)', '$promotedTotal', _green)),
+          const SizedBox(width: 10),
+          Expanded(child: _miniStat('Unresolved Gaps', '$unresolvedGaps', _amber)),
+        ]),
+        const Divider(color: _border, height: 20),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text('DEVELOPMENTAL REPLAY',
+              style: TextStyle(color: _textDim, fontSize: 10, letterSpacing: 1.2)),
+        ),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _miniStat('Replay Eligible', '$replayEligible', _text)),
+          const SizedBox(width: 10),
+          Expanded(child: _miniStat('Replayed', '$replayed', _cyan)),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _miniStat('New Distinctions', '$newDistinctions', _purple)),
+          const SizedBox(width: 10),
+          Expanded(child: _miniStat('Promotions', '$promotionsFromReplay', _green)),
+        ]),
       ])),
     ]);
   }

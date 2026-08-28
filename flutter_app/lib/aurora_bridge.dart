@@ -236,6 +236,24 @@ class AuroraBridge {
       'historical_total_events': _i('historical_total_events'),
       'historical_progress': _d('historical_progress'),
       'historical_status': _s('historical_status'),
+      // Build 772 (Historical Lexical Consequence Attribution): flat
+      // counters from AuroraLexicalGrounding.status()["historical"] plus
+      // the historical environment's own backfill cursor/promoted count --
+      // see get_cognitive_stats()'s own "Build 772" block. Observability
+      // only, nothing computed here.
+      'lexical_backfill_examined_through_event_index': _i('lexical_backfill_examined_through_event_index'),
+      'promoted_lexical_candidates': _i('promoted_lexical_candidates'),
+      'lexical_candidates_formed_historical': _i('lexical_candidates_formed_historical'),
+      'historical_pairs_examined': _i('historical_pairs_examined'),
+      'historical_outcomes_attributed': _i('historical_outcomes_attributed'),
+      'explicit_corrections_detected': _i('explicit_corrections_detected'),
+      'discriminating_historical_consequences': _i('discriminating_historical_consequences'),
+      'candidates_promoted_with_historical_contribution': _i('candidates_promoted_with_historical_contribution'),
+      'unresolved_historical_lexical_gaps': _i('unresolved_historical_lexical_gaps'),
+      'replay_eligible_observations': _i('replay_eligible_observations'),
+      'replayed_observations': _i('replayed_observations'),
+      'new_distinctions_from_replay': _i('new_distinctions_from_replay'),
+      'promotions_from_replay': _i('promotions_from_replay'),
       // Axis pressures nested
       'X': _d('X'), 'T': _d('T'), 'N': _d('N'), 'B': _d('B'), 'A': _d('A'),
     };
