@@ -1134,7 +1134,9 @@ def _clean_directive_focus(value: str) -> str:
     return " ".join(words).strip()
 
 
-def _question_boundary_surface(form: Mapping[str, Any]) -> str:
+def _question_boundary_surface(
+    form: Mapping[str, Any], *, systems: Optional[Dict[str, Any]] = None
+) -> str:
     """Lexicalize an unresolved relation without pretending to answer it."""
     rel = dict(form or {})
     subject = str(rel.get("subject", "") or "").strip()
@@ -1187,13 +1189,35 @@ def _question_boundary_surface(form: Mapping[str, Any]) -> str:
             opening = f"I understand the question about {focus}."
         else:
             opening = "I understand the question and the boundary it asks me to resolve."
+
+    # Build 774 follow-up ("try, fail, correct course" -- the same
+    # standing direction already applied to referent/pronoun resolution
+    # in aurora_referent_hypothesis.py): attempt a real, checkable
+    # interpretation built only from what the user's own sentence already
+    # contains, instead of a bare admission of failure. Falls back to the
+    # original abstention text when systems isn't available to check a
+    # hypothesis against next turn, or when there isn't even a subject/
+    # relation to reflect back.
+    try:
+        from aurora_boundary_hypothesis import (
+            attempt_boundary_hypothesis,
+            render_checkable_boundary_interpretation,
+        )
+        hypothesis = attempt_boundary_hypothesis(systems, rel)
+        if hypothesis:
+            return render_checkable_boundary_interpretation(hypothesis)
+    except Exception:
+        pass
+
     return (
         opening
         + " I do not yet have enough grounded information to answer it without inventing one."
     )
 
 
-def _directive_boundary_surface(form: Mapping[str, Any]) -> str:
+def _directive_boundary_surface(
+    form: Mapping[str, Any], *, systems: Optional[Dict[str, Any]] = None
+) -> str:
     rel = dict(form or {})
     relation = _base_relation(str(rel.get("relation", "") or "")) or "respond to"
     raw_object = str(rel.get("obj", "") or "").strip()
@@ -1209,6 +1233,21 @@ def _directive_boundary_surface(form: Mapping[str, Any]) -> str:
     )
     addressed = "you " if raw_object.lower().split()[:1] == ["me"] else ""
     requested = f"{relation} {addressed}{focus}".strip()
+
+    # Build 774 follow-up: same "try, fail, correct course" treatment as
+    # _question_boundary_surface() above -- see there and
+    # aurora_boundary_hypothesis.py for the reasoning.
+    try:
+        from aurora_boundary_hypothesis import (
+            attempt_boundary_hypothesis,
+            render_checkable_boundary_interpretation,
+        )
+        hypothesis = attempt_boundary_hypothesis(systems, rel)
+        if hypothesis:
+            return render_checkable_boundary_interpretation(hypothesis)
+    except Exception:
+        pass
+
     return (
         f"I understand that you are asking me to {requested}. "
         "I do not yet have enough grounded information to do that reliably "
@@ -1257,8 +1296,17 @@ def derive_constraint_grounded_candidate(
     emotional_state: Optional[Mapping[str, Any]] = None,
     prior_claim: Optional[Mapping[str, Any]] = None,
     receiver_observation: Optional[Mapping[str, Any]] = None,
+    systems: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Derive a conservative response candidate from one X/T/N/B/A state.
+
+    systems (optional, Build 774 follow-up): when the live turn loop can
+    supply it, an unresolved question boundary attempts a real, checkable
+    interpretation instead of a bare admission of failure -- see
+    aurora_boundary_hypothesis.py. Omit it (the default) for identical
+    behavior to every caller that doesn't have a live turn to check a
+    hypothesis against next turn (e.g. aurora_communication_emergence.py's
+    own use of this function).
 
     The function does not identify a human-language intent category.  It reads
     the unresolved role in the current proposition and lets the active roots
@@ -1453,9 +1501,9 @@ def derive_constraint_grounded_candidate(
     if not response and emergent_operation:
         clause = _reconstruct_clause(form)
         if form.get("question"):
-            response = _question_boundary_surface(form)
+            response = _question_boundary_surface(form, systems=systems)
         elif form.get("directive"):
-            response = _directive_boundary_surface(form)
+            response = _directive_boundary_surface(form, systems=systems)
         elif clause:
             focus = subject or obj or complement
             response = (
@@ -1493,9 +1541,9 @@ def derive_constraint_grounded_candidate(
                 receiver_repair = bool(fallback)
             if not fallback:
                 if form.get("question"):
-                    fallback = _question_boundary_surface(form)
+                    fallback = _question_boundary_surface(form, systems=systems)
                 elif form.get("directive"):
-                    fallback = _directive_boundary_surface(form)
+                    fallback = _directive_boundary_surface(form, systems=systems)
             if fallback:
                 response = fallback
                 basis = "emergent_constraint_operation_relation_floor"
