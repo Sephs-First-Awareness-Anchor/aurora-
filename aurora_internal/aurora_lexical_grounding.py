@@ -576,6 +576,12 @@ class AuroraLexicalGrounding(WarpCapable):
                     "replay_of_possibility_id": original_possibility_id,
                     "enabling_candidate_id": enabling_candidate.candidate_id,
                     "enabling_genealogy_ability_id": enabling_candidate.genealogy_ability_id,
+                    # Build 773: present only for entries that came through
+                    # _record_historical_unresolved() (which now submits a
+                    # real WarpDemand) -- absent, never fabricated, for
+                    # entries from _record_historical_implication(), which
+                    # never lacked a relation and so never opened a demand.
+                    "warp_demand_id": str(entry.get("warp_demand_id") or ""),
                 },
             )
         except Exception:
@@ -1307,7 +1313,21 @@ class AuroraLexicalGrounding(WarpCapable):
         terms. Keyed by every salient content word in the pair (not just
         one), since any of them promoting later could be what unblocks
         this specific pair. Bounded/oldest-evicted, mirrors
-        _record_historical_implication()'s own pattern."""
+        _record_historical_implication()'s own pattern.
+
+        Build 773 (Developmental Integration Closure): this is a genuine
+        representational gap ("no relational configuration could be
+        derived"), which is exactly what warp_guard() exists to confess --
+        _submit_gap() already does this for live gaps, this method never
+        did for the historical equivalent. Fires the SAME universal
+        confession, at lower severity than a live gap's 0.4 (historical
+        volume must not crowd out live WARP prioritization), and keeps the
+        returned WarpDecision's demand_id so a later resolving replay
+        (_replay_one()) can preserve the relationship between the original
+        WARP demand and the resulting admitted representation -- never
+        bypassing WARP for this population the way it previously did.
+        Unconditional and silent-on-failure, mirroring _submit_gap()
+        exactly: observability, never a gate on this method's own bookkeeping."""
         try:
             from aurora_internal.aurora_relation_pairs import WORD_RE, STOPWORDS
             words = {w for w in WORD_RE.findall(raw.lower()) if w not in STOPWORDS}
@@ -1315,12 +1335,26 @@ class AuroraLexicalGrounding(WarpCapable):
             words = set()
         if not words:
             return
+        demand_id = ""
+        try:
+            decision = warp_guard(
+                source="lexical_grounding",
+                layer="word_role_resolution",
+                trigger=WarpTrigger.NO_LANGUAGE_FORM,
+                unresolved_text=raw[:400],
+                severity=0.25,
+                persistence_key=f"lexical_historical:{possibility_id}",
+            )
+            demand_id = str(getattr(getattr(decision, "demand", None), "demand_id", "") or "")
+        except Exception:
+            pass
         self._historical_implications.pop(possibility_id, None)
         self._historical_unresolved[possibility_id] = {
             "possibility_id": possibility_id,
             "raw_text_trunc": raw[:400],
             "observed_response_trunc": observed[:400],
             "observed_source": str(observed_source or ""),
+            "warp_demand_id": demand_id,
             "replayed_for_words": [],
         }
         for word in words:
