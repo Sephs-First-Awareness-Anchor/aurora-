@@ -1,0 +1,458 @@
+name: One-shot phone regression repair
+
+on:
+  push:
+    branches:
+      - fix/phone-turn-followup-regressions-20260829
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: startsWith(github.event.head_commit.message, 'chore: stage phone regression repair')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/phone-turn-followup-regressions-20260829
+
+      - name: Apply confirmed phone regression repairs
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, found {count}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # 1) Leading vocative parsing: cover bare/filler + Aurora addresses
+          # without stripping declarative content such as "Aurora is a great name".
+          replace_once(
+              'aurora.py',
+              r'''_VOCATIVE_ADDRESS_LEAD_RE = re.compile(
+              r"^(?:hey|hi|hello|yo)[\s,]+aurora\b[\s,]*",
+              re.IGNORECASE,
+          )
+          ''',
+              r'''_VOCATIVE_ADDRESS_LEAD_RE = re.compile(
+              r"^(?:hey|hi|hello|yo)[\s,]+aurora\b[\s,]*",
+              re.IGNORECASE,
+          )
+          _VOCATIVE_NAME_ADDRESS_RE = re.compile(
+              r"^(?:(?:well|so|okay|ok|um+|uh+)[\s,]+)?aurora"
+              r"(?:\s*,\s*|\s+(?=(?:what|who|whom|whose|which|where|when|why|how|"
+              r"can|could|would|will|tell|show|give|explain|describe)\b))",
+              re.IGNORECASE,
+          )
+          ''',
+          )
+          replace_once(
+              'aurora.py',
+              r'''    stripped = _VOCATIVE_ADDRESS_RE.sub("", raw)
+              if stripped == raw:
+                  stripped = _VOCATIVE_ADDRESS_LEAD_RE.sub("", raw)
+              stripped = stripped.strip()
+          ''',
+              r'''    stripped = _VOCATIVE_ADDRESS_RE.sub("", raw)
+              if stripped == raw:
+                  stripped = _VOCATIVE_ADDRESS_LEAD_RE.sub("", raw)
+              if stripped == raw:
+                  stripped = _VOCATIVE_NAME_ADDRESS_RE.sub("", raw)
+              stripped = stripped.strip()
+          ''',
+          )
+
+          # 2) Phone keyboards/speech transcription commonly emit curly apostrophes.
+          # Normalize before tokenization and relation lemmatization so what’s/that's
+          # follows the same path as ASCII what's/that's.
+          replace_once(
+              'aurora_internal/aurora_constraint_semantic_continuity.py',
+              '    low = str(value or "").strip().lower()\n',
+              '    low = str(value or "").strip().lower().replace("\\u2018", "\'").replace("\\u2019", "\'")\n',
+          )
+          replace_once(
+              'aurora_internal/aurora_constraint_semantic_continuity.py',
+              '''def _tokens(text: Any) -> List[str]:
+              return re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?|\\d+(?:\\.\\d+)?", str(text or ""))
+          ''',
+              '''def _tokens(text: Any) -> List[str]:
+              source = str(text or "").replace("\\u2018", "'").replace("\\u2019", "'")
+              return re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?|\\d+(?:\\.\\d+)?", source)
+          ''',
+          )
+
+          # 3) Boundary hypotheses only earn developmental confirmation from an
+          # explicit confirmation. Topic change / non-answer is not evidence.
+          p = Path('aurora_boundary_hypothesis.py')
+          text = p.read_text(encoding='utf-8')
+          replace_import = 'from typing import Any, Dict, Optional\n\nfrom aurora_referent_hypothesis import _BARE_NEGATIVE_LEAD, _CORRECTION_MARKERS\n'
+          replacement_import = '''import re
+          from typing import Any, Dict, Optional
+
+          from aurora_referent_hypothesis import _BARE_NEGATIVE_LEAD, _CORRECTION_MARKERS
+
+          _EXPLICIT_CONFIRMATION_LEAD = re.compile(
+              r"^\\s*(?:yes|yeah|yep|yup|exactly|correct|"
+              r"(?:that's|that is)\\s+(?:right|correct|what i meant)|you got it)\\b",
+              re.IGNORECASE,
+          )
+          '''
+          if text.count(replace_import) != 1:
+              raise SystemExit('aurora_boundary_hypothesis.py: import anchor mismatch')
+          text = text.replace(replace_import, replacement_import, 1)
+          marker = 'def check_and_resolve_pending_boundary_hypothesis(\n'
+          start = text.index(marker)
+          replacement_fn = '''def check_and_resolve_pending_boundary_hypothesis(
+              systems: Dict[str, Any],
+              new_user_text: str,
+          ) -> Optional[Dict[str, Any]]:
+              """Resolve a pending boundary hypothesis only from an actual signal.
+
+              Explicit correction records a corrected outcome. Explicit confirmation
+              records a confirmed outcome. A topic change, unrelated reply, or mere
+              absence of correction clears the pending probe without awarding either
+              outcome; silence is not evidence of truth.
+              """
+              if not isinstance(systems, dict):
+                  return None
+              pending = systems.get("_pending_boundary_hypothesis")
+              if not pending:
+                  return None
+              systems["_pending_boundary_hypothesis"] = None
+
+              text_low = str(new_user_text or "").lower()
+              was_corrected = (
+                  any(marker in text_low for marker in _CORRECTION_MARKERS)
+                  or bool(_BARE_NEGATIVE_LEAD.match(text_low))
+              )
+              was_confirmed = bool(_EXPLICIT_CONFIRMATION_LEAD.match(text_low))
+
+              outcome = dict(pending)
+              if was_corrected:
+                  outcome["corrected"] = True
+                  outcome["resolved"] = True
+              elif was_confirmed:
+                  outcome["corrected"] = False
+                  outcome["resolved"] = True
+              else:
+                  outcome["corrected"] = None
+                  outcome["resolved"] = False
+                  outcome["unanswered"] = True
+                  return outcome
+
+              try:
+                  from aurora_developmental_log import record_developmental_event
+                  _pieces = " / ".join(
+                      f"{k}={pending.get(k)!r}" for k in ("subject", "relation", "obj") if pending.get(k)
+                  )
+                  record_developmental_event(
+                      systems,
+                      "boundary_hypothesis_corrected" if was_corrected else "boundary_hypothesis_confirmed",
+                      (f"guessed the shape of an unresolved question ({_pieces})"
+                       + (" -- corrected by user" if was_corrected else " -- explicitly confirmed by user")),
+                      once=False,
+                  )
+              except Exception:
+                  pass
+
+              return outcome
+          '''
+          p.write_text(text[:start] + replacement_fn, encoding='utf-8')
+
+          # 4) Android turn admission: time waiting behind the prior causal turn
+          # must not consume the next turn's Surface timeout. Also keep the prior
+          # turn id authoritative until the next turn actually acquires admission,
+          # and mark Subsurface active at the real surface/subsurface seam.
+          bridge = 'flutter_app/android/app/src/main/python/aurora_bridge.py'
+          replace_once(
+              bridge,
+              '_SURFACE_WAIT_TIMEOUT_S: float = 90.0\n\n# A Surface response that finished deciding after handle_message() already\n',
+              '_SURFACE_WAIT_TIMEOUT_S: float = 90.0\n_TURN_ADMISSION_TIMEOUT_S: float = 180.0\n\n# A Surface response that finished deciding after handle_message() already\n',
+          )
+          replace_once(
+              bridge,
+              '''# Build 774 PR3: turn diagnostics -- the ten observable states named by the
+          # build directive, keyed by turn_id. A legitimate Aurora decision not to
+          # speak (suppressed_by_aurora) must stay distinguishable from infrastructure
+          # failing to deliver one (timeout / transport_failure / empty_expression).
+          # Pure observation: never read by any cognitive code path, and never
+          # allowed to affect a turn even if a write here itself fails.
+          _LIVE_TURN_STATES = (
+              "surface_received", "surface_processing", "surface_expressed",
+              "subsurface_active", "subsurface_integrated", "suppressed_by_aurora",
+              "empty_expression", "transport_failure", "timeout", "late_completion",
+          )
+          ''',
+              '''# Build 774 turn diagnostics. `surface_queued` means the input arrived
+          # while the preceding causal turn still owned the live-turn lock; that wait is
+          # deliberately distinct from Surface generation and therefore cannot spend the
+          # Surface timeout budget. A legitimate Aurora decision not to speak remains
+          # distinguishable from transport/surface failure.
+          _LIVE_TURN_STATES = (
+              "surface_received", "surface_queued", "surface_processing", "surface_expressed",
+              "subsurface_active", "subsurface_integrated", "suppressed_by_aurora",
+              "empty_expression", "transport_failure", "timeout", "late_completion",
+          )
+          ''',
+          )
+          replace_once(
+              bridge,
+              '''        _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
+              _systems["_current_turn_id"] = _turn_id
+              _record_turn_state(_turn_id, "surface_received", user_text=text[:100])
+
+              _box_lock = threading.Lock()
+              _box_event = threading.Event()
+              _box_state = {"text": "", "delivered": False}
+          ''',
+              '''        _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
+              _record_turn_state(_turn_id, "surface_received", user_text=text[:100])
+
+              _box_lock = threading.Lock()
+              _box_event = threading.Event()
+              _processing_started = threading.Event()
+              _box_state = {"text": "", "delivered": False}
+          ''',
+          )
+          replace_once(
+              bridge,
+              '''                _surface_text = ""
+                      _record_turn_state(_turn_id, "empty_expression", error=str(_aurora_boundary_exc))
+
+                  _route_late = False
+          ''',
+              '''                _surface_text = ""
+                      _record_turn_state(_turn_id, "empty_expression", error=str(_aurora_boundary_exc))
+
+                  # The callback is the real seam: resp_A is decided and everything
+                  # still running in process_external_user_turn is Subsurface work.
+                  _record_turn_state(_turn_id, "subsurface_active")
+
+                  _route_late = False
+          ''',
+          )
+          replace_once(
+              bridge,
+              '''            try:
+                      _record_turn_state(_turn_id, "surface_processing")
+                      with _lock:
+                          result = _aurora.process_external_user_turn(
+          ''',
+              '''            try:
+                      if _lock.locked():
+                          _record_turn_state(_turn_id, "surface_queued")
+                      with _lock:
+                          # Do not overwrite the previous turn's causal identity while
+                          # this turn is merely queued behind its Subsurface continuation.
+                          _systems["_current_turn_id"] = _turn_id
+                          _record_turn_state(_turn_id, "surface_processing")
+                          _processing_started.set()
+                          result = _aurora.process_external_user_turn(
+          ''',
+          )
+          replace_once(
+              bridge,
+              '''                response = _box_state["text"]
+                      _record_turn_state(_turn_id, "subsurface_active")
+          ''',
+              '''                response = _box_state["text"]
+          ''',
+          )
+          replace_once(
+              bridge,
+              '''        _surface_arrived = _box_event.wait(_SURFACE_WAIT_TIMEOUT_S)
+              with _box_lock:
+                  _box_state["delivered"] = True
+                  response = _box_state["text"] if _surface_arrived else ""
+              if not _surface_arrived:
+                  _record_turn_state(_turn_id, "timeout")
+              return response
+          ''',
+              '''        # A fast follow-up may arrive while the preceding turn is still
+              # completing its causal Subsurface work under `_lock`. Queue admission is
+              # not Surface generation, so it gets its own bound and cannot burn the
+              # 90-second Surface budget before this turn has actually begun.
+              _admitted = _processing_started.wait(_TURN_ADMISSION_TIMEOUT_S)
+              if not _admitted:
+                  with _box_lock:
+                      _box_state["delivered"] = True
+                  _record_turn_state(_turn_id, "transport_failure", error="turn_admission_timeout")
+                  return ""
+
+              _surface_arrived = _box_event.wait(_SURFACE_WAIT_TIMEOUT_S)
+              with _box_lock:
+                  _box_state["delivered"] = True
+                  response = _box_state["text"] if _surface_arrived else ""
+              if not _surface_arrived:
+                  _record_turn_state(_turn_id, "timeout")
+              return response
+          ''',
+          )
+
+          # Hub wording: queued and processing are now intentionally distinct.
+          replace_once(
+              'flutter_app/lib/screens/hub_screen.dart',
+              '''  // Newest first; an entry whose last_state is still surface_received or
+            // surface_processing (never reached a terminal state) means that turn
+            // is/was genuinely stuck at that exact point -- the single most useful
+            // fact for triaging "she went silent."
+          ''',
+              '''  // Newest first. surface_queued means the input is waiting behind the
+            // prior causal turn; surface_processing means this turn has actually entered
+            // Aurora's response path. The distinction prevents queue time from looking
+            // like a silent Surface stall.
+          ''',
+          )
+
+          # Regression tests from the exact phone failures.
+          t = Path('tests/test_boundary_hypothesis_and_vocative_stripping.py')
+          test_text = t.read_text(encoding='utf-8')
+          test_text = test_text.replace(
+              '    _directive_boundary_surface,\n    _question_boundary_surface,\n    extract_relational_form,\n',
+              '    _base_relation,\n    _directive_boundary_surface,\n    _question_boundary_surface,\n    _tokens,\n    extract_relational_form,\n',
+              1,
+          )
+          test_text += '''
+
+          def test_vocative_name_only_and_filler_forms_are_stripped_without_eating_content():
+              assert aurora._strip_vocative_address("Aurora, what's up?") == "what's up?"
+              assert aurora._strip_vocative_address("Okay Aurora, how are you?") == "how are you?"
+              assert aurora._strip_vocative_address("So Aurora tell me something") == "tell me something"
+              assert aurora._strip_vocative_address("Well Aurora, what do you think?") == "what do you think?"
+              assert aurora._strip_vocative_address("Aurora is a great name") == "Aurora is a great name"
+
+
+          def test_curly_phone_apostrophe_matches_ascii_contraction_path():
+              assert _tokens("what’s up?") == ["what's", "up"]
+              assert _base_relation("what’s") == "be"
+              assert _base_relation("what's") == "be"
+
+
+          def test_boundary_hypothesis_topic_change_is_not_false_confirmation(monkeypatch):
+              import aurora_developmental_log
+
+              events = []
+              monkeypatch.setattr(
+                  aurora_developmental_log,
+                  "record_developmental_event",
+                  lambda *args, **kwargs: events.append((args, kwargs)),
+              )
+              systems = {}
+              form = {"subject": "the plan", "relation": "requires", "obj": "budget"}
+              _question_boundary_surface(form, systems=systems)
+
+              outcome = check_and_resolve_pending_boundary_hypothesis(
+                  systems, "anyway, what were we talking about before that?"
+              )
+              assert outcome["resolved"] is False
+              assert outcome["corrected"] is None
+              assert outcome["unanswered"] is True
+              assert systems.get("_pending_boundary_hypothesis") is None
+              assert events == [], "absence of correction must never be logged as confirmation"
+          '''
+          t.write_text(test_text, encoding='utf-8')
+
+          t = Path('tests/test_android_surface_subsurface_reconnection.py')
+          test_text = t.read_text(encoding='utf-8')
+          test_text = test_text.replace('import time\n', 'import time\nimport threading\n', 1)
+          test_text = test_text.replace(
+              '    aurora_bridge._SURFACE_WAIT_TIMEOUT_S = 20.0\n',
+              '    aurora_bridge._SURFACE_WAIT_TIMEOUT_S = 20.0\n    aurora_bridge._TURN_ADMISSION_TIMEOUT_S = 2.0\n',
+              1,
+          )
+          test_text += '''
+
+          def test_fast_followup_queue_does_not_spend_surface_timeout_or_overwrite_prior_turn_id(monkeypatch):
+              aurora_bridge._SURFACE_WAIT_TIMEOUT_S = 0.05
+              aurora_bridge._TURN_ADMISSION_TIMEOUT_S = 2.0
+              release_first = threading.Event()
+
+              def fake_process(systems, text, *, on_surface_ready=None, **kw):
+                  resp_a = _FakeResp(f"Surface reply to: {text}")
+                  on_surface_ready(resp_a)
+                  if text == "first turn":
+                      release_first.wait(1.0)
+                  return {"resp_A": resp_a}
+
+              monkeypatch.setattr(aurora, "process_external_user_turn", fake_process)
+
+              first_reply = aurora_bridge.handle_message("first turn")
+              first_id = aurora_bridge._systems["_current_turn_id"]
+              assert first_reply == "Surface reply to: first turn"
+              assert "subsurface_active" in _states(first_id), (
+                  "the diagnostic seam must become active as soon as Surface externalizes, "
+                  "not only after process_external_user_turn returns"
+              )
+
+              second = {}
+              thread = threading.Thread(
+                  target=lambda: second.setdefault("reply", aurora_bridge.handle_message("second turn")),
+                  daemon=True,
+              )
+              thread.start()
+              time.sleep(0.12)
+
+              # The second turn has arrived but has not been admitted. It must not
+              # steal the first turn's causal identity while the first is still live.
+              assert aurora_bridge._systems["_current_turn_id"] == first_id
+              all_diag = json.loads(aurora_bridge.get_live_turn_diagnostics())
+              queued = [
+                  e for e in all_diag
+                  if e.get("states") and e["states"][0].get("user_text") == "second turn"
+              ]
+              assert len(queued) == 1
+              queued_id = queued[0]["turn_id"]
+              assert queued[0]["last_state"] == "surface_queued"
+              assert "timeout" not in _states(queued_id)
+
+              # Let the first causal turn finish. Only now does the second Surface
+              # budget begin, so its immediate callback must still arrive normally
+              # even though it waited longer than _SURFACE_WAIT_TIMEOUT_S in queue.
+              release_first.set()
+              thread.join(1.5)
+              assert not thread.is_alive()
+              assert second["reply"] == "Surface reply to: second turn"
+              assert aurora_bridge._systems["_current_turn_id"] == queued_id
+              second_states = _states(queued_id)
+              assert "surface_queued" in second_states
+              assert "surface_processing" in second_states
+              assert "surface_expressed" in second_states
+              assert "subsurface_active" in second_states
+              assert "timeout" not in second_states
+          '''
+          t.write_text(test_text, encoding='utf-8')
+          PY
+
+      - name: Compile and run focused regression suite
+        shell: bash
+        run: |
+          python -m py_compile \
+            aurora.py \
+            aurora_boundary_hypothesis.py \
+            aurora_internal/aurora_constraint_semantic_continuity.py \
+            flutter_app/android/app/src/main/python/aurora_bridge.py
+          pytest -q \
+            tests/test_boundary_hypothesis_and_vocative_stripping.py \
+            tests/test_boundary_surface_and_study_trace_regressions.py \
+            tests/test_android_surface_subsurface_reconnection.py
+
+      - name: Commit repair
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add aurora.py \
+            aurora_boundary_hypothesis.py \
+            aurora_internal/aurora_constraint_semantic_continuity.py \
+            flutter_app/android/app/src/main/python/aurora_bridge.py \
+            flutter_app/lib/screens/hub_screen.dart \
+            tests/test_boundary_hypothesis_and_vocative_stripping.py \
+            tests/test_android_surface_subsurface_reconnection.py
+          git commit -m "fix: close confirmed phone turn regressions"
+          git push origin HEAD:fix/phone-turn-followup-regressions-20260829
