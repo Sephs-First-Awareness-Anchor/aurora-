@@ -598,6 +598,28 @@ class AuroraLexicalGrounding(WarpCapable):
         if genealogy is None:
             return ""
         distinct_surfaces = len({str(e.get("surface_hash", "") or "") for e in candidate.evidence if e.get("surface_hash")})
+        # Build 773 (Developmental Integration Closure): genealogy previously
+        # never learned WHERE a candidate's evidence came from or whether a
+        # developmental-replay resolution contributed -- both already exist
+        # per-evidence-entry (evidence_source, provenance, and the replay
+        # ancestry fields Build 772 PR 3's extra_evidence already carries),
+        # just never reached the registered AbilityProfile. Read-only over
+        # already-computed evidence, no new derivation.
+        historical_evidence_count = sum(
+            1 for e in candidate.evidence if str(e.get("evidence_source") or "") == "historical"
+        )
+        live_evidence_count = sum(
+            1 for e in candidate.evidence if str(e.get("evidence_source") or "") == "live"
+        )
+        replay_ancestry = [
+            {
+                "replay_of_possibility_id": str(e.get("replay_of_possibility_id") or ""),
+                "enabling_candidate_id": str(e.get("enabling_candidate_id") or ""),
+                "enabling_genealogy_ability_id": str(e.get("enabling_genealogy_ability_id") or ""),
+            }
+            for e in candidate.evidence
+            if str(e.get("provenance") or "") == "developmental_replay"
+        ][:5]
         payload = {
             "word": candidate.word,
             "component_id": candidate.component_id,
@@ -607,6 +629,9 @@ class AuroraLexicalGrounding(WarpCapable):
             "trial_score": float(getattr(component, "trial_score_ema", 0.0) or 0.0),
             "evidence_count": len(candidate.evidence),
             "distinct_surfaces": distinct_surfaces,
+            "historical_evidence_count": historical_evidence_count,
+            "live_evidence_count": live_evidence_count,
+            "replay_ancestry": replay_ancestry,
         }
         if hasattr(genealogy, "register_emergent_lexical_grounding"):
             try:
