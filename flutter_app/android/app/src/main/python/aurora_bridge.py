@@ -359,6 +359,7 @@ _MIN_PROACTIVE_GAP: float = 90.0   # minimum seconds between autonomous expressi
 # data is gathered; still finite, so a genuinely wedged Surface call
 # cannot hang Kotlin's caller forever.
 _SURFACE_WAIT_TIMEOUT_S: float = 90.0
+_TURN_ADMISSION_TIMEOUT_S: float = 180.0
 
 # A Surface response that finished deciding after handle_message() already
 # gave up waiting on it (see _SURFACE_WAIT_TIMEOUT_S) -- kept separate from
@@ -396,7 +397,7 @@ def get_late_surface_response() -> str:
 # Pure observation: never read by any cognitive code path, and never
 # allowed to affect a turn even if a write here itself fails.
 _LIVE_TURN_STATES = (
-    "surface_received", "surface_processing", "surface_expressed",
+    "surface_received", "surface_queued", "surface_processing", "surface_expressed",
     "subsurface_active", "subsurface_integrated", "suppressed_by_aurora",
     "empty_expression", "transport_failure", "timeout", "late_completion",
 )
@@ -4390,11 +4391,11 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         import uuid as _uuid_hm
 
         _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
-        _systems["_current_turn_id"] = _turn_id
         _record_turn_state(_turn_id, "surface_received", user_text=text[:100])
 
         _box_lock = threading.Lock()
         _box_event = threading.Event()
+        _processing_started = threading.Event()
         _box_state = {"text": "", "delivered": False}
 
         def _on_surface_ready(resp_a) -> None:
@@ -4450,6 +4451,9 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                 _surface_text = ""
                 _record_turn_state(_turn_id, "empty_expression", error=str(_aurora_boundary_exc))
 
+            # This callback is the real Surface/Subsurface seam.
+            _record_turn_state(_turn_id, "subsurface_active")
+
             _route_late = False
             with _box_lock:
                 _box_state["text"] = _surface_text
@@ -4468,8 +4472,12 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         def _continue_deep_turn() -> None:
             global _last_response, _last_path_key, _vacuum_reconciliation_debt
             try:
-                _record_turn_state(_turn_id, "surface_processing")
+                if _lock.locked():
+                    _record_turn_state(_turn_id, "surface_queued")
                 with _lock:
+                    _systems["_current_turn_id"] = _turn_id
+                    _record_turn_state(_turn_id, "surface_processing")
+                    _processing_started.set()
                     result = _aurora.process_external_user_turn(
                         _systems,
                         text,
@@ -4484,7 +4492,6 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                         on_surface_ready=_on_surface_ready,
                     )
                 response = _box_state["text"]
-                _record_turn_state(_turn_id, "subsurface_active")
                 # Repair P (per Sunni, 2026-08-19): _last_axis_state's X/T/N/B/A
                 # were never written anywhere in this file -- confirmed by
                 # searching every assignment pattern before touching anything.
@@ -4895,6 +4902,13 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         threading.Thread(
             target=_continue_deep_turn, daemon=True, name=f"surface_turn:{_turn_id[-12:]}"
         ).start()
+
+        _admitted = _processing_started.wait(_TURN_ADMISSION_TIMEOUT_S)
+        if not _admitted:
+            with _box_lock:
+                _box_state["delivered"] = True
+            _record_turn_state(_turn_id, "transport_failure", error="turn_admission_timeout")
+            return ""
 
         _surface_arrived = _box_event.wait(_SURFACE_WAIT_TIMEOUT_S)
         with _box_lock:

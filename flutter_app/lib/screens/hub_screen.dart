@@ -662,10 +662,9 @@ class _HubScreenState extends State<HubScreen> {
 
   // Build 774: raw on-device visibility into recent live turns' recorded
   // states, so a hung/silent turn is diagnosable from the phone alone.
-  // Newest first; an entry whose last_state is still surface_received or
-  // surface_processing (never reached a terminal state) means that turn
-  // is/was genuinely stuck at that exact point -- the single most useful
-  // fact for triaging "she went silent."
+  // Newest first. surface_queued means the input is waiting behind the
+  // prior causal turn; surface_processing means this turn has actually entered
+  // Aurora's response path. Queue time is therefore distinct from a Surface stall.
   static const _terminalGoodStates = {
     'subsurface_integrated', 'suppressed_by_aurora', 'late_completion',
   };

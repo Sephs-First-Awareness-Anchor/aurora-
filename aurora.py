@@ -4800,6 +4800,12 @@ _VOCATIVE_ADDRESS_LEAD_RE = re.compile(
     r"^(?:hey|hi|hello|yo)[\s,]+aurora\b[\s,]*",
     re.IGNORECASE,
 )
+_VOCATIVE_NAME_ADDRESS_RE = re.compile(
+    r"^(?:(?:well|so|okay|ok|um+|uh+)[\s,]+)?aurora"
+    r"(?:\s*,\s*|\s+(?=(?:what|who|whom|whose|which|where|when|why|how|"
+    r"can|could|would|will|tell|show|give|explain|describe)\b))",
+    re.IGNORECASE,
+)
 
 
 def _strip_vocative_address(text: str) -> str:
@@ -4821,6 +4827,8 @@ def _strip_vocative_address(text: str) -> str:
     stripped = _VOCATIVE_ADDRESS_RE.sub("", raw)
     if stripped == raw:
         stripped = _VOCATIVE_ADDRESS_LEAD_RE.sub("", raw)
+    if stripped == raw:
+        stripped = _VOCATIVE_NAME_ADDRESS_RE.sub("", raw)
     stripped = stripped.strip()
     if not stripped or stripped == raw.strip():
         return raw

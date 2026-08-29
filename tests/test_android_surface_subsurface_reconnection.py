@@ -21,6 +21,7 @@ import json
 import os
 import sys
 import time
+import threading
 
 import pytest
 
@@ -76,6 +77,7 @@ def _reset_bridge_state():
     aurora_bridge._vacuum_reconciliation_debt = 0.0
     aurora_bridge._entropy_debt_secs = 0.0
     aurora_bridge._SURFACE_WAIT_TIMEOUT_S = 20.0
+    aurora_bridge._TURN_ADMISSION_TIMEOUT_S = 2.0
     yield
 
 
@@ -277,3 +279,52 @@ def test_on_surface_ready_defaults_to_none_for_every_existing_caller():
     assert sig_outer.parameters["on_surface_ready"].default is None
     sig_inner = inspect.signature(aurora._run_live_response_turn)
     assert sig_inner.parameters["on_surface_ready"].default is None
+
+
+def test_fast_followup_queue_does_not_spend_surface_timeout_or_overwrite_prior_turn_id(monkeypatch):
+    aurora_bridge._SURFACE_WAIT_TIMEOUT_S = 0.05
+    aurora_bridge._TURN_ADMISSION_TIMEOUT_S = 2.0
+    release_first = threading.Event()
+
+    def fake_process(systems, text, *, on_surface_ready=None, **kw):
+        resp_a = _FakeResp(f"Surface reply to: {text}")
+        on_surface_ready(resp_a)
+        if text == "first turn":
+            release_first.wait(1.0)
+        return {"resp_A": resp_a}
+
+    monkeypatch.setattr(aurora, "process_external_user_turn", fake_process)
+    assert aurora_bridge.handle_message("first turn") == "Surface reply to: first turn"
+    first_id = aurora_bridge._systems["_current_turn_id"]
+    assert "subsurface_active" in _states(first_id)
+
+    second = {}
+    thread = threading.Thread(
+        target=lambda: second.setdefault("reply", aurora_bridge.handle_message("second turn")),
+        daemon=True,
+    )
+    thread.start()
+    time.sleep(0.12)
+    assert aurora_bridge._systems["_current_turn_id"] == first_id
+
+    all_diag = json.loads(aurora_bridge.get_live_turn_diagnostics())
+    queued = [
+        e for e in all_diag
+        if e.get("states") and e["states"][0].get("user_text") == "second turn"
+    ]
+    assert len(queued) == 1
+    queued_id = queued[0]["turn_id"]
+    assert queued[0]["last_state"] == "surface_queued"
+    assert "timeout" not in _states(queued_id)
+
+    release_first.set()
+    thread.join(1.5)
+    assert not thread.is_alive()
+    assert second["reply"] == "Surface reply to: second turn"
+    assert aurora_bridge._systems["_current_turn_id"] == queued_id
+    states = _states(queued_id)
+    assert "surface_queued" in states
+    assert "surface_processing" in states
+    assert "surface_expressed" in states
+    assert "subsurface_active" in states
+    assert "timeout" not in states

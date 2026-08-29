@@ -18,8 +18,10 @@ if REPO_ROOT not in sys.path:
 
 import aurora
 from aurora_internal.aurora_constraint_semantic_continuity import (
+    _base_relation,
     _directive_boundary_surface,
     _question_boundary_surface,
+    _tokens,
     extract_relational_form,
 )
 from aurora_boundary_hypothesis import check_and_resolve_pending_boundary_hypothesis
@@ -99,3 +101,39 @@ def test_vocative_stripping_fixes_the_live_device_parse():
     assert after["subject"] == "you"
     assert after["relation"] == "are"
     assert after["unknown_role"] == "manner"
+
+
+def test_vocative_name_only_and_filler_forms_are_stripped_without_eating_content():
+    assert aurora._strip_vocative_address("Aurora, what's up?") == "what's up?"
+    assert aurora._strip_vocative_address("Okay Aurora, how are you?") == "how are you?"
+    assert aurora._strip_vocative_address("So Aurora tell me something") == "tell me something"
+    assert aurora._strip_vocative_address("Well Aurora, what do you think?") == "what do you think?"
+    assert aurora._strip_vocative_address("Aurora is a great name") == "Aurora is a great name"
+
+
+def test_curly_phone_apostrophe_matches_ascii_contraction_path():
+    assert _tokens("what’s up?") == ["what's", "up"]
+    assert _base_relation("what’s") == "be"
+    assert _base_relation("what's") == "be"
+
+
+def test_boundary_hypothesis_topic_change_is_not_false_confirmation(monkeypatch):
+    import aurora_developmental_log
+    events = []
+    monkeypatch.setattr(
+        aurora_developmental_log,
+        "record_developmental_event",
+        lambda *args, **kwargs: events.append((args, kwargs)),
+    )
+    systems = {}
+    _question_boundary_surface(
+        {"subject": "the plan", "relation": "requires", "obj": "budget"},
+        systems=systems,
+    )
+    outcome = check_and_resolve_pending_boundary_hypothesis(
+        systems, "anyway, what were we talking about before that?"
+    )
+    assert outcome["resolved"] is False
+    assert outcome["corrected"] is None
+    assert outcome["unanswered"] is True
+    assert events == []

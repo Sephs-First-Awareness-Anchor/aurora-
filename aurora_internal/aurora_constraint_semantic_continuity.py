@@ -183,7 +183,8 @@ def _looks_directive_verb(token: str) -> bool:
 
 
 def _tokens(text: Any) -> List[str]:
-    return re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?|\d+(?:\.\d+)?", str(text or ""))
+    source = str(text or "").replace("\u2018", "'").replace("\u2019", "'")
+    return re.findall(r"[A-Za-z]+(?:'[A-Za-z]+)?|\d+(?:\.\d+)?", source)
 
 
 def _clean_phrase(tokens: Sequence[str]) -> str:
@@ -1055,7 +1056,7 @@ def _article_phrase(value: str) -> str:
 
 
 def _base_relation(value: str) -> str:
-    low = str(value or "").strip().lower()
+    low = str(value or "").strip().lower().replace("\u2018", "'").replace("\u2019", "'")
     irregular = {
         "is": "be", "are": "be", "am": "be", "was": "be", "were": "be",
         "has": "have", "had": "have", "does": "do", "did": "do",
