@@ -609,6 +609,25 @@ class AuroraService : Service() {
                         )
                     }
                 }
+
+                // Build 774: a Surface response that finished deciding after
+                // sendMessage()'s own wait already gave up (handle_message()
+                // returned "" on Surface timeout). Delivered through the same
+                // proactive transport Flutter already handles correctly —
+                // kept in its own Python-side store so it stays diagnostically
+                // distinct from Aurora genuinely speaking unprompted, but
+                // there is nothing Surface-specific for Dart to do with it.
+                val lateSurface = bridge.callAttr("get_late_surface_response").toString()
+                if (lateSurface.isNotBlank()) {
+                    withContext(Dispatchers.Main) {
+                        eventSink?.success(
+                            JSONObject()
+                                .put("type", "proactive")
+                                .put("text", lateSurface)
+                                .toString()
+                        )
+                    }
+                }
             } catch (_: Exception) { /* Python not ready yet — skip this tick */ }
         }
     }
