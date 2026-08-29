@@ -210,53 +210,27 @@ class AuroraBridge {
     return _parseCognitiveStats(json);
   }
 
+  // Build 773 (Canonical Hub Telemetry): real JSON parsing, not regex --
+  // precedented by uploadContent()'s own jsonDecode() use above in this
+  // same file. The old regex parser had two real bugs beyond the
+  // missing-vs-zero problem it was replaced to fix: it looked for
+  // "crystal_maturity"/"crystal_nodes" while Python has always emitted
+  // "concept_crystal_maturity"/"concept_crystal_nodes" (so
+  // hub_screen.dart's Concept Crystal display, which reads the
+  // concept_-prefixed names, was silently always zero), and it could
+  // never represent nested Map/List fields (genealogy_axis_counts,
+  // genealogy_recent_abilities, warp_recent_demands,
+  // quasiarch_recent_interventions) at all -- a bare regex has no notion
+  // of JSON nesting. Returning the decoded map as-is (missing keys stay
+  // absent, not defaulted) is what lets every Hub widget tell "measured"
+  // from "unavailable" by checking containsKey/reading a nullable value,
+  // instead of every absent field silently becoming 0/false/''.
   static Map<String, dynamic> _parseCognitiveStats(String json) {
-    int    _i(String key) { final m = RegExp('"$key"\\s*:\\s*(\\d+)').firstMatch(json); return m != null ? (int.tryParse(m.group(1)!) ?? 0) : 0; }
-    double _d(String key) { final m = RegExp('"$key"\\s*:\\s*([0-9.]+)').firstMatch(json); return m != null ? (double.tryParse(m.group(1)!) ?? 0.0) : 0.0; }
-    bool   _b(String key) => json.contains('"$key":true');
-    String _s(String key) { final m = RegExp('"$key"\\s*:\\s*"([^"]*)"').firstMatch(json); return m?.group(1) ?? ''; }
-    return {
-      'lsa_paths':          _i('lsa_paths'),
-      'avg_n_cost':         _d('avg_n_cost'),
-      'evo_cycles':         _i('evo_cycles'),
-      'sentence_target':    _i('sentence_target'),
-      'evo_available':      _b('evo_available'),
-      'understanding_index':_d('understanding_index'),
-      'coherence_index':    _d('coherence_index'),
-      'grounding_index':    _d('grounding_index'),
-      'topic_tracking':     _d('topic_tracking'),
-      'sedimemory_depth':   _i('sedimemory_depth'),
-      'crystal_maturity':   _d('crystal_maturity'),
-      'crystal_nodes':      _i('crystal_nodes'),
-      'chamber_fossils':    _i('chamber_fossils'),
-      'noncomp_loaded':     _i('noncomp_loaded'),
-      'noncomp_diagonal_live': _i('noncomp_diagonal_live'),
-      'turn_count':         _i('turn_count'),
-      'historical_events_experienced': _i('historical_events_experienced'),
-      'historical_total_events': _i('historical_total_events'),
-      'historical_progress': _d('historical_progress'),
-      'historical_status': _s('historical_status'),
-      // Build 772 (Historical Lexical Consequence Attribution): flat
-      // counters from AuroraLexicalGrounding.status()["historical"] plus
-      // the historical environment's own backfill cursor/promoted count --
-      // see get_cognitive_stats()'s own "Build 772" block. Observability
-      // only, nothing computed here.
-      'lexical_backfill_examined_through_event_index': _i('lexical_backfill_examined_through_event_index'),
-      'promoted_lexical_candidates': _i('promoted_lexical_candidates'),
-      'lexical_candidates_formed_historical': _i('lexical_candidates_formed_historical'),
-      'historical_pairs_examined': _i('historical_pairs_examined'),
-      'historical_outcomes_attributed': _i('historical_outcomes_attributed'),
-      'explicit_corrections_detected': _i('explicit_corrections_detected'),
-      'discriminating_historical_consequences': _i('discriminating_historical_consequences'),
-      'candidates_promoted_with_historical_contribution': _i('candidates_promoted_with_historical_contribution'),
-      'unresolved_historical_lexical_gaps': _i('unresolved_historical_lexical_gaps'),
-      'replay_eligible_observations': _i('replay_eligible_observations'),
-      'replayed_observations': _i('replayed_observations'),
-      'new_distinctions_from_replay': _i('new_distinctions_from_replay'),
-      'promotions_from_replay': _i('promotions_from_replay'),
-      // Axis pressures nested
-      'X': _d('X'), 'T': _d('T'), 'N': _d('N'), 'B': _d('B'), 'A': _d('A'),
-    };
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    return {};
   }
 
   /// Room state: recent notes, messages, activity log, room intentions,
