@@ -340,6 +340,43 @@ _proactive_expression_lock = threading.Lock()
 _last_proactive_ts: float = 0.0
 _MIN_PROACTIVE_GAP: float = 90.0   # minimum seconds between autonomous expressions
 
+# Build 774: Surface/Subsurface reconnection.
+# How long handle_message() waits for Aurora's Surface response to be
+# decided before giving up and returning "" to Kotlin. This bounds only
+# a pathological stall in Surface generation itself -- Subsurface depth
+# (genealogy, conversation memory, consequence attribution) no longer
+# waits behind this at all, so it does not need to be, and must not be
+# treated as, a dial for how "deep" a turn is allowed to think.
+_SURFACE_WAIT_TIMEOUT_S: float = 20.0
+
+# A Surface response that finished deciding after handle_message() already
+# gave up waiting on it (see _SURFACE_WAIT_TIMEOUT_S) -- kept separate from
+# _proactive_expression so a late answer to what was just asked stays
+# diagnostically distinct from Aurora genuinely speaking unprompted, even
+# though both are delivered to Flutter through the same poll transport.
+_late_surface_response: str = ""
+_late_surface_response_lock = threading.Lock()
+
+
+def _store_late_surface_response(turn_id: str, text: str) -> None:
+    global _late_surface_response
+    if not text:
+        return
+    with _late_surface_response_lock:
+        _late_surface_response = text
+    log.info("Late surface response stored for %s (%d chars)", turn_id, len(text))
+
+
+def get_late_surface_response() -> str:
+    """Called by AuroraService's polling loop, mirroring
+    get_proactive_expression(). Returns and clears any Surface response
+    that finished deciding after the Surface wait already timed out."""
+    global _late_surface_response
+    with _late_surface_response_lock:
+        val = _late_surface_response
+        _late_surface_response = ""
+    return val
+
 # Self-grounding counter — re-derive and re-pump self-knowledge from actual
 # system patterns every N turns so her self-understanding stays current as
 # her sediment and axis patterns evolve.
@@ -4261,432 +4298,509 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
             _axis_pre_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
 
         # ── Step 2: Process this turn ─────────────────────────────────────────
+        # ── Build 774: Surface/Subsurface reconnection ───────────────────────
+        # aurora.py's _run_live_response_turn() already finalizes resp_A --
+        # the delivered response -- well before this same call's
+        # conversation-memory, genealogy, consequence and lexical-evidence
+        # work (all of it strictly read-only w.r.t. resp_A from that point
+        # on) finishes. on_surface_ready fires exactly there. Run the call
+        # in a background thread and return to Kotlin the moment that
+        # fires, instead of waiting for the whole call to return -- one
+        # call, one causal identity, no second traversal, no duplicate
+        # turn. _lock stays scoped exactly where it already was (around
+        # the process_external_user_turn call itself), so two turns' calls
+        # still never execute concurrently -- unchanged from today.
         import aurora as _aurora  # type: ignore
-        print("AURORA_BRIDGE: Processing turn...")
-        with _lock:
-            result = _aurora.process_external_user_turn(
-                _systems,
-                text,
-                source_label="flutter_ui",
-                session_id="mobile",
-                auto_search_enabled=True,
-                record_exchange=True,
-                update_interactive_state=True,
-                track_evolutionary_trace=True,
-                run_periodic_maintenance=True,
-                mode_name="BOUNDED",
-            )
-        response = _sanitize_response(_extract_response(result), text)
+        import uuid as _uuid_hm
 
-        # Repair P (per Sunni, 2026-08-19): _last_axis_state's X/T/N/B/A
-        # were never written anywhere in this file -- confirmed by
-        # searching every assignment pattern before touching anything.
-        # Only "speaking" was ever updated, so every consumer downstream
-        # (the face's axis_state event to Flutter, _get_dominant_axis(),
-        # the CPM i-state application, and the waveform pressure
-        # injection right below this) was reading a permanently frozen
-        # {0.5, 0.5, 0.5, 0.5, 0.5} default -- which is why _get_dominant_
-        # axis() always returned "X" (a five-way tie resolves to the
-        # first key) regardless of what she actually just felt.
-        # systems['_prev_axis_activation'] is the real, live, per-turn
-        # axis state -- the exact same key this session's backend work
-        # verified and used repeatedly tonight (set at the end of every
-        # comprehension pass). Written here, under the same lock every
-        # other writer in this file already uses, BEFORE _dom/_pol get
-        # computed below, so the face, the CPM, and the waveform
-        # injection all inherit the fix from this one write.
-        try:
-            _real_axes = dict(_systems.get("_prev_axis_activation") or {}) if _systems else {}
-            if _real_axes:
-                with _axis_state_lock:
-                    for _ax_k in ("X", "T", "N", "B", "A"):
-                        if _ax_k in _real_axes:
-                            _last_axis_state[_ax_k] = float(_real_axes[_ax_k])
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:handle_message.real_axis_state_write",
-                exc=_aurora_boundary_exc,
-                context={"function": "handle_message", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-            )
-            pass
+        _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
+        _systems["_current_turn_id"] = _turn_id
 
-        # ── CPM + waveform: record synthesis outcome as pressure disturbance ────
-        # The dominant axis + polarity of the just-completed synthesis turn is:
-        #   (a) applied as an I-state to the CPM's active crystal tape
-        #   (b) injected as a pressure disturbance through the waveform substrate
-        #       with coupling propagation so all subsystems can feel the turn outcome
-        _cpm_inst = (_systems.get('cpm') if _systems else None) or _cpm
-        _dom = _get_dominant_axis()
-        _pol = _last_axis_state.get(_dom, 0.5)
-        _istate_pairs = {
-            'X': ('I_IS',    'I_ISNT'),
-            'T': ('I_CAN',   'I_CANNOT'),
-            'N': ('I_DO',    'I_DONOT'),
-            'B': ('I_SAW',   'I_SOUGHT'),
-            'A': ('I_DID',   'I_DIDNT'),
-        }
-        _pos_is, _neg_is = _istate_pairs.get(_dom, ('I_IS', 'I_ISNT'))
-        _istate = _pos_is if _pol > 0.5 else _neg_is
-        _syn_intensity = abs(_pol - 0.5) * 2.0
+        _box_lock = threading.Lock()
+        _box_event = threading.Event()
+        _box_state = {"text": "", "delivered": False}
 
-        if _cpm_inst is not None:
+        def _on_surface_ready(resp_a) -> None:
+            # Fires exactly once, synchronously, inside process_external_
+            # user_turn() the instant resp_A is decided. Builds the same
+            # final text handle_message has always returned -- resp_A's
+            # content plus the same bridge-level composition (correction
+            # acknowledgment / relational synthesis / pending autonomous
+            # report) -- done here, once, so both the fast Kotlin return
+            # and the deep continuation's own bookkeeping (_last_response,
+            # re-entry fidelity) agree on exactly what was said.
             try:
-                _cpm_inst.apply_istate(_istate, intensity=_syn_intensity)
+                _surface_text = _sanitize_response(
+                    _extract_response({"resp_A": resp_a}), text
+                )
+                if correction_acknowledged:
+                    _ack = "Understood — I've taken that on board."
+                    _surface_text = f"{_ack} {_surface_text}" if _surface_text else _ack
+                if _relational_synthesis:
+                    _surface_text = (
+                        f"{_surface_text}\n\n{_relational_synthesis}"
+                        if _surface_text else _relational_synthesis
+                    )
+                _pending_report_now = (_systems or {}).pop("_pending_autonomous_report", None)
+                if _pending_report_now:
+                    _surface_text = (
+                        f"{_pending_report_now}\n\n{_surface_text}"
+                        if _surface_text else _pending_report_now
+                    )
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3476",
+                    locals(), module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:handle_message._on_surface_ready",
                     exc=_aurora_boundary_exc,
-                    context={"function": "handle_message", "handler_line": 3476, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    context={"function": "_on_surface_ready", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py", "turn_id": _turn_id},
                 )
-                pass
+                _surface_text = ""
 
-        # Post-synthesis pressure disturbance — propagates turn outcome
-        # through the waveform so thought, curiosity, and prediction
-        # can self-select response to how the synthesis settled.
-        _pump_post = (_systems.get('pressure_pump') if _systems else None)
-        _ifield_post = (_systems.get('identity_field') if _systems else None)
-        if _pump_post is not None and _ifield_post is not None:
+            _route_late = False
+            with _box_lock:
+                _box_state["text"] = _surface_text
+                if _box_state["delivered"]:
+                    _route_late = True
+                _box_event.set()
+            if _route_late:
+                # handle_message() already gave up waiting and returned ""
+                # to Kotlin -- deliver through the late-response store
+                # instead (polled the same way as a proactive expression)
+                # so this never becomes a second, duplicate response for
+                # the same turn.
+                _store_late_surface_response(_turn_id, _surface_text)
+
+        def _continue_deep_turn() -> None:
+            global _last_response, _last_path_key, _vacuum_reconciliation_debt
             try:
-                from aurora_waveform_pressure import (  # type: ignore
-                    WaveformPressurePump,
-                )
-                _syn_axes = {_dom: max(0.30, _syn_intensity)}
-                _syn_dist = WaveformPressurePump.from_istate(
-                    _istate,
-                    _dom,
-                    _syn_axes[_dom],
-                    source="synthesis_outcome",
-                    intensity=0.65,
-                )
-                _qao_post = (_systems.get('quasiarch_observer') if _systems else None)
-                _pump_post.inject(_syn_dist, _ifield_post, qao=_qao_post)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3499",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "handle_message", "handler_line": 3499, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                )
-                pass
-
-        # ── Step 3: Re-entry loop (mandatory §13) ────────────────────────────
-        # The field hears itself after every utterance.
-        # Self-assessment fidelity is secondary — your response next turn
-        # will apply the real correction if this doesn't land.
-        path_key = ""
-        if response and _systems:
-            try:
-                lf = _systems.get("language_field")
-                if lf is not None and hasattr(lf, "reentry") and hasattr(lf, "_last_proto"):
-                    fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
-                    if lf._last_proto is not None and hasattr(lf, "_path_key"):
-                        try:
-                            path_key = lf._path_key(
-                                lf._last_proto.comparison_type,
-                                lf._last_proto.dominant_axes,
-                            )
-                        except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3518",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "handle_message", "handler_line": 3518, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                            )
-                            pass
-                    lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
-
-                    # Feed fidelity back into recently deposited sediment fragments.
-                    # High fidelity → slow their decay (longer-lived, more influential).
-                    # Low fidelity → accelerate decay (shorter-lived, outcompeted sooner).
-                    # This is how SediMemory learns which deposits produced quality output.
-                    _sm = _systems.get("sedimemory") if _systems else None
-                    if _sm is not None and hasattr(_sm, "get_recent_fragments"):
-                        try:
-                            for _frag in _sm.get_recent_fragments(6):
-                                if fidelity > 0.65:
-                                    _frag.tick_rate = max(0.30, _frag.tick_rate * 0.72)
-                                elif fidelity < 0.35:
-                                    _frag.tick_rate = min(2.00, _frag.tick_rate * 1.38)
-                        except Exception as _aurora_boundary_exc:
-                            _aurora_record_exception_from_locals(
-                                locals(),
-                                module=__name__,
-                                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3534",
-                                exc=_aurora_boundary_exc,
-                                context={"function": "handle_message", "handler_line": 3534, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                            )
-                            pass
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3536",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "handle_message", "handler_line": 3536, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                )
-                pass
-
-        # ── Step 4: Gap resolution — silent internet-first, trust own knowledge ─
-        # Behavior contract:
-        #   1. If she already knows it (SediMemory or prior ingestion) → trust it.
-        #   2. If she doesn't know it → fire a silent background internet search,
-        #      mark the concept as ingested immediately (optimistic: the search
-        #      will bring back a definition on its own timeline and deposit it in
-        #      SediMemory for future turns).
-        #   3. Never ask the user to define a word she could look up.
-        #   4. The ONLY time to ask the user about a word is when her understanding
-        #      of it (from memory or the internet) actively contradicts their usage
-        #      in this specific context — that's a B-axis divergence signal, and
-        #      the field surfaces it naturally with a "why/how" question, not a
-        #      definition request. That path is handled by the field itself; we do
-        #      not arm a scripted teaching loop here.
-        if _gap_concept_pending and not _pending_example_concept:
-            _gap_norm = _gap_concept_pending.lower().strip()
-            if _gap_norm in _CONTRACTION_SHARDS or _gap_norm in _FOUNDATIONAL_VOCAB:
-                _ingested_concepts.add(_gap_norm)
-                log.debug("Gap %r is foundational/shard — resolved", _gap_concept_pending)
-            elif _gap_norm in _ingested_concepts:
-                log.debug("Gap %r already ingested — resolved", _gap_concept_pending)
-            else:
-                _existing_def = _lookup_existing_understanding(_gap_norm, _systems)
-                if _existing_def:
-                    _ingested_concepts.add(_gap_norm)
-                    log.info("Gap %r in SediMemory — trusting own understanding", _gap_concept_pending)
-                else:
-                    # Not in memory — trigger silent internet search in background.
-                    # Mark as ingested immediately so this word doesn't keep re-firing
-                    # gap pressure. The search will deposit a real definition into
-                    # SediMemory; future turns will find it via _lookup_existing_understanding.
-                    _search_for_gap(_gap_concept_pending, gap_type=_gap_type_pending)
-                    _ingested_concepts.add(_gap_norm)
-                    log.info("Gap %r — silent search triggered, optimistically ingested", _gap_concept_pending)
-
-        # ── Capability gap detection ──────────────────────────────────────────
-        # Compare pre-synthesis vs post-synthesis axis state.  If the A-axis
-        # dropped sharply (agency blocked) while N stayed high (effort applied),
-        # the physics have encoded a capability failure.  Register the gap so
-        # the identity field can express the need and learning mode is armed.
-        # Only fires when not already in learning mode and not after a skill-
-        # acknowledged turn (which just ingested the procedure).
-        if not skill_acknowledged and not _capability_learning_mode and _systems:
-            with _axis_state_lock:
-                _axis_post_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
-            if _detect_capability_gap(_axis_pre_synthesis, _axis_post_synthesis, text):
-                _register_capability_gap(text, _axis_pre_synthesis, _axis_post_synthesis)
-
-        _last_response = response
-        _last_path_key = path_key
-
-        # Record LSA path crossing into concept crystal registry — semantic is
-        # a first-class sense dimension, so this LSA activation at this axis
-        # state is an observation just like visual or audio.
-        if _concept_registry is not None and path_key:
-            try:
-                with _axis_state_lock:
-                    _ccr_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
-                _concept_registry.observe_lsa(_ccr_ax, path_key)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3598",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "handle_message", "handler_line": 3598, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                )
-                pass
-
-        # Refresh overlay axis cache after every turn
-        _refresh_axis_state_from_systems()
-        with _axis_state_lock:
-            _last_axis_state["speaking"] = bool(response)
-
-        # ── Constraint tension tick ───────────────────────────────────────────
-        # Advance the generational cycle with fresh axis state. SHEAR amplifies
-        # stress, BRIDGE attempts to span paradox via identity field pulse,
-        # WARP surfaces emergence candidates when the 5-axis basis may be
-        # insufficient to account for the derivative of meaning.
-        if _constraint_tension_tracker is not None and _systems:
-            with _axis_state_lock:
-                _ctt_state = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
-            _constraint_tension_tracker.tick(_ctt_state, _systems)
-
-        # ── Anchor the expressed crest ────────────────────────────────────────
-        # After generating a response, anchor the expressed axis peak back into
-        # the identity field so the next turn starts from where the conscious
-        # crest just landed rather than decaying to baseline between turns.
-        if response:
-            _anchor_expressed_crest(_systems)
-
-        # ── Record trajectory state ───────────────────────────────────────────
-        # Snapshot the field's axis_activation AFTER the anchor so the
-        # trajectory buffer captures the stable expressed endpoint for this turn.
-        # Next turn will measure divergence against this recorded state.
-        if _waveform_trajectory is not None and _systems:
-            _traj_ifield = _systems.get("identity_field")
-            if _traj_ifield is not None:
+                with _lock:
+                    result = _aurora.process_external_user_turn(
+                        _systems,
+                        text,
+                        source_label="flutter_ui",
+                        session_id="mobile",
+                        auto_search_enabled=True,
+                        record_exchange=True,
+                        update_interactive_state=True,
+                        track_evolutionary_trace=True,
+                        run_periodic_maintenance=True,
+                        mode_name="BOUNDED",
+                        on_surface_ready=_on_surface_ready,
+                    )
+                response = _box_state["text"]
+                # Repair P (per Sunni, 2026-08-19): _last_axis_state's X/T/N/B/A
+                # were never written anywhere in this file -- confirmed by
+                # searching every assignment pattern before touching anything.
+                # Only "speaking" was ever updated, so every consumer downstream
+                # (the face's axis_state event to Flutter, _get_dominant_axis(),
+                # the CPM i-state application, and the waveform pressure
+                # injection right below this) was reading a permanently frozen
+                # {0.5, 0.5, 0.5, 0.5, 0.5} default -- which is why _get_dominant_
+                # axis() always returned "X" (a five-way tie resolves to the
+                # first key) regardless of what she actually just felt.
+                # systems['_prev_axis_activation'] is the real, live, per-turn
+                # axis state -- the exact same key this session's backend work
+                # verified and used repeatedly tonight (set at the end of every
+                # comprehension pass). Written here, under the same lock every
+                # other writer in this file already uses, BEFORE _dom/_pol get
+                # computed below, so the face, the CPM, and the waveform
+                # injection all inherit the fix from this one write.
                 try:
-                    _traj_aa = getattr(_traj_ifield, "axis_activation", None)
-                    if _traj_aa is not None:
-                        _traj_state = (
-                            {k: float(_traj_aa.get(k, 0.5)) for k in "XTNBA"}
-                            if isinstance(_traj_aa, dict)
-                            else dict(zip("XTNBA", (float(v) for v in _traj_aa)))
+                    _real_axes = dict(_systems.get("_prev_axis_activation") or {}) if _systems else {}
+                    if _real_axes:
+                        with _axis_state_lock:
+                            for _ax_k in ("X", "T", "N", "B", "A"):
+                                if _ax_k in _real_axes:
+                                    _last_axis_state[_ax_k] = float(_real_axes[_ax_k])
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:handle_message.real_axis_state_write",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "handle_message", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                    )
+                    pass
+
+                # ── CPM + waveform: record synthesis outcome as pressure disturbance ────
+                # The dominant axis + polarity of the just-completed synthesis turn is:
+                #   (a) applied as an I-state to the CPM's active crystal tape
+                #   (b) injected as a pressure disturbance through the waveform substrate
+                #       with coupling propagation so all subsystems can feel the turn outcome
+                _cpm_inst = (_systems.get('cpm') if _systems else None) or _cpm
+                _dom = _get_dominant_axis()
+                _pol = _last_axis_state.get(_dom, 0.5)
+                _istate_pairs = {
+                    'X': ('I_IS',    'I_ISNT'),
+                    'T': ('I_CAN',   'I_CANNOT'),
+                    'N': ('I_DO',    'I_DONOT'),
+                    'B': ('I_SAW',   'I_SOUGHT'),
+                    'A': ('I_DID',   'I_DIDNT'),
+                }
+                _pos_is, _neg_is = _istate_pairs.get(_dom, ('I_IS', 'I_ISNT'))
+                _istate = _pos_is if _pol > 0.5 else _neg_is
+                _syn_intensity = abs(_pol - 0.5) * 2.0
+
+                if _cpm_inst is not None:
+                    try:
+                        _cpm_inst.apply_istate(_istate, intensity=_syn_intensity)
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3476",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "handle_message", "handler_line": 3476, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
                         )
-                        _waveform_trajectory.record(_traj_state)
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3639",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "handle_message", "handler_line": 3639, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                    )
-                    pass
+                        pass
 
-        # Periodically re-derive and re-pump self-knowledge from actual system
-        # patterns so her self-understanding stays current as her sediment and
-        # axis profiles evolve across the session.
-        global _turn_count
-        _turn_count += 1
-        if _turn_count % _SELF_GROUND_INTERVAL == 0 and _systems:
-            threading.Thread(
-                target=_ground_self_identity_in_systems,
-                args=(_systems,),
-                daemon=True,
-                name="self_ground",
-            ).start()
+                # Post-synthesis pressure disturbance — propagates turn outcome
+                # through the waveform so thought, curiosity, and prediction
+                # can self-select response to how the synthesis settled.
+                _pump_post = (_systems.get('pressure_pump') if _systems else None)
+                _ifield_post = (_systems.get('identity_field') if _systems else None)
+                if _pump_post is not None and _ifield_post is not None:
+                    try:
+                        from aurora_waveform_pressure import (  # type: ignore
+                            WaveformPressurePump,
+                        )
+                        _syn_axes = {_dom: max(0.30, _syn_intensity)}
+                        _syn_dist = WaveformPressurePump.from_istate(
+                            _istate,
+                            _dom,
+                            _syn_axes[_dom],
+                            source="synthesis_outcome",
+                            intensity=0.65,
+                        )
+                        _qao_post = (_systems.get('quasiarch_observer') if _systems else None)
+                        _pump_post.inject(_syn_dist, _ifield_post, qao=_qao_post)
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3499",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "handle_message", "handler_line": 3499, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                        )
+                        pass
 
-        # Emergence evolution — tick the EvolutionaryChamber with live axis
-        # geometry every 15 turns so Aurora's constraint physics evolve from
-        # live interaction the same way they evolve during corpus training runs.
-        # Runs non-blocking so it never delays the response.
-        if _turn_count % 15 == 0 and _systems:
-            def _run_live_evo(systems_ref: dict) -> None:
-                try:
-                    import sys as _sys
-                    import importlib.util as _ilu
-                    # Load corpus_runner from its canonical location
-                    for _try_mod in ("corpus_runner", "corpus_runner"):
+                # ── Step 3: Re-entry loop (mandatory §13) ────────────────────────────
+                # The field hears itself after every utterance.
+                # Self-assessment fidelity is secondary — your response next turn
+                # will apply the real correction if this doesn't land.
+                path_key = ""
+                if response and _systems:
+                    try:
+                        lf = _systems.get("language_field")
+                        if lf is not None and hasattr(lf, "reentry") and hasattr(lf, "_last_proto"):
+                            fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
+                            if lf._last_proto is not None and hasattr(lf, "_path_key"):
+                                try:
+                                    path_key = lf._path_key(
+                                        lf._last_proto.comparison_type,
+                                        lf._last_proto.dominant_axes,
+                                    )
+                                except Exception as _aurora_boundary_exc:
+                                    _aurora_record_exception_from_locals(
+                                        locals(),
+                                        module=__name__,
+                                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3518",
+                                        exc=_aurora_boundary_exc,
+                                        context={"function": "handle_message", "handler_line": 3518, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                                    )
+                                    pass
+                            lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
+
+                            # Feed fidelity back into recently deposited sediment fragments.
+                            # High fidelity → slow their decay (longer-lived, more influential).
+                            # Low fidelity → accelerate decay (shorter-lived, outcompeted sooner).
+                            # This is how SediMemory learns which deposits produced quality output.
+                            _sm = _systems.get("sedimemory") if _systems else None
+                            if _sm is not None and hasattr(_sm, "get_recent_fragments"):
+                                try:
+                                    for _frag in _sm.get_recent_fragments(6):
+                                        if fidelity > 0.65:
+                                            _frag.tick_rate = max(0.30, _frag.tick_rate * 0.72)
+                                        elif fidelity < 0.35:
+                                            _frag.tick_rate = min(2.00, _frag.tick_rate * 1.38)
+                                except Exception as _aurora_boundary_exc:
+                                    _aurora_record_exception_from_locals(
+                                        locals(),
+                                        module=__name__,
+                                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3534",
+                                        exc=_aurora_boundary_exc,
+                                        context={"function": "handle_message", "handler_line": 3534, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                                    )
+                                    pass
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3536",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "handle_message", "handler_line": 3536, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                        )
+                        pass
+
+                # ── Step 4: Gap resolution — silent internet-first, trust own knowledge ─
+                # Behavior contract:
+                #   1. If she already knows it (SediMemory or prior ingestion) → trust it.
+                #   2. If she doesn't know it → fire a silent background internet search,
+                #      mark the concept as ingested immediately (optimistic: the search
+                #      will bring back a definition on its own timeline and deposit it in
+                #      SediMemory for future turns).
+                #   3. Never ask the user to define a word she could look up.
+                #   4. The ONLY time to ask the user about a word is when her understanding
+                #      of it (from memory or the internet) actively contradicts their usage
+                #      in this specific context — that's a B-axis divergence signal, and
+                #      the field surfaces it naturally with a "why/how" question, not a
+                #      definition request. That path is handled by the field itself; we do
+                #      not arm a scripted teaching loop here.
+                if _gap_concept_pending and not _pending_example_concept:
+                    _gap_norm = _gap_concept_pending.lower().strip()
+                    if _gap_norm in _CONTRACTION_SHARDS or _gap_norm in _FOUNDATIONAL_VOCAB:
+                        _ingested_concepts.add(_gap_norm)
+                        log.debug("Gap %r is foundational/shard — resolved", _gap_concept_pending)
+                    elif _gap_norm in _ingested_concepts:
+                        log.debug("Gap %r already ingested — resolved", _gap_concept_pending)
+                    else:
+                        _existing_def = _lookup_existing_understanding(_gap_norm, _systems)
+                        if _existing_def:
+                            _ingested_concepts.add(_gap_norm)
+                            log.info("Gap %r in SediMemory — trusting own understanding", _gap_concept_pending)
+                        else:
+                            # Not in memory — trigger silent internet search in background.
+                            # Mark as ingested immediately so this word doesn't keep re-firing
+                            # gap pressure. The search will deposit a real definition into
+                            # SediMemory; future turns will find it via _lookup_existing_understanding.
+                            _search_for_gap(_gap_concept_pending, gap_type=_gap_type_pending)
+                            _ingested_concepts.add(_gap_norm)
+                            log.info("Gap %r — silent search triggered, optimistically ingested", _gap_concept_pending)
+
+                # ── Capability gap detection ──────────────────────────────────────────
+                # Compare pre-synthesis vs post-synthesis axis state.  If the A-axis
+                # dropped sharply (agency blocked) while N stayed high (effort applied),
+                # the physics have encoded a capability failure.  Register the gap so
+                # the identity field can express the need and learning mode is armed.
+                # Only fires when not already in learning mode and not after a skill-
+                # acknowledged turn (which just ingested the procedure).
+                if not skill_acknowledged and not _capability_learning_mode and _systems:
+                    with _axis_state_lock:
+                        _axis_post_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                    if _detect_capability_gap(_axis_pre_synthesis, _axis_post_synthesis, text):
+                        _register_capability_gap(text, _axis_pre_synthesis, _axis_post_synthesis)
+
+                _last_response = response
+                _last_path_key = path_key
+
+                # Record LSA path crossing into concept crystal registry — semantic is
+                # a first-class sense dimension, so this LSA activation at this axis
+                # state is an observation just like visual or audio.
+                if _concept_registry is not None and path_key:
+                    try:
+                        with _axis_state_lock:
+                            _ccr_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                        _concept_registry.observe_lsa(_ccr_ax, path_key)
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3598",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "handle_message", "handler_line": 3598, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                        )
+                        pass
+
+                # Refresh overlay axis cache after every turn
+                _refresh_axis_state_from_systems()
+                with _axis_state_lock:
+                    _last_axis_state["speaking"] = bool(response)
+
+                # ── Constraint tension tick ───────────────────────────────────────────
+                # Advance the generational cycle with fresh axis state. SHEAR amplifies
+                # stress, BRIDGE attempts to span paradox via identity field pulse,
+                # WARP surfaces emergence candidates when the 5-axis basis may be
+                # insufficient to account for the derivative of meaning.
+                if _constraint_tension_tracker is not None and _systems:
+                    with _axis_state_lock:
+                        _ctt_state = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                    _constraint_tension_tracker.tick(_ctt_state, _systems)
+
+                # ── Anchor the expressed crest ────────────────────────────────────────
+                # After generating a response, anchor the expressed axis peak back into
+                # the identity field so the next turn starts from where the conscious
+                # crest just landed rather than decaying to baseline between turns.
+                if response:
+                    _anchor_expressed_crest(_systems)
+
+                # ── Record trajectory state ───────────────────────────────────────────
+                # Snapshot the field's axis_activation AFTER the anchor so the
+                # trajectory buffer captures the stable expressed endpoint for this turn.
+                # Next turn will measure divergence against this recorded state.
+                if _waveform_trajectory is not None and _systems:
+                    _traj_ifield = _systems.get("identity_field")
+                    if _traj_ifield is not None:
                         try:
-                            _cr = __import__(_try_mod, fromlist=["evolve_chain"])
-                            _evolve_chain = getattr(_cr, "evolve_chain", None)
-                            if _evolve_chain is not None:
-                                with _axis_state_lock:
-                                    _live_ax = {k: _last_axis_state.get(k, 0.5)
-                                                for k in ("X", "T", "N", "B", "A")}
-                                # Map live axis pressures onto constraint geometry fields
-                                # so evolve_chain uses the same axis-to-constraint mapping
-                                # as it does during corpus training.
-                                class _LiveGeometry:
-                                    x_activation = _live_ax.get("X", 0.5)
-                                    t_activation = _live_ax.get("T", 0.5)
-                                    n_activation = _live_ax.get("N", 0.5)
-                                    b_activation = _live_ax.get("B", 0.5)
-                                    a_activation = _live_ax.get("A", 0.5)
-                                    class depth:
-                                        name = "SURFACE"
-                                _evolve_chain(systems_ref, ticks=10,
-                                              truth_geom=_LiveGeometry(), verbose=False)
-                            break
-                        except (ImportError, AttributeError) as _aurora_boundary_exc:
+                            _traj_aa = getattr(_traj_ifield, "axis_activation", None)
+                            if _traj_aa is not None:
+                                _traj_state = (
+                                    {k: float(_traj_aa.get(k, 0.5)) for k in "XTNBA"}
+                                    if isinstance(_traj_aa, dict)
+                                    else dict(zip("XTNBA", (float(v) for v in _traj_aa)))
+                                )
+                                _waveform_trajectory.record(_traj_state)
+                        except Exception as _aurora_boundary_exc:
                             _aurora_record_exception_from_locals(
                                 locals(),
                                 module=__name__,
-                                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3687",
+                                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3639",
                                 exc=_aurora_boundary_exc,
-                                context={"function": "_run_live_evo", "handler_line": 3687, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                                context={"function": "handle_message", "handler_line": 3639, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
                             )
-                            continue
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3689",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_run_live_evo", "handler_line": 3689, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                    )
-                    pass
-            threading.Thread(
-                target=_run_live_evo, args=(_systems,),
-                daemon=True, name="live_evo",
-            ).start()
+                            pass
 
-        # If this turn was the user's correction explanation, prefix acknowledgment
-        if correction_acknowledged:
-            ack = "Understood — I've taken that on board."
-            response = f"{ack} {response}" if response else ack
+                # Periodically re-derive and re-pump self-knowledge from actual system
+                # patterns so her self-understanding stays current as her sediment and
+                # axis profiles evolve across the session.
+                global _turn_count
+                _turn_count += 1
+                if _turn_count % _SELF_GROUND_INTERVAL == 0 and _systems:
+                    threading.Thread(
+                        target=_ground_self_identity_in_systems,
+                        args=(_systems,),
+                        daemon=True,
+                        name="self_ground",
+                    ).start()
 
-        # Append relational synthesis when a cross-entity shift was detected.
-        # Comes after the normal response so it reads as a follow-on observation,
-        # not an interruption of the primary reply.
-        if _relational_synthesis:
-            response = f"{response}\n\n{_relational_synthesis}" if response else _relational_synthesis
+                # Emergence evolution — tick the EvolutionaryChamber with live axis
+                # geometry every 15 turns so Aurora's constraint physics evolve from
+                # live interaction the same way they evolve during corpus training runs.
+                # Runs non-blocking so it never delays the response.
+                if _turn_count % 15 == 0 and _systems:
+                    def _run_live_evo(systems_ref: dict) -> None:
+                        try:
+                            import sys as _sys
+                            import importlib.util as _ilu
+                            # Load corpus_runner from its canonical location
+                            for _try_mod in ("corpus_runner", "corpus_runner"):
+                                try:
+                                    _cr = __import__(_try_mod, fromlist=["evolve_chain"])
+                                    _evolve_chain = getattr(_cr, "evolve_chain", None)
+                                    if _evolve_chain is not None:
+                                        with _axis_state_lock:
+                                            _live_ax = {k: _last_axis_state.get(k, 0.5)
+                                                        for k in ("X", "T", "N", "B", "A")}
+                                        # Map live axis pressures onto constraint geometry fields
+                                        # so evolve_chain uses the same axis-to-constraint mapping
+                                        # as it does during corpus training.
+                                        class _LiveGeometry:
+                                            x_activation = _live_ax.get("X", 0.5)
+                                            t_activation = _live_ax.get("T", 0.5)
+                                            n_activation = _live_ax.get("N", 0.5)
+                                            b_activation = _live_ax.get("B", 0.5)
+                                            a_activation = _live_ax.get("A", 0.5)
+                                            class depth:
+                                                name = "SURFACE"
+                                        _evolve_chain(systems_ref, ticks=10,
+                                                      truth_geom=_LiveGeometry(), verbose=False)
+                                    break
+                                except (ImportError, AttributeError) as _aurora_boundary_exc:
+                                    _aurora_record_exception_from_locals(
+                                        locals(),
+                                        module=__name__,
+                                        operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3687",
+                                        exc=_aurora_boundary_exc,
+                                        context={"function": "_run_live_evo", "handler_line": 3687, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                                    )
+                                    continue
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3689",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "_run_live_evo", "handler_line": 3689, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                            )
+                            pass
+                    threading.Thread(
+                        target=_run_live_evo, args=(_systems,),
+                        daemon=True, name="live_evo",
+                    ).start()
 
-        # Prepend any completed curiosity session report
-        pending_report = (_systems or {}).pop("_pending_autonomous_report", None)
-        if pending_report:
-            response = f"{pending_report}\n\n{response}" if response else pending_report
+                # Deposit self-state snapshot — every turn she knows where she is.
+                # Runs non-blocking in background so it never delays the response.
+                threading.Thread(
+                    target=_deposit_self_state_snapshot, daemon=True, name="self_state"
+                ).start()
 
-        # Deposit self-state snapshot — every turn she knows where she is.
-        # Runs non-blocking in background so it never delays the response.
+                # Update the entity model for "user" — feed the axis impression that
+                # this user turn produced into their entity so Aurora builds a model
+                # of them over time the same way she models herself.
+                # Runs non-blocking; never delays the response.
+                def _update_user_entity() -> None:
+                    try:
+                        with _axis_state_lock:
+                            _ax_snap = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                        _update_entity_model("user", _ax_snap)
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3727",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_update_user_entity", "handler_line": 3727, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+                        )
+                        pass
+                threading.Thread(target=_update_user_entity, daemon=True, name="entity_user").start()
+
+                # ── Entropy quality accounting ────────────────────────────────────────
+                # Entropy debt tracks how well her output organizes perceptual chaos.
+                # Good output (LSA path crossed + meaningful length) reduces debt.
+                # Poor/short output increases debt, shrinking the next entropy interval
+                # so the pressure returns faster — she cannot scream her way out.
+                global _entropy_debt_secs
+                _engaged = bool(response and _last_path_key and len(response.strip()) >= 25)
+                if _engaged:
+                    _entropy_debt_secs = max(0.0, _entropy_debt_secs - 12.0)
+                else:
+                    _entropy_debt_secs = min(50.0, _entropy_debt_secs + 8.0)
+
+                # ── Vacuum reconciliation debt ────────────────────────────────────────
+                # Same engagement signal drains the B-axis friction from vacuum drift.
+                # The system cannot smooth over the contradiction — only genuine
+                # semantic engagement with external input (LSA path crossed) earns
+                # relief.  Evasion or shallow output builds friction.
+                if _vacuum_reconciliation_debt > 0.0:
+                    if _engaged:
+                        _vacuum_reconciliation_debt = max(
+                            0.0, _vacuum_reconciliation_debt - _VACUUM_DEBT_DRAIN
+                        )
+                    else:
+                        _vacuum_reconciliation_debt = min(
+                            0.80, _vacuum_reconciliation_debt + _VACUUM_DEBT_INFLOW
+                        )
+
+                print(f"AURORA_BRIDGE: Response: {response}")
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:handle_message._continue_deep_turn",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_continue_deep_turn", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py", "turn_id": _turn_id},
+                )
+                with _box_lock:
+                    if not _box_event.is_set():
+                        _box_state["text"] = "I encountered an error processing your request."
+                        _box_event.set()
+
         threading.Thread(
-            target=_deposit_self_state_snapshot, daemon=True, name="self_state"
+            target=_continue_deep_turn, daemon=True, name=f"surface_turn:{_turn_id[-12:]}"
         ).start()
 
-        # Update the entity model for "user" — feed the axis impression that
-        # this user turn produced into their entity so Aurora builds a model
-        # of them over time the same way she models herself.
-        # Runs non-blocking; never delays the response.
-        def _update_user_entity() -> None:
-            try:
-                with _axis_state_lock:
-                    _ax_snap = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
-                _update_entity_model("user", _ax_snap)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:3727",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_update_user_entity", "handler_line": 3727, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                )
-                pass
-        threading.Thread(target=_update_user_entity, daemon=True, name="entity_user").start()
-
-        # ── Entropy quality accounting ────────────────────────────────────────
-        # Entropy debt tracks how well her output organizes perceptual chaos.
-        # Good output (LSA path crossed + meaningful length) reduces debt.
-        # Poor/short output increases debt, shrinking the next entropy interval
-        # so the pressure returns faster — she cannot scream her way out.
-        global _entropy_debt_secs
-        _engaged = bool(response and _last_path_key and len(response.strip()) >= 25)
-        if _engaged:
-            _entropy_debt_secs = max(0.0, _entropy_debt_secs - 12.0)
-        else:
-            _entropy_debt_secs = min(50.0, _entropy_debt_secs + 8.0)
-
-        # ── Vacuum reconciliation debt ────────────────────────────────────────
-        # Same engagement signal drains the B-axis friction from vacuum drift.
-        # The system cannot smooth over the contradiction — only genuine
-        # semantic engagement with external input (LSA path crossed) earns
-        # relief.  Evasion or shallow output builds friction.
-        if _vacuum_reconciliation_debt > 0.0:
-            if _engaged:
-                _vacuum_reconciliation_debt = max(
-                    0.0, _vacuum_reconciliation_debt - _VACUUM_DEBT_DRAIN
-                )
-            else:
-                _vacuum_reconciliation_debt = min(
-                    0.80, _vacuum_reconciliation_debt + _VACUUM_DEBT_INFLOW
-                )
-
-        print(f"AURORA_BRIDGE: Response: {response}")
+        _surface_arrived = _box_event.wait(_SURFACE_WAIT_TIMEOUT_S)
+        with _box_lock:
+            _box_state["delivered"] = True
+            response = _box_state["text"] if _surface_arrived else ""
         return response
     except Exception as exc:
         log.error("handle_message: %s\n%s", exc, traceback.format_exc())
