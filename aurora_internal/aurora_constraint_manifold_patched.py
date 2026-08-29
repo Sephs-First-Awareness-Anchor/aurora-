@@ -289,44 +289,160 @@ class ConstraintField:
     Every process must be expressible within this tensor.
     """
     
+    # Susceptibility per axis for the constitutive response of an
+    # unresolved position: how much of an occupied neighbor's pressure
+    # leaks into it. Derived from aurora_noncomp_registry.py's
+    # shift_cost_coeff ordering (kX < kT < kN < kB < kA -- X:1.0, T:7.0,
+    # N:10.0, B:40.0, A:150.0) as 1/(1+shift_cost_coeff): an axis that is
+    # harder to shift is also less moved by a neighbor's pressure. X is
+    # excluded -- an unresolved position never claims admissibility
+    # beyond the floor, only T/N/B/A show susceptibility.
+    _CONSTITUTIVE_SUSCEPTIBILITY = {
+        "T": 0.125,
+        "N": 0.09,
+        "B": 0.024,
+        "A": 0.0065,
+    }
+
     def __init__(self):
         # Tensor shape: [5, 5, 5, 5] → ConstraintVector (5D)
         # Total: 5^4 = 625 field positions, each returning 5D vector
         self._field: Dict[Tuple[int, int, int, int], ConstraintVector] = {}
-        
+
+    def neighbors(self, index: ConstraintFieldIndex) -> List[ConstraintFieldIndex]:
+        """
+        Lattice-adjacent indices: one step in exactly one of the four
+        axes (constraint, space, state, level), clipped to [0,4]. Up to
+        8 neighbors. This is the locality primitive for constitutive
+        response -- pressure at a position only reaches its immediate
+        neighbors, never leaks further, keeping the field's influence
+        bounded without ever populating all 625 positions.
+        """
+        key = index.to_tuple()
+        axis_enums = (Constraint, CompositionalSpace, State, RecursionLevel)
+        out: List[ConstraintFieldIndex] = []
+        for axis in range(4):
+            for delta in (-1, 1):
+                v = key[axis] + delta
+                if 0 <= v <= 4:
+                    new_key = key[:axis] + (v,) + key[axis + 1:]
+                    out.append(ConstraintFieldIndex(
+                        constraint=axis_enums[0](new_key[0]),
+                        space=axis_enums[1](new_key[1]),
+                        state=axis_enums[2](new_key[2]),
+                        level=axis_enums[3](new_key[3]),
+                    ))
+        return out
+
+    def is_occupied(self, index: ConstraintFieldIndex) -> bool:
+        """Whether a position is actually stored (vs. latent/unresolved)."""
+        return index.to_tuple() in self._field
+
     def measure(self, index: ConstraintFieldIndex) -> ConstraintVector:
         """
         Measure the constraint field at a given index.
-        
-        If no measurement exists, return zero vector (maintaining X > 0).
+
+        If the position is stored, return it directly. Otherwise it is
+        latent, not nonexistent: derive a constitutive response from
+        whichever lattice neighbors ARE stored (never itself stored back
+        -- this stays a read, not a write, so occupied_count()/
+        total_energy() and the computational-resolution principle are
+        untouched). No occupied neighbor at all -> the original floor
+        vector, unchanged.
         """
         key = index.to_tuple()
-        if key not in self._field:
-            # Zero vector with minimal existence to maintain admissibility
+        if key in self._field:
+            return self._field[key]
+        return self._constitutive_response(index)
+
+    def _constitutive_response(self, index: ConstraintFieldIndex) -> ConstraintVector:
+        """
+        Zero displacement != zero susceptibility: an unresolved position
+        still feels whatever pressure its occupied neighbors are under,
+        attenuated per axis, without itself claiming occupancy. X stays
+        pinned at the minimal-existence floor either way.
+        """
+        contributions = [
+            self._field[n.to_tuple()]
+            for n in self.neighbors(index)
+            if n.to_tuple() in self._field
+        ]
+        if not contributions:
             return ConstraintVector(X=1e-9, T=0, N=0, B=0, A=0)
-        return self._field[key]
-    
+        n = len(contributions)
+        susc = self._CONSTITUTIVE_SUSCEPTIBILITY
+        return ConstraintVector(
+            X=1e-9,
+            T=(sum(v.T for v in contributions) / n) * susc["T"],
+            N=(sum(v.N for v in contributions) / n) * susc["N"],
+            B=(sum(v.B for v in contributions) / n) * susc["B"],
+            A=(sum(v.A for v in contributions) / n) * susc["A"],
+        )
+
     def update(self, index: ConstraintFieldIndex, vector: ConstraintVector):
         """
         Update the field at a given index.
-        
+
         Mutation is allowed if:
         1. X > 0 (admissibility preserved)
         2. Vector is in span of 𝒞 (no sixth dimension)
+
+        vector may be this module's own ConstraintVector or the
+        engine-authoritative one aurora_constraint_manifold.py
+        substitutes in (aurora_constraint_engine.ConstraintVector,
+        which enforces X > 0 at construction and has no in_span() of
+        its own -- in_span() is duck-typed here rather than assumed,
+        defaulting to True for that class since it has no separate
+        span concept to violate).
         """
         if vector.X <= 0:
             raise ManifoldViolation(
                 f"Cannot update field with inadmissible vector: X={vector.X} ≤ 0"
             )
-        
-        if not vector.in_span():
+
+        if not getattr(vector, "in_span", lambda: True)():
             raise ManifoldViolation(
                 "Cannot update field with vector outside constraint span"
             )
-        
+
         key = index.to_tuple()
         self._field[key] = vector
-    
+
+    def rebuild_epoch(
+        self,
+        measurements: List[Tuple[ConstraintFieldIndex, ConstraintVector]],
+    ) -> None:
+        """
+        Replace the entire realized field for one tick's worth of live
+        measurements. A position no incoming measurement still claims is
+        simply absent from the new field -- unlike repeated update()
+        calls, a stale entry from a node that has since moved elsewhere
+        cannot linger forever as a ghost occupancy. Multiple
+        measurements landing on the same index are combined as a
+        deterministic component-wise mean (order-independent -- opposing
+        signed polarity cancels naturally) rather than letting dict
+        iteration order pick a last-write-wins winner.
+        """
+        grouped: Dict[Tuple[int, int, int, int], List[ConstraintVector]] = {}
+        for index, vector in measurements:
+            # Same duck-typed admissibility gate as update() -- see its
+            # docstring for why in_span() can't be assumed to exist.
+            if vector.X <= 0 or not getattr(vector, "in_span", lambda: True)():
+                continue
+            grouped.setdefault(index.to_tuple(), []).append(vector)
+
+        new_field: Dict[Tuple[int, int, int, int], ConstraintVector] = {}
+        for key, vectors in grouped.items():
+            n = len(vectors)
+            new_field[key] = ConstraintVector(
+                X=sum(v.X for v in vectors) / n,
+                T=sum(v.T for v in vectors) / n,
+                N=sum(v.N for v in vectors) / n,
+                B=sum(v.B for v in vectors) / n,
+                A=sum(v.A for v in vectors) / n,
+            )
+        self._field = new_field
+
     def total_energy(self) -> float:
         """
         Compute total energy across all field positions.

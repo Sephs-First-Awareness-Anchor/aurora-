@@ -1127,6 +1127,13 @@ class IVMLattice:
         if CONSTRAINT_MANIFOLD_AVAILABLE and ConstraintField is not None:
             self._constraint_field = ConstraintField()
 
+        # Constitutive mobility per node, cached from the PREVIOUS tick's
+        # constraint-field rebuild. flow_energy() reads this at the START
+        # of the next tick (see tick()'s explicit one-tick-lag note) --
+        # empty until the first tick ever rebuilds the field, so tick 1
+        # behaves identically to before this existed.
+        self._constitutive_mobility: Dict[str, float] = {}
+
         # Energy conservation tracking
         self._initial_total_energy: float = 0.0
         self._energy_conservation_tolerance: float = 0.001  # 0.1% drift allowed
@@ -1363,6 +1370,16 @@ class IVMLattice:
         Conservation is enforced: energy is redistributed, not created.
         Total energy before and after must match within tolerance.
 
+        Constitutive mobility (self._constitutive_mobility) scales HOW
+        MUCH flows along each pair -- never adds or removes energy, since
+        deltas stay exactly equal-and-opposite. It reflects the constraint
+        field's state as of the PREVIOUS tick's rebuild (tick() runs this
+        method, at step 4, before that tick's own field rebuild at step
+        6b) -- a deliberate one-tick lag rather than reordering tick()'s
+        existing, already-tested step sequence. Empty on tick 1 (mobility
+        defaults to 1.0 for every node), so behavior is unchanged until
+        the field has actually been built at least once.
+
         Returns a report with total_before, total_after, conservation_error.
         """
         for _ in range(iterations):
@@ -1376,7 +1393,15 @@ class IVMLattice:
                     other = self.nodes.get(cid)
                     if other and other.can_exchange_energy:
                         diff = node.node_energy - other.node_energy
-                        flow = diff * strength * 0.1
+                        # Constitutive mobility modulates HOW MUCH flows
+                        # along this pair, never the total in existence --
+                        # deltas stay exactly equal-and-opposite below, so
+                        # conservation is unaffected by the multiplier.
+                        pair_mobility = (
+                            self._constitutive_mobility.get(nid, 1.0)
+                            + self._constitutive_mobility.get(cid, 1.0)
+                        ) / 2.0
+                        flow = diff * strength * 0.1 * pair_mobility
                         deltas[nid] -= flow
                         deltas[cid] += flow
 
@@ -1499,75 +1524,136 @@ class IVMLattice:
     # CONSTRAINT FIELD (Layer -1 integration)
     # ====================================================================
 
+    def _field_index_for_node(self, node: "IVMNode") -> Optional[Any]:
+        """
+        Map an IVM node's current mode/energy/scale to its
+        ConstraintFieldIndex position. Shared by measure_constraint_field()
+        (populating the field) and _compute_constitutive_mobility()
+        (sampling around it) so the mapping is defined once. Returns
+        None when the node has no active mode (nothing to index).
+        """
+        try:
+            from aurora_constraint_manifold import (
+                Constraint, CompositionalSpace, State, RecursionLevel as RL,
+                ConstraintFieldIndex
+            )
+            # Use first active constraint for the constraint index
+            active_count = node.mode.value
+            if active_count == 0:
+                return None
+            c_idx = min(active_count - 1, 4)
+            constraint = Constraint(c_idx)
+
+            # Map mode to compositional space (rough mapping)
+            space_map = {
+                ExistenceMode.REFERENCE:  CompositionalSpace.ATOMIC,
+                ExistenceMode.TRANSIENT:  CompositionalSpace.RELATIONAL,
+                ExistenceMode.PERSISTENT: CompositionalSpace.STRUCTURAL,
+                ExistenceMode.BOUNDED:    CompositionalSpace.PROCESSUAL,
+                ExistenceMode.AGENTIC:    CompositionalSpace.SYSTEMIC,
+            }
+            space = space_map.get(node.mode, CompositionalSpace.ATOMIC)
+
+            # Energy → state
+            e = node.node_energy
+            if e > 0.9:
+                state = State.ACTIVE
+            elif e > 0.6:
+                state = State.RESONANT
+            elif e > 0.3:
+                state = State.SATURATED
+            elif e > 0.1:
+                state = State.DISSIPATING
+            else:
+                state = State.LATENT
+
+            level = RL(min(4, node.position.scale))
+
+            return ConstraintFieldIndex(
+                constraint=constraint,
+                space=space,
+                state=state,
+                level=level,
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_ivm.py:_field_index_for_node",
+                exc=_aurora_boundary_exc,
+                context={"function": "_field_index_for_node", "source_file": "aurora_ivm.py"},
+            )
+            return None
+
     def measure_constraint_field(self) -> Optional[Any]:
         """
-        Update the constraint field with current node measurements.
-
-        Each node's constraint vector is stored at its field index.
+        Rebuild the constraint field for this tick from current node
+        measurements (an epoch refresh via rebuild_epoch(), not repeated
+        update() calls) -- a node that has moved to a different field
+        position since the prior tick does not leave a stale ghost entry
+        behind, and multiple nodes landing on the same position combine
+        deterministically instead of last-write-wins.
         Returns the constraint field, or None if manifold unavailable.
         """
         if self._constraint_field is None or not CONSTRAINT_MANIFOLD_AVAILABLE:
             return None
 
+        measurements = []
         for node in self.nodes.values():
             if node.constraint_vector is None:
                 continue
+            idx = self._field_index_for_node(node)
+            if idx is not None:
+                measurements.append((idx, node.constraint_vector))
+
+        self._constraint_field.rebuild_epoch(measurements)
+        return self._constraint_field
+
+    def _compute_constitutive_mobility(self) -> None:
+        """
+        For every node that occupies a field position after this tick's
+        rebuild, sample its UNoccupied lattice neighbors via
+        ConstraintField.measure() -- their constitutive response,
+        derived fresh and never stored -- and turn the average T+N+B+A
+        pressure into a small, bounded (+/-5%) conductance multiplier.
+        Cached into self._constitutive_mobility for flow_energy() to
+        read at the START of the NEXT tick (see tick()'s one-tick-lag
+        note): the vacuum changes how readily existing energy flows
+        through a node, it does not add or remove any energy itself.
+        """
+        self._constitutive_mobility = {}
+        if self._constraint_field is None or not CONSTRAINT_MANIFOLD_AVAILABLE:
+            return
+
+        _GAIN = 0.002  # keeps typical pressure magnitudes within the +/-5% clamp
+        for nid, node in self.nodes.items():
+            if node.constraint_vector is None:
+                continue
+            idx = self._field_index_for_node(node)
+            if idx is None:
+                continue
             try:
-                from aurora_constraint_manifold import (
-                    Constraint, CompositionalSpace, State, RecursionLevel as RL,
-                    ConstraintFieldIndex
-                )
-                # Map node properties to field index
-                # Use first active constraint for the constraint index
-                active_count = node.mode.value
-                if active_count == 0:
-                    continue
-                c_idx = min(active_count - 1, 4)
-                constraint = Constraint(c_idx)
-
-                # Map mode to compositional space (rough mapping)
-                space_map = {
-                    ExistenceMode.REFERENCE:  CompositionalSpace.ATOMIC,
-                    ExistenceMode.TRANSIENT:  CompositionalSpace.RELATIONAL,
-                    ExistenceMode.PERSISTENT: CompositionalSpace.STRUCTURAL,
-                    ExistenceMode.BOUNDED:    CompositionalSpace.PROCESSUAL,
-                    ExistenceMode.AGENTIC:    CompositionalSpace.SYSTEMIC,
-                }
-                space = space_map.get(node.mode, CompositionalSpace.ATOMIC)
-
-                # Energy → state
-                e = node.node_energy
-                if e > 0.9:
-                    state = State.ACTIVE
-                elif e > 0.6:
-                    state = State.RESONANT
-                elif e > 0.3:
-                    state = State.SATURATED
-                elif e > 0.1:
-                    state = State.DISSIPATING
-                else:
-                    state = State.LATENT
-
-                level = RL(min(4, node.position.scale))
-
-                idx = ConstraintFieldIndex(
-                    constraint=constraint,
-                    space=space,
-                    state=state,
-                    level=level,
-                )
-                self._constraint_field.update(idx, node.constraint_vector)
+                responses = [
+                    self._constraint_field.measure(nb)
+                    for nb in self._constraint_field.neighbors(idx)
+                    if not self._constraint_field.is_occupied(nb)
+                ]
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
                     module=__name__,
-                    operation="exception_handler:aurora_ivm.py:1538",
+                    operation="exception_handler:aurora_ivm.py:_compute_constitutive_mobility",
                     exc=_aurora_boundary_exc,
-                    context={"function": "measure_constraint_field", "handler_line": 1538, "source_file": "aurora_ivm.py"},
+                    context={"function": "_compute_constitutive_mobility", "source_file": "aurora_ivm.py"},
                 )
                 continue
-
-        return self._constraint_field
+            if not responses:
+                continue
+            avg_pressure = sum(
+                r.T + r.N + r.B + r.A for r in responses
+            ) / len(responses)
+            gain = max(-0.05, min(0.05, avg_pressure * _GAIN))
+            self._constitutive_mobility[nid] = 1.0 + gain
 
     def get_constraint_field_stats(self) -> Dict[str, Any]:
         """Return statistics about the constraint field."""
@@ -1587,6 +1673,13 @@ class IVMLattice:
                     name: axis.t_energy_spent
                     for name, axis in self.vertices.axes.items()
                 },
+                'field_occupied': self._constraint_field.occupied_count(),
+                'field_total_energy': round(self._constraint_field.total_energy(), 4),
+                'field_capacity': self._constraint_field.capacity(),
+                'field_avg_mobility': (
+                    round(sum(self._constitutive_mobility.values()) / len(self._constitutive_mobility), 4)
+                    if self._constitutive_mobility else 1.0
+                ),
             }
             return stats
         except Exception as _aurora_boundary_exc:
@@ -1617,9 +1710,17 @@ class IVMLattice:
         1. Advance toroidal vertex dynamics (with level-appropriate T-cost)
         2. Compute global polarity field (depth-weighted)
         3. Apply global alignment torques (sea-anemone model)
-        4. Flow energy between persistent nodes
+        4. Flow energy between persistent nodes (conductance modulated by
+           constitutive mobility CACHED FROM THE PREVIOUS TICK -- see
+           flow_energy()'s own comment for why this is deliberately
+           lagged by one tick rather than reordered same-tick)
         5. Decay all persistent nodes
         6. Update all constraint vectors (signed, no abs)
+        6b. Rebuild the constraint field (Layer -1) from this tick's
+            node measurements -- an epoch refresh, not a running total
+        6c. Derive this tick's constitutive mobility from latent field
+            pressure around occupied positions, for step 4 to read NEXT
+            tick
 
         level: the recursion level of this tick.
             CORE ticks are 32× more expensive in T-energy.
@@ -1644,6 +1745,13 @@ class IVMLattice:
         # 6. Update constraint vectors (signed)
         self.update_all_constraint_vectors()
 
+        # 6b. Rebuild the constraint field from this tick's node measurements
+        self.measure_constraint_field()
+
+        # 6c. Derive constitutive mobility from latent field pressure --
+        #     cached for flow_energy() to read at the START of the NEXT
+        #     tick (one-tick lag; see flow_energy()'s own comment).
+        self._compute_constitutive_mobility()
 
         # 7. Sanitize numeric state (prevents NaN/inf from poisoning totals)
         for axis in self.vertices.axes.values():
