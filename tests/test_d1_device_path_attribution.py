@@ -86,9 +86,17 @@ def test_aurora_bridge_extract_response_reads_resp_a():
 
 
 def test_aurora_bridge_handle_message_calls_process_external_user_turn():
+    """Build 774 (Android Surface/Subsurface Live-Turn Reconnection) moved
+    the resp_A -> text extraction from immediately after the
+    process_external_user_turn() call into the on_surface_ready callback
+    that fires from inside it -- same resp_A, same extraction contract,
+    now applied the instant it's decided rather than after the whole
+    call (including Subsurface work) returns. Updated to match that
+    structure rather than the old literal call site."""
     source = _aurora_bridge_source()
     assert "_aurora.process_external_user_turn(" in source
-    assert "response = _sanitize_response(_extract_response(result), text)" in source
+    assert "on_surface_ready=_on_surface_ready," in source
+    assert '_sanitize_response(\n                    _extract_response({"resp_A": resp_a}), text\n                )' in source
 
 
 def test_device_delivered_text_byte_attributes_to_resp_a_live():
@@ -105,10 +113,23 @@ def test_device_delivered_text_byte_attributes_to_resp_a_live():
     confirmed (this directive's own finding) to make MULTIPLE internal
     process_external_user_turn() calls per user turn (background study-
     cycle prompts fire synchronously inside it -- see known_fixes_
-    registry.md's D1 entry for that separate finding)."""
+    registry.md's D1 entry for that separate finding).
+
+    Build 774 (Android Surface/Subsurface Live-Turn Reconnection):
+    handle_message() now returns the device text the moment
+    process_external_user_turn()'s on_surface_ready callback fires --
+    well before that same call itself returns (it keeps running its
+    Subsurface continuation in a background thread afterward). This
+    wrapped orig_peut() only records into `captured` on RETURN, so it
+    can still be empty for a moment after handle_message() already has
+    its answer -- the same call is simply still finishing its deeper
+    work. Poll briefly for it rather than asserting immediately; the
+    attribution invariant itself (device text traces back to a real
+    resp_A) is unchanged by when the call returns."""
     sys.path.insert(0, REPO_ROOT)
     sys.path.insert(0, ANDROID_PY_DIR)
 
+    import time as _time
     import aurora as A
 
     captured = []
@@ -134,7 +155,11 @@ def test_device_delivered_text_byte_attributes_to_resp_a_live():
         )
 
         device_text = aurora_bridge.handle_message("Hi Aurora, how are you today?")
-        assert captured, "handle_message() never called process_external_user_turn()"
+
+        deadline = _time.time() + 30.0
+        while not captured and _time.time() < deadline:
+            _time.sleep(0.1)
+        assert captured, "handle_message() never called process_external_user_turn() (waited 30s for its Subsurface continuation to finish)"
 
         recomputed_candidates = [
             aurora_bridge._sanitize_response(
