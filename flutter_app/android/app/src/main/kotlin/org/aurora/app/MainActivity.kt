@@ -318,6 +318,11 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    "getLiveTurnDiagnostics" -> {
+                        AuroraService.callPythonString("get_live_turn_diagnostics") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     "getRoomState" -> {
                         AuroraService.getRoomState { json ->
                             runOnUiThread { result.success(json) }
