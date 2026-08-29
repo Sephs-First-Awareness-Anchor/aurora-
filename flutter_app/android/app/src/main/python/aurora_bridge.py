@@ -10826,47 +10826,20 @@ def get_cognitive_stats() -> str:
     if _systems is None:
         return _json.dumps({"error": "not_initialized"})
 
+    # Build 773 (Canonical Hub Telemetry): every field below is populated
+    # ONLY inside its own subsystem's success path further down -- never
+    # pre-seeded with a value that could pass for a real measurement.
+    # Before this, a subsystem being absent (perception, identity_field,
+    # genealogy, the concept crystal registry, warp_field, ...) silently
+    # left its fields at fake defaults here (avg_n_cost: 1.0,
+    # understanding_index: 0.0, concept_crystal_nodes: 0, ...) --
+    # indistinguishable from a genuine reading of exactly that value. `ts`
+    # and `turn_count` are the only fields that are always meaningful at
+    # this point (not gated on any optional subsystem), so they're the
+    # only ones still set unconditionally.
     stats: dict = {
-        "ts":              _t.time(),
-        "turn_count":      _turn_count,
-
-        # Language field — LSA paths and N-cost
-        "lsa_paths":       0,
-        "avg_n_cost":      1.0,
-        "lf_active":       False,
-
-        # Evolution / emergence
-        "evo_cycles":      0,
-        "sentence_target": 10,
-        "evo_available":   False,
-
-        # Axis pressures
-        "axis_pressures":  {},
-
-        # Understanding / OETS
-        "understanding_index": 0.0,
-        "coherence_index":     0.0,
-        "grounding_index":     0.0,
-        "topic_tracking":      0.0,
-
-        # SediMemory
-        "sedimemory_depth": 0,
-
-        # Noncomp manifold
-        "noncomp_loaded":   0,
-        "noncomp_diagonal_live": 0,
-
-        # Concept Crystal developmental registry
-        "concept_crystal_maturity": 0.0,
-        "concept_crystal_nodes": 0,
-        "concept_crystal_promoted": 0,
-        "concept_crystal_grounded": 0,
-
-        # Chamber (EvolutionaryChamber)
-        "chamber_fossils":  0,
-
-        # Historical experiential baseline witness runtime
-        "historical_experience": {},
+        "ts":         _t.time(),
+        "turn_count": _turn_count,
     }
 
     try:
@@ -10914,7 +10887,18 @@ def get_cognitive_stats() -> str:
         if ifield is not None and hasattr(ifield, "status"):
             try:
                 ifield_status = ifield.status()
-                stats["axis_pressures"]   = ifield_status.get("axis_pressures", {})
+                _axis_pressures = ifield_status.get("axis_pressures", {}) or {}
+                stats["axis_pressures"]   = _axis_pressures
+                # Build 773: flatten to real top-level X/T/N/B/A keys --
+                # previously these were never set anywhere in this function
+                # (only nested here), so Dart's hub_screen.dart reading
+                # _stats['X'] as a flat key only ever "worked" by accident
+                # (its old regex parser matched the first "X": occurrence
+                # anywhere in the raw JSON string, nested or not). Only set
+                # when the identity field actually reports that axis.
+                for _ax in ("X", "T", "N", "B", "A"):
+                    if _ax in _axis_pressures:
+                        stats[_ax] = _axis_pressures[_ax]
                 stats["noncomp_loaded"]   = int(ifield_status.get("loaded_count", 0))
                 stats["noncomp_diagonal_live"] = int(ifield_status.get("diagonal_live", 0))
             except Exception as _aurora_boundary_exc:

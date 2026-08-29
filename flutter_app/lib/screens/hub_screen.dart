@@ -267,9 +267,45 @@ class _HubScreenState extends State<HubScreen> {
     ]),
   );
 
-  Widget _axisBar(String axis, double value) {
+  // ── Build 773 (Canonical Hub Telemetry) ─────────────────────────────────
+  // get_cognitive_stats() now omits a key entirely when its subsystem is
+  // unavailable, instead of substituting a fake default (e.g. avg_n_cost
+  // used to default to 1.0, understanding_index to 0.0) -- so "the key is
+  // missing" and "the key was measured as zero" must render differently.
+  // These three helpers are the one place that distinction is made;
+  // every stat-reading call site below uses them instead of `?? default`.
+  bool _statAvailable(String key) => _stats.containsKey(key) && _stats[key] != null;
+
+  String _intStat(String key) => _statAvailable(key) ? '${_stats[key]}' : '—';
+
+  String _dblStat(String key, {int decimals = 3}) {
+    if (!_statAvailable(key)) return '—';
+    final v = _stats[key];
+    final d = (v is num) ? v.toDouble() : (double.tryParse('$v') ?? 0.0);
+    return d.toStringAsFixed(decimals);
+  }
+
+  double? _dblOrNull(String key) {
+    final v = _stats[key];
+    return (v is num) ? v.toDouble() : null;
+  }
+
+  /// A stat's normal color when measured, dimmed to _textDim when the key
+  /// never arrived -- same "missing looks visibly different" rule applied
+  /// to color, not just text.
+  Color _availColor(String key, Color color) => _statAvailable(key) ? color : _textDim;
+
+  // Build 773 (Canonical Hub Telemetry): value is nullable -- the identity
+  // field genuinely not having reported this axis yet must render as "—"
+  // and an empty bar, never as a measurement-shaped 0.10 (the old
+  // fallback). A real reading of 0.0 still renders as 0.000 with an empty
+  // bar, which looks identical -- that's correct, since a real zero and
+  // an empty bar are the same picture; only the LABEL distinguishes
+  // "measured zero" from "not measured", same as every other stat here.
+  Widget _axisBar(String axis, double? value) {
     final color = _axisColors[axis] ?? _purple;
     final label = _axisLabels[axis] ?? axis;
+    final available = value != null;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -279,16 +315,17 @@ class _HubScreenState extends State<HubScreen> {
           const SizedBox(width: 6),
           Text('$axis  $label', style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
           const Spacer(),
-          Text(value.toStringAsFixed(3), style: TextStyle(color: color, fontSize: 11)),
+          Text(available ? value.toStringAsFixed(3) : '—',
+            style: TextStyle(color: available ? color : _textDim, fontSize: 11)),
         ]),
         const SizedBox(height: 4),
         ClipRRect(
           borderRadius: BorderRadius.circular(3),
           child: LinearProgressIndicator(
-            value: value.clamp(0.0, 1.0),
+            value: available ? value.clamp(0.0, 1.0) : 0.0,
             minHeight: 5,
             backgroundColor: _border,
-            valueColor: AlwaysStoppedAnimation(color),
+            valueColor: AlwaysStoppedAnimation(available ? color : _border),
           ),
         ),
       ]),
@@ -427,55 +464,60 @@ class _HubScreenState extends State<HubScreen> {
       _sectionTitle('CONSTRAINT AXES', color: _cyan),
       _card(child: Column(children: [
         for (final ax in axes)
-          _axisBar(ax, (_stats[ax] as double?) ?? 0.10),
+          _axisBar(ax, (_stats[ax] as num?)?.toDouble()),
       ])),
     ]);
   }
 
   Widget _buildCognitivePanel() {
-    final lsa    = _stats['lsa_paths']   as int?    ?? 0;
-    final nCost  = _stats['avg_n_cost']  as double? ?? 1.0;
-    final sedi   = _stats['sedimemory_depth'] as int? ?? 0;
-    final crMat  = _stats['concept_crystal_maturity'] as double? ?? 0.0;
-    final crN    = _stats['concept_crystal_nodes'] as int? ?? 0;
-    final crP    = _stats['concept_crystal_promoted'] as int? ?? 0;
-    final nonc   = _stats['noncomp_loaded']    as int?    ?? 0;
-    final noncD  = _stats['noncomp_diagonal_live'] as int? ?? 0;
-    final uIdx   = _stats['understanding_index'] as double? ?? 0.0;
-    final coh    = _stats['coherence_index']     as double? ?? 0.0;
-    final grd    = _stats['grounding_index']     as double? ?? 0.0;
-    final tpc    = _stats['topic_tracking']      as double? ?? 0.0;
     final histDone = _stats['historical_events_experienced'] as int? ?? 0;
     final histTotal = _stats['historical_total_events'] as int? ?? 0;
     final histProgress = _stats['historical_progress'] as double? ?? 0.0;
     final histStatus = (_stats['historical_status'] as String?)?.replaceAll('_', ' ') ?? 'not initialized';
 
+    // Concept Crystal / Noncomp mini-stats mix several fields into one
+    // string -- rendered as a whole '—' when their primary field is
+    // unavailable, rather than a half-real half-dash string.
+    final crAvailable = _statAvailable('concept_crystal_nodes');
+    final crText = crAvailable
+        ? '${_intStat('concept_crystal_promoted')} promoted / ${_intStat('concept_crystal_nodes')} total '
+          '(${(( _dblOrNull('concept_crystal_maturity') ?? 0.0) * 100).toStringAsFixed(0)}%)'
+        : '—';
+    final noncAvailable = _statAvailable('noncomp_loaded');
+    final noncDAvailable = _statAvailable('noncomp_diagonal_live');
+
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _sectionTitle('COGNITIVE FIELD'),
       _card(child: Column(children: [
         Row(children: [
-          Expanded(child: _miniStat('LSA Paths', '$lsa', _purple)),
+          Expanded(child: _miniStat('LSA Paths', _intStat('lsa_paths'), _availColor('lsa_paths', _purple))),
           const SizedBox(width: 10),
-          Expanded(child: _miniStat('Avg N-Cost', nCost.toStringAsFixed(3),
-              _nCostColor(nCost))),
+          Expanded(child: _miniStat('Avg N-Cost', _dblStat('avg_n_cost'),
+              _statAvailable('avg_n_cost') ? _nCostColor(_dblOrNull('avg_n_cost') ?? 1.0) : _textDim)),
         ]),
         const SizedBox(height: 8),
         Row(children: [
-          Expanded(child: _miniStat('SediMemory', '$sedi frags', _cyan)),
+          Expanded(child: _miniStat('SediMemory',
+              _statAvailable('sedimemory_depth') ? '${_intStat('sedimemory_depth')} frags' : '—',
+              _availColor('sedimemory_depth', _cyan))),
           const SizedBox(width: 10),
-          Expanded(child: _miniStat('Concept Crystals', '$crP promoted / $crN total (${(crMat * 100).toStringAsFixed(0)}%)', _green)),
+          Expanded(child: _miniStat('Concept Crystals', crText, crAvailable ? _green : _textDim)),
         ]),
         const SizedBox(height: 8),
         Row(children: [
-          Expanded(child: _miniStat('Noncomp', '$nonc loaded', _textDim)),
+          Expanded(child: _miniStat('Noncomp',
+              noncAvailable ? '${_intStat('noncomp_loaded')} loaded' : '—',
+              _availColor('noncomp_loaded', _textDim))),
           const SizedBox(width: 10),
-          Expanded(child: _miniStat('Diagonal Live', '$noncD active', _purpleDim)),
+          Expanded(child: _miniStat('Diagonal Live',
+              noncDAvailable ? '${_intStat('noncomp_diagonal_live')} active' : '—',
+              _availColor('noncomp_diagonal_live', _purpleDim))),
         ]),
         const Divider(color: _border, height: 20),
-        _statRow('Understanding', uIdx.toStringAsFixed(3), valueColor: _green),
-        _statRow('Coherence',     coh.toStringAsFixed(3),  valueColor: _cyan),
-        _statRow('Grounding',     grd.toStringAsFixed(3),  valueColor: _amber),
-        _statRow('Topic Tracking',tpc.toStringAsFixed(3),  valueColor: _purple),
+        _statRow('Understanding', _dblStat('understanding_index'), valueColor: _availColor('understanding_index', _green)),
+        _statRow('Coherence',     _dblStat('coherence_index'),     valueColor: _availColor('coherence_index', _cyan)),
+        _statRow('Grounding',     _dblStat('grounding_index'),     valueColor: _availColor('grounding_index', _amber)),
+        _statRow('Topic Tracking',_dblStat('topic_tracking'),      valueColor: _availColor('topic_tracking', _purple)),
         const Divider(color: _border, height: 20),
         _statRow(
           'Historical Experience',
@@ -608,23 +650,24 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   Widget _buildEvolutionPanel() {
-    final evoC  = _stats['evo_cycles']    as int?    ?? 0;
-    final evoS  = _stats['sentence_target'] as int?  ?? 10;
-    final fossi = _stats['chamber_fossils'] as int?  ?? 0;
+    // Build 773: evo_cycles/sentence_target only ever land in the JSON
+    // together, inside evo_status()'s own success path -- evo_available's
+    // absence (not just its being false) is what "unavailable" means here.
     final avail = _stats['evo_available'] == true;
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _sectionTitle('EMERGENCE & EVOLUTION', color: _green),
       _card(child: Column(children: [
         Row(children: [
-          Expanded(child: _miniStat('Evo Cycles', '$evoC', _green)),
+          Expanded(child: _miniStat('Evo Cycles', avail ? _intStat('evo_cycles') : '—', avail ? _green : _textDim)),
           const SizedBox(width: 10),
-          Expanded(child: _miniStat('Sentence Target', '$evoS words',
+          Expanded(child: _miniStat('Sentence Target',
+              avail ? '${_intStat('sentence_target')} words' : '—',
               avail ? _text : _textDim)),
         ]),
         const SizedBox(height: 8),
         Row(children: [
-          Expanded(child: _miniStat('Chamber Fossils', '$fossi', _amber)),
+          Expanded(child: _miniStat('Chamber Fossils', _intStat('chamber_fossils'), _availColor('chamber_fossils', _amber))),
           const SizedBox(width: 10),
           Expanded(child: _miniStat('Live Evo', 'every 15 turns', _cyan)),
         ]),
@@ -658,12 +701,10 @@ class _HubScreenState extends State<HubScreen> {
   // real ability admission data (axis distribution, most-recently-
   // admitted abilities with their actual tags), not a synthetic summary.
   Widget _buildGenealogyPanel() {
-    final total = _stats['genealogy_ability_count'] as int? ?? 0;
     final axisCounts = Map<String, dynamic>.from(
         _stats['genealogy_axis_counts'] as Map? ?? {});
     final recentAbilities = List<dynamic>.from(
         _stats['genealogy_recent_abilities'] as List? ?? []);
-    final warpActuators = _stats['warp_actuator_count'] as int? ?? 0;
     final warpDemands = List<dynamic>.from(
         _stats['warp_recent_demands'] as List? ?? []);
 
@@ -671,9 +712,9 @@ class _HubScreenState extends State<HubScreen> {
       _sectionTitle('GENEALOGY', color: _amber),
       _card(child: Column(children: [
         Row(children: [
-          Expanded(child: _miniStat('Total Abilities', '$total', _amber)),
+          Expanded(child: _miniStat('Total Abilities', _intStat('genealogy_ability_count'), _availColor('genealogy_ability_count', _amber))),
           const SizedBox(width: 10),
-          Expanded(child: _miniStat('Actuators', '$warpActuators', _cyan)),
+          Expanded(child: _miniStat('Actuators', _intStat('warp_actuator_count'), _availColor('warp_actuator_count', _cyan))),
         ]),
         const SizedBox(height: 8),
         Row(children: [
@@ -742,7 +783,6 @@ class _HubScreenState extends State<HubScreen> {
   // whether it actually resolved. Real intervention records, not a
   // health-check summary invented at this layer.
   Widget _buildQuasiarchPanel() {
-    final eventCount = _stats['quasiarch_event_count'] as int? ?? 0;
     final interventions = List<dynamic>.from(
         _stats['quasiarch_recent_interventions'] as List? ?? []);
 
@@ -750,7 +790,7 @@ class _HubScreenState extends State<HubScreen> {
       _sectionTitle('QUASIARCH DIAGNOSTICS', color: _cyan),
       _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: _miniStat('Total Events', '$eventCount', _cyan)),
+          Expanded(child: _miniStat('Total Events', _intStat('quasiarch_event_count'), _availColor('quasiarch_event_count', _cyan))),
         ]),
         if (interventions.isEmpty)
           const Padding(
