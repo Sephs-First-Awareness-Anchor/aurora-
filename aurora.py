@@ -34078,6 +34078,30 @@ def _run_live_response_turn(
                         context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
                     )
 
+    # Give IVMLattice's own heartbeat a live driveshaft. gw._synthesize()
+    # above (Surface path) already admits real nodes onto systems['lattice']
+    # every turn (consciousness.process() -> lattice.admit()), but nothing
+    # in the live runtime ever called .tick() on it -- only aurora_ivm.py's
+    # own self-tests and the offline corpus_runner.py did. Calling the
+    # lattice's own existing tick() here (not consciousness.tick(), which
+    # would also silently activate entropy/DPME/dream simulation -- out of
+    # scope for "connect the wire") advances toroidal dynamics, energy
+    # flow, and the constraint-field rebuild/constitutive-mobility pass
+    # against nodes that already carry real conversational evidence.
+    # Subsurface-safe: runs after resp_A is finalized and externalized, so
+    # it can never delay what Aurora says.
+    _lattice_live = systems.get('lattice')
+    if _lattice_live is not None and hasattr(_lattice_live, 'tick'):
+        try:
+            _lattice_live.tick()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora.py:_run_live_response_turn:lattice_tick",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+            )
+
     elapsed_A = (time.time() - start) * 1000
     src = getattr(resp_A, "src", "mind")
     if src != "comprehension" and src != "search":
