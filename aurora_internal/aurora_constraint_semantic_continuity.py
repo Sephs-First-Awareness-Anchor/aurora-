@@ -1066,6 +1066,13 @@ def _base_relation(value: str) -> str:
     }
     if low in irregular:
         return irregular[low]
+    # An apostrophe-s contraction ("what's", "it's", "that's", "he's",
+    # "there's"...) is "is", not a plural/verb-agreement suffix -- the
+    # generic "strip a trailing s" rule below would otherwise mangle it
+    # into a nonword ("what's" -> "what'"), the same bug the irregular
+    # map above already exists to prevent for the spelled-out forms.
+    if low.endswith("'s"):
+        return "be"
     if low.endswith("ies") and len(low) > 4:
         return low[:-3] + "y"
     if low.endswith("es") and len(low) > 4:
