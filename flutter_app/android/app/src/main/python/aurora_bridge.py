@@ -8223,6 +8223,22 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                     log.warning("Curiosity cycle error: %s", exc)
                     break
 
+                # CPU-safety yield. run_curiosity_cycle() enforces its own
+                # _MAX_CYCLES_PER_IDLE cap (reset once, above, at session
+                # start) -- once that cap is hit mid-session every further
+                # call returns None almost instantly (two guard checks, no
+                # real work), and without a sleep here this loop degenerated
+                # into an unthrottled, zero-yield spin for the remainder of
+                # a user-requested duration that can be hours long
+                # (_parse_curiosity_cmd accepts "explore for N hours" with
+                # no ceiling on N) -- observed on-device as sustained high
+                # CPU eventually resetting the phone. A short yield every
+                # iteration, longer when the cycle did no real work, keeps
+                # this session's CPU footprint bounded like every other
+                # curiosity-cycle call site (autonomous relief, gauntlet)
+                # already is by their own small cycle counts.
+                _t2.sleep(0.05 if result else 1.0)
+
             # ── Directed pursuit for unsettled gaps ───────────────────────────
             # She identified what she doesn't know — now do something about it.
             # This is A-axis agency closing the loop on N-axis pressure.
