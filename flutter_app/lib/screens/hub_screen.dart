@@ -706,6 +706,31 @@ class _HubScreenState extends State<HubScreen> {
                 final m = Map<String, dynamic>.from(s as Map);
                 return m['state']?.toString() ?? '?';
               }).join(' → ');
+              String? userText;
+              if (states.isNotEmpty) {
+                final first = Map<String, dynamic>.from(states.first as Map);
+                userText = first['user_text'] as String?;
+              }
+              // Diagnostic-only: when a turn was suppressed_by_aurora, show
+              // what resp_A.content actually was BEFORE _sanitize_response()
+              // ran -- distinguishes "Aurora genuinely had nothing to say"
+              // (pre_sanitize_content also empty) from "she said something
+              // and Android's cleanup discarded it" (pre_sanitize_content
+              // non-empty), which are very different bugs to chase.
+              String? preSanitizePreview;
+              if (lastState == 'suppressed_by_aurora') {
+                for (final s in states.reversed) {
+                  final m = Map<String, dynamic>.from(s as Map);
+                  if (m['state'] == 'suppressed_by_aurora' && m.containsKey('pre_sanitize_content')) {
+                    final raw = (m['pre_sanitize_content'] as String? ?? '');
+                    final len = m['pre_sanitize_len'] as int? ?? raw.length;
+                    preSanitizePreview = raw.isEmpty
+                        ? 'aurora.py itself produced empty content -- genuine silence'
+                        : 'aurora.py produced $len chars, discarded by sanitize: "$raw${len > raw.length ? "…" : ""}"';
+                    break;
+                  }
+                }
+              }
               return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Text('…$shortId', style: const TextStyle(color: _textDim, fontSize: 10, fontFamily: 'monospace')),
@@ -713,9 +738,19 @@ class _HubScreenState extends State<HubScreen> {
                   Text(lastState.isEmpty ? '—' : lastState,
                       style: TextStyle(color: stateColor, fontSize: 11, fontWeight: FontWeight.w600)),
                 ]),
+                if (userText != null && userText.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text('"$userText"',
+                      style: const TextStyle(color: _purpleDim, fontSize: 10, fontStyle: FontStyle.italic)),
+                ],
                 const SizedBox(height: 3),
                 Text(sequence.isEmpty ? '—' : sequence,
                     style: const TextStyle(color: _text, fontSize: 10, height: 1.4)),
+                if (preSanitizePreview != null) ...[
+                  const SizedBox(height: 4),
+                  Text(preSanitizePreview,
+                      style: const TextStyle(color: Colors.orangeAccent, fontSize: 10, height: 1.4, fontStyle: FontStyle.italic)),
+                ],
               ]);
             }),
           ],

@@ -4382,7 +4382,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
 
         _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
         _systems["_current_turn_id"] = _turn_id
-        _record_turn_state(_turn_id, "surface_received")
+        _record_turn_state(_turn_id, "surface_received", user_text=text[:100])
 
         _box_lock = threading.Lock()
         _box_event = threading.Event()
@@ -4398,9 +4398,8 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
             # and the deep continuation's own bookkeeping (_last_response,
             # re-entry fidelity) agree on exactly what was said.
             try:
-                _surface_text = _sanitize_response(
-                    _extract_response({"resp_A": resp_a}), text
-                )
+                _raw_pre_sanitize = _extract_response({"resp_A": resp_a})
+                _surface_text = _sanitize_response(_raw_pre_sanitize, text)
                 if correction_acknowledged:
                     _ack = "Understood — I've taken that on board."
                     _surface_text = f"{_ack} {_surface_text}" if _surface_text else _ack
@@ -4421,7 +4420,17 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                     # resp_A.content was legitimately empty and there was no
                     # ack/synthesis/report to append -- a real Aurora
                     # decision not to speak, not an infrastructure failure.
-                    _record_turn_state(_turn_id, "suppressed_by_aurora")
+                    # Diagnostic-only: also record what came out of aurora.py
+                    # BEFORE _sanitize_response() ran, truncated -- so it's
+                    # visible whether resp_A.content itself was already empty
+                    # (a genuine cognitive decision) or whether sanitization
+                    # discarded real content (an echo-guard/telemetry-filter
+                    # false positive, a different and fixable problem).
+                    _record_turn_state(
+                        _turn_id, "suppressed_by_aurora",
+                        pre_sanitize_content=(_raw_pre_sanitize or "")[:200],
+                        pre_sanitize_len=len(_raw_pre_sanitize or ""),
+                    )
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(), module=__name__,
