@@ -219,3 +219,47 @@ def test_mobility_lag_second_tick_reflects_first_ticks_field():
     # into tick 2 so tick 2's flow_energy() call is not silently neutral.
     lattice.tick(dt=0.1)
     assert lattice._constitutive_mobility  # still populated after tick 2
+
+
+# ---------------------------------------------------------------------------
+# Live driveshaft: aurora.py's _run_live_response_turn now calls
+# systems['lattice'].tick() once per turn, Subsurface-safe, on the exact
+# lattice that gw._synthesize() -> consciousness.process() -> lattice.admit()
+# already populates with real conversational evidence every turn.
+# ---------------------------------------------------------------------------
+
+def test_tick_against_realistically_admitted_nodes_populates_field():
+    """admit() (the ONLY way nodes enter the lattice, live or otherwise --
+    aurora_ivm.py's own docstring) already sets each node's constraint_vector
+    at creation. A single tick() against nodes admitted this way -- not
+    synthetic ConstraintField.update() calls -- must actually populate the
+    field and advance the tick counter, proving the wiring works against
+    realistic data, not just hand-built fixtures."""
+    lattice, n1, n2 = _make_lattice_with_two_connected_persistent_nodes()
+    assert lattice.total_ticks == 0
+    assert lattice._constraint_field.occupied_count() == 0
+
+    lattice.tick()
+
+    assert lattice.total_ticks == 1
+    assert lattice._constraint_field.occupied_count() >= 1
+
+
+def test_live_response_turn_calls_lattice_tick_after_surface_ready():
+    """Source-presence check (mirrors tests/test_rw6c_track1_wiring.py's
+    body.index() ordering assertions): the new lattice.tick() call site
+    must exist in _run_live_response_turn, and must sit AFTER
+    on_surface_ready(resp_A) in source order -- i.e. it is provably in the
+    Subsurface-safe zone, never on the path that decides what Aurora says
+    or delays delivering it."""
+    import inspect
+    import aurora
+
+    source = inspect.getsource(aurora._run_live_response_turn)
+    surface_ready_idx = source.index("on_surface_ready(resp_A)")
+    lattice_tick_idx = source.index("_lattice_live.tick()")
+
+    assert lattice_tick_idx > surface_ready_idx, (
+        "lattice.tick() must run after on_surface_ready(resp_A), not before -- "
+        "it must never be able to delay or alter the delivered response"
+    )
