@@ -42,9 +42,16 @@ Reuses aurora_referent_hypothesis's own correction-marker detection
 rather than duplicating it.
 """
 
+import re
 from typing import Any, Dict, Optional
 
 from aurora_referent_hypothesis import _BARE_NEGATIVE_LEAD, _CORRECTION_MARKERS
+
+_EXPLICIT_CONFIRMATION_LEAD = re.compile(
+    r"^\s*(?:yes|yeah|yep|yup|exactly|correct|"
+    r"(?:that's|that is)\s+(?:right|correct|what i meant)|you got it)\b",
+    re.IGNORECASE,
+)
 
 
 def attempt_boundary_hypothesis(
@@ -111,14 +118,11 @@ def check_and_resolve_pending_boundary_hypothesis(
     systems: Dict[str, Any],
     new_user_text: str,
 ) -> Optional[Dict[str, Any]]:
-    """
-    Call at the START of the next turn, before this turn builds any new
-    hypothesis of its own -- same timing as aurora_referent_hypothesis's
-    check_and_resolve_pending_hypothesis(), and meant to be called right
-    beside it. Detects a real correction signal and logs the outcome --
-    confirmed or corrected -- as genuine developmental pressure either
-    way, so a wrong interpretation is preserved and learned from rather
-    than silently dropped.
+    """Resolve a pending boundary hypothesis only from an actual signal.
+
+    Correction and confirmation must both be explicit. A topic change,
+    unrelated answer, or simple absence of correction clears the probe
+    without awarding developmental confirmation: silence is not evidence.
     """
     if not isinstance(systems, dict):
         return None
@@ -132,22 +136,33 @@ def check_and_resolve_pending_boundary_hypothesis(
         any(marker in text_low for marker in _CORRECTION_MARKERS)
         or bool(_BARE_NEGATIVE_LEAD.match(text_low))
     )
+    was_confirmed = bool(_EXPLICIT_CONFIRMATION_LEAD.match(text_low))
 
     outcome = dict(pending)
-    outcome["corrected"] = was_corrected
+    if was_corrected:
+        outcome["corrected"] = True
+        outcome["resolved"] = True
+    elif was_confirmed:
+        outcome["corrected"] = False
+        outcome["resolved"] = True
+    else:
+        outcome["corrected"] = None
+        outcome["resolved"] = False
+        outcome["unanswered"] = True
+        return outcome
+
     try:
         from aurora_developmental_log import record_developmental_event
-        _pieces = " / ".join(
+        pieces = " / ".join(
             f"{k}={pending.get(k)!r}" for k in ("subject", "relation", "obj") if pending.get(k)
         )
         record_developmental_event(
             systems,
             "boundary_hypothesis_corrected" if was_corrected else "boundary_hypothesis_confirmed",
-            (f"guessed the shape of an unresolved question ({_pieces})"
-             + (" -- corrected by user" if was_corrected else " -- accepted, no correction")),
+            (f"guessed the shape of an unresolved question ({pieces})"
+             + (" -- corrected by user" if was_corrected else " -- explicitly confirmed by user")),
             once=False,
         )
     except Exception:
         pass
-
     return outcome
