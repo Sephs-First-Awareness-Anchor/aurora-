@@ -1138,7 +1138,8 @@ def _question_boundary_surface(form: Mapping[str, Any]) -> str:
     """Lexicalize an unresolved relation without pretending to answer it."""
     rel = dict(form or {})
     subject = str(rel.get("subject", "") or "").strip()
-    relation = _base_relation(str(rel.get("relation", "") or ""))
+    _raw_relation = str(rel.get("relation", "") or "").strip()
+    relation = _base_relation(_raw_relation)
     obj = str(rel.get("obj", "") or "").strip()
     unknown = str(rel.get("unknown_role", "") or "").strip()
     clauses = [
@@ -1172,9 +1173,15 @@ def _question_boundary_surface(form: Mapping[str, Any]) -> str:
     else:
         focus = subject or obj
         if focus and relation:
+            # Echo the word actually used ("is", "was", "that's"...), not
+            # its normalized lemma ("be") -- _base_relation() collapses
+            # is/are/was/were to "be" for internal matching (see the
+            # irregular-verb table above), which is correct for matching
+            # but reads as a fabricated word when read back verbatim: the
+            # user said "is", never "be".
             opening = (
                 f"I understand the question about {focus} and the relation "
-                f"you described as {relation}."
+                f"you described as {_raw_relation or relation}."
             )
         elif focus:
             opening = f"I understand the question about {focus}."

@@ -3039,9 +3039,18 @@ _ABILITY_NOTES_SUBSTRINGS = (
 # OETS study-cycle cognitive traces that should never reach the surface.
 # These are generated when Aurora processes understanding of a concept
 # internally and accidentally get stored in retention then re-surfaced.
+# Hotfix (2026-08-29): the trailing [^.!?\n]*[.!?]? used to swallow
+# arbitrary content up to the next sentence boundary, however far away --
+# a genuine leaked trace ("I understand what glorp means here") is a
+# short, self-contained phrase with nothing following it, but the same
+# opening also occurs at the start of perfectly ordinary sentences ("I
+# understand what you ARE saying about..."), and the old pattern deleted
+# those whole and legitimate. Anchored to \Z so it only matches when the
+# means/is/are/here word is (near) the actual end of the response --
+# i.e. nothing real follows it -- rather than anywhere it happens to occur.
 _STUDY_TRACE_RE = re.compile(
     r'\bI\s+understand\s+(?:what|who|where|when|how)\s+\w+\s+(?:means?|is|are|here)\b'
-    r'[^.!?\n]*[.!?]?',
+    r'\s*[.!?]?\s*\Z',
     re.IGNORECASE,
 )
 # "I'll want the [concept]." — another constraint artifact shape
