@@ -377,6 +377,62 @@ def get_late_surface_response() -> str:
         _late_surface_response = ""
     return val
 
+
+# Build 774 PR3: turn diagnostics -- the ten observable states named by the
+# build directive, keyed by turn_id. A legitimate Aurora decision not to
+# speak (suppressed_by_aurora) must stay distinguishable from infrastructure
+# failing to deliver one (timeout / transport_failure / empty_expression).
+# Pure observation: never read by any cognitive code path, and never
+# allowed to affect a turn even if a write here itself fails.
+_LIVE_TURN_STATES = (
+    "surface_received", "surface_processing", "surface_expressed",
+    "subsurface_active", "subsurface_integrated", "suppressed_by_aurora",
+    "empty_expression", "transport_failure", "timeout", "late_completion",
+)
+_live_turn_diagnostics: "dict[str, dict]" = {}
+_live_turn_diagnostics_lock = threading.Lock()
+_LIVE_TURN_DIAGNOSTICS_MAX = 200  # bounded, oldest evicted -- same discipline as every other diagnostics store in this file
+
+
+def _record_turn_state(turn_id: str, state: str, **extra) -> None:
+    """Best-effort, silent on failure -- pure observability, must never
+    affect the turn it's observing."""
+    try:
+        if state not in _LIVE_TURN_STATES:
+            return
+        now = time.time()
+        with _live_turn_diagnostics_lock:
+            entry = _live_turn_diagnostics.setdefault(turn_id, {"turn_id": turn_id, "states": []})
+            entry["states"].append({"state": state, "ts": now, **extra})
+            entry["last_state"] = state
+            entry["last_ts"] = now
+            if len(_live_turn_diagnostics) > _LIVE_TURN_DIAGNOSTICS_MAX:
+                oldest_id = min(
+                    _live_turn_diagnostics,
+                    key=lambda k: _live_turn_diagnostics[k]["states"][0]["ts"],
+                )
+                if oldest_id != turn_id:
+                    _live_turn_diagnostics.pop(oldest_id, None)
+    except Exception:
+        pass
+
+
+def get_live_turn_diagnostics(turn_id: "str | None" = None) -> str:
+    """Bridge getter -- JSON string of one turn's recorded state sequence
+    (by turn_id), or of every currently-retained turn if turn_id is
+    omitted. Diagnostics only; never consumed by any Python cognition
+    call site."""
+    import json as _json_diag
+    with _live_turn_diagnostics_lock:
+        if turn_id is not None:
+            data = _live_turn_diagnostics.get(turn_id, {})
+        else:
+            data = list(_live_turn_diagnostics.values())
+    try:
+        return _json_diag.dumps(data)
+    except Exception:
+        return "{}" if turn_id is not None else "[]"
+
 # Self-grounding counter — re-derive and re-pump self-knowledge from actual
 # system patterns every N turns so her self-understanding stays current as
 # her sediment and axis patterns evolve.
@@ -4315,6 +4371,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
 
         _turn_id = f"turn_{_uuid_hm.uuid4().hex}"
         _systems["_current_turn_id"] = _turn_id
+        _record_turn_state(_turn_id, "surface_received")
 
         _box_lock = threading.Lock()
         _box_event = threading.Event()
@@ -4347,6 +4404,13 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                         f"{_pending_report_now}\n\n{_surface_text}"
                         if _surface_text else _pending_report_now
                     )
+                if _surface_text:
+                    _record_turn_state(_turn_id, "surface_expressed", chars=len(_surface_text))
+                else:
+                    # resp_A.content was legitimately empty and there was no
+                    # ack/synthesis/report to append -- a real Aurora
+                    # decision not to speak, not an infrastructure failure.
+                    _record_turn_state(_turn_id, "suppressed_by_aurora")
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(), module=__name__,
@@ -4355,6 +4419,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                     context={"function": "_on_surface_ready", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py", "turn_id": _turn_id},
                 )
                 _surface_text = ""
+                _record_turn_state(_turn_id, "empty_expression", error=str(_aurora_boundary_exc))
 
             _route_late = False
             with _box_lock:
@@ -4368,11 +4433,13 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                 # instead (polled the same way as a proactive expression)
                 # so this never becomes a second, duplicate response for
                 # the same turn.
+                _record_turn_state(_turn_id, "late_completion")
                 _store_late_surface_response(_turn_id, _surface_text)
 
         def _continue_deep_turn() -> None:
             global _last_response, _last_path_key, _vacuum_reconciliation_debt
             try:
+                _record_turn_state(_turn_id, "surface_processing")
                 with _lock:
                     result = _aurora.process_external_user_turn(
                         _systems,
@@ -4388,6 +4455,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                         on_surface_ready=_on_surface_ready,
                     )
                 response = _box_state["text"]
+                _record_turn_state(_turn_id, "subsurface_active")
                 # Repair P (per Sunni, 2026-08-19): _last_axis_state's X/T/N/B/A
                 # were never written anywhere in this file -- confirmed by
                 # searching every assignment pattern before touching anything.
@@ -4781,6 +4849,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                         )
 
                 print(f"AURORA_BRIDGE: Response: {response}")
+                _record_turn_state(_turn_id, "subsurface_integrated")
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(), module=__name__,
@@ -4788,6 +4857,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                     exc=_aurora_boundary_exc,
                     context={"function": "_continue_deep_turn", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py", "turn_id": _turn_id},
                 )
+                _record_turn_state(_turn_id, "transport_failure", error=str(_aurora_boundary_exc))
                 with _box_lock:
                     if not _box_event.is_set():
                         _box_state["text"] = "I encountered an error processing your request."
@@ -4801,6 +4871,8 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         with _box_lock:
             _box_state["delivered"] = True
             response = _box_state["text"] if _surface_arrived else ""
+        if not _surface_arrived:
+            _record_turn_state(_turn_id, "timeout")
         return response
     except Exception as exc:
         log.error("handle_message: %s\n%s", exc, traceback.format_exc())
