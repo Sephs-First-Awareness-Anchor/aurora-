@@ -33053,6 +33053,7 @@ def _run_live_response_turn(
     update_interactive_state: bool = False,
     track_evolutionary_trace: bool = False,
     run_periodic_maintenance: bool = False,
+    on_surface_ready: Optional[Callable[[Any], None]] = None,
 ) -> Dict[str, Any]:
     user_text = _normalize_identity_followup_text(user_text, systems)
 
@@ -33940,6 +33941,29 @@ def _run_live_response_turn(
             exc=_aurora_boundary_exc,
             context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
         )
+
+    # Build 774 (Android Surface/Subsurface Live-Turn Reconnection): resp_A
+    # is now fully decided -- nothing from here on ever mutates it, only
+    # reads it (conversation-memory write, working-memory update, cross-
+    # pipeline learning, genealogy/lineage attribution, consequence
+    # attribution, communication_emergence.observe_turn(),
+    # recursive_causal_waveform completion, reflective_readdressing --
+    # all downstream, all read-only with respect to this object). This is
+    # the real Surface/Subsurface seam: a caller that only needs the
+    # externalized response, not the deeper consequence work this same
+    # call continues to do, can be notified right here instead of waiting
+    # for the function to return. Best-effort and silent on failure --
+    # this is pure observability, it must never affect the turn itself.
+    if on_surface_ready is not None:
+        try:
+            on_surface_ready(resp_A)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora.py:_run_live_response_turn:on_surface_ready",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+            )
 
     elapsed_A = (time.time() - start) * 1000
     src = getattr(resp_A, "src", "mind")
@@ -35223,6 +35247,7 @@ def process_external_user_turn(
     mode_name: str = "BOUNDED",
     mode_override: Any = None,
     turn_tick: Optional[int] = None,
+    on_surface_ready: Optional[Callable[[Any], None]] = None,
 ) -> Dict[str, Any]:
     """
     Canonical public bridge into Aurora's live response engine.
@@ -35230,6 +35255,14 @@ def process_external_user_turn(
     External tools and auxiliary runtimes should route here rather than
     building their own generation path, so training and lineage stay tied to
     the same 5-constraint response contract.
+
+    Build 774: on_surface_ready, when supplied, is called with the
+    delivered response object the moment it is decided (before any of the
+    deeper consequence/genealogy/memory work below runs) -- the hook a
+    caller uses to externalize Aurora's response without waiting for that
+    same turn's own Subsurface continuation to finish. Omit it (the
+    default) for byte-for-byte identical behavior to every existing
+    caller of this function.
     """
     if not isinstance(systems, dict):
         return {}
@@ -35503,6 +35536,7 @@ def process_external_user_turn(
             update_interactive_state=update_interactive_state,
             track_evolutionary_trace=track_evolutionary_trace,
             run_periodic_maintenance=run_periodic_maintenance,
+            on_surface_ready=on_surface_ready,
         )
         if isinstance(result, dict) and runtime_contract:
             result["runtime_contract"] = dict(runtime_contract)
