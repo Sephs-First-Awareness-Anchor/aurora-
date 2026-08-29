@@ -471,6 +471,33 @@ class AuroraLexicalGrounding(WarpCapable):
             candidate.status = "promoted"
             candidate.genealogy_ability_id = self._register_genealogy(candidate, self._warp_promoted.get(component_id))
             self._write_back_oets(candidate)
+            # Build 773 (Developmental Integration Closure): expose every
+            # promotion -- historical or live, "historical provenance must
+            # not create a separate ontology" -- to the SAME Concept
+            # Crystal admission surface ordinary cognition already uses
+            # (aurora_bridge.py's cross-modal perception call, e.g.). The
+            # registry itself decides whether anything happens; this only
+            # hands it the axis-profile evidence a promoted candidate
+            # already computed. path_key is stable per candidate identity
+            # (never per-call), so a resubmission for the same candidate --
+            # not expected here, since `promoted` only ever lists
+            # newly-promoted component_ids, but true regardless -- only
+            # strengthens the registry's existing facet rather than
+            # inflating facet-diversity-gated maturity. A replay-derived
+            # candidate promotes through this exact same loop under its own
+            # candidate_id, so its crystal evidence is traceable via PR 1/2's
+            # genealogy ancestry tags -- no separate call needed there.
+            # Best-effort and silent on failure: the registry may not be
+            # wired into self.systems in every boot context, and that must
+            # never break WARP promotion.
+            try:
+                registry = self.systems.get("_concept_crystal_registry")
+                if registry is not None and hasattr(registry, "observe_lsa"):
+                    registry.observe_lsa(
+                        dict(candidate.axis_profile), f"lexical_grounding:{candidate.candidate_id}"
+                    )
+            except Exception:
+                pass
             # Build 772: observability-only tallies -- never read by any
             # scoring/gating path.
             if any(str(e.get("evidence_source") or "") == "historical" for e in candidate.evidence):
