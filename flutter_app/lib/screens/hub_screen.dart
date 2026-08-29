@@ -63,6 +63,14 @@ class _HubScreenState extends State<HubScreen> {
   bool _loading = true;
   Timer? _timer;
 
+  // Build 774 live turn diagnostics -- on-device visibility into which of
+  // the ten Surface/Subsurface states each recent live turn reached
+  // (surface_received/processing/expressed, subsurface_active/integrated,
+  // suppressed_by_aurora, empty_expression, transport_failure, timeout,
+  // late_completion), so a hung or silent turn is diagnosable from the
+  // phone itself without a computer/adb.
+  List<dynamic> _turnDiagnostics = [];
+
   // Habitat diagnostics (Aurora Build 712) -- raw counts only, see
   // aurora_habitat.py's HabitatRuntime.integrity_report(): "for us", per
   // spec section 46, never a developmental judgment.
@@ -96,6 +104,7 @@ class _HubScreenState extends State<HubScreen> {
       final roomJson = roomRaw['raw'] as String? ?? '{}';
       final room = jsonDecode(roomJson) as Map<String, dynamic>;
       final habitatReport = await HabitatBridge.integrityReport();
+      final turnDiagnostics = await AuroraBridge.getLiveTurnDiagnostics();
       if (mounted) {
         setState(() {
           _stats    = stats;
@@ -104,6 +113,7 @@ class _HubScreenState extends State<HubScreen> {
           _messages = (room['messages'] as List<dynamic>?) ?? [];
           _activity = (room['activity'] as List<dynamic>?) ?? [];
           _habitatReport = habitatReport;
+          _turnDiagnostics = turnDiagnostics;
           _loading  = false;
         });
       }
@@ -414,6 +424,7 @@ class _HubScreenState extends State<HubScreen> {
                   _buildAxisPanel(),
                   _buildCognitivePanel(),
                   _buildDevelopmentPanel(),
+                  _buildLiveTurnDiagnosticsPanel(),
                   _buildEvolutionPanel(),
                   _buildGenealogyPanel(),
                   _buildQuasiarchPanel(),
@@ -645,6 +656,69 @@ class _HubScreenState extends State<HubScreen> {
           const SizedBox(width: 10),
           Expanded(child: _miniStat('Promotions', '$promotionsFromReplay', _green)),
         ]),
+      ])),
+    ]);
+  }
+
+  // Build 774: raw on-device visibility into recent live turns' recorded
+  // states, so a hung/silent turn is diagnosable from the phone alone.
+  // Newest first; an entry whose last_state is still surface_received or
+  // surface_processing (never reached a terminal state) means that turn
+  // is/was genuinely stuck at that exact point -- the single most useful
+  // fact for triaging "she went silent."
+  static const _terminalGoodStates = {
+    'subsurface_integrated', 'suppressed_by_aurora', 'late_completion',
+  };
+  static const _terminalBadStates = {
+    'transport_failure', 'timeout', 'empty_expression',
+  };
+
+  Widget _buildLiveTurnDiagnosticsPanel() {
+    final entries = List<Map<String, dynamic>>.from(
+      _turnDiagnostics.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+    )..sort((a, b) => (b['last_ts'] as num? ?? 0).compareTo(a['last_ts'] as num? ?? 0));
+    final recent = entries.take(6).toList();
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionTitle('LIVE TURN DIAGNOSTICS', color: _cyan),
+      _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        if (recent.isEmpty)
+          const Text(
+            'No live turns recorded yet this session -- send Aurora a '
+            'message, then pull down to refresh.',
+            style: const TextStyle(color: _textDim, fontSize: 11, height: 1.4),
+          )
+        else
+          for (int i = 0; i < recent.length; i++) ...[
+            if (i > 0) const Divider(color: _border, height: 16),
+            Builder(builder: (_) {
+              final e = recent[i];
+              final states = List<dynamic>.from(e['states'] as List? ?? []);
+              final lastState = e['last_state'] as String? ?? '';
+              final turnId = (e['turn_id'] as String? ?? '');
+              final shortId = turnId.length > 8 ? turnId.substring(turnId.length - 8) : turnId;
+              final Color stateColor = _terminalGoodStates.contains(lastState)
+                  ? _green
+                  : _terminalBadStates.contains(lastState)
+                      ? Colors.redAccent
+                      : _cyan; // still mid-flight (or a live-only state like surface_expressed)
+              final sequence = states.map((s) {
+                final m = Map<String, dynamic>.from(s as Map);
+                return m['state']?.toString() ?? '?';
+              }).join(' → ');
+              return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Text('…$shortId', style: const TextStyle(color: _textDim, fontSize: 10, fontFamily: 'monospace')),
+                  const Spacer(),
+                  Text(lastState.isEmpty ? '—' : lastState,
+                      style: TextStyle(color: stateColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                ]),
+                const SizedBox(height: 3),
+                Text(sequence.isEmpty ? '—' : sequence,
+                    style: const TextStyle(color: _text, fontSize: 10, height: 1.4)),
+              ]);
+            }),
+          ],
       ])),
     ]);
   }

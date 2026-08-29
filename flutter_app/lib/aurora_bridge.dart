@@ -210,6 +210,20 @@ class AuroraBridge {
     return _parseCognitiveStats(json);
   }
 
+  /// Build 774 live turn diagnostics: get_live_turn_diagnostics() returns
+  /// a JSON array (no turn_id argument = every currently-retained turn),
+  /// each entry {turn_id, states: [{state, ts, ...}], last_state, last_ts}
+  /// -- the ten Surface/Subsurface states named in aurora_bridge.py's
+  /// _LIVE_TURN_STATES. Diagnostic-only, on-device debugging surface.
+  static Future<List<dynamic>> getLiveTurnDiagnostics() async {
+    final json = await _channel.invokeMethod<String>('getLiveTurnDiagnostics') ?? '[]';
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is List) return decoded;
+    } catch (_) {}
+    return [];
+  }
+
   // Build 773 (Canonical Hub Telemetry): real JSON parsing, not regex --
   // precedented by uploadContent()'s own jsonDecode() use above in this
   // same file. The old regex parser had two real bugs beyond the
