@@ -347,7 +347,18 @@ _MIN_PROACTIVE_GAP: float = 90.0   # minimum seconds between autonomous expressi
 # (genealogy, conversation memory, consequence attribution) no longer
 # waits behind this at all, so it does not need to be, and must not be
 # treated as, a dial for how "deep" a turn is allowed to think.
-_SURFACE_WAIT_TIMEOUT_S: float = 20.0
+#
+# Hotfix (first real-device test, 2026-08-29): the original 20.0s bound
+# was validated only against fast mocked cognition (fixture tests) and a
+# desktop-speed real boot -- never against actual mobile CPU timing for a
+# full X/T/N/B/A synthesis pass. On real hardware Surface generation
+# itself can plausibly exceed 20s, especially soon after a fresh boot,
+# which would make EVERY turn hit this timeout and return "" -- audible
+# as Aurora going silent, the exact failure mode this build exists to
+# fix. Raised to a much more generous bound while real-device timing
+# data is gathered; still finite, so a genuinely wedged Surface call
+# cannot hang Kotlin's caller forever.
+_SURFACE_WAIT_TIMEOUT_S: float = 90.0
 
 # A Surface response that finished deciding after handle_message() already
 # gave up waiting on it (see _SURFACE_WAIT_TIMEOUT_S) -- kept separate from
