@@ -4791,6 +4791,42 @@ def _normalize_identity_followup_text(text: str, systems: Dict[str, Any] | None 
     return raw
 
 
+_VOCATIVE_ADDRESS_RE = re.compile(
+    r"^(?:well|so|okay|ok|um+|uh+)[\s,]+"  # optional leading filler
+    r"(?:hey|hi|hello|yo)[\s,]+aurora\b[\s,]*",
+    re.IGNORECASE,
+)
+_VOCATIVE_ADDRESS_LEAD_RE = re.compile(
+    r"^(?:hey|hi|hello|yo)[\s,]+aurora\b[\s,]*",
+    re.IGNORECASE,
+)
+
+
+def _strip_vocative_address(text: str) -> str:
+    """Strip a leading direct address to Aurora ("hey Aurora,", "well hey
+    Aurora", "okay Aurora,"...) so the real question underneath parses
+    normally instead of the vocative phrase confusing subject/relation
+    extraction. Live trace: "Hey Aurora, what's up?" parsed as
+    subject="Hey Aurora" relation="what'" -- the address itself became
+    the extracted subject, and the real question ("what's up") never got
+    a chance to match "wellbeing_query" (the already-correct existing
+    path for "how are you"-shaped questions about Aurora herself).
+
+    Deliberately conservative: only strips a leading vocative, never
+    touches "aurora" appearing mid-sentence as real content, and only
+    when real text remains afterward -- a message that's nothing but the
+    address itself ("hey aurora") is left untouched, since there is
+    nothing here to hand off to an existing correct path for."""
+    raw = str(text or "")
+    stripped = _VOCATIVE_ADDRESS_RE.sub("", raw)
+    if stripped == raw:
+        stripped = _VOCATIVE_ADDRESS_LEAD_RE.sub("", raw)
+    stripped = stripped.strip()
+    if not stripped or stripped == raw.strip():
+        return raw
+    return stripped
+
+
 def _persist_user_identity_name(
     name: str,
     systems: Dict[str, Any] | None,
@@ -19680,6 +19716,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             receiver_observation=dict(
                 systems.get("_last_understanding_observation") or {}
             ),
+            systems=systems,
         ) or {})
         if isinstance(state.pipeline_state, dict):
             state.pipeline_state["constraint_grounded_candidate"] = dict(_constraint_candidate)
@@ -33051,6 +33088,7 @@ def _run_live_response_turn(
     on_surface_ready: Optional[Callable[[Any], None]] = None,
 ) -> Dict[str, Any]:
     user_text = _normalize_identity_followup_text(user_text, systems)
+    user_text = _strip_vocative_address(user_text)
 
     # Try/fail/correct-course: resolve any referent hypothesis this system
     # offered last turn against what the user actually said next, before
@@ -33063,6 +33101,22 @@ def _run_live_response_turn(
             locals(),
             module=__name__,
             operation="exception_handler:aurora.py:_run_live_response_turn:hypothesis_check",
+            exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
+        pass
+
+    # Same try/fail/correct-course discipline, applied to boundary-surface
+    # question/directive interpretations instead of pronoun referents. See
+    # aurora_boundary_hypothesis.py.
+    try:
+        from aurora_boundary_hypothesis import check_and_resolve_pending_boundary_hypothesis
+        check_and_resolve_pending_boundary_hypothesis(systems, user_text)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_run_live_response_turn:boundary_hypothesis_check",
             exc=_aurora_boundary_exc,
             context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
         )
