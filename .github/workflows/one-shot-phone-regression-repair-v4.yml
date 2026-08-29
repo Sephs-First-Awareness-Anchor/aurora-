@@ -1,0 +1,108 @@
+name: One-shot phone regression repair v4
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Apply guarded repair
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import textwrap
+          raw = Path('.github/workflows/one-shot-phone-regression-repair-v2.yml').read_text(encoding='utf-8')
+          start_marker = "          python - <<'PY'\n"
+          end_marker = "\n          PY\n"
+          start = raw.index(start_marker) + len(start_marker)
+          end = raw.index(end_marker, start)
+          code = textwrap.dedent(raw[start:end])
+          exec(compile(code, '<guarded-phone-repair-v2>', 'exec'), {})
+          PY
+
+      - name: Compile and run focused regressions with dependency bootstrap
+        shell: bash
+        run: |
+          python -m py_compile aurora.py aurora_boundary_hypothesis.py \
+            aurora_internal/aurora_constraint_semantic_continuity.py \
+            flutter_app/android/app/src/main/python/aurora_bridge.py
+          python -m pip install --disable-pip-version-check pytest
+          python - <<'PY'
+          import re
+          import subprocess
+          import sys
+
+          tests = [
+              'tests/test_boundary_hypothesis_and_vocative_stripping.py',
+              'tests/test_boundary_surface_and_study_trace_regressions.py',
+              'tests/test_android_surface_subsurface_reconnection.py',
+              'tests/test_constraint_semantic_continuity.py',
+          ]
+          package_for = {
+              'numpy': 'numpy',
+              'scipy': 'scipy',
+              'networkx': 'networkx',
+              'requests': 'requests',
+              'yaml': 'pyyaml',
+              'PIL': 'pillow',
+              'psutil': 'psutil',
+              'cv2': 'opencv-python-headless',
+              'sklearn': 'scikit-learn',
+              'pandas': 'pandas',
+              'dateutil': 'python-dateutil',
+          }
+          installed = set()
+          for attempt in range(12):
+              proc = subprocess.run(
+                  [sys.executable, '-m', 'pytest', '-q', *tests],
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT,
+              )
+              print(proc.stdout)
+              if proc.returncode == 0:
+                  raise SystemExit(0)
+              match = re.search(r"ModuleNotFoundError: No module named ['\"]([^'\"]+)", proc.stdout)
+              if not match:
+                  raise SystemExit(proc.returncode)
+              root = match.group(1).split('.')[0]
+              package = package_for.get(root)
+              if not package or package in installed:
+                  raise SystemExit(proc.returncode)
+              print(f'Installing missing runtime dependency: {root} -> {package}')
+              subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--disable-pip-version-check', package])
+              installed.add(package)
+          raise SystemExit('dependency bootstrap exceeded retry bound')
+          PY
+
+      - name: Commit repair and remove one-shot runners
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm \
+            .github/workflows/one-shot-phone-regression-repair.yml \
+            .github/workflows/one-shot-phone-regression-repair-pr.yml \
+            .github/workflows/one-shot-phone-regression-repair-v2.yml \
+            .github/workflows/one-shot-phone-regression-repair-v3.yml \
+            .github/workflows/one-shot-phone-regression-repair-v4.yml
+          git add aurora.py aurora_boundary_hypothesis.py \
+            aurora_internal/aurora_constraint_semantic_continuity.py \
+            flutter_app/android/app/src/main/python/aurora_bridge.py \
+            flutter_app/lib/screens/hub_screen.dart \
+            tests/test_boundary_hypothesis_and_vocative_stripping.py \
+            tests/test_android_surface_subsurface_reconnection.py
+          git commit -m "fix: close confirmed phone turn regressions"
+          git push origin HEAD:${{ github.head_ref }}
