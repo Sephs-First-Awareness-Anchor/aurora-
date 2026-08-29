@@ -6688,6 +6688,17 @@ class ConstraintGenealogyLogger:
         risk["X"] = max(0.01, 0.12 * (1.0 - trial_score))
         risk["T"] = max(0.0, 0.06 * (1.0 - min(1.0, distinct_surfaces / 4.0)))
 
+        # Build 773 (Developmental Integration Closure): surface WHERE this
+        # candidate's evidence came from and, when a developmental-replay
+        # resolution contributed, what made the derivation possible -- both
+        # already computed by the caller from its own evidence list, never
+        # re-derived here. This is what lets a promoted representation's
+        # historical origin remain part of its genealogy (per the build's
+        # governing principle) without a second index anywhere.
+        historical_evidence_count = max(0, int(rec.get("historical_evidence_count", 0) or 0))
+        live_evidence_count = max(0, int(rec.get("live_evidence_count", 0) or 0))
+        replay_ancestry = [dict(a) for a in list(rec.get("replay_ancestry") or []) if isinstance(a, dict)][:5]
+
         tags = [
             "derived_operation",
             "lexical_role_grounding",
@@ -6698,8 +6709,17 @@ class ConstraintGenealogyLogger:
             f"trial_score:{trial_score:.4f}",
             f"evidence_count:{evidence_count}",
             f"distinct_surfaces:{distinct_surfaces}",
+            f"historical_evidence:{historical_evidence_count}",
+            f"live_evidence:{live_evidence_count}",
         ]
         tags.extend(f"parent:{parent}" for parent in parents[:8])
+        for ancestor in replay_ancestry:
+            replay_of = str(ancestor.get("replay_of_possibility_id") or "")
+            enabled_by = str(ancestor.get("enabling_genealogy_ability_id") or "")
+            if replay_of:
+                tags.append(f"replay_ancestor:{replay_of}")
+            if enabled_by:
+                tags.append(f"replay_enabled_by:{enabled_by}")
         ability = _augment_ability_profile_with_origin(AbilityProfile(
             id=ability_id,
             axis=axis,
