@@ -23909,19 +23909,16 @@ def _run_reasoning_pipeline(
         if _sd is not None and _chamber is not None and _esurfaces is not None:
             if hasattr(_sd, 'tick'):
                 _sd_evidence = _sd.tick(_chamber, _esurfaces)
-                for _sd_ev in (_sd_evidence or []):
-                    try:
-                        if hasattr(_chamber, 'observe_external_evidence'):
-                            _chamber.observe_external_evidence(_sd_ev)
-                    except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:16750",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 16750, "source_file": "aurora.py"},
-                        )
-                        pass
+                # Build 774: observe_external_evidence() -> constraint_
+                # genealogy.register_code_evolution_outcome() profiled at
+                # ~4.6s per call on real hardware for pure code-evolution
+                # bookkeeping -- it does not feed this turn's resp_A
+                # synthesis (only the fire count does, captured below
+                # immediately either way). Queue the evidence itself and
+                # let _run_live_response_turn's Subsurface zone actually
+                # observe it, once resp_A has already been externalized.
+                if _sd_evidence:
+                    systems.setdefault('_deferred_surface_dispatcher_evidence', []).extend(_sd_evidence)
                 if _sd_evidence and isinstance(state.pipeline_state, dict):
                     state.pipeline_state['surface_dispatcher_fires'] = len(_sd_evidence)
     except Exception as _aurora_boundary_exc:
@@ -24969,18 +24966,16 @@ def _run_reasoning_pipeline(
         if _qev:
             _ch2 = systems.get("chamber")
             if _ch2 and hasattr(_ch2, "observe_external_evidence"):
-                for _qe in _qev[:3]:
-                    try:
-                        _ch2.observe_external_evidence(_qe)
-                    except Exception as _aurora_boundary_exc:
-                        _aurora_record_exception_from_locals(
-                            locals(),
-                            module=__name__,
-                            operation="exception_handler:aurora.py:17515",
-                            exc=_aurora_boundary_exc,
-                            context={"function": "_run_reasoning_pipeline", "handler_line": 17515, "source_file": "aurora.py"},
-                        )
-                        pass
+                # Build 774: same shape as the surface-dispatcher evidence
+                # just above -- pure post-decision bookkeeping (this whole
+                # block runs after "Stamp state onto systems for downstream
+                # consumers", reading already-decided state fields, and the
+                # return value here is discarded). Queue it into the same
+                # deferred-evidence list _run_live_response_turn's
+                # Subsurface zone already drains, instead of paying
+                # observe_external_evidence()'s cost (profiled at several
+                # seconds) before resp_A is even decided.
+                systems.setdefault('_deferred_surface_dispatcher_evidence', []).extend(_qev[:3])
         _om = getattr(state, "other_model", None)
         if _om:
             _g2 = systems.get("genealogy") or systems.get("chamber")
@@ -33688,6 +33683,18 @@ def _run_live_response_turn(
                 context={"function": "_run_live_response_turn", "handler_line": 23813, "source_file": "aurora.py"},
             )
             pass
+    # Build 774 note: this call was briefly made lazy/deferred under the
+    # (wrong) assumption that it wasn't needed before resp_A. Reverted --
+    # _chain_up5_understanding() (aurora.py:19361, "Stage 5 up --
+    # Understanding (A axis) -- THE APEX") runs inside dual_question_
+    # pipeline's own reasoning chain and explicitly reuses this call's
+    # result via systems["_live_contract_observation_done"] "so the same
+    # receiver turn cannot advance the contract twice" (its own
+    # docstring). Deferring the call past dual_question_pipeline didn't
+    # skip the work, it just made that reuse-cache miss, so the same
+    # ~7-8s cost still ran synchronously, one level deeper and less
+    # visibly. Real fix for this cost has to be inside ingest_observation/
+    # _record_genealogy_event itself, not in when it's called.
     if understanding_contract is not None and hasattr(understanding_contract, 'ingest_observation'):
         try:
             understanding_observation = dict(
@@ -33818,6 +33825,19 @@ def _run_live_response_turn(
             src="memory_sweep",
         )
         _early_application = _commit_early_response(resp_A, "memory_sweep")
+        # Build 774: this is an early exit -- resp_A is fully decided right
+        # here, same as the main path's callback point below, so a Surface
+        # caller must be notified here too or it never hears back at all.
+        if on_surface_ready is not None:
+            try:
+                on_surface_ready(resp_A)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora.py:_run_live_response_turn:on_surface_ready:memory_sweep",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+                )
         return {
             'input': user_text,
             'resp_A': resp_A,
@@ -33845,6 +33865,16 @@ def _run_live_response_turn(
              _early_validation = _finalize_early_validation()
              resp_A = SimpleNamespace(content=teach_reply, emotional_tone="happy", confidence=0.95, src="teaching")
              _early_application = _commit_early_response(resp_A, "teaching")
+             if on_surface_ready is not None:
+                 try:
+                     on_surface_ready(resp_A)
+                 except Exception as _aurora_boundary_exc:
+                     _aurora_record_exception_from_locals(
+                         locals(), module=__name__,
+                         operation="exception_handler:aurora.py:_run_live_response_turn:on_surface_ready:teaching_reply",
+                         exc=_aurora_boundary_exc,
+                         context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+                     )
              return {
                  'input': user_text, 'resp_A': resp_A, 'resp_B': None, 'offered_lookup': False,
                  'is_question': False, 'elapsed_A': 0.0, 'src': "teaching", 'turn_tick': turn_tick,
@@ -33859,6 +33889,16 @@ def _run_live_response_turn(
              _early_validation = _finalize_early_validation()
              resp_A = SimpleNamespace(content=offer_reply, emotional_tone="attentive", confidence=0.90, src="teaching")
              _early_application = _commit_early_response(resp_A, "teaching")
+             if on_surface_ready is not None:
+                 try:
+                     on_surface_ready(resp_A)
+                 except Exception as _aurora_boundary_exc:
+                     _aurora_record_exception_from_locals(
+                         locals(), module=__name__,
+                         operation="exception_handler:aurora.py:_run_live_response_turn:on_surface_ready:teaching_offer",
+                         exc=_aurora_boundary_exc,
+                         context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+                     )
              return {
                  'input': user_text, 'resp_A': resp_A, 'resp_B': None, 'offered_lookup': False,
                  'is_question': False, 'elapsed_A': 0.0, 'src': "teaching", 'turn_tick': turn_tick,
@@ -33964,6 +34004,25 @@ def _run_live_response_turn(
                 exc=_aurora_boundary_exc,
                 context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
             )
+
+    # Build 774: consume the surface-dispatcher evidence queued above,
+    # now that resp_A no longer waits on it -- same
+    # chamber.observe_external_evidence() call, same per-item exception
+    # handling, just moved past the Surface/Subsurface seam.
+    _deferred_sd_evidence = systems.pop('_deferred_surface_dispatcher_evidence', None)
+    if _deferred_sd_evidence:
+        _chamber_late = systems.get('chamber')
+        if _chamber_late is not None and hasattr(_chamber_late, 'observe_external_evidence'):
+            for _sd_ev_late in _deferred_sd_evidence:
+                try:
+                    _chamber_late.observe_external_evidence(_sd_ev_late)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(), module=__name__,
+                        operation="exception_handler:aurora.py:_run_live_response_turn:deferred_surface_dispatcher_evidence",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+                    )
 
     elapsed_A = (time.time() - start) * 1000
     src = getattr(resp_A, "src", "mind")
