@@ -189,7 +189,8 @@ def store_owner_state(attribute: str, target_key: Any, value: Any, args: tuple) 
 # ---------------------------------------------------------------------------
 
 def apply_constraint_genealogy_rewrite(strategies: Dict[str, Any], target_key: Any, result: Any,
-                                        reflection: Any, args: tuple, kwargs: dict) -> Any:
+                                        reflection: Any, args: tuple, kwargs: dict, *,
+                                        original_invoked: bool = True) -> Any:
     strategy = target_strategy(strategies, target_key)
     feedback = target_feedback(strategies, target_key)
     bias = str(strategy.get('rewrite_bias', 'lineage_memory') or 'lineage_memory')
@@ -237,7 +238,7 @@ def apply_constraint_genealogy_rewrite(strategies: Dict[str, Any], target_key: A
                 'timing_penalty': float(feedback.get('timing_penalty', 0.0) or 0.0),
             }
         return enriched
-    if result is None and isinstance(reflection, dict):
+    if not original_invoked and isinstance(reflection, dict):
         fallback = dict(reflection)
         fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'constraint_genealogy') or 'constraint_genealogy')
         fallback['_aurora_genealogy_strategy'] = strategy
@@ -255,7 +256,8 @@ def apply_constraint_genealogy_rewrite(strategies: Dict[str, Any], target_key: A
 
 
 def apply_governance_rewrite(strategies: Dict[str, Any], target_key: Any, result: Any,
-                              reflection: Any, args: tuple, kwargs: dict) -> Any:
+                              reflection: Any, args: tuple, kwargs: dict, *,
+                              original_invoked: bool = True) -> Any:
     strategy = target_strategy(strategies, target_key)
     feedback = target_feedback(strategies, target_key)
     bias = str(strategy.get('rewrite_bias', 'governance_routing') or 'governance_routing')
@@ -300,7 +302,7 @@ def apply_governance_rewrite(strategies: Dict[str, Any], target_key: Any, result
                 'trial_count': int(feedback.get('trial_count', 0) or 0),
             }
         return enriched
-    if result is None and isinstance(reflection, dict):
+    if not original_invoked and isinstance(reflection, dict):
         fallback = dict(reflection)
         fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'governance_gateway') or 'governance_gateway')
         fallback['_aurora_genealogy_strategy'] = strategy
@@ -323,7 +325,8 @@ def apply_governance_rewrite(strategies: Dict[str, Any], target_key: Any, result
 
 
 def apply_perception_rewrite(strategies: Dict[str, Any], target_key: Any, result: Any,
-                              reflection: Any, args: tuple, kwargs: dict) -> Any:
+                              reflection: Any, args: tuple, kwargs: dict, *,
+                              original_invoked: bool = True) -> Any:
     strategy = target_strategy(strategies, target_key)
     feedback = target_feedback(strategies, target_key)
     bias = str(strategy.get('rewrite_bias', 'perceptual_synthesis') or 'perceptual_synthesis')
@@ -368,7 +371,7 @@ def apply_perception_rewrite(strategies: Dict[str, Any], target_key: Any, result
                 'trial_count': int(feedback.get('trial_count', 0) or 0),
             }
         return enriched
-    if result is None and isinstance(reflection, dict):
+    if not original_invoked and isinstance(reflection, dict):
         fallback = dict(reflection)
         fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'perception_synthesis') or 'perception_synthesis')
         fallback['_aurora_genealogy_strategy'] = strategy
@@ -397,7 +400,8 @@ def apply_perception_rewrite(strategies: Dict[str, Any], target_key: Any, result
 
 
 def apply_dimensional_rewrite(strategies: Dict[str, Any], target_key: Any, result: Any,
-                               reflection: Any, args: tuple, kwargs: dict) -> Any:
+                               reflection: Any, args: tuple, kwargs: dict, *,
+                               original_invoked: bool = True) -> Any:
     strategy = target_strategy(strategies, target_key)
     feedback = target_feedback(strategies, target_key)
     bias = str(strategy.get('rewrite_bias', 'dimensional_balancing') or 'dimensional_balancing')
@@ -442,7 +446,7 @@ def apply_dimensional_rewrite(strategies: Dict[str, Any], target_key: Any, resul
                 'trial_count': int(feedback.get('trial_count', 0) or 0),
             }
         return enriched
-    if result is None and isinstance(reflection, dict):
+    if not original_invoked and isinstance(reflection, dict):
         fallback = dict(reflection)
         fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'dimensional_balancing') or 'dimensional_balancing')
         fallback['_aurora_genealogy_strategy'] = strategy
@@ -471,19 +475,38 @@ def apply_dimensional_rewrite(strategies: Dict[str, Any], target_key: Any, resul
 
 
 def apply_result_rewrite(native_module: str, strategies: Dict[str, Any], target_key: Any, result: Any,
-                          reflection: Any, args: tuple, kwargs: dict) -> Any:
+                          reflection: Any, args: tuple, kwargs: dict, *,
+                          original_invoked: Optional[bool] = None) -> Any:
     """Dispatches to one of the 4 specializations by module identity, or a
     generic fallback -- the same design each of the 25 files already had,
     just no longer with all 4 branches (3 of which can never fire in any
-    given module) pasted alongside the one that's actually reachable."""
+    given module) pasted alongside the one that's actually reachable.
+
+    original_invoked distinguishes "the wrapped original legitimately
+    returned this result (None included)" from "no usable original was
+    available at all" -- conflating the two (treating any None result as
+    if the target were missing) silently replaced a real function's
+    documented, correct None return with the reflection stub on every
+    call. Defaults to None here (rather than requiring every one of the
+    ~20 existing per-module callers -- e.g. aurora.py's, aurora_ivm.py's,
+    each module's own _aurora_apply_result_rewrite() -- to be updated) and
+    falls back to the old `result is not None` heuristic in that case, so
+    only make_override()'s _override(), which knows for certain whether it
+    invoked the original, gets the corrected behavior."""
+    if original_invoked is None:
+        original_invoked = result is not None
     if native_module == 'aurora_internal.constraint_genealogy':
-        return apply_constraint_genealogy_rewrite(strategies, target_key, result, reflection, args, kwargs)
+        return apply_constraint_genealogy_rewrite(strategies, target_key, result, reflection, args, kwargs,
+                                                    original_invoked=original_invoked)
     if native_module == 'aurora_governance_persistence_gateway':
-        return apply_governance_rewrite(strategies, target_key, result, reflection, args, kwargs)
+        return apply_governance_rewrite(strategies, target_key, result, reflection, args, kwargs,
+                                         original_invoked=original_invoked)
     if native_module == 'aurora_expression_perception':
-        return apply_perception_rewrite(strategies, target_key, result, reflection, args, kwargs)
+        return apply_perception_rewrite(strategies, target_key, result, reflection, args, kwargs,
+                                         original_invoked=original_invoked)
     if native_module == 'aurora_dimensional_systems':
-        return apply_dimensional_rewrite(strategies, target_key, result, reflection, args, kwargs)
+        return apply_dimensional_rewrite(strategies, target_key, result, reflection, args, kwargs,
+                                          original_invoked=original_invoked)
     store_reflection(target_key, reflection, args)
     strategy = target_strategy(strategies, target_key)
     feedback = target_feedback(strategies, target_key)
@@ -503,7 +526,7 @@ def apply_result_rewrite(native_module: str, strategies: Dict[str, Any], target_
             'return_hint': str(contract.get('return_hint', '') or ''),
         }
         return enriched
-    if result is None and isinstance(reflection, dict):
+    if not original_invoked and isinstance(reflection, dict):
         fallback = dict(reflection)
         fallback['_aurora_rewrite_profile'] = str(strategy.get('rewrite_profile', 'generic') or 'generic')
         fallback['_aurora_genealogy_strategy'] = strategy
@@ -511,7 +534,7 @@ def apply_result_rewrite(native_module: str, strategies: Dict[str, Any], target_
         fallback['_aurora_contract_profile'] = contract
         fallback['generic_adaptation_mode'] = mode
         return fallback
-    if result is not None:
+    if original_invoked:
         store_owner_state(
             '_aurora_generic_evolution_state',
             target_key,
@@ -540,11 +563,19 @@ def make_override(globals_dict: Dict[str, Any], originals: Dict[str, Any], evolv
 
     def _override(*args, **kwargs):
         result = None
+        # Tracked separately from `result` itself: a target whose original
+        # legitimately returns None (e.g. ConstraintGenealogyLogger.observe()
+        # on a non-relief tick -- its own documented contract) must not be
+        # conflated with "no usable original was available." Only the
+        # latter should fall through to the reflection stub below.
+        original_invoked = False
         if isinstance(original, property):
             if args:
                 result = original.__get__(args[0], type(args[0]))
+                original_invoked = True
         elif callable(original):
             result = original(*args, **kwargs)
+            original_invoked = True
         engine = native_evolved_engine_fn()
         reflection = {
             'available': False,
@@ -554,10 +585,11 @@ def make_override(globals_dict: Dict[str, Any], originals: Dict[str, Any], evolv
         if engine is not None:
             reflection = globals_dict[export_name]({'args_len': len(args), 'kwargs_keys': sorted(kwargs.keys())})
         evolved_last[target_key] = reflection
-        rewritten = apply_result_rewrite(native_module, strategies, target_key, result, reflection, args, kwargs)
+        rewritten = apply_result_rewrite(native_module, strategies, target_key, result, reflection, args, kwargs,
+                                          original_invoked=original_invoked)
         if rewritten is not None:
             return rewritten
-        if result is not None:
+        if original_invoked:
             return result
         return reflection
 
