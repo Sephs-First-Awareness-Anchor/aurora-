@@ -272,3 +272,25 @@ class TestNoImplicitDefaultsMasqueradingAsKnown:
         # The unpinned ref is untouched (immutable dataclass) -- pin creates
         # a new, distinctly-named object rather than mutating in place.
         assert ref.sub_law_c is None
+
+    def test_column_pin_is_a_named_explicit_operation_not_a_silent_default(self):
+        """Mirrors test_anchor_pin_is_a_named_explicit_operation_not_a_silent_default
+        for as_pinned_column() -- the escape hatch ReflexiveInterpreter.interpret()'s
+        live SlotCoord construction uses for the column (law_c/law_d), which has no
+        independent evidence at that call site (confirmed: IndexEntry.dense_top3
+        aggregates across every col_law_c, discarding which one contributed)."""
+        ref = RepresentationalRef(nc_law_c="B", nc_dim="COST", nc_target="A")
+        assert ref.col_law_c is None and ref.col_law_d is None
+        pinned = ref.as_pinned_column()
+        assert pinned.col_law_c == "B" and pinned.col_law_d == "COST"
+        # The unpinned ref is untouched (immutable dataclass) -- pin creates
+        # a new, distinctly-named object rather than mutating in place.
+        assert ref.col_law_c is None
+
+    def test_column_pin_requires_nc_law_c_and_nc_dim_already_resolved(self):
+        ref = RepresentationalRef()
+        try:
+            ref.as_pinned_column()
+            assert False, "as_pinned_column() should raise when nc_law_c/nc_dim are unresolved"
+        except ValueError:
+            pass

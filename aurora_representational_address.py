@@ -198,6 +198,22 @@ class RepresentationalRef:
             raise ValueError("as_pinned_anchor() requires nc_law_c/nc_dim to already be resolved")
         return replace(self, sub_law_c=self.nc_law_c, sub_law_d=self.nc_dim)
 
+    def as_pinned_column(self) -> "RepresentationalRef":
+        """Explicit, clearly-named opt-in to pinning the column (col_law_c/
+        col_law_d := this ref's own nc_law_c/nc_dim) for call sites with no
+        independent column evidence -- e.g. ReflexiveInterpreter.interpret()'s
+        live SlotCoord construction, where the only candidate
+        (IndexEntry.dense_top3) was traced to
+        aurora_constraint_manifold_compiler.py's dense_clusters computation
+        and confirmed to aggregate across every col_law_c that ever produced
+        a given (sub_cluster, col_law_d) pair, structurally discarding which
+        one contributed -- not merely hard to parse out. Only defined
+        starting from a ref that already has nc_law_c/nc_dim; never called
+        automatically."""
+        if self.nc_law_c is None or self.nc_dim is None:
+            raise ValueError("as_pinned_column() requires nc_law_c/nc_dim to already be resolved")
+        return replace(self, col_law_c=self.nc_law_c, col_law_d=self.nc_dim)
+
     # ── NonComp (C1) identity helpers ───────────────────────────────────────
 
     def nc_name_key(self) -> Optional[Tuple[str, str, str]]:
