@@ -17935,6 +17935,8 @@ def _log_modulation_event(
     signals: Dict[str, Any],
     text_changed: bool,
     tone_changed: bool,
+    *,
+    representational_ref: Optional[str] = None,
 ) -> None:
     """
     Log a genealogy relief event after _apply_pipeline_modulation fires.
@@ -17944,6 +17946,13 @@ def _log_modulation_event(
     Traces back to:
       N:READ_PIPELINE_STATE   (N-axis, energy read)
       B:SHAPE_EXPRESSION_BOUNDARY  (B-axis, boundary shaping)
+
+    representational_ref, when supplied, is the encoded RepresentationalRef
+    string already produced by ReflexiveInterpreter.interpret() earlier in
+    this same turn (systems["_last_noncomp_input"]["representational_ref"])
+    -- threaded through so this observation can be traced back to the
+    interpretation it followed, rather than rediscovered later from a
+    poorer representation.
     """
     if not genealogy or not (text_changed or tone_changed):
         return
@@ -17984,6 +17993,7 @@ def _log_modulation_event(
                 "source": "apply_pipeline_modulation",
                 "text_changed": text_changed,
                 "tone_changed": tone_changed,
+                **({"representational_ref": representational_ref} if representational_ref else {}),
             },
         )
     except Exception as _aurora_boundary_exc:
@@ -21129,6 +21139,7 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
                 systems.get("genealogy"), state.pipeline_state,
                 text_changed=(state.response_content != _orig),
                 tone_changed=(state.response_tone != _orig_tone),
+                representational_ref=(systems.get("_last_noncomp_input") or {}).get("representational_ref"),
             )
             _record_response_revision(state, "chain_down1_pipeline_modulation", _orig, _orig_conf)
         except Exception as _aurora_boundary_exc:
