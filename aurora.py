@@ -34110,6 +34110,62 @@ def _run_live_response_turn(
                 context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
             )
 
+    # Give EvolutionaryChamber's genealogy fossilization/link-promotion a
+    # live driveshaft too -- same defect as the lattice above. Real
+    # evidence is already logged into systems['genealogy'] every turn
+    # (chamber._genealogy IS that same object), but chamber.tick() -- the
+    # only thing that advances it toward link promotion -- has real call
+    # sites only in aurora_runtime.py (unused by the live app),
+    # aurora_daemon.py's desktop-only background loop (aurora_bridge.py
+    # itself: "The Android app never runs aurora_daemon.py... at all"),
+    # and corpus_runner.py (offline). Unlike the lattice, this one spends
+    # a real energy budget and can set chamber._alive=False permanently
+    # on a Non-Comp breach, so it needs the SAME two signals
+    # aurora_daemon.py's own chamber-ticking cadence already combines:
+    # RuntimeConstraintGovernor.evaluate_task("evo_tick", ...) (resource
+    # admissibility -- memory/load/disk pressure; NOT a cadence gate by
+    # itself: its "maintenance multiplier" makes an established routine
+    # CHEAPER to keep running, never harder, so relying on it alone would
+    # let this fire every single turn) AND
+    # RuntimeConstraintGovernor.recommended_sleep(...) (the same N/T
+    # budget-derived interval -- 15/20/30s -- that literally paces
+    # aurora_daemon.py's outer loop, reused here as the minimum spacing
+    # between live-path chamber ticks rather than inventing a new
+    # constant). process_external_user_turn already built and cached this
+    # governor above (systems["_runtime_constraint_governor"]) for
+    # "response_turn"; this reuses that same instance for both calls. No
+    # new ActionTrace construction -- action=None is tick()'s own
+    # "natural drift" default, the same way aurora_daemon.py:9617 already
+    # calls it.
+    _chamber_live = systems.get('chamber')
+    _runtime_gov_live = systems.get('_runtime_constraint_governor')
+    if _chamber_live is not None and _runtime_gov_live is not None:
+        try:
+            _heat_name_live = str(systems.get("_daemon_heat", "NORMAL") or "NORMAL").upper()
+            _heat_label_live = {
+                "LOW": "low", "NORMAL": "medium", "MEDIUM": "medium",
+                "HIGH": "high", "CRITICAL": "high",
+            }.get(_heat_name_live, "medium")
+            _now_live = time.time()
+            _last_chamber_tick = float(systems.get('_last_chamber_tick_time', 0.0) or 0.0)
+            _min_interval = _runtime_gov_live.recommended_sleep(systems, heat=_heat_label_live)
+            if _now_live - _last_chamber_tick >= _min_interval:
+                _evo_decision = _runtime_gov_live.evaluate_task(
+                    "evo_tick", systems, heat=_heat_label_live,
+                    quiet=False, state_write_lock=False,
+                )
+                if _evo_decision.get("allowed", False):
+                    _chamber_live.tick()
+                    _runtime_gov_live.note_task_run("evo_tick")
+                    systems['_last_chamber_tick_time'] = _now_live
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora.py:_run_live_response_turn:chamber_tick",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+            )
+
     elapsed_A = (time.time() - start) * 1000
     src = getattr(resp_A, "src", "mind")
     if src != "comprehension" and src != "search":
