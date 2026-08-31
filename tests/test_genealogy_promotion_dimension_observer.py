@@ -63,12 +63,19 @@ class TestPromotionInputIsStructurallyAxisOnly:
     def test_observe_never_forwards_difference_snapshot_to_pair_accumulation(self):
         from aurora_internal.constraint_genealogy import ConstraintGenealogyLogger
 
-        source = inspect.getsource(ConstraintGenealogyLogger.observe)
+        # Repair N wrapped observe()'s real ~350-line body in _observe_impl()
+        # behind a concurrency lock (constraint_genealogy.py's own docstring
+        # on observe()) -- observe() itself is now a thin public entry-point
+        # stub that just calls self._observe_impl(...); _accumulate_pairs()
+        # lives in _observe_impl(), not in observe() directly. Inspect the
+        # real body, not the stub, so this test tracks the actual wiring
+        # rather than becoming permanently stale relative to that refactor.
+        source = inspect.getsource(ConstraintGenealogyLogger._observe_impl)
         accumulate_calls = [
             line.strip() for line in source.splitlines()
             if "_accumulate_pairs(" in line
         ]
-        assert accumulate_calls, "observe() no longer calls _accumulate_pairs() -- re-verify wiring."
+        assert accumulate_calls, "_observe_impl() no longer calls _accumulate_pairs() -- re-verify wiring."
         for call in accumulate_calls:
             assert "difference_snapshot" not in call, (
                 f"observe() now forwards difference_snapshot into pair accumulation "
