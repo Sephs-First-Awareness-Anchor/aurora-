@@ -112,18 +112,39 @@ def run_canary(state_dir: Optional[str] = None) -> List[BoundaryRecord]:
     ))
 
     # ── Boundary 3: live SlotCoord construction (ReflexiveInterpreter.interpret) ──
-    coord_a = SlotCoord(state_a.constraint, state_a.constraint, state_a.dimension, state_a.constraint, state_a.dimension)
-    coord_b = SlotCoord(state_b.constraint, state_b.constraint, state_b.dimension, state_b.constraint, state_b.dimension)
+    # Reconstructed via the SAME mechanism interpret() itself now uses --
+    # RepresentationalRef(nc_law_c=idx_e.nc_law_c, nc_dim=idx_e.nc_dim,
+    # nc_target=idx_e.nc_target).as_pinned_column() -- not a hand-rolled
+    # copy, so this boundary tracks interpret()'s real behavior rather than
+    # a frozen snapshot of what it used to do.
+    from aurora_representational_address import RepresentationalRef, slotcoord_from_ref
+    idx_e_a = directory.get_index_entry(state_a.nc_name)
+    idx_e_b = directory.get_index_entry(state_b.nc_name)
+    coord_a = slotcoord_from_ref(
+        RepresentationalRef(nc_law_c=idx_e_a.nc_law_c, nc_dim=idx_e_a.nc_dim,
+                             nc_target=idx_e_a.nc_target).as_pinned_column()
+    )
+    coord_b = slotcoord_from_ref(
+        RepresentationalRef(nc_law_c=idx_e_b.nc_law_c, nc_dim=idx_e_b.nc_dim,
+                             nc_target=idx_e_b.nc_target).as_pinned_column()
+    )
     records.append(BoundaryRecord(
         "3_live_slotcoord_construction",
-        "pinned",
-        "aurora_reflexive_interpreter.py's interpret() builds SlotCoord with "
-        "target=nc_law_c=law_c all forced to match.constraint -- the "
-        "coordinate's 5 nominal fields collapse to 2 independent values "
-        "(constraint, dimension), repeated. Still distinguishable between "
-        "these two experiences because their constraints differ, but the "
-        "coordinate's OWN internal richness (a genuinely independent law_c) "
-        "is pinned away regardless of which experience this is.",
+        "preserved",
+        "aurora_reflexive_interpreter.py's interpret() now derives the row "
+        "(nc_law_c/nc_dim/target) from the manifold directory's own "
+        "IndexEntry for the matched NC -- genuinely independent of "
+        "SemanticMatcher's live classification, not a copy of it. The "
+        "column (law_c/law_d) still has no independent evidence anywhere "
+        "reachable at that call site (confirmed: IndexEntry.dense_top3's "
+        "cluster_pair aggregation discards which col_law_c contributed), so "
+        "it is pinned via the doctrine's named as_pinned_column() escape "
+        "hatch rather than a disguised copy. Both EXPERIENCE_A/B happen to "
+        "land on diagonal NCs (nc_law_c == nc_target), so this specific "
+        "pair's row values don't visibly diverge from the old pinned "
+        "values here -- the mechanism change is real and independently "
+        "verified against a non-diagonal NC in "
+        "tests/test_reflexive_interpreter_slotcoord_derivation.py.",
         coord_a.slot_id, coord_b.slot_id,
         coord_a != coord_b,
     ))

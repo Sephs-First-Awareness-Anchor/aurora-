@@ -141,7 +141,10 @@ except ImportError as _aurora_boundary_exc:
     _SEDIMENT_AVAILABLE = False
 
 try:
-    from aurora_representational_address import RepresentationalRef as _RepresentationalRef
+    from aurora_representational_address import (
+        RepresentationalRef as _RepresentationalRef,
+        slotcoord_from_ref as _slotcoord_from_ref,
+    )
     _REPRESENTATIONAL_REF_AVAILABLE = True
 except ImportError as _aurora_boundary_exc:
     _aurora_record_exception_from_locals(
@@ -1014,6 +1017,8 @@ class ReflexiveInterpreter:
         origin_weight=0.0; origin_region="sparse"; depth_sc=0.50
         _nc_target_resolved = None  # populated below when idx_e resolves; used to
                                      # build a C1-level RepresentationalRef at deposit time
+        idx_e = None  # populated below when the NC directory lookup resolves; used
+                       # for the live SlotCoord's independently-derived row (nc_law_c/nc_dim)
         if self._directory and match.nc_name:
             try:
                 with self._directory.open(match.nc_name) as m:
@@ -1117,8 +1122,31 @@ class ReflexiveInterpreter:
         route_result = None
         if self._router and match.is_reliable:
             try:
-                coord  = SlotCoord(match.constraint,match.constraint,match.dimension,
-                                   match.constraint,match.dimension)
+                # Row (nc_law_c/nc_dim/target): independently derived when the
+                # NC directory identity resolved above (idx_e) -- genuinely
+                # separate from SemanticMatcher's live per-utterance
+                # classification, not a copy of it. target stays
+                # match.constraint (which manifold THIS utterance routes
+                # through is a live, per-turn question SemanticMatcher is the
+                # right authority for). Falls back to match.constraint/
+                # match.dimension only when no NC identity resolved at all --
+                # identical to the previous unconditional behavior in that
+                # case. Column (law_c/law_d): no independent evidence exists
+                # anywhere reachable here (confirmed -- IndexEntry.dense_top3
+                # aggregates across every col_law_c, discarding which one
+                # contributed), so it's pinned via the doctrine's own
+                # explicitly-named escape hatch rather than a disguised copy.
+                if _REPRESENTATIONAL_REF_AVAILABLE:
+                    _row_law_c  = idx_e.nc_law_c if idx_e is not None else match.constraint
+                    _row_dim    = idx_e.nc_dim   if idx_e is not None else match.dimension
+                    _row_target = _nc_target_resolved if _nc_target_resolved is not None else match.constraint
+                    _slot_ref = _RepresentationalRef(
+                        nc_law_c=_row_law_c, nc_dim=_row_dim, nc_target=_row_target,
+                    ).as_pinned_column()
+                    coord = _slotcoord_from_ref(_slot_ref)
+                else:
+                    coord  = SlotCoord(match.constraint,match.constraint,match.dimension,
+                                       match.constraint,match.dimension)
                 signal = RouteSignal(source=coord,strength=ws,intent=expression[:80],
                                      band_pos=self._band_pos,min_evo_target=min_evo,max_targets=max_t)
                 route_result = self._router.route_signal(signal)
