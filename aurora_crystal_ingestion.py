@@ -11,7 +11,20 @@ wires the two remaining cross-system data flows that still need a bridge:
      DPS crystal as facets, so recurring behavioral patterns crystallize
      rather than only accumulating in the JSONL log.
 
-  2. DUAL STRATA FRAME → SEDIMEMORY: High-coherence conscious frames
+  2. PRESSURE → SEDIMEMORY: The same PressureExperiences are also ingested
+     as MemoryEvents so they reach the 25-cell NCStrainFilter and settle
+     into the sediment column.  Before this bridge existed, PressureExperience
+     records had exactly one outbound path (the DPS crystal hook below) and
+     the ledger's own 500-entry JSONL ring buffer was therefore terminal:
+     experience 501 silently destroyed experience 1 with nothing downstream
+     holding it.  SediMemory is the durable strata; PressureExperienceLedger
+     is a staging buffer in front of it.  The NCStrainFilter DIFFERENCE
+     dimension already keys on novelty/deviation/surprise/error/anomaly/gap,
+     so surprise-weighted retention is performed by the existing strainer --
+     this module supplies the divergence measurement, it does not re-implement
+     selection.
+
+  3. DUAL STRATA FRAME → SEDIMEMORY: High-coherence conscious frames
      (coherence >= FRAME_SEDIMENT_THRESHOLD) are ingested into SediMemory
      as self-observation events so coherent states accumulate geologically.
 
@@ -36,6 +49,17 @@ from typing import Any, Dict
 
 PRESSURE_CRYSTAL_MIN_WORTH  = 0.48   # experiences below this skip DPS
 FRAME_SEDIMENT_THRESHOLD    = 0.70   # coherence gate for sedimemory
+
+# Flood control ONLY -- not a selection rule.  Depth-of-deposit selection is
+# NCStrainFilter's job (resonance threshold + DIFFERENCE-dimension lens).
+# This gate exists so that a subsystem emitting hundreds of identical
+# genealogy ticks per minute cannot bury the strata in confirmations of what
+# Aurora already predicts.  A first-ever (anchor, action) pair scores 1.0 and
+# always passes; a perfectly predicted repeat scores 0.0 and does not.
+PRESSURE_SEDIMENT_MIN_DIVERGENCE = 0.15
+
+# Canonical constraint axes, in the order fixed by the AXIS_NC_DIM mapping.
+_PRESSURE_AXES = ("X", "T", "N", "B", "A")
 
 # ── Axis/I-state map for ConstraintVector construction ─────────────────────
 
@@ -105,19 +129,239 @@ def _crystallize_pressure_exp(exp: Any, dps: Any) -> None:
         pass
 
 
-def _install_pressure_dps_hook(dps: Any) -> None:
-    """Inject a crystal hook into PressureExperienceLedger."""
+# ══════════════════════════════════════════════════════════════════════════════
+# 1b. PRESSURE → SEDIMEMORY
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _pressure_axis_for(anchor: str) -> str:
+    """
+    Read the constraint axis the anchor declares about itself.
+
+    Two anchor formats reach the ledger and both are handled by their own
+    canonical reader -- no heuristic classification happens here:
+
+      1. Prose signature names from genealogy_signature_bridge, built by
+         aurora_constraint_signature_resolver.nc_name(law, dim, target)
+         -- "Existential_Operator_of_Agency".  These are decoded with that
+         module's own parse_nc_name(), and the TARGET is the axis, because
+         constraint_genealogy passes target=dom_axis at the call site.
+         Scanning these for a bare axis letter does NOT work and silently
+         mislabels every anchor whose target is not A.
+
+      2. Colon-delimited keys written directly by constraint_genealogy --
+         "B:INTERFACE_WEAKEN:T:ADVANCE_TICK", "REFAB:X:OPERATOR:A:...".
+         The first token that is a canonical axis symbol is the axis this
+         experience was recorded against.
+
+    Anything else (dream_trainer passes a bare fail-dimension name) falls
+    back to A: an unlabelled recorded experience is by construction an
+    authored action.
+    """
+    text = str(anchor or "").strip()
+    if not text:
+        return "A"
+
+    if "_of_" in text and ":" not in text:
+        try:
+            from aurora_constraint_signature_resolver import parse_nc_name
+            _law, _dim, target = parse_nc_name(text)
+            if str(target).upper() in _PRESSURE_AXES:
+                return str(target).upper()
+        except Exception:
+            # Not a well-formed signature name; fall through to token scan.
+            pass
+
+    for token in text.split(":"):
+        tok = token.strip().upper()
+        if tok in _PRESSURE_AXES:
+            return tok
+    return "A"
+
+
+def _pressure_divergence(exp: Any) -> Dict[str, Any]:
+    """
+    How far this experience's outcome sits from what her own prior record
+    predicted for the same (anchor, causal_action) pair.
+
+    Measured against the ledger buffer EXCLUDING this experience -- the
+    crystal hook fires after PressureExperienceLedger.record() has already
+    appended, so the current record must be filtered out or every experience
+    would partly predict itself.
+
+    Returns {divergence, prior_resolution_rate, prior_sample_count}.
+    A pair never seen before scores 1.0: a first encounter carries maximum
+    information about a region of her map she has no history in.
+    """
+    result = {"divergence": 1.0, "prior_resolution_rate": 0.0, "prior_sample_count": 0}
     try:
         from aurora_internal.aurora_pressure_ledger import PressureExperienceLedger
         ledger = PressureExperienceLedger.get()
-        ledger._crystal_hook = lambda exp: _crystallize_pressure_exp(exp, dps)
+
+        anchor = str(getattr(exp, "anchor", "") or "")
+        action = str(getattr(exp, "causal_action", "") or "")
+        this_id = str(getattr(exp, "experience_id", "") or "")
+
+        prior = [
+            e for e in ledger._buffer
+            if e.anchor == anchor
+            and e.causal_action == action
+            and e.experience_id != this_id
+        ]
+        if not prior:
+            return result
+
+        resolved_n = sum(1 for e in prior if e.outcome.get("resolved", False))
+        prior_rate = resolved_n / len(prior)
+        observed   = 1.0 if dict(getattr(exp, "outcome", {}) or {}).get("resolved", False) else 0.0
+
+        result["divergence"] = round(abs(observed - prior_rate), 4)
+        result["prior_resolution_rate"] = round(prior_rate, 4)
+        result["prior_sample_count"] = len(prior)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
             module=__name__,
-            operation="exception_handler:aurora_crystal_ingestion.py:106",
+            operation="exception_handler:aurora_crystal_ingestion.py:_pressure_divergence",
             exc=_aurora_boundary_exc,
-            context={"function": "_install_pressure_dps_hook", "handler_line": 106, "source_file": "aurora_crystal_ingestion.py"},
+            context={"function": "_pressure_divergence", "source_file": "aurora_crystal_ingestion.py"},
+        )
+    return result
+
+
+def _sediment_pressure_exp(exp: Any, sedimemory: Any) -> None:
+    """
+    Ingest one PressureExperience into SediMemory as a MemoryEvent.
+
+    Content keys are named so the existing NCStrainFilter lenses find them
+    without any change to the strainer:
+        cost / tension          → COST cell,       N constraint
+        surprise / deviation    → DIFFERENCE cell
+        polarity / outcome      → POLARITY cell
+        action / operation      → OPERATOR cell,   A constraint
+        confidence              → MAGNITUDE cell
+        timestamp               → T constraint
+
+    The ConstraintVector is built from _AXIS_CV exactly as maybe_sediment_frame
+    already does -- no new vector physics is introduced by this bridge.
+    """
+    if sedimemory is None or exp is None:
+        return
+    try:
+        anchor = str(getattr(exp, "anchor", "") or "").strip()
+        if not anchor:
+            return
+
+        from aurora_internal.aurora_constraint_manifold_patched import ConstraintVector
+        from foundational_contract import ExistenceMode
+
+        consequence = dict(getattr(exp, "consequence", {}) or {})
+        outcome     = dict(getattr(exp, "outcome",     {}) or {})
+        resolved    = bool(outcome.get("resolved", False))
+        tension     = float(consequence.get(
+            "tension",
+            consequence.get("belief_tension",
+            consequence.get("cost_signal", 0.0))
+        ) or 0.0)
+
+        div = _pressure_divergence(exp)
+        if div["divergence"] < PRESSURE_SEDIMENT_MIN_DIVERGENCE:
+            return
+
+        axis   = _pressure_axis_for(anchor)
+        cv     = ConstraintVector(**_AXIS_CV.get(axis, _AXIS_CV["A"]))
+        source = str(getattr(exp, "source", "pressure") or "pressure")
+
+        content = {
+            "source":        f"pressure:{source}",
+            "anchor":        anchor,
+            "meaning":       str(getattr(exp, "meaning", "") or "")[:160],
+            "intent":        str(getattr(exp, "pursuing", "") or "")[:160],
+            "action":        str(getattr(exp, "causal_action", "") or "")[:160],
+            "outcome":       "resolved" if resolved else "diverted",
+            "polarity":      1.0 if resolved else -1.0,
+            "cost":          round(tension, 4),
+            "confidence":    round(1.0 - min(1.0, max(0.0, tension)), 4),
+            "surprise":      div["divergence"],
+            "deviation":     div["divergence"],
+            "dominant_axis": axis,
+            "timestamp":     float(getattr(exp, "timestamp", 0.0) or 0.0),
+            # Provenance -- lets a reactivated fragment point back at the
+            # exact ledger record without a parallel pressure memory store.
+            "experience_id":         str(getattr(exp, "experience_id", "") or ""),
+            "prior_resolution_rate": div["prior_resolution_rate"],
+            "prior_sample_count":    div["prior_sample_count"],
+        }
+        if div["prior_sample_count"] == 0:
+            # First encounter with this (anchor, action): a genuine gap in her
+            # record, surfaced under the DIFFERENCE lens's own key.
+            content["gap"] = True
+
+        sedimemory.ingest_event(
+            content=content,
+            constraint_vector=cv,
+            source=f"pressure:{source}",
+            existence_mode=ExistenceMode.AGENTIC,
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_crystal_ingestion.py:_sediment_pressure_exp",
+            exc=_aurora_boundary_exc,
+            context={"function": "_sediment_pressure_exp", "source_file": "aurora_crystal_ingestion.py"},
+        )
+        pass
+
+
+def _install_pressure_hooks(dps: Any, sedimemory: Any = None) -> None:
+    """
+    Inject the single PressureExperienceLedger hook.
+
+    PressureExperienceLedger supports exactly one `_crystal_hook`, so both
+    downstream consumers are composed into it here rather than each module
+    installing its own -- two competing installers would silently overwrite
+    each other, and the loser would be whichever wired last.
+
+    Either target may be absent; the hook degrades to whatever is present.
+    """
+    try:
+        from aurora_internal.aurora_pressure_ledger import PressureExperienceLedger
+        ledger = PressureExperienceLedger.get()
+
+        def _pressure_fanout(exp: Any) -> None:
+            # Failures are isolated per consumer: a DPS error must not cost
+            # Aurora the sediment deposit, and vice versa.
+            if dps is not None:
+                try:
+                    _crystallize_pressure_exp(exp, dps)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_crystal_ingestion.py:_pressure_fanout_dps",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_pressure_fanout", "source_file": "aurora_crystal_ingestion.py"},
+                    )
+            if sedimemory is not None:
+                try:
+                    _sediment_pressure_exp(exp, sedimemory)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_crystal_ingestion.py:_pressure_fanout_sedi",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_pressure_fanout", "source_file": "aurora_crystal_ingestion.py"},
+                    )
+
+        ledger._crystal_hook = _pressure_fanout
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora_crystal_ingestion.py:_install_pressure_hooks",
+            exc=_aurora_boundary_exc,
+            context={"function": "_install_pressure_hooks", "source_file": "aurora_crystal_ingestion.py"},
         )
         pass
 
@@ -312,9 +556,16 @@ def wire_crystallization_loops(systems: Dict[str, Any]) -> None:
     if dps is None:
         dps = systems.get("dps")
 
-    # ── 1. Pressure → DPS ────────────────────────────────────────────────────
+    # SediMemory is resolved up front because the pressure hook below needs it
+    # at install time -- it is also used by the dual-strata wiring in step 4.
+    sedimemory = systems.get("sedimemory")
+
+    # ── 1. Pressure → DPS + SediMemory ───────────────────────────────────────
+    # One ledger hook, two consumers.  Installed whenever EITHER target exists,
+    # so a boot without DPS still lands pressure experiences in the strata.
+    if dps is not None or sedimemory is not None:
+        _install_pressure_hooks(dps, sedimemory)
     if dps is not None:
-        _install_pressure_dps_hook(dps)
         seed_dps_from_lexicon_and_oets(dps, systems)
 
     # ── 2. Sensory observations → DPS (via AuroraSensoryCrystal._dps_ref) ───
@@ -333,7 +584,7 @@ def wire_crystallization_loops(systems: Dict[str, Any]) -> None:
         _route_behavioral_to_dps(sensory_engine, dps)
 
     # ── 4. Dual strata frame → sedimemory ────────────────────────────────────
-    sedimemory  = systems.get("sedimemory")
+    # (sedimemory already resolved above for the pressure hook)
     consciousness = systems.get("consciousness")
     dce_bridge = (
         getattr(consciousness, "dce", None)

@@ -1693,18 +1693,15 @@ class TemplateRecord:
                     anchor=self.template_str[:40],
                     meaning=f"expression template (gen={self.generation} uses={self.uses})",
                     pursuing="express_with_template",
-                    causal_action=(
-                        f"template_evaluation: clarity={clarity:.2f} "
-                        f"coherence={coherence:.2f} "
-                        f"heat={ivm_heat:.2f} "
-                        f"confusion={confusion_signal:.2f}"
-                    ),
+                    causal_action="template_evaluation",
                     consequence={
                         "tension": round(1.0 - new_fitness, 4),
                         "new_fitness": round(new_fitness, 4),
                         "fitness_drop": _drop,
                         "clarity": round(clarity, 4),
                         "coherence": round(coherence, 4),
+                        "ivm_heat": round(float(ivm_heat), 4),
+                        "confusion_signal": round(float(confusion_signal), 4),
                     },
                     outcome={
                         "resolved": _resolved,
