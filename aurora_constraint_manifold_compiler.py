@@ -218,9 +218,12 @@ def _evo_grade(
     nc_law_c:  str,
     nc_dim:    str,
     nc_target: str,
-) -> float:
+) -> Tuple[float, float]:
     """
-    Evolution grade for one manifold slot.
+    Evolution grade for one manifold slot, plus the mean normalised shift
+    cost (depth) it's built from -- returned alongside so the caller's own
+    depth_score field can reuse it instead of paying for the same two
+    _depth() lookups twice.
 
     Factors:
         depth           — mean normalised shift cost
@@ -242,7 +245,7 @@ def _evo_grade(
         0.20 * cross_col +
         op_bonus + anchor_bonus
     )
-    return round(max(0.0, min(1.0, raw)), 4)
+    return round(max(0.0, min(1.0, raw)), 4), depth
 
 
 def _accountability_weight(
@@ -460,12 +463,12 @@ def compile_noncomp_manifold(
                     col_ld == nc_dim
                 )
                 cluster_pair = f"{sub.cluster}:{col_ld}"
-                evo = _evo_grade(
+                evo, depth_raw = _evo_grade(
                     sub_lc, sub_ld, col_lc, col_ld,
                     nc_law_c, nc_dim, nc_target,
                 )
                 lev          = LEVERAGE_LABEL[LEVERAGE_SIGN.get(col_lc, 0)]
-                depth        = round((_depth(sub_lc) + _depth(col_lc)) / 2.0, 4)
+                depth        = round(depth_raw, 4)
                 combined_k   = round(SHIFT_COST.get(sub_lc, 1.0) + SHIFT_COST.get(col_lc, 1.0), 2)
                 acct_w       = _accountability_weight(sub.cluster, col_ld, is_resonant, evo)
 
