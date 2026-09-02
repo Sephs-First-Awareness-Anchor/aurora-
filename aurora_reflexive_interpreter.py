@@ -1028,8 +1028,15 @@ class ReflexiveInterpreter:
                     )
                     idx_e = self._directory.get_index_entry(match.nc_name)
                     if idx_e:
-                        depth_sc = SHIFT_COST.get(idx_e.nc_law_c,1.0)/150.0
                         _nc_target_resolved = idx_e.nc_target
+                        # Item #6, representational-conservation directive:
+                        # this noncomp's anchor slot already carries its own
+                        # depth_score (m is already open above) -- read it
+                        # rather than re-deriving the same quantity by hand
+                        # from a locally-copied SHIFT_COST table.
+                        _anchor = m.get_anchor()
+                        if _anchor is not None:
+                            depth_sc = _anchor.depth_score
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
