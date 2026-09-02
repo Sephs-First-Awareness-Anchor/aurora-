@@ -3815,15 +3815,16 @@ class DreamTrainer:
                 anchor=primary_dim,
                 meaning=f"fail dimension targeted for dream training: {primary_dim}",
                 pursuing=f"improve_{primary_dim}_via_simulation",
-                causal_action=(
-                    f"run_episode: avatar={spec.get('avatar_id', '?')} "
-                    f"topic={str(spec.get('avatar_overrides', {}).get('topic', {}).get('prompt', ''))[:60]}"
-                ),
+                causal_action="run_episode",
                 consequence={
                     "tension": 1.0 - _fitness,
                     "fitness": _fitness,
                     "shards": result.get("learner_shards", 0),
                     "episode_id": result.get("episode_id", ""),
+                    "avatar_id": spec.get("avatar_id", "?"),
+                    "topic_prompt": str(
+                        spec.get("avatar_overrides", {}).get("topic", {}).get("prompt", "")
+                    )[:60],
                 },
                 outcome={
                     "resolved": _resolved,

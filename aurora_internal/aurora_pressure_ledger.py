@@ -45,8 +45,22 @@ class PressureExperience:
     anchor        -- the concept / link / template under pressure
     meaning       -- what that anchor represents in this subsystem's context
     pursuing      -- what was being attempted
-    causal_action -- the specific operation that incurred the cost
-    consequence   -- what that action produced
+    causal_action -- the specific operation that incurred the cost.
+                     MUST be a STABLE ACTION TYPE, not a formatted event
+                     description.  "Gate4_frequency" is correct;
+                     "Gate4_frequency: count=3 below k_min=21" is not.
+                     outcome_variance() groups by causal_action[:60] to detect
+                     the same action producing different outcomes -- which is
+                     the whole definition of a conditional causal relationship.
+                     If the parameters of the attempt are interpolated into
+                     this string, every occurrence becomes a unique key, no
+                     group ever holds more than one sample, is_conditional can
+                     never become True, and conditioning_signal() reports a
+                     certainty it has not earned.  Put the varying parameters
+                     in `consequence` -- that is what it is for, and every
+                     downstream reader already receives it.
+    consequence   -- what that action produced, including every varying
+                     parameter of the attempt
     outcome       -- how it resolved relative to what was being pursued
     source        -- which subsystem generated this (turn_chain / genealogy /
                      dream_trainer / lsv_template / ...)

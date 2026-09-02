@@ -8421,13 +8421,12 @@ class ConstraintGenealogyLogger:
                     anchor=f"{key[0]}:{key[1]}",
                     meaning=f"constraint link candidate: {key[0]} -> {key[1]}",
                     pursuing=f"promote_{_best_axis}_axis_link",
-                    causal_action=(
-                        f"Gate2_reliability: no axis exceeded threshold "
-                        f"(best={_best_axis} mr_pos={mr_pos.get(_best_axis, 0.0):.4f})"
-                    ),
+                    causal_action="Gate2_reliability",
                     consequence={
                         "tension": max(mr_pos.values()) if mr_pos else 0.0,
                         "gate": 2,
+                        "best_axis": _best_axis,
+                        "best_mr_pos": float(mr_pos.get(_best_axis, 0.0)),
                         "mr_pos": dict(mr_pos),
                         "pf": dict(pf),
                     },
@@ -8531,16 +8530,15 @@ class ConstraintGenealogyLogger:
                         anchor=f"{key[0]}:{key[1]}",
                         meaning=f"constraint link candidate: {key[0]} -> {key[1]}",
                         pursuing=f"promote_{reliable_axis}_axis_link",
-                        causal_action=(
-                            f"Gate4_frequency: count={ps.count} below k_min={k_min_dynamic} "
-                            f"(near_miss: count_ok={near_count_ok} "
-                            f"pos_ok={strong_pos_ok} pf_ok={strong_pf_ok})"
-                        ),
+                        causal_action="Gate4_frequency",
                         consequence={
                             "tension": float(mr_pos.get(reliable_axis, 0.0)),
                             "gate": 4,
                             "count": ps.count,
                             "k_min_required": k_min_dynamic,
+                            "near_miss_count_ok": bool(near_count_ok),
+                            "near_miss_pos_ok": bool(strong_pos_ok),
+                            "near_miss_pf_ok": bool(strong_pf_ok),
                         },
                         outcome={
                             "resolved": False,
@@ -8647,10 +8645,7 @@ class ConstraintGenealogyLogger:
                     anchor=f"{key[0]}:{key[1]}",
                     meaning=f"constraint link candidate: {key[0]} -> {key[1]}",
                     pursuing=f"promote_{reliable_axis}_axis_link",
-                    causal_action=(
-                        f"Gate5_net_benefit: net={net:.6f} below threshold={net_min_dynamic:.6f} "
-                        f"(relief={relief_signal:.6f} cost={cost_signal:.6f})"
-                    ),
+                    causal_action="Gate5_net_benefit",
                     consequence={
                         "tension": float(cost_signal),
                         "gate": 5,
@@ -8772,11 +8767,14 @@ class ConstraintGenealogyLogger:
                     target=dom_axis,
                     meaning=f"constraint link promoted: {key[0]} -> {key[1]}",
                     pursuing=f"promote_{reliable_axis}_axis_link",
-                    causal_action=f"Promoted link {link_id} at depth {depth} (count={ps.count})",
+                    causal_action="promote_link",
                     consequence={
                         "tension": float(relief_signal),
                         "net": float(net),
                         "cost_signal": float(cost_signal),
+                        "link_id": link_id,
+                        "depth": int(depth),
+                        "count": ps.count,
                     },
                     outcome={
                         "resolved": True,
