@@ -25163,6 +25163,15 @@ def _run_reasoning_pipeline(
                         exc=_aurora_boundary_exc,
                         context={"function": "_run_reasoning_pipeline", "source_file": "aurora.py"},
                     )
+                # Item #5, representational-conservation directive: the
+                # turn's already-computed representational_ref (same source
+                # item #4 threads into genealogy.observe()'s notes) is
+                # carried through as ordinary provenance -- SediMemory's
+                # own NCStrainFilter._extract_slice already special-cases
+                # this exact key and preserves it into every resonant
+                # fragment's content, untouched by resonance/strain
+                # selection; it was simply never fed here.
+                _turn_repr_ref = (systems.get("_last_noncomp_input") or {}).get("representational_ref")
                 _sedi.ingest_event(
                     content={
                         'user_text': str(user_text or '')[:300],
@@ -25173,6 +25182,7 @@ def _run_reasoning_pipeline(
                         'confidence': float(state.response_confidence or 0.0),
                         'salient': list(state.salient_concepts or [])[:5],
                         'src': str(state.response_src or ''),
+                        **({"representational_ref": _turn_repr_ref} if _turn_repr_ref else {}),
                     },
                     constraint_vector=_cv,
                     source='turn_pipeline',
