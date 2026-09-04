@@ -120,10 +120,21 @@ def test_habitat_motivation_is_the_only_production_caller_of_current_resolution(
 
 
 def test_interpretation_only_writes_representational_ref_never_reads_it_back():
-    """aurora.py's own two representational_ref sites must remain WRITES
-    (dict construction from noncomp_output/input), not a later read used
-    to branch logic -- confirms interpretation is still a pure provenance
-    carrier, matching least-sufficient resolution."""
+    """aurora.py's own representational_ref sites must remain WRITES
+    (dict/kwarg construction from noncomp_output/input, or from
+    systems["_last_noncomp_input"] directly), not a later read used to
+    branch logic -- confirms interpretation is still a pure provenance
+    carrier, matching least-sufficient resolution.
+
+    Baseline was 4 (2 pairs of output/input fallback). Item #4 of the
+    representational-conservation directive (PR #218) added a 5th site --
+    threading the ref as a kwarg into _log_modulation_event's notes dict,
+    a pure pass-through, no branch. Item #5 (PR #219) added a 6th --
+    threading it into SediMemory's ingest_event content dict; the
+    `if _turn_repr_ref else {}` there is the same truthiness-gated
+    optional-key pattern the original 4 sites' `or` fallbacks already use
+    (include the key when present, omit it when not), not a decision made
+    ON the ref's value."""
     source = _read("aurora.py")
     tree = ast.parse(source)
     read_sites = []
@@ -134,13 +145,10 @@ def test_interpretation_only_writes_representational_ref_never_reads_it_back():
             args = node.args
             if args and isinstance(args[0], ast.Constant) and args[0].value == "representational_ref":
                 read_sites.append(node)
-    # Both existing sites are `.get('representational_ref')` calls on
-    # noncomp_output/noncomp_input dicts feeding a dict literal being
-    # built for return/assignment -- i.e. still writes-in-progress, not a
-    # branch condition. Presence of read_sites is expected (that's how the
-    # ref is threaded); what matters is that count is unchanged from the
-    # documented baseline (4 sites: 2 pairs of output/input fallback).
-    assert len(read_sites) == 4
+    # Presence of read_sites is expected (that's how the ref is threaded);
+    # what matters is that count is unchanged from the documented
+    # baseline (6 sites: the original 4, plus items #4 and #5 above).
+    assert len(read_sites) == 6
 
 
 def test_warp_representational_ref_remains_documented_non_authoritative():
