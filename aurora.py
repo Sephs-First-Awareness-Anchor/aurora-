@@ -25172,6 +25172,13 @@ def _run_reasoning_pipeline(
                 # fragment's content, untouched by resonance/strain
                 # selection; it was simply never fed here.
                 _turn_repr_ref = (systems.get("_last_noncomp_input") or {}).get("representational_ref")
+                # D2/625-cell redesign: "recognize the discoveries when
+                # they develop" -- pass the live oets reference so a
+                # newly-populated D2 cell (first fragment ever landing
+                # there) gets surfaced as a StudyEvent, same mechanism
+                # PressureExperienceLedger._bridge_to_oets already uses.
+                # Per-call only, never stored on SediMemory itself.
+                _oets_for_sedi = getattr(systems.get('perception'), 'oets', None)
                 _sedi.ingest_event(
                     content={
                         'user_text': str(user_text or '')[:300],
@@ -25186,6 +25193,7 @@ def _run_reasoning_pipeline(
                     },
                     constraint_vector=_cv,
                     source='turn_pipeline',
+                    oets=_oets_for_sedi,
                 )
                 _sedi.tick(1.0)
     except Exception as _aurora_boundary_exc:

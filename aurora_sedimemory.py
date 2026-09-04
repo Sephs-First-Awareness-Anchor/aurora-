@@ -90,6 +90,7 @@ from enum import IntEnum
 from typing import Any, Deque, Dict, FrozenSet, List, Optional, Set, Tuple
 
 from aurora_constraint_unit_adapter import build_constraint_profile
+from aurora_representational_address import RepresentationalRef
 
 # ============================================================================
 # LAYER IMPORTS
@@ -234,6 +235,14 @@ class MemoryEvent:
     event_id:          str
     content:           Dict[str, Any]
     constraint_vector: ConstraintVector
+    # D2/625-cell redesign: independent COLUMN evidence for the 625-cell
+    # lattice (aurora_representational_address.py's D2 rung). None (what
+    # every real ingestion path supplies today) means "no independent
+    # column evidence" -- NCStrainFilter.strain() treats this as an
+    # explicit, named diagonal pin (col := row), the same doctrine as
+    # RepresentationalRef.as_pinned_column(): never silently fabricate a
+    # row x col relationship the event never supplied evidence for.
+    col_constraint_vector: Optional[ConstraintVector] = None
     source:            str           = "interaction"
     existence_mode:    ExistenceMode = ExistenceMode.PERSISTENT
     timestamp:         float         = field(default_factory=time.time)
@@ -301,12 +310,14 @@ class MemoryEvent:
         constraint_vector: ConstraintVector,
         source:            str           = "interaction",
         existence_mode:    ExistenceMode = ExistenceMode.PERSISTENT,
+        col_constraint_vector: Optional[ConstraintVector] = None,
     ) -> MemoryEvent:
         eid = f"evt_{hashlib.md5(f'{time.time()}{uuid.uuid4()}'.encode()).hexdigest()[:12]}"
         return cls(
             event_id=eid,
             content=content,
             constraint_vector=constraint_vector,
+            col_constraint_vector=col_constraint_vector,
             source=source,
             existence_mode=existence_mode,
         )
@@ -363,10 +374,17 @@ class SedimentFragment:
     fragment_id:       str
     event_id:          str
     slot_id:           str              # basin this fragment belongs to
-    nc_filter_key:     str              # "AXIS.DIM" e.g. "N.COST"
+    nc_filter_key:     str              # "ROW.DIM|COL.DIM" e.g. "N.COST|N.COST"
     axis:              str
     constraint:        Constraint
     dimension:         NonCompDimension
+    # D2/625-cell redesign: this fragment's COLUMN identity. Equal to the
+    # row identity above (col_constraint==constraint, col_dimension==
+    # dimension) unless the depositing event carried independent column
+    # evidence -- see MemoryEvent.col_constraint_vector.
+    col_axis:          str
+    col_constraint:    Constraint
+    col_dimension:     NonCompDimension
     content:           Dict[str, Any]
     resonance:         float
     deposit_time:      float = field(default_factory=time.time)
@@ -454,19 +472,19 @@ def _spoke_weights(
 
     The dominant slot deposits at full weight (1.0). Every other slot
     deposits at a weight determined by its geometric proximity to the
-    dominant slot in constraint × dimension space:
+    dominant slot in ROW constraint x ROW dimension x COLUMN constraint x
+    COLUMN dimension space (D2/625-cell redesign -- extends the original
+    2-term row-only formula to 4 terms):
 
-        proximity = 1 - (axis_distance + dim_distance) / 2
+        proximity = 1 - (row_axis_dist + row_dim_dist + col_axis_dist + col_dim_dist) / 4
 
-    where:
-        axis_distance = |dominant_depth_rank - spoke_depth_rank| / 4
-        dim_distance  = 0.0 if same dimension, 0.25 per dimension step
-
-    This means:
-        - Same axis, same dimension as dominant  → 1.0  (the dominant itself)
-        - Same axis, adjacent dimension          → ~0.75
-        - Adjacent axis, same dimension          → ~0.75
-        - Opposite axis, different dimension     → ~0.25 (floor)
+    where each *_dist term is |dominant_value - spoke_value| / 4, same as
+    the original row-only terms. Whenever col == row for both the
+    dominant and spoke basin (always true today -- every basin real
+    traffic ever populates is diagonal, see NCStrainFilter._resonant_cells),
+    col_axis_dist == row_axis_dist and col_dim_dist == row_dim_dist
+    identically, so this reduces to exactly the original 2-term formula:
+    proximity = 1 - (row_axis_dist + row_dim_dist) / 2.
 
     Floor is 0.1 so no spoke ever deposits zero — it was still caught
     by that filter for a reason.
@@ -475,8 +493,10 @@ def _spoke_weights(
     if dom_basin is None:
         return {bid: 1.0 for bid in target_basin_ids}
 
-    dom_axis_rank  = AXIS_DEPTH_ORDER.index(dom_basin.axis)
-    dom_dim_value  = dom_basin.dimension.value
+    dom_row_axis_rank = AXIS_DEPTH_ORDER.index(dom_basin.axis)
+    dom_row_dim_value = dom_basin.dimension.value
+    dom_col_axis_rank = AXIS_DEPTH_ORDER.index(dom_basin.col_axis)
+    dom_col_dim_value = dom_basin.col_dimension.value
     weights: Dict[str, float] = {}
 
     for bid in target_basin_ids:
@@ -489,12 +509,16 @@ def _spoke_weights(
             weights[bid] = 0.5
             continue
 
-        spoke_axis_rank = AXIS_DEPTH_ORDER.index(spoke_basin.axis)
-        spoke_dim_value = spoke_basin.dimension.value
+        spoke_row_axis_rank = AXIS_DEPTH_ORDER.index(spoke_basin.axis)
+        spoke_row_dim_value = spoke_basin.dimension.value
+        spoke_col_axis_rank = AXIS_DEPTH_ORDER.index(spoke_basin.col_axis)
+        spoke_col_dim_value = spoke_basin.col_dimension.value
 
-        axis_dist = abs(dom_axis_rank  - spoke_axis_rank)  / 4.0
-        dim_dist  = abs(dom_dim_value  - spoke_dim_value)  / 4.0
-        proximity = 1.0 - (axis_dist + dim_dist) / 2.0
+        row_axis_dist = abs(dom_row_axis_rank - spoke_row_axis_rank) / 4.0
+        row_dim_dist  = abs(dom_row_dim_value - spoke_row_dim_value) / 4.0
+        col_axis_dist = abs(dom_col_axis_rank - spoke_col_axis_rank) / 4.0
+        col_dim_dist  = abs(dom_col_dim_value - spoke_col_dim_value) / 4.0
+        proximity = 1.0 - (row_axis_dist + row_dim_dist + col_axis_dist + col_dim_dist) / 4.0
         weights[bid] = max(0.1, round(proximity, 4))
 
     return weights
@@ -706,16 +730,25 @@ class PathRegistry:
             dominant_slot_id = dominant_basin.basin_id
             dominant_axis    = dominant_basin.axis
         else:
-            axes_in_path = [
-                bid.split(":")[1].split(">")[0]
-                for bid in basin_ids
-                if len(bid.split(":")) >= 2
-                and bid.split(":")[1].split(">")[0] in AXIS_TICK_PARTICIPATION
-            ]
+            # basin_ids are D2/625-cell REF:-encoded RepresentationalRef
+            # strings (see _slot_id_for) -- decode rather than assuming the
+            # legacy "SED:{axis}>{dim}" string shape. nc_law_c is the ROW
+            # axis, matching the "axis" every downstream reader here means.
+            decoded: Dict[str, str] = {}
+            for bid in basin_ids:
+                if not bid.startswith("REF:"):
+                    continue
+                try:
+                    ref = RepresentationalRef.decode(bid)
+                except ValueError:
+                    continue
+                if ref.nc_law_c in AXIS_TICK_PARTICIPATION:
+                    decoded[bid] = ref.nc_law_c
+            axes_in_path = list(decoded.values())
             dominant_axis    = min(axes_in_path or ["X"],
                                    key=lambda a: AXIS_TICK_PARTICIPATION[a])
             dominant_slot_id = next(
-                (b for b in basin_ids if b.startswith(f"SED:{dominant_axis}>")),
+                (bid for bid, axis in decoded.items() if axis == dominant_axis),
                 next(iter(basin_ids))
             )
 
@@ -829,14 +862,20 @@ class PathRegistry:
 
 class NCStrainFilter:
     """
-    The 25-cell straining membrane.
+    The 625-cell D2 straining membrane.
 
-    Each cell is one (Constraint × NonCompDimension) intersection.
-    All 25 cells process every MemoryEvent simultaneously.
+    Each cell is one ordered pair of D1 (Constraint × NonCompDimension)
+    identities -- a row identity crossed with a column identity, 25 x 25
+    -- matching aurora_representational_address.py's D2 addressing rung
+    (RepresentationalRef.for_d2()). When an event supplies no independent
+    column evidence (every real ingestion path today), the scope an event
+    actually resonates against collapses to the 25 diagonal cells
+    (row == col) -- see NCStrainFilter._resonant_cells().
 
     Resonance: cosine similarity between event ConstraintVector and
-    the cell's filter signature. If resonance >= threshold, the cell
-    deposits a fragment into its corresponding basin.
+    the cell's filter signature, computed independently for the row and
+    column halves and combined via min(). If resonance >= threshold, the
+    cell deposits a fragment into its corresponding basin.
 
     Content extraction: each cell pulls the semantic slice of the event
     content that aligns with its dimensional lens:
@@ -895,12 +934,23 @@ class NCStrainFilter:
 
     def __init__(self, resonance_threshold: float = _DEFAULT_RESONANCE_THRESHOLD):
         self.resonance_threshold = resonance_threshold
-        self._signatures: Dict[str, ConstraintVector] = {}
+        # The 25 atomic D1 (Constraint x NonCompDimension) signatures --
+        # the same formula that used to be this class's whole signature
+        # set is now the basis the 625-cell D2 lattice is built from.
+        self._d1_signatures: Dict[Tuple[Constraint, NonCompDimension], ConstraintVector] = {}
+        # filter_key -> (row_signature, col_signature). 625 entries, built
+        # once here, never per-event -- same "build once at construction"
+        # pattern as aurora_closure_basis.py's _build_interaction_field.
+        self._signatures: Dict[str, Tuple[ConstraintVector, ConstraintVector]] = {}
         self._build_signatures()
 
     @staticmethod
-    def filter_key(constraint: Constraint, dimension: NonCompDimension) -> str:
-        return f"{CONSTRAINT_TO_AXIS[constraint]}.{dimension.name}"
+    def filter_key(
+        row_constraint: Constraint, row_dimension: NonCompDimension,
+        col_constraint: Constraint, col_dimension: NonCompDimension,
+    ) -> str:
+        return (f"{CONSTRAINT_TO_AXIS[row_constraint]}.{row_dimension.name}"
+                f"|{CONSTRAINT_TO_AXIS[col_constraint]}.{col_dimension.name}")
 
     def _build_signatures(self) -> None:
         dim_mods = {
@@ -917,9 +967,17 @@ class NCStrainFilter:
                 mod  = dim_mods[dimension]
                 vec  = [max(0.01, base[i] + mod[i]) for i in range(5)]
                 vec[0] = max(0.05, vec[0])   # X must be > 0
-                key = self.filter_key(constraint, dimension)
-                self._signatures[key] = ConstraintVector(
+                self._d1_signatures[(constraint, dimension)] = ConstraintVector(
                     X=vec[0], T=vec[1], N=vec[2], B=vec[3], A=vec[4]
+                )
+
+        d1_keys = list(self._d1_signatures.keys())
+        for row_c, row_d in d1_keys:
+            for col_c, col_d in d1_keys:
+                key = self.filter_key(row_c, row_d, col_c, col_d)
+                self._signatures[key] = (
+                    self._d1_signatures[(row_c, row_d)],
+                    self._d1_signatures[(col_c, col_d)],
                 )
 
     def _resonance(self, event_cv: ConstraintVector, sig: ConstraintVector) -> float:
@@ -928,6 +986,61 @@ class NCStrainFilter:
         dot  = float(a @ b)
         norm = float((a @ a) ** 0.5) * float((b @ b) ** 0.5)
         return 0.0 if norm < 1e-9 else max(0.0, min(1.0, dot / norm))
+
+    def _resonant_cells(
+        self,
+        row_cv: ConstraintVector,
+        col_cv: Optional[ConstraintVector] = None,
+    ) -> List[Tuple[Constraint, NonCompDimension, Constraint, NonCompDimension, float]]:
+        """
+        Shared resolution step for strain() and SedimentColumn.
+        _predict_basin_ids() -- both used to independently re-run their own
+        25-cell scan; this collapses that into one place.
+
+        col_cv is None (true for every real ingestion path today): scope
+        is the 25 DIAGONAL cells only (row == col). This is a
+        representational-honesty scope boundary, not a resonance-threshold
+        shortcut -- with this class's real signature geometry, off-diagonal
+        cells pass threshold about as often as diagonal ones, so pruning by
+        threshold alone would not meaningfully reduce the 625-cell cost.
+        col_cv := row_cv is only a TRUE statement about the cells where col
+        IS the row; firing an off-diagonal cell under that pin would assert
+        a genuine row x col relationship this event supplied no independent
+        evidence for -- exactly the fabrication
+        RepresentationalRef.as_pinned_column() was named to make visible
+        rather than disguise.
+
+        col_cv supplied: full honest 625-cell cross product. Not reachable
+        from any real ingestion call site today (col_constraint_vector is
+        never populated by real ingestion) -- built now so a future genuine
+        column-evidence source (separate work) has real machinery to land
+        in.
+        """
+        has_col_evidence = col_cv is not None
+        eff_col_cv = col_cv if has_col_evidence else row_cv
+        d1_items = list(self._d1_signatures.items())
+
+        row_res = {k: self._resonance(row_cv, sig) for k, sig in d1_items}
+        col_res = (
+            {k: self._resonance(eff_col_cv, sig) for k, sig in d1_items}
+            if has_col_evidence else row_res
+        )
+
+        if has_col_evidence:
+            cells = [
+                (rc, rd, cc, cd)
+                for (rc, rd) in row_res
+                for (cc, cd) in col_res
+            ]
+        else:
+            cells = [(rc, rd, rc, rd) for (rc, rd) in row_res]
+
+        out: List[Tuple[Constraint, NonCompDimension, Constraint, NonCompDimension, float]] = []
+        for (rc, rd, cc, cd) in cells:
+            res = min(row_res[(rc, rd)], col_res[(cc, cd)])
+            if res >= self.resonance_threshold:
+                out.append((rc, rd, cc, cd, res))
+        return out
 
     def _extract_slice(
         self,
@@ -975,51 +1088,89 @@ class NCStrainFilter:
 
     def strain(self, event: MemoryEvent) -> Dict[str, SedimentFragment]:
         """
-        Pass the whole event through all 25 filters simultaneously.
-        Returns filter_key → SedimentFragment for resonant cells only.
+        Pass the whole event through the 625-cell D2 lattice. When the
+        event supplies no independent column evidence (the only case any
+        real ingestion path exercises today), scope collapses to the 25
+        diagonal cells and is algebraically identical to the pre-D2
+        25-cell strain -- see
+        tests/test_sedimemory_d2_625.py::test_diagonal_resonance_equals_legacy_25cell_resonance.
+
+        Returns filter_key -> SedimentFragment for resonant cells only.
         """
         fragments: Dict[str, SedimentFragment] = {}
 
-        for constraint in Constraint.all():
-            for dimension in NonCompDimension:
-                key = self.filter_key(constraint, dimension)
-                sig = self._signatures[key]
-                res = self._resonance(event.constraint_vector, sig)
-                if res < self.resonance_threshold:
-                    continue
-
-                axis      = CONSTRAINT_TO_AXIS[constraint]
-                slot_id   = _slot_id_for(constraint, dimension)
-                tick_rate = AXIS_TICK_PARTICIPATION[axis]
-                content   = self._extract_slice(
-                    event.content, constraint, dimension, res
-                )
-                frag_id = (
-                    f"frag_{hashlib.md5(f'{event.event_id}{key}'.encode()).hexdigest()[:10]}"
-                )
-                fragments[key] = SedimentFragment(
-                    fragment_id=frag_id,
-                    event_id=event.event_id,
-                    slot_id=slot_id,
-                    nc_filter_key=key,
-                    axis=axis,
-                    constraint=constraint,
-                    dimension=dimension,
-                    content=content,
-                    resonance=res,
-                    tick_rate=tick_rate,
-                    lineage_signature=event.lineage_signature,
-                    pressure_history=list(event.pressure_history),
-                    tolerance_snapshot=dict(event.tolerance_snapshot),
-                    transition_mapping=dict(event.transition_mapping),
-                    topology_fingerprint=dict(event.topology_fingerprint),
-                )
+        for (row_c, row_d, col_c, col_d, res) in self._resonant_cells(
+            event.constraint_vector, event.col_constraint_vector
+        ):
+            key       = self.filter_key(row_c, row_d, col_c, col_d)
+            row_axis  = CONSTRAINT_TO_AXIS[row_c]
+            col_axis  = CONSTRAINT_TO_AXIS[col_c]
+            slot_id   = _slot_id_for(row_c, row_d, col_c, col_d)
+            tick_rate = AXIS_TICK_PARTICIPATION[row_axis]
+            content   = self._extract_slice(event.content, row_c, row_d, res)
+            frag_id = (
+                f"frag_{hashlib.md5(f'{event.event_id}{key}'.encode()).hexdigest()[:10]}"
+            )
+            fragments[key] = SedimentFragment(
+                fragment_id=frag_id,
+                event_id=event.event_id,
+                slot_id=slot_id,
+                nc_filter_key=key,
+                axis=row_axis,
+                constraint=row_c,
+                dimension=row_d,
+                col_axis=col_axis,
+                col_constraint=col_c,
+                col_dimension=col_d,
+                content=content,
+                resonance=res,
+                tick_rate=tick_rate,
+                lineage_signature=event.lineage_signature,
+                pressure_history=list(event.pressure_history),
+                tolerance_snapshot=dict(event.tolerance_snapshot),
+                transition_mapping=dict(event.transition_mapping),
+                topology_fingerprint=dict(event.topology_fingerprint),
+            )
 
         return fragments
 
 
-def _slot_id_for(constraint: Constraint, dimension: NonCompDimension) -> str:
-    return f"SED:{CONSTRAINT_TO_AXIS[constraint]}>{dimension.name}"
+def _slot_id_for(
+    row_constraint: Constraint, row_dimension: NonCompDimension,
+    col_constraint: Constraint, col_dimension: NonCompDimension,
+) -> str:
+    return RepresentationalRef.for_d2(
+        CONSTRAINT_TO_AXIS[row_constraint], row_dimension.name,
+        CONSTRAINT_TO_AXIS[col_constraint], col_dimension.name,
+    ).encode()
+
+
+def _migrate_basin_id(basin_id: str) -> str:
+    """
+    D2/625-cell redesign, checkpoint migration: map a legacy
+    'SED:{axis}>{dim.name}' basin id (pre-D2, one constraint x one
+    dimension) onto its diagonal D2 cell id (row == col == that same
+    pair). Every basin any pre-D2 checkpoint ever populated only ever had
+    row==col evidence (single-CV events, no column concept existed at
+    all) -- this restates the identical identity in the new addressing
+    formalism, not a lossy approximation.
+
+    Idempotent: an already-migrated 'REF:'-prefixed id (or anything else
+    unrecognized) passes through unchanged, so this is always safe to
+    apply unconditionally on load regardless of which format produced
+    the checkpoint.
+    """
+    if not basin_id.startswith('SED:') or '>' not in basin_id:
+        return basin_id
+    axis_str, dim_str = basin_id[len('SED:'):].split('>', 1)
+    constraint = AXIS_TO_CONSTRAINT.get(axis_str)
+    if constraint is None:
+        return basin_id
+    try:
+        dimension = NonCompDimension[dim_str]
+    except KeyError:
+        return basin_id
+    return _slot_id_for(constraint, dimension, constraint, dimension)
 
 
 # ============================================================================
@@ -1105,15 +1256,19 @@ class CompressionEngine:
 @dataclass
 class SedimentBasin:
     """
-    One sediment basin in the 25-slot NC lattice.
+    One sediment basin in the 625-cell D2 lattice (row x column, each a
+    (Constraint x NonCompDimension) D1 identity -- 25 x 25).
 
     Receives fragments from the strain filter and the channel system.
-    Ticks at its axis's rate. Compresses mature fragments into mass.
+    Ticks at its ROW axis's rate. Compresses mature fragments into mass.
     """
     basin_id:         str
-    axis:             str
-    constraint:       Constraint
-    dimension:        NonCompDimension
+    axis:             str               # ROW axis
+    constraint:       Constraint         # ROW constraint
+    dimension:        NonCompDimension   # ROW dimension
+    col_axis:          str               # COLUMN axis
+    col_constraint:    Constraint         # COLUMN constraint
+    col_dimension:     NonCompDimension   # COLUMN dimension
     tick_rate:        float
     fragments:        List[SedimentFragment] = field(default_factory=list)
     compressed_mass:  Dict[str, Any]         = field(default_factory=dict)
@@ -1121,11 +1276,17 @@ class SedimentBasin:
     total_compressed: int                    = 0
     last_tick_time:   float                  = field(default_factory=time.time)
 
-    def deposit(self, fragment: SedimentFragment) -> None:
+    def deposit(self, fragment: SedimentFragment) -> bool:
+        """Returns True iff this is the basin's first-ever occupant --
+        total_deposited (monotonic since construction) is the correct
+        "ever populated" signal, not len(fragments), which compression
+        can empty back to 0."""
+        is_first_occupant = (self.total_deposited == 0)
         self.fragments.append(fragment)
         self.total_deposited += 1
         if len(self.fragments) >= _BASIN_FRAGMENT_CAPACITY:
             self._force_compress()
+        return is_first_occupant
 
     def tick(self, delta_t: float, engine: CompressionEngine) -> int:
         mature    = [f for f in self.fragments if f.tick(delta_t)]
@@ -1226,54 +1387,65 @@ class SedimentColumn:
         self._build_basins()
 
     def _build_basins(self) -> None:
-        for constraint in Constraint.all():
-            for dimension in NonCompDimension:
-                bid  = _slot_id_for(constraint, dimension)
-                axis = CONSTRAINT_TO_AXIS[constraint]
+        d1 = [(c, d) for c in Constraint.all() for d in NonCompDimension]
+        for row_c, row_d in d1:
+            for col_c, col_d in d1:
+                bid      = _slot_id_for(row_c, row_d, col_c, col_d)
+                row_axis = CONSTRAINT_TO_AXIS[row_c]
+                col_axis = CONSTRAINT_TO_AXIS[col_c]
                 self._basins[bid] = SedimentBasin(
                     basin_id=bid,
-                    axis=axis,
-                    constraint=constraint,
-                    dimension=dimension,
-                    tick_rate=AXIS_TICK_PARTICIPATION[axis],
+                    axis=row_axis,
+                    constraint=row_c,
+                    dimension=row_d,
+                    col_axis=col_axis,
+                    col_constraint=col_c,
+                    col_dimension=col_d,
+                    tick_rate=AXIS_TICK_PARTICIPATION[row_axis],
                 )
 
     # ------------------------------------------------------------------
     # INGEST — channel-first, full strain on miss
     # ------------------------------------------------------------------
 
-    def ingest(self, event: MemoryEvent) -> Dict[str, SedimentFragment]:
+    def ingest(self, event: MemoryEvent) -> Tuple[Dict[str, SedimentFragment], List[str]]:
         """
         Strain and deposit. Channel-first routing.
 
-        Returns: filter_key → deposited fragment (for inspection).
-                 Empty dict for sub-PERSISTENT events.
+        Returns: (filter_key → deposited fragment, newly-discovered basin
+                  ids -- basins that received their first-ever fragment
+                  this call, per SedimentBasin.deposit()'s return value).
+                 Empty tuple members for sub-PERSISTENT events.
         """
         if event.existence_mode < ExistenceMode.PERSISTENT:
-            return {}
+            return {}, []
 
-        cv = event.constraint_vector
+        cv     = event.constraint_vector
+        col_cv = event.col_constraint_vector
+        newly_discovered: List[str] = []
 
         # ── STEP 1: Predict which basins will be hit (for channel lookup) ──
         # Run a lightweight resonance check to get the expected basin set.
         # This is cheaper than full strain and allows channel lookup before
         # committing to the expensive operation.
-        expected_basin_ids = self._predict_basin_ids(cv)
+        expected_basin_ids = self._predict_basin_ids(cv, col_cv)
 
         # ── STEP 2: Check for a live channel ──
         channel = self._path_reg.lookup(cv, expected_basin_ids)
 
         if channel and not channel.dissolved:
             # CHANNEL HIT — direct deposit into target basins only
-            fragments = self._deposit_via_channel(event, channel)
+            fragments = self._deposit_via_channel(event, channel, newly_discovered)
             self._channel_hits += 1
         else:
-            # FULL STRAIN — run all 25 filters
+            # FULL STRAIN — run the 625-cell lattice (diagonal-only scope
+            # when the event has no independent column evidence)
             fragments = self._strainer.strain(event)
             for fk, frag in fragments.items():
                 basin = self._basins.get(frag.slot_id)
                 if basin:
-                    basin.deposit(frag)
+                    if basin.deposit(frag):
+                        newly_discovered.append(basin.basin_id)
                     self._event_index[event.event_id].append(frag.slot_id)
 
             # Observe this traversal with the PathRegistry
@@ -1287,29 +1459,31 @@ class SedimentColumn:
             self._full_strains += 1
 
         self._total_ingested += 1
-        return fragments
+        return fragments, newly_discovered
 
-    def _predict_basin_ids(self, cv: ConstraintVector) -> FrozenSet[str]:
+    def _predict_basin_ids(
+        self, cv: ConstraintVector, col_cv: Optional[ConstraintVector] = None,
+    ) -> FrozenSet[str]:
         """
         Fast resonance scan to predict which basins would be hit.
         Used for channel lookup before full strain.
         Not authoritative — only needs to produce the same result as
         full strain for path-signature matching purposes.
+
+        Shares NCStrainFilter._resonant_cells() with strain() itself
+        (previously this method independently re-ran its own separate
+        25-cell scan of the same resonances strain() also computed).
         """
-        hits: List[str] = []
-        for constraint in Constraint.all():
-            for dimension in NonCompDimension:
-                key = NCStrainFilter.filter_key(constraint, dimension)
-                sig = self._strainer._signatures[key]
-                res = self._strainer._resonance(cv, sig)
-                if res >= self._strainer.resonance_threshold:
-                    hits.append(_slot_id_for(constraint, dimension))
-        return frozenset(hits)
+        return frozenset(
+            _slot_id_for(rc, rd, cc, cd)
+            for (rc, rd, cc, cd, _res) in self._strainer._resonant_cells(cv, col_cv)
+        )
 
     def _deposit_via_channel(
         self,
         event:   MemoryEvent,
         channel: SedimentChannel,
+        newly_discovered: List[str],
     ) -> Dict[str, SedimentFragment]:
         """
         Deposit into channel target basins using spoke-weighted resonance.
@@ -1336,7 +1510,13 @@ class SedimentColumn:
             spoke_weight = channel.deposit_weight_for(basin_id)
             resonance    = min(1.0, channel_base * spoke_weight)
 
-            fk      = f"{basin.axis}.{basin.dimension.name}"
+            # D2/625-cell redesign: must reconstruct the full row|col
+            # filter_key the basin's own compressed_mass namespace uses
+            # (frag.nc_filter_key, see CompressionEngine.compress()) --
+            # the old row-only 2-part key would silently namespace-miss.
+            fk      = NCStrainFilter.filter_key(
+                basin.constraint, basin.dimension, basin.col_constraint, basin.col_dimension
+            )
             content = self._strainer._extract_slice(
                 event.content, basin.constraint, basin.dimension, resonance
             )
@@ -1351,6 +1531,9 @@ class SedimentColumn:
                 axis=basin.axis,
                 constraint=basin.constraint,
                 dimension=basin.dimension,
+                col_axis=basin.col_axis,
+                col_constraint=basin.col_constraint,
+                col_dimension=basin.col_dimension,
                 content=content,
                 resonance=resonance,
                 tick_rate=basin.tick_rate,
@@ -1360,7 +1543,8 @@ class SedimentColumn:
                 transition_mapping=dict(event.transition_mapping),
                 topology_fingerprint=dict(event.topology_fingerprint),
             )
-            basin.deposit(fragment)
+            if basin.deposit(fragment):
+                newly_discovered.append(basin_id)
             self._event_index[event.event_id].append(basin_id)
             fragments[fk] = fragment
 
@@ -1455,7 +1639,13 @@ class SedimentColumn:
         for basin in self._basins.values():
             if basin.axis != axis or not basin.compressed_mass:
                 continue
-            fk = f"{axis}.{basin.dimension.name}"
+            # D2/625-cell redesign: compressed_mass is keyed by the full
+            # row|col filter_key (frag.nc_filter_key, via CompressionEngine.
+            # compress()) -- must reconstruct the same 4-arg key here, not
+            # the old row-only 2-part one, or every lookup silently misses.
+            fk = NCStrainFilter.filter_key(
+                basin.constraint, basin.dimension, basin.col_constraint, basin.col_dimension
+            )
             sl = self._comp_engine.decompress(basin.compressed_mass, fk, fidelity)
             reconstructed.update(sl)
         reconstructed['_decompressed_from_axis'] = axis
@@ -1571,9 +1761,9 @@ class SediMemory:
     # INGEST
     # ------------------------------------------------------------------
 
-    def ingest_envelope(self, envelope: IVMEnvelope) -> int:
+    def ingest_envelope(self, envelope: IVMEnvelope, oets: Any = None) -> int:
         event = MemoryEvent.from_envelope(envelope)
-        return self._ingest(event)
+        return self._ingest(event, oets=oets)
 
     def ingest_event(
         self,
@@ -1581,19 +1771,83 @@ class SediMemory:
         constraint_vector: ConstraintVector,
         source:            str           = "interaction",
         existence_mode:    ExistenceMode = ExistenceMode.PERSISTENT,
+        col_constraint_vector: Optional[ConstraintVector] = None,
+        oets:              Any            = None,
     ) -> int:
         event = MemoryEvent.create(
             content=content,
             constraint_vector=constraint_vector,
             source=source,
             existence_mode=existence_mode,
+            col_constraint_vector=col_constraint_vector,
         )
-        return self._ingest(event)
+        return self._ingest(event, oets=oets)
 
-    def _ingest(self, event: MemoryEvent) -> int:
-        fragments = self._column.ingest(event)
+    def _ingest(self, event: MemoryEvent, oets: Any = None) -> int:
+        fragments, newly_discovered = self._column.ingest(event)
         self._event_log.append(event.event_id)
+        if newly_discovered and oets is not None:
+            self._announce_discoveries(event, newly_discovered, oets)
         return len(fragments)
+
+    def _announce_discoveries(
+        self, event: MemoryEvent, basin_ids: List[str], oets: Any,
+    ) -> None:
+        """
+        "Recognize the discoveries when they develop": a newly-populated
+        D2 cell is, by definition, new information Aurora didn't have a
+        moment ago -- the same "gap"/novelty framing
+        aurora_crystal_ingestion.py already applies one level up
+        (content["gap"] = True on prior_sample_count == 0), now applied at
+        the structural-cell level via the DIFFERENCE lens's own
+        novelty/deviation/gap vocabulary.
+
+        Mirrors PressureExperienceLedger._bridge_to_oets's existing
+        pattern exactly: oets is a per-call parameter, never stored as
+        self._oets -- SediMemory stays a storage layer that performs the
+        bridging itself when given the reference, not one that reaches
+        into OETS unconditionally.
+        """
+        if not basin_ids or oets is None or not hasattr(oets, "log_study_event"):
+            return
+        try:
+            from aurora_internal.aurora_ontological_scaffolding import StudyEvent
+        except ImportError as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_sedimemory.py:_announce_discoveries.import",
+                exc=_aurora_boundary_exc,
+                context={"function": "_announce_discoveries", "source_file": "aurora_sedimemory.py"},
+            )
+            return
+        for basin_id in basin_ids:
+            basin = self._column._basins.get(basin_id)
+            if basin is None:
+                continue
+            try:
+                ev = StudyEvent(
+                    autonomy_mode="sediment_discovery",
+                    trigger_reason=f"first fragment landed in D2 cell {basin_id}",
+                    studied_items=[{
+                        "basin_id": basin_id,
+                        "row_axis": basin.axis, "row_dimension": basin.dimension.name,
+                        "col_axis": basin.col_axis, "col_dimension": basin.col_dimension.name,
+                        "event_id": event.event_id, "event_source": event.source,
+                    }],
+                    relations_added=0,
+                    memory_committed=True,
+                    why_not_committed="",
+                    announce_worthy=True,
+                )
+                oets.log_study_event(ev)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_sedimemory.py:_announce_discoveries",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_announce_discoveries", "source_file": "aurora_sedimemory.py"},
+                )
+                continue
 
     # ------------------------------------------------------------------
     # TICK
@@ -1809,7 +2063,7 @@ class SediMemory:
                     haystack,
                     content=content,
                     axis=basin.axis,
-                    resonance=float(content.get(f"{NCStrainFilter.filter_key(basin.constraint, basin.dimension)}._mean_resonance", 0.0) or 0.0),
+                    resonance=float(content.get(f"{NCStrainFilter.filter_key(basin.constraint, basin.dimension, basin.col_constraint, basin.col_dimension)}._mean_resonance", 0.0) or 0.0),
                     source_kind="compressed",
                 )
                 if score < min_score:
@@ -1822,7 +2076,7 @@ class SediMemory:
                     "axis": basin.axis,
                     "source_kind": "compressed",
                     "score": score,
-                    "resonance": float(content.get(f"{NCStrainFilter.filter_key(basin.constraint, basin.dimension)}._mean_resonance", 0.0) or 0.0),
+                    "resonance": float(content.get(f"{NCStrainFilter.filter_key(basin.constraint, basin.dimension, basin.col_constraint, basin.col_dimension)}._mean_resonance", 0.0) or 0.0),
                     "event_id": "",
                     "slot_id": basin.basin_id,
                     "content": content,
@@ -1916,21 +2170,47 @@ class SediMemory:
                 saved[basin.basin_id] = dict(basin.compressed_mass)
         saved['_saved_at']   = time.time()
         saved['_tick_count'] = self._column._tick_count
+        saved['_format']     = 'd2_625_v1'
+        # Discovery-surfacing cross-restart accuracy: without this,
+        # total_deposited resets to 0 on every fresh boot and the first
+        # post-boot deposit into an already-known B/A cell re-announces it
+        # as a "discovery". Only B/A are ever checkpointed at all (X/T/N
+        # are ephemeral by the existing doctrine above), so this only
+        # covers those.
+        saved['_populated_basin_ids'] = sorted(
+            bid for bid, basin in self._column._basins.items()
+            if basin.axis in ('B', 'A') and basin.total_deposited > 0
+        )
         return saved
 
     def load_deep(self, data: Dict[str, Any]) -> int:
         """
         Restore B and A axis compressed_mass from checkpoint.
         Returns number of basins restored.
+
+        D2/625-cell redesign: legacy 'SED:{axis}>{dim}' keys (pre-D2
+        checkpoints) are migrated to their diagonal D2 cell id via
+        _migrate_basin_id() -- without this, every legacy key would
+        silently miss self._column._basins under the new id format and
+        real checkpoint history would be lost on the next boot.
         """
         restored = 0
         for basin_id, mass in data.items():
             if basin_id.startswith('_'):
                 continue
-            basin = self._column._basins.get(basin_id)
+            basin = self._column._basins.get(_migrate_basin_id(basin_id))
             if basin and basin.axis in ('B', 'A'):
                 basin.compressed_mass = dict(mass)
                 restored += 1
+        # Pre-mark previously-known cells so the next real deposit into
+        # them isn't re-announced as a fresh discovery. Old checkpoints
+        # lack this key -> .get(..., []) -> no basins pre-marked ->
+        # graceful degradation, same posture as this method's own
+        # except/continue patterns elsewhere in this file.
+        for bid in data.get('_populated_basin_ids', []):
+            basin = self._column._basins.get(_migrate_basin_id(bid))
+            if basin is not None:
+                basin.total_deposited = max(basin.total_deposited, 1)
         return restored
 
     def save_channels(self) -> Dict[str, Any]:
@@ -1956,6 +2236,7 @@ class SediMemory:
                     "dissolution_threshold": ch.dissolution_threshold,
                 }
         channels_data['_saved_at'] = time.time()
+        channels_data['_format']   = 'd2_625_v1'
         return channels_data
 
     def load_channels(self, data: Dict[str, Any]) -> int:
@@ -1963,6 +2244,10 @@ class SediMemory:
         Restore carved channels from checkpoint.
         Rebuilds dominant_index and spoke_weights from persisted data.
         Returns number of channels restored.
+
+        D2/625-cell redesign: target_basin_ids/dominant_slot_id/
+        spoke_weights keys are migrated via _migrate_basin_id() -- same
+        rationale as load_deep().
         """
         reg = self._column._path_reg
         restored = 0
@@ -1970,16 +2255,20 @@ class SediMemory:
             if sig.startswith('_'):
                 continue
             try:
-                target_ids = frozenset(cd['target_basin_ids'])
+                raw_target_ids = list(cd['target_basin_ids'])
+                target_ids = frozenset(_migrate_basin_id(bid) for bid in raw_target_ids)
+                dominant_raw = cd.get('dominant_slot_id', next(iter(raw_target_ids), ''))
+                spoke_weights = {
+                    _migrate_basin_id(k): v for k, v in (cd.get('spoke_weights', {}) or {}).items()
+                }
                 ch = SedimentChannel(
                     channel_id=cd['channel_id'],
                     signature=sig,
                     target_basin_ids=target_ids,
-                    dominant_slot_id=cd.get('dominant_slot_id',
-                                            next(iter(target_ids), '')),
+                    dominant_slot_id=_migrate_basin_id(dominant_raw),
                     dominant_axis=cd['dominant_axis'],
                     cv_quantized=tuple(cd['cv_quantized']),
-                    spoke_weights=cd.get('spoke_weights', {}),
+                    spoke_weights=spoke_weights,
                     traversal_count=cd['traversal_count'],
                     traversal_cost=cd['traversal_cost'],
                     disuse_ticks=cd['disuse_ticks'],
@@ -2120,9 +2409,29 @@ def _verify_sedimemory() -> Dict[str, Any]:
     mem = SediMemory(promotion_threshold=3)  # low threshold for test speed
 
     # 1. Basin construction
-    check("25 NC basins constructed",
-          len(mem._column._basins) == 25,
+    check("625 D2 basins constructed",
+          len(mem._column._basins) == 625,
           f"found={len(mem._column._basins)}")
+    check("25 atomic D1 signatures",
+          len(mem._column._strainer._d1_signatures) == 25,
+          f"found={len(mem._column._strainer._d1_signatures)}")
+
+    # 1b. Diagonal resonance is algebraically identical to a direct
+    # single-vector resonance against the same D1 signature (no
+    # independent column evidence supplied).
+    _probe_cv = ConstraintVector(X=1.0, T=0.5, N=0.8, B=0.3, A=0.2)
+    _strainer = mem._column._strainer
+    _diag_ok = True
+    for (_c, _d), _sig in _strainer._d1_signatures.items():
+        _legacy = _strainer._resonance(_probe_cv, _sig)
+        _new = next(
+            _res for (_rc, _rd, _cc, _cd, _res) in _strainer._resonant_cells(_probe_cv, None)
+            if (_rc, _rd) == (_c, _d)
+        )
+        if _legacy != _new:
+            _diag_ok = False
+            break
+    check("Diagonal resonance matches direct D1 resonance exactly", _diag_ok)
 
     # 2. All axes present
     axes = set(b.axis for b in mem._column._basins.values())
@@ -2302,7 +2611,7 @@ if __name__ == "__main__":
         print(f"ALL {total} CHECKS PASSED ✓")
         print()
         print("SediMemory is structurally sound.")
-        print("25 NC-filter basins ready to strain.")
+        print("625 D2 NC-filter basins ready to strain (25 diagonal cells populated per event with today's single-CV evidence).")
         print("5 axis-stratified temporal scales active.")
         print("PathRegistry carving channels on repeat deep traversals.")
         print("Persistence interfaces ready for GovernancePersistenceGateway.")
