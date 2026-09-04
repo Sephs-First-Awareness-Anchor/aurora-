@@ -3095,11 +3095,18 @@ class DreamTrainer:
         # apply to the highest-effectiveness (env_key, axis) combination.
         # Falls back to generic axis injection if no env data exists yet.
         try:
+            # The prior fallback (simulation._chamber/.chamber._genealogy)
+            # was dead: SimulationEngine never carries a _chamber/chamber
+            # attribute, so genealogy was silently None here on every real
+            # boot and apply_targeted_pressure()/get_pressure_recommendations()
+            # were never reached. self._systems is the same live dict
+            # boot_aurora() populates systems["genealogy"] into (assigned
+            # by direct reference at construction) -- reading it here is
+            # the same already-live source every other consumer in the
+            # codebase already uses, not new plumbing.
             genealogy = self._genealogy_ref
             if genealogy is None:
-                simulation = self._systems.get("simulation") if self._systems else None
-                chamber = getattr(simulation, "_chamber", None) or getattr(simulation, "chamber", None)
-                genealogy = getattr(chamber, "_genealogy", None)
+                genealogy = self._systems.get("genealogy") if self._systems else None
 
             if genealogy is not None:
                 ax = DIMENSION_AXIS.get(dim, "X")
