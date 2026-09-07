@@ -15525,6 +15525,44 @@ _NONCOMP_DIMENSION_RUNTIME_FLAGS: Dict[str, Tuple[str, ...]] = {
 }
 
 
+def _derive_noncomp_column_vector(state: Any) -> Optional[Any]:
+    """
+    Independent D2/625-cell COLUMN evidence for SediMemory's turn-pipeline
+    deposit (aurora_sedimemory.py's NCStrainFilter, 625-cell redesign).
+
+    The deposit's own ROW vector comes from DimensionalSystems.get_constraint_
+    aggregate() -- a mean over DPS crystal constraint_signatures, i.e. this
+    turn's accumulated conceptual-pressure snapshot. state.noncomp_input_state
+    (set earlier in the same turn by _apply_noncomp_input_guidance calling
+    ReflexiveInterpreter.interpret()) comes from a structurally disjoint
+    subsystem: SemanticMatcher's linguistic frame/stance classification of
+    this turn's raw text. Both describe the SAME turn (the invariant) through
+    two independently-computed mechanisms -- not one derived from the other --
+    so this is real, non-fabricated column evidence when it is available.
+
+    Returns None (never a guessed/fabricated column) if no noncomp
+    classification exists for this turn, matching MemoryEvent.
+    col_constraint_vector's own documented default.
+    """
+    noncomp = getattr(state, "noncomp_input_state", None) or {}
+    axis = str(noncomp.get("constraint") or "").strip().upper()
+    if axis not in ("X", "T", "N", "B", "A"):
+        return None
+    try:
+        from aurora_crystal_ingestion import _AXIS_CV
+        from aurora_internal.aurora_constraint_manifold_patched import ConstraintVector as _ColCV
+        return _ColCV(**_AXIS_CV[axis])
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_derive_noncomp_column_vector",
+            exc=_aurora_boundary_exc,
+            context={"function": "_derive_noncomp_column_vector", "source_file": "aurora.py"},
+        )
+        return None
+
+
 def _derive_noncomp_behavior_actuation(summary: Dict[str, Any]) -> Dict[str, Any]:
     constraint = str(summary.get("constraint", "") or "").strip().upper()
     dimension = str(summary.get("dimension", "") or "").strip().upper()
@@ -25179,6 +25217,15 @@ def _run_reasoning_pipeline(
                 # PressureExperienceLedger._bridge_to_oets already uses.
                 # Per-call only, never stored on SediMemory itself.
                 _oets_for_sedi = getattr(systems.get('perception'), 'oets', None)
+                # D2/625-cell redesign, independent-column follow-up: this
+                # turn's own noncomp classification (a disjoint subsystem
+                # from the row's DPS crystal aggregate above) is real,
+                # already-computed independent column evidence when
+                # available -- see _derive_noncomp_column_vector's docstring.
+                # None (no noncomp classification this turn) is the same
+                # explicit diagonal pin every other real ingestion path
+                # already uses; never fabricated.
+                _col_cv = _derive_noncomp_column_vector(state)
                 _sedi.ingest_event(
                     content={
                         'user_text': str(user_text or '')[:300],
@@ -25193,6 +25240,7 @@ def _run_reasoning_pipeline(
                     },
                     constraint_vector=_cv,
                     source='turn_pipeline',
+                    col_constraint_vector=_col_cv,
                     oets=_oets_for_sedi,
                 )
                 _sedi.tick(1.0)
