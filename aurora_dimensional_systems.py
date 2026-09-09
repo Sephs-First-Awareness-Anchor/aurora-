@@ -1145,7 +1145,18 @@ class CrystalProcessingSystem(WarpCapable):
         if not signals:
             return self.process(envelope)
 
+        # Causal-generation fix (AURORA DIRECTIVE, Phase 0): every signal in
+        # `signals` is an independent reaction to the SAME envelope/occurrence.
+        # Pass 1 does only per-signal, independent work -- no relational
+        # (link/resonance) computation may run yet, since that would see a
+        # world containing only the signals processed so far instead of the
+        # full batch. Pass 2 runs the joint work once per distinct touched
+        # entity, after the whole batch has landed, so committed state can no
+        # longer depend on the arrival order of `signals`.
         processed = []
+        touched_crystal_ids: List[str] = []
+        pending_facets: List[Tuple['CrystalFacet', str]] = []
+
         for sig in signals:
             crystal = self._get_or_create(sig.concept)
             crystal.use()
@@ -1160,9 +1171,7 @@ class CrystalProcessingSystem(WarpCapable):
                 confidence=facet_conf,
             )
             if self._energy_system is not None:
-                self._energy_system.register_facet(
-                    facet, self._role_to_category(sig.role)
-                )
+                pending_facets.append((facet, self._role_to_category(sig.role)))
 
             evolved = crystal.evolve()
             self.tracker.record('dps', 'concept_process', 1.0)
@@ -1175,19 +1184,8 @@ class CrystalProcessingSystem(WarpCapable):
                 prev = crystal.constraint_signature.get(axis, w)
                 crystal.constraint_signature[axis] = round(prev * 0.8 + w * 0.2, 4)
 
-            # WARP Universalization Directive Phase 1 (2026-07-24): see
-            # process()'s matching call for the full comment.
-            try:
-                self._update_crystal_links(crystal.crystal_id)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:1089",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "process_concepts", "handler_line": 1089, "source_file": "aurora_dimensional_systems.py"},
-                )
-                pass
+            if crystal.crystal_id not in touched_crystal_ids:
+                touched_crystal_ids.append(crystal.crystal_id)
 
             processed.append({
                 'crystal_id': crystal.crystal_id,
@@ -1198,6 +1196,27 @@ class CrystalProcessingSystem(WarpCapable):
                 'usage':      crystal.usage_count,
                 'role':       sig.role,
             })
+
+        # Pass 2 -- joint/relational work, once per distinct touched entity,
+        # now that every crystal in this batch reflects its final
+        # post-occurrence state.
+        if self._energy_system is not None and pending_facets:
+            self._energy_system.register_facets_batch(pending_facets)
+
+        # WARP Universalization Directive Phase 1 (2026-07-24): see
+        # process()'s matching call for the full comment.
+        for crystal_id in touched_crystal_ids:
+            try:
+                self._update_crystal_links(crystal_id)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dimensional_systems.py:1089",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "process_concepts", "handler_line": 1089, "source_file": "aurora_dimensional_systems.py"},
+                )
+                pass
 
         return {
             'crystals':       processed,
@@ -1266,12 +1285,14 @@ class CrystalProcessingSystem(WarpCapable):
             )
             return 0
         loaded = 0
+        loaded_crystals: List[Crystal] = []
         for cid, cd in (payload.get("crystals") or {}).items():
             try:
                 c = Crystal.from_dict(cd)
                 self.crystals[cid] = c
                 self.concept_index[c.concept] = cid
                 loaded += 1
+                loaded_crystals.append(c)
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
@@ -1279,6 +1300,37 @@ class CrystalProcessingSystem(WarpCapable):
                     operation="exception_handler:aurora_dimensional_systems.py:1161",
                     exc=_aurora_boundary_exc,
                     context={"function": "load_crystals", "handler_line": 1161, "source_file": "aurora_dimensional_systems.py"},
+                )
+                pass
+
+        # AURORA DIRECTIVE, Phase 0: boot rehydration is itself one causal
+        # generation -- every facet across every loaded crystal belongs to
+        # the SAME occurrence (this load), not to per-crystal occurrences.
+        # Previously rehydrated facets were never registered with the
+        # energy system at all (register_crystal() was dead code), so a
+        # restored crystal's energy/resonance state stayed empty until a
+        # later live turn happened to touch it. Fixed as one joint batch
+        # spanning every loaded crystal, rather than looping register_
+        # crystal() per crystal, which would leak the same order-dependency
+        # defect one layer up.
+        if self._energy_system is not None and loaded_crystals:
+            pending_facets = [
+                (facet, self._role_to_category(facet.role))
+                for c in loaded_crystals
+                for facet in c.facets.values()
+            ]
+            if pending_facets:
+                self._energy_system.register_facets_batch(pending_facets)
+        for c in loaded_crystals:
+            try:
+                self._update_crystal_links(c.crystal_id)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_dimensional_systems.py:load_crystals_links",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "load_crystals", "source_file": "aurora_dimensional_systems.py"},
                 )
                 pass
         return loaded
@@ -2054,7 +2106,20 @@ class EnergyRegulatorSystem:
     # ====================================================================
 
     def register_facet(self, facet: CrystalFacet, category: str = "processing"):
-        """Register a facet for energy tracking. Builds resonance links."""
+        """Register a single facet immediately: independent seed followed by
+        its own joint resonance-link build. Correct for a single-item
+        occurrence (e.g. process()'s one-facet-per-envelope path), where
+        there is no sibling in the same causal generation to race against.
+        For a BATCH of facets pulled from one occurrence, use
+        register_facets_batch() instead -- calling this in a loop over a
+        batch reintroduces the exact order-dependency defect this method
+        used to have (AURORA DIRECTIVE, Phase 0)."""
+        self._seed_facet(facet, category)
+        self._update_links_for_facet(facet.facet_id)
+
+    def _seed_facet(self, facet: CrystalFacet, category: str = "processing") -> None:
+        """Independent per-facet registration: energy seed only. No
+        relational (link) computation -- Pass 1 of the two-pass pattern."""
         fid = facet.facet_id
         self.registered_facets[fid] = facet
 
@@ -2069,13 +2134,47 @@ class EnergyRegulatorSystem:
             self.facet_energy[fid] = seed
 
         self.facet_categories[fid] = category
-        self._update_links_for_facet(fid)
         self.tracker.record('der', 'registration', 1.0)
 
+    def register_facets_batch(self, items: List[Tuple[CrystalFacet, str]]) -> None:
+        """Two-pass registration for facets extracted from ONE occurrence
+        (AURORA DIRECTIVE, Phase 0 pattern). Pass 1: seed every facet
+        independently, with no facet's resonance graph depending on which
+        sibling happened to be seeded first. Pass 2: build resonance links
+        once per distinct facet, after the whole batch has landed, so every
+        facet's relational computation sees the complete batch rather than
+        a partial, arrival-order-dependent slice of it.
+
+        items: [(facet, category), ...] -- the batch boundary IS the causal
+        generation; callers should pass the full set of facets extracted
+        from one envelope/occurrence in one call.
+        """
+        touched_ids: List[str] = []
+        for facet, category in items:
+            self._seed_facet(facet, category)
+            if facet.facet_id not in touched_ids:
+                touched_ids.append(facet.facet_id)
+        for fid in touched_ids:
+            self._update_links_for_facet(fid)
+
     def register_crystal(self, crystal: Crystal, category: str = "processing"):
-        """Register all facets of a crystal for energy tracking."""
-        for facet in crystal.facets.values():
-            self.register_facet(facet, category)
+        """Register every facet of ONE crystal for energy tracking, as a
+        single causal generation: independent seeding for all of the
+        crystal's facets first, then joint resonance-link building once per
+        distinct facet, after all of the crystal's facets have landed.
+        Wired in by CrystalProcessingSystem.load_crystals() for a caller
+        that has exactly one already-assembled crystal to (re)register --
+        e.g. restoring one crystal fetched individually outside of a boot
+        batch. For rehydrating MANY crystals at once (boot), the boot
+        loader batches every loaded crystal's facets through
+        register_facets_batch() directly in one causal generation spanning
+        all of them, rather than looping this method per crystal -- looping
+        it would leak the identical order-dependency defect one layer up
+        (a later crystal's facets wouldn't exist yet when an earlier
+        crystal's links are computed)."""
+        self.register_facets_batch([
+            (facet, category) for facet in crystal.facets.values()
+        ])
 
     def _update_links_for_facet(self, facet_id: str, top_k: int = 8):
         """
