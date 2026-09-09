@@ -1852,61 +1852,6 @@ def physics_absorb_truth(
                 # lookup only, never _get_or_create — no new crystals, no
                 # pipeline bypass. The concept key is the utterance's
                 # strongest OETS concept when available.
-                # EDIT (constraint-expansive concepts): the utterance's
-                # constraint profile is checked against existing crystal
-                # coverage. Pressure sets POTENCY: the identity field's live
-                # axis pressures act as IVM polarity, so the same magnitudes
-                # under different pressure produce different I-state
-                # combinations — and therefore different concepts. A
-                # persistent gap derives a PROVISIONAL concept through WARP
-                # (genealogy consulted first); it solidifies only through
-                # the trial lifecycle (experiential recurrence).
-                try:
-                    _dps_x = getattr(systems.get("dimensional"), "dps", None)
-                    if _dps_x is not None and hasattr(_dps_x, "check_and_extend"):
-                        _axes_x = {
-                            "X": float(getattr(geom, "x_activation", 0.0) or 0.0),
-                            "T": float(getattr(geom, "t_activation", 0.0) or 0.0),
-                            "N": float(getattr(geom, "n_activation", 0.0) or 0.0),
-                            "B": float(getattr(geom, "b_activation", 0.0) or 0.0),
-                            "A": float(getattr(geom, "a_activation", 0.0) or 0.0),
-                        }
-                        if max(_axes_x.values() or [0.0]) > 0.05:
-                            _pol_x = {}
-                            try:
-                                _if_x = systems.get("identity_field")
-                                if _if_x is not None:
-                                    _ap_x = (_if_x.status() or {}).get(
-                                        "axis_pressures", {}) or {}
-                                    # pressure [0,1] → polarity [-1,+1]:
-                                    # high field pressure pushes the
-                                    # combination toward the negative
-                                    # (pressure) I-states.
-                                    _pol_x = {ax: 1.0 - 2.0 * float(
-                                        _ap_x.get(ax, 0.5) or 0.5)
-                                        for ax in ("X", "T", "N", "B", "A")}
-                            except Exception as _aurora_boundary_exc:
-                                _aurora_record_exception_from_locals(
-                                    locals(),
-                                    module=__name__,
-                                    operation="exception_handler:corpus_runner.py:1812",
-                                    exc=_aurora_boundary_exc,
-                                    context={"function": "physics_absorb_truth", "handler_line": 1812, "source_file": "corpus_runner.py"},
-                                )
-                                _pol_x = {}
-                            from aurora_warp_protocol import axes_to_istates
-                            _prof_x = axes_to_istates(_axes_x, _pol_x)
-                            _dps_x.check_and_extend(
-                                _prof_x, source="corpus_absorption")
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:corpus_runner.py:1818",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "physics_absorb_truth", "handler_line": 1818, "source_file": "corpus_runner.py"},
-                    )
-                    pass
                 try:
                     _dps_w = getattr(systems.get("dimensional"), "dps", None)
                     if _dps_w is not None:
@@ -1932,6 +1877,84 @@ def physics_absorb_truth(
                         context={"function": "physics_absorb_truth", "handler_line": 1836, "source_file": "corpus_runner.py"},
                     )
                     pass
+
+            # AURORA DIRECTIVE (Phase 2) causal-generation fix: this WARP
+            # coverage-gap check used to run INSIDE the `for w in
+            # clean_words[:10]:` loop above, once per word. _axes_x is
+            # derived entirely from `geom` -- this truth_text's OWN
+            # geometry, computed once above the loop -- not from `w`, so
+            # every word produced nearly the same profile. check_and_extend()
+            # requires GAP_PERSISTENCE_REQUIRED CONSECUTIVE checks before it
+            # fires (see aurora_warp_protocol.py's own docstring: "single-
+            # tick anomalies are not acted on") -- i.e. it's designed to
+            # track persistence ACROSS SEPARATE occurrences over time, not
+            # to be re-fed several near-duplicate signals from ONE
+            # occurrence. Calling it up to 10 times per truth_text let one
+            # absorbed sentence satisfy that persistence requirement
+            # entirely by itself, and let side effects from words already
+            # processed earlier in the SAME loop (observe_encoding,
+            # lexicon.add_word/associate perturbing identity_field's live
+            # axis_pressures) change the polarity/profile seen by a later
+            # word's check purely from batch position. This is the joint,
+            # once-per-occurrence half of the two-pass fix: independent
+            # per-word lexicon/facet work stays in the loop above; this
+            # single coverage check runs once per absorbed truth_text,
+            # using the same occurrence-level (not word-level) geometry.
+            # EDIT (constraint-expansive concepts): the utterance's
+            # constraint profile is checked against existing crystal
+            # coverage. Pressure sets POTENCY: the identity field's live
+            # axis pressures act as IVM polarity, so the same magnitudes
+            # under different pressure produce different I-state
+            # combinations — and therefore different concepts. A
+            # persistent gap derives a PROVISIONAL concept through WARP
+            # (genealogy consulted first); it solidifies only through
+            # the trial lifecycle (experiential recurrence).
+            try:
+                _dps_x = getattr(systems.get("dimensional"), "dps", None)
+                if _dps_x is not None and hasattr(_dps_x, "check_and_extend"):
+                    _axes_x = {
+                        "X": float(getattr(geom, "x_activation", 0.0) or 0.0),
+                        "T": float(getattr(geom, "t_activation", 0.0) or 0.0),
+                        "N": float(getattr(geom, "n_activation", 0.0) or 0.0),
+                        "B": float(getattr(geom, "b_activation", 0.0) or 0.0),
+                        "A": float(getattr(geom, "a_activation", 0.0) or 0.0),
+                    }
+                    if max(_axes_x.values() or [0.0]) > 0.05:
+                        _pol_x = {}
+                        try:
+                            _if_x = systems.get("identity_field")
+                            if _if_x is not None:
+                                _ap_x = (_if_x.status() or {}).get(
+                                    "axis_pressures", {}) or {}
+                                # pressure [0,1] → polarity [-1,+1]:
+                                # high field pressure pushes the
+                                # combination toward the negative
+                                # (pressure) I-states.
+                                _pol_x = {ax: 1.0 - 2.0 * float(
+                                    _ap_x.get(ax, 0.5) or 0.5)
+                                    for ax in ("X", "T", "N", "B", "A")}
+                        except Exception as _aurora_boundary_exc:
+                            _aurora_record_exception_from_locals(
+                                locals(),
+                                module=__name__,
+                                operation="exception_handler:corpus_runner.py:1812",
+                                exc=_aurora_boundary_exc,
+                                context={"function": "physics_absorb_truth", "handler_line": 1812, "source_file": "corpus_runner.py"},
+                            )
+                            _pol_x = {}
+                        from aurora_warp_protocol import axes_to_istates
+                        _prof_x = axes_to_istates(_axes_x, _pol_x)
+                        _dps_x.check_and_extend(
+                            _prof_x, source="corpus_absorption")
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:corpus_runner.py:1818",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "physics_absorb_truth", "handler_line": 1818, "source_file": "corpus_runner.py"},
+                )
+                pass
         # FIX-A009: persist vocabulary growth — without this every corpus
         # run's lexical gains evaporated at process exit.
         try:

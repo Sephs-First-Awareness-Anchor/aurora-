@@ -293,9 +293,22 @@ def build_relevance_anchor_set(
         if not is_hollow:
             anchor[w] = RELEVANCE_DIRECT_ANCHOR
 
+    # AURORA DIRECTIVE (Phase 2) causal-generation fix: `direct_anchors`
+    # below is frozen BEFORE the one-hop pass starts, so the `other in
+    # direct_anchors` check always means "one of this turn's actual direct
+    # anchors" -- never "already claimed by an earlier direct anchor's own
+    # one-hop pass in this same loop". Previously `if other in anchor:
+    # continue` read the live, loop-mutated `anchor` dict, so whichever
+    # direct anchor reached a shared one-hop neighbor FIRST won outright;
+    # `anchor[other] = max(anchor.get(other, 0.0), strength)` below never
+    # even ran for a later direct anchor's contribution to the same
+    # neighbor, so the neighbor's committed score depended on which direct
+    # anchor happened to be iterated first instead of converging to the
+    # true max across every direct anchor from this turn.
+    direct_anchors = frozenset(anchor.keys())
     get_all = getattr(oets, "get_all_relations_for", None)
     if callable(get_all):
-        for w in list(anchor.keys()):
+        for w in direct_anchors:
             try:
                 rels = get_all(w) or []
             except Exception as _aurora_boundary_exc:
@@ -309,7 +322,7 @@ def build_relevance_anchor_set(
                 continue
             for rel in rels:
                 other = rel.target_word if rel.source_word == w else rel.source_word
-                if other in anchor:
+                if other in direct_anchors:
                     continue  # direct membership always wins
                 raw_strength = min(1.0, float(getattr(rel, "strength", 0.0) or 0.0))
                 # 86% of this graph's relations are "co-occurrence"-sourced

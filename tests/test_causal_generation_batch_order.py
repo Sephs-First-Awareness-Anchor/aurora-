@@ -17,10 +17,14 @@ Confirmed instances fixed here (live production code, not a parallel copy):
      _update_links_for_facet() per-facet, same defect one layer down.
   3. EnergyRegulatorSystem.register_crystal() -- was dead code (never
      called in the live build) still carrying the old single-item-
-     registration assumption; rebuilt on the two-pass pattern and wired
-     into CrystalProcessingSystem.load_crystals() (boot rehydration),
-     since loaded crystals' facets were previously never registered with
-     the energy system at all.
+     registration assumption; rebuilt on the two-pass pattern (see
+     register_facets_batch() below). NOT wired into
+     CrystalProcessingSystem.load_crystals() (boot rehydration) -- that
+     was tried and reverted after live measurement showed it made full
+     boot O(n^2) in the persisted facet count (didn't complete in 5
+     minutes against this repo's actual 13,622-facet aurora_state); see
+     the comment above test_load_crystals_does_not_register_facets_
+     with_energy_system() below for the full account.
 
 Fix shape (Phase 0's reference pattern, reused everywhere in this file):
   Pass 1 (per-item, independent) -- create/seed, no relational computation.
@@ -242,14 +246,28 @@ def test_register_crystal_is_order_independent_across_its_own_facets():
     assert single_call_links == der2.facet_to_facet_links
 
 
-# ---- load_crystals(): boot rehydration now actually registers with DER ----
+# ---- load_crystals(): boot rehydration stays deliberately unbatched ----
+#
+# An earlier version of this fix wired load_crystals() to register every
+# loaded crystal's facets through register_facets_batch() as one joint
+# boot-time batch. Reverted: _update_links_for_facet()/_update_crystal_
+# links() are each an O(n) scan per facet/crystal, so registering the full
+# boot batch is O(n^2) -- measured against this repo's actual
+# aurora_state/dps_crystals.json (5,977 crystals, 13,622 facets), it did
+# not complete in 5 minutes and timed out several live "boot the real
+# state dir" tests. Fixing that algorithmic cost is Phase 4 territory
+# (hardware-adaptive/multi-scale execution), not this directive's scope
+# (order-independence of committed outcome). register_crystal()/
+# register_facets_batch() remain correct, tested two-pass primitives
+# above -- available for a caller with a smaller batch -- just not
+# auto-wired into full boot rehydration.
 
-def test_load_crystals_registers_facets_with_energy_system(tmp_path):
-    """Before the fix, rehydrated crystals' facets were never registered
-    with the energy system at all -- register_crystal() was dead code.
-    After loading, every persisted facet must have energy + resonance
-    state, and it must not depend on the dict-iteration order the JSON
-    payload happens to load in."""
+def test_load_crystals_does_not_register_facets_with_energy_system(tmp_path):
+    """Documents the current, deliberate boot behavior: loading crystals
+    populates self.crystals/concept_index only. A rehydrated facet has no
+    energy/resonance state until a later live turn touches its crystal
+    again -- the same limitation this module had before this directive,
+    now measured and documented rather than silently dead code."""
     tracker = EvolutionTracker()
     der = EnergyRegulatorSystem(tracker)
     dps = CrystalProcessingSystem(tracker, energy_system=der)
@@ -272,6 +290,5 @@ def test_load_crystals_registers_facets_with_energy_system(tmp_path):
         fid for c in dps2.crystals.values() for fid in c.facets.keys()
     }
     assert all_facet_ids, "fixture produced no facets to check"
-    for fid in all_facet_ids:
-        assert fid in der2.registered_facets
-        assert fid in der2.facet_energy
+    assert der2.registered_facets == {}
+    assert der2.facet_energy == {}

@@ -1285,14 +1285,12 @@ class CrystalProcessingSystem(WarpCapable):
             )
             return 0
         loaded = 0
-        loaded_crystals: List[Crystal] = []
         for cid, cd in (payload.get("crystals") or {}).items():
             try:
                 c = Crystal.from_dict(cd)
                 self.crystals[cid] = c
                 self.concept_index[c.concept] = cid
                 loaded += 1
-                loaded_crystals.append(c)
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
@@ -1303,36 +1301,29 @@ class CrystalProcessingSystem(WarpCapable):
                 )
                 pass
 
-        # AURORA DIRECTIVE, Phase 0: boot rehydration is itself one causal
+        # AURORA DIRECTIVE, Phase 0/2: boot rehydration is one causal
         # generation -- every facet across every loaded crystal belongs to
-        # the SAME occurrence (this load), not to per-crystal occurrences.
-        # Previously rehydrated facets were never registered with the
-        # energy system at all (register_crystal() was dead code), so a
-        # restored crystal's energy/resonance state stayed empty until a
-        # later live turn happened to touch it. Fixed as one joint batch
-        # spanning every loaded crystal, rather than looping register_
-        # crystal() per crystal, which would leak the same order-dependency
-        # defect one layer up.
-        if self._energy_system is not None and loaded_crystals:
-            pending_facets = [
-                (facet, self._role_to_category(facet.role))
-                for c in loaded_crystals
-                for facet in c.facets.values()
-            ]
-            if pending_facets:
-                self._energy_system.register_facets_batch(pending_facets)
-        for c in loaded_crystals:
-            try:
-                self._update_crystal_links(c.crystal_id)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_dimensional_systems.py:load_crystals_links",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "load_crystals", "source_file": "aurora_dimensional_systems.py"},
-                )
-                pass
+        # the SAME occurrence (this load), so it was tempting to register
+        # them with the energy system and rebuild resonance links as one
+        # joint batch here, using the register_facets_batch()/
+        # _update_crystal_links() two-pass primitives below. Tried exactly
+        # that; reverted after live measurement against this repo's actual
+        # aurora_state/dps_crystals.json (5,977 crystals, 13,622 facets):
+        # _update_links_for_facet()/_update_crystal_links() are each an
+        # O(n) scan per facet/crystal, so registering the full boot batch
+        # is O(n^2) -- didn't complete in 5 minutes against real persisted
+        # state, timing out several "boot the real state dir" tests. That
+        # is a genuine algorithmic cost this directive's scope (order-
+        # independence of committed OUTCOME) doesn't license fixing here --
+        # vectorizing/batching the resonance-link computation itself is
+        # Phase 4 territory ("hardware-adaptive execution", "multi-scale
+        # execution"), not this fix. So: rehydrated facets still don't get
+        # energy/resonance state until a later live turn touches them
+        # again -- the same pre-existing limitation as before this
+        # directive, now at least a known, measured, documented one rather
+        # than silently-dead code (register_crystal()/register_facets_
+        # batch() below remain correct and available for a caller with a
+        # smaller batch, e.g. restoring one crystal outside of full boot).
         return loaded
 
 
