@@ -2,8 +2,8 @@
 """Live possibility-continuation arbitration for Aurora.
 
 Aurora's possibility architecture already exposes more than one prospective
-continuation through the Subsurface predictive stager.  This module does not
-invent a second reasoning system.  It connects those existing projections to
+continuation through the Subsurface predictive stager. This module does not
+invent a second reasoning system. It connects those existing projections to
 ThoughtBraid, ActiveSelfState, ThoughtIntegrationSpace, and Layer-7 inception
 simulation so one live occurrence may support several *uncommitted* thoughts
 before Agency actualizes exactly one.
@@ -18,12 +18,12 @@ Semantic contract
         -> inception self-projection only while competition remains
         -> Agency actualizes one non-dominated continuation
 
-No continuation in this module is lived state.  The caller owns the actuality
+No continuation in this module is lived state. The caller owns the actuality
 boundary by applying ThoughtContinuity.carry_forward() only to the selected
-ThoughtState.  Rejected continuations are reduced to diagnostic summaries and
+ThoughtState. Rejected continuations are reduced to diagnostic summaries and
 never enter SediMemory or continuity.
 
-The module is scheduler-neutral.  Branches execute serially on today's Python
+The module is scheduler-neutral. Branches execute serially on today's Python
 phone runtime; because they share frozen inputs and do not commit live state,
 the same branch set can later be widened by an ACM executor without changing
 which information each branch was allowed to observe.
@@ -202,8 +202,10 @@ def _normalize_staged_frame(frame: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _frame_identity(source: str, frame: Dict[str, Any]) -> str:
+    # Source is intentionally excluded. The same possibility arriving once via
+    # the live braid and once via the file-backed Subsurface queue is one
+    # continuation, not two votes for the same continuation.
     payload = {
-        "source": source,
         "perspective": list(frame.get("pressure_perspective") or ()),
         "axis": _frame_axis(frame),
         "topic": _frame_topic(frame),
@@ -251,9 +253,19 @@ def _candidate_frames(
         branch_limit = 1
 
     raw: List[Tuple[str, Dict[str, Any]]] = []
-    present = dict(getattr(braid_slice, "predictive_frame", {}) or {}) if braid_slice is not None else {}
-    raw.append(("braid_present", _normalize_staged_frame(present)))
-    raw.extend(("subsurface_pressure_perspective", _normalize_staged_frame(frame)) for frame in staged)
+    # Keep the present braid frame byte-for-semantic-byte equivalent. In the
+    # one-candidate case this branch must reproduce the historic integration
+    # path, not gain a synthetic pressure label merely because the frontier is
+    # installed.
+    present = copy.deepcopy(
+        dict(getattr(braid_slice, "predictive_frame", {}) or {})
+        if braid_slice is not None else {}
+    )
+    raw.append(("braid_present", present))
+    raw.extend(
+        ("subsurface_pressure_perspective", _normalize_staged_frame(frame))
+        for frame in staged
+    )
 
     unique: Dict[str, Tuple[str, Dict[str, Any]]] = {}
     for source, frame in raw:
@@ -273,10 +285,25 @@ def _clone_slice(base_slice: Any, predictive_frame: Dict[str, Any]) -> Any:
     return cloned
 
 
-def _register_candidate_context(space: Any, frame: Dict[str, Any], candidate_id: str, tick: int) -> None:
+def _register_candidate_context(
+    space: Any,
+    frame: Dict[str, Any],
+    candidate_id: str,
+    tick: int,
+    source: str,
+) -> None:
+    # The braid-present candidate is the exact pre-frontier path. Its existing
+    # ThoughtStreamSlice predictive context is sufficient, and adding another
+    # candidate context would bias ordinary one-path turns.
+    if source == "braid_present":
+        return
+
     from aurora_thought_formation import make_process_context
 
-    perspective = [str(v).upper() for v in (frame.get("pressure_perspective") or ()) if str(v).upper() in _AXES]
+    perspective = [
+        str(v).upper() for v in (frame.get("pressure_perspective") or ())
+        if str(v).upper() in _AXES
+    ]
     if not perspective:
         perspective = [_frame_axis(frame), "A"]
     topic = _frame_topic(frame) or f"{_frame_axis(frame)} continuation"
@@ -322,9 +349,13 @@ def _evidence_for(
     conflicts = len(getattr(thought, "conflicts", []) or [])
     unresolved = len(getattr(thought, "unresolved", []) or [])
     closure = 1.0 / (1.0 + conflicts + unresolved)
+    prior_axes = (
+        getattr(prior_thought, "axis_fingerprint", []) or []
+        if prior_thought is not None else []
+    )
     continuity = _axis_overlap(
         getattr(thought, "axis_fingerprint", []) or [],
-        getattr(prior_thought, "axis_fingerprint", []) or [] if prior_thought is not None else [],
+        prior_axes,
     )
     return {
         "self_fit": _clip01(self_fit, 0.5),
@@ -336,13 +367,23 @@ def _evidence_for(
     }
 
 
-def _dominates(left: PossibilityContinuation, right: PossibilityContinuation, metrics: Sequence[str]) -> bool:
+def _dominates(
+    left: PossibilityContinuation,
+    right: PossibilityContinuation,
+    metrics: Sequence[str],
+) -> bool:
     lvals = [float(left.evidence.get(metric, 0.5)) for metric in metrics]
     rvals = [float(right.evidence.get(metric, 0.5)) for metric in metrics]
-    return all(l + _EPS >= r for l, r in zip(lvals, rvals)) and any(l > r + _EPS for l, r in zip(lvals, rvals))
+    return (
+        all(l + _EPS >= r for l, r in zip(lvals, rvals))
+        and any(l > r + _EPS for l, r in zip(lvals, rvals))
+    )
 
 
-def _pareto_frontier(candidates: Sequence[PossibilityContinuation], metrics: Sequence[str]) -> List[PossibilityContinuation]:
+def _pareto_frontier(
+    candidates: Sequence[PossibilityContinuation],
+    metrics: Sequence[str],
+) -> List[PossibilityContinuation]:
     return [
         candidate for candidate in candidates
         if not any(
@@ -354,6 +395,11 @@ def _pareto_frontier(candidates: Sequence[PossibilityContinuation], metrics: Seq
 
 def _simulate_candidate(candidate: PossibilityContinuation, self_state: Any) -> Dict[str, Any]:
     """Run an ephemeral Layer-7 inception self-projection with no live registration."""
+    # ImpressionCascade's ID helper consumes Python's module-global RNG. A
+    # rejected hypothetical must not advance the stochastic stream later lived
+    # execution will see, so the entire projection happens inside an RNG
+    # snapshot/restore boundary.
+    rng_state = random.getstate()
     try:
         from aurora_simulation_engine import InceptionEntity
         from foundational_contract import ExistenceMode
@@ -384,9 +430,12 @@ def _simulate_candidate(candidate: PossibilityContinuation, self_state: Any) -> 
             mode=ExistenceMode.BOUNDED,
         )
         collapsed = entity.collapse_to_parent()
-        valence = max(-1.0, min(1.0, float(projected.get("valence", 0.0) or 0.0)))
-        # Simulation contributes as *internal consistency*, never as a
-        # happiness/reward objective.  A branch whose simulated inner response
+        valence = max(
+            -1.0,
+            min(1.0, float(projected.get("valence", 0.0) or 0.0)),
+        )
+        # Simulation contributes as internal consistency, never as a
+        # happiness/reward objective. A branch whose simulated inner response
         # contradicts its own predicted polarity is less self-coherent.
         simulation_coherence = 1.0 - min(1.0, abs(valence - polarity) / 2.0)
         return {
@@ -405,6 +454,8 @@ def _simulate_candidate(candidate: PossibilityContinuation, self_state: Any) -> 
             "reason": type(exc).__name__,
             "simulation_coherence": 0.5,
         }
+    finally:
+        random.setstate(rng_state)
 
 
 def _stable_agency_choice(
@@ -421,7 +472,9 @@ def _stable_agency_choice(
         "candidate_ids": [candidate.candidate_id for candidate in ordered],
     }
     digest = hashlib.sha256(
-        json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+        json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), default=str
+        ).encode("utf-8")
     ).hexdigest()
     return random.Random(int(digest[:16], 16)).choice(ordered)
 
@@ -440,7 +493,7 @@ def resolve_live_possibilities(
     """Resolve several possible thoughts without committing any of them.
 
     The caller must apply continuity to ``resolution.thought_state`` only after
-    this function returns.  That call is the actualization boundary.
+    this function returns. That call is the actualization boundary.
     """
     from aurora_thought_formation import ThoughtIntegrationSpace
 
@@ -460,28 +513,43 @@ def resolve_live_possibilities(
             space.register(ctx)
         if constraint_context is not None:
             space.register(copy.deepcopy(constraint_context))
-        _register_candidate_context(space, predictive_frame, candidate_id, turn_tick)
+        _register_candidate_context(
+            space,
+            predictive_frame,
+            candidate_id,
+            turn_tick,
+            source,
+        )
         thought = space.integrate()
         candidate = PossibilityContinuation(
             candidate_id=candidate_id,
             source=source,
             predictive_frame=predictive_frame,
             pressure_perspective=tuple(
-                str(axis).upper() for axis in (predictive_frame.get("pressure_perspective") or ())
+                str(axis).upper()
+                for axis in (predictive_frame.get("pressure_perspective") or ())
                 if str(axis).upper() in _AXES
             ),
             thought_state=thought,
             braid_slice=branch_slice,
         )
         candidate.evidence.update(
-            _evidence_for(thought, predictive_frame, self_state, user_text, prior_thought)
+            _evidence_for(
+                thought,
+                predictive_frame,
+                self_state,
+                user_text,
+                prior_thought,
+            )
         )
         candidates.append(candidate)
 
     survivors = _pareto_frontier(candidates, _BASE_METRICS)
     arbitration: Dict[str, Any] = {
         "candidate_count": len(candidates),
-        "initial_non_dominated": [candidate.candidate_id for candidate in survivors],
+        "initial_non_dominated": [
+            candidate.candidate_id for candidate in survivors
+        ],
         "deep_simulation_used": False,
         "rule": "pareto_self_situation_then_agency",
     }
@@ -505,15 +573,20 @@ def resolve_live_possibilities(
             arbitration["reason"] = "simulation_disambiguated_continuation"
         else:
             selected = _stable_agency_choice(
-                simulated_survivors, self_state, user_text, turn_tick
+                simulated_survivors,
+                self_state,
+                user_text,
+                turn_tick,
             )
             arbitration.update({
                 "reason": "non_dominated_agency_actualization",
                 "tie_status": "genuinely_non_dominated",
                 "preference_attributed_to_tiebreak": False,
                 "eligible_candidate_ids": [
-                    candidate.candidate_id for candidate in sorted(
-                        simulated_survivors, key=lambda item: item.candidate_id
+                    candidate.candidate_id
+                    for candidate in sorted(
+                        simulated_survivors,
+                        key=lambda item: item.candidate_id,
                     )
                 ],
             })
@@ -521,7 +594,7 @@ def resolve_live_possibilities(
     selected.selected = True
     arbitration["selected_candidate_id"] = selected.candidate_id
 
-    # Observability only.  Store summaries, never rejected ThoughtState objects.
+    # Observability only. Store summaries, never rejected ThoughtState objects.
     systems["_current_possibility_frontier"] = {
         "turn_tick": int(turn_tick),
         "actualized": False,
@@ -542,4 +615,6 @@ def mark_actualized(systems: Dict[str, Any], selected_thought: Any) -> None:
     frontier = systems.get("_current_possibility_frontier")
     if isinstance(frontier, dict):
         frontier["actualized"] = True
-        frontier["actualized_thought_tick"] = int(getattr(selected_thought, "tick", 0) or 0)
+        frontier["actualized_thought_tick"] = int(
+            getattr(selected_thought, "tick", 0) or 0
+        )
