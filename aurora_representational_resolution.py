@@ -241,11 +241,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
         return list(self._projection_events[-max(0, int(limit)):])
 
     def _candidate_pool(self, ref: RepresentationalRef) -> List[Dict[str, Any]]:
-        """Ask Build 714 for the full typed candidate capacity when supported.
-
-        The TypeError fallback preserves compatibility with older fixtures and
-        alternate engines that expose the historical one-argument method.
-        """
+        """Ask Build 714 for the full typed candidate capacity when supported."""
         capacity = max(1, _complete_candidate_capacity(ref))
         try:
             return list(
@@ -275,6 +271,63 @@ class RepresentationalResolutionEngine(_BaseEngine):
             sources[source_id] = (source_id, source_ref, evidence)
         return list(sources.values())
 
+    @staticmethod
+    def _field_candidates_from_structural_sources(
+        ref: RepresentationalRef,
+        sources: Sequence[Tuple[str, RepresentationalRef, Dict[str, Any]]],
+    ) -> List[Dict[str, Any]]:
+        """Reuse the mirror scan as Build 714 field-candidate evidence.
+
+        After every structural perspective has genuinely failed, there is no
+        reason to rescan genealogy merely to recover the same counterpart
+        field/value pairs. This reconstructs the ordinary Build 714 candidate
+        shape from the already-returned real source refs and their native
+        inquiry provenance. It grants no authority; the normal staged inquiry
+        and consequence test still decide retention.
+        """
+        best: Dict[Tuple[str, Any], Dict[str, Any]] = {}
+        for source_id, source_ref, evidence in sources:
+            evidence = dict(evidence or {})
+            finder = str(evidence.get("structural_finder") or "structural")
+            inquiry_id = str(evidence.get("structural_inquiry_id") or "")
+            try:
+                pressure = float(evidence.get("structural_pressure", 0.0) or 0.0)
+            except Exception:
+                pressure = 0.0
+            for field_name in ref.unresolved_fields():
+                value = getattr(source_ref, field_name, None)
+                if value is None:
+                    continue
+                key = (field_name, value)
+                candidate = {
+                    "field": field_name,
+                    "candidate_value": value,
+                    "source": f"{finder}:{inquiry_id or source_id}",
+                    "inquiry_id": inquiry_id,
+                    "counterpart_ability_id": str(source_id),
+                    "evidence": dict(evidence),
+                    "pressure": pressure,
+                }
+                previous = best.get(key)
+                if previous is None or (
+                    -pressure,
+                    str(source_id),
+                ) < (
+                    -float(previous.get("pressure", 0.0) or 0.0),
+                    str(previous.get("counterpart_ability_id") or ""),
+                ):
+                    best[key] = candidate
+        return [best[key] for key in sorted(best, key=lambda item: (item[0], str(item[1])))]
+
+    def _native_structural_finders_available(self) -> bool:
+        return any(
+            callable(getattr(self.genealogy, name, None))
+            for name in (
+                "representation_collision_candidates",
+                "representation_gap_candidates",
+            )
+        )
+
     def _projection_sources_for_ref(
         self, ref: RepresentationalRef
     ) -> List[Tuple[str, RepresentationalRef, Dict[str, Any]]]:
@@ -294,8 +347,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
             ("collision", getattr(self.genealogy, "representation_collision_candidates", None)),
             ("gap", getattr(self.genealogy, "representation_gap_candidates", None)),
         )
-        has_native_finder = any(callable(finder) for _name, finder in finder_specs)
-        if not has_native_finder:
+        if not self._native_structural_finders_available():
             return self._projection_sources_from_candidates(self._candidate_pool(ref))
 
         ability_id = self.ensure_registered(ref)
@@ -341,6 +393,10 @@ class RepresentationalResolutionEngine(_BaseEngine):
         )
         return {
             "projections": projections,
+            "sources": list(sources),
+            "structural_candidates": self._field_candidates_from_structural_sources(
+                ref, sources
+            ),
             "source_count": len(sources),
             "refresh_used": False,
         }
@@ -429,6 +485,23 @@ class RepresentationalResolutionEngine(_BaseEngine):
         self._candidate_downstream_effects.pop(key, None)
         return self._active_stage_for_ref[key]
 
+    def _field_candidates_after_frontier(
+        self, ref: RepresentationalRef, frontier: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        structural = list(frontier.get("structural_candidates") or [])
+        if structural:
+            return structural
+        if self._native_structural_finders_available():
+            # We already performed the native structural scan and found no real
+            # mirror. Go directly to Build 714's lawful-domain bootstrap rather
+            # than paying for the same empty search again.
+            return list(self._bootstrap_domain_hypotheses(
+                ref,
+                ref.unresolved_fields(),
+                max(1, _complete_candidate_capacity(ref)),
+            ) or [])
+        return self._candidate_pool(ref)
+
     def investigate_if_pressured(self, ref, *, consumer="auto", context_scope=None):
         self._projection_state()
         if self._projection_resolution_hold:
@@ -485,7 +558,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
                 ),
             )
 
-        candidates = self._candidate_pool(ref)
+        candidates = self._field_candidates_after_frontier(ref, frontier)
         if not candidates:
             return None
         return self._stage_field_after_projection(ref, candidates, consumer, context_scope)
@@ -615,6 +688,17 @@ class RepresentationalResolutionEngine(_BaseEngine):
         self._projection_event(ref, pending, "failed", evaluation)
         return "failed"
 
+    def _clear_frontier_if_pressure_resolved(self, ref: RepresentationalRef) -> None:
+        if self.inadequacy_pressure(ref) <= 0.0:
+            self._projection_frontiers.pop(ref.encode(), None)
+
+    def complete_field_inquiry(self, ref, candidate, stage, **kwargs):
+        """A completed real refinement experiment ends this optic episode."""
+        try:
+            return super().complete_field_inquiry(ref, candidate, stage, **kwargs)
+        finally:
+            self._projection_frontiers.pop(ref.encode(), None)
+
     def record_pressure_observation(
         self,
         ref,
@@ -627,20 +711,12 @@ class RepresentationalResolutionEngine(_BaseEngine):
         notes=None,
         consumer="observer",
     ):
-        """Record consequence pressure without claiming projection consumption.
-
-        Some systems carry a RepresentationalRef only as provenance while
-        evaluating their own world-state evidence. Their observation is valid
-        evidence that the current representation may be inadequate, but it is
-        not evidence that a staged projected/refined value participated in the
-        calculation. Such observers therefore may update genealogy pressure
-        while neither staging nor completing a resolution experiment.
-        """
+        """Record consequence pressure without claiming projection consumption."""
         self._projection_state()
         previous_hold = self._projection_resolution_hold
         self._projection_resolution_hold = True
         try:
-            return _BaseEngine.record_participation(
+            result = _BaseEngine.record_participation(
                 self,
                 ref,
                 pressure_before=pressure_before,
@@ -654,6 +730,8 @@ class RepresentationalResolutionEngine(_BaseEngine):
             )
         finally:
             self._projection_resolution_hold = previous_hold
+        self._clear_frontier_if_pressure_resolved(ref)
+        return result
 
     def record_participation(
         self,
@@ -672,7 +750,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
         if pending is None or pending.get("mode") != "perspective_projection":
-            return super().record_participation(
+            result = super().record_participation(
                 ref,
                 pressure_before=pressure_before,
                 pressure_after=pressure_after,
@@ -683,6 +761,8 @@ class RepresentationalResolutionEngine(_BaseEngine):
                 consumer=consumer,
                 candidate_evaluation=candidate_evaluation,
             )
+            self._clear_frontier_if_pressure_resolved(ref)
+            return result
         self._active_stage_for_ref.pop(key, None)
         previous_hold = self._projection_resolution_hold
         self._projection_resolution_hold = True
