@@ -16,12 +16,22 @@ Semantic contract
         -> independent ThoughtIntegrationSpace resolutions
         -> Pareto elimination by self + situation + coherence + continuity
         -> inception self-projection only while competition remains
+        -> King identity-topology arbitration while competition remains
         -> Agency actualizes one non-dominated continuation
 
 No continuation in this module is lived state. The caller owns the actuality
 boundary by applying ThoughtContinuity.carry_forward() only to the selected
 ThoughtState. Rejected continuations are reduced to diagnostic summaries and
 never enter SediMemory or continuity.
+
+The King Quasicrystal is not treated as a second scoring intelligence. Its
+existing live identity field is snapshotted once per occurrence and receives
+final authority only after situational evidence and deeper self-projection have
+failed to distinguish the remaining continuations. The comparison uses the
+field's own current-vs-reference pressure topology, matching the native identity
+semantics already used by Habitat motivation. If the King itself cannot
+distinguish the survivors, the final choice is explicitly neutral and is not
+recorded as an identity preference.
 
 The module is scheduler-neutral. Branches execute serially on today's Python
 phone runtime; because they share frozen inputs and do not commit live state,
@@ -458,17 +468,215 @@ def _simulate_candidate(candidate: PossibilityContinuation, self_state: Any) -> 
         random.setstate(rng_state)
 
 
-def _stable_agency_choice(
+def _king_identity_snapshot(systems: Dict[str, Any]) -> Dict[str, Any]:
+    """Freeze the King Quasicrystal's live identity topology for this occurrence.
+
+    NoncompField already exposes current axis pressure and its own neutral
+    reference. Mirroring Habitat motivation, only positive displacement above
+    that native reference counts as active identity pressure. This function is
+    read-only: it never ingests, decays, resets, or otherwise changes the King.
+    """
+    identity_field = systems.get("identity_field")
+    if identity_field is None or not hasattr(identity_field, "status"):
+        return {"available": False, "reason": "identity_field_unavailable"}
+    try:
+        status = identity_field.status() or {}
+    except Exception as exc:
+        return {
+            "available": False,
+            "reason": f"identity_field_status_{type(exc).__name__}",
+        }
+    if not isinstance(status, dict):
+        return {"available": False, "reason": "identity_field_status_invalid"}
+
+    raw_current = dict(status.get("axis_pressures") or {})
+    raw_reference = dict(status.get("reference_axis_pressures") or {})
+    if not raw_reference and hasattr(identity_field, "reference_axis_pressures"):
+        try:
+            raw_reference = dict(identity_field.reference_axis_pressures() or {})
+        except Exception:
+            raw_reference = {}
+
+    current = {
+        axis: float(raw_current[axis])
+        for axis in _AXES
+        if axis in raw_current
+    }
+    reference = {
+        axis: float(raw_reference[axis])
+        for axis in _AXES
+        if axis in raw_reference
+    }
+    elevation = {
+        axis: max(0.0, current.get(axis, 0.0) - reference.get(axis, current.get(axis, 0.0)))
+        for axis in _AXES
+        if axis in current and axis in reference
+    }
+    magnitude = sum(value * value for value in elevation.values()) ** 0.5
+    topology = {
+        axis: (value / magnitude if magnitude > _EPS else 0.0)
+        for axis, value in elevation.items()
+    }
+    dimensions = {
+        str(key): float(value)
+        for key, value in dict(status.get("dimension_pressures") or {}).items()
+        if isinstance(value, (int, float))
+    }
+    return {
+        "available": bool(magnitude > _EPS),
+        "reason": "active_identity_topology" if magnitude > _EPS else "identity_at_reference",
+        "axis_pressures": current,
+        "reference_axis_pressures": reference,
+        "axis_elevation": elevation,
+        "normalized_topology": topology,
+        "dimension_pressures": dimensions,
+    }
+
+
+def _public_king_snapshot(snapshot: Dict[str, Any]) -> Dict[str, Any]:
+    """Compact observability record for the frozen King state."""
+    return {
+        "available": bool(snapshot.get("available")),
+        "reason": snapshot.get("reason"),
+        "axis_elevation": {
+            axis: round(float(value), 6)
+            for axis, value in dict(snapshot.get("axis_elevation") or {}).items()
+        },
+        "normalized_topology": {
+            axis: round(float(value), 6)
+            for axis, value in dict(snapshot.get("normalized_topology") or {}).items()
+        },
+        "dimension_pressures": {
+            str(key): round(float(value), 6)
+            for key, value in dict(snapshot.get("dimension_pressures") or {}).items()
+        },
+    }
+
+
+def _candidate_axis_profile(candidate: PossibilityContinuation) -> Dict[str, float]:
+    """Represent which native axes a surviving continuation actually occupies."""
+    axes = {
+        str(axis).upper()
+        for axis in (getattr(candidate.thought_state, "axis_fingerprint", []) or [])
+        if str(axis).upper() in _AXES
+    }
+    axes.update(
+        str(axis).upper()
+        for axis in (candidate.pressure_perspective or ())
+        if str(axis).upper() in _AXES
+    )
+    raw_axis = str(
+        candidate.predictive_frame.get("dominant_axis_hint")
+        or candidate.predictive_frame.get("dominant_field")
+        or ""
+    )
+    if raw_axis:
+        axis = _frame_axis(candidate.predictive_frame)
+        if axis in _AXES:
+            axes.add(axis)
+    if not axes:
+        return {}
+    return {axis: (1.0 if axis in axes else 0.0) for axis in _AXES}
+
+
+def _king_identity_fit(
+    candidate: PossibilityContinuation,
+    king_snapshot: Dict[str, Any],
+) -> Optional[float]:
+    """Cosine congruence between a continuation and the frozen King topology.
+
+    Candidate axes are a set, not a weighted personality vector. This avoids
+    inventing arbitrary preferences: the only magnitudes come from the King's
+    own live field. A candidate simply intersects more or less with what the
+    identity field is presently carrying.
+    """
+    if not king_snapshot.get("available"):
+        return None
+    topology = dict(king_snapshot.get("normalized_topology") or {})
+    profile = _candidate_axis_profile(candidate)
+    if not topology or not profile:
+        return None
+    p_norm = sum(float(value) ** 2 for value in profile.values()) ** 0.5
+    k_norm = sum(float(topology.get(axis, 0.0)) ** 2 for axis in _AXES) ** 0.5
+    if p_norm <= _EPS or k_norm <= _EPS:
+        return None
+    dot = sum(float(profile.get(axis, 0.0)) * float(topology.get(axis, 0.0)) for axis in _AXES)
+    return _clip01(dot / (p_norm * k_norm), 0.0)
+
+
+def _king_identity_arbitrate(
     candidates: Sequence[PossibilityContinuation],
-    self_state: Any,
+    king_snapshot: Dict[str, Any],
+) -> Tuple[Optional[PossibilityContinuation], Dict[str, Any]]:
+    """Let the King distinguish only futures other evidence could not separate."""
+    if not candidates:
+        return None, {"authority_used": False, "reason": "no_candidates"}
+    if not king_snapshot.get("available"):
+        return None, {
+            "authority_used": False,
+            "reason": str(king_snapshot.get("reason") or "identity_field_unavailable"),
+        }
+
+    scored: List[Tuple[PossibilityContinuation, float]] = []
+    for candidate in candidates:
+        fit = _king_identity_fit(candidate, king_snapshot)
+        if fit is None:
+            continue
+        candidate.evidence["king_identity_fit"] = fit
+        scored.append((candidate, fit))
+    if not scored:
+        return None, {
+            "authority_used": False,
+            "reason": "no_candidate_identity_surface",
+        }
+
+    top_fit = max(fit for _candidate, fit in scored)
+    if top_fit <= _EPS:
+        return None, {
+            "authority_used": True,
+            "reason": "no_candidate_identity_intersection",
+            "candidate_fits": {
+                candidate.candidate_id: round(fit, 6)
+                for candidate, fit in scored
+            },
+        }
+    tied = [
+        candidate for candidate, fit in scored
+        if abs(fit - top_fit) <= _EPS
+    ]
+    evidence = {
+        "authority_used": True,
+        "authority": "king_quasicrystal_identity_field",
+        "candidate_fits": {
+            candidate.candidate_id: round(fit, 6)
+            for candidate, fit in scored
+        },
+        "top_fit": round(top_fit, 6),
+        "top_candidate_ids": sorted(candidate.candidate_id for candidate in tied),
+    }
+    if len(tied) == 1:
+        evidence.update({
+            "reason": "identity_topology_discriminated",
+            "identity_discrimination": True,
+        })
+        return tied[0], evidence
+    evidence.update({
+        "reason": "identity_topology_equivalent",
+        "identity_discrimination": False,
+    })
+    return None, evidence
+
+
+def _neutral_equivalence_choice(
+    candidates: Sequence[PossibilityContinuation],
     user_text: str,
     turn_tick: int,
 ) -> PossibilityContinuation:
+    """Resolve true equivalence without manufacturing evidence of preference."""
     ordered = sorted(candidates, key=lambda candidate: candidate.candidate_id)
     payload = {
         "turn": int(turn_tick),
         "text": str(user_text or ""),
-        "self_pressure": dict(getattr(self_state, "pressure_vec", {}) or {}),
         "candidate_ids": [candidate.candidate_id for candidate in ordered],
     }
     digest = hashlib.sha256(
@@ -477,6 +685,16 @@ def _stable_agency_choice(
         ).encode("utf-8")
     ).hexdigest()
     return random.Random(int(digest[:16], 16)).choice(ordered)
+
+
+def _stable_agency_choice(
+    candidates: Sequence[PossibilityContinuation],
+    self_state: Any,
+    user_text: str,
+    turn_tick: int,
+) -> PossibilityContinuation:
+    """Compatibility alias for pre-King tests; this is neutral, not preference."""
+    return _neutral_equivalence_choice(candidates, user_text, turn_tick)
 
 
 def resolve_live_possibilities(
@@ -498,6 +716,10 @@ def resolve_live_possibilities(
     from aurora_thought_formation import ThoughtIntegrationSpace
 
     prior_thought = systems.get("_current_thought_state")
+    # Freeze the King once, before any sibling continuation is evaluated. Every
+    # candidate therefore encounters the same identity state regardless of
+    # execution order or future ACM parallelization.
+    king_snapshot = _king_identity_snapshot(systems)
     frame_specs = _candidate_frames(systems, self_state, braid_slice)
     if not frame_specs:
         return None
@@ -551,12 +773,15 @@ def resolve_live_possibilities(
             candidate.candidate_id for candidate in survivors
         ],
         "deep_simulation_used": False,
-        "rule": "pareto_self_situation_then_agency",
+        "king_identity_snapshot": _public_king_snapshot(king_snapshot),
+        "king_identity_arbitration": {"authority_used": False, "reason": "not_needed"},
+        "rule": "pareto_self_situation_then_simulation_then_king_identity",
     }
 
     if len(survivors) == 1:
         selected = survivors[0]
         arbitration["reason"] = "single_non_dominated_continuation"
+        arbitration["actualization_authority"] = "existing_evidence"
     else:
         arbitration["deep_simulation_used"] = True
         for candidate in survivors:
@@ -571,25 +796,40 @@ def resolve_live_possibilities(
         if len(simulated_survivors) == 1:
             selected = simulated_survivors[0]
             arbitration["reason"] = "simulation_disambiguated_continuation"
+            arbitration["actualization_authority"] = "self_projection_evidence"
         else:
-            selected = _stable_agency_choice(
+            king_selected, king_evidence = _king_identity_arbitrate(
                 simulated_survivors,
-                self_state,
-                user_text,
-                turn_tick,
+                king_snapshot,
             )
-            arbitration.update({
-                "reason": "non_dominated_agency_actualization",
-                "tie_status": "genuinely_non_dominated",
-                "preference_attributed_to_tiebreak": False,
-                "eligible_candidate_ids": [
-                    candidate.candidate_id
-                    for candidate in sorted(
-                        simulated_survivors,
-                        key=lambda item: item.candidate_id,
-                    )
-                ],
-            })
+            arbitration["king_identity_arbitration"] = king_evidence
+            if king_selected is not None:
+                selected = king_selected
+                arbitration.update({
+                    "reason": "king_identity_actualized_continuation",
+                    "actualization_authority": "king_quasicrystal_identity_field",
+                    "tie_status": "identity_discriminated_non_dominated",
+                    "preference_attributed_to_tiebreak": False,
+                })
+            else:
+                selected = _neutral_equivalence_choice(
+                    simulated_survivors,
+                    user_text,
+                    turn_tick,
+                )
+                arbitration.update({
+                    "reason": "true_equivalence_neutral_actualization",
+                    "actualization_authority": "neutral_equivalence",
+                    "tie_status": "genuinely_non_dominated_after_identity",
+                    "preference_attributed_to_tiebreak": False,
+                    "eligible_candidate_ids": [
+                        candidate.candidate_id
+                        for candidate in sorted(
+                            simulated_survivors,
+                            key=lambda item: item.candidate_id,
+                        )
+                    ],
+                })
 
     selected.selected = True
     arbitration["selected_candidate_id"] = selected.candidate_id
