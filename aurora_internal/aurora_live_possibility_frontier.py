@@ -4,9 +4,9 @@
 Aurora's possibility architecture already exposes more than one prospective
 continuation through the Subsurface predictive stager. This module does not
 invent a second reasoning system. It connects those existing projections to
-ThoughtBraid, ActiveSelfState, ThoughtIntegrationSpace, and Layer-7 inception
-simulation so one live occurrence may support several *uncommitted* thoughts
-before Agency actualizes exactly one.
+ThoughtBraid, ActiveSelfState, ThoughtIntegrationSpace, representational
+perspective, and Layer-7 inception simulation so one live occurrence may
+support several *uncommitted* thoughts before Agency actualizes exactly one.
 
 Semantic contract
 -----------------
@@ -14,6 +14,7 @@ Semantic contract
     one braid/self snapshot
         -> relevant predictive continuations
         -> independent ThoughtIntegrationSpace resolutions
+        -> lawful perspective view when a real RepresentationalRef is present
         -> Pareto elimination by self + situation + coherence + continuity
         -> inception self-projection only while competition remains
         -> King identity-topology arbitration while competition remains
@@ -23,6 +24,13 @@ No continuation in this module is lived state. The caller owns the actuality
 boundary by applying ThoughtContinuity.carry_forward() only to the selected
 ThoughtState. Rejected continuations are reduced to diagnostic summaries and
 never enter SediMemory or continuity.
+
+A representational projection is likewise not lived knowledge. Candidate
+branches may look through an already-staged Build 714 perspective only when a
+real encoded RepresentationalRef is already carried by their braid/predictive
+evidence. The branch never fabricates a ref and never promotes a field. If the
+projected view changes downstream thought, that causal difference is reported
+to the existing resolution engine and awaits real consequence evidence.
 
 The King Quasicrystal is not treated as a second scoring intelligence. Its
 existing live identity field is snapshotted once per occurrence and receives
@@ -87,6 +95,7 @@ class PossibilityContinuation:
     braid_slice: Any
     evidence: Dict[str, float] = field(default_factory=dict)
     simulation: Dict[str, Any] = field(default_factory=dict)
+    projection_views: List[Dict[str, Any]] = field(default_factory=list)
     selected: bool = False
 
     def summary(self) -> Dict[str, Any]:
@@ -99,6 +108,7 @@ class PossibilityContinuation:
             "thought": thought.to_dict() if hasattr(thought, "to_dict") else {},
             "evidence": {k: round(float(v), 4) for k, v in self.evidence.items()},
             "simulation": dict(self.simulation),
+            "projection_views": [dict(view) for view in self.projection_views],
             "selected": bool(self.selected),
         }
 
@@ -329,6 +339,182 @@ def _register_candidate_context(
         unresolved_tension_weight=1.0 - confidence,
     )
     space.register(ctx)
+
+
+def _extract_representational_refs(*values: Any) -> List[str]:
+    """Collect only explicitly-carried encoded refs; never infer or fabricate one."""
+    found: List[str] = []
+    seen: set[str] = set()
+    stack: List[Any] = list(values)
+    while stack:
+        value = stack.pop()
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if str(key) == "representational_ref":
+                    encoded = str(child or "")
+                    if encoded.startswith("REF:") and encoded not in seen:
+                        seen.add(encoded)
+                        found.append(encoded)
+                elif isinstance(child, (dict, list, tuple, set)):
+                    stack.append(child)
+        elif isinstance(value, (list, tuple, set)):
+            stack.extend(value)
+    return found
+
+
+def _projection_contexts_for_candidate(
+    systems: Dict[str, Any],
+    branch_slice: Any,
+    predictive_frame: Dict[str, Any],
+    turn_contexts: Sequence[Any],
+    candidate_id: str,
+    turn_tick: int,
+) -> Tuple[List[Any], List[Dict[str, Any]]]:
+    """Expose active lawful projection views already supported by real refs."""
+    try:
+        from aurora_representational_resolution import consume_projection_for_ref
+        from aurora_thought_formation import make_process_context
+    except Exception:
+        return [], []
+
+    context_states = [
+        getattr(ctx, "current_output_state", None)
+        for ctx in (turn_contexts or ())
+    ]
+    refs = _extract_representational_refs(
+        predictive_frame,
+        getattr(branch_slice, "memory_signal", None),
+        getattr(branch_slice, "sensory_signal", None),
+        systems.get("_braid_sedi_recall"),
+        context_states,
+    )
+    contexts: List[Any] = []
+    views: List[Dict[str, Any]] = []
+    for index, encoded in enumerate(refs):
+        view = consume_projection_for_ref(
+            systems,
+            encoded,
+            consumer="live_possibility_frontier",
+            context_scope=f"turn:{int(turn_tick)}:candidate:{candidate_id}",
+        )
+        if not isinstance(view, dict) or not view.get("projected_ref"):
+            continue
+        axes = [
+            str(axis).upper() for axis in (view.get("pressure_perspective") or ())
+            if str(axis).upper() in _AXES
+        ]
+        exposed = dict(view.get("exposed_fields") or {})
+        if not exposed:
+            continue
+        compact = ", ".join(f"{key}={value}" for key, value in sorted(exposed.items()))
+        ctx = make_process_context(
+            process_id=f"possibility_projection_{candidate_id}_{index}_{turn_tick}",
+            process_type="predictive",
+            what_triggered_it="perspective_before_resolution",
+            what_it_is_operating_on=f"projected distinction: {compact}"[:200],
+            current_output_state=dict(view),
+            self_relevance=0.50,
+            axis_signature=axes or [_frame_axis(predictive_frame)],
+            tick=turn_tick,
+            unresolved_tension_weight=0.20,
+        )
+        contexts.append(ctx)
+        views.append(dict(view))
+    return contexts, views
+
+
+def _prepare_integration_space(
+    self_state: Any,
+    branch_slice: Any,
+    continuity: Any,
+    turn_contexts: Sequence[Any],
+    constraint_context: Any,
+    predictive_frame: Dict[str, Any],
+    candidate_id: str,
+    turn_tick: int,
+    source: str,
+    extra_contexts: Sequence[Any] = (),
+) -> Any:
+    from aurora_thought_formation import ThoughtIntegrationSpace
+
+    space = ThoughtIntegrationSpace(self_state, braid_slice=branch_slice)
+    if continuity is not None and hasattr(continuity, "prime_integration_space"):
+        continuity.prime_integration_space(space)
+    for ctx in copy.deepcopy(list(turn_contexts or ())):
+        space.register(ctx)
+    if constraint_context is not None:
+        space.register(copy.deepcopy(constraint_context))
+    _register_candidate_context(
+        space, predictive_frame, candidate_id, turn_tick, source,
+    )
+    for ctx in copy.deepcopy(list(extra_contexts or ())):
+        space.register(ctx)
+    return space
+
+
+def _thought_difference(before: Any, after: Any) -> Dict[str, Any]:
+    """Describe only material internal change caused by a projected view."""
+    difference: Dict[str, Any] = {}
+    before_interp = str(getattr(before, "unified_interpretation", "") or "")
+    after_interp = str(getattr(after, "unified_interpretation", "") or "")
+    if before_interp != after_interp:
+        difference["interpretation_changed"] = True
+    before_self = str(getattr(before, "self_application", "") or "")
+    after_self = str(getattr(after, "self_application", "") or "")
+    if before_self != after_self:
+        difference["self_application_changed"] = True
+    before_axes = tuple(getattr(before, "axis_fingerprint", []) or [])
+    after_axes = tuple(getattr(after, "axis_fingerprint", []) or [])
+    if before_axes != after_axes:
+        difference["axis_fingerprint_changed"] = {"before": list(before_axes), "after": list(after_axes)}
+    before_conflicts = len(getattr(before, "conflicts", []) or [])
+    after_conflicts = len(getattr(after, "conflicts", []) or [])
+    if before_conflicts != after_conflicts:
+        difference["conflict_count_changed"] = {"before": before_conflicts, "after": after_conflicts}
+    before_unresolved = len(getattr(before, "unresolved", []) or [])
+    after_unresolved = len(getattr(after, "unresolved", []) or [])
+    if before_unresolved != after_unresolved:
+        difference["unresolved_count_changed"] = {"before": before_unresolved, "after": after_unresolved}
+    try:
+        before_conf = float(getattr(before, "confidence", 0.0) or 0.0)
+        after_conf = float(getattr(after, "confidence", 0.0) or 0.0)
+        if abs(before_conf - after_conf) > _EPS:
+            difference["confidence_changed"] = {"before": before_conf, "after": after_conf}
+    except Exception:
+        pass
+    return difference
+
+
+def _record_projection_thought_difference(
+    systems: Dict[str, Any],
+    views: Sequence[Dict[str, Any]],
+    difference: Dict[str, Any],
+    candidate_id: str,
+) -> None:
+    if not difference:
+        return
+    try:
+        from aurora_representational_address import RepresentationalRef
+        from aurora_representational_resolution import get_or_create_engine
+        engine = get_or_create_engine(systems)
+    except Exception:
+        return
+    if engine is None:
+        return
+    for view in views:
+        try:
+            ref = RepresentationalRef.decode(str(view.get("base_ref") or ""))
+            engine.record_candidate_downstream_effect(
+                ref,
+                consumer="live_possibility_frontier",
+                downstream_difference=dict(difference),
+                action_or_prediction_affected="candidate_thought_integration",
+                baseline_expectation={"candidate_id": candidate_id, "projection": False},
+                conditioned_expectation={"candidate_id": candidate_id, "projection": True},
+                metadata={"projection_id": view.get("projection_id")},
+            )
+        except Exception:
+            continue
 
 
 def _axis_overlap(left: Iterable[str], right: Iterable[str]) -> float:
@@ -713,8 +899,6 @@ def resolve_live_possibilities(
     The caller must apply continuity to ``resolution.thought_state`` only after
     this function returns. That call is the actualization boundary.
     """
-    from aurora_thought_formation import ThoughtIntegrationSpace
-
     prior_thought = systems.get("_current_thought_state")
     # Freeze the King once, before any sibling continuation is evaluated. Every
     # candidate therefore encounters the same identity state regardless of
@@ -728,21 +912,51 @@ def resolve_live_possibilities(
     for source, predictive_frame in frame_specs:
         candidate_id = _frame_identity(source, predictive_frame)
         branch_slice = _clone_slice(braid_slice, predictive_frame)
-        space = ThoughtIntegrationSpace(self_state, braid_slice=branch_slice)
-        if continuity is not None and hasattr(continuity, "prime_integration_space"):
-            continuity.prime_integration_space(space)
-        for ctx in copy.deepcopy(list(turn_contexts or ())):
-            space.register(ctx)
-        if constraint_context is not None:
-            space.register(copy.deepcopy(constraint_context))
-        _register_candidate_context(
-            space,
+
+        # Coarse baseline first. Perspective is conditional extra work, never a
+        # mandatory second integration on every branch.
+        baseline_space = _prepare_integration_space(
+            self_state,
+            branch_slice,
+            continuity,
+            turn_contexts,
+            constraint_context,
             predictive_frame,
             candidate_id,
             turn_tick,
             source,
         )
-        thought = space.integrate()
+        baseline_thought = baseline_space.integrate()
+
+        projection_contexts, projection_views = _projection_contexts_for_candidate(
+            systems,
+            branch_slice,
+            predictive_frame,
+            turn_contexts,
+            candidate_id,
+            turn_tick,
+        )
+        if projection_contexts:
+            projected_space = _prepare_integration_space(
+                self_state,
+                branch_slice,
+                continuity,
+                turn_contexts,
+                constraint_context,
+                predictive_frame,
+                candidate_id,
+                turn_tick,
+                source,
+                extra_contexts=projection_contexts,
+            )
+            thought = projected_space.integrate()
+            difference = _thought_difference(baseline_thought, thought)
+            _record_projection_thought_difference(
+                systems, projection_views, difference, candidate_id,
+            )
+        else:
+            thought = baseline_thought
+
         candidate = PossibilityContinuation(
             candidate_id=candidate_id,
             source=source,
@@ -754,6 +968,7 @@ def resolve_live_possibilities(
             ),
             thought_state=thought,
             braid_slice=branch_slice,
+            projection_views=projection_views,
         )
         candidate.evidence.update(
             _evidence_for(
@@ -773,9 +988,11 @@ def resolve_live_possibilities(
             candidate.candidate_id for candidate in survivors
         ],
         "deep_simulation_used": False,
+        "perspective_projection_used": any(candidate.projection_views for candidate in candidates),
+        "projection_view_count": sum(len(candidate.projection_views) for candidate in candidates),
         "king_identity_snapshot": _public_king_snapshot(king_snapshot),
         "king_identity_arbitration": {"authority_used": False, "reason": "not_needed"},
-        "rule": "pareto_self_situation_then_simulation_then_king_identity",
+        "rule": "coarse_then_perspective_then_pareto_then_simulation_then_king_identity",
     }
 
     if len(survivors) == 1:
