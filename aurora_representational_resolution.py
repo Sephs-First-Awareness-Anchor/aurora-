@@ -219,6 +219,41 @@ class RepresentationalResolutionEngine(_BaseEngine):
         self._projection_state()
         return list(self._projection_events[-max(0, int(limit)):])
 
+    def _candidate_pool(self, ref: RepresentationalRef) -> List[Dict[str, Any]]:
+        """Ask Build 714 for the full typed candidate capacity when supported.
+
+        The TypeError fallback preserves compatibility with older fixtures and
+        alternate engines that expose the historical one-argument method.
+        """
+        capacity = max(1, _complete_candidate_capacity(ref))
+        try:
+            return list(
+                self.unresolved_field_candidates(ref, max_candidates=capacity) or []
+            )
+        except TypeError:
+            return list(self.unresolved_field_candidates(ref) or [])
+
+    def _projection_sources_from_candidates(
+        self, candidates: Sequence[Dict[str, Any]]
+    ) -> List[Tuple[str, RepresentationalRef, Dict[str, Any]]]:
+        sources: Dict[str, Tuple[str, RepresentationalRef, Dict[str, Any]]] = {}
+        for candidate in candidates:
+            if str(candidate.get("origin") or "") == "domain_hypothesis":
+                continue
+            source_id = str(candidate.get("counterpart_ability_id") or "")
+            if not source_id or source_id in sources:
+                continue
+            source_ref = self._ref_from_ability_id(source_id)
+            if source_ref is None:
+                continue
+            evidence = dict(candidate.get("evidence") or {})
+            evidence.setdefault(
+                "structural_pressure", float(candidate.get("pressure", 0.0) or 0.0)
+            )
+            evidence.setdefault("candidate_source", str(candidate.get("source") or ""))
+            sources[source_id] = (source_id, source_ref, evidence)
+        return list(sources.values())
+
     def _projection_sources_for_ref(
         self, ref: RepresentationalRef
     ) -> List[Tuple[str, RepresentationalRef, Dict[str, Any]]]:
@@ -226,10 +261,14 @@ class RepresentationalResolutionEngine(_BaseEngine):
 
         Projection should be able to use a whole real sibling representation,
         including combinations of fields that field-by-field candidate
-        deduplication could otherwise hide. We therefore query genealogy's
+        deduplication could otherwise hide. We therefore prefer genealogy's
         existing collision/gap search directly and preserve every distinct
         counterpart ref it returns. The search itself is still bounded by
         genealogy's native machinery; this layer adds no new exhaustive scan.
+
+        If an alternate/test genealogy does not expose those finder methods,
+        fall back to Build 714's candidate surface and recover its real
+        counterpart refs. Domain hypotheses are never accepted as mirrors.
         """
         unresolved = ref.unresolved_fields()
         if not unresolved or self.inadequacy_pressure(ref) <= 0.0:
@@ -240,10 +279,13 @@ class RepresentationalResolutionEngine(_BaseEngine):
         from aurora_internal.constraint_genealogy import TraceItem
 
         sources: Dict[str, Tuple[str, RepresentationalRef, Dict[str, Any]]] = {}
-        for finder_name, finder in (
-            ("collision", self.genealogy.representation_collision_candidates),
-            ("gap", self.genealogy.representation_gap_candidates),
-        ):
+        finder_specs = (
+            ("collision", getattr(self.genealogy, "representation_collision_candidates", None)),
+            ("gap", getattr(self.genealogy, "representation_gap_candidates", None)),
+        )
+        for finder_name, finder in finder_specs:
+            if not callable(finder):
+                continue
             try:
                 found = finder([TraceItem(kind="ABILITY", id=ability_id)])
             except Exception:
@@ -270,7 +312,9 @@ class RepresentationalResolutionEngine(_BaseEngine):
                         **dict(entry.get("evidence", {}) or {}),
                     },
                 )
-        return list(sources.values())
+        if sources:
+            return list(sources.values())
+        return self._projection_sources_from_candidates(self._candidate_pool(ref))
 
     def _stage_field_after_projection(self, ref, candidates, consumer, context_scope):
         if not candidates:
@@ -356,10 +400,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
                 ),
             )
 
-        capacity = _complete_candidate_capacity(ref)
-        candidates = self.unresolved_field_candidates(
-            ref, max_candidates=max(1, capacity)
-        )
+        candidates = self._candidate_pool(ref)
         if not candidates:
             return None
         return self._stage_field_after_projection(ref, candidates, consumer, context_scope)
