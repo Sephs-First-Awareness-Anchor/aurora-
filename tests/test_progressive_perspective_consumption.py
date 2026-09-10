@@ -109,6 +109,46 @@ def test_field_inquiry_requires_explicit_projection_frontier_exhaustion():
     assert event["evaluation"]["attempted_count"] == len(projections)
 
 
+def test_structural_search_is_amortized_across_failed_lenses():
+    engine = _bare_engine()
+    base = _coarse()
+    projections = rr.build_perspective_projections(
+        base, _structural_sources(), max_projections=None,
+    )
+    assert len(projections) > 1
+    engine.inadequacy_pressure = lambda _ref: 0.7
+
+    scans = []
+    def sources(_ref):
+        scans.append("scan")
+        return _structural_sources()
+    engine._projection_sources_for_ref = sources
+
+    fallback = {
+        "field": "sub_law_c",
+        "candidate_value": "T",
+        "origin": "domain_hypothesis",
+        "source": "test",
+        "counterpart_ability_id": "REFHYP:test",
+    }
+    engine.unresolved_field_candidates = lambda _ref, **_kwargs: [fallback]
+    engine.stage_field_inquiry = lambda *args, **kwargs: [{"stage_id": "s"}]
+
+    # Consume the cached frontier without allowing each failed lens to rescan.
+    for expected in projections:
+        staged = engine.investigate_if_pressured(base, consumer="test")
+        assert staged["mode"] == "perspective_projection"
+        assert staged["candidate"]["projection_view_key"] == expected["projection_view_key"]
+        view_key = staged["candidate"]["projection_view_key"]
+        engine._projection_attempt_counts[view_key] = 1
+        engine._active_stage_for_ref.pop(base.encode(), None)
+
+    # Exhaustion permits one refresh and then the field inquiry.
+    staged = engine.investigate_if_pressured(base, consumer="test")
+    assert staged["mode"] == "field_inquiry"
+    assert scans == ["scan", "scan"]
+
+
 def test_duplicate_projected_view_keeps_cheapest_strongest_structural_provenance():
     base = _coarse()
     same_view_weak = _source_one()
@@ -127,6 +167,23 @@ def test_duplicate_projected_view_keeps_cheapest_strongest_structural_provenance
     )
     assert t_view["counterpart_ability_id"] == "strong"
     assert t_view["evidence"]["structural_pressure"] == 0.9
+
+
+def test_same_projected_representation_keeps_only_cheapest_lens():
+    base = _coarse()
+    source = RepresentationalRef.for_c2(
+        "X", "MAGNITUDE", "A", "T", "POLARITY", None, None,
+    )
+    projections = rr.build_perspective_projections(
+        base, [("source", source, {"structural_pressure": 0.5})],
+        max_projections=None,
+    )
+    encoded = RepresentationalRef.for_c2(
+        "X", "MAGNITUDE", "A", "T", "POLARITY", None, None,
+    ).encode()
+    matches = [item for item in projections if item["projected_ref"] == encoded]
+    assert len(matches) == 1
+    assert matches[0]["pressure_perspective"] == ["T"]
 
 
 def test_pressure_observer_cannot_stage_or_complete_resolution(monkeypatch):
@@ -156,6 +213,23 @@ def test_pressure_observer_cannot_stage_or_complete_resolution(monkeypatch):
     assert result == "observed"
     assert calls == [{"hold": True, "candidate_evaluation": None}]
     assert engine._active_stage_for_ref == {}
+
+
+def test_provisional_reader_is_the_demand_edge_after_pressure_exists():
+    engine = _bare_engine()
+    base = _coarse()
+    engine.inadequacy_pressure = lambda _ref: 0.8
+    engine._projection_sources_for_ref = lambda _ref: _structural_sources()
+
+    assert engine._active_stage_for_ref == {}
+    view = engine.provisional_resolution(base, consumer="habitat_motivation")
+    pending = engine._active_stage_for_ref[base.encode()]
+
+    assert pending["mode"] == "perspective_projection"
+    assert pending["consumer"] == "habitat_motivation"
+    assert view.encode() == pending["candidate"]["projected_ref"]
+    assert view.encode() != base.encode()
+    assert engine._provisional_reads[base.encode()] == 1
 
 
 def test_pressure_observer_cannot_steal_real_consumers_pending_projection(monkeypatch):
