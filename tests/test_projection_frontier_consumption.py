@@ -7,8 +7,14 @@ from aurora_internal import aurora_live_possibility_frontier as frontier
 
 
 def _bare_engine():
+    genealogy = SimpleNamespace(
+        abilities={},
+        tick_count=0,
+        representation_collision_candidates=lambda trace: [],
+        representation_gap_candidates=lambda trace: [],
+    )
     engine = rr.RepresentationalResolutionEngine.__new__(rr.RepresentationalResolutionEngine)
-    engine.genealogy = SimpleNamespace(abilities={}, tick_count=0)
+    engine.genealogy = genealogy
     engine.root = None
     engine._genealogy_records = {}
     engine._active_resolutions = {}
@@ -41,30 +47,36 @@ def _sources():
     }
 
 
-def _structural_candidates(source_ids):
+def _collision_entries(source_ids):
     return [
         {
-            "field": "sub_law_c",
-            "candidate_value": "T",
-            "source": f"collision:{sid}",
-            "counterpart_ability_id": sid,
+            "counterpart_representation_id": sid,
+            "collision_id": f"collision::{sid}",
             "evidence": {"collision": True},
-            "origin": "collision",
+            "pressure": 0.7,
         }
         for sid in source_ids
     ]
+
+
+def _wire_structural_mirrors(engine, base, sources):
+    engine.genealogy.abilities[engine.ability_id_for_ref(base)] = object()
+    engine.genealogy.representation_collision_candidates = (
+        lambda trace: _collision_entries(sources.keys())
+    )
+    engine.genealogy.representation_gap_candidates = lambda trace: []
+    engine._ref_from_ability_id = lambda aid: sources.get(aid)
 
 
 def test_complete_projection_frontier_survives_old_five_item_budget():
     engine = _bare_engine()
     base = _coarse()
     sources = _sources()
-    candidates = _structural_candidates(sources)
+    _wire_structural_mirrors(engine, base, sources)
     engine.inadequacy_pressure = lambda ref: 0.8
-    engine.unresolved_field_candidates = lambda ref: candidates
-    engine._ref_from_ability_id = lambda aid: sources.get(aid)
 
-    all_views = engine._projection_frontier(base, candidates)
+    structural = engine._structural_projection_candidates(base, charge_cost=False)
+    all_views = engine._projection_frontier(base, structural)
     assert len(all_views) > rr.MAX_CANDIDATE_FIELDS_PER_PASS
     for view in all_views[: rr.MAX_CANDIDATE_FIELDS_PER_PASS]:
         engine._projection_attempt_counts[view["projection_id"]] = 1
@@ -79,15 +91,12 @@ def test_complete_projection_frontier_survives_old_five_item_budget():
     }
 
 
-def test_hypothetical_peek_has_zero_resolution_side_effects():
+def test_hypothetical_peek_has_zero_resolution_or_search_cost_side_effects():
     engine = _bare_engine()
     base = _coarse()
     sources = _sources()
-    candidates = _structural_candidates(sources)
-    engine.genealogy.abilities[engine.ability_id_for_ref(base)] = object()
+    _wire_structural_mirrors(engine, base, sources)
     engine.inadequacy_pressure = lambda ref: 0.7
-    engine.unresolved_field_candidates = lambda ref: candidates
-    engine._ref_from_ability_id = lambda aid: sources.get(aid)
 
     before = {
         "active": dict(engine._active_stage_for_ref),
@@ -95,6 +104,8 @@ def test_hypothetical_peek_has_zero_resolution_side_effects():
         "effects": dict(engine._candidate_downstream_effects),
         "attempts": dict(engine._projection_attempt_counts),
         "events": list(engine._projection_events),
+        "cost": dict(engine._cost_ledger),
+        "abilities": dict(engine.genealogy.abilities),
     }
     view = engine.peek_projection(base, consumer="hypothetical")
     after = {
@@ -103,9 +114,24 @@ def test_hypothetical_peek_has_zero_resolution_side_effects():
         "effects": dict(engine._candidate_downstream_effects),
         "attempts": dict(engine._projection_attempt_counts),
         "events": list(engine._projection_events),
+        "cost": dict(engine._cost_ledger),
+        "abilities": dict(engine.genealogy.abilities),
     }
     assert view and view["observed"] is False
     assert before == after
+
+
+def test_hypothetical_peek_never_bootstraps_domain_hypotheses():
+    engine = _bare_engine()
+    base = _coarse()
+    engine.genealogy.abilities[engine.ability_id_for_ref(base)] = object()
+    engine.inadequacy_pressure = lambda ref: 0.7
+    before_abilities = dict(engine.genealogy.abilities)
+    before_cost = dict(engine._cost_ledger)
+
+    assert engine.peek_projection(base, consumer="hypothetical") is None
+    assert engine.genealogy.abilities == before_abilities
+    assert engine._cost_ledger == before_cost
 
 
 def test_projection_use_without_real_consequence_stays_pending_not_failed():
