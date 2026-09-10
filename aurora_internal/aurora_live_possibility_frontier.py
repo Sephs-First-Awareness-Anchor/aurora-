@@ -14,11 +14,12 @@ Semantic contract
     one braid/self snapshot
         -> relevant predictive continuations
         -> independent ThoughtIntegrationSpace resolutions
-        -> lawful perspective view when a real RepresentationalRef is present
+        -> pure lawful perspective peek when a real RepresentationalRef exists
         -> Pareto elimination by self + situation + coherence + continuity
         -> inception self-projection only while competition remains
         -> King identity-topology arbitration while competition remains
         -> Agency actualizes one non-dominated continuation
+        -> only the winner's projection use may enter Build 714 evidence
 
 No continuation in this module is lived state. The caller owns the actuality
 boundary by applying ThoughtContinuity.carry_forward() only to the selected
@@ -26,11 +27,12 @@ ThoughtState. Rejected continuations are reduced to diagnostic summaries and
 never enter SediMemory or continuity.
 
 A representational projection is likewise not lived knowledge. Candidate
-branches may look through an already-staged Build 714 perspective only when a
-real encoded RepresentationalRef is already carried by their braid/predictive
-evidence. The branch never fabricates a ref and never promotes a field. If the
-projected view changes downstream thought, that causal difference is reported
-to the existing resolution engine and awaits real consequence evidence.
+branches may peek through an already-supported Build 714 perspective only when
+a real encoded RepresentationalRef is already carried by their braid/predictive
+evidence. The peek cannot stage, count a read, write an event, or create a
+registration. After Agency actualizes one branch, mark_actualized() alone may
+register that winner's projection participation. Rejected futures therefore
+leave no representational-development footprint.
 
 The King Quasicrystal is not treated as a second scoring intelligence. Its
 existing live identity field is snapshotted once per occurrence and receives
@@ -108,7 +110,7 @@ class PossibilityContinuation:
             "thought": thought.to_dict() if hasattr(thought, "to_dict") else {},
             "evidence": {k: round(float(v), 4) for k, v in self.evidence.items()},
             "simulation": dict(self.simulation),
-            "projection_views": [dict(view) for view in self.projection_views],
+            "projection_views": [copy.deepcopy(view) for view in self.projection_views],
             "selected": bool(self.selected),
         }
 
@@ -370,9 +372,9 @@ def _projection_contexts_for_candidate(
     candidate_id: str,
     turn_tick: int,
 ) -> Tuple[List[Any], List[Dict[str, Any]]]:
-    """Expose active lawful projection views already supported by real refs."""
+    """Purely expose lawful projection views already supported by real refs."""
     try:
-        from aurora_representational_resolution import consume_projection_for_ref
+        from aurora_representational_resolution import peek_projection_for_ref
         from aurora_thought_formation import make_process_context
     except Exception:
         return [], []
@@ -391,10 +393,10 @@ def _projection_contexts_for_candidate(
     contexts: List[Any] = []
     views: List[Dict[str, Any]] = []
     for index, encoded in enumerate(refs):
-        view = consume_projection_for_ref(
+        view = peek_projection_for_ref(
             systems,
             encoded,
-            consumer="live_possibility_frontier",
+            consumer="live_possibility_frontier_hypothetical",
             context_scope=f"turn:{int(turn_tick)}:candidate:{candidate_id}",
         )
         if not isinstance(view, dict) or not view.get("projected_ref"):
@@ -419,7 +421,7 @@ def _projection_contexts_for_candidate(
             unresolved_tension_weight=0.20,
         )
         contexts.append(ctx)
-        views.append(dict(view))
+        views.append(copy.deepcopy(view))
     return contexts, views
 
 
@@ -485,36 +487,16 @@ def _thought_difference(before: Any, after: Any) -> Dict[str, Any]:
     return difference
 
 
-def _record_projection_thought_difference(
-    systems: Dict[str, Any],
+def _annotate_projection_difference(
     views: Sequence[Dict[str, Any]],
     difference: Dict[str, Any],
-    candidate_id: str,
-) -> None:
-    if not difference:
-        return
-    try:
-        from aurora_representational_address import RepresentationalRef
-        from aurora_representational_resolution import get_or_create_engine
-        engine = get_or_create_engine(systems)
-    except Exception:
-        return
-    if engine is None:
-        return
+) -> List[Dict[str, Any]]:
+    annotated: List[Dict[str, Any]] = []
     for view in views:
-        try:
-            ref = RepresentationalRef.decode(str(view.get("base_ref") or ""))
-            engine.record_candidate_downstream_effect(
-                ref,
-                consumer="live_possibility_frontier",
-                downstream_difference=dict(difference),
-                action_or_prediction_affected="candidate_thought_integration",
-                baseline_expectation={"candidate_id": candidate_id, "projection": False},
-                conditioned_expectation={"candidate_id": candidate_id, "projection": True},
-                metadata={"projection_id": view.get("projection_id")},
-            )
-        except Exception:
-            continue
+        item = copy.deepcopy(view)
+        item["thought_difference"] = copy.deepcopy(difference)
+        annotated.append(item)
+    return annotated
 
 
 def _axis_overlap(left: Iterable[str], right: Iterable[str]) -> float:
@@ -951,8 +933,8 @@ def resolve_live_possibilities(
             )
             thought = projected_space.integrate()
             difference = _thought_difference(baseline_thought, thought)
-            _record_projection_thought_difference(
-                systems, projection_views, difference, candidate_id,
+            projection_views = _annotate_projection_difference(
+                projection_views, difference,
             )
         else:
             thought = baseline_thought
@@ -1067,11 +1049,40 @@ def resolve_live_possibilities(
     )
 
 
+def _commit_actualized_projection_views(systems: Dict[str, Any]) -> List[Dict[str, Any]]:
+    selected = systems.get("_selected_possibility")
+    if not isinstance(selected, dict):
+        return []
+    views = selected.get("projection_views") or []
+    if not isinstance(views, list):
+        return []
+    try:
+        from aurora_representational_resolution import actualize_projection_for_ref
+    except Exception:
+        return []
+    commits: List[Dict[str, Any]] = []
+    for view in views:
+        if not isinstance(view, dict):
+            continue
+        result = actualize_projection_for_ref(
+            systems,
+            view,
+            consumer="live_possibility_frontier_actualized",
+            downstream_difference=dict(view.get("thought_difference") or {}),
+            action_or_prediction_affected="actualized_candidate_thought",
+        )
+        if isinstance(result, dict):
+            commits.append(dict(result))
+    return commits
+
+
 def mark_actualized(systems: Dict[str, Any], selected_thought: Any) -> None:
-    """Mark the caller-owned actuality boundary after continuity commits winner."""
+    """Mark caller-owned actuality boundary after continuity commits winner."""
+    projection_commits = _commit_actualized_projection_views(systems)
     frontier = systems.get("_current_possibility_frontier")
     if isinstance(frontier, dict):
         frontier["actualized"] = True
         frontier["actualized_thought_tick"] = int(
             getattr(selected_thought, "tick", 0) or 0
         )
+        frontier["actualized_projection_commits"] = projection_commits
