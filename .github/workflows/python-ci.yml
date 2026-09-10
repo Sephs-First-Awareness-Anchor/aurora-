@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'claude/**'
+      - 'ceph/**'
     paths:
       - '*.py'
       - 'aurora_internal/**'
