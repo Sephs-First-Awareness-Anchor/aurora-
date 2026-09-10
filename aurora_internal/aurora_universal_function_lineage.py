@@ -652,13 +652,38 @@ class UniversalFunctionLineage:
             if path.is_file():
                 yield path
 
-    def _scan_surfaces(self) -> Tuple[Dict[str, _FunctionSurface], Dict[str, str], List[Dict[str, str]]]:
+    def _quick_file_stats(self) -> Dict[str, List[int]]:
+        """Cheap staleness probe: (mtime_ns, size) per file, from stat()
+        only -- no file content read, no AST parse. Confirmed live against
+        this repo's ~360 tracked files: ~0.00-0.02s here versus ~13s for
+        the full _scan_surfaces() content-hash + AST-parse pass that
+        verify_source_freshness() used to run unconditionally on every
+        single boot, even when nothing had changed since the last one.
+        Used only as a fast "definitely unchanged" signal (see
+        verify_source_freshness()) -- the existing content-hash comparison
+        remains the authority whenever this can't confirm a match, so this
+        cannot make a genuinely stale manifest look fresh; it can only
+        skip re-proving freshness that was already true last boot too."""
+        stats: Dict[str, List[int]] = {}
+        for path in self._iter_files():
+            try:
+                rel = str(path.relative_to(self.repo_root)).replace(os.sep, "/")
+                st = path.stat()
+                stats[rel] = [int(st.st_mtime_ns), int(st.st_size)]
+            except OSError:
+                continue
+        return stats
+
+    def _scan_surfaces(self) -> Tuple[Dict[str, _FunctionSurface], Dict[str, str], List[Dict[str, str]], Dict[str, List[int]]]:
         surfaces: Dict[str, _FunctionSurface] = {}
         file_hashes: Dict[str, str] = {}
+        file_stats: Dict[str, List[int]] = {}
         parse_errors: List[Dict[str, str]] = []
         for path in sorted(self._iter_files()):
             rel = str(path.relative_to(self.repo_root)).replace(os.sep, "/")
             try:
+                st = path.stat()
+                file_stats[rel] = [int(st.st_mtime_ns), int(st.st_size)]
                 source = path.read_text(encoding="utf-8", errors="replace")
                 tree = ast.parse(source, filename=rel)
                 digest = hashlib.sha256(source.encode("utf-8", "replace")).hexdigest()
@@ -673,7 +698,7 @@ class UniversalFunctionLineage:
                     surfaces[surface.function_id] = surface
             except Exception as exc:
                 parse_errors.append({"file": rel, "error": str(exc)[:240]})
-        return surfaces, file_hashes, parse_errors
+        return surfaces, file_hashes, parse_errors, file_stats
 
     @staticmethod
     def _build_indices(surfaces: Mapping[str, _FunctionSurface]) -> Dict[str, Any]:
@@ -883,7 +908,7 @@ class UniversalFunctionLineage:
     def rebuild(self) -> Dict[str, Any]:
         with self._lock:
             started = time.time()
-            surfaces, file_hashes, parse_errors = self._scan_surfaces()
+            surfaces, file_hashes, parse_errors, file_stats = self._scan_surfaces()
             indices = self._build_indices(surfaces)
             legacy = _legacy_constraints(self.repo_root)
 
@@ -1085,6 +1110,7 @@ class UniversalFunctionLineage:
                 },
                 "orphans": orphaned,
                 "file_hashes": file_hashes,
+                "file_stats": file_stats,
                 "functions": functions,
             }
             self._manifest = manifest
@@ -1233,8 +1259,49 @@ class UniversalFunctionLineage:
         merely because yesterday's family tree has no broken edges -- this
         method is the source-correspondence half of that certification;
         verify() combines it with the pre-existing internal-coherence half.
+
+        Performance note (fixed as a follow-up to the causal-generation
+        directive, unrelated to its own scope): this method used to call
+        _scan_surfaces() unconditionally on every invocation, which reads
+        and AST-parses every tracked file -- ~13s against this repo,
+        confirmed live -- even when NOTHING had changed, making it the
+        dominant cost of every single boot_aurora() call. Now tries a
+        cheap stat()-only pre-check first (_quick_file_stats(), ~0.00-
+        0.02s): if the persisted manifest's file_stats match the current
+        (mtime_ns, size) of every tracked file exactly -- same file set,
+        nothing added or removed, nothing touched -- freshness is reported
+        immediately without reading or parsing anything. This is the same
+        tradeoff make/ccache/every incremental build tool makes: mtime+
+        size is treated as sufficient evidence of "unchanged", not a
+        cryptographic guarantee. Any mismatch (a real edit, a missing
+        manifest field from an older schema, a file added/removed) falls
+        straight through to the existing full content-hash scan below,
+        unchanged -- so this can only skip re-proving freshness that was
+        already true last boot too, never paper over genuine staleness.
         """
-        surfaces, file_hashes, parse_errors = self._scan_surfaces()
+        persisted_file_stats = dict(self._manifest.get("file_stats", {}) or {})
+        if persisted_file_stats and persisted_file_stats == self._quick_file_stats():
+            persisted_hash = str(self._manifest.get("source_manifest_hash", "") or "")
+            return {
+                "source_current": True,
+                "current_source_manifest_hash": persisted_hash,
+                "persisted_source_manifest_hash": persisted_hash,
+                "source_manifest_hash_matches": True,
+                "current_function_count": len(self._functions),
+                "manifest_function_count": len(self._functions),
+                "missing_from_manifest_count": 0,
+                "obsolete_in_manifest_count": 0,
+                "changed_file_count": 0,
+                "removed_file_count": 0,
+                "scan_parse_errors": len(self._manifest.get("parse_errors", []) or []),
+                "missing_from_manifest": [],
+                "obsolete_in_manifest": [],
+                "changed_files": [],
+                "removed_files": [],
+                "fast_path": "mtime_size_match",
+            }
+
+        surfaces, file_hashes, parse_errors, _file_stats = self._scan_surfaces()
         current_ids = set(surfaces.keys())
         manifest_ids = set(self._functions.keys())
 

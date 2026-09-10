@@ -15,7 +15,7 @@ def _lineage() -> UniversalFunctionLineage:
 
 def test_manifest_covers_every_scanned_executable_function() -> None:
     lineage = _lineage()
-    surfaces, _file_hashes, errors = lineage._scan_surfaces()
+    surfaces, _file_hashes, errors, _file_stats = lineage._scan_surfaces()
     assert not errors
     assert lineage.status()["function_count"] == len(surfaces)
     assert lineage.status()["named_function_count"] == sum(1 for row in surfaces.values() if row.kind != "lambda")
