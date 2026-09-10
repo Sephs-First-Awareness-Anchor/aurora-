@@ -489,10 +489,32 @@ class RepresentationalResolutionEngine(_BaseEngine):
             return None
         return self._stage_field_after_projection(ref, candidates, consumer, context_scope)
 
-    def provisional_resolution(self, ref):
+    def provisional_resolution(
+        self,
+        ref,
+        *,
+        consumer="provisional_reader",
+        context_scope=None,
+    ):
+        """Return the current earned/provisional view and make demand causal.
+
+        A pressure observer never stages an optic. The first real subsystem
+        that actually asks to *use* a provisional representation is therefore
+        the lawful demand edge: if inadequacy exists and no experiment is
+        active, this read opens the perspective frontier (or, only after its
+        exhaustion/unavailability, Build 714's ordinary field inquiry) before
+        returning the view. Existing one-argument callers remain compatible.
+        """
         self._projection_state()
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
+        if pending is None and self.inadequacy_pressure(ref) > 0.0:
+            self.investigate_if_pressured(
+                ref,
+                consumer=str(consumer or "provisional_reader"),
+                context_scope=context_scope,
+            )
+            pending = self._active_stage_for_ref.get(key)
         if pending is None or pending.get("mode") != "perspective_projection":
             return super().provisional_resolution(ref)
         try:
@@ -738,7 +760,8 @@ def record_ref_participation_from_scores(
     Without ``candidate_evaluation`` the caller is an observational pressure
     source only. Its scores still update the canonical genealogy consequence
     profile, but it cannot stage or complete a representation experiment it
-    did not actually consume.
+    did not actually consume. The next real `provisional_resolution()` reader
+    becomes the demand edge that opens the perspective frontier.
     """
     if not ref_encoded or not dimension_scores:
         return
