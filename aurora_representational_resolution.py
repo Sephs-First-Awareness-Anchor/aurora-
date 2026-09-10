@@ -143,6 +143,11 @@ class RepresentationalResolutionEngine(_BaseEngine):
             if src is not None: sources[sid] = (sid, src, dict(c.get("evidence") or {}))
         return list(sources.values())
 
+    def _projection_frontier(self, ref, candidates):
+        return build_perspective_projections(
+            ref, self._projection_sources(candidates), max_projections=None,
+        )
+
     def _stage_field_after_projection(self, ref, candidates, consumer, context_scope):
         if not candidates: return None
         key = ref.encode()
@@ -175,9 +180,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
         # these views is cheap: they are only encoded overlays over already
         # resolved structural counterparts. We expose the complete relevant
         # frontier here, then stage ONE cheapest untried view at a time.
-        projections = build_perspective_projections(
-            ref, self._projection_sources(candidates), max_projections=None,
-        )
+        projections = self._projection_frontier(ref, candidates)
         untried = [p for p in projections if self._projection_attempt_counts.get(p["projection_id"], 0) == 0]
         if untried:
             candidate = dict(untried[0])
@@ -197,34 +200,11 @@ class RepresentationalResolutionEngine(_BaseEngine):
         # original Build 714 retained-resolution inquiry to begin.
         return self._stage_field_after_projection(ref, candidates, consumer, context_scope)
 
-    def provisional_resolution(self, ref):
-        self._projection_state()
-        key = ref.encode(); pending = self._active_stage_for_ref.get(key)
-        if pending is None or pending.get("mode") != "perspective_projection":
-            return super().provisional_resolution(ref)
-        try: view = RepresentationalRef.decode(str(pending["candidate"]["projected_ref"]))
-        except Exception: return self.current_resolution(ref)
-        self._provisional_reads[key] = self._provisional_reads.get(key, 0) + 1
-        return view
-
-    def consume_projection(self, ref, *, consumer="cognition", context_scope=None):
-        """Common causal doorway for any real representational consumer.
-
-        If pressure has staged a lawful perspective view, return that transient
-        view and record that the consumer actually looked through it. Nothing
-        here can promote or retain a field. Consumers may separately report a
-        downstream difference and later consequence evidence through the
-        existing Build 714 path.
-        """
-        self._projection_state()
-        key = ref.encode()
-        if key not in self._active_stage_for_ref:
-            self.investigate_if_pressured(ref, consumer=consumer, context_scope=context_scope)
-        pending = self._active_stage_for_ref.get(key)
-        if pending is None or pending.get("mode") != "perspective_projection":
+    def _projection_view_record(self, ref, candidate, *, consumer, context_scope, observed):
+        try:
+            view = RepresentationalRef.decode(str(candidate.get("projected_ref") or ""))
+        except Exception:
             return None
-        view = self.provisional_resolution(ref)
-        candidate = dict(pending.get("candidate") or {})
         return {
             "mode": "perspective_projection",
             "consumer": str(consumer or "cognition"),
@@ -238,7 +218,79 @@ class RepresentationalResolutionEngine(_BaseEngine):
             "source_ref": candidate.get("source_ref"),
             "projection_frontier_size": candidate.get("projection_frontier_size"),
             "projection_frontier_remaining": candidate.get("projection_frontier_remaining"),
+            "observed": bool(observed),
         }
+
+    def peek_projection(self, ref, *, consumer="hypothetical", context_scope=None):
+        """Pure projection lookup for an uncommitted hypothetical branch.
+
+        This method never stages an inquiry, increments a read counter, writes
+        an event, or changes attempt state. It may return an already-staged
+        projection, or calculate which lawful untried projection *would* be
+        next for a ref that is already represented in genealogy. Rejected
+        possibility branches can therefore inspect the mirror without leaving
+        fingerprints in lived representational development.
+        """
+        self._projection_state()
+        key = ref.encode()
+        pending = self._active_stage_for_ref.get(key)
+        if pending is not None:
+            if pending.get("mode") != "perspective_projection":
+                return None
+            candidate = dict(pending.get("candidate") or {})
+            return self._projection_view_record(
+                ref, candidate, consumer=consumer, context_scope=context_scope, observed=False,
+            )
+
+        # A hypothetical branch is not allowed to create registration merely
+        # by being considered. If the coarse ref has never entered the real
+        # genealogy, there is no lived representational pressure to inspect.
+        ability_id = self.ability_id_for_ref(ref)
+        if ability_id not in getattr(self.genealogy, "abilities", {}):
+            return None
+        if self.inadequacy_pressure(ref) <= 0.0:
+            return None
+        candidates = self.unresolved_field_candidates(ref)
+        if not candidates:
+            return None
+        projections = self._projection_frontier(ref, candidates)
+        untried = [p for p in projections if self._projection_attempt_counts.get(p["projection_id"], 0) == 0]
+        if not untried:
+            return None
+        candidate = dict(untried[0])
+        candidate["projection_frontier_size"] = len(projections)
+        candidate["projection_frontier_remaining"] = len(untried)
+        return self._projection_view_record(
+            ref, candidate, consumer=consumer, context_scope=context_scope, observed=False,
+        )
+
+    def provisional_resolution(self, ref):
+        self._projection_state()
+        key = ref.encode(); pending = self._active_stage_for_ref.get(key)
+        if pending is None or pending.get("mode") != "perspective_projection":
+            return super().provisional_resolution(ref)
+        try: view = RepresentationalRef.decode(str(pending["candidate"]["projected_ref"]))
+        except Exception: return self.current_resolution(ref)
+        self._provisional_reads[key] = self._provisional_reads.get(key, 0) + 1
+        return view
+
+    def consume_projection(self, ref, *, consumer="cognition", context_scope=None):
+        """Common causal doorway for an actual representational consumer."""
+        self._projection_state()
+        key = ref.encode()
+        if key not in self._active_stage_for_ref:
+            self.investigate_if_pressured(ref, consumer=consumer, context_scope=context_scope)
+        pending = self._active_stage_for_ref.get(key)
+        if pending is None or pending.get("mode") != "perspective_projection":
+            return None
+        view = self.provisional_resolution(ref)
+        candidate = dict(pending.get("candidate") or {})
+        record = self._projection_view_record(
+            ref, candidate, consumer=consumer, context_scope=context_scope, observed=True,
+        )
+        if record is not None:
+            record["projected_ref"] = view.encode()
+        return record
 
     def record_candidate_downstream_effect(self, ref, *, consumer, downstream_difference,
                                            action_or_prediction_affected,
@@ -292,10 +344,9 @@ class RepresentationalResolutionEngine(_BaseEngine):
             baseline_error = candidate_error = 0.0
             has_errors = False
 
-        # A live cognitive consumer may have genuinely used the projection and
-        # changed its downstream thought before reality has supplied the
-        # consequence needed to judge that lens. Do not misclassify absence of
-        # evidence as failed perspective and escalate to resolution.
+        # A real consumer may have used the projection before reality has
+        # supplied the consequence needed to judge that lens. Absence of
+        # evidence is not failed perspective and must not escalate resolution.
         if not (has_effect and has_actual and has_errors):
             self._projection_event(ref, pending, "pending_evidence", evaluation)
             return "pending_evidence"
@@ -362,8 +413,22 @@ def get_or_create_engine(systems: Optional[Dict[str, Any]]) -> Optional[Represen
     return engine
 
 
+def peek_projection_for_ref(systems, ref_encoded, *, consumer="hypothetical", context_scope=None):
+    """Pure bridge for uncommitted branches holding a real encoded ref."""
+    if not ref_encoded:
+        return None
+    engine = get_or_create_engine(systems)
+    if engine is None:
+        return None
+    try:
+        ref = RepresentationalRef.decode(str(ref_encoded))
+        return engine.peek_projection(ref, consumer=consumer, context_scope=context_scope)
+    except Exception:
+        return None
+
+
 def consume_projection_for_ref(systems, ref_encoded, *, consumer="cognition", context_scope=None):
-    """Public consumer bridge for an already-real encoded RepresentationalRef."""
+    """Observed-consumer bridge for an already-real encoded RepresentationalRef."""
     if not ref_encoded:
         return None
     engine = get_or_create_engine(systems)
