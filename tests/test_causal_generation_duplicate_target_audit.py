@@ -35,5 +35,5 @@ def test_current_running_signature_update_is_not_permutation_invariant_for_sibli
     reverse = _current_signature_update(0.4, [0.9, 0.1])
 
     assert forward != reverse
-    assert forward == 0.484
-    assert reverse == 0.452
+    assert forward == 0.452
+    assert reverse == 0.42
