@@ -33,8 +33,32 @@ import signal
 import random
 import datetime
 import subprocess
+import threading
 from pathlib import Path
 from typing import Dict, Any, Optional, List
+
+# AURORA DIRECTIVE (Phase 4): this daemon's own run() loop and aurora_acm_
+# bridge.py's tick-triggered threads both call _run_dream_burst() on
+# independent schedules, in the same process, against fixed shared file
+# paths (see that function's own comment at its projection-write site).
+# Reused, not reinvented: PERSISTENCE_LOCK/atomic_write_json already exist
+# for exactly this in aurora_persistence_utils.py and are already the
+# codebase's own convention (aurora.py and a dozen other modules import
+# them the same way).
+from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
+
+# AURORA DIRECTIVE (Phase 4): _run_code_mutation_cycle() is ALSO reachable
+# from both the same two independent schedules, but deliberately does NOT
+# reuse PERSISTENCE_LOCK above -- that lock is shared by many unrelated
+# brief atomic-write callers throughout the process, while one mutation
+# cycle can legitimately run for a long time (function_lineage.rebuild()
+# alone -- see aurora_internal/aurora_universal_function_lineage.py -- is a
+# full-codebase AST rescan measured at 60-150+s in this environment).
+# Holding PERSISTENCE_LOCK for that long would stall every unrelated
+# atomic_write_json() caller in the process for the same duration. A
+# dedicated, non-reentrant lock scoped to exactly this hazard avoids that
+# collateral blocking.
+_CODE_MUTATION_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -3135,6 +3159,28 @@ def _select_discovery_driven_operator() -> str:
 
 
 def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
+    """AURORA DIRECTIVE (Phase 4): serialization wrapper around
+    _run_code_mutation_cycle_impl(). This daemon's own run() loop and
+    aurora_acm_bridge.py's tick-triggered thread both reach this same
+    function, on independent schedules, in the same process -- both write
+    to the same fixed target files (aurora_internal/aurora_evolved_
+    surfaces.py, code_links.json via CodeEvolutionChamber) with no other
+    coordination between them, so a concurrent second invocation could
+    silently lose the first's mutation (both read the same pre-mutation
+    file content, compute independently, and whichever writes last wins).
+    Skips rather than blocks -- see _CODE_MUTATION_LOCK's own comment near
+    the top of this file for why a dedicated non-blocking lock is used
+    here instead of the shared PERSISTENCE_LOCK."""
+    if not _CODE_MUTATION_LOCK.acquire(blocking=False):
+        _log("  [MUTATE] Another mutation cycle is already running in this process — skipping this trigger.")
+        return
+    try:
+        _run_code_mutation_cycle_impl(systems)
+    finally:
+        _CODE_MUTATION_LOCK.release()
+
+
+def _run_code_mutation_cycle_impl(systems: Dict[str, Any]) -> None:
     """
     Apply one autonomous code mutation using accumulated genealogy + adapter hint state.
 
@@ -3143,6 +3189,8 @@ def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
     On success, re-injects gen-2 surfaces so hub metrics update immediately.
 
     Rate-gated: requires at least MIN_LINKS genealogy links before running.
+    Only ever called from _run_code_mutation_cycle() above, which holds
+    _CODE_MUTATION_LOCK for the duration of this call.
     """
     global _code_mutation_op_index
     MIN_LINKS = 50   # don't mutate on a cold chain
@@ -5093,32 +5141,45 @@ def _run_dream_burst(systems: Dict[str, Any]) -> None:
     # subsurface learned while sleeping.
     try:
         _proj_path = _SUBSURFACE_PROJECTION
-        _proj_now: Dict[str, Any] = {}
-        if _proj_path.exists():
-            try:
-                _proj_now = dict(json.loads(_proj_path.read_text()) or {})
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:3858",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_dream_burst", "handler_line": 3858, "source_file": "aurora_daemon.py"},
-                )
-                _proj_now = {}
-        _oets_growth = max(0, _dream_oets_after - _dream_oets_before)
-        _insight_summary = (
-            "; ".join(_dream_lessons) if _dream_lessons
-            else "dream consolidation completed"
-        )
-        _proj_now["dream_completed"] = True
-        _proj_now["dream_completed_at"] = time.time()
-        _proj_now["dream_insights"] = _insight_summary
-        _proj_now["oets_growth"] = _oets_growth
-        tmp = str(_proj_path) + ".tmp"
-        with open(tmp, "w") as _f:
-            json.dump(_proj_now, _f, indent=2)
-        os.replace(tmp, str(_proj_path))
+        # AURORA DIRECTIVE (Phase 4): this file is written from TWO
+        # independent schedules in the same process -- this daemon's own
+        # run() loop (below _TICK_DREAM/_governed_decision gating) AND
+        # aurora_acm_bridge.py's tick-triggered threads (_trigger_fn ->
+        # threading.Thread(target=_run_dream_burst, ...)) -- with no
+        # shared in-memory state between them (each boots its own
+        # `systems` via its own boot_aurora() call), so the ONLY thing
+        # that can corrupt a concurrent write is exactly this file. The
+        # read-modify-write must be one atomic critical section, not just
+        # the write: two threads racing past an unlocked read would each
+        # modify their own stale copy and the second write silently loses
+        # the first's update, regardless of how atomic the write itself
+        # is. PERSISTENCE_LOCK/atomic_write_json are the codebase's own
+        # existing convention for this (aurora_persistence_utils.py),
+        # reused here rather than inventing new locking.
+        with PERSISTENCE_LOCK:
+            _proj_now: Dict[str, Any] = {}
+            if _proj_path.exists():
+                try:
+                    _proj_now = dict(json.loads(_proj_path.read_text()) or {})
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:3858",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_dream_burst", "handler_line": 3858, "source_file": "aurora_daemon.py"},
+                    )
+                    _proj_now = {}
+            _oets_growth = max(0, _dream_oets_after - _dream_oets_before)
+            _insight_summary = (
+                "; ".join(_dream_lessons) if _dream_lessons
+                else "dream consolidation completed"
+            )
+            _proj_now["dream_completed"] = True
+            _proj_now["dream_completed_at"] = time.time()
+            _proj_now["dream_insights"] = _insight_summary
+            _proj_now["oets_growth"] = _oets_growth
+            atomic_write_json(_proj_path, _proj_now)
         _log(f"  [DREAM] Projection updated: {len(_dream_lessons)} lesson(s), {_oets_growth} OETS growth.")
     except Exception as _de:
         _aurora_record_exception_from_locals(
