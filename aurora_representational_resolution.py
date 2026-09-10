@@ -292,6 +292,73 @@ class RepresentationalResolutionEngine(_BaseEngine):
             record["projected_ref"] = view.encode()
         return record
 
+    def actualize_projection_use(self, ref, peeked_view, *, consumer,
+                                 downstream_difference=None,
+                                 action_or_prediction_affected="cognition"):
+        """Commit projection participation only for an actualized branch.
+
+        The pure hypothetical peek identifies the lens without touching lived
+        ledgers. After Agency actualizes that branch, this method stages/reads
+        the same lens through the normal consumer path. If the lens produced no
+        downstream Difference in the actualized cognition, it is immediately
+        marked non-discriminating and the next lawful lens may be tried. If it
+        did produce a Difference, its causal effect is retained only as pending
+        evidence until a later real consequence can judge adequacy.
+        """
+        self._projection_state()
+        expected_id = str((peeked_view or {}).get("projection_id") or "")
+        observed = self.consume_projection(
+            ref,
+            consumer=consumer,
+            context_scope=(peeked_view or {}).get("context_scope"),
+        )
+        if not observed or str(observed.get("projection_id") or "") != expected_id:
+            return {"status": "projection_mismatch", "projection_id": expected_id}
+
+        key = ref.encode()
+        pending = self._active_stage_for_ref.get(key)
+        if pending is None or pending.get("mode") != "perspective_projection":
+            return {"status": "projection_unavailable", "projection_id": expected_id}
+
+        difference = dict(downstream_difference or {})
+        if self._has_material_downstream_difference(difference):
+            self.record_candidate_downstream_effect(
+                ref,
+                consumer=consumer,
+                downstream_difference=difference,
+                action_or_prediction_affected=action_or_prediction_affected,
+                baseline_expectation={"projection": False},
+                conditioned_expectation={"projection": True},
+                metadata={"projection_id": expected_id, "actualized_branch": True},
+            )
+            return {
+                "status": "awaiting_consequence",
+                "projection_id": expected_id,
+                "downstream_difference": difference,
+            }
+
+        # No downstream distinction appeared even after the chosen branch used
+        # this view. That is enough to say this lens did not resolve the current
+        # representational inadequacy; no external outcome is needed to know it
+        # failed to change the consumer at all.
+        self._active_stage_for_ref.pop(key, None)
+        self._provisional_reads[key] = 0
+        self._candidate_downstream_effects.pop(key, None)
+        if expected_id:
+            self._projection_attempt_counts[expected_id] = self._projection_attempt_counts.get(expected_id, 0) + 1
+        self._projection_event(
+            ref,
+            pending,
+            "non_discriminating",
+            {"actualized_branch": True, "consumer": consumer},
+        )
+        self.investigate_if_pressured(
+            ref,
+            consumer=consumer,
+            context_scope=(peeked_view or {}).get("context_scope"),
+        )
+        return {"status": "non_discriminating", "projection_id": expected_id}
+
     def record_candidate_downstream_effect(self, ref, *, consumer, downstream_difference,
                                            action_or_prediction_affected,
                                            baseline_expectation=None,
@@ -436,10 +503,29 @@ def consume_projection_for_ref(systems, ref_encoded, *, consumer="cognition", co
         return None
     try:
         ref = RepresentationalRef.decode(str(ref_encoded))
+        return engine.consume_projection(ref, consumer=consumer, context_scope=context_scope)
     except Exception:
         return None
+
+
+def actualize_projection_for_ref(systems, peeked_view, *, consumer="cognition",
+                                 downstream_difference=None,
+                                 action_or_prediction_affected="cognition"):
+    """Commit only the projection use belonging to an actualized branch."""
+    if not isinstance(peeked_view, dict) or not peeked_view.get("base_ref"):
+        return None
+    engine = get_or_create_engine(systems)
+    if engine is None:
+        return None
     try:
-        return engine.consume_projection(ref, consumer=consumer, context_scope=context_scope)
+        ref = RepresentationalRef.decode(str(peeked_view.get("base_ref")))
+        return engine.actualize_projection_use(
+            ref,
+            peeked_view,
+            consumer=consumer,
+            downstream_difference=downstream_difference,
+            action_or_prediction_affected=action_or_prediction_affected,
+        )
     except Exception:
         return None
 
