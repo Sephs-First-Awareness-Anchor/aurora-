@@ -41,6 +41,16 @@ neither starts a second one:
       integrating the same interpreted_turn event just rewrites the
       presence frame with the same values) and safer than risking a
       regression in already-proven main-loop behavior.
+
+Occurrence-barrier correction (2026-09-10): aurora.py already calls
+runtime.wait_for_turn_phase(turn_id, phase, timeout=...) after publishing
+turn_open/interpreted_turn, but this runtime previously exposed no such
+method. The hasattr() guard therefore always failed and Surface immediately
+fell through to a file read, racing this thread's 150ms poll. The runtime
+now exposes the missing barrier. Waiting Surface nudges this independent
+thread awake and blocks only until the requested phase is integrated (or
+its existing bounded timeout expires). The periodic poll remains the
+cross-process/backstop path; no cognitive work is moved onto Surface.
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
@@ -53,12 +63,14 @@ from typing import Any, Callable, Dict, List, Optional
 from aurora_internal.dual_strata.subsurface_presence import (
     read_and_clear_turn_events,
     integrate_turn_event,
+    read_presence_frame,
     write_heartbeat,
 )
 
 # Spec section 4 responsiveness targets are <250ms; polling well under
 # that (not AT it) leaves headroom for the actual integration work each
-# tick does.
+# tick does. The poll is now a backstop: in-process Surface waits wake the
+# runtime immediately through _wake_event.
 DEFAULT_POLL_INTERVAL_S = 0.15
 
 
@@ -83,10 +95,18 @@ class SubsurfacePresenceRuntime:
         # instant current-turn evidence changes rather than polling.
         self.on_binding_change = on_binding_change
         self._stop_event = threading.Event()
+        self._wake_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self.last_tick_at: float = 0.0
         self.last_tick_error: str = ""
         self.tick_count: int = 0
+
+        # One condition protects only the tick-generation signal. It never
+        # protects cognitive state or the presence files themselves. A waiter
+        # observes a generation, wakes this thread, and sleeps until a later
+        # integration cycle completes, avoiding active polling on Surface.
+        self._phase_condition = threading.Condition()
+        self._tick_generation: int = 0
 
         # Build 694 step 17: this runtime holds its own long-lived
         # PresenceMetrics instance (role="presence_runtime") -- ticking
@@ -102,6 +122,7 @@ class SubsurfacePresenceRuntime:
         if self.is_running():
             return
         self._stop_event.clear()
+        self._wake_event.clear()
         self._thread = threading.Thread(
             target=self._run, name="subsurface-presence-runtime", daemon=True,
         )
@@ -109,12 +130,96 @@ class SubsurfacePresenceRuntime:
 
     def stop(self, timeout: float = 2.0) -> None:
         self._stop_event.set()
+        # _run now sleeps on _wake_event rather than _stop_event so a stop
+        # must wake it explicitly; otherwise a custom long poll interval
+        # could make stop() wait unnecessarily.
+        self._wake_event.set()
+        with self._phase_condition:
+            self._phase_condition.notify_all()
         if self._thread is not None:
             self._thread.join(timeout=timeout)
         self._thread = None
 
     def is_running(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
+
+    @staticmethod
+    def _frame_has_phase(frame: Any, turn_id: str, phase: str) -> bool:
+        """Return whether one persisted PresenceFrame proves phase landed.
+
+        turn_open/interpreted are the two bounded waits used by aurora.py.
+        Unknown/future phase names conservatively require only a same-turn
+        frame rather than inventing a new semantic completion criterion.
+        """
+        if not isinstance(frame, dict):
+            return False
+        if str(frame.get("turn_id", "") or "") != str(turn_id or ""):
+            return False
+        phase_key = str(phase or "").strip().lower()
+        if phase_key == "turn_open":
+            return bool(frame.get("turn_open_at"))
+        if phase_key == "interpreted":
+            return bool(frame.get("interpreted_at"))
+        return True
+
+    def wait_for_turn_phase(
+        self,
+        turn_id: str,
+        phase: str,
+        *,
+        timeout: float = 0.0,
+    ) -> Optional[Dict[str, Any]]:
+        """Wake Subsurface and wait for this turn's requested phase.
+
+        This is the missing synchronization joint aurora.py already probes
+        for with hasattr(). The caller never performs tick() itself: Surface
+        only sets _wake_event, while this runtime's independent daemon thread
+        does the actual integration. The wait is condition-based and bounded
+        by the caller's existing timeout. If the runtime is not running, the
+        newest matching file-backed frame is returned if already available;
+        otherwise None lets aurora.py keep its existing fallback behavior.
+        """
+        wanted_turn = str(turn_id or "")
+        if not wanted_turn:
+            return None
+        budget = max(0.0, float(timeout or 0.0))
+        deadline = time.monotonic() + budget
+
+        while True:
+            # Hold the condition while checking the file and capturing the
+            # generation number. _run increments that generation under the
+            # same condition after each tick, preventing a lost notification
+            # between "not ready" and the wait below.
+            with self._phase_condition:
+                try:
+                    frame = read_presence_frame(self.state_dir)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(), module=__name__,
+                        operation="exception_handler:aurora_internal/dual_strata/subsurface_presence_runtime.py:wait_for_turn_phase:read",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "SubsurfacePresenceRuntime.wait_for_turn_phase", "source_file": "aurora_internal/dual_strata/subsurface_presence_runtime.py"},
+                    )
+                    frame = None
+                if self._frame_has_phase(frame, wanted_turn, phase):
+                    return dict(frame)
+
+                remaining = deadline - time.monotonic()
+                if remaining <= 0.0 or not self.is_running() or self._stop_event.is_set():
+                    return None
+
+                observed_generation = self._tick_generation
+                # The event is the in-process fast path. It wakes the daemon
+                # from its normal 150ms backstop sleep without doing any of
+                # that daemon's work on this Surface thread.
+                self._wake_event.set()
+                self._phase_condition.wait_for(
+                    lambda: self._tick_generation != observed_generation or self._stop_event.is_set(),
+                    timeout=remaining,
+                )
+
+            if self._stop_event.is_set():
+                return None
 
     def _run(self) -> None:
         while not self._stop_event.is_set():
@@ -131,7 +236,15 @@ class SubsurfacePresenceRuntime:
                 )
             self.last_tick_at = time.time()
             self.tick_count += 1
-            self._stop_event.wait(self.poll_interval_s)
+            with self._phase_condition:
+                self._tick_generation += 1
+                self._phase_condition.notify_all()
+            if self._stop_event.is_set():
+                break
+            # Periodic polling remains the cross-process and idle backstop;
+            # wait_for_turn_phase() can interrupt this sleep immediately.
+            self._wake_event.wait(self.poll_interval_s)
+            self._wake_event.clear()
 
     def tick(self) -> Dict[str, Any]:
         """One integration cycle -- also callable directly (tests,
