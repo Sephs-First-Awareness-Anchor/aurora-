@@ -251,13 +251,13 @@ class PredicateIdentity:
 
 
 # ============================================================================
-# BEING RESPONSE
+# BEING RESPONSE / SAME-OCCURRENCE OBSERVATION
 # ============================================================================
 
 @dataclass
 class BeingResponse:
     """
-    A single being's response to input.
+    A single being's committed response to input.
 
     constraint_displacement: signed contribution to constraint space.
         Positive pole being + high resonance -> positive displacement.
@@ -281,6 +281,25 @@ class BeingResponse:
     @property
     def active(self) -> bool:
         return not self.silent and self.claim is not None
+
+
+@dataclass(frozen=True)
+class BeingObservation:
+    """A side-effect-free I-State reaction to one frozen occurrence.
+
+    Observation deliberately carries the lattice values the being actually
+    saw.  The collective can therefore finish every sibling observation before
+    any sibling commits lattice torque.  This is the Layer-2 form of the
+    causal-generation rule: same occurrence first, relational consequence
+    second.  It is scheduler-neutral, so a phone may execute observations on
+    one worker while an ACM host may fan them wider without changing meaning.
+    """
+    input_mode: ExistenceMode
+    claim: Optional[OntologicalClaim]
+    silent: bool
+    resonance: float
+    constraint_displacement: float
+    axis_snapshot: Dict[str, Any] = field(default_factory=dict)
 
 
 # ============================================================================
@@ -383,19 +402,72 @@ class IStateBeing:
 
     # ---- Processing ----
 
-    def process(self, envelope: IVMEnvelope) -> BeingResponse:
+    def _snapshot_axis(self) -> Dict[str, Any]:
+        axis = self.lattice.vertices.axes[self._axis_name]
+        return {
+            'phase': float(axis.phase),
+            'positive_weight': float(axis.positive_weight),
+            'negative_weight': float(axis.negative_weight),
+            'polarity': float(axis.polarity),
+            'at_transition': bool(axis.at_transition),
+        }
+
+    def observe(
+        self,
+        envelope: IVMEnvelope,
+        *,
+        axis_snapshot: Optional[Dict[str, Any]] = None,
+    ) -> BeingObservation:
+        """Form this being's reaction without mutating being or lattice state."""
+        input_mode = envelope.mode
+        snapshot = dict(axis_snapshot or self._snapshot_axis())
+
+        if input_mode < self.min_mode:
+            return BeingObservation(
+                input_mode=input_mode,
+                claim=None,
+                silent=True,
+                resonance=0.0,
+                constraint_displacement=0.0,
+                axis_snapshot=snapshot,
+            )
+
+        claim = OntologicalClaim(predicate=self.predicate, mode=input_mode)
+        resonance = self._compute_resonance(envelope, axis_snapshot=snapshot)
+        displacement = self._compute_displacement(resonance)
+        return BeingObservation(
+            input_mode=input_mode,
+            claim=claim,
+            silent=False,
+            resonance=resonance,
+            constraint_displacement=displacement,
+            axis_snapshot=snapshot,
+        )
+
+    def commit_observation(
+        self,
+        envelope: IVMEnvelope,
+        observation: BeingObservation,
+        *,
+        apply_stimulus: bool = True,
+    ) -> BeingResponse:
+        """Commit one previously formed observation.
+
+        `apply_stimulus=False` is used only by IStateCollective while it holds
+        the same-occurrence barrier.  The collective applies every sibling's
+        stimulus after every sibling response has been committed, preventing a
+        partial lattice write from becoming another sibling's observation.
+        """
         self.total_processed += 1
         self.generation += 1
 
-        input_mode = envelope.mode
-
-        if input_mode < self.min_mode:
+        if observation.silent:
             self.total_silent += 1
             return BeingResponse(
                 predicate=self.predicate,
                 axis=self.axis,
                 polarity=self.polarity,
-                input_mode=input_mode,
+                input_mode=observation.input_mode,
                 required_mode=self.min_mode,
                 recursion_level=self.recursion_level,
                 constraint_axis=self.constraint_axis,
@@ -405,40 +477,49 @@ class IStateBeing:
                 interpretation={'status': 'silent', 'reason': 'below_tier'},
             )
 
-        claim = OntologicalClaim(predicate=self.predicate, mode=input_mode)
-
-        resonance = self._compute_resonance(envelope)
+        resonance = float(observation.resonance)
+        displacement = float(observation.constraint_displacement)
         self.resonance_history.append(resonance)
         self._update_coherence()
 
-        # Signed constraint displacement
-        constraint_displacement = self._compute_displacement(resonance)
+        if apply_stimulus:
+            self.lattice.vertices.inject_stimulus(
+                self.predicate,
+                resonance * 0.3,
+                level=self.recursion_level,
+            )
 
-        # Inject at THIS being's level — not the default surface
-        self.lattice.vertices.inject_stimulus(
-            self.predicate,
-            resonance * 0.3,
-            level=self.recursion_level,
+        interpretation = self._interpret(
+            envelope,
+            resonance,
+            displacement,
+            axis_snapshot=observation.axis_snapshot,
         )
-
-        interpretation = self._interpret(envelope, resonance, constraint_displacement)
-
         return BeingResponse(
             predicate=self.predicate,
             axis=self.axis,
             polarity=self.polarity,
-            input_mode=input_mode,
+            input_mode=observation.input_mode,
             required_mode=self.min_mode,
             recursion_level=self.recursion_level,
             constraint_axis=self.constraint_axis,
-            claim=claim,
+            claim=observation.claim,
             silent=False,
             resonance=resonance,
-            constraint_displacement=constraint_displacement,
+            constraint_displacement=displacement,
             interpretation=interpretation,
         )
 
-    def _compute_resonance(self, envelope: IVMEnvelope) -> float:
+    def process(self, envelope: IVMEnvelope) -> BeingResponse:
+        """Backward-compatible single-being path: observe then commit now."""
+        return self.commit_observation(envelope, self.observe(envelope))
+
+    def _compute_resonance(
+        self,
+        envelope: IVMEnvelope,
+        *,
+        axis_snapshot: Optional[Dict[str, Any]] = None,
+    ) -> float:
         axis_idx = AXIS_ORDER.index(self._axis_name)
         if axis_idx < len(envelope.position.phases):
             input_phase = envelope.position.phases[axis_idx]
@@ -446,7 +527,12 @@ class IStateBeing:
         else:
             positional = 0.5
 
-        toroidal = self.axis_weight
+        if axis_snapshot is None:
+            toroidal = self.axis_weight
+        elif self.polarity == 'positive':
+            toroidal = float(axis_snapshot.get('positive_weight', self.axis_weight))
+        else:
+            toroidal = float(axis_snapshot.get('negative_weight', self.axis_weight))
         mode_diff = abs(envelope.mode.value - self.min_mode.value)
         mode_factor = 1.0 / (1.0 + mode_diff * 0.3)
 
@@ -460,18 +546,32 @@ class IStateBeing:
         """
         return resonance if self.polarity == 'positive' else -resonance
 
-    def _interpret(self, envelope: IVMEnvelope, resonance: float,
-                   displacement: float) -> Dict[str, Any]:
+    def _interpret(
+        self,
+        envelope: IVMEnvelope,
+        resonance: float,
+        displacement: float,
+        *,
+        axis_snapshot: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        snapshot = dict(axis_snapshot or self._snapshot_axis())
+        raw_polarity = float(snapshot.get('polarity', self.axis_polarity))
+        signed_polarity = raw_polarity if self.polarity == 'positive' else -raw_polarity
+        axis_weight = (
+            float(snapshot.get('positive_weight', self.axis_weight))
+            if self.polarity == 'positive'
+            else float(snapshot.get('negative_weight', self.axis_weight))
+        )
         return {
             'status': 'active',
             'predicate': self.predicate,
             'resonance': round(resonance, 4),
             'constraint_displacement': round(displacement, 4),
             'constraint_axis': self.constraint_axis,
-            'axis_phase': round(self.axis_phase, 4),
-            'axis_weight': round(self.axis_weight, 4),
-            'axis_polarity': round(self.axis_polarity, 4),
-            'at_transition': self.at_transition,
+            'axis_phase': round(float(snapshot.get('phase', self.axis_phase)), 4),
+            'axis_weight': round(axis_weight, 4),
+            'axis_polarity': round(signed_polarity, 4),
+            'at_transition': bool(snapshot.get('at_transition', self.at_transition)),
             'recursion_level': self.recursion_level.name,
             'react_gain': round(self.react_gain, 5),
             'align_gain': round(self.align_gain, 5),
@@ -570,6 +670,13 @@ class IStateCollective:
         Positive and negative poles partially cancel. That's correct.
         Paradox axis (both fire at 0.5) -> net ~0.0 at the throat.
         X is held >= epsilon (admissibility invariant from Layer -1).
+
+    OCCURRENCE SEMANTICS:
+        The ten beings are sibling reactions to one admitted event. Every
+        being observes one frozen lattice sample first. Only after all ten
+        observations exist are being-history and lattice-stimulus effects
+        committed. This keeps physical execution order from becoming causal
+        meaning and makes the observation phase safely widenable later.
     """
 
     def __init__(self, contract: FoundationalContract, lattice: IVMLattice):
@@ -583,18 +690,75 @@ class IStateCollective:
         self.synthesis_count = 0
         self.history: deque = deque(maxlen=200)
 
-    def process(self, envelope: IVMEnvelope) -> SynthesisResult:
+    def _snapshot_lattice_axes(self) -> Dict[str, Dict[str, Any]]:
+        snapshot: Dict[str, Dict[str, Any]] = {}
+        for axis_name, axis in self.lattice.vertices.axes.items():
+            snapshot[axis_name] = {
+                'phase': float(axis.phase),
+                'positive_weight': float(axis.positive_weight),
+                'negative_weight': float(axis.negative_weight),
+                'polarity': float(axis.polarity),
+                'at_transition': bool(axis.at_transition),
+            }
+        return snapshot
+
+    def observe_generation(self, envelope: IVMEnvelope) -> Dict[str, BeingObservation]:
+        """Observe all siblings against one frozen lattice occurrence."""
+        lattice_snapshot = self._snapshot_lattice_axes()
+        return {
+            predicate: being.observe(
+                envelope,
+                axis_snapshot=lattice_snapshot.get(being.axis),
+            )
+            for predicate, being in self.beings.items()
+        }
+
+    def commit_generation(
+        self,
+        envelope: IVMEnvelope,
+        observations: Dict[str, BeingObservation],
+    ) -> Tuple[Dict[str, BeingResponse], int, int]:
+        """Commit one complete sibling generation after its observation barrier."""
         responses: Dict[str, BeingResponse] = {}
         active_count = 0
         silent_count = 0
 
+        # First commit only being-local history/coherence. No sibling can see
+        # partial lattice consequence because every observation already exists.
         for predicate, being in self.beings.items():
-            response = being.process(envelope)
+            observation = observations[predicate]
+            response = being.commit_observation(
+                envelope,
+                observation,
+                apply_stimulus=False,
+            )
             responses[predicate] = response
             if response.active:
                 active_count += 1
             else:
                 silent_count += 1
+
+        # Then commit the shared-lattice consequences. Under current IVM
+        # physics apply_torque changes velocity/energy/T-cost but not phase, so
+        # this is numerically equivalent to the historical immediate path while
+        # establishing the correct same-occurrence barrier for wider execution.
+        for predicate, being in self.beings.items():
+            observation = observations[predicate]
+            if observation.silent:
+                continue
+            self.lattice.vertices.inject_stimulus(
+                predicate,
+                float(observation.resonance) * 0.3,
+                level=being.recursion_level,
+            )
+
+        return responses, active_count, silent_count
+
+    def process(self, envelope: IVMEnvelope) -> SynthesisResult:
+        observations = self.observe_generation(envelope)
+        responses, active_count, silent_count = self.commit_generation(
+            envelope, observations,
+        )
 
         axis_resonances, paradoxes, axis_tensions = self._analyze_axes(responses)
 
@@ -989,4 +1153,3 @@ if __name__ == '__main__':
                   f"X={net.get('X',0):+.3f} T={net.get('T',0):+.3f} "
                   f"N={net.get('N',0):+.3f} B={net.get('B',0):+.3f} "
                   f"A={net.get('A',0):+.3f}")
-
