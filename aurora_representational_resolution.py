@@ -86,11 +86,8 @@ def _projection_id(
 
 
 def _projection_view_key(candidate: Dict[str, Any]) -> str:
-    """Stable identity of the transient view independent of source provenance."""
-    payload = "|".join((
-        str(candidate.get("projected_ref") or ""),
-        ".".join(str(a) for a in (candidate.get("pressure_perspective") or ())),
-    ))
+    """Identity of what the consumer can actually see, independent of lens/source."""
+    payload = str(candidate.get("projected_ref") or "")
     return "rview_" + hashlib.sha256(payload.encode()).hexdigest()[:20]
 
 
@@ -135,6 +132,10 @@ def build_perspective_projections(
     projection frontier." The engine uses that form before permitting
     representational growth. A numeric limit remains available for diagnostics
     and callers that only want a bounded preview.
+
+    Distinct lenses/sources that yield the same projected RepresentationalRef
+    are one consumable view. The least-dimensional lens wins, then the strongest
+    structural pressure, with projection identity only a neutral final tie.
     """
     best_by_view: Dict[str, Dict[str, Any]] = {}
     for source_id, source_ref, evidence in sorted(
@@ -760,7 +761,7 @@ def record_ref_participation_from_scores(
     Without ``candidate_evaluation`` the caller is an observational pressure
     source only. Its scores still update the canonical genealogy consequence
     profile, but it cannot stage or complete a representation experiment it
-    did not actually consume. The next real `provisional_resolution()` reader
+    did not actually consume. The next real ``provisional_resolution()`` reader
     becomes the demand edge that opens the perspective frontier.
     """
     if not ref_encoded or not dimension_scores:
