@@ -15,6 +15,7 @@ Semantic contract
         -> relevant predictive continuations
         -> independent ThoughtIntegrationSpace resolutions
         -> pure lawful perspective peek when a real RepresentationalRef exists
+        -> at most one causally-attributable lens per candidate occurrence
         -> Pareto elimination by self + situation + coherence + continuity
         -> inception self-projection only while competition remains
         -> King identity-topology arbitration while competition remains
@@ -30,9 +31,11 @@ A representational projection is likewise not lived knowledge. Candidate
 branches may peek through an already-supported Build 714 perspective only when
 a real encoded RepresentationalRef is already carried by their braid/predictive
 evidence. The peek cannot stage, count a read, write an event, or create a
-registration. After Agency actualizes one branch, mark_actualized() alone may
-register that winner's projection participation. Rejected futures therefore
-leave no representational-development footprint.
+registration. A candidate uses at most one projection in an occurrence so any
+baseline-to-projected thought Difference belongs to that lens alone. After
+Agency actualizes one branch, mark_actualized() alone may register that winner's
+projection participation. Rejected futures therefore leave no representational-
+development footprint.
 
 The King Quasicrystal is not treated as a second scoring intelligence. Its
 existing live identity field is snapshotted once per occurrence and receives
@@ -254,8 +257,6 @@ def _candidate_frames(
             n_passes_for_density,
         )
 
-        # A new live occurrence must not inherit an earlier turn's systems-side
-        # cache if the file-backed queue has no new frames.
         systems["_staged_subsurface_frames"] = []
         systems["_staged_subsurface_frame"] = None
         harvested = PredictiveStager.harvest_into_systems(systems, max_frames=8)
@@ -275,10 +276,6 @@ def _candidate_frames(
         branch_limit = 1
 
     raw: List[Tuple[str, Dict[str, Any]]] = []
-    # Keep the present braid frame byte-for-semantic-byte equivalent. In the
-    # one-candidate case this branch must reproduce the historic integration
-    # path, not gain a synthetic pressure label merely because the frontier is
-    # installed.
     present = copy.deepcopy(
         dict(getattr(braid_slice, "predictive_frame", {}) or {})
         if braid_slice is not None else {}
@@ -314,9 +311,6 @@ def _register_candidate_context(
     tick: int,
     source: str,
 ) -> None:
-    # The braid-present candidate is the exact pre-frontier path. Its existing
-    # ThoughtStreamSlice predictive context is sufficient, and adding another
-    # candidate context would bias ordinary one-path turns.
     if source == "braid_present":
         return
 
@@ -372,7 +366,14 @@ def _projection_contexts_for_candidate(
     candidate_id: str,
     turn_tick: int,
 ) -> Tuple[List[Any], List[Dict[str, Any]]]:
-    """Purely expose lawful projection views already supported by real refs."""
+    """Select one pure, causally-attributable projection for this candidate.
+
+    Every eligible ref is only peeked, so this search is side-effect free. The
+    selected lens maximizes overlap with the candidate's own pressure
+    perspective, then prefers lower dimensionality, then a stable canonical id.
+    Applying at most one lens means any baseline-to-projected ThoughtState
+    Difference can be attributed to that lens without false causal credit.
+    """
     try:
         from aurora_representational_resolution import peek_projection_for_ref
         from aurora_thought_formation import make_process_context
@@ -390,9 +391,16 @@ def _projection_contexts_for_candidate(
         systems.get("_braid_sedi_recall"),
         context_states,
     )
-    contexts: List[Any] = []
-    views: List[Dict[str, Any]] = []
-    for index, encoded in enumerate(refs):
+    candidate_axes = {
+        str(axis).upper()
+        for axis in (predictive_frame.get("pressure_perspective") or ())
+        if str(axis).upper() in _AXES
+    }
+    if not candidate_axes:
+        candidate_axes = {_frame_axis(predictive_frame)}
+
+    eligible: List[Tuple[float, int, str, Dict[str, Any]]] = []
+    for encoded in sorted(refs):
         view = peek_projection_for_ref(
             systems,
             encoded,
@@ -401,28 +409,48 @@ def _projection_contexts_for_candidate(
         )
         if not isinstance(view, dict) or not view.get("projected_ref"):
             continue
-        axes = [
-            str(axis).upper() for axis in (view.get("pressure_perspective") or ())
+        axes = {
+            str(axis).upper()
+            for axis in (view.get("pressure_perspective") or ())
             if str(axis).upper() in _AXES
-        ]
+        }
         exposed = dict(view.get("exposed_fields") or {})
         if not exposed:
             continue
-        compact = ", ".join(f"{key}={value}" for key, value in sorted(exposed.items()))
-        ctx = make_process_context(
-            process_id=f"possibility_projection_{candidate_id}_{index}_{turn_tick}",
-            process_type="predictive",
-            what_triggered_it="perspective_before_resolution",
-            what_it_is_operating_on=f"projected distinction: {compact}"[:200],
-            current_output_state=dict(view),
-            self_relevance=0.50,
-            axis_signature=axes or [_frame_axis(predictive_frame)],
-            tick=turn_tick,
-            unresolved_tension_weight=0.20,
-        )
-        contexts.append(ctx)
-        views.append(copy.deepcopy(view))
-    return contexts, views
+        overlap = len(candidate_axes & axes) / max(1, len(candidate_axes | axes))
+        eligible.append((
+            -float(overlap),
+            len(axes) if axes else len(_AXES) + 1,
+            str(view.get("projection_id") or view.get("base_ref") or ""),
+            copy.deepcopy(view),
+        ))
+
+    if not eligible:
+        return [], []
+    eligible.sort(key=lambda item: (item[0], item[1], item[2]))
+    neg_overlap, _dims, _pid, view = eligible[0]
+    axes = [
+        str(axis).upper() for axis in (view.get("pressure_perspective") or ())
+        if str(axis).upper() in _AXES
+    ]
+    exposed = dict(view.get("exposed_fields") or {})
+    compact = ", ".join(f"{key}={value}" for key, value in sorted(exposed.items()))
+    view["candidate_axis_overlap"] = round(-neg_overlap, 6)
+    view["candidate_projection_selection"] = (
+        "max_pressure_overlap_then_lowest_dimensionality_then_canonical"
+    )
+    ctx = make_process_context(
+        process_id=f"possibility_projection_{candidate_id}_{turn_tick}",
+        process_type="predictive",
+        what_triggered_it="perspective_before_resolution",
+        what_it_is_operating_on=f"projected distinction: {compact}"[:200],
+        current_output_state=dict(view),
+        self_relevance=0.50,
+        axis_signature=axes or [_frame_axis(predictive_frame)],
+        tick=turn_tick,
+        unresolved_tension_weight=0.20,
+    )
+    return [ctx], [view]
 
 
 def _prepare_integration_space(
@@ -455,7 +483,7 @@ def _prepare_integration_space(
 
 
 def _thought_difference(before: Any, after: Any) -> Dict[str, Any]:
-    """Describe only material internal change caused by a projected view."""
+    """Describe only material internal change caused by one projected view."""
     difference: Dict[str, Any] = {}
     before_interp = str(getattr(before, "unified_interpretation", "") or "")
     after_interp = str(getattr(after, "unified_interpretation", "") or "")
@@ -468,20 +496,28 @@ def _thought_difference(before: Any, after: Any) -> Dict[str, Any]:
     before_axes = tuple(getattr(before, "axis_fingerprint", []) or [])
     after_axes = tuple(getattr(after, "axis_fingerprint", []) or [])
     if before_axes != after_axes:
-        difference["axis_fingerprint_changed"] = {"before": list(before_axes), "after": list(after_axes)}
+        difference["axis_fingerprint_changed"] = {
+            "before": list(before_axes), "after": list(after_axes)
+        }
     before_conflicts = len(getattr(before, "conflicts", []) or [])
     after_conflicts = len(getattr(after, "conflicts", []) or [])
     if before_conflicts != after_conflicts:
-        difference["conflict_count_changed"] = {"before": before_conflicts, "after": after_conflicts}
+        difference["conflict_count_changed"] = {
+            "before": before_conflicts, "after": after_conflicts
+        }
     before_unresolved = len(getattr(before, "unresolved", []) or [])
     after_unresolved = len(getattr(after, "unresolved", []) or [])
     if before_unresolved != after_unresolved:
-        difference["unresolved_count_changed"] = {"before": before_unresolved, "after": after_unresolved}
+        difference["unresolved_count_changed"] = {
+            "before": before_unresolved, "after": after_unresolved
+        }
     try:
         before_conf = float(getattr(before, "confidence", 0.0) or 0.0)
         after_conf = float(getattr(after, "confidence", 0.0) or 0.0)
         if abs(before_conf - after_conf) > _EPS:
-            difference["confidence_changed"] = {"before": before_conf, "after": after_conf}
+            difference["confidence_changed"] = {
+                "before": before_conf, "after": after_conf
+            }
     except Exception:
         pass
     return difference
@@ -573,10 +609,6 @@ def _pareto_frontier(
 
 def _simulate_candidate(candidate: PossibilityContinuation, self_state: Any) -> Dict[str, Any]:
     """Run an ephemeral Layer-7 inception self-projection with no live registration."""
-    # ImpressionCascade's ID helper consumes Python's module-global RNG. A
-    # rejected hypothetical must not advance the stochastic stream later lived
-    # execution will see, so the entire projection happens inside an RNG
-    # snapshot/restore boundary.
     rng_state = random.getstate()
     try:
         from aurora_simulation_engine import InceptionEntity
@@ -612,9 +644,6 @@ def _simulate_candidate(candidate: PossibilityContinuation, self_state: Any) -> 
             -1.0,
             min(1.0, float(projected.get("valence", 0.0) or 0.0)),
         )
-        # Simulation contributes as internal consistency, never as a
-        # happiness/reward objective. A branch whose simulated inner response
-        # contradicts its own predicted polarity is less self-coherent.
         simulation_coherence = 1.0 - min(1.0, abs(valence - polarity) / 2.0)
         return {
             "mode": "ephemeral_inception",
@@ -637,13 +666,7 @@ def _simulate_candidate(candidate: PossibilityContinuation, self_state: Any) -> 
 
 
 def _king_identity_snapshot(systems: Dict[str, Any]) -> Dict[str, Any]:
-    """Freeze the King Quasicrystal's live identity topology for this occurrence.
-
-    NoncompField already exposes current axis pressure and its own neutral
-    reference. Mirroring Habitat motivation, only positive displacement above
-    that native reference counts as active identity pressure. This function is
-    read-only: it never ingests, decays, resets, or otherwise changes the King.
-    """
+    """Freeze the King Quasicrystal's live identity topology for this occurrence."""
     identity_field = systems.get("identity_field")
     if identity_field is None or not hasattr(identity_field, "status"):
         return {"available": False, "reason": "identity_field_unavailable"}
@@ -751,13 +774,7 @@ def _king_identity_fit(
     candidate: PossibilityContinuation,
     king_snapshot: Dict[str, Any],
 ) -> Optional[float]:
-    """Cosine congruence between a continuation and the frozen King topology.
-
-    Candidate axes are a set, not a weighted personality vector. This avoids
-    inventing arbitrary preferences: the only magnitudes come from the King's
-    own live field. A candidate simply intersects more or less with what the
-    identity field is presently carrying.
-    """
+    """Cosine congruence between a continuation and the frozen King topology."""
     if not king_snapshot.get("available"):
         return None
     topology = dict(king_snapshot.get("normalized_topology") or {})
@@ -876,15 +893,8 @@ def resolve_live_possibilities(
     continuity: Any,
     constraint_context: Any = None,
 ) -> Optional[PossibilityResolution]:
-    """Resolve several possible thoughts without committing any of them.
-
-    The caller must apply continuity to ``resolution.thought_state`` only after
-    this function returns. That call is the actualization boundary.
-    """
+    """Resolve several possible thoughts without committing any of them."""
     prior_thought = systems.get("_current_thought_state")
-    # Freeze the King once, before any sibling continuation is evaluated. Every
-    # candidate therefore encounters the same identity state regardless of
-    # execution order or future ACM parallelization.
     king_snapshot = _king_identity_snapshot(systems)
     frame_specs = _candidate_frames(systems, self_state, braid_slice)
     if not frame_specs:
@@ -895,8 +905,6 @@ def resolve_live_possibilities(
         candidate_id = _frame_identity(source, predictive_frame)
         branch_slice = _clone_slice(braid_slice, predictive_frame)
 
-        # Coarse baseline first. Perspective is conditional extra work, never a
-        # mandatory second integration on every branch.
         baseline_space = _prepare_integration_space(
             self_state,
             branch_slice,
@@ -966,15 +974,13 @@ def resolve_live_possibilities(
     survivors = _pareto_frontier(candidates, _BASE_METRICS)
     arbitration: Dict[str, Any] = {
         "candidate_count": len(candidates),
-        "initial_non_dominated": [
-            candidate.candidate_id for candidate in survivors
-        ],
+        "initial_non_dominated": [candidate.candidate_id for candidate in survivors],
         "deep_simulation_used": False,
         "perspective_projection_used": any(candidate.projection_views for candidate in candidates),
         "projection_view_count": sum(len(candidate.projection_views) for candidate in candidates),
         "king_identity_snapshot": _public_king_snapshot(king_snapshot),
         "king_identity_arbitration": {"authority_used": False, "reason": "not_needed"},
-        "rule": "coarse_then_perspective_then_pareto_then_simulation_then_king_identity",
+        "rule": "coarse_then_one_perspective_then_pareto_then_simulation_then_king_identity",
     }
 
     if len(survivors) == 1:
@@ -1033,7 +1039,6 @@ def resolve_live_possibilities(
     selected.selected = True
     arbitration["selected_candidate_id"] = selected.candidate_id
 
-    # Observability only. Store summaries, never rejected ThoughtState objects.
     systems["_current_possibility_frontier"] = {
         "turn_tick": int(turn_tick),
         "actualized": False,
