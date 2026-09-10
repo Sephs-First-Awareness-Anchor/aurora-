@@ -45,21 +45,28 @@ RE-ENTRY LOOP ALIGNMENT:
     This module closes the loop:
     STATE → EXPRESSION → RE-ENTRY → RECONCILIATION → UNDERSTANDING
 
-    begin_response_turn() = STATE snapshot
+    begin_response_turn() = STATE snapshot / possibility actualization
     begin_expression()    = EXPRESSION anchor
     checkpoint_expression() = live braid tap during EXPRESSION
     complete_expression() = RE-ENTRY signal (feeds back to braid)
 
 THOUGHT INTEGRATION:
-    begin_response_turn() runs a lightweight ThoughtIntegrationSpace pass
-    with the current braid slice. The result is stored at:
+    begin_response_turn() taps one live braid/self snapshot and allows the
+    already-staged Subsurface possibility frames to resolve as independent,
+    uncommitted ThoughtStates. Agency selects one continuation, and ONLY that
+    ThoughtState crosses ThoughtContinuity into lived cognition. If the
+    possibility frontier is unavailable, the historic single-space integration
+    path remains the local fail-soft behavior.
 
-        systems['_current_thought_state']     — ThoughtState
-        systems['_current_braid_slice']       — ThoughtStreamSlice
+    The selected result is stored at:
+
+        systems['_current_thought_state']     — actualized ThoughtState
+        systems['_current_braid_slice']       — selected ThoughtStreamSlice
+        systems['_current_possibility_frontier'] — non-lived branch summaries
         systems['_expression_layer']          — StreamingExpressionLayer instance
 
     Downstream pipeline (downward chain, expression, grammar engine) can
-    read systems['_current_thought_state'] for axis/lane/topic context.
+    continue reading systems['_current_thought_state'] exactly as before.
 """
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
@@ -390,16 +397,19 @@ def begin_response_turn(
     """
     CALL SITE 2 — Top of _run_live_response_turn, after turn_tick is assigned.
 
-    Taps the braid, builds a ThoughtState via ThoughtIntegrationSpace,
-    carries it forward through ThoughtContinuity, and stores it in systems.
+    Taps one braid/self moment, resolves any relevant Subsurface possibility
+    continuations against that SAME moment, and lets Agency actualize exactly
+    one ThoughtState. Only the selected state enters ThoughtContinuity.
 
     This is the STATE phase of:
-    STATE → EXPRESSION → RE-ENTRY → RECONCILIATION → UNDERSTANDING
+    POSSIBILITY → AGENCY → STATE → EXPRESSION → RE-ENTRY → RECONCILIATION
 
     Stores:
-        systems['_current_thought_state']  — ThoughtState (reasoning-safe)
-        systems['_current_braid_slice']    — ThoughtStreamSlice (raw tap)
-        systems['_turn_thought_tick']      — turn_tick for this response
+        systems['_current_thought_state']       — actualized ThoughtState
+        systems['_current_braid_slice']         — selected ThoughtStreamSlice
+        systems['_current_possibility_frontier'] — non-lived branch summaries
+        systems['_selected_possibility']        — selected branch summary
+        systems['_turn_thought_tick']           — turn_tick for this response
     """
     try:
         from aurora_thought_formation import (
@@ -408,52 +418,90 @@ def begin_response_turn(
             get_continuity,
         )
 
-        # Snapshot self-state
+        # Snapshot self-state and braid exactly once. Every possible
+        # continuation must start from this same present.
         self_state = ActiveSelfState.load(systems)
-
-        # Tap braid (non-consuming)
         braid = systems.get('_thought_braid')
         braid_slice = braid.tap() if braid is not None else None
         systems['_current_braid_slice'] = braid_slice
+        systems['_current_possibility_frontier'] = None
+        systems['_selected_possibility'] = None
 
-        # Build integration space with braid slice
-        space = ThoughtIntegrationSpace(self_state, braid_slice=braid_slice)
-
-        # Prime with carry-forward state from last thought
         continuity = get_continuity()
-        continuity.prime_integration_space(space)
+        turn_contexts = _build_turn_process_contexts(
+            systems, tick=turn_tick, user_text=user_text
+        )
 
-        # Register turn-level process contexts
-        turn_contexts = _build_turn_process_contexts(systems, tick=turn_tick, user_text=user_text)
-        for ctx in turn_contexts:
-            space.register(ctx)
-
-        # Structural reasoning track — runs parallel with semantic braid
+        # Structural reasoning is invariant evidence for all branches. Reason
+        # once from the frozen self-state, then copy its ProcessContext into
+        # each candidate integration space. Only the selected ThoughtState is
+        # allowed to close the structural/semantic alignment loop below.
         _cr = systems.get('constraint_reasoner')
         _constraint_trace = None
+        _cr_ctx = None
         if _cr is not None:
             try:
                 _cr_profile = getattr(self_state, 'pressure_vec', None) or _cr.current_profile()
                 _constraint_trace = _cr.reason(_cr_profile, depth=3, user_text=user_text)
                 systems['_constraint_trace'] = _constraint_trace
                 _cr_ctx = _cr.to_process_context(_constraint_trace, tick=turn_tick)
-                if _cr_ctx is not None:
-                    space.register(_cr_ctx)
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
                     module=__name__,
-                    operation="exception_handler:aurora_braid_wiring.py:350",
+                    operation="exception_handler:aurora_braid_wiring.py:possibility_constraint_trace",
                     exc=_aurora_boundary_exc,
-                    context={"function": "begin_response_turn", "handler_line": 350, "source_file": "aurora_braid_wiring.py"},
+                    context={"function": "begin_response_turn", "source_file": "aurora_braid_wiring.py"},
                 )
                 _constraint_trace = None
+                _cr_ctx = None
                 systems['_constraint_trace'] = None
 
-        # Integrate — emotion firewall fires internally
-        thought_state = space.integrate()
+        resolution = None
+        try:
+            from aurora_internal.aurora_live_possibility_frontier import (
+                mark_actualized,
+                resolve_live_possibilities,
+            )
+            resolution = resolve_live_possibilities(
+                systems,
+                self_state=self_state,
+                braid_slice=braid_slice,
+                user_text=user_text,
+                turn_tick=turn_tick,
+                turn_contexts=turn_contexts,
+                continuity=continuity,
+                constraint_context=_cr_ctx,
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_braid_wiring.py:possibility_frontier",
+                exc=_aurora_boundary_exc,
+                context={"function": "begin_response_turn", "source_file": "aurora_braid_wiring.py"},
+            )
+            resolution = None
 
-        # Alignment check: structural vs semantic — emit WarpDemand if divergent
+        if resolution is not None:
+            thought_state = resolution.thought_state
+            braid_slice = resolution.braid_slice
+            systems['_current_braid_slice'] = braid_slice
+        else:
+            # Local fail-soft only: preserve the pre-frontier single-space
+            # behavior if candidate machinery is unavailable. This does not
+            # manufacture an alternate answer; it simply prevents an optional
+            # orchestration seam from blanking the live turn.
+            space = ThoughtIntegrationSpace(self_state, braid_slice=braid_slice)
+            continuity.prime_integration_space(space)
+            for ctx in turn_contexts:
+                space.register(ctx)
+            if _cr_ctx is not None:
+                space.register(_cr_ctx)
+            thought_state = space.integrate()
+
+        # Structural vs semantic alignment is evaluated against the branch
+        # Aurora actually chose, never against rejected possibilities.
         if _cr is not None and _constraint_trace is not None:
             try:
                 _cr.integrate(_constraint_trace, thought_state)
@@ -467,11 +515,23 @@ def begin_response_turn(
                 )
                 pass
 
-        # Carry forward through continuity
+        # ACTUALITY BOUNDARY. No candidate is lived before this line.
         thought_state = continuity.carry_forward(thought_state)
-
         systems['_current_thought_state'] = thought_state
         systems['_turn_thought_tick'] = turn_tick
+
+        if resolution is not None:
+            try:
+                mark_actualized(systems, thought_state)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_braid_wiring.py:mark_actualized",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "begin_response_turn", "source_file": "aurora_braid_wiring.py"},
+                )
+                pass
 
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
