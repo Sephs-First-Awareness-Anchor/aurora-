@@ -15,6 +15,7 @@ import json
 import time
 import hashlib
 import logging
+import threading
 from collections import deque
 from types import SimpleNamespace
 from typing import Optional, Dict, Any, List, Tuple, Set
@@ -328,6 +329,14 @@ class WorkingMemory:
         # Salience decays with idle turns; current_topic always stays at 1.0.
         self.active_contexts: Dict[str, Dict[str, Any]] = {}
         self.stated_facts: dict = {}       # {subject: {property: value, ...}}
+        # AURORA DIRECTIVE (Phase 4): one WorkingMemory instance is shared
+        # across the main turn-processing path AND aurora_daemon.py's
+        # ambient-overhearing thread AND its voice-session thread -- all
+        # three reach note_user_facts() unlocked, doing an unprotected
+        # check-then-create-then-mutate on self.stated_facts[topic].
+        # RLock (not Lock): note_user_facts() recurses into itself for
+        # "X said Y"-shaped text (see the reported_match branch).
+        self._stated_facts_lock = threading.RLock()
         self.recent_entities: list = []
         self.last_search_results: list = []
         self.last_search_query: str = ""
@@ -5835,6 +5844,21 @@ class WorkingMemory:
                 return
             if self.extract_behavior_alignment_request(user_text):
                 return
+        # AURORA DIRECTIVE (Phase 4): everything below reads/mutates
+        # self.stated_facts, unlocked -- and this WorkingMemory instance
+        # is shared across the main turn thread, aurora_daemon.py's
+        # ambient-overhearing thread, and its voice-session thread. See
+        # self._stated_facts_lock's own comment (near self.stated_facts'
+        # declaration in __init__).
+        with self._stated_facts_lock:
+            self._note_user_facts_locked(user_text, understood, native, use_native_only)
+
+    def _note_user_facts_locked(self, user_text: str, understood: Optional[dict],
+                                 native: dict, use_native_only: bool) -> None:
+        """The stated_facts-mutating tail of note_user_facts(). Only ever
+        called while holding self._stated_facts_lock (an RLock, so the
+        reported_match branch's recursive self.note_user_facts(nested)
+        call below re-enters safely on the same thread)."""
         _skip_subjects = {
             'how', 'what', 'why', 'where', 'when', 'who', 'which', 'it',
             'this', 'that', 'they', 'he', 'she', 'we', 'you', 'i', 'my',
@@ -6003,7 +6027,13 @@ class WorkingMemory:
                     claim_terms = self._claim_terms(self.last_response_anchor_claim)
                     if semantic_anchor not in claim_terms:
                         self.last_response_anchor_claim = {}
-        for subject in list(self.stated_facts.keys())[-4:]:
+        # AURORA DIRECTIVE (Phase 4): snapshot under the same lock
+        # note_user_facts() uses -- an unlocked list(dict.keys()) here can
+        # raise "dictionary changed size during iteration" if a concurrent
+        # thread's note_user_facts() inserts a new topic mid-iteration.
+        with self._stated_facts_lock:
+            _recent_subjects = list(self.stated_facts.keys())[-4:]
+        for subject in _recent_subjects:
             self._register_mention(subject, 'fact', 'memory', 0.68)
         _aurora_text_clean = str(aurora_text or "").strip()
         _internal_prefixes = ("[AFTERTHOUGHT]", "[CODE]", "[PRESSURE]", "125-layer manifold:")

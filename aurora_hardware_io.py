@@ -5476,6 +5476,14 @@ class SensoryIntegrationEngine:
         self.default_mode = mode
         self.state_dir = Path(state_dir) if state_dir else Path(__file__).resolve().parent / "aurora_state"
         self._vision_snapshot_dir = self.state_dir / "vision_snapshots"
+        # AURORA DIRECTIVE (Phase 4): one SensoryIntegrationEngine instance
+        # is shared between aurora_surface_daemon.py's continuous camera-
+        # capture thread and any thread reaching a "what do you see?"
+        # voice command (aurora_voice.py -> daemon_voice_session) -- both
+        # call see() -> _save_camera_snapshot(), which used to glob-delete
+        # stale files then cv2.imwrite() the new one with no lock and no
+        # atomic rename.
+        self._camera_snapshot_lock = threading.Lock()
 
         # Mappers
         self.visual_mapper = VisualLinguisticMapper()
@@ -6468,35 +6476,56 @@ class SensoryIntegrationEngine:
         frame = getattr(camera, "last_frame", None)
         if frame is None or not _CV2_AVAILABLE:
             return None
-        try:
-            self._vision_snapshot_dir.mkdir(parents=True, exist_ok=True)
-            for stale in self._vision_snapshot_dir.glob("sight_*.jpg"):
-                try:
-                    stale.unlink()
-                except Exception as _aurora_boundary_exc:
-                    _aurora_record_exception_from_locals(
-                        locals(),
-                        module=__name__,
-                        operation="exception_handler:aurora_hardware_io.py:5747",
-                        exc=_aurora_boundary_exc,
-                        context={"function": "_save_camera_snapshot", "handler_line": 5747, "source_file": "aurora_hardware_io.py"},
-                    )
-                    pass
-            snapshot_path = self._vision_snapshot_dir / "sight_latest.jpg"
-            cv2.imwrite(str(snapshot_path), frame)
-            shared_camera_dir = self.state_dir / "vision_seeds" / "camera"
-            shared_camera_dir.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(shared_camera_dir / "frame_latest.png"), frame)
-            return str(snapshot_path)
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_hardware_io.py:5755",
-                exc=_aurora_boundary_exc,
-                context={"function": "_save_camera_snapshot", "handler_line": 5755, "source_file": "aurora_hardware_io.py"},
-            )
-            return None
+        # AURORA DIRECTIVE (Phase 4): the camera-capture thread and any
+        # voice-triggered see() call can race here (see
+        # self._camera_snapshot_lock's own comment in __init__). The lock
+        # stops the two writers from interleaving the stale-file cleanup
+        # with each other's write; the tmp-then-os.replace() pattern
+        # (matching this codebase's existing atomic_write_json convention)
+        # additionally guarantees any reader of sight_latest.jpg /
+        # frame_latest.png -- in or out of process -- never observes a
+        # partially-written (torn) image, lock or no lock.
+        with self._camera_snapshot_lock:
+            try:
+                self._vision_snapshot_dir.mkdir(parents=True, exist_ok=True)
+                snapshot_path = self._vision_snapshot_dir / "sight_latest.jpg"
+                for stale in self._vision_snapshot_dir.glob("sight_*.jpg"):
+                    if stale == snapshot_path:
+                        continue
+                    try:
+                        stale.unlink()
+                    except Exception as _aurora_boundary_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(),
+                            module=__name__,
+                            operation="exception_handler:aurora_hardware_io.py:5747",
+                            exc=_aurora_boundary_exc,
+                            context={"function": "_save_camera_snapshot", "handler_line": 5747, "source_file": "aurora_hardware_io.py"},
+                        )
+                        pass
+                # cv2.imwrite() infers the encoder from the file extension,
+                # so the tmp suffix must come BEFORE it, not after.
+                _uniq = f".tmp{os.getpid()}_{threading.get_ident()}"
+                _tmp_snapshot = str(snapshot_path.with_suffix(_uniq + snapshot_path.suffix))
+                cv2.imwrite(_tmp_snapshot, frame)
+                os.replace(_tmp_snapshot, str(snapshot_path))
+
+                shared_camera_dir = self.state_dir / "vision_seeds" / "camera"
+                shared_camera_dir.mkdir(parents=True, exist_ok=True)
+                _shared_path = shared_camera_dir / "frame_latest.png"
+                _tmp_shared = str(_shared_path.with_suffix(_uniq + _shared_path.suffix))
+                cv2.imwrite(_tmp_shared, frame)
+                os.replace(_tmp_shared, str(_shared_path))
+                return str(snapshot_path)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_hardware_io.py:5755",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_save_camera_snapshot", "handler_line": 5755, "source_file": "aurora_hardware_io.py"},
+                )
+                return None
 
     def listen(self, duration: float = 2.0) -> Tuple[str, Dict[str, Any]]:
         """

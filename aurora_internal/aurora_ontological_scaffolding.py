@@ -1191,7 +1191,11 @@ class OntologicalWeb(WarpCapable):
     # INFERENCE ENGINE — Detect implicit relations
     # ================================================================
 
-    def _select_relation_type(self, r1: str, r2: str, *, source: str) -> Tuple[RelationType, str]:
+    def _select_relation_type(
+        self, r1: str, r2: str, *, source: str,
+        outcomes: Optional[Dict[str, Dict[str, Dict[str, int]]]] = None,
+        commit: bool = True,
+    ) -> Tuple[RelationType, str]:
         """FIX-A011/FIX-A013 (Sunni & Cael): nearest-fit selection over
         RELATION_TYPE_AXIS_PROFILES, now discounted by accumulated
         real-world failure for this exact (role-pair signature, type)
@@ -1205,6 +1209,19 @@ class OntologicalWeb(WarpCapable):
         earning trust. Returns (chosen_type, signature) -- callers pass the
         signature to add_relation() so a future failure can be attributed
         back to this exact selection pattern.
+
+        AURORA DIRECTIVE (Phase 2) causal-generation fix: `outcomes` and
+        `commit` let a batch caller (infer_relations_from_context(), which
+        scores many word-pairs from the SAME occurrence) score every pair
+        against one frozen `outcomes` snapshot and defer the real
+        self._selection_outcomes "uses" mutation to a second pass, once per
+        pending selection, after the whole batch has been scored. Without
+        this, an earlier pair's synchronous "uses" bump (the previous
+        single-pass behavior, still exactly what happens for a true
+        single-item caller with commit=True/outcomes=None) shifts the
+        failure-rate discount for a LATER pair in the same batch that
+        happens to share its role-pair signature -- so which relation type
+        got chosen depended on arrival order within one occurrence.
         """
         signature = "+".join(sorted((r1, r2)))
         if self._relation_type_checker is None:
@@ -1226,18 +1243,27 @@ class OntologicalWeb(WarpCapable):
         # _rel_contribution_sum fix (1M+ cosine() calls for a 12-message
         # corpus run). Cache by the same `signature` already computed
         # above for outcome tracking.
+        # signal is computed unconditionally (not only on a cache miss, as
+        # before) -- it used to be scoped inside the `if raw_scores is
+        # None:` cache-miss branch while also being read, unconditionally,
+        # by the check_and_extend() call below, raising NameError on any
+        # cache-hit call that fell through to the RELATED_TO fallback.
+        # Found incidentally while restructuring this method for the fix
+        # above; _role_pair_axis_signal() is cheap and pure, so computing
+        # it unconditionally costs nothing on the cache-hit path.
+        signal = _role_pair_axis_signal(r1, r2)
         raw_scores = self._raw_score_cache.get(signature)
         if raw_scores is None:
-            signal = _role_pair_axis_signal(r1, r2)
             d15 = checker._ensure_full_dims(signal)
             raw_scores = {cid: checker.cosine(profile, d15) for cid, profile in checker._components.items()}
             self._raw_score_cache[signature] = raw_scores
 
-        outcomes = self._selection_outcomes.get(signature, {})
+        source_outcomes = self._selection_outcomes if outcomes is None else outcomes
+        stats_for_sig = source_outcomes.get(signature, {})
         adjusted_scores: Dict[str, float] = {}
         for cid, score in raw_scores.items():
             type_value = cid.split("RELTYPE:", 1)[-1]
-            stats = outcomes.get(type_value, {})
+            stats = stats_for_sig.get(type_value, {})
             uses = int(stats.get("uses", 0) or 0)
             failures = int(stats.get("failures", 0) or 0)
             if uses >= _SELECTION_FAILURE_MIN_USES:
@@ -1252,10 +1278,11 @@ class OntologicalWeb(WarpCapable):
             picked_value = best_id.split("RELTYPE:", 1)[-1]
             for rtype in RelationType:
                 if rtype.value == picked_value:
-                    bucket = self._selection_outcomes.setdefault(signature, {}).setdefault(
-                        rtype.value, {"uses": 0, "failures": 0}
-                    )
-                    bucket["uses"] = int(bucket.get("uses", 0) or 0) + 1
+                    if commit:
+                        bucket = self._selection_outcomes.setdefault(signature, {}).setdefault(
+                            rtype.value, {"uses": 0, "failures": 0}
+                        )
+                        bucket["uses"] = int(bucket.get("uses", 0) or 0) + 1
                     return rtype, signature
 
         try:
@@ -1263,6 +1290,17 @@ class OntologicalWeb(WarpCapable):
         except Exception:
             pass
         return RelationType.RELATED_TO, signature
+
+    def commit_relation_type_usage(self, rtype: RelationType, signature: str) -> None:
+        """AURORA DIRECTIVE (Phase 2): the deferred half of a commit=False
+        _select_relation_type() call -- bumps self._selection_outcomes'
+        real "uses" counter for (signature, rtype.value). Call once per
+        pending selection, after a whole batch has been scored against a
+        frozen snapshot (see infer_relations_from_context())."""
+        bucket = self._selection_outcomes.setdefault(signature, {}).setdefault(
+            rtype.value, {"uses": 0, "failures": 0}
+        )
+        bucket["uses"] = int(bucket.get("uses", 0) or 0) + 1
 
     def register_selection_failure(self, relation: "SemanticRelation") -> None:
         """FIX-A013: called when a reconciliation (FIX-A012) contradicts a
@@ -1311,6 +1349,24 @@ class OntologicalWeb(WarpCapable):
         if len(known) < 2:
             return
 
+        # AURORA DIRECTIVE (Phase 2) causal-generation fix: every pair below
+        # is an independent reaction to this SAME occurrence (one
+        # co-occurring word list) -- _select_relation_type()'s failure-rate
+        # discount used to be committed synchronously per pair, so a later
+        # pair sharing an earlier pair's role-pair signature, within this
+        # SAME batch, saw a discount already shifted by that earlier pair's
+        # own commit. Pass 1 scores every pair (both loops below) against
+        # one outcomes snapshot frozen before this batch starts. Pass 2
+        # commits each pending selection's "uses" usage exactly once,
+        # after the whole batch is scored, then creates/strengthens every
+        # relation -- so the committed relation types can no longer depend
+        # on which pair happened to be scored first.
+        outcomes_snapshot = {
+            sig: {t: dict(v) for t, v in types.items()}
+            for sig, types in self._selection_outcomes.items()
+        }
+        pending: List[Tuple[str, str, RelationType, str, float, float, str]] = []
+
         # Directive NC1, ratified 2026-08-03 (Sunni & Cael): this exhaustive
         # pairwise loop used to hardcode RELATED_TO for every pair -- the
         # role-pair heuristics below (verb+noun -> ENABLES, adjective+noun
@@ -1329,14 +1385,10 @@ class OntologicalWeb(WarpCapable):
             for w2 in known[i+1:]:
                 r1, r2 = self.nodes[w1].role, self.nodes[w2].role
                 rtype, _rtype_sig = self._select_relation_type(
-                    r1, r2, source=f"infer_relations_from_context:{r1}+{r2}"
+                    r1, r2, source=f"infer_relations_from_context:{r1}+{r2}",
+                    outcomes=outcomes_snapshot, commit=False,
                 )
-                self.add_relation(
-                    w1, w2, rtype,
-                    strength=0.2, confidence=0.3,
-                    knowledge_source="co-occurrence",
-                    selection_signature=_rtype_sig,
-                )
+                pending.append((w1, w2, rtype, _rtype_sig, 0.2, 0.3, "co-occurrence"))
 
         # Adjacent words in known list get stronger connections
         for i in range(len(known) - 1):
@@ -1348,14 +1400,23 @@ class OntologicalWeb(WarpCapable):
             # rather than only recognizing verb->noun / adjective->noun.
             if node1.role in ("verb", "adjective") or node2.role in ("verb", "adjective") or node1.role != node2.role:
                 _adj_rtype, _adj_sig = self._select_relation_type(
-                    node1.role, node2.role, source=f"infer_relations_from_context:adjacency:{node1.role}+{node2.role}"
+                    node1.role, node2.role,
+                    source=f"infer_relations_from_context:adjacency:{node1.role}+{node2.role}",
+                    outcomes=outcomes_snapshot, commit=False,
                 )
-                self.add_relation(
-                    w1, w2, _adj_rtype,
-                    strength=0.3, confidence=0.25,
-                    knowledge_source="adjacency",
-                    selection_signature=_adj_sig,
-                )
+                pending.append((w1, w2, _adj_rtype, _adj_sig, 0.3, 0.25, "adjacency"))
+
+        # Pass 2 -- commit usage once per pending selection, then create the
+        # relations, now that every pair in this occurrence has been scored.
+        for _, _, rtype, rtype_sig, _, _, _ in pending:
+            self.commit_relation_type_usage(rtype, rtype_sig)
+        for w1, w2, rtype, rtype_sig, strength, confidence, ksrc in pending:
+            self.add_relation(
+                w1, w2, rtype,
+                strength=strength, confidence=confidence,
+                knowledge_source=ksrc,
+                selection_signature=rtype_sig,
+            )
 
     def infer_taxonomy_from_definitions(self, word: str):
         """

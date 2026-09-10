@@ -33,8 +33,32 @@ import signal
 import random
 import datetime
 import subprocess
+import threading
 from pathlib import Path
 from typing import Dict, Any, Optional, List
+
+# AURORA DIRECTIVE (Phase 4): this daemon's own run() loop and aurora_acm_
+# bridge.py's tick-triggered threads both call _run_dream_burst() on
+# independent schedules, in the same process, against fixed shared file
+# paths (see that function's own comment at its projection-write site).
+# Reused, not reinvented: PERSISTENCE_LOCK/atomic_write_json already exist
+# for exactly this in aurora_persistence_utils.py and are already the
+# codebase's own convention (aurora.py and a dozen other modules import
+# them the same way).
+from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
+
+# AURORA DIRECTIVE (Phase 4): _run_code_mutation_cycle() is ALSO reachable
+# from both the same two independent schedules, but deliberately does NOT
+# reuse PERSISTENCE_LOCK above -- that lock is shared by many unrelated
+# brief atomic-write callers throughout the process, while one mutation
+# cycle can legitimately run for a long time (function_lineage.rebuild()
+# alone -- see aurora_internal/aurora_universal_function_lineage.py -- is a
+# full-codebase AST rescan measured at 60-150+s in this environment).
+# Holding PERSISTENCE_LOCK for that long would stall every unrelated
+# atomic_write_json() caller in the process for the same duration. A
+# dedicated, non-reentrant lock scoped to exactly this hazard avoids that
+# collateral blocking.
+_CODE_MUTATION_LOCK = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -76,6 +100,103 @@ except Exception as _aurora_boundary_exc:
     _acm_read_axes = None
     _acm_get_axes = None
     _acm_run = None
+
+
+# AURORA DIRECTIVE (Phase 4): aurora_room_notes.json / aurora_room_
+# activity.json are each read-modify-written, unlocked, from ~15 call
+# sites across this file -- the room-operator thread's own _append_note()/
+# _log_activity() (its own local functions further down), PLUS a dozen
+# main-thread sites in _stage_low_resource_evolution_relief,
+# _maybe_consume_low_resource_evolution_relief, _poedex_deliver_tutorial,
+# _poedex_post_study_scan, and _finish_recurring_issue_research. The main-
+# thread sites can't race EACH OTHER (one thread, sequential loop), but
+# every one of them can race the operator thread, which runs as a genuine
+# separate thread in the same process. Consolidated into two shared,
+# locked writers so every call site goes through the same lock instead of
+# needing 15 individually-verified `with lock:` wraps around already-
+# duplicated read-append-truncate-write blocks.
+_ROOM_FILES_LOCK = threading.Lock()
+
+
+def _append_room_note(content: str, note_type: str = "observation",
+                      source: str = "daemon") -> None:
+    """Locked, deduplicated writer for aurora_room_notes.json. Matches the
+    exact shape every prior call site built by hand: ts/ts_str/type/
+    content/source, truncated to the last 200 entries."""
+    notes_path = _STATE_DIR / "aurora_room_notes.json"
+    with _ROOM_FILES_LOCK:
+        notes: List[Dict] = []
+        if notes_path.exists():
+            try:
+                notes = json.loads(notes_path.read_text())
+                if not isinstance(notes, list):
+                    notes = []
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:_append_room_note",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_append_room_note", "source_file": "aurora_daemon.py"},
+                )
+                notes = []
+        notes.append({
+            "ts":      time.time(),
+            "ts_str":  time.strftime("%Y-%m-%d %H:%M:%S"),
+            "type":    note_type,
+            "content": content,
+            "source":  source,
+        })
+        try:
+            notes_path.write_text(json.dumps(notes[-200:], indent=2))
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:_append_room_note.write",
+                exc=_aurora_boundary_exc,
+                context={"function": "_append_room_note", "source_file": "aurora_daemon.py"},
+            )
+
+
+def _append_room_activity(action: str, detail: str, *, category: str = "action") -> None:
+    """Locked, deduplicated writer for aurora_room_activity.json. Matches
+    the exact shape every prior call site built by hand: ts/ts_str/
+    action/detail/category, truncated to the last 500 entries."""
+    activity_path = _STATE_DIR / "aurora_room_activity.json"
+    with _ROOM_FILES_LOCK:
+        activity: List[Dict] = []
+        if activity_path.exists():
+            try:
+                activity = json.loads(activity_path.read_text())
+                if not isinstance(activity, list):
+                    activity = []
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:_append_room_activity",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_append_room_activity", "source_file": "aurora_daemon.py"},
+                )
+                activity = []
+        activity.append({
+            "ts":       time.time(),
+            "ts_str":   time.strftime("%H:%M:%S"),
+            "action":   action,
+            "detail":   detail,
+            "category": category,
+        })
+        try:
+            activity_path.write_text(json.dumps(activity[-500:], indent=2))
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_daemon.py:_append_room_activity.write",
+                exc=_aurora_boundary_exc,
+                context={"function": "_append_room_activity", "source_file": "aurora_daemon.py"},
+            )
 
 
 def _resolve_oets_web_paths() -> List[Path]:
@@ -2557,11 +2678,11 @@ def _stage_low_resource_evolution_relief(
 
     should_announce = (not same_signature) or (now_ts - float(prev.get("generated_at", 0.0) or 0.0) >= 900)
     if should_announce:
-        note_entry = {
-            "ts": now_ts,
-            "ts_str": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "type": "evolution_relief",
-            "content": (
+        # AURORA DIRECTIVE (Phase 4): routed through the shared, locked
+        # _append_room_note()/_append_room_activity() -- see their own
+        # comment near _ROOM_FILES_LOCK's declaration.
+        _append_room_note(
+            content=(
                 "LOW-RESOURCE EVOLUTION RELIEF\n\n"
                 f"Blocked tasks: {', '.join(blocked_tasks)}\n"
                 f"Reason: {reason}\n"
@@ -2570,44 +2691,13 @@ def _stage_low_resource_evolution_relief(
                 f"Next prompt: {top_prompt}\n\n"
                 f"Poedex question:\n{poedex_question}"
             ),
-            "source": "daemon_evolution_relief",
-        }
-        try:
-            notes = json.loads(notes_path.read_text()) if notes_path.exists() else []
-            if not isinstance(notes, list):
-                notes = []
-            notes.append(note_entry)
-            notes_path.write_text(json.dumps(notes[-200:], indent=2))
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_daemon.py:2105",
-                exc=_aurora_boundary_exc,
-                context={"function": "_stage_low_resource_evolution_relief", "handler_line": 2105, "source_file": "aurora_daemon.py"},
-            )
-            pass
-        try:
-            activity = json.loads(activity_path.read_text()) if activity_path.exists() else []
-            if not isinstance(activity, list):
-                activity = []
-            activity.append({
-                "ts": now_ts,
-                "ts_str": time.strftime("%H:%M:%S"),
-                "action": "low-resource evolution relief",
-                "detail": f"{task_name} blocked by {reason} -> {payload['selected_operator']}",
-                "category": "action",
-            })
-            activity_path.write_text(json.dumps(activity[-500:], indent=2))
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_daemon.py:2119",
-                exc=_aurora_boundary_exc,
-                context={"function": "_stage_low_resource_evolution_relief", "handler_line": 2119, "source_file": "aurora_daemon.py"},
-            )
-            pass
+            note_type="evolution_relief",
+            source="daemon_evolution_relief",
+        )
+        _append_room_activity(
+            action="low-resource evolution relief",
+            detail=f"{task_name} blocked by {reason} -> {payload['selected_operator']}",
+        )
 
     systems["_low_resource_evolution_relief"] = payload
     _log(
@@ -2822,55 +2912,25 @@ def _maybe_consume_low_resource_evolution_relief(
         plan["updated_at"] = result_ts
         plan["updated_at_str"] = result_ts_str
         _persist(plan)
-        try:
-            notes = json.loads(notes_path.read_text()) if notes_path.exists() else []
-            if not isinstance(notes, list):
-                notes = []
-            notes.append({
-                "ts": result_ts,
-                "ts_str": result_ts_str,
-                "type": "evolution_relief_research",
-                "content": (
-                    "LOW-RESOURCE EVOLUTION HANDOFF\n\n"
-                    f"Blocked tasks: {', '.join(str(t) for t in (plan.get('blocked_tasks') or []) if str(t)) or 'mutation'}\n"
-                    f"Reason: {plan.get('reason', '?')}\n"
-                    f"Preferred operator: {plan.get('selected_operator', '--')}\n"
-                    "Handoff status: local fallback\n\n"
-                    f"{local_result}"
-                ),
-                "source": "daemon_evolution_relief_fallback",
-            })
-            notes_path.write_text(json.dumps(notes[-200:], indent=2))
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_daemon.py:2319",
-                exc=_aurora_boundary_exc,
-                context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2319, "source_file": "aurora_daemon.py"},
-            )
-            pass
-        try:
-            activity = json.loads(activity_path.read_text()) if activity_path.exists() else []
-            if not isinstance(activity, list):
-                activity = []
-            activity.append({
-                "ts": result_ts,
-                "ts_str": time.strftime("%H:%M:%S"),
-                "action": "evolution relief local fallback",
-                "detail": excerpt or str(plan.get("selected_operator", "--") or "--"),
-                "category": "change",
-            })
-            activity_path.write_text(json.dumps(activity[-500:], indent=2))
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_daemon.py:2333",
-                exc=_aurora_boundary_exc,
-                context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2333, "source_file": "aurora_daemon.py"},
-            )
-            pass
+        # AURORA DIRECTIVE (Phase 4): shared, locked writers -- see
+        # _ROOM_FILES_LOCK's own comment.
+        _append_room_note(
+            content=(
+                "LOW-RESOURCE EVOLUTION HANDOFF\n\n"
+                f"Blocked tasks: {', '.join(str(t) for t in (plan.get('blocked_tasks') or []) if str(t)) or 'mutation'}\n"
+                f"Reason: {plan.get('reason', '?')}\n"
+                f"Preferred operator: {plan.get('selected_operator', '--')}\n"
+                "Handoff status: local fallback\n\n"
+                f"{local_result}"
+            ),
+            note_type="evolution_relief_research",
+            source="daemon_evolution_relief_fallback",
+        )
+        _append_room_activity(
+            action="evolution relief local fallback",
+            detail=excerpt or str(plan.get("selected_operator", "--") or "--"),
+            category="change",
+        )
         _log("  [RELIEF] Staged evolution handoff fell back to local relief guidance.")
         return True
 
@@ -2906,11 +2966,10 @@ def _maybe_consume_low_resource_evolution_relief(
     if should_announce:
         blocked_tasks = ", ".join(str(t) for t in (plan.get("blocked_tasks") or []) if str(t)) or "mutation"
         _exec_op = parsed_params["operator"] or plan.get("selected_operator", "--")
-        note_entry = {
-            "ts": result_ts,
-            "ts_str": result_ts_str,
-            "type": "evolution_relief_research",
-            "content": (
+        # AURORA DIRECTIVE (Phase 4): shared, locked writers -- see
+        # _ROOM_FILES_LOCK's own comment.
+        _append_room_note(
+            content=(
                 "LOW-RESOURCE EVOLUTION HANDOFF\n\n"
                 f"Blocked tasks: {blocked_tasks}\n"
                 f"Reason: {plan.get('reason', '?')}\n"
@@ -2921,44 +2980,13 @@ def _maybe_consume_low_resource_evolution_relief(
                 "Poedex Researcher returned:\n"
                 f"{result[:4000]}"
             ),
-            "source": "daemon_evolution_relief_handoff",
-        }
-        try:
-            notes = json.loads(notes_path.read_text()) if notes_path.exists() else []
-            if not isinstance(notes, list):
-                notes = []
-            notes.append(note_entry)
-            notes_path.write_text(json.dumps(notes[-200:], indent=2))
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_daemon.py:2393",
-                exc=_aurora_boundary_exc,
-                context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2393, "source_file": "aurora_daemon.py"},
-            )
-            pass
-        try:
-            activity = json.loads(activity_path.read_text()) if activity_path.exists() else []
-            if not isinstance(activity, list):
-                activity = []
-            activity.append({
-                "ts": result_ts,
-                "ts_str": time.strftime("%H:%M:%S"),
-                "action": "evolution relief handoff",
-                "detail": excerpt or str(plan.get("selected_operator", "--") or "--"),
-                "category": "action",
-            })
-            activity_path.write_text(json.dumps(activity[-500:], indent=2))
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora_daemon.py:2407",
-                exc=_aurora_boundary_exc,
-                context={"function": "_maybe_consume_low_resource_evolution_relief", "handler_line": 2407, "source_file": "aurora_daemon.py"},
-            )
-            pass
+            note_type="evolution_relief_research",
+            source="daemon_evolution_relief_handoff",
+        )
+        _append_room_activity(
+            action="evolution relief handoff",
+            detail=excerpt or str(plan.get("selected_operator", "--") or "--"),
+        )
 
     _log(
         "  [RELIEF] Low-resource evolution handoff captured via Poedex "
@@ -3135,6 +3163,28 @@ def _select_discovery_driven_operator() -> str:
 
 
 def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
+    """AURORA DIRECTIVE (Phase 4): serialization wrapper around
+    _run_code_mutation_cycle_impl(). This daemon's own run() loop and
+    aurora_acm_bridge.py's tick-triggered thread both reach this same
+    function, on independent schedules, in the same process -- both write
+    to the same fixed target files (aurora_internal/aurora_evolved_
+    surfaces.py, code_links.json via CodeEvolutionChamber) with no other
+    coordination between them, so a concurrent second invocation could
+    silently lose the first's mutation (both read the same pre-mutation
+    file content, compute independently, and whichever writes last wins).
+    Skips rather than blocks -- see _CODE_MUTATION_LOCK's own comment near
+    the top of this file for why a dedicated non-blocking lock is used
+    here instead of the shared PERSISTENCE_LOCK."""
+    if not _CODE_MUTATION_LOCK.acquire(blocking=False):
+        _log("  [MUTATE] Another mutation cycle is already running in this process — skipping this trigger.")
+        return
+    try:
+        _run_code_mutation_cycle_impl(systems)
+    finally:
+        _CODE_MUTATION_LOCK.release()
+
+
+def _run_code_mutation_cycle_impl(systems: Dict[str, Any]) -> None:
     """
     Apply one autonomous code mutation using accumulated genealogy + adapter hint state.
 
@@ -3143,6 +3193,8 @@ def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
     On success, re-injects gen-2 surfaces so hub metrics update immediately.
 
     Rate-gated: requires at least MIN_LINKS genealogy links before running.
+    Only ever called from _run_code_mutation_cycle() above, which holds
+    _CODE_MUTATION_LOCK for the duration of this call.
     """
     global _code_mutation_op_index
     MIN_LINKS = 50   # don't mutate on a cold chain
@@ -4105,22 +4157,6 @@ def _poedex_deliver_tutorial(systems: Dict[str, Any]) -> None:
 
         _log("  [POEDEX] Delivering tutorial to Aurora's awareness...")
 
-        notes: List[Dict] = []
-        if notes_path.exists():
-            try:
-                notes = json.loads(notes_path.read_text())
-                if not isinstance(notes, list):
-                    notes = []
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:3253",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_poedex_deliver_tutorial", "handler_line": 3253, "source_file": "aurora_daemon.py"},
-                )
-                notes = []
-
         now = time.time()
 
         intro_text = (
@@ -4154,14 +4190,13 @@ def _poedex_deliver_tutorial(systems: Dict[str, Any]) -> None:
 
         full_content = intro_text + "\n".join(demo_results) if demo_results else intro_text
 
-        notes.append({
-            "ts":      now,
-            "ts_str":  time.strftime("%Y-%m-%d %H:%M:%S"),
-            "type":    "discovery",
-            "content": full_content,
-            "source":  "poedex_tutorial",
-        })
-        notes_path.write_text(json.dumps(notes[-200:], indent=2))
+        # AURORA DIRECTIVE (Phase 4): shared, locked writer -- see
+        # _ROOM_FILES_LOCK's own comment.
+        _append_room_note(
+            content=full_content,
+            note_type="discovery",
+            source="poedex_tutorial",
+        )
 
         # Visual-side: operator navigates tabs mentioned in each step,
         # then lands on Notes so Aurora can read what was just written,
@@ -4179,30 +4214,13 @@ def _poedex_deliver_tutorial(systems: Dict[str, Any]) -> None:
         for tab in tab_tour:
             _signal_operator("scan_tab", {"tab": tab})
 
-        # Activity log
-        activity: List[Dict] = []
-        if activity_path.exists():
-            try:
-                activity = json.loads(activity_path.read_text())
-                if not isinstance(activity, list):
-                    activity = []
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:3321",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_poedex_deliver_tutorial", "handler_line": 3321, "source_file": "aurora_daemon.py"},
-                )
-                activity = []
-        activity.append({
-            "ts":       now,
-            "ts_str":   time.strftime("%H:%M:%S"),
-            "action":   "poedex tutorial received",
-            "detail":   f"{len(demo_results)} live lookups, operator touring {len(tab_tour)} tabs",
-            "category": "note",
-        })
-        activity_path.write_text(json.dumps(activity[-500:], indent=2))
+        # AURORA DIRECTIVE (Phase 4): shared, locked writer -- see
+        # _ROOM_FILES_LOCK's own comment.
+        _append_room_activity(
+            action="poedex tutorial received",
+            detail=f"{len(demo_results)} live lookups, operator touring {len(tab_tour)} tabs",
+            category="note",
+        )
 
         # Mark intro done
         intro_done_path.write_text(json.dumps({
@@ -4321,31 +4339,12 @@ def _poedex_post_study_scan(systems: Dict[str, Any]) -> None:
         entries = entries[-500:]
         poedex_log_path.write_text(json.dumps(entries, indent=2))
 
-        # Activity log
-        activity: List[Dict] = []
-        if activity_path.exists():
-            try:
-                activity = json.loads(activity_path.read_text())
-                if not isinstance(activity, list):
-                    activity = []
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:3435",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_poedex_post_study_scan", "handler_line": 3435, "source_file": "aurora_daemon.py"},
-                )
-                activity = []
-        activity.append({
-            "ts":       now_ts,
-            "ts_str":   time.strftime("%H:%M:%S"),
-            "action":   "poedex study scan",
-            "detail":   f"shelf seeded: {', '.join(topics)}",
-            "category": "action",
-        })
-        activity = activity[-500:]
-        activity_path.write_text(json.dumps(activity, indent=2))
+        # AURORA DIRECTIVE (Phase 4): shared, locked writer -- see
+        # _ROOM_FILES_LOCK's own comment.
+        _append_room_activity(
+            action="poedex study scan",
+            detail=f"shelf seeded: {', '.join(topics)}",
+        )
 
         _log(f"  [POEDEX] Study scan complete — shelf seeded: {', '.join(topics)}")
 
@@ -4762,11 +4761,10 @@ def _finish_recurring_issue_research(correlation: Dict[str, Any], result: str) -
         poedex_excerpt=excerpt,
     )
 
-    note_entry = {
-        "ts": now_ts,
-        "ts_str": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "type": "issue_research",
-        "content": (
+    # AURORA DIRECTIVE (Phase 4): shared, locked writers -- see
+    # _ROOM_FILES_LOCK's own comment.
+    _append_room_note(
+        content=(
             "AUTONOMOUS ISSUE RESEARCH\n\n"
             f"Recurring issue: {candidate_dim}\n"
             f"QAO recent events: {qao_recent}\n"
@@ -4774,96 +4772,36 @@ def _finish_recurring_issue_research(correlation: Dict[str, Any], result: str) -
             "Poedex Researcher returned:\n"
             f"{result}"
         ),
-        "source": "daemon_poedex_research",
-    }
-    try:
-        notes = json.loads(notes_path.read_text()) if notes_path.exists() else []
-        if not isinstance(notes, list):
-            notes = []
-        notes.append(note_entry)
-        notes_path.write_text(json.dumps(notes[-200:], indent=2))
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(), module=__name__,
-            operation="exception_handler:aurora_daemon.py:_finish_recurring_issue_research:notes",
-            exc=_aurora_boundary_exc,
-            context={"function": "_finish_recurring_issue_research", "source_file": "aurora_daemon.py"},
-        )
-        pass
-
-    try:
-        activity = json.loads(activity_path.read_text()) if activity_path.exists() else []
-        if not isinstance(activity, list):
-            activity = []
-        activity.append({
-            "ts": now_ts,
-            "ts_str": time.strftime("%H:%M:%S"),
-            "action": "autonomous poedex issue research",
-            "detail": f"{candidate_dim} (qao={qao_recent})",
-            "category": "action",
-        })
-        activity_path.write_text(json.dumps(activity[-500:], indent=2))
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(), module=__name__,
-            operation="exception_handler:aurora_daemon.py:_finish_recurring_issue_research:activity",
-            exc=_aurora_boundary_exc,
-            context={"function": "_finish_recurring_issue_research", "source_file": "aurora_daemon.py"},
-        )
-        pass
+        note_type="issue_research",
+        source="daemon_poedex_research",
+    )
+    _append_room_activity(
+        action="autonomous poedex issue research",
+        detail=f"{candidate_dim} (qao={qao_recent})",
+    )
 
     selected_proposal = _select_autonomous_repair_proposal(signal_issue)
     applied_proposal_id = ""
     if selected_proposal:
         selected_id = str(selected_proposal.get("proposal_id", "") or "")
-        try:
-            activity = json.loads(activity_path.read_text()) if activity_path.exists() else []
-            if not isinstance(activity, list):
-                activity = []
-            activity.append({
-                "ts": now_ts,
-                "ts_str": time.strftime("%H:%M:%S"),
-                "action": "subsurface selected repair proposal",
-                "detail": f"{selected_id} -> {selected_proposal.get('proposed_action') or 'repair overlay'}",
-                "category": "change",
-            })
-            activity_path.write_text(json.dumps(activity[-500:], indent=2))
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(), module=__name__,
-                operation="exception_handler:aurora_daemon.py:_finish_recurring_issue_research:proposal_activity",
-                exc=_aurora_boundary_exc,
-                context={"function": "_finish_recurring_issue_research", "source_file": "aurora_daemon.py"},
-            )
-            pass
+        _append_room_activity(
+            action="subsurface selected repair proposal",
+            detail=f"{selected_id} -> {selected_proposal.get('proposed_action') or 'repair overlay'}",
+            category="change",
+        )
         if _apply_autonomous_repair_proposal(selected_proposal):
             applied_proposal_id = selected_id
-            try:
-                notes = json.loads(notes_path.read_text()) if notes_path.exists() else []
-                if not isinstance(notes, list):
-                    notes = []
-                notes.append({
-                    "ts": time.time(),
-                    "ts_str": time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "type": "issue_repair_applied",
-                    "content": (
-                        "AUTONOMOUS ISSUE REPAIR\n\n"
-                        f"Recurring issue: {signal_issue}\n"
-                        f"Applied proposal: {selected_id}\n"
-                        f"Action: {selected_proposal.get('proposed_action')}\n"
-                        f"Hint: {selected_proposal.get('code_hint')}\n"
-                    ),
-                    "source": "daemon_quasiarch_enforcer",
-                })
-                notes_path.write_text(json.dumps(notes[-200:], indent=2))
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(), module=__name__,
-                    operation="exception_handler:aurora_daemon.py:_finish_recurring_issue_research:repair_notes",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_finish_recurring_issue_research", "source_file": "aurora_daemon.py"},
-                )
-                pass
+            _append_room_note(
+                content=(
+                    "AUTONOMOUS ISSUE REPAIR\n\n"
+                    f"Recurring issue: {signal_issue}\n"
+                    f"Applied proposal: {selected_id}\n"
+                    f"Action: {selected_proposal.get('proposed_action')}\n"
+                    f"Hint: {selected_proposal.get('code_hint')}\n"
+                ),
+                note_type="issue_repair_applied",
+                source="daemon_quasiarch_enforcer",
+            )
             _write_subsurface_repair_signal(
                 "enforce",
                 issue=signal_issue,
@@ -5093,32 +5031,45 @@ def _run_dream_burst(systems: Dict[str, Any]) -> None:
     # subsurface learned while sleeping.
     try:
         _proj_path = _SUBSURFACE_PROJECTION
-        _proj_now: Dict[str, Any] = {}
-        if _proj_path.exists():
-            try:
-                _proj_now = dict(json.loads(_proj_path.read_text()) or {})
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:3858",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_run_dream_burst", "handler_line": 3858, "source_file": "aurora_daemon.py"},
-                )
-                _proj_now = {}
-        _oets_growth = max(0, _dream_oets_after - _dream_oets_before)
-        _insight_summary = (
-            "; ".join(_dream_lessons) if _dream_lessons
-            else "dream consolidation completed"
-        )
-        _proj_now["dream_completed"] = True
-        _proj_now["dream_completed_at"] = time.time()
-        _proj_now["dream_insights"] = _insight_summary
-        _proj_now["oets_growth"] = _oets_growth
-        tmp = str(_proj_path) + ".tmp"
-        with open(tmp, "w") as _f:
-            json.dump(_proj_now, _f, indent=2)
-        os.replace(tmp, str(_proj_path))
+        # AURORA DIRECTIVE (Phase 4): this file is written from TWO
+        # independent schedules in the same process -- this daemon's own
+        # run() loop (below _TICK_DREAM/_governed_decision gating) AND
+        # aurora_acm_bridge.py's tick-triggered threads (_trigger_fn ->
+        # threading.Thread(target=_run_dream_burst, ...)) -- with no
+        # shared in-memory state between them (each boots its own
+        # `systems` via its own boot_aurora() call), so the ONLY thing
+        # that can corrupt a concurrent write is exactly this file. The
+        # read-modify-write must be one atomic critical section, not just
+        # the write: two threads racing past an unlocked read would each
+        # modify their own stale copy and the second write silently loses
+        # the first's update, regardless of how atomic the write itself
+        # is. PERSISTENCE_LOCK/atomic_write_json are the codebase's own
+        # existing convention for this (aurora_persistence_utils.py),
+        # reused here rather than inventing new locking.
+        with PERSISTENCE_LOCK:
+            _proj_now: Dict[str, Any] = {}
+            if _proj_path.exists():
+                try:
+                    _proj_now = dict(json.loads(_proj_path.read_text()) or {})
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora_daemon.py:3858",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "_run_dream_burst", "handler_line": 3858, "source_file": "aurora_daemon.py"},
+                    )
+                    _proj_now = {}
+            _oets_growth = max(0, _dream_oets_after - _dream_oets_before)
+            _insight_summary = (
+                "; ".join(_dream_lessons) if _dream_lessons
+                else "dream consolidation completed"
+            )
+            _proj_now["dream_completed"] = True
+            _proj_now["dream_completed_at"] = time.time()
+            _proj_now["dream_insights"] = _insight_summary
+            _proj_now["oets_growth"] = _oets_growth
+            atomic_write_json(_proj_path, _proj_now)
         _log(f"  [DREAM] Projection updated: {len(_dream_lessons)} lesson(s), {_oets_growth} OETS growth.")
     except Exception as _de:
         _aurora_record_exception_from_locals(
@@ -6269,56 +6220,19 @@ def _room_operator_thread() -> None:
     notes_path    = _STATE_DIR / "aurora_room_notes.json"
     activity_path = _STATE_DIR / "aurora_room_activity.json"
 
+    # AURORA DIRECTIVE (Phase 4): delegate to the shared, locked writers --
+    # see _ROOM_FILES_LOCK's own comment. This thread's own inline
+    # read-append-truncate-write (identical in shape to the dozen main-
+    # thread call sites elsewhere in this file, and racing exactly those)
+    # is exactly the hazard that lock exists to close; every caller below
+    # (_do_boot_tour, _do_post_study_visit, _do_idle_scan, ...) keeps
+    # calling _append_note()/_log_activity() by the same name, unchanged.
     def _append_note(content: str, note_type: str = "observation",
                      source: str = "room_operator") -> None:
-        notes: List[Dict] = []
-        if notes_path.exists():
-            try:
-                notes = json.loads(notes_path.read_text())
-                if not isinstance(notes, list):
-                    notes = []
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:4730",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_append_note", "handler_line": 4730, "source_file": "aurora_daemon.py"},
-                )
-                pass
-        notes.append({
-            "ts":      time.time(),
-            "ts_str":  time.strftime("%Y-%m-%d %H:%M:%S"),
-            "type":    note_type,
-            "content": content,
-            "source":  source,
-        })
-        notes_path.write_text(json.dumps(notes[-200:], indent=2))
+        _append_room_note(content=content, note_type=note_type, source=source)
 
     def _log_activity(action: str, detail: str) -> None:
-        activity: List[Dict] = []
-        if activity_path.exists():
-            try:
-                activity = json.loads(activity_path.read_text())
-                if not isinstance(activity, list):
-                    activity = []
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_daemon.py:4748",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_log_activity", "handler_line": 4748, "source_file": "aurora_daemon.py"},
-                )
-                pass
-        activity.append({
-            "ts":       time.time(),
-            "ts_str":   time.strftime("%H:%M:%S"),
-            "action":   action,
-            "detail":   detail,
-            "category": "operator",
-        })
-        activity_path.write_text(json.dumps(activity[-500:], indent=2))
+        _append_room_activity(action=action, detail=detail, category="operator")
 
     def _do_boot_tour() -> None:
         """Navigate every tab, screenshot and OCR it, write a note of what she saw."""
