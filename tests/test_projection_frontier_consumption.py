@@ -172,6 +172,43 @@ def test_live_frontier_extracts_only_explicit_real_ref_fields():
     assert found == [ref]
 
 
+def test_live_candidate_selects_one_projection_for_unambiguous_causal_credit(monkeypatch):
+    ref_x = RepresentationalRef.for_c1("X", "MAGNITUDE", "A").encode()
+    ref_t = RepresentationalRef.for_c1("T", "POLARITY", "A").encode()
+
+    def fake_peek(_systems, encoded, **kwargs):
+        axis = "T" if encoded == ref_t else "X"
+        return {
+            "base_ref": encoded,
+            "current_ref": encoded,
+            "projected_ref": encoded + f"::{axis}",
+            "projection_id": f"projection_{axis}",
+            "pressure_perspective": [axis],
+            "exposed_fields": {"sub_law_c": axis},
+            "observed": False,
+        }
+
+    monkeypatch.setattr(rr, "peek_projection_for_ref", fake_peek)
+    predictive_frame = {
+        "pressure_perspective": ["T"],
+        "left": {"representational_ref": ref_x},
+        "right": {"representational_ref": ref_t},
+    }
+    contexts, views = frontier._projection_contexts_for_candidate(
+        {},
+        SimpleNamespace(memory_signal=None, sensory_signal=None),
+        predictive_frame,
+        [],
+        "candidate",
+        12,
+    )
+
+    assert len(contexts) == 1
+    assert len(views) == 1
+    assert views[0]["projection_id"] == "projection_T"
+    assert views[0]["candidate_axis_overlap"] == 1.0
+
+
 def test_actuality_commit_uses_only_selected_projection_views(monkeypatch):
     selected_view = {
         "base_ref": _coarse().encode(),
