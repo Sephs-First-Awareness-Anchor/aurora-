@@ -702,3 +702,156 @@ def test_lexical_contributor_captured_once_and_outcome_never_double_credited():
     assert result2["recorded"] is True
     matching_evidence_after = [e for e in candidate.evidence if e.get("evidence_id") == entry["evidence_id"]]
     assert len(matching_evidence_after) == 1
+
+
+# ---------------------------------------------------------------------------
+# Representation-conservation test (directive section 7): a turn containing
+# multiple participants and an alternative, plus an exclusion/contrast,
+# must have those distinctions survive semantic continuity -> RCRW ->
+# PropositionFrame projection -- through the REAL live-turn functions, not
+# isolated unit calls on each stage.
+# ---------------------------------------------------------------------------
+
+def test_multi_participant_alternative_and_exclusion_survive_the_real_pipeline():
+    import tempfile
+    from types import SimpleNamespace
+    import aurora
+    from aurora_internal.aurora_constraint_semantic_continuity import (
+        derive_constraint_semantic_state,
+    )
+    from aurora_internal.aurora_recursive_causal_reasoning_waveform import (
+        AuroraRecursiveCausalReasoningWaveform,
+    )
+    from aurora_internal.aurora_proposition_frame import build_frame
+
+    # Real utterance carrying THREE distinctions at once: two participants
+    # (engineer / researcher) in an alternative relation, and an exclusion
+    # ("without shortcuts") contrasting against the asserted action.
+    text = "the engineer or the researcher fixed it but without shortcuts"
+    relational_form = extract_relational_form(text, feed_lexical_grounding=False)
+    assert relational_form["alternatives"], "the parse itself must carry the alternative"
+    assert any(c.get("exclusion") for c in relational_form["clauses"]), (
+        "the parse itself must carry the tagged exclusion clause"
+    )
+
+    axis_activation = {"X": 0.2, "T": 0.2, "N": 0.2, "B": 0.2, "A": 0.2}
+    semantic_state = derive_constraint_semantic_state(relational_form, axis_activation=axis_activation)
+    assert semantic_state["relational_form"]["alternatives"] == relational_form["alternatives"]
+
+    with tempfile.TemporaryDirectory() as td:
+        # A REAL RCRW instance -- not a spy -- exercising its actual
+        # backprojection logic (_backproject -> bind_referential_continuity
+        # -> derive_constraint_semantic_state), not a stand-in.
+        rcrw = AuroraRecursiveCausalReasoningWaveform(state_dir=td, persist=False)
+        systems = {"recursive_causal_waveform": rcrw, "genealogy": None, "state_dir": td}
+        state = SimpleNamespace(
+            relational_form=relational_form,
+            axis_activation=dict(axis_activation),
+            dominant_axis="N",
+            pipeline_state={},
+            referent_map={},
+            claim_resolution={},
+            meaning_forms=[],
+            constraint_semantic_state={},
+            genealogy_trace={},
+            noncomp_input_state={},
+            parsed={},
+            surface_reactive_emotion={},
+            deep_emotional_state={"dominant": "calm"},
+            emotional_state={"dominant": "calm"},
+        )
+
+        # Real live-turn function, the actual up-chain stage that calls
+        # RCRW's prepare_semantic_state() (directive 3.2's wiring).
+        aurora._chain_up3_purpose(text, systems, state)
+
+        assert state.relational_form.get("alternatives") == relational_form["alternatives"], (
+            "the alternative did not survive RCRW's real backprojection"
+        )
+        post_rcrw_clauses = state.relational_form.get("clauses") or []
+        assert any(c.get("exclusion") for c in post_rcrw_clauses), (
+            "the exclusion clause did not survive RCRW's real backprojection"
+        )
+
+        # PropositionFrame projection (directive 3.10): the compact frame
+        # may narrow subject/relation/obj, but must link back to the full
+        # source representation carrying what it couldn't compact.
+        systems["_active_turn_state"] = state
+        frame = build_frame(systems, state)
+        assert frame is not None
+        assert frame.source_representation.get("alternatives") == relational_form["alternatives"], (
+            "PropositionFrame's source_representation lost the alternative"
+        )
+        frame_clauses = frame.source_representation.get("clauses") or []
+        assert any(c.get("exclusion") for c in frame_clauses), (
+            "PropositionFrame's source_representation lost the exclusion clause"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Lexical teaching regression, full loop (directive section 7): teach a
+# novel token, prove it becomes the lexical developmental target with real
+# evidence IDs attributed to the emitted response, and that the receiver's
+# next-turn outcome closes that exact evidence through the REAL live-turn
+# fan-out (_finalize_validated_communication), not a manual call.
+# ---------------------------------------------------------------------------
+
+def test_taught_word_evidence_closes_through_the_real_receiver_fan_out():
+    import aurora
+    from aurora_internal.aurora_lexical_grounding import AuroraLexicalGrounding
+
+    lex = AuroraLexicalGrounding(state_dir=tempfile.mkdtemp(), persist=False)
+    # Teaching utterance with similarity ("is like") plus a contrastive/
+    # missing property ("but without") -- the exact shape directive 3.5/3.11
+    # target, using a synthetic novel token (never a real vocabulary map).
+    teaching_text = "florbin is like patience but without waiting"
+    form = extract_relational_form(teaching_text, feed_lexical_grounding=False)
+    for _ in range(3):
+        lex.observe_lexical_context(word="florbin", relational_form=form, provenance="taught")
+
+    candidate = next((c for c in lex._candidates.values() if c.word == "florbin"), None)
+    assert candidate is not None, "the taught token itself must become a lexical developmental target"
+    evidence_before = [dict(e) for e in candidate.evidence]
+    assert evidence_before and all(not e.get("validated") for e in evidence_before)
+
+    # Turn 1: the response gets built with this evidence attributed to it.
+    systems = {"lexical_grounding": lex}
+    contributors = aurora._build_communication_contributors(systems)
+    lexical_trace = contributors.get("lexical_grounding")
+    assert lexical_trace, "the emitted response must carry the real evidence_id(s), not a generic label"
+
+    pending = {
+        "response_id": "resp:florbin:1",
+        "summary": "florbin is like patience but without waiting",
+        "contributors": contributors,
+    }
+    understanding_observation = {
+        "validated_response": pending,
+        "accuracy": {"label": "confirmed", "score": 0.9},
+    }
+
+    # Turn 2: the REAL receiver-outcome fan-out -- not a manual
+    # record_evidence_outcome() call -- routes the outcome to this exact
+    # candidate/evidence pair.
+    finalized = aurora._finalize_validated_communication(
+        systems, understanding_observation, "yes, exactly that", session_id="s1", turn_tick=1,
+    )
+    assert finalized.get("outcome_kind") == "positive"
+    assert finalized.get("lexical_grounding") == [True]
+
+    evidence_after = candidate.evidence
+    touched_ids = {e["evidence_id"] for e in lexical_trace}
+    for entry in evidence_after:
+        if entry["evidence_id"] in touched_ids:
+            assert entry["validated"] is True
+            assert entry["outcome_kind"] == "positive"
+
+    # Later use changes only after validated evidence: a second, unrelated
+    # observation must not retroactively validate itself just because an
+    # earlier one was confirmed.
+    lex.observe_lexical_context(word="florbin", relational_form=form, provenance="taught")
+    newest = max(candidate.evidence, key=lambda e: e.get("evidence_id", ""))
+    # The newest observation is unvalidated on arrival -- validation is
+    # never granted automatically from a sibling's prior consequence.
+    if newest["evidence_id"] not in touched_ids:
+        assert not newest.get("validated")
