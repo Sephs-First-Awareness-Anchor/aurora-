@@ -3743,6 +3743,8 @@ class AxisProjector:
         #     promoted links right now (developmental momentum, already 0–1 normalized).
         relief_vec: Dict[str, float] = {"X": 0.0, "T": 0.0, "N": 0.0, "B": 0.0, "A": 0.0}
         genealogy = systems.get("genealogy")
+        if not genealogy:
+            _report_missing_required_organ(systems, "genealogy", operation="pressure_orientation")
         if genealogy:
             try:
                 if hasattr(genealogy, "pressure_orientation"):
@@ -5927,6 +5929,8 @@ def _sediment_validated_fact(systems, claims, user_text: str) -> int:
         perception = systems.get("perception")
         oets = getattr(perception, "oets", None)
         gen = systems.get("genealogy") or systems.get("constraint_genealogy")
+        if gen is None:
+            _report_missing_required_organ(systems, "genealogy", operation="_sediment_validated_fact")
         for claim in list(claims)[:4]:
             if not isinstance(claim, dict):
                 continue
@@ -9155,6 +9159,8 @@ def _generate_perspective_from_core(
             if _latt and hasattr(_latt, "heat_status"):
                 _hs = _latt.heat_status() or {}
                 _heat_score = float(_hs.get("score", 0.0) or 0.0)
+            elif not _latt:
+                _report_missing_required_organ(systems, "lattice", operation="heat_status")
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -9173,6 +9179,8 @@ def _generate_perspective_from_core(
                 _po = _gen.pressure_orientation() or {}
                 if _po:
                     _orient = max(_po, key=lambda k: abs(float(_po[k]) - 1.0), default="")
+            elif not _gen:
+                _report_missing_required_organ(systems, "genealogy", operation="pressure_orientation")
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -9495,8 +9503,14 @@ def _format_arithmetic_number(value: float) -> str:
     return f"{value:.6f}".rstrip("0").rstrip(".")
 
 
-def _answer_simple_arithmetic(text: str) -> str:
-    """Answer small spoken arithmetic probes before semantic fallback can echo them."""
+def _parse_simple_arithmetic_operands(text: str) -> Optional[Tuple[float, str, float, Optional[float]]]:
+    """Shared parse step for _answer_simple_arithmetic() and the
+    operational-synthesis lived-example feed below -- one regex, two
+    consumers, so the structured (left, symbol, right, result) a real
+    arithmetic turn represents is available without re-deriving it or
+    letting the two drift apart. Returns None when the text isn't
+    arithmetic; result is None only for the division-by-zero case (a
+    real answer text still exists for that, just no defined result)."""
     raw = _strip_surface_invocation_prefix(text)
     low = raw.lower().replace("×", "*").replace("÷", "/")
     low = re.sub(r"\bwhat(?:\s+is|'s|s)?\b", " ", low)
@@ -9509,28 +9523,89 @@ def _answer_simple_arithmetic(text: str) -> str:
         re.IGNORECASE,
     )
     if not match:
-        return ""
+        return None
     left = float(match.group(1))
     op = match.group(2).lower().strip()
     right = float(match.group(3))
     if op in {"+", "plus"}:
-        result = left + right
-        symbol = "+"
-    elif op in {"-", "minus"}:
-        result = left - right
-        symbol = "-"
-    elif op in {"*", "x", "times", "multiplied by"}:
-        result = left * right
-        symbol = "*"
-    else:
-        if abs(right) < 1e-12:
-            return "I can't divide by zero."
-        result = left / right
-        symbol = "/"
+        return left, "+", right, left + right
+    if op in {"-", "minus"}:
+        return left, "-", right, left - right
+    if op in {"*", "x", "times", "multiplied by"}:
+        return left, "*", right, left * right
+    if abs(right) < 1e-12:
+        return left, "/", right, None
+    return left, "/", right, left / right
+
+
+def _answer_simple_arithmetic(text: str) -> str:
+    """Answer small spoken arithmetic probes before semantic fallback can echo them."""
+    parsed = _parse_simple_arithmetic_operands(text)
+    if parsed is None:
+        return ""
+    left, symbol, right, result = parsed
+    if result is None:
+        return "I can't divide by zero."
     return (
         f"{_format_arithmetic_number(left)} {symbol} "
         f"{_format_arithmetic_number(right)} is {_format_arithmetic_number(result)}."
     )
+
+
+def _feed_arithmetic_lived_experience(text: str, systems: Dict[str, Any]) -> None:
+    """Directive 3.15/3.16: AuroraOperationalSynthesisChamber and
+    AuroraGeneralExecutionFoundry are both mounted and WARP-registered at
+    boot (aurora.py's boot_aurora), and aurora_operational_synthesis.py
+    already provides a universal discovery seam, submit_lived_experience(),
+    specifically built to forward one real (input, expected_output) pair
+    to every present chamber sharing the observe_example() signature --
+    but per that function's own docstring it had exactly one caller
+    anywhere in the codebase (aurora_dream_trainer.py, offline, hand-wired
+    to operational_synthesis only), confirmed via full-repo search. Live
+    turns never called it at all.
+
+    Scalar arithmetic is the one live-turn signal that genuinely,
+    structurally matches operational_synthesis's own declared substrate
+    ("scalar arithmetic over selected values", its module docstring's
+    first supported family) without inventing a new contract: real
+    (left, operator, right) -> result examples occur naturally every time
+    a user asks Aurora simple arithmetic, already answered independently
+    by _answer_simple_arithmetic above. Routing it through the existing
+    universal seam (rather than calling operational_synthesis directly)
+    means general_execution_foundry -- built to expand on exactly this
+    kind of task once the narrower chamber's primitives fall short --
+    receives the same real evidence too, exactly as the seam was designed
+    to do. Strictly additive: never changes the delivered answer, only
+    lets each chamber independently test whether it can learn the
+    operation Aurora already performs natively. Best-effort and silent on
+    failure."""
+    if not isinstance(systems, dict):
+        return
+    if systems.get("operational_synthesis") is None and systems.get("general_execution_foundry") is None:
+        return
+    parsed = _parse_simple_arithmetic_operands(text)
+    if parsed is None or parsed[3] is None:
+        return
+    left, symbol, right, result = parsed
+    try:
+        from aurora_internal.aurora_operational_synthesis import submit_lived_experience
+        submit_lived_experience(
+            systems,
+            f"OPTASK:arithmetic:{symbol}",
+            {"left": left, "op": symbol, "right": right},
+            result,
+            source="live_turn_arithmetic",
+            need_description=f"scalar arithmetic ({symbol}) over two selected values",
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_feed_arithmetic_lived_experience",
+            exc=_aurora_boundary_exc,
+            context={"function": "_feed_arithmetic_lived_experience", "source_file": "aurora.py"},
+        )
+        pass
 
 
 def _answer_current_date_question(text: str) -> str:
@@ -18199,6 +18274,49 @@ def _log_claim_resolution_relief(
         pass
 
 
+# Communication Architecture Repair Directive 3.22: several required-tier
+# developmental organs (per the mobile health surface's own
+# _MOBILE_HEALTH_DEGRADED classification -- genealogy, dimensional,
+# sensory_crystal, recursive_causal_waveform, sedimemory, lattice) are
+# read via a bare `if systems.get(key):` guard at live boundaries with a
+# silent neutral-default fallback and no fault recorded on the missing
+# branch -- confirmed at aurora.py's genealogy-pressure-orientation sites.
+# This organ is truly missing for the rest of the process once boot
+# completes, so recording a fault on every single call (some of these
+# sites run many times per turn) would flood both runtime_faults.jsonl
+# and the native developmental stream with duplicates -- report each
+# organ's absence once per process, the same discipline
+# aurora_developmental_log.record_developmental_event() already uses.
+def _report_missing_required_organ(systems: Dict[str, Any], key: str, *, operation: str) -> None:
+    if not isinstance(systems, dict):
+        return
+    reported = systems.setdefault("_reported_missing_organs", set())
+    if not isinstance(reported, set):
+        reported = set(reported or [])
+        systems["_reported_missing_organs"] = reported
+    if key in reported:
+        return
+    reported.add(key)
+    try:
+        from aurora_internal.aurora_runtime_faults import record_runtime_fault
+        record_runtime_fault(
+            systems,
+            subsystem=key,
+            operation=operation,
+            severity="subsystem_degradation",
+            context={"reason": "required_organ_missing_at_live_boundary"},
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_report_missing_required_organ",
+            exc=_aurora_boundary_exc,
+            context={"function": "_report_missing_required_organ", "source_file": "aurora.py"},
+        )
+        pass
+
+
 # Communication Architecture Repair Directive 3.8: aurora_referent_hypothesis.py
 # and known_fixes_registry.md both already flagged that two call sites gated
 # a constraint-genealogy write on gen.log_relief(axis, magnitude, notes=...)
@@ -20347,7 +20465,10 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
         try:
             with directory.open(nc_name) as m:
                 # Dynamic Channel Resonance
-                env_p = {"pressure": systems.get("dimensional").get_constraint_aggregate()} if systems.get("dimensional") else {"pressure": {}}
+                _dimensional_for_env = systems.get("dimensional")
+                if _dimensional_for_env is None:
+                    _report_missing_required_organ(systems, "dimensional", operation="get_constraint_aggregate")
+                env_p = {"pressure": _dimensional_for_env.get_constraint_aggregate()} if _dimensional_for_env else {"pressure": {}}
                 # Build 711: response Scouts only return specimens. Aurora's
                 # own projection of those specimens may exert turn-local
                 # pressure on manifold selection. Use deviation from the
@@ -25957,6 +26078,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
 
     _arithmetic_answer = _answer_simple_arithmetic(_raw_user_text)
     if _arithmetic_answer:
+        _feed_arithmetic_lived_experience(_raw_user_text, systems)
         return (_arithmetic_answer, "precise", 0.96)
 
     _date_answer = _answer_current_date_question(_raw_user_text)

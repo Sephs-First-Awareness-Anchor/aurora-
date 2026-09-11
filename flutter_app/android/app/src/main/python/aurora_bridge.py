@@ -24,6 +24,7 @@ import sys
 import threading
 import time
 import traceback
+from pathlib import Path
 from typing import Optional
 
 log = logging.getLogger("aurora_bridge")
@@ -1716,8 +1717,8 @@ def _validate_boot(systems: dict) -> tuple:
     The only prior guard was `if _systems is None` — which only catches total
     failure, not silent partial initialisation.
     """
-    fatal    = [k for k in _BOOT_FATAL_SYSTEMS    if not systems.get(k)]
-    degraded = [k for k in _BOOT_DEGRADED_SYSTEMS if not systems.get(k)]
+    fatal    = _classify_missing(_BOOT_FATAL_SYSTEMS, systems)
+    degraded = _classify_missing(_BOOT_DEGRADED_SYSTEMS, systems)
     return fatal, degraded
 
 
@@ -1749,6 +1750,77 @@ _MOBILE_HEALTH_DEGRADED = (
 _MOBILE_HEALTH_OPTIONAL_SYSTEMS_KEYS = ("hardware", "sensory_integration")
 
 
+# Directive 3.21 (Communication Architecture Repair Directive): the checks
+# above -- and _validate_boot()'s identical pattern -- only ever tested
+# bool(systems.get(key)): a dictionary key containing a truthy object.
+# That misses exactly the failure modes the directive names: a detached
+# singleton (an instance that exists but never received the canonical
+# genealogy/warp_field this boot actually installed), an organ pointed at
+# a stale state directory, or one whose declared attach_systems()
+# dependency contract never actually ran. This adds those checks WHERE
+# the organ's own object shape exposes the information needed to make
+# them -- it never assumes an organ is unhealthy for lacking an attribute
+# it was never going to have (a plain sentinel/mock keeps passing exactly
+# as before); it only catches the case where the organ DOES expose e.g.
+# .genealogy and that genealogy is a different, real, non-canonical
+# object than systems["genealogy"].
+def _organ_health_detail(obj, systems: dict) -> bool:
+    if obj is None:
+        return False
+    if not isinstance(systems, dict):
+        return True
+
+    # Canonical genealogy identity: a detached genealogy singleton is
+    # exactly the "exists but wrong" case bool() alone cannot see.
+    canonical_genealogy = systems.get("genealogy")
+    organ_genealogy = getattr(obj, "genealogy", None)
+    if organ_genealogy is not None and canonical_genealogy is not None:
+        if organ_genealogy is not canonical_genealogy:
+            return False
+
+    # Canonical WARP field identity, for organs that hold one directly.
+    canonical_warp = systems.get("warp_field")
+    organ_warp = getattr(obj, "warp_field", None)
+    if organ_warp is not None and canonical_warp is not None:
+        if organ_warp is not canonical_warp:
+            return False
+
+    # Active state directory: an organ tracking its own state_dir must
+    # use the SAME directory this boot is actually using, not a stale
+    # fixture/temp path left over from construction.
+    active_state_dir = systems.get("state_dir")
+    organ_state_dir = getattr(obj, "state_dir", None)
+    if organ_state_dir is not None and active_state_dir:
+        try:
+            if Path(str(organ_state_dir)).resolve() != Path(str(active_state_dir)).resolve():
+                return False
+        except Exception:
+            pass
+
+    # Declared dependency-injection contract: an organ with an
+    # attach_systems() method promises its own .systems gets populated by
+    # it -- an organ that never received that call (attach_systems exists
+    # but .systems is still empty) never actually joined the live boot
+    # graph, even though the bare instance is truthy.
+    if hasattr(obj, "attach_systems") and hasattr(obj, "systems"):
+        if not getattr(obj, "systems", None):
+            return False
+
+    return True
+
+
+def _classify_missing(keys, systems: dict) -> list:
+    """Same truthiness gate as before, PLUS _organ_health_detail() for
+    whichever of these keys' objects expose checkable identity/wiring --
+    a key is "missing" here if it's None OR present-but-detached."""
+    missing = []
+    for key in keys:
+        obj = systems.get(key)
+        if not obj or not _organ_health_detail(obj, systems):
+            missing.append(key)
+    return missing
+
+
 def get_mobile_developmental_health() -> str:
     """Bounded, machine-readable developmental health snapshot for the
     Flutter Hub. Distinguishes "Aurora alive" from "Aurora alive but
@@ -1769,8 +1841,8 @@ def get_mobile_developmental_health() -> str:
     import json as _json
     systems = _systems or {}
 
-    fatal_missing = [k for k in _MOBILE_HEALTH_FATAL if not systems.get(k)]
-    degraded_missing = [k for k in _MOBILE_HEALTH_DEGRADED if not systems.get(k)]
+    fatal_missing = _classify_missing(_MOBILE_HEALTH_FATAL, systems)
+    degraded_missing = _classify_missing(_MOBILE_HEALTH_DEGRADED, systems)
 
     optional_status = {
         # aurora.py never stores anything under "_curiosity_engine" --

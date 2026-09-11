@@ -22,6 +22,18 @@ Covers the confirmed-real repairs made this pass:
   3.20 runtime faults project into the native developmental timeline,
        not only telemetry
 
+Second pass (connecting the pieces originally identified as deferred):
+  3.2  confirmed already fixed in current-main (aurora.py:_chain_up3_purpose
+       calls RCRW's prepare_semantic_state() and its effective_interpretation
+       becomes state.relational_form/axis_activation) -- see
+       tests/test_recursive_causal_reasoning_waveform.py for the live-turn
+       acceptance test, added here since it was missing before
+  3.15/3.16 real live-turn arithmetic examples now reach
+       OperationalSynthesisChamber and GeneralExecutionFoundry through the
+       existing submit_lived_experience() universal discovery seam, which
+       previously had its one production caller only in the offline dream
+       trainer
+
 Per directive instruction (section 7, relational identity regression):
 "Do not use Sunni in the test." Every entity used below is synthetic.
 """
@@ -380,3 +392,102 @@ def test_runtime_fault_projection_never_recurses():
 if __name__ == "__main__":
     import sys
     sys.exit(pytest.main([__file__, "-v"]))
+
+
+# ---------------------------------------------------------------------------
+# 3.15/3.16 -- Live turns reach OperationalSynthesisChamber and
+# GeneralExecutionFoundry through the existing universal discovery seam
+# ---------------------------------------------------------------------------
+
+def test_arithmetic_turn_feeds_both_synthesis_chambers_via_universal_seam():
+    """A full-repo search confirmed observe_experience()/observe_example()
+    had zero live-turn callers for either chamber, and
+    submit_lived_experience()'s only caller anywhere was the offline dream
+    trainer. Real arithmetic turns must now reach both chambers as genuine
+    (input, expected_output) evidence -- never changing the delivered
+    answer, and never raising when a chamber is absent."""
+    import aurora
+    from aurora_internal.aurora_operational_synthesis import AuroraOperationalSynthesisChamber
+    from aurora_internal.aurora_general_execution_foundry import AuroraGeneralExecutionFoundry
+
+    with tempfile.TemporaryDirectory() as td1, tempfile.TemporaryDirectory() as td2:
+        op_synth = AuroraOperationalSynthesisChamber(state_dir=td1, persist=False)
+        foundry = AuroraGeneralExecutionFoundry(state_dir=td2, persist=False)
+        systems = {"operational_synthesis": op_synth, "general_execution_foundry": foundry}
+
+        for a, op, b in [(2, "plus", 3), (10, "plus", 5), (7, "plus", 1), (100, "plus", 1)]:
+            answer = aurora._answer_simple_arithmetic(f"what is {a} {op} {b}?")
+            assert answer  # the delivered answer path is untouched
+            aurora._feed_arithmetic_lived_experience(f"what is {a} {op} {b}?", systems)
+
+        op_status = op_synth.task_status("OPTASK:arithmetic:+")
+        foundry_status = foundry.task_status("OPTASK:arithmetic:+")
+        # Both chambers genuinely processed the evidence (not silently
+        # dropped) -- op_synth's narrower primitive space finds a fitting
+        # candidate; the foundry at minimum records real examples against
+        # the same task, whatever its own classification lands on.
+        assert op_status.get("status") in ("candidate_trial", "warp_trial")
+        assert foundry_status.get("status") != "unknown_task"
+
+
+def test_arithmetic_feed_never_raises_when_chambers_absent_or_division_by_zero():
+    import aurora
+
+    # Neither chamber present.
+    aurora._feed_arithmetic_lived_experience("what is 4 plus 5?", {})
+    aurora._feed_arithmetic_lived_experience("what is 4 plus 5?", {"operational_synthesis": None})
+
+    # Division by zero has no defined result -- must not be fed as if it did.
+    class _SpyChamber:
+        def __init__(self):
+            self.calls = []
+        def observe_example(self, *args, **kwargs):
+            self.calls.append((args, kwargs))
+            return {}
+
+    spy = _SpyChamber()
+    aurora._feed_arithmetic_lived_experience(
+        "what is 4 divided by 0?", {"operational_synthesis": spy},
+    )
+    assert spy.calls == []
+
+    # Non-arithmetic text must not be fed.
+    aurora._feed_arithmetic_lived_experience("who is Wrenfield to you?", {"operational_synthesis": spy})
+    assert spy.calls == []
+
+
+# ---------------------------------------------------------------------------
+# 3.22 -- Fail-soft starvation: required organs now report their absence
+# once, into the native developmental stream, instead of vanishing silently
+# ---------------------------------------------------------------------------
+
+def test_missing_required_organ_reported_once_and_reaches_native_stream():
+    import aurora
+
+    with tempfile.TemporaryDirectory() as td:
+        systems = {"state_dir": td}
+        aurora._report_missing_required_organ(systems, "genealogy", operation="pressure_orientation")
+        aurora._report_missing_required_organ(systems, "genealogy", operation="pressure_orientation")
+        aurora._report_missing_required_organ(systems, "genealogy", operation="pressure_orientation")
+        aurora._report_missing_required_organ(systems, "lattice", operation="heat_status")
+
+        faults_path = Path(td) / "runtime_faults.jsonl"
+        faults = [json.loads(line) for line in faults_path.read_text().splitlines() if line.strip()]
+        # Deduped: 3 identical calls for "genealogy" produce exactly one
+        # record, not three -- a hot per-turn call site must not flood the
+        # ledger just because the organ stays missing for the whole process.
+        genealogy_faults = [f for f in faults if f["subsystem"] == "genealogy"]
+        assert len(genealogy_faults) == 1
+        assert len(faults) == 2  # genealogy + lattice, once each
+
+        dev_path = Path(td) / "developmental_timeline.jsonl"
+        dev_entries = [json.loads(line) for line in dev_path.read_text().splitlines() if line.strip()]
+        assert len(dev_entries) == 2
+        assert {e["subsystem"] for e in dev_entries} == {"genealogy", "lattice"}
+
+
+def test_missing_required_organ_never_raises_on_bad_systems():
+    import aurora
+    # Non-dict systems must be a silent no-op, not a crash.
+    aurora._report_missing_required_organ(None, "genealogy", operation="x")
+    aurora._report_missing_required_organ("not a dict", "genealogy", operation="x")

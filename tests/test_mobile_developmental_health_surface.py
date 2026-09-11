@@ -212,3 +212,151 @@ def test_record_boot_health_never_raises_when_cwd_is_gone(monkeypatch):
 
     payload = json.loads(bridge.record_boot_health())
     assert payload["overall"] in ("healthy", "degraded", "fatal")
+
+
+# ── Directive 3.21: beyond bool(systems.get(key)) ──────────────────────────
+
+class _FakeOrgan:
+    """A truthy stand-in object that can carry the same identity/wiring
+    attributes real organs expose (.genealogy, .warp_field, .state_dir,
+    .attach_systems/.systems), so tests can prove the health check
+    actually inspects them rather than just truthiness."""
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+def test_detached_genealogy_singleton_is_not_reported_healthy(monkeypatch):
+    """A truthy organ whose .genealogy is a DIFFERENT real object than
+    systems['genealogy'] is exactly the detached-singleton case bool()
+    alone cannot see."""
+    bridge = _bridge()
+    canonical_genealogy = object()
+    detached_genealogy = object()
+    systems = _full_systems()
+    systems["genealogy"] = canonical_genealogy
+    systems["recursive_causal_waveform"] = _FakeOrgan(genealogy=detached_genealogy)
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    payload = json.loads(bridge.get_mobile_developmental_health())
+    assert "recursive_causal_waveform" in payload["degraded_missing"]
+    assert payload["overall"] == "degraded"
+
+
+def test_organ_sharing_canonical_genealogy_is_healthy(monkeypatch):
+    """The same organ shape, but genuinely sharing the canonical
+    genealogy object, must NOT be flagged -- proving this isn't just
+    rejecting any organ with a .genealogy attribute."""
+    bridge = _bridge()
+    canonical_genealogy = object()
+    systems = _full_systems()
+    systems["genealogy"] = canonical_genealogy
+    systems["recursive_causal_waveform"] = _FakeOrgan(genealogy=canonical_genealogy)
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    payload = json.loads(bridge.get_mobile_developmental_health())
+    assert "recursive_causal_waveform" not in payload["degraded_missing"]
+    assert payload["overall"] == "healthy"
+
+
+def test_organ_pointed_at_stale_state_dir_is_not_reported_healthy(monkeypatch, tmp_path):
+    bridge = _bridge()
+    active_dir = tmp_path / "active"
+    stale_dir = tmp_path / "stale"
+    active_dir.mkdir()
+    stale_dir.mkdir()
+    systems = _full_systems()
+    systems["state_dir"] = str(active_dir)
+    systems["sensory_crystal"] = _FakeOrgan(state_dir=str(stale_dir))
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    payload = json.loads(bridge.get_mobile_developmental_health())
+    assert "sensory_crystal" in payload["degraded_missing"]
+
+
+def test_organ_using_the_active_state_dir_is_healthy(monkeypatch, tmp_path):
+    bridge = _bridge()
+    systems = _full_systems()
+    systems["state_dir"] = str(tmp_path)
+    systems["sensory_crystal"] = _FakeOrgan(state_dir=str(tmp_path))
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    payload = json.loads(bridge.get_mobile_developmental_health())
+    assert "sensory_crystal" not in payload["degraded_missing"]
+
+
+def test_organ_with_attach_systems_never_called_is_not_reported_healthy(monkeypatch):
+    """An organ that declares an attach_systems() dependency contract but
+    whose .systems is still empty never actually joined the live boot
+    graph, even though the bare instance is truthy."""
+    bridge = _bridge()
+
+    class _UnattachedOrgan:
+        def __init__(self):
+            self.systems = {}
+        def attach_systems(self, systems):
+            self.systems = dict(systems)
+
+    systems = _full_systems()
+    systems["dimensional"] = _UnattachedOrgan()  # attach_systems() never called
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    payload = json.loads(bridge.get_mobile_developmental_health())
+    assert "dimensional" in payload["degraded_missing"]
+
+
+def test_organ_with_attach_systems_actually_called_is_healthy(monkeypatch):
+    bridge = _bridge()
+
+    class _AttachedOrgan:
+        def __init__(self):
+            self.systems = {}
+        def attach_systems(self, systems):
+            self.systems = dict(systems)
+
+    organ = _AttachedOrgan()
+    organ.attach_systems({"genealogy": object()})
+    systems = _full_systems()
+    systems["dimensional"] = organ
+    monkeypatch.setattr(bridge, "_systems", systems, raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    payload = json.loads(bridge.get_mobile_developmental_health())
+    assert "dimensional" not in payload["degraded_missing"]
+
+
+def test_plain_sentinel_organs_without_checkable_attributes_stay_healthy(monkeypatch):
+    """A bare object() (no .genealogy/.state_dir/.attach_systems) must be
+    treated exactly as before -- present and truthy is sufficient when
+    there's nothing further to check. Regression guard against the new
+    checks becoming falsely strict."""
+    bridge = _bridge()
+    monkeypatch.setattr(bridge, "_systems", _full_systems(), raising=False)
+    monkeypatch.setattr(bridge, "_dream_substrate_boot_ok", True, raising=False)
+
+    payload = json.loads(bridge.get_mobile_developmental_health())
+    assert payload["overall"] == "healthy"
+    assert payload["fatal_missing"] == []
+    assert payload["degraded_missing"] == []
+
+
+def test_validate_boot_also_catches_detached_genealogy_singleton(monkeypatch):
+    """_validate_boot() (which gates whether background threads start)
+    uses the same _classify_missing() helper -- must not regress to
+    bool()-only checking either."""
+    bridge = _bridge()
+    canonical_genealogy = object()
+    detached_genealogy = object()
+    systems = _full_systems()
+    systems["genealogy"] = detached_genealogy
+    # _BOOT_DEGRADED_SYSTEMS includes "genealogy"; give it a distinct
+    # canonical reference to compare against via a second organ that
+    # legitimately shares the canonical one.
+    systems["lattice"] = _FakeOrgan(genealogy=canonical_genealogy)
+    fatal, degraded = bridge._validate_boot(systems)
+    assert "lattice" in degraded
