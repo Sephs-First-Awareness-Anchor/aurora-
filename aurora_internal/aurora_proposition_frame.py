@@ -55,6 +55,20 @@ class PropositionFrame:
     # (density-driven). None when sedimemory was absent/empty/not
     # consulted -- never a fabricated number.
     density: Optional[float] = None
+    # Communication Architecture Repair Directive 3.10: PropositionFrame's
+    # compact subject/relation/object view is too narrow to be the sole
+    # carrier for multi-participant, perspective-bearing, alternative,
+    # contrastive, or recursive relations -- but it doesn't need to grow a
+    # field for every shape the richer source might take. Instead it keeps
+    # a LINK to that source: the untouched relational_form dict this frame
+    # was compacted from (when the frame came from one), so a consumer that
+    # needs participants/alternatives/clauses/modality/owner/provenance
+    # that _frame_from_constraint_relation didn't copy into the compact
+    # fields above can still reach them, rather than the richer
+    # representation being amputated the moment this frame is built.
+    # Empty when this frame's rung has no such source (thought/claim/anchor).
+    source_representation: Dict[str, Any] = field(default_factory=dict)
+    relation_provenance: str = ""
 
 
 def _record_frame_decision(
@@ -321,6 +335,13 @@ def _frame_from_constraint_relation(systems: Dict[str, Any]) -> Optional[Proposi
         topic=subject or obj or complement,
         source="constraint_relation",
         derivation_signature="X^1*T^1*N^1*B^1*A^1",
+        # Directive 3.10: carry the full RelationalForm this frame was
+        # compacted from -- participants, alternatives, clauses, modality,
+        # owner, unknown_token/unknown_descriptor, and provenance all
+        # survive here even though the compact fields above don't have a
+        # slot for each of them individually.
+        source_representation=dict(relation),
+        relation_provenance=str(relation.get("relation_provenance", "") or ""),
     )
     _record_frame_decision(
         systems,

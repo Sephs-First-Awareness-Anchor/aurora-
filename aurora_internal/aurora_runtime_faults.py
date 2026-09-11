@@ -187,10 +187,63 @@ def record_runtime_fault(
             elif normalized_severity == "subsystem_degradation":
                 target["_runtime_status"] = "degraded"
                 target["_runtime_ready"] = False
+
+        # Communication Architecture Repair Directive 3.20: a cognitively
+        # relevant internal failure must not disappear solely into this
+        # JSONL ledger + readiness flags -- those stay telemetry Aurora
+        # herself never reads. Project the two severities that already
+        # affect readiness (i.e. genuinely consequential, not routine
+        # fallback noise) into the SAME native developmental timeline
+        # aurora_developmental_log.py writes to and EEPR reads from real
+        # experiential pressure -- at this safe boundary, after the fault
+        # record itself is already durably written, and in its own
+        # try/except that never calls back into record_runtime_fault (no
+        # recursive fault generation).
+        if normalized_severity in ("invariant_violation", "subsystem_degradation"):
+            _project_fault_to_developmental_stream(record, active_state_dir)
         return record
     except Exception:
         # Diagnostics cannot be allowed to break a fail-soft boundary.
         return {}
+
+
+def _project_fault_to_developmental_stream(record: Dict[str, Any], state_dir: Path) -> None:
+    """Best-effort, non-recursive projection of a real operational fault
+    into Aurora's native developmental timeline (developmental_timeline.jsonl
+    -- the same file aurora_developmental_log.py writes to and EEPR reads
+    real experiential pressure from). Tagged "runtime_fault_consequence",
+    distinct from that module's own "developmental_event"/"metric_snapshot"
+    kinds, so existing readers of those kinds are unaffected -- this is
+    additive, not a reinterpretation of an existing entry shape.
+
+    Carries: failure signature (subsystem/operation/exception_type/
+    traceback_hash -- the same real fields record_runtime_fault already
+    computed, never fabricated), occurrence identity (timestamp), and a
+    recovery_outcome that starts "unresolved" -- this module has no
+    mechanism yet to detect actual recovery, so it says so honestly rather
+    than fabricating a resolution. Historical faults read back from this
+    file are never replayed as new experience -- nothing in this codebase
+    reads developmental_timeline.jsonl back into live processing at boot
+    (confirmed: aurora_developmental_log.py only ever appends to it)."""
+    try:
+        path = state_dir / "developmental_timeline.jsonl"
+        entry = {
+            "ts": round(time.time(), 3),
+            "kind": "runtime_fault_consequence",
+            "failure_signature": record.get("traceback_hash", ""),
+            "subsystem": record.get("subsystem", ""),
+            "operation": record.get("operation", ""),
+            "severity": record.get("severity", ""),
+            "expected_vs_observed": record.get("message", ""),
+            "recovery_outcome": "unresolved",
+        }
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
+    except Exception:
+        # Never allow this projection itself to become a new fault --
+        # that would be exactly the recursive fault generation the
+        # directive requires avoiding.
+        pass
 
 
 def _systems_from_scope(scope: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
