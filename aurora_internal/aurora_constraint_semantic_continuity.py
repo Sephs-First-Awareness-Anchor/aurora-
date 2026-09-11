@@ -771,21 +771,43 @@ def extract_relational_form(
     )
     result = form.to_dict()
 
-    # Build 771 PR 5: "every scaffold-driven resolution is simultaneously
-    # a WARP-feeding observation" -- feed the word that ended up bound in
-    # the relation slot back to AuroraLexicalGrounding, tagged with this
-    # form's own relation_provenance. Off by default (see
+    # Build 771 PR 5 / Directive 3.5: "every scaffold-driven resolution is
+    # simultaneously a WARP-feeding observation" -- originally fed ONLY the
+    # word bound into the relation slot back to AuroraLexicalGrounding.
+    # That misses exactly the teaching shape the directive names: "wanna
+    # is related to want" binds "wanna" as SUBJECT and "is" as relation --
+    # the copula got observed, the actual novel word never did. Generalize
+    # to every content-bearing slot this form actually bound (subject,
+    # relation, obj, complement, unknown_descriptor), each as its own
+    # observation carrying the SAME full relational_form/provenance --
+    # _word_slot()/_lexical_geometry() in aurora_lexical_grounding.py
+    # already derive a word's structural role/neighbors/Difference geometry
+    # generically from wherever it sits in that form, so this adds no new
+    # per-word logic, just stops narrowing the target to one slot. Function
+    # words are skipped (structural glue, not content needing grounding) --
+    # the same _STRONG_FUNCTION_WORDS set aurora_proposition_frame.py
+    # already treats that way. Off by default (see
     # _CONSUME_LEXICAL_GROUNDING); best-effort and silent on failure, same
     # discipline as every other WARP confession call site -- this must
     # never affect what extract_relational_form() returns.
-    if _CONSUME_LEXICAL_GROUNDING and relation and feed_lexical_grounding:
+    if _CONSUME_LEXICAL_GROUNDING and feed_lexical_grounding:
         try:
             from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
-            get_lexical_grounding().observe_lexical_context(
-                word=relation,
-                relational_form=result,
-                provenance=result.get("relation_provenance", "inherited_scaffold"),
-            )
+            from aurora_internal.aurora_semantic_probe_battery import _STRONG_FUNCTION_WORDS
+            _grounding = get_lexical_grounding()
+            _rel_provenance = result.get("relation_provenance", "inherited_scaffold")
+            _fed_words: set = set()
+            for _slot_value in (relation, subject, obj, complement, unknown_descriptor):
+                for _w in str(_slot_value or "").lower().split():
+                    _w = _w.strip(".,!?;:\"'()")
+                    if not _w or _w in _fed_words or _w in _STRONG_FUNCTION_WORDS:
+                        continue
+                    _fed_words.add(_w)
+                    _grounding.observe_lexical_context(
+                        word=_w,
+                        relational_form=result,
+                        provenance=_rel_provenance,
+                    )
         except Exception:
             pass
 

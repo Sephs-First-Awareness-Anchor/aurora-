@@ -40,6 +40,7 @@ Per directive instruction (section 7, relational identity regression):
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 from pathlib import Path
 
@@ -491,3 +492,213 @@ def test_missing_required_organ_never_raises_on_bad_systems():
     # Non-dict systems must be a silent no-op, not a crash.
     aurora._report_missing_required_organ(None, "genealogy", operation="x")
     aurora._report_missing_required_organ("not a dict", "genealogy", operation="x")
+
+
+# ---------------------------------------------------------------------------
+# 3.5 -- Lexical observation actually generalized (not just data-available)
+# ---------------------------------------------------------------------------
+
+def test_taught_word_in_subject_slot_is_now_observed_not_just_the_copula():
+    """3.5's real failure: 'wanna is related to want' binds wanna as
+    SUBJECT and 'is' as relation -- the old gate fed only the relation
+    slot, so the taught word itself never reached lexical grounding.
+    Confirms the generalized feed now observes every content-bearing
+    slot, not just relation."""
+    import aurora_internal.aurora_lexical_grounding as alg
+    from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
+
+    observed = []
+
+    class _FakeGrounding:
+        def observe_lexical_context(self, *, word, relational_form, provenance):
+            observed.append(word)
+            return {"action": "trial_started"}
+
+    original_get = alg.get_lexical_grounding
+    fake = _FakeGrounding()
+    alg.get_lexical_grounding = lambda: fake
+    try:
+        extract_relational_form("wanna is related to want crave desire")
+    finally:
+        alg.get_lexical_grounding = original_get
+
+    assert "wanna" in observed, "the actual taught word must be observed, not only the copula"
+    assert "want" in observed
+    assert "crave" in observed
+
+
+def test_function_words_are_not_fed_as_lexical_content():
+    import aurora_internal.aurora_lexical_grounding as alg
+    from aurora_internal.aurora_constraint_semantic_continuity import extract_relational_form
+
+    observed = []
+
+    class _FakeGrounding:
+        def observe_lexical_context(self, *, word, relational_form, provenance):
+            observed.append(word)
+            return {"action": "trial_started"}
+
+    original_get = alg.get_lexical_grounding
+    fake = _FakeGrounding()
+    alg.get_lexical_grounding = lambda: fake
+    try:
+        extract_relational_form("the glass fell from the table")
+    finally:
+        alg.get_lexical_grounding = original_get
+
+    assert "the" not in observed
+    assert "from" not in observed
+
+
+# ---------------------------------------------------------------------------
+# Persistence test (directive section 7): a validated/promoted
+# developmental distinction survives a restart using the active state
+# directory, without re-crediting the historical evidence
+# ---------------------------------------------------------------------------
+
+def test_lexical_candidate_survives_restart_without_recrediting_evidence():
+    from aurora_internal.aurora_lexical_grounding import AuroraLexicalGrounding
+
+    with tempfile.TemporaryDirectory() as td:
+        form = {
+            "raw_text": "a novel gadget appeared",
+            "subject": "gadget", "relation": "appeared", "obj": "", "complement": "",
+        }
+        first = AuroraLexicalGrounding(state_dir=td, persist=True)
+        for _ in range(3):
+            first.observe_lexical_context(word="gadget", relational_form=form, provenance="test")
+        first.save()
+
+        candidates_before = list(first._candidates.values())
+        assert len(candidates_before) == 1
+        evidence_before = len(candidates_before[0].evidence)
+        assert evidence_before >= 1
+
+        # "Restart": a fresh instance reading only the persisted state,
+        # using the SAME active state directory -- not a fixture copy.
+        restarted = AuroraLexicalGrounding(state_dir=td, persist=True)
+        candidates_after = list(restarted._candidates.values())
+        assert len(candidates_after) == 1
+        assert candidates_after[0].word == "gadget"
+        # Retained, not re-credited: reloading must not replay the
+        # observation as new evidence -- the count must match exactly,
+        # never double.
+        assert len(candidates_after[0].evidence) == evidence_before
+        assert candidates_after[0].status == candidates_before[0].status
+
+
+# ---------------------------------------------------------------------------
+# Boot identity + WARP registry test (directive section 7). Real end-to-end
+# boot, not source inspection -- expensive (a full boot_aurora() takes
+# ~2-3 minutes), so this single test covers both required checks at once
+# rather than paying that cost twice.
+# ---------------------------------------------------------------------------
+
+def test_real_boot_produces_singleton_organs_registered_under_canonical_warp_field():
+    import shutil
+    import aurora as A
+    import aurora_warp_protocol as awp
+    from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
+
+    repo_root = Path(__file__).resolve().parents[1]
+    scratch = tempfile.mkdtemp(prefix="aurora_directive_boot_")
+    try:
+        scratch_state = os.path.join(scratch, "aurora_state")
+        shutil.copytree(str(repo_root / "aurora_state"), scratch_state)
+        systems = A.boot_aurora(state_dir=scratch_state, verbose=False)
+
+        # Boot identity: no lazily-created detached WarpField/lexical
+        # singleton -- the global getters must resolve to the SAME object
+        # boot_aurora installed into systems, not a second, empty one.
+        warp_field = systems.get("warp_field")
+        assert warp_field is not None
+        assert awp.get_warp_field() is warp_field, (
+            "get_warp_field() resolved to a different, detached WarpField "
+            "than the one boot_aurora installed into systems"
+        )
+        assert get_lexical_grounding() is systems.get("lexical_grounding"), (
+            "get_lexical_grounding() resolved to a different, detached "
+            "singleton than the one boot_aurora installed into systems"
+        )
+
+        # WARP registry: every organ this directive touched must be
+        # registered on the SAME canonical field under a real routing name,
+        # and that registry entry must be object-identical to systems[key]
+        # -- not a copy, not a second instance.
+        registry = dict(getattr(warp_field, "_warp_capable_registry", {}) or {})
+        expected = {
+            # RCRW's routing name (its own _warp_level_name()) differs from
+            # its systems dict key -- confirmed at aurora.py's actual
+            # register_warp_capable call site, not assumed.
+            "recursive_causal_waveform": "recursive_causal_reasoning_waveform",
+            "communication_emergence": "communication_emergence",
+            "lexical_grounding": "lexical_grounding",
+            "operational_synthesis": "operational_synthesis",
+            "general_execution_foundry": "general_execution_foundry",
+        }
+        for systems_key, routing_name in expected.items():
+            organ = systems.get(systems_key)
+            assert organ is not None, f"systems['{systems_key}'] was not mounted"
+            assert routing_name in registry, (
+                f"'{routing_name}' is not registered on the canonical WARP field"
+            )
+            assert registry[routing_name] is organ, (
+                f"WARP registry entry for '{routing_name}' is not the same "
+                f"object as systems['{systems_key}'] -- detached singleton"
+            )
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
+# ---------------------------------------------------------------------------
+# Contributor closure test (directive section 7): every contributor
+# consumed during composition is captured once, and outcome routing never
+# double-credits the same evidence
+# ---------------------------------------------------------------------------
+
+def test_lexical_contributor_captured_once_and_outcome_never_double_credited():
+    import aurora
+    from aurora_internal.aurora_lexical_grounding import AuroraLexicalGrounding
+
+    lex = AuroraLexicalGrounding(state_dir=tempfile.mkdtemp(), persist=False)
+    form = {
+        "raw_text": "a novel gadget appeared",
+        "subject": "gadget", "relation": "appeared", "obj": "", "complement": "",
+    }
+    for _ in range(3):
+        lex.observe_lexical_context(word="gadget", relational_form=form, provenance="test")
+
+    systems = {"lexical_grounding": lex}
+
+    contributors = aurora._build_communication_contributors(systems)
+    trace = contributors.get("lexical_grounding")
+    assert trace, "the drained trace must be attached to the contributor bundle"
+    assert len(trace) == 1
+
+    # Captured once: a second build must drain nothing further for the
+    # same observation -- the trace was already consumed.
+    contributors_again = aurora._build_communication_contributors(systems)
+    assert not contributors_again.get("lexical_grounding")
+
+    entry = trace[0]
+    result1 = lex.record_evidence_outcome(
+        candidate_id=entry["candidate_id"], evidence_id=entry["evidence_id"],
+        outcome_kind="positive", observed_effect="confirmed",
+    )
+    assert result1["recorded"] is True
+
+    candidate = next(c for c in lex._candidates.values() if c.candidate_id == entry["candidate_id"])
+    matching_evidence = [e for e in candidate.evidence if e.get("evidence_id") == entry["evidence_id"]]
+    assert len(matching_evidence) == 1
+    assert matching_evidence[0]["validated"] is True
+    assert matching_evidence[0]["outcome_kind"] == "positive"
+
+    # No duplicate credit: recording the SAME outcome again must not
+    # create a second evidence entry or otherwise double-count it.
+    result2 = lex.record_evidence_outcome(
+        candidate_id=entry["candidate_id"], evidence_id=entry["evidence_id"],
+        outcome_kind="positive", observed_effect="confirmed",
+    )
+    assert result2["recorded"] is True
+    matching_evidence_after = [e for e in candidate.evidence if e.get("evidence_id") == entry["evidence_id"]]
+    assert len(matching_evidence_after) == 1
