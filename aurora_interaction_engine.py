@@ -17,8 +17,12 @@ from aurora_constraint_engine import (
     ConstraintEngine as _ConstraintEngine,
     FoundationalContract as _FoundationalContract,
     ExistenceMode as _ExistenceMode,
+    IStatePredicate as _IStatePredicate,
     GovernorWeights as _GovernorWeights,
 )
+from aurora_internal.aurora_constraint_manifold_patched import Constraint as _Constraint
+from aurora_internal.aurora_noncomp_registry import REGISTRY as _NC_REGISTRY
+from aurora_internal.aurora_difference_buffer import make_difference_buffer as _make_difference_buffer
 _FC = _FoundationalContract()
 
 # Constitutive physics audit (2026-09-12): nothing in production ever called
@@ -33,6 +37,13 @@ _FC = _FoundationalContract()
 # actual interaction output and needs its own deliberate follow-up, not a
 # guess bundled into this fix.
 _GOVERNOR_ENGINE = _ConstraintEngine()
+
+# A:POLARITY/DIFFERENCE (constitutive physics audit follow-up, 2026-09-12):
+# module-level shared state for the same reason _GOVERNOR_ENGINE is
+# module-level -- one physical universe, not one per turn. Turn count
+# stands in for "tick" here since this module has no wall-clock tick loop.
+_A_DIFF_BUFFER = _make_difference_buffer()
+_a_turn_count = 0
 
 BASE_INTERACTION_FACETS: Sequence[str] = (
     "input_signature",
@@ -313,6 +324,56 @@ class InteractionEngine:
             )
             normalized["_physics_governor_decision"] = ""
             normalized["_physics_governor_reason"] = ""
+
+        # A:POLARITY/DIFFERENCE (constitutive physics audit follow-up,
+        # 2026-09-12): I_DID/I_DIDNT require ExistenceMode.AGENTIC -- the
+        # single highest ontological-commitment tier, per
+        # FoundationalContract's own Reference<Transient<Persistent<
+        # Bounded<Agentic hierarchy -- which is correct for this predicate:
+        # "did/didn't" asserts an authored act actually happened (or
+        # didn't) in THIS turn, a per-action commitment, not a reflection
+        # of accumulated system-wide depth/connections the way classify()
+        # is used for X/T/B's admission-count-driven claims elsewhere. So
+        # mode is fixed at AGENTIC rather than run through classify()
+        # (there is no honest per-turn "ontological_depth" signal to feed
+        # it, and _ANCHOR_DEPTH=0.4192 is never reachable from turn-level
+        # fields alone -- forcing one through classify() would be the
+        # fabrication, not fixing the mode here).
+        #
+        # Because mode is fixed, displacement().A's magnitude --
+        # (mode.value+1)*0.1 -- is a constant regardless of turn. But
+        # DIFFERENCE_PARAMS for A declares polarity_signed=True, and
+        # _compute_displacement() already signs the value by
+        # predicate.positive (+0.5 for I_DID, -0.5 for I_DIDNT). Feeding
+        # that already-signed value (not abs()) into the prior_self
+        # Difference buffer means genuine authored/deferred oscillation
+        # across turns shows up as real, nonzero drift -- cost still uses
+        # abs() since energy cost can't be negative.
+        global _a_turn_count
+        try:
+            _authored = normalized["response_action"] != "defer_to_live_gradient"
+            _a_turn_count += 1
+            _a_predicate = _IStatePredicate.I_DID if _authored else _IStatePredicate.I_DIDNT
+            _a_claim = _FC.make_claim(_ExistenceMode.AGENTIC, _a_predicate,
+                                       content=normalized["response_action"])
+            _a_mags = {_Constraint.A: _a_claim.displacement().A}
+            _A_DIFF_BUFFER.record(_a_turn_count, _a_mags)
+            _a_snap = _A_DIFF_BUFFER.snapshot(_a_turn_count, _a_mags)
+            normalized["_physics_agency_claim"] = _a_predicate.name
+            normalized["_physics_agency_cost"] = _NC_REGISTRY.shift_cost(
+                _Constraint.A, abs(_a_claim.displacement().A))
+            normalized["_physics_agency_difference"] = _a_snap.value(_Constraint.A)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_interaction_engine.py:normalize_turn_event:agency_claim",
+                exc=_aurora_boundary_exc,
+                context={"function": "normalize_turn_event", "source_file": "aurora_interaction_engine.py"},
+            )
+            normalized["_physics_agency_claim"] = ""
+            normalized["_physics_agency_cost"] = 0.0
+            normalized["_physics_agency_difference"] = 0.0
 
         return normalized
 
