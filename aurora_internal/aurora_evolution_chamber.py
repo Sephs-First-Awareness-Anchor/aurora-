@@ -456,11 +456,23 @@ class GlobalNonComps:
                 f"partition_count=0 with {node_count} nodes at tick={tick}")
 
     @staticmethod
+    def agency_cost(magnitude: float) -> float:
+        """
+        The one canonical agency-cost law: k_A * magnitude^2.
+
+        Split out from check_A (constitutive physics audit, 2026-09-12) so
+        every caller that needs "what would this magnitude cost" computes
+        it the same way check_A itself enforces it, instead of re-deriving
+        the formula inline with its own copy of the constant.
+        """
+        return K.agency_cost_coefficient * (magnitude ** 2)
+
+    @staticmethod
     def check_A(magnitude: float, energy_available: float, tick: int) -> None:
         if magnitude > K.agency_max_magnitude:
             raise NonCompViolation("A",
                 f"agency magnitude={magnitude:.4f} > ceiling={K.agency_max_magnitude}")
-        cost = K.agency_cost_coefficient * (magnitude ** 2)
+        cost = GlobalNonComps.agency_cost(magnitude)
         if cost > energy_available:
             raise NonCompViolation("A",
                 f"agency cost={cost:.6f} > available={energy_available:.6f} at tick={tick}")
@@ -1200,17 +1212,35 @@ class EvolutionaryChamber:
                     requested_axes = len(ordered_labels)
                     represented_scale = str(ordered_labels[0]).lower() if ordered_labels else "existence"
                     magnitude = requested_axes * 0.1
-                    base_energy_cost = self.K.agency_cost_coefficient * (magnitude ** 2)
+                    base_energy_cost = GlobalNonComps.agency_cost(magnitude)
 
                     carry_credit = max(0.0, float(self._carryover_credit_current.get(represented_scale, 0.0)))
                     effective_cost = max(0.0, float(base_energy_cost) - carry_credit)
 
                     available_energy = max(0.0, self._budget.available - self.K.energy_budget_floor)
-                    executable = (
-                        requested_axes > 0
-                        and magnitude <= float(self.K.agency_max_magnitude)
-                        and effective_cost <= available_energy
-                    )
+                    # Route the agency ceiling+cost law through the canonical
+                    # GlobalNonComps.check_A instead of re-deriving the same
+                    # comparison inline (constitutive physics audit,
+                    # 2026-09-12: check_A had zero callers anywhere in the
+                    # repo despite being a correct, fully-implemented
+                    # precondition — this loop had quietly reimplemented the
+                    # identical ceiling/cost test instead of calling it).
+                    # check_A's `cost > energy_available` test, given
+                    # energy_available=available_energy+carry_credit, is
+                    # algebraically identical to this chamber's
+                    # carryover-credit-adjusted rule
+                    # (effective_cost = base_cost - carry_credit <=
+                    # available_energy  <=>  base_cost <= available_energy +
+                    # carry_credit), so the executable/idle-fallback
+                    # behavior below is unchanged by this refactor.
+                    executable = requested_axes > 0
+                    if executable:
+                        try:
+                            GlobalNonComps.check_A(
+                                magnitude, available_energy + carry_credit, self.tick_count
+                            )
+                        except NonCompViolation:
+                            executable = False
 
                     # Every attempted op participates in evolutionary chain lineage.
                     trace_items = _pair_atom_trace_items(ordered_labels)
