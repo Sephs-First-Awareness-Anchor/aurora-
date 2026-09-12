@@ -44,9 +44,13 @@ from aurora_constraint_engine import (
     ManifoldViolation as _ManifoldViolation,
     FoundationalContract as _FoundationalContract,
     ExistenceMode as _ExistenceMode,
+    IStatePredicate as _IStatePredicate,
     GovernorWeights as _GovernorWeights,
 )
 _FC = _FoundationalContract()
+from aurora_internal.aurora_constraint_manifold_patched import Constraint as _Constraint
+from aurora_internal.aurora_noncomp_registry import REGISTRY as _NC_REGISTRY
+from aurora_internal.aurora_difference_buffer import make_difference_buffer as _make_difference_buffer
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
@@ -335,6 +339,19 @@ class ImageIngestionProtocol:
         self._clusters: Dict[str, VisualCluster]        = {}
         self._lock      = threading.RLock()
 
+        # X:POLARITY/COST/DIFFERENCE (constitutive physics audit follow-up,
+        # 2026-09-12): per-admission history for the existence channel. See
+        # _admit_vector() for how these are used. Admission count stands in
+        # for "tick" here since this module has no wall-clock tick loop --
+        # X's own DifferenceParams (ref_type='prior_self', window_ticks=1)
+        # only needs a monotonic index of "occurrences so far", which this
+        # module's own admission sequence genuinely is.
+        self._x_admission_count: int = 0
+        self._x_diff_buffer = _make_difference_buffer()
+        self.last_admission_claim = None
+        self.last_admission_cost: float = 0.0
+        self.last_admission_difference: float = 0.0
+
         # Build 608 (D1): instance-level paths derived from state_dir when
         # given, falling back to the class-level constants otherwise --
         # the isolation-gap bug class (known_fixes_registry.md) previously
@@ -407,12 +424,48 @@ class ImageIngestionProtocol:
         boundary (this module tracks no per-item tick, energy pool, or
         agency for a single image) so they are filled with the neutral
         midpoint rather than a fabricated measurement.
+
+        POLARITY/COST/DIFFERENCE (2026-09-12 follow-up): a real
+        OntologicalClaim (I_IS / I_ISNT) is constructed via
+        FoundationalContract.make_claim() rather than leaving admission as
+        an untyped internal boolean -- this is Aurora's own existing
+        is/isn't vocabulary (aurora_constraint_engine.py), not a new one.
+        ExistenceMode is classified from len(self._vectors) (genuinely
+        accumulated ingestion history, not an invented number), so the
+        mode -- and therefore the claim's displacement magnitude -- really
+        does grow as this engine admits more real occurrences. That
+        displacement is what REGISTRY.shift_cost(X, ...) charges against:
+        a real, registry-derived cost, computed and recorded even though
+        this module has no energy pool of its own to reject an
+        unaffordable one from (X is the cheapest tier by design; nothing
+        elsewhere in this module currently needs X-admission to ever be
+        rejected for cost, only for outright failure). The Difference
+        channel compares that magnitude to this module's own immediately
+        prior admission via the same DifferenceHistoryBuffer substrate the
+        chamber uses, rather than reimplementing history-tracking here.
         """
         x = 1.0 if fv is not None else 0.0
         try:
             _ConstraintVector(X=x, T=0.5, N=0.5, B=0.5, A=0.5)
         except _ManifoldViolation:
+            self.last_admission_claim = _FC.make_claim(
+                _ExistenceMode.REFERENCE, _IStatePredicate.I_ISNT, content=path
+            )
             return False
+
+        mode = _FC.classify({"connections": len(self._vectors)})
+        claim = _FC.make_claim(mode, _IStatePredicate.I_IS, content=path)
+        self.last_admission_claim = claim
+
+        x_magnitude = abs(claim.displacement().X)
+        self.last_admission_cost = _NC_REGISTRY.shift_cost(_Constraint.X, x_magnitude)
+
+        self._x_admission_count += 1
+        _mags = {_Constraint.X: x_magnitude}
+        self._x_diff_buffer.record(self._x_admission_count, _mags)
+        _snap = self._x_diff_buffer.snapshot(self._x_admission_count, _mags)
+        self.last_admission_difference = _snap.value(_Constraint.X)
+
         with self._lock:
             self._vectors[path] = fv
         return True

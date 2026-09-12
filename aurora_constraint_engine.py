@@ -240,20 +240,35 @@ class IStatePredicate(enum.Enum):
     I-state predicates paired with their required axis and minimum ExistenceMode.
     From the OntologicalContract spec in the task brief.
     """
-    I_IS    = ("X", ExistenceMode.REFERENCE)
-    I_ISNT  = ("X", ExistenceMode.REFERENCE)
-    I_CAN   = ("T", ExistenceMode.TRANSIENT)
-    I_CANNOT = ("T", ExistenceMode.TRANSIENT)
-    I_DO    = ("N", ExistenceMode.PERSISTENT)
-    I_DONOT = ("N", ExistenceMode.PERSISTENT)
-    I_SAW   = ("B", ExistenceMode.BOUNDED)
-    I_SOUGHT = ("B", ExistenceMode.BOUNDED)
-    I_DID   = ("A", ExistenceMode.AGENTIC)
-    I_DIDNT = ("A", ExistenceMode.AGENTIC)
+    # CONSTITUTIVE PHYSICS AUDIT (2026-09-12), X/T/N/B/A:POLARITY finding:
+    # every "negative" member here used to share its (axis, min_mode) value
+    # tuple exactly with its "positive" counterpart. Python's enum.Enum
+    # collapses same-valued members into aliases of the first-defined one,
+    # so IStatePredicate.I_ISNT was never a distinct member -- it WAS
+    # I_IS (`I_ISNT is I_IS` -> True, `I_ISNT.name` -> "I_IS"), and likewise
+    # for I_CANNOT/I_DONOT/I_SOUGHT/I_DIDNT. OntologicalClaim._compute_displacement()'s
+    # `positive = self.predicate.name in (...)` check therefore could never
+    # see a negative predicate: the entire isn't/can't/don't/didn't half of
+    # this vocabulary was unreachable at the language level, for all five
+    # constraints, not just one. The added `positive` field below is what
+    # actually distinguishes them now; axis/min_mode stay identical within
+    # each pair on purpose (a predicate and its negation share the same
+    # axis and admissibility floor -- only its polarity differs).
+    I_IS     = ("X", ExistenceMode.REFERENCE,  True)
+    I_ISNT   = ("X", ExistenceMode.REFERENCE,  False)
+    I_CAN    = ("T", ExistenceMode.TRANSIENT,  True)
+    I_CANNOT = ("T", ExistenceMode.TRANSIENT,  False)
+    I_DO     = ("N", ExistenceMode.PERSISTENT, True)
+    I_DONOT  = ("N", ExistenceMode.PERSISTENT, False)
+    I_SAW    = ("B", ExistenceMode.BOUNDED,    True)
+    I_SOUGHT = ("B", ExistenceMode.BOUNDED,    False)
+    I_DID    = ("A", ExistenceMode.AGENTIC,    True)
+    I_DIDNT  = ("A", ExistenceMode.AGENTIC,    False)
 
-    def __init__(self, axis: str, min_mode: ExistenceMode) -> None:
+    def __init__(self, axis: str, min_mode: ExistenceMode, positive: bool) -> None:
         self.axis = axis
         self.min_mode = min_mode
+        self.positive = positive
 
 
 class OntologicalClaim:
@@ -279,11 +294,20 @@ class OntologicalClaim:
         """Signed constraint displacement. Positive predicates push outward."""
         axis = self.predicate.axis
         scale = (self.mode.value + 1) * 0.1
-        positive = self.predicate.name in ("I_IS", "I_CAN", "I_DO", "I_SAW", "I_DID")
-        sign = 1.0 if positive else -1.0
+        sign = 1.0 if self.predicate.positive else -1.0
         base = {"X": 1e-4, "T": 1e-4, "N": 1e-4, "B": 1e-4, "A": 1e-4}
         base[axis] = sign * scale
-        base["X"] = max(1e-9, base["X"])   # X invariant
+        # X invariant: ConstraintVector requires X > 0 to construct at all
+        # (X <= 0 is manifold collapse, not "negative existence" -- there is
+        # no coherent negative quantity of existence in this physics). So
+        # for I_ISNT specifically (axis == "X", sign == -1), this floors the
+        # displacement's X field to near-zero rather than letting it go
+        # negative. That means displacement().X's SIGN is not a reliable
+        # polarity read for the X axis the way it is for T/N/B/A -- use
+        # predicate.positive directly for X's own polarity; this floor is
+        # semantically correct (existence pushed toward collapse, not
+        # inverted), not a bug to route around.
+        base["X"] = max(1e-9, base["X"])
         return ConstraintVector(**base)
 
     def displacement(self) -> ConstraintVector:
