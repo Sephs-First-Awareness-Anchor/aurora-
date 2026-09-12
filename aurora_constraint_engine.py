@@ -18,92 +18,25 @@ from typing import ClassVar, Dict, FrozenSet, List, Optional, Set, Tuple
 
 import numpy as np
 
-
-# ============================================================
-# EXCEPTIONS
-# ============================================================
-
-class ManifoldViolation(Exception):
-    """Physics invariant broken — X <= 0, bad axis, or field boundary crossed."""
+# CONSTITUTIVE PHYSICS AUDIT (2026-09-12): this module used to define its own
+# ConstraintVector/ManifoldViolation, textually identical but class-distinct
+# from aurora_internal.aurora_constraint_manifold_patched's versions — two
+# disconnected physics universes with the same names. See
+# docs/AURORA_CONSTITUTIVE_PHYSICS_AUDIT_2026-09-12.md. Importing the
+# canonical classes here (rather than re-defining them) is the fix: every
+# consumer of this "standalone" engine now shares one ConstraintVector
+# identity with the registry-driven evolution/genealogy pipeline, so a
+# `except ManifoldViolation` in either world actually catches both, and
+# `isinstance`/equality checks against ConstraintVector no longer silently
+# fail across the two subsystems.
+from aurora_internal.aurora_constraint_manifold_patched import (
+    ConstraintVector,
+    ManifoldViolation,
+)
 
 
 class OntologicalViolation(Exception):
     """OntologicalClaim exceeds the asserting ExistenceMode."""
-
-
-# ============================================================
-# SECTION 1 — PhysicsCore
-# INV-01, INV-08, INV-11, seed section 1.4
-# ============================================================
-
-class ConstraintVector:
-    """
-    INV-01: Five-axis constraint physics vector (X, T, N, B, A).
-    X > 0 is the manifold invariant — existence requires admissibility.
-    INV-11: governor permissiveness hierarchy encoded in empirical weights.
-    """
-
-    __slots__ = ("X", "T", "N", "B", "A")
-
-    def __init__(self, X: float, T: float, N: float, B: float, A: float) -> None:
-        if X <= 0:
-            raise ManifoldViolation(
-                f"ConstraintVector.X must be > 0 (INV-01); got {X!r}"
-            )
-        object.__setattr__(self, "X", float(X))
-        object.__setattr__(self, "T", float(T))
-        object.__setattr__(self, "N", float(N))
-        object.__setattr__(self, "B", float(B))
-        object.__setattr__(self, "A", float(A))
-
-    def __setattr__(self, name: str, value: object) -> None:
-        raise ManifoldViolation("ConstraintVector is immutable after construction.")
-
-    def to_array(self) -> np.ndarray:
-        return np.array([self.X, self.T, self.N, self.B, self.A], dtype=np.float64)
-
-    @classmethod
-    def from_array(cls, arr: np.ndarray) -> "ConstraintVector":
-        return cls(X=float(arr[0]), T=float(arr[1]), N=float(arr[2]),
-                   B=float(arr[3]), A=float(arr[4]))
-
-    def magnitude(self) -> float:
-        return float(np.linalg.norm(self.to_array()))
-
-    def add(self, other: "ConstraintVector") -> "ConstraintVector":
-        return ConstraintVector.from_array(self.to_array() + other.to_array())
-
-    def subtract(self, other: "ConstraintVector") -> "ConstraintVector":
-        result = self.to_array() - other.to_array()
-        if result[0] <= 0:
-            raise ManifoldViolation(
-                f"Subtraction would set X={result[0]:.6f}; manifold requires X > 0"
-            )
-        return ConstraintVector.from_array(result)
-
-    def scalar_multiply(self, scalar: float) -> "ConstraintVector":
-        result = self.to_array() * scalar
-        if result[0] <= 0:
-            raise ManifoldViolation(
-                f"scalar_multiply({scalar}) would set X={result[0]:.6f}"
-            )
-        return ConstraintVector.from_array(result)
-
-    def dot(self, other: "ConstraintVector") -> float:
-        return float(np.dot(self.to_array(), other.to_array()))
-
-    def span_check(self) -> Set[str]:
-        """INV-08: Return axes with |value| > 0.01 — the 'engaged' axes."""
-        labels = ("X", "T", "N", "B", "A")
-        return {ax for ax, v in zip(labels, self.to_array()) if abs(v) > 0.01}
-
-    def axis_count(self) -> int:
-        """INV-08: Number of meaningfully engaged axes."""
-        return len(self.span_check())
-
-    def __repr__(self) -> str:
-        return (f"ConstraintVector(X={self.X:.4f}, T={self.T:.4f}, "
-                f"N={self.N:.4f}, B={self.B:.4f}, A={self.A:.4f})")
 
 
 class EnergyLaw:
@@ -124,13 +57,46 @@ class EnergyLaw:
     @staticmethod
     def redistribute(vec: ConstraintVector,
                      delta: ConstraintVector) -> ConstraintVector:
-        """Pay the cost of gain through N. N floors at 0; debt is absorbed."""
-        gain = sum(max(0.0, d) for d in delta.to_array())
-        n_new = max(0.0, vec.N - gain)
-        arr = vec.to_array() + delta.to_array()
-        arr[2] = n_new                          # overwrite N after redistribution
+        """
+        Redistribute magnitude through the energy pool (N).
+
+        Gains requested on X/T/B/A are funded out of N; losses on X/T/B/A
+        are credited back to N. N is not directly settable via delta — it
+        is the derived remainder after funding/crediting the other four
+        axes.
+
+        CONSTITUTIVE PHYSICS AUDIT (2026-09-12) fix: the previous version
+        applied the full requested gain to every axis and only afterward
+        floored N at 0, so a gain exceeding available N fabricated energy
+        from nothing (e.g. vec=(X=1,T=0.1,N=0.05,B=0.1,A=0.1) with
+        delta=(T=+0.3,B=+0.2) raised total energy from 1.35 to 1.8). This
+        version caps realized gains proportionally at what N (plus any
+        credited losses) can actually fund, so N floors at exactly 0 and
+        total energy is conserved by construction — verified below via
+        EnergyLaw.conserved() rather than left as an unenforced helper.
+        """
+        raw = delta.to_array().copy()
+        raw[2] = 0.0  # N is derived below, not directly settable via delta
+        gains = np.clip(raw, 0.0, None)
+        losses = np.clip(raw, None, 0.0)
+        total_gain = float(np.sum(gains))
+        credited = float(np.sum(np.abs(losses)))
+        available = max(0.0, vec.N) + credited
+        if total_gain > available:
+            scale = 0.0 if available <= 0 else available / total_gain
+            gains = gains * scale
+            total_gain = float(np.sum(gains))
+        arr = vec.to_array() + gains + losses
+        arr[2] = max(0.0, vec.N + credited - total_gain)
         arr[0] = max(1e-9, arr[0])              # X invariant
-        return ConstraintVector.from_array(arr)
+        result = ConstraintVector.from_array(arr)
+        if not EnergyLaw.conserved(vec, result):
+            raise ManifoldViolation(
+                "EnergyLaw.redistribute produced non-conserved energy: "
+                f"{EnergyLaw.total_energy(vec):.6f} -> "
+                f"{EnergyLaw.total_energy(result):.6f}"
+            )
+        return result
 
 
 class MagnitudeImpact:
