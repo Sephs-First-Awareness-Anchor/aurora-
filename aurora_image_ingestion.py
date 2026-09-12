@@ -382,6 +382,18 @@ class ImageIngestionProtocol:
         self.last_admission_cost: float = 0.0
         self.last_admission_difference: float = 0.0
 
+        # B:POLARITY/COST/DIFFERENCE (constitutive physics audit follow-up,
+        # 2026-09-12): per-recluster history for the boundary channel. See
+        # _recluster() for how these are used. A separate buffer/counter
+        # from the X admission one above -- reclustering is a distinct,
+        # much rarer event stream with its own natural sequence, not the
+        # same "tick" as individual image admissions.
+        self._recluster_count: int = 0
+        self._b_diff_buffer = _make_difference_buffer()
+        self.last_recluster_claim = None
+        self.last_recluster_cost: float = 0.0
+        self.last_recluster_difference: float = 0.0
+
         # Build 608 (D1): instance-level paths derived from state_dir when
         # given, falling back to the class-level constants otherwise --
         # the isolation-gap bug class (known_fixes_registry.md) previously
@@ -564,11 +576,23 @@ class ImageIngestionProtocol:
         }
 
     def _recluster(self):
-        """Recluster all vectors and rebind OETS."""
+        """
+        Recluster all vectors and rebind OETS.
+
+        B:POLARITY/COST/DIFFERENCE (constitutive physics audit follow-up,
+        2026-09-12): this method already fully replaces self._clusters
+        every call -- the old boundary structure genuinely dissolves and a
+        new one forms, a real "saw/saunt" (contained/dissolved) event, not
+        a fabricated one. Previously this happened with no physics
+        involvement at all.
+        """
         with self._lock:
             all_fvs = list(self._vectors.values())
         if not all_fvs:
             return
+
+        with self._lock:
+            _old_cluster_count = len(self._clusters)
 
         vectors = [fv.to_vector() for fv in all_fvs]
         k = min(12, max(1, len(vectors) // 3))
@@ -598,6 +622,28 @@ class ImageIngestionProtocol:
 
         with self._lock:
             self._clusters = new_clusters
+        _new_cluster_count = len(new_clusters)
+
+        # B:POLARITY/COST/DIFFERENCE: the old cluster boundaries (if any)
+        # just genuinely dissolved (I_SOUGHT, B's negative pole) and this
+        # new set now contains the data (I_SAW). mode is classified from
+        # the real new cluster count, not a fabricated number.
+        _b_mode = _FC.classify({"connections": _new_cluster_count})
+        _b_mode = _ExistenceMode(max(int(_b_mode), int(_ExistenceMode.BOUNDED)))
+        if _old_cluster_count > 0:
+            _dissolve_claim = _FC.make_claim(_b_mode, _IStatePredicate.I_SOUGHT, content="recluster_dissolve")
+            self.last_recluster_claim = _dissolve_claim
+        _form_claim = _FC.make_claim(_b_mode, _IStatePredicate.I_SAW, content="recluster_form")
+        self.last_recluster_claim = _form_claim
+
+        _b_magnitude = abs(_form_claim.displacement().B)
+        self.last_recluster_cost = _NC_REGISTRY.shift_cost(_Constraint.B, _b_magnitude)
+
+        self._recluster_count += 1
+        _mags = {_Constraint.B: _b_magnitude}
+        self._b_diff_buffer.record(self._recluster_count, _mags)
+        _snap = self._b_diff_buffer.snapshot(self._recluster_count, _mags)
+        self.last_recluster_difference = _snap.value(_Constraint.B)
 
     def autonomous_download_cycle(self) -> Dict:
         """Run one autonomous download cycle during idle time."""

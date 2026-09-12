@@ -456,6 +456,42 @@ class GlobalNonComps:
                 f"partition_count=0 with {node_count} nodes at tick={tick}")
 
     @staticmethod
+    def check_B_polarity(
+        polarity_before: Optional[float],
+        polarity_after: float,
+        flip_pressure: float,
+        tick: int,
+    ) -> None:
+        """
+        B:POLARITY (CONSTITUTIVE PHYSICS AUDIT, 2026-09-12): the boundary
+        layer is defined (PolarityParams, aurora_noncomp_registry.py) to
+        resist polarity inversion -- flip_threshold=0.65 is the minimum
+        cross-scale gradient pressure required before its polarity may
+        flip sign, versus e.g. 0.35 for the surface (X) layer. This was
+        computed but had no flip-rejection call site anywhere in the repo.
+        Uses the real per-tick polarity already read by
+        PolarityGradientSensor.measure() (self._polarity_sensor in
+        EvolutionaryChamber.tick()) -- a flip that happened under less
+        cross-scale pressure than the boundary layer's own threshold is a
+        genuine violation of "deep layer resists flip", not a fabricated
+        check.
+        """
+        if polarity_before is None:
+            return  # no prior tick to compare against yet
+        flipped = (polarity_before * polarity_after) < 0.0
+        if not flipped:
+            return
+        threshold = (
+            _NC_REGISTRY.polarity(Constraint.B).flip_threshold
+            if _NC_REGISTRY is not None else 0.65
+        )
+        if flip_pressure < threshold:
+            raise NonCompViolation("B",
+                f"boundary polarity flipped ({polarity_before:.4f} -> "
+                f"{polarity_after:.4f}) under pressure={flip_pressure:.4f} "
+                f"< flip_threshold={threshold:.4f} at tick={tick}")
+
+    @staticmethod
     def agency_cost(magnitude: float) -> float:
         """
         The one canonical agency-cost law: k_A * magnitude^2.
@@ -865,11 +901,39 @@ class StructuralProximityMeter:
         RecursionLevel.CORE:     "agency",
     }
 
-    def __init__(self, lattice: IVMLattice):
+    def __init__(self, lattice: IVMLattice, energy_budget=None):
         self._lattice = lattice
         self._weights: Dict[Tuple[str, str], float] = {}
         self._partitions: Dict[str, FrozenSet[str]] = {}
         self._partition_history: Deque[int] = deque(maxlen=K.entropy_window)
+        # CONSTITUTIVE PHYSICS AUDIT (2026-09-12), B:COST follow-up:
+        # shift_cost()/can_afford_shift() (aurora_energy_layer_costs.py:139-147)
+        # were fully implemented but had zero callers anywhere in the repo --
+        # boundary weight changes were free. energy_budget, when supplied,
+        # makes every boundary-weight transition compute a real
+        # REGISTRY.shift_cost(Constraint.B, |delta|).
+        #
+        # Whether that cost is enforced (can reject the transition) or only
+        # recorded depends on what energy_budget is actually backed by --
+        # REGISTRY's shift_cost_coeff for B (40.0) was derived against
+        # LayerEnergyAccountant's real pool scale (initial_pool=1000.0,
+        # aurora_energy_layer_costs.py:338), not the chamber's own
+        # EnergyBudget placeholder scale (initial_energy=1.0 at every call
+        # site: aurora.py, run_chain.py, aurora_primitive_extractor.py).
+        # Charging the 40.0 coefficient against a 1.0-scale pool would
+        # starve it after a single transition -- a scale mismatch, not
+        # real physics. So: when energy_budget is attached to a shared
+        # LayerEnergyAccountant (the live boot_aurora() path, see
+        # EnergyBudget.attach_shared_accountant/__init__), cost is a real
+        # precondition -- a transition the shared pool can't afford is
+        # rejected and the boundary weight holds at its prior value. In
+        # standalone/test construction (no shared accountant), cost is
+        # computed and recorded (last_boundary_cost) for genealogy/worth
+        # scoring but does not block, since there is no pool at the
+        # matching scale to check it against.
+        self._energy_budget = energy_budget
+        self.last_boundary_cost: float = 0.0
+        self.blocked_transitions: int = 0
 
     def structural_distance(self, node_a: IVMNode, node_b: IVMNode) -> float:
         pa = self._lattice.vertices.compute_axis_polarities(node_a.mode)
@@ -882,9 +946,15 @@ class StructuralProximityMeter:
         )
         return dist / total_w
 
-    def update_boundaries(self) -> int:
+    def update_boundaries(self, tick: int = 0) -> int:
         nodes = list(self._lattice.nodes.values())
         transitions = 0
+        tick_cost = 0.0
+        self.blocked_transitions = 0
+        enforce = (
+            self._energy_budget is not None
+            and getattr(self._energy_budget, "_shared", None) is not None
+        )
         for i, na in enumerate(nodes):
             for nb in nodes[i + 1:]:
                 key = (na.node_id, nb.node_id)
@@ -897,11 +967,39 @@ class StructuralProximityMeter:
                 else:
                     new_w = min(1.0, prev + K.proximity_strengthen_rate
                                 * (d - K.proximity_threshold))
-                if abs(new_w - prev) > 1e-6:
+                delta = abs(new_w - prev)
+                if delta > 1e-6:
+                    if _NC_REGISTRY is not None:
+                        cost = _NC_REGISTRY.shift_cost(Constraint.B, delta)
+                        if enforce:
+                            try:
+                                self._energy_budget.spend(cost, tick)
+                            except NonCompViolation:
+                                self.blocked_transitions += 1
+                                continue
+                        tick_cost += cost
                     transitions += 1
                 self._weights[key] = new_w
                 self._weights[key_r] = new_w
+        self.last_boundary_cost = tick_cost
         return transitions
+
+    def mean_boundary_weight(self) -> float:
+        """
+        Real, per-tick structural boundary magnitude: the mean of all
+        pairwise proximity weights this meter is currently tracking.
+
+        B:DIFFERENCE follow-up (CONSTITUTIVE PHYSICS AUDIT 2026-09-12):
+        this is the genuine boundary-topology signal (as opposed to the
+        generic axis-polarity pressure every constraint already gets from
+        _read_pressure()) that EvolutionaryChamber.tick() blends into
+        Constraint.B's magnitude before feeding self._diff_buffer, so
+        B's Difference reflects actual structural drift rather than only
+        polarity pressure.
+        """
+        if not self._weights:
+            return 0.5  # matches the resting default a fresh pair starts at
+        return sum(self._weights.values()) / len(self._weights)
 
     def recompute_partitions(self) -> int:
         nodes = list(self._lattice.nodes.keys())
@@ -1178,10 +1276,14 @@ class EvolutionaryChamber:
         # V3 physics sub-systems
         self._abilities = _build_chamber_abilities()
         self._budget = EnergyBudget(initial_energy, shared_accountant=energy_accountant)
-        self._proximity = StructuralProximityMeter(lattice)
+        self._proximity = StructuralProximityMeter(lattice, energy_budget=self._budget)
         self._mapper = _ActionAbilityMapper(lattice, self._abilities)
         self._polarity_sensor = PolarityGradientSensor()
         self._gradient_miner = GradientChainMiner()
+        # B:POLARITY (CONSTITUTIVE PHYSICS AUDIT, 2026-09-12): previous
+        # tick's boundary-axis polarity, for GlobalNonComps.check_B_polarity
+        # flip detection. None until the first tick has a prior to compare.
+        self._prev_boundary_polarity: Optional[float] = None
         # Difference channel history buffer — maintained across every tick
         # so C:D values are always current for relief annotation, variant
         # promotion, and live cost-diff scoring.
@@ -1279,7 +1381,7 @@ class EvolutionaryChamber:
                 "I_CAN", strength=0.02, level=RecursionLevel.SHALLOW
             )
             self.lattice.vertices.tick(dt=self.K.dt)
-            self._proximity.update_boundaries()
+            self._proximity.update_boundaries(self.tick_count)
             self._proximity.recompute_partitions()
 
             # 3. N Non-Comp: baseline existence burn
@@ -1446,6 +1548,27 @@ class EvolutionaryChamber:
                 self.lattice.vertices, tick=self.tick_count
             )
 
+            # 7a. B Non-Comp: boundary layer resists polarity flip
+            # (CONSTITUTIVE PHYSICS AUDIT, 2026-09-12) — uses the real
+            # boundary-axis polarity and cross-scale pressure this tick
+            # already measured, see GlobalNonComps.check_B_polarity.
+            _b_flip_pressure = (
+                polarity_report.pair_pressures.get("energy→boundary", 0.0)
+                + polarity_report.pair_pressures.get("boundary→agency", 0.0)
+            )
+            _b_polarity_after = polarity_report.polarities.get("boundary", 0.0)
+            try:
+                GlobalNonComps.check_B_polarity(
+                    self._prev_boundary_polarity,
+                    _b_polarity_after,
+                    _b_flip_pressure,
+                    self.tick_count,
+                )
+            finally:
+                # Real state changed regardless of whether the transition
+                # was legitimate -- only the legitimacy is being judged.
+                self._prev_boundary_polarity = _b_polarity_after
+
             # 7b. Record magnitude state in Difference buffer and compute C:D snapshot.
             # Magnitudes are approximated from IVM pressure components — the best
             # available proxy for per-constraint activation intensity within the
@@ -1526,6 +1649,14 @@ class EvolutionaryChamber:
                 # Blend physical + intent so C:D reflects both held state and
                 # declared constraint demand in the evolutionary chain.
                 _chamber_magnitudes[c] = (0.7 * physical) + (0.3 * intent)
+            # B:DIFFERENCE follow-up (CONSTITUTIVE PHYSICS AUDIT 2026-09-12):
+            # blend in the real structural boundary-weight signal from
+            # StructuralProximityMeter so B's Difference reflects actual
+            # boundary topology, not only generic axis-polarity pressure.
+            _b_structural = self._proximity.mean_boundary_weight()
+            _chamber_magnitudes[Constraint.B] = (
+                0.5 * _chamber_magnitudes[Constraint.B] + 0.5 * _b_structural
+            )
             self._diff_buffer.record(self.tick_count, _chamber_magnitudes)
             _diff_snapshot = self._diff_buffer.snapshot(self.tick_count, _chamber_magnitudes)
 
