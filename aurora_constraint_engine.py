@@ -1180,11 +1180,20 @@ class ConstraintEngine:
         uncertainty = float(observation.get("uncertainty", 0.0))
         self._guards.uncertainty.update_uncertainty(uncertainty)
 
+        # Constitutive physics audit (2026-09-12), B:MAGNITUDE/B:OPERATOR
+        # finding: this always called .update() with no boundary_pressure,
+        # so it silently defaulted to 0.0 regardless of what the caller's
+        # observation actually carried -- the BoundaryCalibrationGuard's
+        # pressure-based dissolution check could never fire. Read it from
+        # the observation like every other guard input above; still
+        # defaults to 0.0 (unchanged behavior) when a caller doesn't
+        # supply it, but no longer discards it when one does.
         bv = observation.get("boundary_vector")
+        boundary_pressure = float(observation.get("boundary_pressure", 0.0))
         if isinstance(bv, ConstraintVector):
-            self._guards.boundary.update(bv)
+            self._guards.boundary.update(bv, boundary_pressure)
         else:
-            self._guards.boundary.update(profile)
+            self._guards.boundary.update(profile, boundary_pressure)
 
         ext = observation.get("external_perspective")
         if ext:
@@ -1198,9 +1207,38 @@ class ConstraintEngine:
         INV-04, INV-11, INV-13: Request permission for a task.
         routing_mode defaults to 'surface' if not in task_descriptor.
         Returns PERMITTED, REJECTED, or DEFERRED.
+
+        Constitutive physics audit (2026-09-12), B:MAGNITUDE/B:OPERATOR
+        finding: this used to return the axis-weight governor's decision
+        untouched -- self._guards existed ("all five are non-optional" per
+        FailureGuardSuite's own docstring) but nothing here ever consulted
+        them, so a PERMITTED decision could be returned while the boundary
+        was already reporting dissolution. Only the boundary guard is
+        consulted here, not the full five-guard suite: the other four
+        guards' own docstrings record them as long-standing, separately
+        tracked chronic-failure signals (e.g. "10/10 episodes fail") that
+        are a different, already-known problem -- folding them into a
+        hard veto here, with no caller yet supplying the observation
+        fields they need (external_perspective, coherence, uncertainty),
+        would silently defer every task by default and is not what this
+        audit's B finding was about. The boundary guard, by contrast,
+        passes by default and only vetoes on a genuine, rare dissolution
+        condition (B < 0.10 or pressure >= 0.80), so wiring it in here is
+        safe and matches the evidenced gap precisely.
         """
         routing_mode = task_descriptor.get("routing_mode", "surface")
-        return self._governor.govern(task_descriptor, routing_mode)
+        result = self._governor.govern(task_descriptor, routing_mode)
+        if result.decision == GovernorDecision.PERMITTED:
+            boundary_check = self._guards.boundary.check()
+            if not boundary_check.passed:
+                return GovernorResult(
+                    decision=GovernorDecision.DEFERRED,
+                    profile=result.profile,
+                    reason=f"boundary_guard_veto: {boundary_check.reason}",
+                    retry_condition="BoundaryCalibrationGuard.check().passed",
+                    under_distillation=result.under_distillation,
+                )
+        return result
 
     # Read-only access to internals for diagnostics
     @property
