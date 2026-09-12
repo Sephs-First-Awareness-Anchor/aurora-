@@ -976,15 +976,33 @@ class EnergyBudget:
     def replenish_from_lattice(self, lattice: IVMLattice) -> None:
         """
         Energy is conserved via redistribution — it is not created.
-        Baseline burn redistributes from the boundary layer back into the budget.
-        Lattice pool contributes proportionally; floor ensures existence can persist.
+
+        CONSTITUTIVE PHYSICS AUDIT (2026-09-12) fix: this used to credit a
+        lattice-proportional bonus to the budget by reading
+        lattice.get_total_energy() and crediting min(baseline_burn,
+        lattice_total * 0.001) without ever decreasing the lattice's own
+        energy — so whenever the lattice held any energy at all, this
+        fabricated that bonus from nothing, every tick, unbounded over
+        time (verified concretely: net budget strictly increased tick over
+        tick with the lattice's energy never touched). It now calls
+        IVMLattice.withdraw_energy() to genuinely take that amount out of
+        the lattice, crediting the budget only with what was actually
+        withdrawn. Combined budget+lattice energy is conserved exactly by
+        this exchange: whatever the lattice loses, the budget gains, no
+        more and no less.
+
+        floor_component (exactly matching burn_existence_cost's baseline
+        burn) is kept as a net-zero architectural subsidy, not a
+        violation: existence is the cheapest, reference-state constraint
+        by design (LAYER_COST[X] is the cheapest tier in the registry), so
+        burn and floor cancel exactly with no residual energy either way —
+        only the lattice-proportional bonus needed a real transfer.
         """
         lattice_total = lattice.get_total_energy()
-        # Lattice-proportional component (redistributed from node pool)
-        lattice_component = lattice_total * 0.001
-        # Boundary layer always returns the baseline burn (conservation)
+        desired_bonus = min(K.baseline_burn_per_tick, lattice_total * 0.001)
+        actual_bonus = lattice.withdraw_energy(desired_bonus) if desired_bonus > 0 else 0.0
         floor_component = K.baseline_burn_per_tick
-        replenish = floor_component + min(K.baseline_burn_per_tick, lattice_component)
+        replenish = floor_component + actual_bonus
         self._budget += replenish
 
     def status(self) -> Dict:
