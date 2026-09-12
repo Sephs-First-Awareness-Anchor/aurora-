@@ -395,6 +395,19 @@ def _boot(out_dir: str, run_id: str, cfg_overrides: Optional[Dict[str, Any]] = N
                 context={"function": "_boot", "handler_line": 308, "source_file": "run_chain.py"},
             )
             restored_pairs = 0
+    restored_tick_state = False
+    if hasattr(genealogy, "restore_tick_state"):
+        try:
+            restored_tick_state = bool(genealogy.restore_tick_state())
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:run_chain.py:restore_tick_state",
+                exc=_aurora_boundary_exc,
+                context={"function": "_boot", "source_file": "run_chain.py"},
+            )
+            restored_tick_state = False
     chamber = EvolutionaryChamber(
         lattice=lattice,
         genealogy=genealogy,
@@ -414,8 +427,12 @@ def _boot(out_dir: str, run_id: str, cfg_overrides: Optional[Dict[str, Any]] = N
         f"HARD_WINDOW={int(getattr(genealogy.cfg, 'STAGNATION_HARD_WINDOW', 0))} "
         f"BOOTSTRAP={float(getattr(genealogy.cfg, 'STAGNATION_BOOTSTRAP_RATIO', 0.0)):.2f}"
     )
-    if restored_links > 0 or restored_pairs > 0:
-        print(f"  [BOOT] Restored continuity: links={restored_links} pair_stats={restored_pairs}")
+    if restored_links > 0 or restored_pairs > 0 or restored_tick_state:
+        print(
+            f"  [BOOT] Restored continuity: links={restored_links} "
+            f"pair_stats={restored_pairs} tick_state={restored_tick_state} "
+            f"(tick_count={int(genealogy.tick_count)})"
+        )
     return chamber, genealogy, printer, action_cycle
 # ---------------------------------------------------------------------------
 # MODES
