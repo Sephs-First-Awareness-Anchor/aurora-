@@ -1088,7 +1088,6 @@ class EvolutionaryChamber:
         self.run_id = run_id or f"run_{uuid.uuid4().hex[:8]}"
         self.output_dir = output_dir
         self.K = constants
-        self.tick_count: int = 0
         self._alive: bool = True
 
         os.makedirs(output_dir, exist_ok=True)
@@ -1105,6 +1104,26 @@ class EvolutionaryChamber:
                 abilities=_ab,
                 output_dir=output_dir,
             )
+
+        # CONSTITUTIVE PHYSICS AUDIT (2026-09-12) T follow-up: this used to
+        # hardcode tick_count to 0 regardless of what the injected genealogy
+        # logger's own (now-restorable, see aurora_runtime.py/run_chain.py's
+        # restore_tick_state() wiring) tick_count already was. That's correct
+        # for this chamber's own session-local physics (check_T's monotonicity
+        # check and the Difference buffer's windowing below only care about
+        # relative ordering within this process's ticks, and self._diff_buffer
+        # is itself a fresh, in-memory, session-local buffer either way) --
+        # but self.tick_count is also hashed into genealogy-facing identifiers
+        # elsewhere in this class (lineage_raw / target_generation for
+        # dream-feedback mutations), and those ARE meant to be historically
+        # unique across this object's full persisted lifetime, not just this
+        # process's. Starting from 0 there let two genealogy records from
+        # different real points in Aurora's history collide on the same
+        # generation number (and, when evidence_id is empty and the mutation
+        # repeats, the same lineage hash). Resuming from the genealogy
+        # logger's own tick_count fixes that without touching the session-
+        # local uses at all, since they only depend on relative differences.
+        self.tick_count: int = int(getattr(self._genealogy, "tick_count", 0) or 0)
 
         # V3 physics sub-systems
         self._abilities = _build_chamber_abilities()
