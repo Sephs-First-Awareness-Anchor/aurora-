@@ -14,11 +14,25 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
 from aurora_constraint_engine import (
     ConstraintVector as _ConstraintVector,
+    ConstraintEngine as _ConstraintEngine,
     FoundationalContract as _FoundationalContract,
     ExistenceMode as _ExistenceMode,
     GovernorWeights as _GovernorWeights,
 )
 _FC = _FoundationalContract()
+
+# Constitutive physics audit (2026-09-12): nothing in production ever called
+# ConstraintEngine.feed_evidence()/.govern() -- not from here, not from
+# aurora_hardware_io.py, not even EngineRuntime.tick() despite its own
+# docstring calling it "the primary runtime method". This module-level
+# instance is shared across calls (one physical universe, not one per turn)
+# and is wired into normalize_turn_event() below in OBSERVE-ONLY mode: it
+# records what the governor would decide on real turn data, but nothing
+# reads that decision to change response_action/intended_effect/output yet.
+# Making that decision load-bearing is a live behavior change to Aurora's
+# actual interaction output and needs its own deliberate follow-up, not a
+# guess bundled into this fix.
+_GOVERNOR_ENGINE = _ConstraintEngine()
 
 BASE_INTERACTION_FACETS: Sequence[str] = (
     "input_signature",
@@ -276,6 +290,30 @@ class InteractionEngine:
             "oets_cluster": str(event.get("oets_cluster") or event.get("topic_cluster") or ""),
             "text": text,
         }
+
+        # Constitutive physics audit (2026-09-12): observe-only governor call
+        # (see _GOVERNOR_ENGINE above). primary_axis="X" is a provisional
+        # choice for this diagnostic phase (a turn becoming known information
+        # is fundamentally an X/existence event per the registry's own
+        # INFORMATION_LINEAGE_MAP), not a considered classification of what a
+        # real interaction task should declare -- these two keys are for
+        # observability only and nothing branches on them yet.
+        try:
+            _GOVERNOR_ENGINE.feed_evidence({"text": text, "tone": normalized["tone"]})
+            _gov_result = _GOVERNOR_ENGINE.govern({"primary_axis": "X"})
+            normalized["_physics_governor_decision"] = _gov_result.decision.value
+            normalized["_physics_governor_reason"] = _gov_result.reason
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_interaction_engine.py:normalize_turn_event:governor_observe",
+                exc=_aurora_boundary_exc,
+                context={"function": "normalize_turn_event", "source_file": "aurora_interaction_engine.py"},
+            )
+            normalized["_physics_governor_decision"] = ""
+            normalized["_physics_governor_reason"] = ""
+
         return normalized
 
     def validate_base_event(self, event: Mapping[str, Any]) -> List[str]:
