@@ -950,27 +950,73 @@ class StructuralProximityMeter:
 # ---------------------------------------------------------------------------
 
 class EnergyBudget:
+    """
+    CONSTITUTIVE PHYSICS AUDIT (2026-09-12), N follow-up: this used to be
+    the chamber's own, permanently disconnected energy pool -- meanwhile
+    boot_aurora() separately constructs a real, shared LayerEnergyAccountant
+    (systems['accountant'], aurora_internal/aurora_energy_layer_costs.py)
+    for the intake/worth/solidification/variant-promotion pipeline, whose
+    own replenish() docstring already documented "aurora_evolution_chamber.py
+    replenish_from_lattice() equivalent" as an intended caller -- i.e. these
+    two pools were always meant to be connected and simply never were: two
+    live, simultaneously-running, unsynchronized economies in one process.
 
-    def __init__(self, initial_energy: float = 1.0):
-        self._budget = initial_energy
+    `shared_accountant` closes that gap without touching any tuned
+    behavior: when None (the default -- standalone/test construction,
+    e.g. run_chain.py without boot_aurora()), every method below behaves
+    exactly as before, byte-for-byte. When a shared LayerEnergyAccountant
+    is provided (the live boot_aurora() path), this class becomes a thin
+    view over that one shared pool instead of maintaining a second,
+    parallel number -- available()/spend()/burn_existence_cost() all read
+    and write the shared pool directly via its own real
+    withdraw()/replenish() methods, so there is exactly one live energy
+    pool, not two.
+    """
+
+    def __init__(self, initial_energy: float = 1.0, shared_accountant=None):
+        self._shared = shared_accountant
+        if self._shared is None:
+            self._budget = initial_energy
         self._initial = initial_energy
         self._total_spent = 0.0
 
+    def attach_shared_accountant(self, accountant) -> None:
+        """
+        Connect this budget to a shared LayerEnergyAccountant after
+        construction, for boot sequences (e.g. aurora.py's boot_aurora())
+        where the chamber and the shared accountant are necessarily built
+        in separate steps. Any energy in the chamber-local pool at the
+        point of attachment is folded into the shared pool via a real
+        replenish() (not discarded), so nothing is lost by attaching late.
+        """
+        if accountant is None or self._shared is not None:
+            return
+        leftover = self._budget
+        self._shared = accountant
+        if leftover:
+            self._shared.replenish(max(0.0, leftover), source="chamber_late_attach")
+
     @property
     def available(self) -> float:
-        return self._budget
+        return self._shared.pool if self._shared is not None else self._budget
 
     def burn_existence_cost(self) -> float:
         cost = K.baseline_burn_per_tick
-        self._budget -= cost
+        if self._shared is not None:
+            self._shared.withdraw(cost, sink="chamber_existence_burn")
+        else:
+            self._budget -= cost
         self._total_spent += cost
         return cost
 
     def spend(self, amount: float, tick: int) -> None:
-        if self._budget - amount < K.energy_budget_floor:
+        if self.available - amount < K.energy_budget_floor:
             raise NonCompViolation("N",
                 f"spend={amount:.6f} would push budget below floor at tick={tick}")
-        self._budget -= amount
+        if self._shared is not None:
+            self._shared.withdraw(amount, sink="chamber_agency_spend")
+        else:
+            self._budget -= amount
         self._total_spent += amount
 
     def replenish_from_lattice(self, lattice: IVMLattice) -> None:
@@ -1003,10 +1049,13 @@ class EnergyBudget:
         actual_bonus = lattice.withdraw_energy(desired_bonus) if desired_bonus > 0 else 0.0
         floor_component = K.baseline_burn_per_tick
         replenish = floor_component + actual_bonus
-        self._budget += replenish
+        if self._shared is not None:
+            self._shared.replenish(replenish, source="chamber_lattice_bonus")
+        else:
+            self._budget += replenish
 
     def status(self) -> Dict:
-        return {"budget": self._budget, "initial": self._initial,
+        return {"budget": self.available, "initial": self._initial,
                 "total_spent": self._total_spent}
 
 
@@ -1083,6 +1132,7 @@ class EvolutionaryChamber:
         output_dir: str = "chamber_output",
         constants: WorldConstants = K,
         initial_energy: float = 1.0,
+        energy_accountant=None,
     ):
         self.lattice = lattice
         self.run_id = run_id or f"run_{uuid.uuid4().hex[:8]}"
@@ -1127,7 +1177,7 @@ class EvolutionaryChamber:
 
         # V3 physics sub-systems
         self._abilities = _build_chamber_abilities()
-        self._budget = EnergyBudget(initial_energy)
+        self._budget = EnergyBudget(initial_energy, shared_accountant=energy_accountant)
         self._proximity = StructuralProximityMeter(lattice)
         self._mapper = _ActionAbilityMapper(lattice, self._abilities)
         self._polarity_sensor = PolarityGradientSensor()
@@ -1173,6 +1223,17 @@ class EvolutionaryChamber:
 
         # Initial partition computation
         self._proximity.recompute_partitions()
+
+    def attach_energy_accountant(self, accountant) -> None:
+        """
+        Connect this chamber's energy economy to a shared
+        LayerEnergyAccountant after construction (see
+        EnergyBudget.attach_shared_accountant() for why boot_aurora()
+        needs this rather than passing energy_accountant to __init__ --
+        the shared accountant is built after the chamber in that boot
+        sequence).
+        """
+        self._budget.attach_shared_accountant(accountant)
 
     # ====================================================================
     # tick

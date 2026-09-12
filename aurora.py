@@ -29707,6 +29707,27 @@ def boot_aurora(
             systems['strand_lib']       = _strand_lib
             systems['_strand_builder']  = _strand_builder
 
+            # Constitutive physics audit (2026-09-12), N follow-up: connect
+            # the chamber's own energy economy (constructed earlier in this
+            # function, in the "Evolutionary Chamber + Genealogy" section)
+            # to this shared accountant, so there is one live energy pool
+            # instead of two disconnected ones -- see
+            # EnergyBudget.attach_shared_accountant()'s docstring for why
+            # this happens here (post-construction) rather than at chamber
+            # construction time.
+            _chamber_for_accountant = systems.get('chamber')
+            if _chamber_for_accountant is not None and hasattr(_chamber_for_accountant, 'attach_energy_accountant'):
+                try:
+                    _chamber_for_accountant.attach_energy_accountant(_accountant)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora.py:boot_aurora:attach_energy_accountant",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "boot_aurora", "source_file": "aurora.py"},
+                    )
+
             if verbose:
                 print("  [INTAKE] Intake metabolism pipeline online (Steps 9–14)")
         except Exception as _intake_e:
