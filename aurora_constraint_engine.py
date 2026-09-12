@@ -103,7 +103,22 @@ class MagnitudeImpact:
     """
     Magnitude = (B × T × X) / N  [guard N=0].
     Impact    = Magnitude × A.
-    Encodes the B-T-X structural triad as the primary load-bearer.
+
+    RE-DERIVATION RECORD (constitutive physics audit, 2026-09-12, resolved):
+    this formula was flagged in aurora_internal/aurora_noncomp_registry.py
+    (see MAGNITUDE_NUMERATOR_AXES) as authored under the pre-Build-725
+    assumption that B, not X, was the canonical atomic MAGNITUDE-role axis.
+    Conclusion after re-derivation: the arithmetic is unchanged -- B*T*X is
+    a product, and a product's value doesn't depend on which factor is
+    narratively called "primary". X is now correctly understood as the
+    primary magnitude carrier (existence/admissibility IS the measure) and
+    B's presence reflects its own corrected role (DIFFERENCE -- a
+    well-differentiated concept carries more communicative weight), not a
+    magnitude role of its own. This is a domain-specific derived metric (a
+    communication field's semantic weight), distinct from the atomic
+    per-axis Magnitude/Polarity/Operator/Cost/Difference table -- its
+    validity doesn't depend on which axis owns that abstract label. See
+    the registry file for the full reasoning.
     """
 
     @staticmethod
