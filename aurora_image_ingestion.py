@@ -41,6 +41,7 @@ import urllib.parse
 from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
 from aurora_constraint_engine import (
     ConstraintVector as _ConstraintVector,
+    ManifoldViolation as _ManifoldViolation,
     FoundationalContract as _FoundationalContract,
     ExistenceMode as _ExistenceMode,
     GovernorWeights as _GovernorWeights,
@@ -379,6 +380,43 @@ class ImageIngestionProtocol:
             A=float(ax.get("A", 0.20)),
         )
 
+    def _admit_vector(self, path: str, fv: Optional["VisualFeatureVector"]) -> bool:
+        """
+        The sole admission gate for a feature vector entering this engine's
+        live index.
+
+        Constitutive physics audit (2026-09-12), X:OPERATOR finding: this
+        module used to write directly into self._vectors (three call
+        sites: folder ingestion, camera-frame refinement, user teaching)
+        with no existence-admissibility check at all -- data became "real"
+        to this engine the instant Python executed a dict assignment.
+        Every one of those direct writes is replaced by a call here, so an
+        occurrence cannot enter self._vectors without passing through
+        ConstraintVector's own X<=0 admissibility check.
+
+        X reflects whether an occurrence actually happened here: fv is
+        None exactly when FeatureExtractor.extract() hit a real failure
+        (corrupt/unreadable file, caught exception -- see
+        aurora_vision_clustering.py). A successful PIL-unavailable stub
+        extraction is a legitimate degraded-but-real admission, not a
+        failure, and stub vectors don't carry meaningful width/height, so
+        this deliberately does not key off those fields -- fv is not None
+        is the actual, exercised existence signal already implicit in the
+        code before this fix (the old `if fv:` guard at the folder-scan
+        call site). T/N/B/A have no per-item meaning at this admission
+        boundary (this module tracks no per-item tick, energy pool, or
+        agency for a single image) so they are filled with the neutral
+        midpoint rather than a fabricated measurement.
+        """
+        x = 1.0 if fv is not None else 0.0
+        try:
+            _ConstraintVector(X=x, T=0.5, N=0.5, B=0.5, A=0.5)
+        except _ManifoldViolation:
+            return False
+        with self._lock:
+            self._vectors[path] = fv
+        return True
+
     def runtime_regime(self) -> Dict[str, Any]:
         cv = self.constraint_profile()
         axes = {"X": cv.X, "T": cv.T, "N": cv.N, "B": cv.B, "A": cv.A}
@@ -422,9 +460,7 @@ class ImageIngestionProtocol:
         for path in image_paths:
             if path not in self._vectors:
                 fv = self.extractor.extract(path)
-                if fv:
-                    with self._lock:
-                        self._vectors[path] = fv
+                if self._admit_vector(path, fv):
                     new_count += 1
 
         if not self._vectors:
@@ -509,8 +545,7 @@ class ImageIngestionProtocol:
             saturation=frame_features.get("saturation", 0.5),
             aspect_ratio=frame_features.get("aspect", 1.0),
         )
-        with self._lock:
-            self._vectors[fv.image_path] = fv
+        self._admit_vector(fv.image_path, fv)
 
         # Light recluster every 20 camera frames
         if len([k for k in self._vectors if k.startswith("camera_")]) % 20 == 0:
@@ -545,8 +580,7 @@ class ImageIngestionProtocol:
             aspect_ratio=float(visual_features.get("aspect_ratio", 1.0)),
         )
 
-        with self._lock:
-            self._vectors[ts_key] = fv
+        self._admit_vector(ts_key, fv)
 
         # Find nearest cluster by centroid distance; create one if none exist.
         fv_vec = fv.to_vector()

@@ -32,6 +32,7 @@ from typing import Any, Dict, List, Optional
 
 from aurora_constraint_engine import (
     ConstraintVector as _ConstraintVector,
+    ManifoldViolation as _ManifoldViolation,
     FoundationalContract as _FoundationalContract,
     ExistenceMode as _ExistenceMode,
     GovernorWeights as _GovernorWeights,
@@ -577,7 +578,23 @@ class ScreenObserver:
 
                 # 1. Capture screen
                 img, path = self._capture_frame()
-                if img is None:
+                # Existence admission gate (constitutive physics audit,
+                # 2026-09-12, X:OPERATOR finding): this loop already
+                # rejected a failed capture via `if img is None`, but that
+                # rejection was a bare boolean, disconnected from the
+                # physics substrate -- no ManifoldViolation, no typed
+                # occurrence. Routing the same condition through
+                # ConstraintVector's own X<=0 check makes the identical
+                # rejection real physics instead of parallel ad hoc logic,
+                # with no change in behavior (a successful capture always
+                # has X=1.0 and passes; a failed one always had X=0.0 and
+                # rejected exactly as before).
+                try:
+                    _ConstraintVector(
+                        X=(1.0 if img is not None else 0.0),
+                        T=0.5, N=0.5, B=0.5, A=0.5,
+                    )
+                except _ManifoldViolation:
                     time.sleep(self._interval)
                     continue
 

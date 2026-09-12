@@ -57,7 +57,7 @@ from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 import numpy as np
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Optional, Callable
+from typing import Dict, List, Tuple, Optional, Callable, Set
 from enum import IntEnum, auto
 import math
 
@@ -109,13 +109,20 @@ class ConstraintVector:
     A: float  # Agency magnitude
     
     def __post_init__(self):
-        """Verify admissibility on construction."""
+        """Verify admissibility on construction, then lock the vector immutable."""
         if self.X <= 0:
             raise ManifoldViolation(
                 f"Inadmissible vector: X={self.X} ≤ 0. "
                 "The manifold collapses when existence is non-positive."
             )
-    
+        object.__setattr__(self, "_locked", True)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        """ConstraintVector is immutable after construction (INV-01)."""
+        if getattr(self, "_locked", False):
+            raise ManifoldViolation("ConstraintVector is immutable after construction.")
+        object.__setattr__(self, name, value)
+
     def to_array(self) -> np.ndarray:
         """Convert to numpy array [X, T, N, B, A]."""
         return np.array([self.X, self.T, self.N, self.B, self.A])
@@ -152,7 +159,28 @@ class ConstraintVector:
     def dot(self, other: ConstraintVector) -> float:
         """Dot product in constraint space."""
         return float(np.dot(self.to_array(), other.to_array()))
-    
+
+    def add(self, other: ConstraintVector) -> ConstraintVector:
+        """Method form of __add__ (compatibility alias)."""
+        return self + other
+
+    def subtract(self, other: ConstraintVector) -> ConstraintVector:
+        """Method form of __sub__ (compatibility alias)."""
+        return self - other
+
+    def scalar_multiply(self, scalar: float) -> ConstraintVector:
+        """Method form of __mul__ (compatibility alias)."""
+        return self * scalar
+
+    def span_check(self) -> Set[str]:
+        """Return axes with |value| > 0.01 — the 'engaged' axes."""
+        labels = ("X", "T", "N", "B", "A")
+        return {ax for ax, v in zip(labels, self.to_array()) if abs(v) > 0.01}
+
+    def axis_count(self) -> int:
+        """Number of meaningfully engaged axes."""
+        return len(self.span_check())
+
     def in_span(self) -> bool:
         """
         Check if this vector lies in the span of the five constraints.

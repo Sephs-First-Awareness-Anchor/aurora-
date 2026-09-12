@@ -456,11 +456,23 @@ class GlobalNonComps:
                 f"partition_count=0 with {node_count} nodes at tick={tick}")
 
     @staticmethod
+    def agency_cost(magnitude: float) -> float:
+        """
+        The one canonical agency-cost law: k_A * magnitude^2.
+
+        Split out from check_A (constitutive physics audit, 2026-09-12) so
+        every caller that needs "what would this magnitude cost" computes
+        it the same way check_A itself enforces it, instead of re-deriving
+        the formula inline with its own copy of the constant.
+        """
+        return K.agency_cost_coefficient * (magnitude ** 2)
+
+    @staticmethod
     def check_A(magnitude: float, energy_available: float, tick: int) -> None:
         if magnitude > K.agency_max_magnitude:
             raise NonCompViolation("A",
                 f"agency magnitude={magnitude:.4f} > ceiling={K.agency_max_magnitude}")
-        cost = K.agency_cost_coefficient * (magnitude ** 2)
+        cost = GlobalNonComps.agency_cost(magnitude)
         if cost > energy_available:
             raise NonCompViolation("A",
                 f"agency cost={cost:.6f} > available={energy_available:.6f} at tick={tick}")
@@ -964,15 +976,33 @@ class EnergyBudget:
     def replenish_from_lattice(self, lattice: IVMLattice) -> None:
         """
         Energy is conserved via redistribution — it is not created.
-        Baseline burn redistributes from the boundary layer back into the budget.
-        Lattice pool contributes proportionally; floor ensures existence can persist.
+
+        CONSTITUTIVE PHYSICS AUDIT (2026-09-12) fix: this used to credit a
+        lattice-proportional bonus to the budget by reading
+        lattice.get_total_energy() and crediting min(baseline_burn,
+        lattice_total * 0.001) without ever decreasing the lattice's own
+        energy — so whenever the lattice held any energy at all, this
+        fabricated that bonus from nothing, every tick, unbounded over
+        time (verified concretely: net budget strictly increased tick over
+        tick with the lattice's energy never touched). It now calls
+        IVMLattice.withdraw_energy() to genuinely take that amount out of
+        the lattice, crediting the budget only with what was actually
+        withdrawn. Combined budget+lattice energy is conserved exactly by
+        this exchange: whatever the lattice loses, the budget gains, no
+        more and no less.
+
+        floor_component (exactly matching burn_existence_cost's baseline
+        burn) is kept as a net-zero architectural subsidy, not a
+        violation: existence is the cheapest, reference-state constraint
+        by design (LAYER_COST[X] is the cheapest tier in the registry), so
+        burn and floor cancel exactly with no residual energy either way —
+        only the lattice-proportional bonus needed a real transfer.
         """
         lattice_total = lattice.get_total_energy()
-        # Lattice-proportional component (redistributed from node pool)
-        lattice_component = lattice_total * 0.001
-        # Boundary layer always returns the baseline burn (conservation)
+        desired_bonus = min(K.baseline_burn_per_tick, lattice_total * 0.001)
+        actual_bonus = lattice.withdraw_energy(desired_bonus) if desired_bonus > 0 else 0.0
         floor_component = K.baseline_burn_per_tick
-        replenish = floor_component + min(K.baseline_burn_per_tick, lattice_component)
+        replenish = floor_component + actual_bonus
         self._budget += replenish
 
     def status(self) -> Dict:
@@ -1058,7 +1088,6 @@ class EvolutionaryChamber:
         self.run_id = run_id or f"run_{uuid.uuid4().hex[:8]}"
         self.output_dir = output_dir
         self.K = constants
-        self.tick_count: int = 0
         self._alive: bool = True
 
         os.makedirs(output_dir, exist_ok=True)
@@ -1075,6 +1104,26 @@ class EvolutionaryChamber:
                 abilities=_ab,
                 output_dir=output_dir,
             )
+
+        # CONSTITUTIVE PHYSICS AUDIT (2026-09-12) T follow-up: this used to
+        # hardcode tick_count to 0 regardless of what the injected genealogy
+        # logger's own (now-restorable, see aurora_runtime.py/run_chain.py's
+        # restore_tick_state() wiring) tick_count already was. That's correct
+        # for this chamber's own session-local physics (check_T's monotonicity
+        # check and the Difference buffer's windowing below only care about
+        # relative ordering within this process's ticks, and self._diff_buffer
+        # is itself a fresh, in-memory, session-local buffer either way) --
+        # but self.tick_count is also hashed into genealogy-facing identifiers
+        # elsewhere in this class (lineage_raw / target_generation for
+        # dream-feedback mutations), and those ARE meant to be historically
+        # unique across this object's full persisted lifetime, not just this
+        # process's. Starting from 0 there let two genealogy records from
+        # different real points in Aurora's history collide on the same
+        # generation number (and, when evidence_id is empty and the mutation
+        # repeats, the same lineage hash). Resuming from the genealogy
+        # logger's own tick_count fixes that without touching the session-
+        # local uses at all, since they only depend on relative differences.
+        self.tick_count: int = int(getattr(self._genealogy, "tick_count", 0) or 0)
 
         # V3 physics sub-systems
         self._abilities = _build_chamber_abilities()
@@ -1200,17 +1249,35 @@ class EvolutionaryChamber:
                     requested_axes = len(ordered_labels)
                     represented_scale = str(ordered_labels[0]).lower() if ordered_labels else "existence"
                     magnitude = requested_axes * 0.1
-                    base_energy_cost = self.K.agency_cost_coefficient * (magnitude ** 2)
+                    base_energy_cost = GlobalNonComps.agency_cost(magnitude)
 
                     carry_credit = max(0.0, float(self._carryover_credit_current.get(represented_scale, 0.0)))
                     effective_cost = max(0.0, float(base_energy_cost) - carry_credit)
 
                     available_energy = max(0.0, self._budget.available - self.K.energy_budget_floor)
-                    executable = (
-                        requested_axes > 0
-                        and magnitude <= float(self.K.agency_max_magnitude)
-                        and effective_cost <= available_energy
-                    )
+                    # Route the agency ceiling+cost law through the canonical
+                    # GlobalNonComps.check_A instead of re-deriving the same
+                    # comparison inline (constitutive physics audit,
+                    # 2026-09-12: check_A had zero callers anywhere in the
+                    # repo despite being a correct, fully-implemented
+                    # precondition — this loop had quietly reimplemented the
+                    # identical ceiling/cost test instead of calling it).
+                    # check_A's `cost > energy_available` test, given
+                    # energy_available=available_energy+carry_credit, is
+                    # algebraically identical to this chamber's
+                    # carryover-credit-adjusted rule
+                    # (effective_cost = base_cost - carry_credit <=
+                    # available_energy  <=>  base_cost <= available_energy +
+                    # carry_credit), so the executable/idle-fallback
+                    # behavior below is unchanged by this refactor.
+                    executable = requested_axes > 0
+                    if executable:
+                        try:
+                            GlobalNonComps.check_A(
+                                magnitude, available_energy + carry_credit, self.tick_count
+                            )
+                        except NonCompViolation:
+                            executable = False
 
                     # Every attempted op participates in evolutionary chain lineage.
                     trace_items = _pair_atom_trace_items(ordered_labels)

@@ -1283,11 +1283,25 @@ from foundational_contract import (
 # foundational_contract, whose language_projection takes no mode argument).
 from aurora_constraint_engine import (
     ConstraintVector as _ConstraintVector,
+    ConstraintEngine as _ConstraintEngine,
     GovernorWeights as _GovernorWeights,
     ExistenceMode as _ExistenceMode,
     FoundationalContract as _FoundationalContract,
 )
 _FC = _FoundationalContract()
+
+# Constitutive physics audit (2026-09-12): nothing in production ever called
+# ConstraintEngine.feed_evidence()/.govern() -- not from here, not from
+# aurora_interaction_engine.py, not even EngineRuntime.tick() despite its
+# own docstring calling it "the primary runtime method". This module-level
+# instance is shared across calls (one physical universe, not one per
+# call) and is wired into SensoryIntegrationEngine.speak() below in
+# OBSERVE-ONLY mode: it records what the governor would decide on a real
+# environmental action (Aurora speaking), but the decision does not gate
+# whether speech actually happens yet. Making it load-bearing is a live
+# behavior change to Aurora's actual output and needs its own deliberate
+# follow-up, not a guess bundled into this fix.
+_GOVERNOR_ENGINE = _ConstraintEngine()
 
 # Pattern types shared with aurora_expression_perception
 from aurora_perception_primitives import PatternType, DimensionalPattern
@@ -6587,6 +6601,23 @@ class SensoryIntegrationEngine:
         if not self.hardware or not self.hardware.voice:
             logger.warning("[SENSORY INTEGRATION] No voice available")
             return False
+
+        # Constitutive physics audit (2026-09-12): observe-only governor call
+        # (see _GOVERNOR_ENGINE above). primary_axis="A" is the honest
+        # classification for this event -- speaking is an agentic act -- not
+        # a softer choice picked to get a nicer-looking decision, since this
+        # phase only observes and does not act on the result.
+        try:
+            _GOVERNOR_ENGINE.feed_evidence({"text": text, "tone": str(tone or "neutral")})
+            _GOVERNOR_ENGINE.govern({"primary_axis": "A"})
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_hardware_io.py:SensoryIntegrationEngine.speak:governor_observe",
+                exc=_aurora_boundary_exc,
+                context={"function": "speak", "source_file": "aurora_hardware_io.py"},
+            )
 
         # Get speech parameters based on personality and tone
         params = self.voice_mapper.get_speech_parameters(tone, text)
