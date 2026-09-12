@@ -126,6 +126,18 @@ class WebImageDownloader:
         self._downloaded: set = set()
         self.load_state()
 
+        # T:POLARITY/COST/DIFFERENCE (constitutive physics audit follow-up,
+        # 2026-09-12): the real can/can't-continue signal for this file
+        # lives here -- can_download()'s daily-limit check -- not in the
+        # general admission gate (_admit_vector), which isn't actually
+        # gated by the download quota at all for local/camera/teach
+        # admissions. See can_download() for how these are used.
+        self._check_count: int = 0
+        self._diff_buffer = _make_difference_buffer()
+        self.last_claim = None
+        self.last_cost: float = 0.0
+        self.last_difference: float = 0.0
+
     def _reset_if_new_day(self):
         today = time.strftime("%Y-%m-%d")
         if today != self._date:
@@ -135,8 +147,26 @@ class WebImageDownloader:
     def can_download(self) -> bool:
         self._reset_if_new_day()
         if self.allow_network and not self.network_gateway:
-            return False
-        return self._downloads_today < self.DAILY_LIMIT
+            allowed = False
+        else:
+            allowed = self._downloads_today < self.DAILY_LIMIT
+
+        mode = _FC.classify({"connections": self._downloads_today})
+        mode = _ExistenceMode(max(int(mode), int(_ExistenceMode.TRANSIENT)))
+        predicate = _IStatePredicate.I_CAN if allowed else _IStatePredicate.I_CANNOT
+        claim = _FC.make_claim(mode, predicate, content="web_download")
+        self.last_claim = claim
+
+        magnitude = abs(claim.displacement().T)
+        self.last_cost = _NC_REGISTRY.shift_cost(_Constraint.T, magnitude)
+
+        self._check_count += 1
+        mags = {_Constraint.T: magnitude}
+        self._diff_buffer.record(self._check_count, mags)
+        snap = self._diff_buffer.snapshot(self._check_count, mags)
+        self.last_difference = snap.value(_Constraint.T)
+
+        return allowed
 
     def download_for_concept(self, concept: str) -> List[str]:
         """

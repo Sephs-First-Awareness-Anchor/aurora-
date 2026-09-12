@@ -378,7 +378,16 @@ DIFFERENCE_PARAMS: Dict[Constraint, DifferenceParams] = {
         constraint      = Constraint.T,
         ref_type        = 'prior_self',
         window_ticks    = 4,
-        normalize_scale = 4.0,      # matches k_T — momentum window
+        # CONSTITUTIVE PHYSICS AUDIT (2026-09-12), T follow-up: this was
+        # 4.0 with a comment claiming it "matches k_T", but
+        # LAYER_COST[T].shift_cost_coeff was raised from 4.0 to 7.0 (see
+        # that field's own comment) without updating this one to match --
+        # a real, verifiable drift caught by the registry's own
+        # verify_noncomp_registry() self-check ("Difference normalize_scale
+        # matches shift_cost_coeff"), which was failing before this fix.
+        # T's Difference channel had been normalizing against a stale
+        # constant ever since the cost coefficient changed.
+        normalize_scale = 7.0,      # matches k_T — momentum window
         polarity_signed = True,     # acceleration (+) vs deceleration (−) are distinct
     ),
     #
