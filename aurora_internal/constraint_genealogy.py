@@ -8287,7 +8287,13 @@ class ConstraintGenealogyLogger:
 
             ps = self._pair_stats[key]
             ps.update(relief, cost_total, x_risk, self.tick_count)
-            self._update_representation_relation(key, ps, relief, cost_total, x_risk)
+            # RELATIONAL PROMOTION JURISDICTION REPAIR: capture the actual
+            # intact relation record _update_representation_relation()
+            # already builds/updates from real observed coactivation --
+            # previously discarded here -- so _try_promote() judges the
+            # relation that physically occurred, not only PairStats' shadow
+            # of it. See _try_promote()'s docstring.
+            relation = self._update_representation_relation(key, ps, relief, cost_total, x_risk)
 
             # Already promoted?
             if key in self._links_by_parents:
@@ -8295,7 +8301,7 @@ class ConstraintGenealogyLogger:
                 continue
 
             # Check promotion
-            link = self._try_promote(key, ps)
+            link = self._try_promote(key, ps, relation)
             if link is not None:
                 if link.id in self.links:
                     # Collision-safe guard: do not duplicate an existing link id.
@@ -8323,11 +8329,67 @@ class ConstraintGenealogyLogger:
             return self.rewrite_trace(trace)
         return None
 
+    def _relation_difference_support(
+        self, relation: Optional[Dict[str, Any]], axis: str
+    ) -> float:
+        """
+        RELATIONAL PROMOTION JURISDICTION REPAIR (Sunni & Cael): a lawful,
+        consequence-driven reliability-corroboration term for Gate 2,
+        sourced from the actual intact relation record
+        (self._representation_relations, built by
+        _update_representation_relation() from real observed
+        coactivation) -- not a new gate, not a new schema, not a
+        Difference-specific promotion rule.
+
+        `relation["difference"]` accumulates real per-axis Difference
+        evidence observed across this exact pair's history:
+        sum/abs_sum/last per axis. A CONSISTENT (same-signed) accumulated
+        Difference on `axis` -- abs(sum)/abs_sum close to 1.0 -- means
+        this axis's constraint magnitude has genuinely, repeatedly moved
+        the same direction whenever this relation occurred: a real
+        structural corroboration of "this axis reliably changed", the
+        exact question Gate 2's POS_FRACTION_MIN threshold already asks
+        of PairStats' pf (positive-relief fraction). A value oscillating
+        near zero net despite real activity contributes little, mirroring
+        PairStats' own "positive-only fraction, not raw magnitude" idiom
+        for the identical noise-vs-signal problem (see pos_fraction()).
+
+        Returns 0.0 -- support, never opposition -- whenever there is no
+        Difference evidence for this axis on this relation (relation is
+        None, or this axis's abs_sum is 0). Unknown/absent evidence is
+        never penalized and never inferred; it simply contributes nothing,
+        leaving the existing PairStats-only calculation exactly as it was.
+        """
+        if not relation:
+            return 0.0
+        diff = relation.get("difference") or {}
+        abs_sum = float((diff.get("abs_sum") or {}).get(axis, 0.0) or 0.0)
+        if abs_sum <= 0.0:
+            return 0.0
+        signed_sum = float((diff.get("sum") or {}).get(axis, 0.0) or 0.0)
+        return abs(signed_sum) / abs_sum
+
     def _try_promote(
-        self, key: Tuple[str, str], ps: PairStats
+        self, key: Tuple[str, str], ps: PairStats,
+        relation: Optional[Dict[str, Any]] = None,
     ) -> Optional[ConstraintLink]:
         """
         Evaluate all promotion gates and mint a Link if all pass.
+
+        RELATIONAL PROMOTION JURISDICTION REPAIR (Sunni & Cael): `relation`
+        is the actual intact representation-relation record this pair has
+        accumulated (self._representation_relations[relation_id], built by
+        _update_representation_relation() -- same object, not a copy),
+        passed by _accumulate_pairs() at decision time rather than
+        attached only after promotion succeeds. All five gates below still
+        judge PairStats' statistics exactly as before; `relation` is
+        additionally consulted, narrowly, where an existing gate
+        calculation already has a lawful use for it (see
+        _relation_difference_support()). `relation` is None only for a
+        direct/diagnostic call outside the normal _accumulate_pairs() path
+        (mirrors the existing fallback in _promoted_relation_metadata()) --
+        every gate below treats that exactly like a relation with no
+        additional evidence, never as a reason to reject or fabricate one.
         """
         cfg = self.cfg
 
@@ -8396,13 +8458,19 @@ class ConstraintGenealogyLogger:
                 floor_ratio=0.30,
                 cap_ratio=1.80,
             )
+            # RELATIONAL PROMOTION JURISDICTION REPAIR: the relation's own
+            # recorded Difference evidence for axis `a` is a second,
+            # independent lens on the SAME reliability question this
+            # threshold already asks from PairStats' pf (positive-relief
+            # fraction) -- did this axis genuinely, consistently change,
+            # or is the signal noise? See _relation_difference_support().
             pos_fraction_dyn, _ = self._regulated_threshold(
                 "POS_FRACTION_MIN",
                 float(cfg.POS_FRACTION_MIN),
                 axis=a,
                 depth=depth,
                 threshold_kind="floor",
-                local_support=max(0.0, float(self._causal_support(a, depth))) + max(0.0, float(pf.get(a, 0.0) or 0.0)) + _ax_sup_bonus[a],
+                local_support=max(0.0, float(self._causal_support(a, depth))) + max(0.0, float(pf.get(a, 0.0) or 0.0)) + _ax_sup_bonus[a] + self._relation_difference_support(relation, a),
                 local_opposition=max(0.0, float(self._gradient_axis_ema.get(self._opposing_axis(a), 0.0) or 0.0)) + _ax_opp_bonus[a],
                 floor_ratio=0.55,
                 cap_ratio=1.35,
