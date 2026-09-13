@@ -9,12 +9,20 @@ consulted/attached only after promotion succeeded. The repair threads the
 already-existing relation record into _try_promote() at decision time
 (narrowest existing seam: _accumulate_pairs() now captures
 _update_representation_relation()'s previously-discarded return value and
-passes it through) and lets Gate 2's existing POS_FRACTION_MIN regulated
-threshold consult the relation's own already-recorded Difference evidence
-as an additional `local_support` term (see
-ConstraintGenealogyLogger._relation_difference_support()) -- an existing
-"support/opposition" calculation, not a new gate, schema, or promotion
-authority.
+passes it through).
+
+An earlier revision of this repair additionally fed a same-signed-Difference
+"consistency ratio" from the relation into Gate 2's local_support as a
+reliability corroboration signal. That was removed (Sunni & Cael): Aurora's
+existing Difference physics never establishes that same-signed Difference
+means reliability, and DIFFERENCE_PARAMS[X] and DIFFERENCE_PARAMS[B] are
+unsigned by construction (polarity_signed=False) -- a sign-consistency ratio
+computed over their values is a mathematical artifact of how they happen to
+be stored, not causal evidence. So: the intact relation is available to
+_try_promote() at decision time and its Difference history survives
+promotion intact, but no gate consults it. Difference should affect
+promotion only once an existing lawful Aurora mechanism gives it that
+meaning -- not yet established, so it stays inert here.
 
 Every proof below drives the real ConstraintGenealogyLogger / PairStats /
 _try_promote() machinery -- no parallel promotion path is created or
@@ -35,8 +43,7 @@ difference_snapshot argument added). This repair stores the relation
 separately (self._representation_relations, unchanged location) and only
 threads the already-returned record through an existing internal call
 (_accumulate_pairs() -> _try_promote()), so none of those four files
-needed modification -- confirmed by running them unmodified alongside this
-suite (see task ledger / commit message for the full sweep).
+needed modification.
 
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
@@ -148,51 +155,54 @@ class TestCandidateIsTheActualObservedRelation:
 
 
 # ---------------------------------------------------------------------------
-# Proof 2 + 3: no additional causally relevant evidence -> unchanged outcome;
-# withholding Difference alone does not change promotion without consequence
+# Proof 2 + 3: Difference presence alone never alters promotion -- the
+# relation is available at decision time, but no gate consults its
+# Difference evidence. Confirmed with a PairStats that comfortably clears
+# Gate 2 on its own AND with the exact borderline PairStats that a prior,
+# now-removed revision of this repair used to make Difference evidence flip.
 # ---------------------------------------------------------------------------
 
-class TestNoSpuriousEffectWithoutCausalConsequence:
-    def test_gate_outcome_identical_for_none_vs_empty_evidence_relation(self, tmp_path):
-        """relation=None (no relation passed at all) and relation={} /
-        relation with zero abs_sum (a relation observed, but with no
-        Difference evidence yet) must produce the identical Gate 2 result --
-        omission and empty evidence are the same "unknown", never treated
-        differently."""
-        logger = ConstraintGenealogyLogger(run_id="no_evidence", output_dir=str(tmp_path / "a"))
+class TestDifferencePresenceDoesNotAlterPromotion:
+    def test_gate_outcome_identical_for_none_vs_empty_vs_populated_evidence_relation(self, tmp_path):
+        """relation=None, relation={}, a relation with zero abs_sum evidence,
+        and a relation with strong self-consistent Difference evidence must
+        all produce the identical Gate 2 result on a PairStats built below
+        Gate 2's regulated floor -- no gate reads relation["difference"],
+        so none of these can differ from one another."""
         key = ("A:one", "B:two")
-        ps = _make_ps(pos_count_x=16, count=50)  # deliberately below Gate 2's floor
+        ps = _make_ps(pos_count_x=16, count=50)  # pf(X) = 0.32, below Gate 2's floor
 
-        link_none = logger._try_promote(key, ps, None)
-        stats_none = dict(logger._promotion_stats)
+        logger_none = ConstraintGenealogyLogger(run_id="none", output_dir=str(tmp_path / "a"))
+        link_none = logger_none._try_promote(key, ps, None)
 
-        logger2 = ConstraintGenealogyLogger(run_id="no_evidence_2", output_dir=str(tmp_path / "b"))
-        link_empty = logger2._try_promote(key, ps, {})
-        stats_empty = dict(logger2._promotion_stats)
+        logger_empty = ConstraintGenealogyLogger(run_id="empty", output_dir=str(tmp_path / "b"))
+        link_empty = logger_empty._try_promote(key, ps, {})
 
-        logger3 = ConstraintGenealogyLogger(run_id="no_evidence_3", output_dir=str(tmp_path / "c"))
+        logger_zero = ConstraintGenealogyLogger(run_id="zero", output_dir=str(tmp_path / "c"))
         zero_relation = {"difference": {"sum": {"X": 0.0}, "abs_sum": {"X": 0.0}}}
-        link_zero = logger3._try_promote(key, ps, zero_relation)
-        stats_zero = dict(logger3._promotion_stats)
+        link_zero = logger_zero._try_promote(key, ps, zero_relation)
 
-        assert link_none is None and link_empty is None and link_zero is None
-        assert stats_none.get("reject_reliability") == stats_empty.get("reject_reliability") == stats_zero.get("reject_reliability") == 1
+        logger_strong = ConstraintGenealogyLogger(run_id="strong", output_dir=str(tmp_path / "d"))
+        strong_relation = {"difference": {"sum": {"X": 1.0}, "abs_sum": {"X": 1.0}}}
+        link_strong = logger_strong._try_promote(key, ps, strong_relation)
+
+        assert link_none is None and link_empty is None and link_zero is None and link_strong is None, (
+            "strong, self-consistent Difference evidence must not flip "
+            "Gate 2 -- Difference has no causal meaning wired to any gate."
+        )
+        stats = [
+            logger_none._promotion_stats.get("reject_reliability"),
+            logger_empty._promotion_stats.get("reject_reliability"),
+            logger_zero._promotion_stats.get("reject_reliability"),
+            logger_strong._promotion_stats.get("reject_reliability"),
+        ]
+        assert stats == [1, 1, 1, 1]
 
     def test_gate2_outcome_unchanged_when_relief_alone_already_clears_the_floor(self, tmp_path):
         """When PairStats' own pos_fraction already comfortably clears Gate
-        2's regulated floor on its own (the normal case for most real
-        pairs), supplying real Difference evidence must not change the
-        Gate 2 decision or the resulting link's physics -- Difference is
-        corroboration for a borderline case, not a bonus applied
-        unconditionally.
-
-        Compared directly via _try_promote() (not a multi-tick observe()
-        run): a real end-to-end run also exercises _update_gradient_memory()
-        feeding Gate 5's gradient_signal from difference_snapshot, a
-        pre-existing mechanism unrelated to this repair (confirmed by
-        reproducing the same tick-count sensitivity against the unmodified
-        base commit) -- comparing _try_promote() outputs directly isolates
-        the jurisdiction repair's own effect from that unrelated one."""
+        2's regulated floor on its own, supplying real Difference evidence
+        must not change the Gate 2 decision or the resulting link's
+        physics."""
         key = ("A:one", "B:two")
         ps = _make_ps(pos_count_x=35, count=50)  # pf(X) = 0.70, comfortably clears
 
@@ -207,91 +217,40 @@ class TestNoSpuriousEffectWithoutCausalConsequence:
         assert logger_none._promotion_stats.get("reject_reliability", 0) == 0
         assert logger_strong._promotion_stats.get("reject_reliability", 0) == 0
         # Same PairStats-derived physics either way -- the relation only
-        # ever affects the Gate 2 decision itself and the metadata attached
-        # after promotion (representation_relation/constraint_basis/
-        # semantic_identity), never the promoted link's own measured
-        # relief/cost/depth/dominant axis.
+        # ever affects the metadata attached after promotion
+        # (representation_relation/constraint_basis/semantic_identity),
+        # never the promoted link's own measured relief/cost/depth/axis.
         assert link_none.mean_relief == link_strong.mean_relief
         assert link_none.mean_cost == link_strong.mean_cost
         assert link_none.dominant_relief_axis == link_strong.dominant_relief_axis
         assert link_none.depth == link_strong.depth
         assert link_none.count == link_strong.count
 
-
-# ---------------------------------------------------------------------------
-# Proof 4: an observed dimensional distinction CAN change promotion, through
-# the existing support/opposition calculation -- not a hardcoded bonus
-# ---------------------------------------------------------------------------
-
-class TestObservedDifferenceCanChangePromotionThroughExistingCalculation:
-    def test_consistent_difference_evidence_flips_gate2_reliability_and_full_promotion(self, tmp_path):
-        """A PairStats deliberately built just below Gate 2's regulated
-        POS_FRACTION_MIN floor on axis X (pf=0.40) is rejected at Gate 2
-        with no relation. The identical PairStats, with a relation whose
-        recorded Difference on X is perfectly self-consistent (every
-        observed tick moved the same direction), passes Gate 2 and the
-        full promotion succeeds -- the mechanism is
-        _relation_difference_support() feeding _regulated_threshold()'s
-        existing `local_support` parameter, not a new gate or a hardcoded
-        Difference bonus."""
+    def test_real_observe_driven_promotion_unaffected_by_unsigned_axis_difference(self, tmp_path):
+        """DIFFERENCE_PARAMS[X] and DIFFERENCE_PARAMS[B] are unsigned by
+        construction -- a real difference_snapshot carrying activity on
+        those axes must not influence promotion via the relation (it may
+        still influence promotion via other, pre-existing mechanisms
+        unrelated to this repair, e.g. _update_gradient_memory() feeding
+        Gate 5's gradient_signal -- this test isolates the relation's own
+        effect via direct _try_promote() calls, not a multi-tick observe()
+        timing comparison)."""
         key = ("A:one", "B:two")
-        ps = _make_ps(pos_count_x=16, count=50)  # pf(X) = 0.32
+        ps = _make_ps(pos_count_x=16, count=50)  # borderline, pf(X) = 0.32
 
-        logger_no_rel = ConstraintGenealogyLogger(run_id="flip_no_rel", output_dir=str(tmp_path / "a"))
-        link_no_rel = logger_no_rel._try_promote(key, ps, None)
-        assert link_no_rel is None
-        assert logger_no_rel._promotion_stats.get("reject_reliability") == 1
+        logger_x = ConstraintGenealogyLogger(run_id="unsigned_x", output_dir=str(tmp_path / "a"))
+        x_relation = {"difference": {"sum": {"X": 0.9}, "abs_sum": {"X": 0.9}}}
+        link_x = logger_x._try_promote(key, ps, x_relation)
 
-        logger_with_rel = ConstraintGenealogyLogger(run_id="flip_with_rel", output_dir=str(tmp_path / "b"))
-        consistent_relation = {"difference": {"sum": {"X": 1.0}, "abs_sum": {"X": 1.0}}}
-        link_with_rel = logger_with_rel._try_promote(key, ps, consistent_relation)
-        assert link_with_rel is not None
-        assert logger_with_rel._promotion_stats.get("reject_reliability", 0) == 0
-        assert link_with_rel.dominant_relief_axis is not None
+        logger_b = ConstraintGenealogyLogger(run_id="unsigned_b", output_dir=str(tmp_path / "b"))
+        b_relation = {"difference": {"sum": {"B": 0.9}, "abs_sum": {"B": 0.9}}}
+        link_b = logger_b._try_promote(key, ps, b_relation)
 
-    def test_inconsistent_oscillating_difference_evidence_does_not_flip_gate2(self, tmp_path):
-        """The same borderline PairStats, but with Difference evidence that
-        is real (nonzero abs_sum) yet inconsistent (oscillating -- net sum
-        near zero despite real activity) contributes near-zero support,
-        mirroring PairStats' own pos_fraction() idiom for the identical
-        noise-vs-signal problem. Rejection is unchanged."""
-        key = ("A:one", "B:two")
-        ps = _make_ps(pos_count_x=16, count=50)
-
-        logger = ConstraintGenealogyLogger(run_id="oscillating", output_dir=str(tmp_path))
-        oscillating_relation = {"difference": {"sum": {"X": 0.1}, "abs_sum": {"X": 1.0}}}
-        link = logger._try_promote(key, ps, oscillating_relation)
-        assert link is None
-        assert logger._promotion_stats.get("reject_reliability") == 1
+        assert link_x is None and link_b is None
 
 
 # ---------------------------------------------------------------------------
-# Proof 5: unknown/unresolved dimensional evidence stays unresolved -- never
-# falls back to an axis-derived dimension
-# ---------------------------------------------------------------------------
-
-class TestUnknownEvidenceStaysUnresolved:
-    @pytest.mark.parametrize("relation,axis", [
-        (None, "X"),
-        ({}, "X"),
-        ({"difference": {}}, "X"),
-        ({"difference": {"sum": {}, "abs_sum": {}}}, "X"),
-        ({"difference": {"sum": {"X": 0.0}, "abs_sum": {"X": 0.0}}}, "X"),
-    ])
-    def test_relation_difference_support_returns_zero_never_a_fabricated_value(self, relation, axis, tmp_path):
-        logger = ConstraintGenealogyLogger(run_id="unknown", output_dir=str(tmp_path))
-        assert logger._relation_difference_support(relation, axis) == 0.0
-
-    def test_missing_axis_evidence_does_not_borrow_from_a_different_axis(self, tmp_path):
-        """Evidence recorded for axis T must never be used to support axis
-        X's reliability check -- no axis -> dimension inference of any kind."""
-        logger = ConstraintGenealogyLogger(run_id="no_borrow", output_dir=str(tmp_path))
-        relation = {"difference": {"sum": {"T": 1.0}, "abs_sum": {"T": 1.0}}}
-        assert logger._relation_difference_support(relation, "X") == 0.0
-
-
-# ---------------------------------------------------------------------------
-# Proof 6: existing relation history/parents/basis/consequence/difference
+# Proof 4: existing relation history/parents/basis/consequence/difference
 # survive promotion intact
 # ---------------------------------------------------------------------------
 
