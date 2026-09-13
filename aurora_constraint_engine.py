@@ -410,19 +410,43 @@ class FoundationalContract:
 # INV-05, section 2.5, seed sections 1 and 3
 # ============================================================
 
-class NonCompDimension(enum.Enum):
-    """INV-05, section 4.1: Five NC dimensions present in the sediment basins."""
-    POLARITY   = "polarity"
-    MAGNITUDE  = "magnitude"
-    OPERATOR   = "operator"
-    COST       = "cost"
-    DIFFERENCE = "difference"
-
+# fix/canonical-noncomp-dimension: this used to define its own, independent
+# NonCompDimension(enum.Enum) with string values ("polarity", "magnitude",
+# ...) -- a duplicate identity of the canonical NonCompDimension(IntEnum)
+# in aurora_internal/aurora_noncomp_registry.py (POLARITY=0, MAGNITUDE=1,
+# ...). Same five members, same declaration order, but a DIFFERENT class,
+# so `isinstance`/`is`/registry-returned-member comparisons against this
+# module's members could silently fail even when the enum "looked" the
+# same. Collapsed onto the canonical enum below.
+#
+# Every consumer of this module's NonCompDimension is internal to this
+# file (NC_CHANNELS below and SedimentBasin.basin_id) -- traced via a
+# repo-wide grep of every `from aurora_constraint_engine import` site;
+# no other module ever imported NonCompDimension, SedimentBasin,
+# NC_CHANNELS, or SEDIMENT_BASINS from here. Every other consumer in the
+# repo (aurora_sedimemory.py, aurora_closure_basis.py,
+# aurora_reflexive_interpreter.py, aurora_noncomp_layer_compiler.py,
+# aurora_internal/aurora_dna_strand_schema.py, aurora_runtime.py) already
+# imports NonCompDimension from the canonical registry module, so those
+# are unaffected by this change.
+#
+# The old enum's `.value` WAS the lowercase string used to build the
+# "SED:{axis}>{dim}" sediment-basin IDs and "NC_{AXIS}_{DIM}" channel
+# names below -- exactly the external serialization this fix must not
+# silently change. The canonical enum's `.value` is an int (its ordinal),
+# so every former `dim.value` site here is converted to `dim.name.lower()`
+# instead, which reproduces the identical lowercase string ("polarity",
+# "magnitude", "operator", "cost", "difference") since both enums declare
+# the same five members in the same order. See basin_id below for the
+# other site. Byte-identical output is pinned by this file's own
+# self-test assertions (SED:B>polarity, NC_X_POLARITY == SED:X>polarity,
+# etc.) and by tests/test_canonical_noncomp_dimension.py.
+from aurora_internal.aurora_noncomp_registry import NonCompDimension
 
 # 25 NC channels (5 axes × 5 dimensions) — named as NC_{AXIS}_{DIM}
 # Values map to sediment basin IDs (SED:axis>dimension)
 NC_CHANNELS: Dict[str, str] = {
-    f"NC_{ax}_{dim.name}": f"SED:{ax}>{dim.value}"
+    f"NC_{ax}_{dim.name}": f"SED:{ax}>{dim.name.lower()}"
     for ax in ("X", "T", "N", "B", "A")
     for dim in NonCompDimension
 }
@@ -849,7 +873,9 @@ class SedimentBasin:
 
     @property
     def basin_id(self) -> str:
-        return f"SED:{self.axis}>{self.dimension.value}"
+        # fix/canonical-noncomp-dimension: dimension.name.lower(), not
+        # .value -- see the NonCompDimension collapse note above.
+        return f"SED:{self.axis}>{self.dimension.name.lower()}"
 
     def deposit(self, event_id: str) -> None:
         self.contributing_events.append(event_id)
