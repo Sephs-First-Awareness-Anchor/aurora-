@@ -18534,11 +18534,56 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
     try:
         _coll = systems.get("collective")
         if _coll is not None and hasattr(_coll, "process_raw"):
-            _syn = _coll.process_raw(
-                payload=user_text,
-                payload_type="text",
-                evidence={"source": "user_turn", "intent": str((state.parsed or {}).get("query_type", "general") or "general")},
-            )
+            # Existence evidence for a user turn.  Declared from facts this
+            # intake genuinely knows, never granted by fiat:
+            #   has_temporality -- the turn occurs at a moment in the dialogue.
+            #   conserves_state -- the turn is conserved: this same text is
+            #                      written to log_envelope_shadow(),
+            #                      log_relation_pairs_from_turn() and the
+            #                      internal field's ingest_external_input().
+            # That is PERSISTENT -- exactly the crystal gate, and no more.
+            # Identity and agency are NOT claimed here.  Before this, every
+            # turn entered as REFERENCE and no user words could ever be born
+            # as a crystal, however often they recurred.
+            _turn_evidence = {
+                "source": "user_turn",
+                "intent": str((state.parsed or {}).get("query_type", "general") or "general"),
+                "has_temporality": True,
+                "conserves_state": True,
+            }
+            _env = None
+            if hasattr(_coll, "lattice") and hasattr(_coll, "process"):
+                # process_raw()'s own two steps, keeping the envelope in hand
+                # so Layer 3 receives the SAME occurrence the collective saw.
+                from aurora_ivm import IVMEnvelope as _IVMEnvelope
+                _node = _coll.lattice.admit(
+                    payload=user_text, payload_type="text", evidence=_turn_evidence,
+                )
+                _env = _IVMEnvelope.from_node(_node)
+                _syn = _coll.process(_env)
+            else:
+                _syn = _coll.process_raw(
+                    payload=user_text, payload_type="text", evidence=_turn_evidence,
+                )
+            # Layer 3: perspective-conditioned representation birth for the
+            # user's own words.  The PerspectivePair on _syn is handed INTO
+            # formation (Section 14), not stamped afterwards.
+            _dim = systems.get("dimensional")
+            if _env is not None and _syn is not None and _dim is not None \
+                    and hasattr(_dim, "process_synthesis"):
+                try:
+                    _birth = _dim.process_synthesis(_env, _syn) or {}
+                    if isinstance(state.pipeline_state, dict):
+                        state.pipeline_state["perspective_birth"] = dict(
+                            _birth.get("perspective_retention") or {})
+                except Exception as _aurora_birth_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora.py:_chain_up1_information:layer3_birth",
+                        exc=_aurora_birth_exc,
+                        context={"function": "_chain_up1_information", "source_file": "aurora.py"},
+                    )
             if _syn is not None and isinstance(state.pipeline_state, dict):
                 state.pipeline_state["paradoxes"]               = list(getattr(_syn, "paradoxes", []) or [])
                 state.pipeline_state["axis_tensions"]           = dict(getattr(_syn, "axis_tensions", {}) or {})
@@ -28615,6 +28660,26 @@ def boot_aurora(
     if verbose: print("  [L2] I-State Collective...", end=" ", flush=True)
     from aurora_i_state_beings import IStateCollective
     collective = IStateCollective(contract, lattice)
+    # Layer 2.5 (Primitive Perspective directive, Section 13.1): instantiate
+    # the engine immediately after the collective, bound to THIS boot's state
+    # directory.  Without it, lineage development would never persist across
+    # restarts (Section 17).
+    try:
+        try:
+            from aurora_internal.aurora_primitive_perspective import PrimitivePerspectiveEngine
+        except ImportError:
+            from aurora_primitive_perspective import PrimitivePerspectiveEngine
+        _perspective_dir = os.path.join(state_dir, "perspective") if state_dir else None
+        collective.perspective = PrimitivePerspectiveEngine(state_dir=_perspective_dir)
+        systems['perspective'] = collective.perspective
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:boot_aurora:perspective",
+            exc=_aurora_boundary_exc,
+            context={"function": "boot_aurora", "source_file": "aurora.py"},
+        )
     systems['collective'] = collective
     _register_layer(systems, 'L2', 'I-State Collective', 'collective', collective, {
         'synthesize': 'synthesize_collective_consciousness',

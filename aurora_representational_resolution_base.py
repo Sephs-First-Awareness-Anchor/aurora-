@@ -118,6 +118,24 @@ def _clip01(v: float) -> float:
     return max(0.0, min(1.0, float(v)))
 
 
+PERSPECTIVE_SCOPE_PREFIX = "perspective:"
+
+
+def perspective_scope(lineage: str, context_scope: Optional[str] = None) -> str:
+    """The resolution scope for one primitive perspective lineage.
+
+    Layer 2.5 (Primitive Perspective directive, Section 16): a lineage may
+    independently resolve some address fields while leaving others None.
+    Keying its evidence under its own scope uses this engine's existing
+    ref|scope mechanism, so a field one lineage earns is stored under a key
+    the other lineage never reads.  Nothing is copied between lineages and
+    nothing is inferred across them.  An operational context scope, when the
+    caller also knows one, is kept and composed rather than replaced.
+    """
+    lineage_part = PERSPECTIVE_SCOPE_PREFIX + str(lineage)
+    return f"{context_scope}#{lineage_part}" if context_scope else lineage_part
+
+
 @dataclass
 class ResolutionOutcome:
     """One entry in the required Section 29 instrumentation stream."""
@@ -788,6 +806,7 @@ class RepresentationalResolutionEngine:
         context_scope: Optional[str] = None,
         _discrepancy_before_override: Optional[float] = None,
         candidate_evaluation: Optional[Dict[str, Any]] = None,
+        perspective_lineage: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Only ever admits evidence through the SAME observe() ->
         PairStats -> _try_promote() chain every other genealogy consumer
@@ -816,6 +835,13 @@ class RepresentationalResolutionEngine:
         participation() captures the true pre-tick discrepancy and passes
         it through here instead. Internal wiring only -- production callers
         completing a real (non-hypothesis) staged inquiry never need this."""
+        # A caller completing an inquiry with ONE perspective lineage's
+        # evidence knows that lineage -- exactly the "caller who actually
+        # knows" this method requires before any scope is applied.  The
+        # sealed evidence-admission chain below is unchanged; only the scope
+        # its result is retained under becomes lineage-specific.
+        if perspective_lineage:
+            context_scope = perspective_scope(perspective_lineage, context_scope)
         ability_id = self.ensure_registered(ref)
         coarse_key = ref.encode()
         coactivated_ids = [ability_id, str(candidate.get("counterpart_ability_id", ""))]
@@ -925,6 +951,7 @@ class RepresentationalResolutionEngine:
                         source=f"stage:{stage.get('stage_id', '')}",
                         context_scope=context_scope,
                         candidate_evaluation=causal_evaluation,
+                        perspective_lineage=perspective_lineage,
                     )
                 finally:
                     self._in_complete_field_inquiry = False
@@ -981,6 +1008,7 @@ class RepresentationalResolutionEngine:
         context_scope: Optional[str] = None,
         candidate_evaluation: Optional[Dict[str, Any]] = None,
         _allow_direct_call: bool = False,
+        perspective_lineage: Optional[str] = None,
     ) -> RepresentationalRef:
         """The ONLY place a new resolved field is ever produced anywhere in
         this module. Requires: field was unresolved on `ref`, `value` is a
@@ -1035,6 +1063,7 @@ class RepresentationalResolutionEngine:
             "timestamp": _now(),
             "status": "retained",
             "context_scope": context_scope,
+            "perspective_lineage": perspective_lineage,
             "resolved_ref": refined.encode(),
             "candidate_evaluation": dict(candidate_evaluation or {}),
         }
@@ -1084,6 +1113,20 @@ class RepresentationalResolutionEngine:
         if global_scoped:
             return RepresentationalRef.decode(global_scoped)
         return ref
+
+    def lineage_resolution(self, ref: RepresentationalRef, lineage: str, *,
+                           context_scope: Optional[str] = None) -> RepresentationalRef:
+        """What ONE perspective lineage has itself resolved for this ref.
+
+        Deliberately stricter than current_resolution(): no fallback to the
+        global resolution, and no possible route to the other lineage's.  A
+        field this lineage has not earned stays None here even if the other
+        lineage -- or the non-perspective path -- resolved it.  Existing
+        callers of current_resolution() are unaffected.
+        """
+        scoped = self._active_resolutions.get(
+            ref.encode() + "|" + perspective_scope(lineage, context_scope))
+        return RepresentationalRef.decode(scoped) if scoped else ref
 
     def genealogy_for(self, ref: RepresentationalRef) -> List[Dict[str, Any]]:
         return list(self._genealogy_records.get(ref.encode(), []))
