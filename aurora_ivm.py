@@ -1428,6 +1428,42 @@ class IVMLattice:
         """Total energy across all persistent nodes."""
         return sum(n.node_energy for n in self.nodes.values() if n.can_exchange_energy)
 
+    def withdraw_energy(self, amount: float) -> float:
+        """
+        Withdraw up to `amount` energy from exchangeable nodes, proportional
+        to each node's current share of the total, respecting the same 0.01
+        floor used elsewhere in this class (see the conservation-check delta
+        application above). Returns the amount actually withdrawn, which is
+        less than requested if nodes don't have enough spare energy above
+        the floor.
+
+        This is a genuine transfer OUT of the lattice, not a read: callers
+        outside this class that want to draw on lattice energy (e.g.
+        EnergyBudget.replenish_from_lattice in aurora_evolution_chamber.py)
+        must call this rather than just reading get_total_energy() and
+        crediting themselves the same amount without debiting anything --
+        that was the constitutive physics audit's (2026-09-12) N-conservation
+        finding: energy read from here was being credited elsewhere with no
+        corresponding decrease here, fabricating energy every tick. This
+        also decrements _initial_total_energy by the same amount so
+        verify_energy_conservation() continues to reflect only genuine
+        drift, not this accounted-for external withdrawal.
+        """
+        if amount <= 0:
+            return 0.0
+        exchangeable = [n for n in self.nodes.values() if n.can_exchange_energy]
+        total = sum(n.node_energy for n in exchangeable)
+        if total <= 0:
+            return 0.0
+        withdrawn = 0.0
+        for n in exchangeable:
+            share = (n.node_energy / total) * amount
+            take = min(share, max(0.0, n.node_energy - 0.01))
+            n.node_energy -= take
+            withdrawn += take
+        self._initial_total_energy = max(0.0, self._initial_total_energy - withdrawn)
+        return withdrawn
+
     def verify_energy_conservation(self) -> Tuple[bool, float]:
         """
         Verify energy conservation against initial state.

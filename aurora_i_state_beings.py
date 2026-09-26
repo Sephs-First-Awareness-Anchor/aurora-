@@ -79,6 +79,7 @@ Created: February 2026
 
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+import os
 import time
 import math
 import hashlib
@@ -644,11 +645,31 @@ class SynthesisResult:
 
     reality_warp: bool = False
     warp_severity: float = 0.0
+    # Layer 2.5.  Optional and defaulted, so every existing construction site
+    # and every consumer of SynthesisResult is unaffected.  Carries both
+    # primitive views of this occurrence to representation formation, instead
+    # of representation birth seeing only the collapsed synthesis.
+    perspective_pair: Optional[Any] = None
 
 
 # ============================================================================
 # COLLECTIVE
 # ============================================================================
+
+try:
+    from aurora_internal.aurora_primitive_perspective import (
+        PrimitivePerspectiveEngine,
+    )
+except Exception:       # pragma: no cover
+    try:
+        # The app build flattens root modules into one import directory, so
+        # the package path is not guaranteed on device.
+        from aurora_primitive_perspective import (      # type: ignore
+            PrimitivePerspectiveEngine,
+        )
+    except Exception:   # Layer 2.5 is optional at import
+        PrimitivePerspectiveEngine = None    # type: ignore
+
 
 class IStateCollective:
     """
@@ -690,6 +711,19 @@ class IStateCollective:
         self.synthesis_count = 0
         self.history: deque = deque(maxlen=200)
 
+        # Layer 2.5, attached to the collective itself rather than to any one
+        # high-level route: perspective is primitive, so it must not depend on
+        # whether dialogue, DCE assembly, the gateway or an embodied kernel
+        # event happened to call process().
+        self.perspective: Optional[Any] = None
+        if PrimitivePerspectiveEngine is not None:
+            try:
+                self.perspective = PrimitivePerspectiveEngine(
+                    state_dir=os.environ.get("AURORA_STATE_DIR") or None,
+                )
+            except Exception:
+                self.perspective = None
+
     def _snapshot_lattice_axes(self) -> Dict[str, Dict[str, Any]]:
         snapshot: Dict[str, Dict[str, Any]] = {}
         for axis_name, axis in self.lattice.vertices.axes.items():
@@ -702,9 +736,19 @@ class IStateCollective:
             }
         return snapshot
 
-    def observe_generation(self, envelope: IVMEnvelope) -> Dict[str, BeingObservation]:
-        """Observe all siblings against one frozen lattice occurrence."""
-        lattice_snapshot = self._snapshot_lattice_axes()
+    def observe_generation(
+        self,
+        envelope: IVMEnvelope,
+        lattice_snapshot: Optional[Dict[str, Dict[str, Any]]] = None,
+    ) -> Dict[str, BeingObservation]:
+        """Observe all siblings against one frozen lattice occurrence.
+
+        `lattice_snapshot` may be supplied by the caller so that Layer 2.5
+        freezes the SAME axes the siblings observed, rather than taking its
+        own snapshot a moment later.
+        """
+        if lattice_snapshot is None:
+            lattice_snapshot = self._snapshot_lattice_axes()
         return {
             predicate: being.observe(
                 envelope,
@@ -755,7 +799,17 @@ class IStateCollective:
         return responses, active_count, silent_count
 
     def process(self, envelope: IVMEnvelope) -> SynthesisResult:
-        observations = self.observe_generation(envelope)
+        # Layer 2.5: freeze the primitive occurrence BEFORE commit, while the
+        # lattice still holds its pre-occurrence state. commit_generation
+        # injects stimulus and advances being-local history, so a snapshot
+        # taken afterwards would already carry this occurrence's own
+        # consequences into perspective formation.
+        lattice_snapshot = self._snapshot_lattice_axes()
+        observations = self.observe_generation(envelope, lattice_snapshot)
+        primitive_snapshot = self._freeze_primitive_occurrence(
+            envelope, observations, lattice_snapshot,
+        )
+
         responses, active_count, silent_count = self.commit_generation(
             envelope, observations,
         )
@@ -784,6 +838,18 @@ class IStateCollective:
             axis_net_displacements=axis_net,
         )
 
+        # Both lineages form from the frozen occurrence plus the committed
+        # responses, independently, before any Layer 3 work begins. A
+        # perspective mismatch is ordinary native structure and is NOT routed
+        # to warp handling.
+        if primitive_snapshot is not None and self.perspective is not None:
+            try:
+                result.perspective_pair = self.perspective.form(
+                    primitive_snapshot, responses,
+                )
+            except Exception:
+                result.perspective_pair = None
+
         if paradoxes:
             result.reality_warp = True
             avg_tension = sum(
@@ -794,6 +860,54 @@ class IStateCollective:
         self.synthesis_count += 1
         self.history.append(result)
         return result
+
+    def _freeze_primitive_occurrence(
+        self,
+        envelope: IVMEnvelope,
+        observations: Dict[str, BeingObservation],
+        lattice_snapshot: Dict[str, Dict[str, Any]],
+    ) -> Optional[Any]:
+        """Capture the primitive, system-native occurrence for Layer 2.5.
+
+        Nothing semantic goes in: no parsed concepts, no topic words, no
+        intents or emotions inferred from English, no response drafts.
+        """
+        if self.perspective is None:
+            return None
+        try:
+            global_polarity: Dict[str, float] = {}
+            if hasattr(self.lattice, "get_global_polarity"):
+                global_polarity = dict(self.lattice.get_global_polarity() or {})
+            being_continuity = {
+                predicate: {
+                    "coherence": float(getattr(being, "coherence", 1.0)),
+                    "generation": float(getattr(being, "generation", 0)),
+                    "total_processed": float(getattr(being, "total_processed", 0)),
+                    "total_silent": float(getattr(being, "total_silent", 0)),
+                }
+                for predicate, being in self.beings.items()
+            }
+            collective_continuity = {
+                "synthesis_count": float(self.synthesis_count),
+                "history_depth": float(len(self.history)),
+                "history_capacity": float(self.history.maxlen or 0),
+            }
+            # P0 evaluates the reactive law, which divides by each axis's
+            # inertia.  Added to a COPY of the frozen axes, so the snapshot
+            # the siblings observed is untouched.
+            perspective_axes = {name: dict(values) for name, values in lattice_snapshot.items()}
+            for axis_name, axis in self.lattice.vertices.axes.items():
+                if axis_name in perspective_axes:
+                    perspective_axes[axis_name]["inertia"] = float(getattr(axis, "inertia", 1.0))
+            return self.perspective.freeze(
+                envelope, observations,
+                lattice_axes=perspective_axes,
+                global_polarity=global_polarity,
+                being_continuity=being_continuity,
+                collective_continuity=collective_continuity,
+            )
+        except Exception:
+            return None
 
     def process_raw(self, payload: Any, payload_type: str,
                     evidence: Dict[str, Any]) -> SynthesisResult:

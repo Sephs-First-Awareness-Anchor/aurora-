@@ -1,5 +1,7 @@
 from pathlib import Path
+from types import SimpleNamespace
 
+import aurora
 from aurora_internal.aurora_constraint_semantic_continuity import (
     derive_constraint_semantic_state,
     extract_relational_form,
@@ -155,3 +157,97 @@ def test_repeated_low_alignment_creates_a_warp_trial_wavelet(tmp_path):
         )
     assert bridge.status()["trial_wavelets"] >= 1
     assert bridge.warp_status()["trials"] >= 1
+
+
+def test_live_turn_actually_invokes_and_consumes_rcrw_effective_interpretation(tmp_path):
+    """Directive 3.2 / acceptance test "RCRW live-consumption test": run the
+    ordinary live response-turn path (aurora.py's _chain_up3_purpose, the
+    real caller inside _run_live_response_turn's up-chain), not a direct
+    unit call on the waveform itself. Prove RCRW is invoked with the real
+    user text, and that a material change in effective_interpretation
+    actually changes state.relational_form/axis_activation/dominant_axis
+    -- the same state PropositionFrame/_frame_from_constraint_relation
+    read from systems["_active_turn_state"] -- rather than being computed
+    and silently discarded."""
+
+    class _SpyRCRW:
+        def __init__(self):
+            self.calls = []
+
+        def prepare_semantic_state(self, semantic_state, *, raw_text,
+                                    referent_map=None, claim_resolution=None,
+                                    meaning_forms=None, axis_activation=None,
+                                    systems=None):
+            self.calls.append(raw_text)
+            revised = dict(semantic_state)
+            revised["relational_form"] = {
+                "subject": "RCRW_BACKPROJECTED_SUBJECT",
+                "relation": "reconstructed",
+                "obj": "effective_interpretation_result",
+                "confidence": 0.91,
+            }
+            revised["axis_activation"] = {
+                "X": 0.05, "T": 0.05, "N": 0.05, "B": 0.05, "A": 0.90,
+            }
+            return revised
+
+    spy = _SpyRCRW()
+    user_text = "why did the glass fall after I bumped the table?"
+    systems = {"recursive_causal_waveform": spy, "genealogy": None, "state_dir": str(tmp_path)}
+    state = SimpleNamespace(
+        relational_form=extract_relational_form(user_text),
+        axis_activation={"X": 0.2, "T": 0.2, "N": 0.2, "B": 0.2, "A": 0.2},
+        dominant_axis="N",
+        pipeline_state={},
+        referent_map={},
+        claim_resolution={},
+        meaning_forms=[],
+        constraint_semantic_state={},
+        genealogy_trace={},
+        noncomp_input_state={},
+        parsed={},
+        surface_reactive_emotion={},
+        deep_emotional_state={"dominant": "calm"},
+        emotional_state={"dominant": "calm"},
+    )
+
+    aurora._chain_up3_purpose(user_text, systems, state)
+
+    # RCRW was actually invoked, with the real turn text.
+    assert spy.calls == [user_text]
+    # Its effective_interpretation became causally authoritative for the
+    # downstream relational_form/axis state -- not generated and ignored.
+    assert state.relational_form["subject"] == "RCRW_BACKPROJECTED_SUBJECT"
+    assert state.relational_form["relation"] == "reconstructed"
+    assert state.axis_activation["A"] == 0.90
+    assert state.dominant_axis == "A"
+
+
+def test_live_turn_without_rcrw_registered_leaves_relational_form_untouched(tmp_path):
+    """No systems["recursive_causal_waveform"] must fall back to exactly
+    the pre-RCRW relational_form/axis_activation -- optional-organ
+    absence must not raise or silently corrupt state."""
+    user_text = "why did the glass fall after I bumped the table?"
+    original_form = extract_relational_form(user_text)
+    systems = {"genealogy": None, "state_dir": str(tmp_path)}
+    state = SimpleNamespace(
+        relational_form=dict(original_form),
+        axis_activation={"X": 0.2, "T": 0.2, "N": 0.2, "B": 0.2, "A": 0.2},
+        dominant_axis="N",
+        pipeline_state={},
+        referent_map={},
+        claim_resolution={},
+        meaning_forms=[],
+        constraint_semantic_state={},
+        genealogy_trace={},
+        noncomp_input_state={},
+        parsed={},
+        surface_reactive_emotion={},
+        deep_emotional_state={"dominant": "calm"},
+        emotional_state={"dominant": "calm"},
+    )
+
+    aurora._chain_up3_purpose(user_text, systems, state)
+
+    assert state.relational_form.get("subject") == original_form.get("subject")
+    assert state.relational_form.get("relation") == original_form.get("relation")

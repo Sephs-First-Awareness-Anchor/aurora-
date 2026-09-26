@@ -373,6 +373,24 @@ class DifferenceHistoryBuffer:
         If history is shorter than window, return the earliest recorded
         magnitude for c. If no history at all, return current (Δ = 0).
         warm_up_flag = True whenever we fall back to earliest available.
+
+        CONSTITUTIVE PHYSICS AUDIT (2026-09-12) fix: record() for the
+        current tick is always called before snapshot() for that same
+        tick (every caller in this codebase does so, including
+        EvolutionaryChamber.tick()), so by the time this method runs,
+        history_list[-1] IS the current tick, not "1 tick ago". The old
+        `history_list[-(window)]` therefore read the current tick's own
+        just-recorded value for window=1 (X's own window), making X's
+        Difference channel exactly zero always -- not small, not
+        approximate, structurally always 0.0 -- since current vs. itself
+        can never differ. For T (window=4) and A (window=8) it was a
+        milder off-by-one (reading 3 or 7 ticks back instead of 4 or 8).
+        Verified concretely: record(1, X=1.0), record(2, X=5.0),
+        snapshot(2, X=5.0) with window=1 returned reference=5.0 (should
+        be 1.0, tick 1's value) and difference=0.0 (should be nonzero).
+        Skipping the just-recorded current entry with `-(window+1)` fixes
+        this: window=1 now correctly reads history_list[-2], the entry
+        immediately before the current one.
         """
         history_list = list(self._history)   # ordered oldest → newest
 
@@ -380,13 +398,24 @@ class DifferenceHistoryBuffer:
             # No history at all — Δ is 0.0 by definition
             return current_mag, True
 
-        if len(history_list) >= window:
+        # history_list[-1] is the current tick (just recorded by the
+        # caller before calling snapshot()); "window ticks ago" relative
+        # to the current tick means skipping past it first.
+        prior_history = history_list[:-1]
+
+        if not prior_history:
+            # Only the current tick has ever been recorded — Δ is 0.0
+            return current_mag, True
+
+        if len(prior_history) >= window:
             # History is deep enough — look back exactly window ticks
-            target_entry = history_list[-(window)]   # window ticks back
+            # from the current tick, i.e. window-1 back from the entry
+            # immediately preceding it.
+            target_entry = prior_history[-(window)]
             return target_entry[1].get(c, 0.0), False
         else:
             # Warm-up: not enough history yet — use oldest available
-            oldest_entry = history_list[0]
+            oldest_entry = prior_history[0]
             return oldest_entry[1].get(c, 0.0), True
 
     def _peer_mean(

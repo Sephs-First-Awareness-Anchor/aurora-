@@ -41,11 +41,16 @@ import urllib.parse
 from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
 from aurora_constraint_engine import (
     ConstraintVector as _ConstraintVector,
+    ManifoldViolation as _ManifoldViolation,
     FoundationalContract as _FoundationalContract,
     ExistenceMode as _ExistenceMode,
+    IStatePredicate as _IStatePredicate,
     GovernorWeights as _GovernorWeights,
 )
 _FC = _FoundationalContract()
+from aurora_internal.aurora_constraint_manifold_patched import Constraint as _Constraint
+from aurora_internal.aurora_noncomp_registry import REGISTRY as _NC_REGISTRY
+from aurora_internal.aurora_difference_buffer import make_difference_buffer as _make_difference_buffer
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
@@ -121,6 +126,18 @@ class WebImageDownloader:
         self._downloaded: set = set()
         self.load_state()
 
+        # T:POLARITY/COST/DIFFERENCE (constitutive physics audit follow-up,
+        # 2026-09-12): the real can/can't-continue signal for this file
+        # lives here -- can_download()'s daily-limit check -- not in the
+        # general admission gate (_admit_vector), which isn't actually
+        # gated by the download quota at all for local/camera/teach
+        # admissions. See can_download() for how these are used.
+        self._check_count: int = 0
+        self._diff_buffer = _make_difference_buffer()
+        self.last_claim = None
+        self.last_cost: float = 0.0
+        self.last_difference: float = 0.0
+
     def _reset_if_new_day(self):
         today = time.strftime("%Y-%m-%d")
         if today != self._date:
@@ -130,8 +147,26 @@ class WebImageDownloader:
     def can_download(self) -> bool:
         self._reset_if_new_day()
         if self.allow_network and not self.network_gateway:
-            return False
-        return self._downloads_today < self.DAILY_LIMIT
+            allowed = False
+        else:
+            allowed = self._downloads_today < self.DAILY_LIMIT
+
+        mode = _FC.classify({"connections": self._downloads_today})
+        mode = _ExistenceMode(max(int(mode), int(_ExistenceMode.TRANSIENT)))
+        predicate = _IStatePredicate.I_CAN if allowed else _IStatePredicate.I_CANNOT
+        claim = _FC.make_claim(mode, predicate, content="web_download")
+        self.last_claim = claim
+
+        magnitude = abs(claim.displacement().T)
+        self.last_cost = _NC_REGISTRY.shift_cost(_Constraint.T, magnitude)
+
+        self._check_count += 1
+        mags = {_Constraint.T: magnitude}
+        self._diff_buffer.record(self._check_count, mags)
+        snap = self._diff_buffer.snapshot(self._check_count, mags)
+        self.last_difference = snap.value(_Constraint.T)
+
+        return allowed
 
     def download_for_concept(self, concept: str) -> List[str]:
         """
@@ -334,6 +369,31 @@ class ImageIngestionProtocol:
         self._clusters: Dict[str, VisualCluster]        = {}
         self._lock      = threading.RLock()
 
+        # X:POLARITY/COST/DIFFERENCE (constitutive physics audit follow-up,
+        # 2026-09-12): per-admission history for the existence channel. See
+        # _admit_vector() for how these are used. Admission count stands in
+        # for "tick" here since this module has no wall-clock tick loop --
+        # X's own DifferenceParams (ref_type='prior_self', window_ticks=1)
+        # only needs a monotonic index of "occurrences so far", which this
+        # module's own admission sequence genuinely is.
+        self._x_admission_count: int = 0
+        self._x_diff_buffer = _make_difference_buffer()
+        self.last_admission_claim = None
+        self.last_admission_cost: float = 0.0
+        self.last_admission_difference: float = 0.0
+
+        # B:POLARITY/COST/DIFFERENCE (constitutive physics audit follow-up,
+        # 2026-09-12): per-recluster history for the boundary channel. See
+        # _recluster() for how these are used. A separate buffer/counter
+        # from the X admission one above -- reclustering is a distinct,
+        # much rarer event stream with its own natural sequence, not the
+        # same "tick" as individual image admissions.
+        self._recluster_count: int = 0
+        self._b_diff_buffer = _make_difference_buffer()
+        self.last_recluster_claim = None
+        self.last_recluster_cost: float = 0.0
+        self.last_recluster_difference: float = 0.0
+
         # Build 608 (D1): instance-level paths derived from state_dir when
         # given, falling back to the class-level constants otherwise --
         # the isolation-gap bug class (known_fixes_registry.md) previously
@@ -379,6 +439,79 @@ class ImageIngestionProtocol:
             A=float(ax.get("A", 0.20)),
         )
 
+    def _admit_vector(self, path: str, fv: Optional["VisualFeatureVector"]) -> bool:
+        """
+        The sole admission gate for a feature vector entering this engine's
+        live index.
+
+        Constitutive physics audit (2026-09-12), X:OPERATOR finding: this
+        module used to write directly into self._vectors (three call
+        sites: folder ingestion, camera-frame refinement, user teaching)
+        with no existence-admissibility check at all -- data became "real"
+        to this engine the instant Python executed a dict assignment.
+        Every one of those direct writes is replaced by a call here, so an
+        occurrence cannot enter self._vectors without passing through
+        ConstraintVector's own X<=0 admissibility check.
+
+        X reflects whether an occurrence actually happened here: fv is
+        None exactly when FeatureExtractor.extract() hit a real failure
+        (corrupt/unreadable file, caught exception -- see
+        aurora_vision_clustering.py). A successful PIL-unavailable stub
+        extraction is a legitimate degraded-but-real admission, not a
+        failure, and stub vectors don't carry meaningful width/height, so
+        this deliberately does not key off those fields -- fv is not None
+        is the actual, exercised existence signal already implicit in the
+        code before this fix (the old `if fv:` guard at the folder-scan
+        call site). T/N/B/A have no per-item meaning at this admission
+        boundary (this module tracks no per-item tick, energy pool, or
+        agency for a single image) so they are filled with the neutral
+        midpoint rather than a fabricated measurement.
+
+        POLARITY/COST/DIFFERENCE (2026-09-12 follow-up): a real
+        OntologicalClaim (I_IS / I_ISNT) is constructed via
+        FoundationalContract.make_claim() rather than leaving admission as
+        an untyped internal boolean -- this is Aurora's own existing
+        is/isn't vocabulary (aurora_constraint_engine.py), not a new one.
+        ExistenceMode is classified from len(self._vectors) (genuinely
+        accumulated ingestion history, not an invented number), so the
+        mode -- and therefore the claim's displacement magnitude -- really
+        does grow as this engine admits more real occurrences. That
+        displacement is what REGISTRY.shift_cost(X, ...) charges against:
+        a real, registry-derived cost, computed and recorded even though
+        this module has no energy pool of its own to reject an
+        unaffordable one from (X is the cheapest tier by design; nothing
+        elsewhere in this module currently needs X-admission to ever be
+        rejected for cost, only for outright failure). The Difference
+        channel compares that magnitude to this module's own immediately
+        prior admission via the same DifferenceHistoryBuffer substrate the
+        chamber uses, rather than reimplementing history-tracking here.
+        """
+        x = 1.0 if fv is not None else 0.0
+        try:
+            _ConstraintVector(X=x, T=0.5, N=0.5, B=0.5, A=0.5)
+        except _ManifoldViolation:
+            self.last_admission_claim = _FC.make_claim(
+                _ExistenceMode.REFERENCE, _IStatePredicate.I_ISNT, content=path
+            )
+            return False
+
+        mode = _FC.classify({"connections": len(self._vectors)})
+        claim = _FC.make_claim(mode, _IStatePredicate.I_IS, content=path)
+        self.last_admission_claim = claim
+
+        x_magnitude = abs(claim.displacement().X)
+        self.last_admission_cost = _NC_REGISTRY.shift_cost(_Constraint.X, x_magnitude)
+
+        self._x_admission_count += 1
+        _mags = {_Constraint.X: x_magnitude}
+        self._x_diff_buffer.record(self._x_admission_count, _mags)
+        _snap = self._x_diff_buffer.snapshot(self._x_admission_count, _mags)
+        self.last_admission_difference = _snap.value(_Constraint.X)
+
+        with self._lock:
+            self._vectors[path] = fv
+        return True
+
     def runtime_regime(self) -> Dict[str, Any]:
         cv = self.constraint_profile()
         axes = {"X": cv.X, "T": cv.T, "N": cv.N, "B": cv.B, "A": cv.A}
@@ -422,9 +555,7 @@ class ImageIngestionProtocol:
         for path in image_paths:
             if path not in self._vectors:
                 fv = self.extractor.extract(path)
-                if fv:
-                    with self._lock:
-                        self._vectors[path] = fv
+                if self._admit_vector(path, fv):
                     new_count += 1
 
         if not self._vectors:
@@ -445,11 +576,23 @@ class ImageIngestionProtocol:
         }
 
     def _recluster(self):
-        """Recluster all vectors and rebind OETS."""
+        """
+        Recluster all vectors and rebind OETS.
+
+        B:POLARITY/COST/DIFFERENCE (constitutive physics audit follow-up,
+        2026-09-12): this method already fully replaces self._clusters
+        every call -- the old boundary structure genuinely dissolves and a
+        new one forms, a real "saw/saunt" (contained/dissolved) event, not
+        a fabricated one. Previously this happened with no physics
+        involvement at all.
+        """
         with self._lock:
             all_fvs = list(self._vectors.values())
         if not all_fvs:
             return
+
+        with self._lock:
+            _old_cluster_count = len(self._clusters)
 
         vectors = [fv.to_vector() for fv in all_fvs]
         k = min(12, max(1, len(vectors) // 3))
@@ -479,6 +622,28 @@ class ImageIngestionProtocol:
 
         with self._lock:
             self._clusters = new_clusters
+        _new_cluster_count = len(new_clusters)
+
+        # B:POLARITY/COST/DIFFERENCE: the old cluster boundaries (if any)
+        # just genuinely dissolved (I_SOUGHT, B's negative pole) and this
+        # new set now contains the data (I_SAW). mode is classified from
+        # the real new cluster count, not a fabricated number.
+        _b_mode = _FC.classify({"connections": _new_cluster_count})
+        _b_mode = _ExistenceMode(max(int(_b_mode), int(_ExistenceMode.BOUNDED)))
+        if _old_cluster_count > 0:
+            _dissolve_claim = _FC.make_claim(_b_mode, _IStatePredicate.I_SOUGHT, content="recluster_dissolve")
+            self.last_recluster_claim = _dissolve_claim
+        _form_claim = _FC.make_claim(_b_mode, _IStatePredicate.I_SAW, content="recluster_form")
+        self.last_recluster_claim = _form_claim
+
+        _b_magnitude = abs(_form_claim.displacement().B)
+        self.last_recluster_cost = _NC_REGISTRY.shift_cost(_Constraint.B, _b_magnitude)
+
+        self._recluster_count += 1
+        _mags = {_Constraint.B: _b_magnitude}
+        self._b_diff_buffer.record(self._recluster_count, _mags)
+        _snap = self._b_diff_buffer.snapshot(self._recluster_count, _mags)
+        self.last_recluster_difference = _snap.value(_Constraint.B)
 
     def autonomous_download_cycle(self) -> Dict:
         """Run one autonomous download cycle during idle time."""
@@ -509,8 +674,7 @@ class ImageIngestionProtocol:
             saturation=frame_features.get("saturation", 0.5),
             aspect_ratio=frame_features.get("aspect", 1.0),
         )
-        with self._lock:
-            self._vectors[fv.image_path] = fv
+        self._admit_vector(fv.image_path, fv)
 
         # Light recluster every 20 camera frames
         if len([k for k in self._vectors if k.startswith("camera_")]) % 20 == 0:
@@ -545,8 +709,7 @@ class ImageIngestionProtocol:
             aspect_ratio=float(visual_features.get("aspect_ratio", 1.0)),
         )
 
-        with self._lock:
-            self._vectors[ts_key] = fv
+        self._admit_vector(ts_key, fv)
 
         # Find nearest cluster by centroid distance; create one if none exist.
         fv_vec = fv.to_vector()

@@ -566,11 +566,13 @@ class TeachingEngine:
             success = oets.teach(term, text)
             if success:
                 wm.pending_teaching_offer = False
-                # Relief: learning settles curiosity
+                # Relief: learning settles curiosity (directive 3.8: was
+                # gen.log_relief(...), a method that never existed -- now
+                # a real genealogy.observe() event via _log_learning_relief).
                 try:
                     gen = self.systems.get("genealogy")
                     if gen:
-                        gen.log_relief("A", 0.4, notes=f"learned_concept:{term}")
+                        _log_learning_relief(gen, "A", 0.4, notes=f"learned_concept:{term}")
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(),
@@ -3352,7 +3354,24 @@ def _is_identity_question(text: str) -> bool:
         "do you know who", "what do you know about yourself",
         "who is sir", "sir morningstar",
     )
-    return any(m in t for m in identity_markers)
+    if any(m in t for m in identity_markers):
+        return True
+    # Directive 3.9: "who is X (to you)?" / "what is your relationship
+    # with/to X?" / "how do you know X?" must be recognized generally,
+    # for any entity name -- not only the two names hardcoded above.
+    return bool(_RELATIONAL_ENTITY_QUESTION.search(text or ""))
+
+
+# General "who is X to you" family -- captures the candidate entity name
+# in a group regardless of which phrasing was used, so
+# _generate_identity_response can look it up in core_identity.entities
+# without depending on which specific name appears in the question.
+_RELATIONAL_ENTITY_QUESTION = re.compile(
+    r"\bwho\s+is\s+([A-Za-z][A-Za-z0-9_'-]{1,})(?:\s+to\s+you)?\b"
+    r"|\bwhat\s+is\s+your\s+relationship\s+(?:with|to)\s+([A-Za-z][A-Za-z0-9_'-]{1,})\b"
+    r"|\bhow\s+do\s+you\s+know\s+([A-Za-z][A-Za-z0-9_'-]{1,})\b",
+    re.IGNORECASE,
+)
 
 
 def _generate_identity_response(
@@ -3432,16 +3451,26 @@ def _generate_identity_response(
                              "your creator", "your author")):
         return core_identity.who_made_me()
 
-    # "Who is Sunni?"
-    if "sunni" in t or "sir morningstar" in t or ("sir" in t and "who" in t):
-        entity = core_identity.get_entity("sunni")
-        if entity:
-            return f"{entity.name}: {entity.description} {entity.relationship_to_aurora}"
-
-    # "Who is Cael?"
-    if "cael" in t:
-        entity = core_identity.get_entity("cael")
-        if entity:
+    # Directive 3.9: "who is X (to you)?" / "your relationship with X" /
+    # "how do you know X?" for ANY entity core_identity knows about --
+    # general lookup by name/alias via get_entity(), not a branch per
+    # taught name. Replaces the old sunni/cael-only hardcoding; the two
+    # entities that used to be special-cased here still resolve correctly
+    # because they're seeded into core_identity.entities like any other.
+    # "Sir Morningstar"/"sir ... who" phrasing has no literal captured
+    # token for the regex to find, so it's kept as an explicit alias probe
+    # alongside the general match.
+    _candidate_names: List[str] = []
+    for _m in _RELATIONAL_ENTITY_QUESTION.finditer(text or ""):
+        _candidate_names.extend(g for g in _m.groups() if g)
+    if "sir morningstar" in t or ("sir" in t and "who" in t):
+        _candidate_names.append("sunni")
+    for _name in _candidate_names:
+        try:
+            entity = core_identity.get_entity(_name)
+        except Exception:
+            entity = None
+        if entity is not None and str(getattr(entity, "relationship_to_aurora", "") or ""):
             return f"{entity.name}: {entity.description} {entity.relationship_to_aurora}"
 
     return None
@@ -3714,6 +3743,8 @@ class AxisProjector:
         #     promoted links right now (developmental momentum, already 0–1 normalized).
         relief_vec: Dict[str, float] = {"X": 0.0, "T": 0.0, "N": 0.0, "B": 0.0, "A": 0.0}
         genealogy = systems.get("genealogy")
+        if not genealogy:
+            _report_missing_required_organ(systems, "genealogy", operation="pressure_orientation")
         if genealogy:
             try:
                 if hasattr(genealogy, "pressure_orientation"):
@@ -5898,6 +5929,8 @@ def _sediment_validated_fact(systems, claims, user_text: str) -> int:
         perception = systems.get("perception")
         oets = getattr(perception, "oets", None)
         gen = systems.get("genealogy") or systems.get("constraint_genealogy")
+        if gen is None:
+            _report_missing_required_organ(systems, "genealogy", operation="_sediment_validated_fact")
         for claim in list(claims)[:4]:
             if not isinstance(claim, dict):
                 continue
@@ -5962,12 +5995,15 @@ def _sediment_validated_fact(systems, claims, user_text: str) -> int:
                         pass
             # 2. Constraint genealogy — relief/lineage grounding (mirrors the
             #    explicit-teaching path so the fact settles into the constraint
-            #    fossil record on its meaning axis).
-            if gen is not None and hasattr(gen, "log_relief"):
+            #    fossil record on its meaning axis). Directive 3.8: this used
+            #    to gate on hasattr(gen, "log_relief"), a method that never
+            #    existed anywhere in this codebase -- always False, permanent
+            #    dead code. Now calls the real genealogy.observe() path.
+            if gen is not None:
                 _axes = list(claim.get("meaning_axes", []) or [])
                 _axis = str(_axes[0]) if _axes else "B"
                 try:
-                    gen.log_relief(_axis, 0.3, notes=f"learned_fact:{term}")
+                    _log_learning_relief(gen, _axis, 0.3, notes=f"learned_fact:{term}")
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(),
@@ -6750,6 +6786,22 @@ def _build_communication_contributors(
                 context={"function": "_build_communication_contributors", "source_file": "aurora.py"},
             )
             pass
+
+    # Directive 3.6/3.7: the genealogy item_id / WARP component id the
+    # resolver (aurora_genealogy_representation_resolver.py) actually
+    # grounded this turn's expression in -- cached by aurora_working_memory
+    # ._render_from_comprehension_intent(), previously discarded the moment
+    # it was reduced to axis weights. Only attach when the resolver reached
+    # a real conclusion (a genealogy match or a genuinely synthesized WARP
+    # component); "unresolved" carries no identity worth attributing.
+    resolved_rep = dict(systems.get("_last_resolved_representation") or {})
+    if resolved_rep.get("item_id") or resolved_rep.get("warp_component_id"):
+        contributors["resolved_representation"] = {
+            "item_id": resolved_rep.get("item_id"),
+            "source": str(resolved_rep.get("source") or ""),
+            "warp_component_id": resolved_rep.get("warp_component_id"),
+            "confidence": resolved_rep.get("confidence"),
+        }
 
     snapshot = dict(systems.get("_mtsl_snapshot") or {})
     semantic_variant_id = str(snapshot.get("semantic_variant_id") or "")
@@ -9107,6 +9159,8 @@ def _generate_perspective_from_core(
             if _latt and hasattr(_latt, "heat_status"):
                 _hs = _latt.heat_status() or {}
                 _heat_score = float(_hs.get("score", 0.0) or 0.0)
+            elif not _latt:
+                _report_missing_required_organ(systems, "lattice", operation="heat_status")
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -9125,6 +9179,8 @@ def _generate_perspective_from_core(
                 _po = _gen.pressure_orientation() or {}
                 if _po:
                     _orient = max(_po, key=lambda k: abs(float(_po[k]) - 1.0), default="")
+            elif not _gen:
+                _report_missing_required_organ(systems, "genealogy", operation="pressure_orientation")
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -9447,8 +9503,14 @@ def _format_arithmetic_number(value: float) -> str:
     return f"{value:.6f}".rstrip("0").rstrip(".")
 
 
-def _answer_simple_arithmetic(text: str) -> str:
-    """Answer small spoken arithmetic probes before semantic fallback can echo them."""
+def _parse_simple_arithmetic_operands(text: str) -> Optional[Tuple[float, str, float, Optional[float]]]:
+    """Shared parse step for _answer_simple_arithmetic() and the
+    operational-synthesis lived-example feed below -- one regex, two
+    consumers, so the structured (left, symbol, right, result) a real
+    arithmetic turn represents is available without re-deriving it or
+    letting the two drift apart. Returns None when the text isn't
+    arithmetic; result is None only for the division-by-zero case (a
+    real answer text still exists for that, just no defined result)."""
     raw = _strip_surface_invocation_prefix(text)
     low = raw.lower().replace("×", "*").replace("÷", "/")
     low = re.sub(r"\bwhat(?:\s+is|'s|s)?\b", " ", low)
@@ -9461,28 +9523,89 @@ def _answer_simple_arithmetic(text: str) -> str:
         re.IGNORECASE,
     )
     if not match:
-        return ""
+        return None
     left = float(match.group(1))
     op = match.group(2).lower().strip()
     right = float(match.group(3))
     if op in {"+", "plus"}:
-        result = left + right
-        symbol = "+"
-    elif op in {"-", "minus"}:
-        result = left - right
-        symbol = "-"
-    elif op in {"*", "x", "times", "multiplied by"}:
-        result = left * right
-        symbol = "*"
-    else:
-        if abs(right) < 1e-12:
-            return "I can't divide by zero."
-        result = left / right
-        symbol = "/"
+        return left, "+", right, left + right
+    if op in {"-", "minus"}:
+        return left, "-", right, left - right
+    if op in {"*", "x", "times", "multiplied by"}:
+        return left, "*", right, left * right
+    if abs(right) < 1e-12:
+        return left, "/", right, None
+    return left, "/", right, left / right
+
+
+def _answer_simple_arithmetic(text: str) -> str:
+    """Answer small spoken arithmetic probes before semantic fallback can echo them."""
+    parsed = _parse_simple_arithmetic_operands(text)
+    if parsed is None:
+        return ""
+    left, symbol, right, result = parsed
+    if result is None:
+        return "I can't divide by zero."
     return (
         f"{_format_arithmetic_number(left)} {symbol} "
         f"{_format_arithmetic_number(right)} is {_format_arithmetic_number(result)}."
     )
+
+
+def _feed_arithmetic_lived_experience(text: str, systems: Dict[str, Any]) -> None:
+    """Directive 3.15/3.16: AuroraOperationalSynthesisChamber and
+    AuroraGeneralExecutionFoundry are both mounted and WARP-registered at
+    boot (aurora.py's boot_aurora), and aurora_operational_synthesis.py
+    already provides a universal discovery seam, submit_lived_experience(),
+    specifically built to forward one real (input, expected_output) pair
+    to every present chamber sharing the observe_example() signature --
+    but per that function's own docstring it had exactly one caller
+    anywhere in the codebase (aurora_dream_trainer.py, offline, hand-wired
+    to operational_synthesis only), confirmed via full-repo search. Live
+    turns never called it at all.
+
+    Scalar arithmetic is the one live-turn signal that genuinely,
+    structurally matches operational_synthesis's own declared substrate
+    ("scalar arithmetic over selected values", its module docstring's
+    first supported family) without inventing a new contract: real
+    (left, operator, right) -> result examples occur naturally every time
+    a user asks Aurora simple arithmetic, already answered independently
+    by _answer_simple_arithmetic above. Routing it through the existing
+    universal seam (rather than calling operational_synthesis directly)
+    means general_execution_foundry -- built to expand on exactly this
+    kind of task once the narrower chamber's primitives fall short --
+    receives the same real evidence too, exactly as the seam was designed
+    to do. Strictly additive: never changes the delivered answer, only
+    lets each chamber independently test whether it can learn the
+    operation Aurora already performs natively. Best-effort and silent on
+    failure."""
+    if not isinstance(systems, dict):
+        return
+    if systems.get("operational_synthesis") is None and systems.get("general_execution_foundry") is None:
+        return
+    parsed = _parse_simple_arithmetic_operands(text)
+    if parsed is None or parsed[3] is None:
+        return
+    left, symbol, right, result = parsed
+    try:
+        from aurora_internal.aurora_operational_synthesis import submit_lived_experience
+        submit_lived_experience(
+            systems,
+            f"OPTASK:arithmetic:{symbol}",
+            {"left": left, "op": symbol, "right": right},
+            result,
+            source="live_turn_arithmetic",
+            need_description=f"scalar arithmetic ({symbol}) over two selected values",
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_feed_arithmetic_lived_experience",
+            exc=_aurora_boundary_exc,
+            context={"function": "_feed_arithmetic_lived_experience", "source_file": "aurora.py"},
+        )
+        pass
 
 
 def _answer_current_date_question(text: str) -> str:
@@ -10739,6 +10862,23 @@ def _build_grounded_fallback_response(
                 if _twl and _twl not in _GROUNDING_FALLBACK_SKIP:
                     _poedex_anchor = str(_tw)
                     break
+        # Scout authority (directive section 7): a surface token that also
+        # names a public concept must not have its already-grounded
+        # internal relationship overwritten by external scout/Poedex
+        # evidence merely because it matched as an anchor here. Skip the
+        # anchor entirely -- not just this call site, every dispatch below
+        # that reads _poedex_anchor -- when it resolves to a real
+        # core_identity entity; the identity gates earlier in the
+        # comprehension pipeline are the authoritative source for it.
+        if _poedex_anchor:
+            _ci_anchor_guard = systems.get("core_identity") if isinstance(systems, dict) else None
+            if _ci_anchor_guard is not None:
+                try:
+                    _anchor_entity = _ci_anchor_guard.get_entity(_poedex_anchor)
+                except Exception:
+                    _anchor_entity = None
+                if _anchor_entity is not None and str(getattr(_anchor_entity, "relationship_to_aurora", "") or ""):
+                    _poedex_anchor = ""
         if _prefer_auto_poedex and _poedex_anchor:
             _poe_result = _try_poedex_lookup(_poedex_anchor, systems, use_researcher=True)
             if _poe_result:
@@ -17243,6 +17383,30 @@ def _build_established_strata_evidence(
                 evidence["established_turn_state"]["reflexive_nc"] = _ri_state.nc_name
             if _ri_state.summary:
                 evidence["established_turn_state"]["reflexive_summary"] = _ri_state.summary
+            # Directive 3.14: ReflexiveInterpreter/UnderstandingState's
+            # consequence never reached genealogy/EvolutionaryChamber --
+            # confirmed by a full-repo trace, no bridge existed at all.
+            # Bridge only the genuine case: real reconciled understanding
+            # (is_understood=True), through the SAME canonical
+            # genealogy.observe() chokepoint 3.8's fix uses, on the
+            # interpretation's own real constraint axis and worth_score --
+            # never a fabricated axis or magnitude. An unresolved/falling
+            # interpretation is deliberately NOT logged as relief here
+            # (that would fabricate a resolution that didn't happen); it
+            # stays live as unresolved pressure the next turn's re-entry
+            # can still act on, exactly as directive section 4 requires.
+            _genealogy_for_ri = systems.get("genealogy")
+            if (
+                _genealogy_for_ri is not None
+                and bool(_ri_state.is_understood)
+                and str(_ri_state.worth_trajectory or "").lower() in ("rising", "stable")
+            ):
+                _log_learning_relief(
+                    _genealogy_for_ri,
+                    str(_ri_state.constraint or "A"),
+                    float(_ri_state.worth_score or 0.0),
+                    notes=f"reflexive_understanding:{_ri_state.frame}:{_ri_state.representational_ref or ''}",
+                )
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -18110,6 +18274,138 @@ def _log_claim_resolution_relief(
         pass
 
 
+# Communication Architecture Repair Directive 3.22: several required-tier
+# developmental organs (per the mobile health surface's own
+# _MOBILE_HEALTH_DEGRADED classification -- genealogy, dimensional,
+# sensory_crystal, recursive_causal_waveform, sedimemory, lattice) are
+# read via a bare `if systems.get(key):` guard at live boundaries with a
+# silent neutral-default fallback and no fault recorded on the missing
+# branch -- confirmed at aurora.py's genealogy-pressure-orientation sites.
+# This organ is truly missing for the rest of the process once boot
+# completes, so recording a fault on every single call (some of these
+# sites run many times per turn) would flood both runtime_faults.jsonl
+# and the native developmental stream with duplicates -- report each
+# organ's absence once per process, the same discipline
+# aurora_developmental_log.record_developmental_event() already uses.
+def _report_missing_required_organ(systems: Dict[str, Any], key: str, *, operation: str) -> None:
+    if not isinstance(systems, dict):
+        return
+    reported = systems.setdefault("_reported_missing_organs", set())
+    if not isinstance(reported, set):
+        reported = set(reported or [])
+        systems["_reported_missing_organs"] = reported
+    if key in reported:
+        return
+    reported.add(key)
+    try:
+        from aurora_internal.aurora_runtime_faults import record_runtime_fault
+        record_runtime_fault(
+            systems,
+            subsystem=key,
+            operation=operation,
+            severity="subsystem_degradation",
+            context={"reason": "required_organ_missing_at_live_boundary"},
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_report_missing_required_organ",
+            exc=_aurora_boundary_exc,
+            context={"function": "_report_missing_required_organ", "source_file": "aurora.py"},
+        )
+        pass
+
+
+# Communication Architecture Repair Directive 3.8: aurora_referent_hypothesis.py
+# and known_fixes_registry.md both already flagged that two call sites gated
+# a constraint-genealogy write on gen.log_relief(axis, magnitude, notes=...)
+# -- a method that has never existed anywhere in this codebase, so both
+# writes were either an unguarded AttributeError (swallowed by the caller's
+# broad except) or permanently dead code behind a hasattr() check that can
+# never be True. This is the real replacement: genealogy's one confirmed
+# mutating chokepoint, observe(), with a genuine PressureVec before/after
+# delta, following the exact pattern _log_claim_resolution_relief above
+# already established for a real relief event. No fabricated pressure,
+# relief, or confidence -- the magnitude/axis are the same real values the
+# dead call sites were already computing from actual learned content, just
+# routed through the API that actually exists.
+_LEARNING_RELIEF_ABILITY_REGISTERED: bool = False
+
+
+def _ensure_learning_relief_ability(genealogy: Any) -> None:
+    global _LEARNING_RELIEF_ABILITY_REGISTERED
+    if _LEARNING_RELIEF_ABILITY_REGISTERED or not genealogy:
+        return
+    try:
+        from aurora_evolution_stack import AbilityProfile
+        from aurora_internal.constraint_genealogy import _augment_ability_profile_with_origin
+
+        _learn_ap = AbilityProfile(
+            id="A:RESOLVE_LEARNING_CURIOSITY",
+            axis="A",
+            requires=("X", "A"),
+            cost={"X": 0.0, "T": 0.0, "N": 0.0, "B": 0.0, "A": 0.01},
+            risk={"X": 0.0, "T": 0.0, "N": 0.0, "B": 0.0, "A": 0.0},
+            effect_tags=("concept_integration", "curiosity_relief", "fact_grounding"),
+            notes="Settle unresolved curiosity/pressure once a taught concept or validated fact is genuinely integrated.",
+        )
+        if hasattr(genealogy, 'abilities'):
+            genealogy.abilities[_learn_ap.id] = _augment_ability_profile_with_origin(_learn_ap)
+        _LEARNING_RELIEF_ABILITY_REGISTERED = True
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_ensure_learning_relief_ability",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ensure_learning_relief_ability", "source_file": "aurora.py"},
+        )
+        pass
+
+
+def _log_learning_relief(genealogy: Any, axis: str, magnitude: float, *, notes: str = "") -> None:
+    """Real genealogy.observe() relief event for a learned concept/fact --
+    the replacement for the nonexistent gen.log_relief(axis, magnitude,
+    notes=...) this codebase used to (silently, always-falsely) gate on.
+    Never raises; best-effort exactly like the dead code it replaces."""
+    if not genealogy:
+        return
+    try:
+        from aurora_evolution_stack import PressureVec, TraceItem
+
+        _ensure_learning_relief_ability(genealogy)
+        _axes = ("X", "T", "N", "B", "A")
+        axis = str(axis or "A").strip().upper()
+        if axis not in _axes:
+            axis = "A"
+        magnitude = max(0.0, min(1.0, float(magnitude or 0.0)))
+        _before_kwargs = {ax: 0.0 for ax in _axes}
+        _before_kwargs[axis] = magnitude
+        _before_kwargs["X"] = max(_before_kwargs["X"], 0.05)
+        p_before = PressureVec(**_before_kwargs)
+        p_after = PressureVec(**{ax: 0.0 for ax in _axes})
+        trace = [TraceItem(kind="ABILITY", id="A:RESOLVE_LEARNING_CURIOSITY")]
+        tick = int(getattr(genealogy, 'tick_count', 0))
+        genealogy.observe(
+            pressure_before=p_before,
+            trace=trace,
+            pressure_after=p_after,
+            state_sig_before=f"learning_relief_pre_{tick}",
+            state_sig_after=f"learning_relief_post_{tick}",
+            notes={"tag": "learning_relief", "detail": str(notes or "")},
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_log_learning_relief",
+            exc=_aurora_boundary_exc,
+            context={"function": "_log_learning_relief", "source_file": "aurora.py"},
+        )
+        pass
+
+
 # ---------------------------------------------------------------------------
 # BIDIRECTIONAL DEVELOPMENTAL CHAIN PIPELINE
 # ---------------------------------------------------------------------------
@@ -18238,11 +18534,56 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
     try:
         _coll = systems.get("collective")
         if _coll is not None and hasattr(_coll, "process_raw"):
-            _syn = _coll.process_raw(
-                payload=user_text,
-                payload_type="text",
-                evidence={"source": "user_turn", "intent": str((state.parsed or {}).get("query_type", "general") or "general")},
-            )
+            # Existence evidence for a user turn.  Declared from facts this
+            # intake genuinely knows, never granted by fiat:
+            #   has_temporality -- the turn occurs at a moment in the dialogue.
+            #   conserves_state -- the turn is conserved: this same text is
+            #                      written to log_envelope_shadow(),
+            #                      log_relation_pairs_from_turn() and the
+            #                      internal field's ingest_external_input().
+            # That is PERSISTENT -- exactly the crystal gate, and no more.
+            # Identity and agency are NOT claimed here.  Before this, every
+            # turn entered as REFERENCE and no user words could ever be born
+            # as a crystal, however often they recurred.
+            _turn_evidence = {
+                "source": "user_turn",
+                "intent": str((state.parsed or {}).get("query_type", "general") or "general"),
+                "has_temporality": True,
+                "conserves_state": True,
+            }
+            _env = None
+            if hasattr(_coll, "lattice") and hasattr(_coll, "process"):
+                # process_raw()'s own two steps, keeping the envelope in hand
+                # so Layer 3 receives the SAME occurrence the collective saw.
+                from aurora_ivm import IVMEnvelope as _IVMEnvelope
+                _node = _coll.lattice.admit(
+                    payload=user_text, payload_type="text", evidence=_turn_evidence,
+                )
+                _env = _IVMEnvelope.from_node(_node)
+                _syn = _coll.process(_env)
+            else:
+                _syn = _coll.process_raw(
+                    payload=user_text, payload_type="text", evidence=_turn_evidence,
+                )
+            # Layer 3: perspective-conditioned representation birth for the
+            # user's own words.  The PerspectivePair on _syn is handed INTO
+            # formation (Section 14), not stamped afterwards.
+            _dim = systems.get("dimensional")
+            if _env is not None and _syn is not None and _dim is not None \
+                    and hasattr(_dim, "process_synthesis"):
+                try:
+                    _birth = _dim.process_synthesis(_env, _syn) or {}
+                    if isinstance(state.pipeline_state, dict):
+                        state.pipeline_state["perspective_birth"] = dict(
+                            _birth.get("perspective_retention") or {})
+                except Exception as _aurora_birth_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora.py:_chain_up1_information:layer3_birth",
+                        exc=_aurora_birth_exc,
+                        context={"function": "_chain_up1_information", "source_file": "aurora.py"},
+                    )
             if _syn is not None and isinstance(state.pipeline_state, dict):
                 state.pipeline_state["paradoxes"]               = list(getattr(_syn, "paradoxes", []) or [])
                 state.pipeline_state["axis_tensions"]           = dict(getattr(_syn, "axis_tensions", {}) or {})
@@ -20169,7 +20510,10 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
         try:
             with directory.open(nc_name) as m:
                 # Dynamic Channel Resonance
-                env_p = {"pressure": systems.get("dimensional").get_constraint_aggregate()} if systems.get("dimensional") else {"pressure": {}}
+                _dimensional_for_env = systems.get("dimensional")
+                if _dimensional_for_env is None:
+                    _report_missing_required_organ(systems, "dimensional", operation="get_constraint_aggregate")
+                env_p = {"pressure": _dimensional_for_env.get_constraint_aggregate()} if _dimensional_for_env else {"pressure": {}}
                 # Build 711: response Scouts only return specimens. Aurora's
                 # own projection of those specimens may exert turn-local
                 # pressure on manifold selection. Use deviation from the
@@ -25779,6 +26123,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
 
     _arithmetic_answer = _answer_simple_arithmetic(_raw_user_text)
     if _arithmetic_answer:
+        _feed_arithmetic_lived_experience(_raw_user_text, systems)
         return (_arithmetic_answer, "precise", 0.96)
 
     _date_answer = _answer_current_date_question(_raw_user_text)
@@ -25830,6 +26175,25 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 )
                 pass
         if _known_name:
+            # Directive 3.9: "in relation to you how do you know me?" is a
+            # relational question, not a name-recall one -- answering with
+            # only the bare name (as before) drops the relationship/
+            # perspective structure core_identity actually holds for this
+            # user. General on phrasing, not on which name resolves --
+            # any user whose stated name matches a core_identity entity
+            # gets the same treatment.
+            _wants_relationship = any(p in _t_low for p in (
+                "relation", "relationship", "how do you know", "to you",
+            ))
+            _entity = None
+            if _wants_relationship and _ci is not None:
+                try:
+                    _entity = _ci.get_entity(_known_name)
+                except Exception:
+                    _entity = None
+            _relationship = str(getattr(_entity, "relationship_to_aurora", "") or "") if _entity is not None else ""
+            if _relationship:
+                return (f"You're {_known_name}. {_relationship}", "warm", 0.97)
             return (f"Yes — you're {_known_name}.", "warm", 0.97)
         return ("I don't have your name recorded yet. What should I call you?", "curious", 0.88)
 
@@ -28296,6 +28660,26 @@ def boot_aurora(
     if verbose: print("  [L2] I-State Collective...", end=" ", flush=True)
     from aurora_i_state_beings import IStateCollective
     collective = IStateCollective(contract, lattice)
+    # Layer 2.5 (Primitive Perspective directive, Section 13.1): instantiate
+    # the engine immediately after the collective, bound to THIS boot's state
+    # directory.  Without it, lineage development would never persist across
+    # restarts (Section 17).
+    try:
+        try:
+            from aurora_internal.aurora_primitive_perspective import PrimitivePerspectiveEngine
+        except ImportError:
+            from aurora_primitive_perspective import PrimitivePerspectiveEngine
+        _perspective_dir = os.path.join(state_dir, "perspective") if state_dir else None
+        collective.perspective = PrimitivePerspectiveEngine(state_dir=_perspective_dir)
+        systems['perspective'] = collective.perspective
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:boot_aurora:perspective",
+            exc=_aurora_boundary_exc,
+            context={"function": "boot_aurora", "source_file": "aurora.py"},
+        )
     systems['collective'] = collective
     _register_layer(systems, 'L2', 'I-State Collective', 'collective', collective, {
         'synthesize': 'synthesize_collective_consciousness',
@@ -29387,6 +29771,27 @@ def boot_aurora(
             systems['variant_promoter'] = _variant_promoter
             systems['strand_lib']       = _strand_lib
             systems['_strand_builder']  = _strand_builder
+
+            # Constitutive physics audit (2026-09-12), N follow-up: connect
+            # the chamber's own energy economy (constructed earlier in this
+            # function, in the "Evolutionary Chamber + Genealogy" section)
+            # to this shared accountant, so there is one live energy pool
+            # instead of two disconnected ones -- see
+            # EnergyBudget.attach_shared_accountant()'s docstring for why
+            # this happens here (post-construction) rather than at chamber
+            # construction time.
+            _chamber_for_accountant = systems.get('chamber')
+            if _chamber_for_accountant is not None and hasattr(_chamber_for_accountant, 'attach_energy_accountant'):
+                try:
+                    _chamber_for_accountant.attach_energy_accountant(_accountant)
+                except Exception as _aurora_boundary_exc:
+                    _aurora_record_exception_from_locals(
+                        locals(),
+                        module=__name__,
+                        operation="exception_handler:aurora.py:boot_aurora:attach_energy_accountant",
+                        exc=_aurora_boundary_exc,
+                        context={"function": "boot_aurora", "source_file": "aurora.py"},
+                    )
 
             if verbose:
                 print("  [INTAKE] Intake metabolism pipeline online (Steps 9–14)")

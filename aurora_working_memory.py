@@ -3372,6 +3372,22 @@ class WorkingMemory:
                 real_dominant_axis = dominant_axis_from_weights(axis_weights) or str(
                     getattr(perception, '_dominant_axis', '') or ''
                 )
+                # Directive 3.6/3.7: resolved's item_id/source/warp_component_id
+                # used to be discarded the moment axis_weights was computed --
+                # AssemblyResult has no slot for them, so this was the ONLY
+                # place in the live turn that ever saw them. Cache the real
+                # identity/provenance here so _build_communication_contributors
+                # (aurora.py) can attach it to the emitted response's
+                # contributor bundle instead of only a generic subsystem label.
+                # Axis weights remain a projection; this is the representation
+                # they were projected FROM, not a replacement for it.
+                if isinstance(systems, dict):
+                    systems['_last_resolved_representation'] = {
+                        'item_id': resolved.item_id,
+                        'source': resolved.source,
+                        'warp_component_id': resolved.warp_component_id,
+                        'confidence': resolved.confidence,
+                    }
                 # active_count / entropy_state / ds_stats remain placeholders --
                 # they belong to DCE Layer 2 synthesis, a subsystem this resolver
                 # doesn't reach. coherence, adjusted_axes, and dominant_axis are

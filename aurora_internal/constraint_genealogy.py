@@ -8287,7 +8287,13 @@ class ConstraintGenealogyLogger:
 
             ps = self._pair_stats[key]
             ps.update(relief, cost_total, x_risk, self.tick_count)
-            self._update_representation_relation(key, ps, relief, cost_total, x_risk)
+            # RELATIONAL PROMOTION JURISDICTION REPAIR: capture the actual
+            # intact relation record _update_representation_relation()
+            # already builds/updates from real observed coactivation --
+            # previously discarded here -- so _try_promote() judges the
+            # relation that physically occurred, not only PairStats' shadow
+            # of it. See _try_promote()'s docstring.
+            relation = self._update_representation_relation(key, ps, relief, cost_total, x_risk)
 
             # Already promoted?
             if key in self._links_by_parents:
@@ -8295,7 +8301,7 @@ class ConstraintGenealogyLogger:
                 continue
 
             # Check promotion
-            link = self._try_promote(key, ps)
+            link = self._try_promote(key, ps, relation)
             if link is not None:
                 if link.id in self.links:
                     # Collision-safe guard: do not duplicate an existing link id.
@@ -8324,10 +8330,40 @@ class ConstraintGenealogyLogger:
         return None
 
     def _try_promote(
-        self, key: Tuple[str, str], ps: PairStats
+        self, key: Tuple[str, str], ps: PairStats,
+        relation: Optional[Dict[str, Any]] = None,
     ) -> Optional[ConstraintLink]:
         """
         Evaluate all promotion gates and mint a Link if all pass.
+
+        RELATIONAL PROMOTION JURISDICTION REPAIR (Sunni & Cael): `relation`
+        is the actual intact representation-relation record this pair has
+        accumulated (self._representation_relations[relation_id], built by
+        _update_representation_relation() -- same object, not a copy),
+        passed by _accumulate_pairs() at decision time rather than
+        attached only after promotion succeeds. This closes the
+        jurisdictional gap -- the candidate a caller could inspect here is
+        no longer only PairStats' shadow of the relation -- without yet
+        making any gate below consult it: all five gates judge PairStats'
+        statistics exactly as before this repair.
+
+        `relation["difference"]` keeps accumulating real per-axis
+        Difference evidence (see _update_representation_relation()) and
+        survives intact onto a promoted link's representation_relation,
+        but no gate reads it. An earlier revision of this repair fed a
+        same-signed-Difference "consistency ratio" into Gate 2's
+        local_support as a reliability corroboration signal; removed
+        (Sunni & Cael) because Aurora's existing Difference physics never
+        establishes that same-signed Difference means reliability, and
+        DIFFERENCE_PARAMS[X] and DIFFERENCE_PARAMS[B] are unsigned by
+        construction (polarity_signed=False) -- a "sign consistency" ratio
+        computed over their values is a mathematical artifact of how they
+        happen to be stored, not causal evidence. Difference should affect
+        promotion only once an existing lawful Aurora mechanism gives it
+        that meaning; until then it stays available on `relation` and
+        untouched by every gate. `relation` is None only for a
+        direct/diagnostic call outside the normal _accumulate_pairs() path
+        (mirrors the existing fallback in _promoted_relation_metadata()).
         """
         cfg = self.cfg
 

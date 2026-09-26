@@ -456,11 +456,59 @@ class GlobalNonComps:
                 f"partition_count=0 with {node_count} nodes at tick={tick}")
 
     @staticmethod
+    def check_B_polarity(
+        polarity_before: Optional[float],
+        polarity_after: float,
+        flip_pressure: float,
+        tick: int,
+    ) -> None:
+        """
+        B:POLARITY (CONSTITUTIVE PHYSICS AUDIT, 2026-09-12): the boundary
+        layer is defined (PolarityParams, aurora_noncomp_registry.py) to
+        resist polarity inversion -- flip_threshold=0.65 is the minimum
+        cross-scale gradient pressure required before its polarity may
+        flip sign, versus e.g. 0.35 for the surface (X) layer. This was
+        computed but had no flip-rejection call site anywhere in the repo.
+        Uses the real per-tick polarity already read by
+        PolarityGradientSensor.measure() (self._polarity_sensor in
+        EvolutionaryChamber.tick()) -- a flip that happened under less
+        cross-scale pressure than the boundary layer's own threshold is a
+        genuine violation of "deep layer resists flip", not a fabricated
+        check.
+        """
+        if polarity_before is None:
+            return  # no prior tick to compare against yet
+        flipped = (polarity_before * polarity_after) < 0.0
+        if not flipped:
+            return
+        threshold = (
+            _NC_REGISTRY.polarity(Constraint.B).flip_threshold
+            if _NC_REGISTRY is not None else 0.65
+        )
+        if flip_pressure < threshold:
+            raise NonCompViolation("B",
+                f"boundary polarity flipped ({polarity_before:.4f} -> "
+                f"{polarity_after:.4f}) under pressure={flip_pressure:.4f} "
+                f"< flip_threshold={threshold:.4f} at tick={tick}")
+
+    @staticmethod
+    def agency_cost(magnitude: float) -> float:
+        """
+        The one canonical agency-cost law: k_A * magnitude^2.
+
+        Split out from check_A (constitutive physics audit, 2026-09-12) so
+        every caller that needs "what would this magnitude cost" computes
+        it the same way check_A itself enforces it, instead of re-deriving
+        the formula inline with its own copy of the constant.
+        """
+        return K.agency_cost_coefficient * (magnitude ** 2)
+
+    @staticmethod
     def check_A(magnitude: float, energy_available: float, tick: int) -> None:
         if magnitude > K.agency_max_magnitude:
             raise NonCompViolation("A",
                 f"agency magnitude={magnitude:.4f} > ceiling={K.agency_max_magnitude}")
-        cost = K.agency_cost_coefficient * (magnitude ** 2)
+        cost = GlobalNonComps.agency_cost(magnitude)
         if cost > energy_available:
             raise NonCompViolation("A",
                 f"agency cost={cost:.6f} > available={energy_available:.6f} at tick={tick}")
@@ -853,11 +901,39 @@ class StructuralProximityMeter:
         RecursionLevel.CORE:     "agency",
     }
 
-    def __init__(self, lattice: IVMLattice):
+    def __init__(self, lattice: IVMLattice, energy_budget=None):
         self._lattice = lattice
         self._weights: Dict[Tuple[str, str], float] = {}
         self._partitions: Dict[str, FrozenSet[str]] = {}
         self._partition_history: Deque[int] = deque(maxlen=K.entropy_window)
+        # CONSTITUTIVE PHYSICS AUDIT (2026-09-12), B:COST follow-up:
+        # shift_cost()/can_afford_shift() (aurora_energy_layer_costs.py:139-147)
+        # were fully implemented but had zero callers anywhere in the repo --
+        # boundary weight changes were free. energy_budget, when supplied,
+        # makes every boundary-weight transition compute a real
+        # REGISTRY.shift_cost(Constraint.B, |delta|).
+        #
+        # Whether that cost is enforced (can reject the transition) or only
+        # recorded depends on what energy_budget is actually backed by --
+        # REGISTRY's shift_cost_coeff for B (40.0) was derived against
+        # LayerEnergyAccountant's real pool scale (initial_pool=1000.0,
+        # aurora_energy_layer_costs.py:338), not the chamber's own
+        # EnergyBudget placeholder scale (initial_energy=1.0 at every call
+        # site: aurora.py, run_chain.py, aurora_primitive_extractor.py).
+        # Charging the 40.0 coefficient against a 1.0-scale pool would
+        # starve it after a single transition -- a scale mismatch, not
+        # real physics. So: when energy_budget is attached to a shared
+        # LayerEnergyAccountant (the live boot_aurora() path, see
+        # EnergyBudget.attach_shared_accountant/__init__), cost is a real
+        # precondition -- a transition the shared pool can't afford is
+        # rejected and the boundary weight holds at its prior value. In
+        # standalone/test construction (no shared accountant), cost is
+        # computed and recorded (last_boundary_cost) for genealogy/worth
+        # scoring but does not block, since there is no pool at the
+        # matching scale to check it against.
+        self._energy_budget = energy_budget
+        self.last_boundary_cost: float = 0.0
+        self.blocked_transitions: int = 0
 
     def structural_distance(self, node_a: IVMNode, node_b: IVMNode) -> float:
         pa = self._lattice.vertices.compute_axis_polarities(node_a.mode)
@@ -870,9 +946,15 @@ class StructuralProximityMeter:
         )
         return dist / total_w
 
-    def update_boundaries(self) -> int:
+    def update_boundaries(self, tick: int = 0) -> int:
         nodes = list(self._lattice.nodes.values())
         transitions = 0
+        tick_cost = 0.0
+        self.blocked_transitions = 0
+        enforce = (
+            self._energy_budget is not None
+            and getattr(self._energy_budget, "_shared", None) is not None
+        )
         for i, na in enumerate(nodes):
             for nb in nodes[i + 1:]:
                 key = (na.node_id, nb.node_id)
@@ -885,11 +967,39 @@ class StructuralProximityMeter:
                 else:
                     new_w = min(1.0, prev + K.proximity_strengthen_rate
                                 * (d - K.proximity_threshold))
-                if abs(new_w - prev) > 1e-6:
+                delta = abs(new_w - prev)
+                if delta > 1e-6:
+                    if _NC_REGISTRY is not None:
+                        cost = _NC_REGISTRY.shift_cost(Constraint.B, delta)
+                        if enforce:
+                            try:
+                                self._energy_budget.spend(cost, tick)
+                            except NonCompViolation:
+                                self.blocked_transitions += 1
+                                continue
+                        tick_cost += cost
                     transitions += 1
                 self._weights[key] = new_w
                 self._weights[key_r] = new_w
+        self.last_boundary_cost = tick_cost
         return transitions
+
+    def mean_boundary_weight(self) -> float:
+        """
+        Real, per-tick structural boundary magnitude: the mean of all
+        pairwise proximity weights this meter is currently tracking.
+
+        B:DIFFERENCE follow-up (CONSTITUTIVE PHYSICS AUDIT 2026-09-12):
+        this is the genuine boundary-topology signal (as opposed to the
+        generic axis-polarity pressure every constraint already gets from
+        _read_pressure()) that EvolutionaryChamber.tick() blends into
+        Constraint.B's magnitude before feeding self._diff_buffer, so
+        B's Difference reflects actual structural drift rather than only
+        polarity pressure.
+        """
+        if not self._weights:
+            return 0.5  # matches the resting default a fresh pair starts at
+        return sum(self._weights.values()) / len(self._weights)
 
     def recompute_partitions(self) -> int:
         nodes = list(self._lattice.nodes.keys())
@@ -938,45 +1048,112 @@ class StructuralProximityMeter:
 # ---------------------------------------------------------------------------
 
 class EnergyBudget:
+    """
+    CONSTITUTIVE PHYSICS AUDIT (2026-09-12), N follow-up: this used to be
+    the chamber's own, permanently disconnected energy pool -- meanwhile
+    boot_aurora() separately constructs a real, shared LayerEnergyAccountant
+    (systems['accountant'], aurora_internal/aurora_energy_layer_costs.py)
+    for the intake/worth/solidification/variant-promotion pipeline, whose
+    own replenish() docstring already documented "aurora_evolution_chamber.py
+    replenish_from_lattice() equivalent" as an intended caller -- i.e. these
+    two pools were always meant to be connected and simply never were: two
+    live, simultaneously-running, unsynchronized economies in one process.
 
-    def __init__(self, initial_energy: float = 1.0):
-        self._budget = initial_energy
+    `shared_accountant` closes that gap without touching any tuned
+    behavior: when None (the default -- standalone/test construction,
+    e.g. run_chain.py without boot_aurora()), every method below behaves
+    exactly as before, byte-for-byte. When a shared LayerEnergyAccountant
+    is provided (the live boot_aurora() path), this class becomes a thin
+    view over that one shared pool instead of maintaining a second,
+    parallel number -- available()/spend()/burn_existence_cost() all read
+    and write the shared pool directly via its own real
+    withdraw()/replenish() methods, so there is exactly one live energy
+    pool, not two.
+    """
+
+    def __init__(self, initial_energy: float = 1.0, shared_accountant=None):
+        self._shared = shared_accountant
+        if self._shared is None:
+            self._budget = initial_energy
         self._initial = initial_energy
         self._total_spent = 0.0
 
+    def attach_shared_accountant(self, accountant) -> None:
+        """
+        Connect this budget to a shared LayerEnergyAccountant after
+        construction, for boot sequences (e.g. aurora.py's boot_aurora())
+        where the chamber and the shared accountant are necessarily built
+        in separate steps. Any energy in the chamber-local pool at the
+        point of attachment is folded into the shared pool via a real
+        replenish() (not discarded), so nothing is lost by attaching late.
+        """
+        if accountant is None or self._shared is not None:
+            return
+        leftover = self._budget
+        self._shared = accountant
+        if leftover:
+            self._shared.replenish(max(0.0, leftover), source="chamber_late_attach")
+
     @property
     def available(self) -> float:
-        return self._budget
+        return self._shared.pool if self._shared is not None else self._budget
 
     def burn_existence_cost(self) -> float:
         cost = K.baseline_burn_per_tick
-        self._budget -= cost
+        if self._shared is not None:
+            self._shared.withdraw(cost, sink="chamber_existence_burn")
+        else:
+            self._budget -= cost
         self._total_spent += cost
         return cost
 
     def spend(self, amount: float, tick: int) -> None:
-        if self._budget - amount < K.energy_budget_floor:
+        if self.available - amount < K.energy_budget_floor:
             raise NonCompViolation("N",
                 f"spend={amount:.6f} would push budget below floor at tick={tick}")
-        self._budget -= amount
+        if self._shared is not None:
+            self._shared.withdraw(amount, sink="chamber_agency_spend")
+        else:
+            self._budget -= amount
         self._total_spent += amount
 
     def replenish_from_lattice(self, lattice: IVMLattice) -> None:
         """
         Energy is conserved via redistribution — it is not created.
-        Baseline burn redistributes from the boundary layer back into the budget.
-        Lattice pool contributes proportionally; floor ensures existence can persist.
+
+        CONSTITUTIVE PHYSICS AUDIT (2026-09-12) fix: this used to credit a
+        lattice-proportional bonus to the budget by reading
+        lattice.get_total_energy() and crediting min(baseline_burn,
+        lattice_total * 0.001) without ever decreasing the lattice's own
+        energy — so whenever the lattice held any energy at all, this
+        fabricated that bonus from nothing, every tick, unbounded over
+        time (verified concretely: net budget strictly increased tick over
+        tick with the lattice's energy never touched). It now calls
+        IVMLattice.withdraw_energy() to genuinely take that amount out of
+        the lattice, crediting the budget only with what was actually
+        withdrawn. Combined budget+lattice energy is conserved exactly by
+        this exchange: whatever the lattice loses, the budget gains, no
+        more and no less.
+
+        floor_component (exactly matching burn_existence_cost's baseline
+        burn) is kept as a net-zero architectural subsidy, not a
+        violation: existence is the cheapest, reference-state constraint
+        by design (LAYER_COST[X] is the cheapest tier in the registry), so
+        burn and floor cancel exactly with no residual energy either way —
+        only the lattice-proportional bonus needed a real transfer.
         """
         lattice_total = lattice.get_total_energy()
-        # Lattice-proportional component (redistributed from node pool)
-        lattice_component = lattice_total * 0.001
-        # Boundary layer always returns the baseline burn (conservation)
+        desired_bonus = min(K.baseline_burn_per_tick, lattice_total * 0.001)
+        actual_bonus = lattice.withdraw_energy(desired_bonus) if desired_bonus > 0 else 0.0
         floor_component = K.baseline_burn_per_tick
-        replenish = floor_component + min(K.baseline_burn_per_tick, lattice_component)
-        self._budget += replenish
+        replenish = floor_component + actual_bonus
+        if self._shared is not None:
+            self._shared.replenish(replenish, source="chamber_lattice_bonus")
+        else:
+            self._budget += replenish
 
     def status(self) -> Dict:
-        return {"budget": self._budget, "initial": self._initial,
+        return {"budget": self.available, "initial": self._initial,
                 "total_spent": self._total_spent}
 
 
@@ -1053,12 +1230,12 @@ class EvolutionaryChamber:
         output_dir: str = "chamber_output",
         constants: WorldConstants = K,
         initial_energy: float = 1.0,
+        energy_accountant=None,
     ):
         self.lattice = lattice
         self.run_id = run_id or f"run_{uuid.uuid4().hex[:8]}"
         self.output_dir = output_dir
         self.K = constants
-        self.tick_count: int = 0
         self._alive: bool = True
 
         os.makedirs(output_dir, exist_ok=True)
@@ -1076,13 +1253,37 @@ class EvolutionaryChamber:
                 output_dir=output_dir,
             )
 
+        # CONSTITUTIVE PHYSICS AUDIT (2026-09-12) T follow-up: this used to
+        # hardcode tick_count to 0 regardless of what the injected genealogy
+        # logger's own (now-restorable, see aurora_runtime.py/run_chain.py's
+        # restore_tick_state() wiring) tick_count already was. That's correct
+        # for this chamber's own session-local physics (check_T's monotonicity
+        # check and the Difference buffer's windowing below only care about
+        # relative ordering within this process's ticks, and self._diff_buffer
+        # is itself a fresh, in-memory, session-local buffer either way) --
+        # but self.tick_count is also hashed into genealogy-facing identifiers
+        # elsewhere in this class (lineage_raw / target_generation for
+        # dream-feedback mutations), and those ARE meant to be historically
+        # unique across this object's full persisted lifetime, not just this
+        # process's. Starting from 0 there let two genealogy records from
+        # different real points in Aurora's history collide on the same
+        # generation number (and, when evidence_id is empty and the mutation
+        # repeats, the same lineage hash). Resuming from the genealogy
+        # logger's own tick_count fixes that without touching the session-
+        # local uses at all, since they only depend on relative differences.
+        self.tick_count: int = int(getattr(self._genealogy, "tick_count", 0) or 0)
+
         # V3 physics sub-systems
         self._abilities = _build_chamber_abilities()
-        self._budget = EnergyBudget(initial_energy)
-        self._proximity = StructuralProximityMeter(lattice)
+        self._budget = EnergyBudget(initial_energy, shared_accountant=energy_accountant)
+        self._proximity = StructuralProximityMeter(lattice, energy_budget=self._budget)
         self._mapper = _ActionAbilityMapper(lattice, self._abilities)
         self._polarity_sensor = PolarityGradientSensor()
         self._gradient_miner = GradientChainMiner()
+        # B:POLARITY (CONSTITUTIVE PHYSICS AUDIT, 2026-09-12): previous
+        # tick's boundary-axis polarity, for GlobalNonComps.check_B_polarity
+        # flip detection. None until the first tick has a prior to compare.
+        self._prev_boundary_polarity: Optional[float] = None
         # Difference channel history buffer — maintained across every tick
         # so C:D values are always current for relief annotation, variant
         # promotion, and live cost-diff scoring.
@@ -1124,6 +1325,17 @@ class EvolutionaryChamber:
 
         # Initial partition computation
         self._proximity.recompute_partitions()
+
+    def attach_energy_accountant(self, accountant) -> None:
+        """
+        Connect this chamber's energy economy to a shared
+        LayerEnergyAccountant after construction (see
+        EnergyBudget.attach_shared_accountant() for why boot_aurora()
+        needs this rather than passing energy_accountant to __init__ --
+        the shared accountant is built after the chamber in that boot
+        sequence).
+        """
+        self._budget.attach_shared_accountant(accountant)
 
     # ====================================================================
     # tick
@@ -1169,7 +1381,7 @@ class EvolutionaryChamber:
                 "I_CAN", strength=0.02, level=RecursionLevel.SHALLOW
             )
             self.lattice.vertices.tick(dt=self.K.dt)
-            self._proximity.update_boundaries()
+            self._proximity.update_boundaries(self.tick_count)
             self._proximity.recompute_partitions()
 
             # 3. N Non-Comp: baseline existence burn
@@ -1200,17 +1412,35 @@ class EvolutionaryChamber:
                     requested_axes = len(ordered_labels)
                     represented_scale = str(ordered_labels[0]).lower() if ordered_labels else "existence"
                     magnitude = requested_axes * 0.1
-                    base_energy_cost = self.K.agency_cost_coefficient * (magnitude ** 2)
+                    base_energy_cost = GlobalNonComps.agency_cost(magnitude)
 
                     carry_credit = max(0.0, float(self._carryover_credit_current.get(represented_scale, 0.0)))
                     effective_cost = max(0.0, float(base_energy_cost) - carry_credit)
 
                     available_energy = max(0.0, self._budget.available - self.K.energy_budget_floor)
-                    executable = (
-                        requested_axes > 0
-                        and magnitude <= float(self.K.agency_max_magnitude)
-                        and effective_cost <= available_energy
-                    )
+                    # Route the agency ceiling+cost law through the canonical
+                    # GlobalNonComps.check_A instead of re-deriving the same
+                    # comparison inline (constitutive physics audit,
+                    # 2026-09-12: check_A had zero callers anywhere in the
+                    # repo despite being a correct, fully-implemented
+                    # precondition — this loop had quietly reimplemented the
+                    # identical ceiling/cost test instead of calling it).
+                    # check_A's `cost > energy_available` test, given
+                    # energy_available=available_energy+carry_credit, is
+                    # algebraically identical to this chamber's
+                    # carryover-credit-adjusted rule
+                    # (effective_cost = base_cost - carry_credit <=
+                    # available_energy  <=>  base_cost <= available_energy +
+                    # carry_credit), so the executable/idle-fallback
+                    # behavior below is unchanged by this refactor.
+                    executable = requested_axes > 0
+                    if executable:
+                        try:
+                            GlobalNonComps.check_A(
+                                magnitude, available_energy + carry_credit, self.tick_count
+                            )
+                        except NonCompViolation:
+                            executable = False
 
                     # Every attempted op participates in evolutionary chain lineage.
                     trace_items = _pair_atom_trace_items(ordered_labels)
@@ -1318,6 +1548,27 @@ class EvolutionaryChamber:
                 self.lattice.vertices, tick=self.tick_count
             )
 
+            # 7a. B Non-Comp: boundary layer resists polarity flip
+            # (CONSTITUTIVE PHYSICS AUDIT, 2026-09-12) — uses the real
+            # boundary-axis polarity and cross-scale pressure this tick
+            # already measured, see GlobalNonComps.check_B_polarity.
+            _b_flip_pressure = (
+                polarity_report.pair_pressures.get("energy→boundary", 0.0)
+                + polarity_report.pair_pressures.get("boundary→agency", 0.0)
+            )
+            _b_polarity_after = polarity_report.polarities.get("boundary", 0.0)
+            try:
+                GlobalNonComps.check_B_polarity(
+                    self._prev_boundary_polarity,
+                    _b_polarity_after,
+                    _b_flip_pressure,
+                    self.tick_count,
+                )
+            finally:
+                # Real state changed regardless of whether the transition
+                # was legitimate -- only the legitimacy is being judged.
+                self._prev_boundary_polarity = _b_polarity_after
+
             # 7b. Record magnitude state in Difference buffer and compute C:D snapshot.
             # Magnitudes are approximated from IVM pressure components — the best
             # available proxy for per-constraint activation intensity within the
@@ -1398,6 +1649,14 @@ class EvolutionaryChamber:
                 # Blend physical + intent so C:D reflects both held state and
                 # declared constraint demand in the evolutionary chain.
                 _chamber_magnitudes[c] = (0.7 * physical) + (0.3 * intent)
+            # B:DIFFERENCE follow-up (CONSTITUTIVE PHYSICS AUDIT 2026-09-12):
+            # blend in the real structural boundary-weight signal from
+            # StructuralProximityMeter so B's Difference reflects actual
+            # boundary topology, not only generic axis-polarity pressure.
+            _b_structural = self._proximity.mean_boundary_weight()
+            _chamber_magnitudes[Constraint.B] = (
+                0.5 * _chamber_magnitudes[Constraint.B] + 0.5 * _b_structural
+            )
             self._diff_buffer.record(self.tick_count, _chamber_magnitudes)
             _diff_snapshot = self._diff_buffer.snapshot(self.tick_count, _chamber_magnitudes)
 

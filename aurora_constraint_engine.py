@@ -18,92 +18,25 @@ from typing import ClassVar, Dict, FrozenSet, List, Optional, Set, Tuple
 
 import numpy as np
 
-
-# ============================================================
-# EXCEPTIONS
-# ============================================================
-
-class ManifoldViolation(Exception):
-    """Physics invariant broken — X <= 0, bad axis, or field boundary crossed."""
+# CONSTITUTIVE PHYSICS AUDIT (2026-09-12): this module used to define its own
+# ConstraintVector/ManifoldViolation, textually identical but class-distinct
+# from aurora_internal.aurora_constraint_manifold_patched's versions — two
+# disconnected physics universes with the same names. See
+# docs/AURORA_CONSTITUTIVE_PHYSICS_AUDIT_2026-09-12.md. Importing the
+# canonical classes here (rather than re-defining them) is the fix: every
+# consumer of this "standalone" engine now shares one ConstraintVector
+# identity with the registry-driven evolution/genealogy pipeline, so a
+# `except ManifoldViolation` in either world actually catches both, and
+# `isinstance`/equality checks against ConstraintVector no longer silently
+# fail across the two subsystems.
+from aurora_internal.aurora_constraint_manifold_patched import (
+    ConstraintVector,
+    ManifoldViolation,
+)
 
 
 class OntologicalViolation(Exception):
     """OntologicalClaim exceeds the asserting ExistenceMode."""
-
-
-# ============================================================
-# SECTION 1 — PhysicsCore
-# INV-01, INV-08, INV-11, seed section 1.4
-# ============================================================
-
-class ConstraintVector:
-    """
-    INV-01: Five-axis constraint physics vector (X, T, N, B, A).
-    X > 0 is the manifold invariant — existence requires admissibility.
-    INV-11: governor permissiveness hierarchy encoded in empirical weights.
-    """
-
-    __slots__ = ("X", "T", "N", "B", "A")
-
-    def __init__(self, X: float, T: float, N: float, B: float, A: float) -> None:
-        if X <= 0:
-            raise ManifoldViolation(
-                f"ConstraintVector.X must be > 0 (INV-01); got {X!r}"
-            )
-        object.__setattr__(self, "X", float(X))
-        object.__setattr__(self, "T", float(T))
-        object.__setattr__(self, "N", float(N))
-        object.__setattr__(self, "B", float(B))
-        object.__setattr__(self, "A", float(A))
-
-    def __setattr__(self, name: str, value: object) -> None:
-        raise ManifoldViolation("ConstraintVector is immutable after construction.")
-
-    def to_array(self) -> np.ndarray:
-        return np.array([self.X, self.T, self.N, self.B, self.A], dtype=np.float64)
-
-    @classmethod
-    def from_array(cls, arr: np.ndarray) -> "ConstraintVector":
-        return cls(X=float(arr[0]), T=float(arr[1]), N=float(arr[2]),
-                   B=float(arr[3]), A=float(arr[4]))
-
-    def magnitude(self) -> float:
-        return float(np.linalg.norm(self.to_array()))
-
-    def add(self, other: "ConstraintVector") -> "ConstraintVector":
-        return ConstraintVector.from_array(self.to_array() + other.to_array())
-
-    def subtract(self, other: "ConstraintVector") -> "ConstraintVector":
-        result = self.to_array() - other.to_array()
-        if result[0] <= 0:
-            raise ManifoldViolation(
-                f"Subtraction would set X={result[0]:.6f}; manifold requires X > 0"
-            )
-        return ConstraintVector.from_array(result)
-
-    def scalar_multiply(self, scalar: float) -> "ConstraintVector":
-        result = self.to_array() * scalar
-        if result[0] <= 0:
-            raise ManifoldViolation(
-                f"scalar_multiply({scalar}) would set X={result[0]:.6f}"
-            )
-        return ConstraintVector.from_array(result)
-
-    def dot(self, other: "ConstraintVector") -> float:
-        return float(np.dot(self.to_array(), other.to_array()))
-
-    def span_check(self) -> Set[str]:
-        """INV-08: Return axes with |value| > 0.01 — the 'engaged' axes."""
-        labels = ("X", "T", "N", "B", "A")
-        return {ax for ax, v in zip(labels, self.to_array()) if abs(v) > 0.01}
-
-    def axis_count(self) -> int:
-        """INV-08: Number of meaningfully engaged axes."""
-        return len(self.span_check())
-
-    def __repr__(self) -> str:
-        return (f"ConstraintVector(X={self.X:.4f}, T={self.T:.4f}, "
-                f"N={self.N:.4f}, B={self.B:.4f}, A={self.A:.4f})")
 
 
 class EnergyLaw:
@@ -124,20 +57,68 @@ class EnergyLaw:
     @staticmethod
     def redistribute(vec: ConstraintVector,
                      delta: ConstraintVector) -> ConstraintVector:
-        """Pay the cost of gain through N. N floors at 0; debt is absorbed."""
-        gain = sum(max(0.0, d) for d in delta.to_array())
-        n_new = max(0.0, vec.N - gain)
-        arr = vec.to_array() + delta.to_array()
-        arr[2] = n_new                          # overwrite N after redistribution
+        """
+        Redistribute magnitude through the energy pool (N).
+
+        Gains requested on X/T/B/A are funded out of N; losses on X/T/B/A
+        are credited back to N. N is not directly settable via delta — it
+        is the derived remainder after funding/crediting the other four
+        axes.
+
+        CONSTITUTIVE PHYSICS AUDIT (2026-09-12) fix: the previous version
+        applied the full requested gain to every axis and only afterward
+        floored N at 0, so a gain exceeding available N fabricated energy
+        from nothing (e.g. vec=(X=1,T=0.1,N=0.05,B=0.1,A=0.1) with
+        delta=(T=+0.3,B=+0.2) raised total energy from 1.35 to 1.8). This
+        version caps realized gains proportionally at what N (plus any
+        credited losses) can actually fund, so N floors at exactly 0 and
+        total energy is conserved by construction — verified below via
+        EnergyLaw.conserved() rather than left as an unenforced helper.
+        """
+        raw = delta.to_array().copy()
+        raw[2] = 0.0  # N is derived below, not directly settable via delta
+        gains = np.clip(raw, 0.0, None)
+        losses = np.clip(raw, None, 0.0)
+        total_gain = float(np.sum(gains))
+        credited = float(np.sum(np.abs(losses)))
+        available = max(0.0, vec.N) + credited
+        if total_gain > available:
+            scale = 0.0 if available <= 0 else available / total_gain
+            gains = gains * scale
+            total_gain = float(np.sum(gains))
+        arr = vec.to_array() + gains + losses
+        arr[2] = max(0.0, vec.N + credited - total_gain)
         arr[0] = max(1e-9, arr[0])              # X invariant
-        return ConstraintVector.from_array(arr)
+        result = ConstraintVector.from_array(arr)
+        if not EnergyLaw.conserved(vec, result):
+            raise ManifoldViolation(
+                "EnergyLaw.redistribute produced non-conserved energy: "
+                f"{EnergyLaw.total_energy(vec):.6f} -> "
+                f"{EnergyLaw.total_energy(result):.6f}"
+            )
+        return result
 
 
 class MagnitudeImpact:
     """
     Magnitude = (B × T × X) / N  [guard N=0].
     Impact    = Magnitude × A.
-    Encodes the B-T-X structural triad as the primary load-bearer.
+
+    RE-DERIVATION RECORD (constitutive physics audit, 2026-09-12, resolved):
+    this formula was flagged in aurora_internal/aurora_noncomp_registry.py
+    (see MAGNITUDE_NUMERATOR_AXES) as authored under the pre-Build-725
+    assumption that B, not X, was the canonical atomic MAGNITUDE-role axis.
+    Conclusion after re-derivation: the arithmetic is unchanged -- B*T*X is
+    a product, and a product's value doesn't depend on which factor is
+    narratively called "primary". X is now correctly understood as the
+    primary magnitude carrier (existence/admissibility IS the measure) and
+    B's presence reflects its own corrected role (DIFFERENCE -- a
+    well-differentiated concept carries more communicative weight), not a
+    magnitude role of its own. This is a domain-specific derived metric (a
+    communication field's semantic weight), distinct from the atomic
+    per-axis Magnitude/Polarity/Operator/Cost/Difference table -- its
+    validity doesn't depend on which axis owns that abstract label. See
+    the registry file for the full reasoning.
     """
 
     @staticmethod
@@ -274,20 +255,35 @@ class IStatePredicate(enum.Enum):
     I-state predicates paired with their required axis and minimum ExistenceMode.
     From the OntologicalContract spec in the task brief.
     """
-    I_IS    = ("X", ExistenceMode.REFERENCE)
-    I_ISNT  = ("X", ExistenceMode.REFERENCE)
-    I_CAN   = ("T", ExistenceMode.TRANSIENT)
-    I_CANNOT = ("T", ExistenceMode.TRANSIENT)
-    I_DO    = ("N", ExistenceMode.PERSISTENT)
-    I_DONOT = ("N", ExistenceMode.PERSISTENT)
-    I_SAW   = ("B", ExistenceMode.BOUNDED)
-    I_SOUGHT = ("B", ExistenceMode.BOUNDED)
-    I_DID   = ("A", ExistenceMode.AGENTIC)
-    I_DIDNT = ("A", ExistenceMode.AGENTIC)
+    # CONSTITUTIVE PHYSICS AUDIT (2026-09-12), X/T/N/B/A:POLARITY finding:
+    # every "negative" member here used to share its (axis, min_mode) value
+    # tuple exactly with its "positive" counterpart. Python's enum.Enum
+    # collapses same-valued members into aliases of the first-defined one,
+    # so IStatePredicate.I_ISNT was never a distinct member -- it WAS
+    # I_IS (`I_ISNT is I_IS` -> True, `I_ISNT.name` -> "I_IS"), and likewise
+    # for I_CANNOT/I_DONOT/I_SOUGHT/I_DIDNT. OntologicalClaim._compute_displacement()'s
+    # `positive = self.predicate.name in (...)` check therefore could never
+    # see a negative predicate: the entire isn't/can't/don't/didn't half of
+    # this vocabulary was unreachable at the language level, for all five
+    # constraints, not just one. The added `positive` field below is what
+    # actually distinguishes them now; axis/min_mode stay identical within
+    # each pair on purpose (a predicate and its negation share the same
+    # axis and admissibility floor -- only its polarity differs).
+    I_IS     = ("X", ExistenceMode.REFERENCE,  True)
+    I_ISNT   = ("X", ExistenceMode.REFERENCE,  False)
+    I_CAN    = ("T", ExistenceMode.TRANSIENT,  True)
+    I_CANNOT = ("T", ExistenceMode.TRANSIENT,  False)
+    I_DO     = ("N", ExistenceMode.PERSISTENT, True)
+    I_DONOT  = ("N", ExistenceMode.PERSISTENT, False)
+    I_SAW    = ("B", ExistenceMode.BOUNDED,    True)
+    I_SOUGHT = ("B", ExistenceMode.BOUNDED,    False)
+    I_DID    = ("A", ExistenceMode.AGENTIC,    True)
+    I_DIDNT  = ("A", ExistenceMode.AGENTIC,    False)
 
-    def __init__(self, axis: str, min_mode: ExistenceMode) -> None:
+    def __init__(self, axis: str, min_mode: ExistenceMode, positive: bool) -> None:
         self.axis = axis
         self.min_mode = min_mode
+        self.positive = positive
 
 
 class OntologicalClaim:
@@ -313,11 +309,20 @@ class OntologicalClaim:
         """Signed constraint displacement. Positive predicates push outward."""
         axis = self.predicate.axis
         scale = (self.mode.value + 1) * 0.1
-        positive = self.predicate.name in ("I_IS", "I_CAN", "I_DO", "I_SAW", "I_DID")
-        sign = 1.0 if positive else -1.0
+        sign = 1.0 if self.predicate.positive else -1.0
         base = {"X": 1e-4, "T": 1e-4, "N": 1e-4, "B": 1e-4, "A": 1e-4}
         base[axis] = sign * scale
-        base["X"] = max(1e-9, base["X"])   # X invariant
+        # X invariant: ConstraintVector requires X > 0 to construct at all
+        # (X <= 0 is manifold collapse, not "negative existence" -- there is
+        # no coherent negative quantity of existence in this physics). So
+        # for I_ISNT specifically (axis == "X", sign == -1), this floors the
+        # displacement's X field to near-zero rather than letting it go
+        # negative. That means displacement().X's SIGN is not a reliable
+        # polarity read for the X axis the way it is for T/N/B/A -- use
+        # predicate.positive directly for X's own polarity; this floor is
+        # semantically correct (existence pushed toward collapse, not
+        # inverted), not a bug to route around.
+        base["X"] = max(1e-9, base["X"])
         return ConstraintVector(**base)
 
     def displacement(self) -> ConstraintVector:
@@ -405,19 +410,43 @@ class FoundationalContract:
 # INV-05, section 2.5, seed sections 1 and 3
 # ============================================================
 
-class NonCompDimension(enum.Enum):
-    """INV-05, section 4.1: Five NC dimensions present in the sediment basins."""
-    POLARITY   = "polarity"
-    MAGNITUDE  = "magnitude"
-    OPERATOR   = "operator"
-    COST       = "cost"
-    DIFFERENCE = "difference"
-
+# fix/canonical-noncomp-dimension: this used to define its own, independent
+# NonCompDimension(enum.Enum) with string values ("polarity", "magnitude",
+# ...) -- a duplicate identity of the canonical NonCompDimension(IntEnum)
+# in aurora_internal/aurora_noncomp_registry.py (POLARITY=0, MAGNITUDE=1,
+# ...). Same five members, same declaration order, but a DIFFERENT class,
+# so `isinstance`/`is`/registry-returned-member comparisons against this
+# module's members could silently fail even when the enum "looked" the
+# same. Collapsed onto the canonical enum below.
+#
+# Every consumer of this module's NonCompDimension is internal to this
+# file (NC_CHANNELS below and SedimentBasin.basin_id) -- traced via a
+# repo-wide grep of every `from aurora_constraint_engine import` site;
+# no other module ever imported NonCompDimension, SedimentBasin,
+# NC_CHANNELS, or SEDIMENT_BASINS from here. Every other consumer in the
+# repo (aurora_sedimemory.py, aurora_closure_basis.py,
+# aurora_reflexive_interpreter.py, aurora_noncomp_layer_compiler.py,
+# aurora_internal/aurora_dna_strand_schema.py, aurora_runtime.py) already
+# imports NonCompDimension from the canonical registry module, so those
+# are unaffected by this change.
+#
+# The old enum's `.value` WAS the lowercase string used to build the
+# "SED:{axis}>{dim}" sediment-basin IDs and "NC_{AXIS}_{DIM}" channel
+# names below -- exactly the external serialization this fix must not
+# silently change. The canonical enum's `.value` is an int (its ordinal),
+# so every former `dim.value` site here is converted to `dim.name.lower()`
+# instead, which reproduces the identical lowercase string ("polarity",
+# "magnitude", "operator", "cost", "difference") since both enums declare
+# the same five members in the same order. See basin_id below for the
+# other site. Byte-identical output is pinned by this file's own
+# self-test assertions (SED:B>polarity, NC_X_POLARITY == SED:X>polarity,
+# etc.) and by tests/test_canonical_noncomp_dimension.py.
+from aurora_internal.aurora_noncomp_registry import NonCompDimension
 
 # 25 NC channels (5 axes × 5 dimensions) — named as NC_{AXIS}_{DIM}
 # Values map to sediment basin IDs (SED:axis>dimension)
 NC_CHANNELS: Dict[str, str] = {
-    f"NC_{ax}_{dim.name}": f"SED:{ax}>{dim.value}"
+    f"NC_{ax}_{dim.name}": f"SED:{ax}>{dim.name.lower()}"
     for ax in ("X", "T", "N", "B", "A")
     for dim in NonCompDimension
 }
@@ -844,7 +873,9 @@ class SedimentBasin:
 
     @property
     def basin_id(self) -> str:
-        return f"SED:{self.axis}>{self.dimension.value}"
+        # fix/canonical-noncomp-dimension: dimension.name.lower(), not
+        # .value -- see the NonCompDimension collapse note above.
+        return f"SED:{self.axis}>{self.dimension.name.lower()}"
 
     def deposit(self, event_id: str) -> None:
         self.contributing_events.append(event_id)
@@ -1214,11 +1245,20 @@ class ConstraintEngine:
         uncertainty = float(observation.get("uncertainty", 0.0))
         self._guards.uncertainty.update_uncertainty(uncertainty)
 
+        # Constitutive physics audit (2026-09-12), B:MAGNITUDE/B:OPERATOR
+        # finding: this always called .update() with no boundary_pressure,
+        # so it silently defaulted to 0.0 regardless of what the caller's
+        # observation actually carried -- the BoundaryCalibrationGuard's
+        # pressure-based dissolution check could never fire. Read it from
+        # the observation like every other guard input above; still
+        # defaults to 0.0 (unchanged behavior) when a caller doesn't
+        # supply it, but no longer discards it when one does.
         bv = observation.get("boundary_vector")
+        boundary_pressure = float(observation.get("boundary_pressure", 0.0))
         if isinstance(bv, ConstraintVector):
-            self._guards.boundary.update(bv)
+            self._guards.boundary.update(bv, boundary_pressure)
         else:
-            self._guards.boundary.update(profile)
+            self._guards.boundary.update(profile, boundary_pressure)
 
         ext = observation.get("external_perspective")
         if ext:
@@ -1232,9 +1272,38 @@ class ConstraintEngine:
         INV-04, INV-11, INV-13: Request permission for a task.
         routing_mode defaults to 'surface' if not in task_descriptor.
         Returns PERMITTED, REJECTED, or DEFERRED.
+
+        Constitutive physics audit (2026-09-12), B:MAGNITUDE/B:OPERATOR
+        finding: this used to return the axis-weight governor's decision
+        untouched -- self._guards existed ("all five are non-optional" per
+        FailureGuardSuite's own docstring) but nothing here ever consulted
+        them, so a PERMITTED decision could be returned while the boundary
+        was already reporting dissolution. Only the boundary guard is
+        consulted here, not the full five-guard suite: the other four
+        guards' own docstrings record them as long-standing, separately
+        tracked chronic-failure signals (e.g. "10/10 episodes fail") that
+        are a different, already-known problem -- folding them into a
+        hard veto here, with no caller yet supplying the observation
+        fields they need (external_perspective, coherence, uncertainty),
+        would silently defer every task by default and is not what this
+        audit's B finding was about. The boundary guard, by contrast,
+        passes by default and only vetoes on a genuine, rare dissolution
+        condition (B < 0.10 or pressure >= 0.80), so wiring it in here is
+        safe and matches the evidenced gap precisely.
         """
         routing_mode = task_descriptor.get("routing_mode", "surface")
-        return self._governor.govern(task_descriptor, routing_mode)
+        result = self._governor.govern(task_descriptor, routing_mode)
+        if result.decision == GovernorDecision.PERMITTED:
+            boundary_check = self._guards.boundary.check()
+            if not boundary_check.passed:
+                return GovernorResult(
+                    decision=GovernorDecision.DEFERRED,
+                    profile=result.profile,
+                    reason=f"boundary_guard_veto: {boundary_check.reason}",
+                    retry_condition="BoundaryCalibrationGuard.check().passed",
+                    under_distillation=result.under_distillation,
+                )
+        return result
 
     # Read-only access to internals for diagnostics
     @property

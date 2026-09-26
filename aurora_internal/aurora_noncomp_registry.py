@@ -151,32 +151,55 @@ INFORMATION_LINEAGE_MAP: Dict[str, Tuple[str, str, str]] = {
     "A": ("Agency",    "Understanding", "Field Impact"),
 }
 
-# ⚠ ARCHITECTURAL FLAG (Build 725 Correction, foundational operator mapping):
-# This composite formula was authored under the pre-correction assumption
-# that B carried the MAGNITUDE role (old AXIS_NC_DIM: B→MAGNITUDE). The
-# corrected canonical mapping is X→MAGNITUDE, B→DIFFERENCE. The axis-role
-# LABELS below have NOT been changed pending Sunni's verification of whether
-# this composite (B×T×X)/N formula still holds as physics, or whether it
-# was itself downstream of the mapping error and needs re-derivation with X
-# as the magnitude primitive. Per the correction record: "Anything
-# downstream that derived semantics or behavior from an incorrect mapping
-# must then be regenerated or verified rather than blindly retained." This
-# formula is that case — flagged, not silently rewritten.
+# RE-DERIVATION RECORD (Build 725 Correction, foundational operator mapping,
+# resolved 2026-09-12 -- constitutive physics audit X:MAGNITUDE follow-up):
 #
-# Magnitude formula (AS SHIPPED, unverified post-correction): Magnitude = (B × T × X) / N
-# Semantic reading: Meaning = (Boundary × Belief × Information) / Purpose
-#   B = primary magnitude carrier — boundary IS the measure
+# This composite formula was authored under the pre-correction assumption
+# that B carried the atomic MAGNITUDE role (old AXIS_NC_DIM: B→MAGNITUDE).
+# The corrected canonical mapping is X→MAGNITUDE, B→DIFFERENCE (see
+# AXIS_NC_DIM below). This was flagged rather than silently rewritten, per
+# the correction record's own instruction to verify rather than blindly
+# retain or blindly replace. Re-derivation conclusion, reasoned through
+# rather than guessed:
+#
+# The formula's ARITHMETIC does not need to change. B×T×X is a product,
+# and a product's computed value is invariant under which factor prose
+# calls "primary" -- swapping the narrative emphasis from B to X changes
+# nothing about what the formula outputs. What was actually wrong was the
+# JUSTIFICATION offered for B's inclusion ("boundary IS the measure"),
+# which explicitly invoked the now-superseded B→MAGNITUDE mapping as its
+# reason. That reasoning is corrected below. Separately: this composite is
+# not actually computing "the atomic X:MAGNITUDE channel" in the first
+# place -- the 25-atomic-channel table (NC[X][MAGNITUDE] etc., in
+# NonCompRegistry) already IS the canonical per-axis Magnitude/Polarity/
+# Operator/Cost/Difference reading for each constraint alone. This formula
+# is a distinct, domain-specific DERIVED metric -- a communication field's
+# overall semantic weight -- that combines multiple axes for reasons
+# specific to that purpose, not a restatement of the atomic table. Its
+# validity doesn't rise or fall with which axis "owns" the abstract
+# Magnitude label among the 25 channels.
+#
+# Magnitude formula (verified, unchanged): Magnitude = (B × T × X) / N
+# Corrected semantic reading: Meaning = (Boundary × Belief × Information) / Purpose
+#   X = primary magnitude carrier — existence/admissibility IS the measure
+#     (corrected: X, not B, is the canonical atomic MAGNITUDE-role axis)
+#   B = differentiation contribution — a well-bounded (distinguishable)
+#     concept carries more communicative weight than a poorly-defined one
+#     (corrected: B's own atomic role is DIFFERENCE, not MAGNITUDE -- its
+#     presence here reflects that contrast/definition contributes to
+#     communicative magnitude, not that B itself IS the magnitude)
 #   T = propagation multiplier — how far magnitude reaches through time
-#   X = coherence anchor — grounds magnitude in admissibility
 #   N = normalization denominator — cost of sustaining magnitude
 #     (higher N activation = lower magnitude cost ratio = more efficient field)
 MAGNITUDE_NUMERATOR_AXES: Tuple[str, str, str] = ("B", "T", "X")
 MAGNITUDE_DENOMINATOR_AXIS: str = "N"
 
-# Impact formula (AS SHIPPED, unverified post-correction): Impact = Magnitude × A = ((B × T × X) / N) × A
+# Impact formula (verified, unchanged): Impact = Magnitude × A = ((B × T × X) / N) × A
 # Semantic reading: Understanding = Meaning × Agency
 #   A converts field potential (magnitude) into directed cognitive outcome.
 #   Agency without magnitude is incoherent. Magnitude without agency is inert.
+#   (A's own atomic role is OPERATOR, consistent with this: Impact is what
+#   happens when the invariant transformation rule (A) acts on a magnitude.)
 IMPACT_NUMERATOR_AXES: Tuple[str, str, str, str] = ("B", "T", "X", "A")
 IMPACT_DENOMINATOR_AXIS: str = "N"
 
@@ -355,7 +378,16 @@ DIFFERENCE_PARAMS: Dict[Constraint, DifferenceParams] = {
         constraint      = Constraint.T,
         ref_type        = 'prior_self',
         window_ticks    = 4,
-        normalize_scale = 4.0,      # matches k_T — momentum window
+        # CONSTITUTIVE PHYSICS AUDIT (2026-09-12), T follow-up: this was
+        # 4.0 with a comment claiming it "matches k_T", but
+        # LAYER_COST[T].shift_cost_coeff was raised from 4.0 to 7.0 (see
+        # that field's own comment) without updating this one to match --
+        # a real, verifiable drift caught by the registry's own
+        # verify_noncomp_registry() self-check ("Difference normalize_scale
+        # matches shift_cost_coeff"), which was failing before this fix.
+        # T's Difference channel had been normalizing against a stale
+        # constant ever since the cost coefficient changed.
+        normalize_scale = 7.0,      # matches k_T — momentum window
         polarity_signed = True,     # acceleration (+) vs deceleration (−) are distinct
     ),
     #
