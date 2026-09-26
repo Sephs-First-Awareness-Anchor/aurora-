@@ -22,12 +22,13 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 import aurora_representational_resolution_base as _base
 from aurora_representational_resolution_base import *  # noqa: F401,F403
 from aurora_representational_resolution_base import RepresentationalResolutionEngine as _BaseEngine
-from aurora_representational_address import AXES, RepresentationalRef, _FIELDS
+from aurora_representational_address import AXES, DIM_NAMES, RepresentationalRef, _FIELDS
 
 _DIMENSION_OWNER_AXIS = {
     "MAGNITUDE": "X", "POLARITY": "T", "COST": "N",
     "DIFFERENCE": "B", "OPERATOR": "A",
 }
+_AXIS_FIELDS = {"sub_law_c", "col_law_c"}
 _EPS = 1e-12
 
 
@@ -46,8 +47,11 @@ def _canonical_perspectives() -> Tuple[Tuple[str, ...], ...]:
         return tuple(c for n in range(1, len(axes) + 1) for c in combinations(axes, n))
 
 
-def _project(ref: RepresentationalRef, source: RepresentationalRef,
-             perspective: Sequence[str]) -> Tuple[RepresentationalRef, Dict[str, Any]]:
+def _project(
+    ref: RepresentationalRef,
+    source: RepresentationalRef,
+    perspective: Sequence[str],
+) -> Tuple[RepresentationalRef, Dict[str, Any]]:
     lens = {str(a).upper() for a in perspective if str(a).upper() in AXES}
     exposed: Dict[str, Any] = {}
     for field_name in ref.unresolved_fields():
@@ -57,10 +61,51 @@ def _project(ref: RepresentationalRef, source: RepresentationalRef,
     return (replace(ref, **exposed), exposed) if exposed else (ref, {})
 
 
-def _projection_id(ref: RepresentationalRef, source: RepresentationalRef,
-                   perspective: Sequence[str], projected: RepresentationalRef) -> str:
-    payload = "|".join((ref.encode(), source.encode(), ".".join(perspective), projected.encode()))
+def _projection_id(
+    ref: RepresentationalRef,
+    source: RepresentationalRef,
+    perspective: Sequence[str],
+    projected: RepresentationalRef,
+) -> str:
+    payload = "|".join(
+        (ref.encode(), source.encode(), ".".join(perspective), projected.encode())
+    )
     return "rproj_" + hashlib.sha256(payload.encode()).hexdigest()[:20]
+
+
+def _projection_view_key(candidate: Dict[str, Any]) -> str:
+    """Identity of what the consumer can actually see, independent of lens/source."""
+    payload = str(candidate.get("projected_ref") or "")
+    return "rview_" + hashlib.sha256(payload.encode()).hexdigest()[:20]
+
+
+def _field_domain_size(field_name: str) -> int:
+    """Size of this field's already-defined lawful representational domain."""
+    return len(AXES) if field_name in _AXIS_FIELDS else len(DIM_NAMES)
+
+
+def _complete_candidate_capacity(ref: RepresentationalRef) -> int:
+    """Maximum distinct field/value hypotheses possible for this ref.
+
+    This is not a tuning budget. It follows directly from the typed
+    RepresentationalRef domains and lets the escalation path see every lawful
+    value before choosing a field inquiry.
+    """
+    return sum(_field_domain_size(field_name) for field_name in ref.unresolved_fields())
+
+
+def _projection_priority(item: Dict[str, Any]) -> Tuple[int, float, str]:
+    """Cheapest dimensional lens first, then strongest native structural pressure."""
+    evidence = dict(item.get("evidence") or {})
+    try:
+        pressure = float(evidence.get("structural_pressure", 0.0) or 0.0)
+    except Exception:
+        pressure = 0.0
+    return (
+        len(item.get("pressure_perspective") or ()),
+        -pressure,
+        str(item.get("projection_id") or ""),
+    )
 
 
 def build_perspective_projections(
@@ -81,10 +126,12 @@ def build_perspective_projections(
         for perspective in _canonical_perspectives():
             projected, exposed = _project(ref, source_ref, perspective)
             encoded = projected.encode()
-            if not exposed or encoded == ref.encode() or encoded in seen:
+            if not exposed or encoded == ref.encode():
                 continue
-            seen.add(encoded)
-            primary = next((f for f in _FIELDS if f in exposed), sorted(exposed)[0])
+            primary = next(
+                (field_name for field_name in _FIELDS if field_name in exposed),
+                sorted(exposed)[0],
+            )
             pid = _projection_id(ref, source_ref, perspective, projected)
             results.append({
                 "mode": "perspective_projection",
@@ -125,7 +172,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
 
     def _projection_event(self, ref, pending, outcome, evaluation=None):
         self._projection_state()
-        c = dict(pending.get("candidate") or {})
+        candidate = dict(pending.get("candidate") or {})
         self._projection_events.append({
             "ref": ref.encode(),
             "projection_id": c.get("projection_id"),
@@ -135,6 +182,31 @@ class RepresentationalResolutionEngine(_BaseEngine):
             "source_ref": c.get("source_ref"),
             "outcome": outcome,
             "evaluation": dict(evaluation or {}),
+        })
+        self._projection_events = self._projection_events[-200:]
+
+    def _projection_frontier_event(
+        self,
+        ref: RepresentationalRef,
+        *,
+        outcome: str,
+        projection_count: int,
+        attempted_count: int,
+    ) -> None:
+        self._projection_state()
+        self._projection_events.append({
+            "ref": ref.encode(),
+            "projection_id": None,
+            "projection_view_key": None,
+            "projected_ref": None,
+            "pressure_perspective": [],
+            "exposed_fields": {},
+            "source_ref": None,
+            "outcome": outcome,
+            "evaluation": {
+                "projection_count": int(projection_count),
+                "attempted_count": int(attempted_count),
+            },
         })
         self._projection_events = self._projection_events[-200:]
 
@@ -223,11 +295,20 @@ class RepresentationalResolutionEngine(_BaseEngine):
         if not candidates:
             return None
         key = ref.encode()
-        candidate = min(candidates, key=lambda c: (
-            self._candidate_attempt_counts.get(self._candidate_attempt_key(
-                key, str(c.get("field", "")), c.get("candidate_value")), 0),
-            self._candidate_attempt_key(key, str(c.get("field", "")), c.get("candidate_value")),
-        ))
+        candidate = min(
+            candidates,
+            key=lambda item: (
+                self._candidate_attempt_counts.get(
+                    self._candidate_attempt_key(
+                        key, str(item.get("field", "")), item.get("candidate_value")
+                    ),
+                    0,
+                ),
+                self._candidate_attempt_key(
+                    key, str(item.get("field", "")), item.get("candidate_value")
+                ),
+            ),
+        )
         staged = self.stage_field_inquiry(ref, candidate, consumer=consumer)
         if not staged:
             return None
@@ -242,6 +323,23 @@ class RepresentationalResolutionEngine(_BaseEngine):
         self._provisional_reads[key] = 0
         self._candidate_downstream_effects.pop(key, None)
         return self._active_stage_for_ref[key]
+
+    def _field_candidates_after_frontier(
+        self, ref: RepresentationalRef, frontier: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        structural = list(frontier.get("structural_candidates") or [])
+        if structural:
+            return structural
+        if self._native_structural_finders_available():
+            # We already performed the native structural scan and found no real
+            # mirror. Go directly to Build 714's lawful-domain bootstrap rather
+            # than paying for the same empty search again.
+            return list(self._bootstrap_domain_hypotheses(
+                ref,
+                ref.unresolved_fields(),
+                max(1, _complete_candidate_capacity(ref)),
+            ) or [])
+        return self._candidate_pool(ref)
 
     def investigate_if_pressured(self, ref, *, consumer="auto", context_scope=None):
         self._projection_state()
@@ -391,7 +489,22 @@ class RepresentationalResolutionEngine(_BaseEngine):
             ref, candidate, consumer=consumer, context_scope=context_scope, observed=False,
         )
 
-    def provisional_resolution(self, ref):
+    def provisional_resolution(
+        self,
+        ref,
+        *,
+        consumer="provisional_reader",
+        context_scope=None,
+    ):
+        """Return the current earned/provisional view and make demand causal.
+
+        A pressure observer never stages an optic. The first real subsystem
+        that actually asks to *use* a provisional representation is therefore
+        the lawful demand edge: if inadequacy exists and no experiment is
+        active, this read opens the perspective frontier (or, only after its
+        exhaustion/unavailability, Build 714's ordinary field inquiry) before
+        returning the view. Existing one-argument callers remain compatible.
+        """
         self._projection_state()
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
@@ -565,9 +678,30 @@ class RepresentationalResolutionEngine(_BaseEngine):
         self._projection_event(ref, pending, "failed", evaluation)
         return "failed"
 
-    def record_participation(self, ref, *, pressure_before, pressure_after, source,
-                             context_tag="", extra_trace=None, notes=None,
-                             consumer="auto", candidate_evaluation=None):
+    def _clear_frontier_if_pressure_resolved(self, ref: RepresentationalRef) -> None:
+        if self.inadequacy_pressure(ref) <= 0.0:
+            self._projection_frontiers.pop(ref.encode(), None)
+
+    def complete_field_inquiry(self, ref, candidate, stage, **kwargs):
+        """A completed real refinement experiment ends this optic episode."""
+        try:
+            return super().complete_field_inquiry(ref, candidate, stage, **kwargs)
+        finally:
+            self._projection_frontiers.pop(ref.encode(), None)
+
+    def record_pressure_observation(
+        self,
+        ref,
+        *,
+        pressure_before,
+        pressure_after,
+        source,
+        context_tag="",
+        extra_trace=None,
+        notes=None,
+        consumer="observer",
+    ):
+        """Record consequence pressure without claiming projection consumption."""
         self._projection_state()
         key = ref.encode()
         pending = self._active_stage_for_ref.get(key)
@@ -585,6 +719,7 @@ class RepresentationalResolutionEngine(_BaseEngine):
             )
 
         self._active_stage_for_ref.pop(key, None)
+        previous_hold = self._projection_resolution_hold
         self._projection_resolution_hold = True
         try:
             result = super().record_participation(
@@ -703,12 +838,24 @@ def record_ref_participation_from_scores(systems, ref_encoded, dimension_scores,
         return
     axis = ref.nc_law_c if ref.nc_law_c in AXES else "X"
     others = [a for a in AXES if a != axis]
-    avg = _base._clip01(sum(dimension_scores.values()) / max(1, len(dimension_scores)))
+    avg = _base._clip01(
+        sum(dimension_scores.values()) / max(1, len(dimension_scores))
+    )
     unexplained = max(0.0, 1.0 - avg)
     before = {a: (1.0 if a == axis else 0.0) for a in AXES}
-    after = {a: (unexplained if a == axis else unexplained / len(others)) for a in AXES}
+    after = {
+        a: (
+            unexplained
+            if a == axis
+            else unexplained / max(1, len(others))
+        )
+        for a in AXES
+    }
     from aurora_internal.constraint_genealogy import TraceItem
-    trace = [TraceItem(kind="ABILITY", id=str(t)) for t in (extra_trace_ids or [])]
+    trace = [
+        TraceItem(kind="ABILITY", id=str(trace_id))
+        for trace_id in (extra_trace_ids or [])
+    ]
     try:
         engine.record_participation(
             ref,
