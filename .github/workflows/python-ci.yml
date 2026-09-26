@@ -55,3 +55,8 @@ jobs:
           import aurora_governance_persistence_gateway
           print('Aurora core imports OK')
           PY
+
+      - name: Interaction-event action-handoff regression
+        env:
+          AURORA_SKIP_DEP_INSTALL: '1'
+        run: python tests/test_interaction_event_action_handoff.py

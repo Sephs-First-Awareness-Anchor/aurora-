@@ -22,6 +22,7 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import re
 from dataclasses import asdict, dataclass, field
@@ -433,6 +434,16 @@ class RelationalForm:
     clauses: List[Dict[str, str]] = field(default_factory=list)
     confidence: float = 0.0
     source: str = "utterance_relation"
+    # A live interaction can itself be the relation even when the surface
+    # payload contains no proposition.  These fields are populated only by
+    # bind_external_interaction_event(), which is called from the canonical
+    # external-user-turn boundary rather than by the generic parser.
+    interaction_event: bool = False
+    interaction_payload: str = ""
+    interaction_source: str = ""
+    selected_action: str = ""
+    selected_stance: str = ""
+    should_speak: Optional[bool] = None
     # Build 771 (Constraint-Native Lexical Grounding): the relation binding
     # above comes entirely from _RELATION_VERBS/_AUX/_MODAL/etc -- hand-
     # authored scaffolding, not something Aurora derived from her own
@@ -461,6 +472,114 @@ class ConstraintSemanticState:
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
+
+
+def bind_external_interaction_event(
+    form: Mapping[str, Any],
+    *,
+    raw_text: str,
+    receiver: str = "Aurora",
+    source: str = "external_user_turn",
+) -> Dict[str, Any]:
+    """Bind the fact of live contact when no proposition was recoverable.
+
+    This is deliberately not a greeting/intent classifier.  The canonical
+    external-turn boundary already knows two facts before lexical analysis:
+    another participant produced a non-empty communicative act, and Aurora is
+    its receiver.  When the payload contains no relation of its own, preserve
+    that interaction itself as the relation instead of miscasting the payload
+    as a broken declarative proposition.
+
+    Ordinary questions, directives, and assertions are returned unchanged.
+    """
+    relation = copy.deepcopy(dict(form or {}))
+    raw = str(raw_text or relation.get("raw_text") or "").strip()
+    if (
+        not raw
+        or bool(relation.get("relation"))
+        or bool(relation.get("question"))
+        or bool(relation.get("directive"))
+    ):
+        return relation
+
+    prior_payload = str(
+        relation.get("subject")
+        or relation.get("obj")
+        or relation.get("complement")
+        or raw
+    ).strip()
+    receiver_name = str(receiver or "Aurora").strip() or "Aurora"
+    relation.update({
+        "raw_text": raw,
+        "subject": "external speaker",
+        "relation": "interact",
+        "obj": receiver_name,
+        "complement": prior_payload,
+        "unknown_role": "",
+        "unknown_token": "",
+        "question": False,
+        "directive": False,
+        "interaction_event": True,
+        "interaction_payload": prior_payload,
+        "interaction_source": str(source or "external_user_turn"),
+        "relation_provenance": "live_interaction_boundary",
+        "confidence": max(0.72, float(relation.get("confidence", 0.0) or 0.0)),
+    })
+    return relation
+
+
+def bind_conscious_action(
+    semantic_state: Mapping[str, Any],
+    conscious_frame: Optional[Mapping[str, Any]],
+) -> Dict[str, Any]:
+    """Carry the already-selected conscious action into semantic authority.
+
+    ConsciousFrame has long selected an action before expression, but the
+    response obligation previously discarded it.  This bridge does not choose
+    an action and does not classify the utterance; it only preserves the action
+    Aurora already selected so N/A resolution can constrain language.
+    """
+    state = copy.deepcopy(dict(semantic_state or {}))
+    frame = dict(conscious_frame or {})
+    action = str(frame.get("selected_action", "") or "").strip()
+    if not state or not action:
+        return state
+
+    stance = str(frame.get("stance", "") or "").strip()
+    processing_mode = str(frame.get("processing_mode", "") or "").strip()
+    should_speak_raw = frame.get("should_speak")
+    should_speak = None if should_speak_raw is None else bool(should_speak_raw)
+
+    obligation = dict(state.get("response_obligation") or {})
+    obligation.update({
+        "selected_action": action,
+        "selected_stance": stance,
+        "processing_mode": processing_mode,
+        "should_speak": should_speak,
+        "action_source": "pre_generation_conscious_frame",
+    })
+    state["response_obligation"] = obligation
+
+    relation = dict(state.get("relational_form") or {})
+    relation["selected_action"] = action
+    relation["selected_stance"] = stance
+    relation["should_speak"] = should_speak
+    state["relational_form"] = relation
+
+    axis_derivation = copy.deepcopy(dict(state.get("axis_derivation") or {}))
+    a_record = dict(axis_derivation.get("A") or {})
+    a_payload = dict(a_record.get("payload") or {})
+    a_payload.update({
+        "selected_action": action,
+        "selected_stance": stance,
+        "processing_mode": processing_mode,
+        "should_speak": should_speak,
+    })
+    if a_record:
+        a_record["payload"] = a_payload
+        axis_derivation["A"] = a_record
+        state["axis_derivation"] = axis_derivation
+    return state
 
 
 def extract_relational_form(
@@ -916,8 +1035,10 @@ def derive_constraint_semantic_state(
     relation = dict(form or {})
     activation = {ax: float(dict(axis_activation or {}).get(ax, 0.0) or 0.0) for ax in AXES}
     unresolved: List[str] = []
-    requires_response = bool(relation.get("question") or relation.get("directive"))
-    if requires_response and not relation.get("unknown_role"):
+    interaction_event = bool(relation.get("interaction_event"))
+    requires_resolution = bool(relation.get("question") or relation.get("directive"))
+    requires_response = bool(requires_resolution or interaction_event)
+    if requires_resolution and not relation.get("unknown_role"):
         unresolved.append("unknown_role")
     if not relation.get("relation"):
         unresolved.append("relation")
@@ -940,7 +1061,7 @@ def derive_constraint_semantic_state(
         "relation": str(relation.get("relation", "") or ""),
         "requested_change": str(
             relation.get("unknown_role", "")
-            or ("evaluate" if requires_response else "integrate")
+            or ("participate" if interaction_event else ("evaluate" if requires_response else "integrate"))
         ),
         "negated": bool(relation.get("negated")),
     }
@@ -954,7 +1075,9 @@ def derive_constraint_semantic_state(
     }
 
     unknown = str(relation.get("unknown_role", "") or "")
-    if relation.get("directive"):
+    if interaction_event:
+        operation = "participate_in_interaction"
+    elif relation.get("directive"):
         operation = "fulfill_directed_relation"
     elif relation.get("question"):
         if unknown in {"cause", "manner", "time", "location", "person", "subject", "object", "selection"}:
@@ -1023,7 +1146,7 @@ def derive_constraint_semantic_state(
     required = 4.0  # relation plus at least one participant plus unknown/truth status
     present = float(bool(relation.get("relation")))
     present += float(bool(relation.get("subject") or relation.get("obj")))
-    present += float(bool(relation.get("unknown_role") or not requires_response))
+    present += float(bool(relation.get("unknown_role") or not requires_response or interaction_event))
     present += float(bool(relation.get("raw_text")))
     completeness = max(0.0, min(1.0, present / required))
 
@@ -1031,6 +1154,8 @@ def derive_constraint_semantic_state(
         "operation": operation,
         "requires_response": requires_response,
         "directive": bool(relation.get("directive")),
+        "interaction_event": interaction_event,
+        "interaction_payload": str(relation.get("interaction_payload", "") or ""),
         "unknown_role": unknown,
         "unknown_descriptor": str(relation.get("unknown_descriptor", "") or ""),
         "must_preserve": [
@@ -1399,8 +1524,10 @@ def derive_constraint_grounded_candidate(
     """
     state = dict(semantic_state or {})
     form = dict(state.get("relational_form") or {})
+    obligation = dict(state.get("response_obligation") or {})
     emergent_operation = dict(state.get("emergent_operation") or {})
-    requires_response = bool(form.get("question") or form.get("directive"))
+    interaction_event = bool(form.get("interaction_event") or obligation.get("interaction_event"))
+    requires_response = bool(form.get("question") or form.get("directive") or interaction_event)
     if not form or (not requires_response and not emergent_operation):
         return {}
 
@@ -1422,6 +1549,21 @@ def derive_constraint_grounded_candidate(
     basis = ""
     communicative_baseline = False
     receiver_repair = False
+
+    # Interaction-before-proposition: the external boundary has established a
+    # real relation even when the payload itself carried no predicate.  Let the
+    # action Aurora already selected in ConsciousFrame supply what she is doing
+    # next.  This is an ordinary semantic claim and is therefore passed through
+    # her generative renderer downstream; it is not a canned greeting surface.
+    selected_action = str(
+        obligation.get("selected_action")
+        or form.get("selected_action")
+        or ""
+    ).strip()
+    if not response and interaction_event and selected_action:
+        action_surface = selected_action.replace("_", " ").strip()
+        response = f"I choose to {action_surface}."
+        basis = "conscious_action_bound_to_interaction_event"
 
     # Present self-state: the relation itself locates Aurora as the entity whose
     # manner/state is unresolved.  The answer comes from live DER and axis state.
@@ -1663,6 +1805,39 @@ def relation_alignment(user_form: Mapping[str, Any], response_text: str) -> Dict
     response_surface = str(response_text or "")
     text = response_surface.lower()
     tokens = set(re.findall(r"[a-z][a-z0-9'-]{1,}", text))
+
+    # For a live interaction event the structural participants (external
+    # speaker -> Aurora) are context, not nouns the reply must parrot.  Fidelity
+    # is whether expression enacts the conscious action that N/A already chose.
+    # This lets "participate" outrank a diagnostic paraphrase without requiring
+    # any greeting phrase or intent label.
+    if bool(form.get("interaction_event")):
+        action_raw = str(form.get("selected_action", "") or "").replace("_", " ").lower()
+        action_terms = set(re.findall(r"[a-z][a-z0-9'-]{1,}", action_raw))
+        action_present = bool(action_terms) and any(
+            any(
+                token == action_term
+                or token.startswith(action_term)
+                or action_term.startswith(token)
+                for token in tokens
+            )
+            for action_term in action_terms
+        )
+        has_surface = bool(text.strip())
+        relation_present = bool(has_surface and action_present)
+        score = 1.0 if relation_present else (0.35 if has_surface else 0.0)
+        return {
+            "score": round(score, 4),
+            "relation_present": relation_present,
+            "addresses_unknown": has_surface,
+            "preserved_slots": ["selected_action"] if action_present else [],
+            "missing_slots": [] if action_present else (["selected_action"] if action_terms else ["interaction_action"]),
+            "leaked_unknown_token": False,
+            "unknown_role": "",
+            "interaction_event": True,
+            "selected_action": str(form.get("selected_action", "") or ""),
+        }
+
     preserved: List[str] = []
     missing: List[str] = []
     for slot in ("subject", "obj", "complement"):

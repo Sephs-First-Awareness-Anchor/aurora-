@@ -20060,8 +20060,29 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
     _constraint_candidate = {}
     try:
         from aurora_internal.aurora_constraint_semantic_continuity import (
+            bind_conscious_action,
             derive_constraint_grounded_candidate,
         )
+        _pre_generation_frame = dict(
+            (state.pipeline_state or {}).get("pre_generation_conscious_frame")
+            or systems.get("_pre_generation_conscious_frame")
+            or systems.get("_live_conscious_frame")
+            or {}
+        )
+        if _pre_generation_frame:
+            state.constraint_semantic_state = dict(bind_conscious_action(
+                state.constraint_semantic_state or {},
+                _pre_generation_frame,
+            ) or state.constraint_semantic_state or {})
+            _action_bound_form = dict((state.constraint_semantic_state or {}).get("relational_form") or {})
+            if _action_bound_form:
+                state.relational_form = _action_bound_form
+            if isinstance(state.pipeline_state, dict):
+                state.pipeline_state["constraint_semantic_state"] = dict(state.constraint_semantic_state or {})
+                state.pipeline_state["selected_conscious_action"] = str(
+                    ((state.constraint_semantic_state or {}).get("response_obligation") or {}).get("selected_action", "")
+                    or ""
+                )
         _constraint_candidate = dict(derive_constraint_grounded_candidate(
             state.constraint_semantic_state or {},
             salient_concepts=list(state.salient_concepts or []),
@@ -22006,10 +22027,12 @@ def _composer_preserves_meaning(grounded_text: str, composer_text: str, user_tex
         return False, reasons
 
     if not grounded_text:
-        # Nothing to preserve against -- composer stands on its own,
-        # subject only to the checks already applied above.
-        reasons.append("no_grounded_candidate_to_compare")
-        return True, reasons
+        # Absence of a semantic candidate is not evidence that meaning was
+        # preserved.  The caller may still admit a standalone composer through
+        # an independent relation/authority check, but preservation itself is
+        # unknown and must never be promoted to True by an empty comparison.
+        reasons.append("no_grounded_candidate_semantic_preservation_unknown")
+        return False, reasons
 
     grounded_entities = _extract_named_relational_entities(grounded_text, systems)
     if grounded_entities:
@@ -22110,15 +22133,55 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
         else:
             _preserved, _reasons = (False, ["composer_empty"])
 
+        # A standalone composer may still be legitimate, but it must earn
+        # semantic authority independently.  Empty grounded_text no longer
+        # masquerades as successful preservation.  Require the generated
+        # surface to align with the current relational form and clear the same
+        # grounded-authority floor used everywhere else.
+        _standalone_composer_grounded = False
+        _standalone_alignment = {}
+        _standalone_authority = 0.0
+        if _d2_unified_text and not _grounded_text:
+            try:
+                from aurora_internal.aurora_constraint_semantic_continuity import relation_alignment as _standalone_relation_alignment
+                _standalone_form = dict(getattr(state, "relational_form", None) or {})
+                if not _standalone_form:
+                    _standalone_form = dict(
+                        ((getattr(state, "constraint_semantic_state", None) or {}).get("relational_form") or {})
+                    )
+                _standalone_alignment = _standalone_relation_alignment(
+                    _standalone_form, _d2_unified_text
+                ) if _standalone_form else {"score": 0.0}
+                _standalone_authority = _grounded_semantic_authority(
+                    _d2_unified_text, user_text, systems, _composer_confidence
+                )
+                _standalone_composer_grounded = bool(
+                    float(_standalone_alignment.get("score", 0.0) or 0.0) >= 0.58
+                    and _standalone_authority >= _GROUNDED_AUTHORITY_FLOOR
+                )
+                _reasons = list(_reasons) + [
+                    "standalone_relation_grounded"
+                    if _standalone_composer_grounded
+                    else "standalone_relation_not_grounded"
+                ]
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="articulation:standalone_semantic_grounding",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_finalize_articulation", "source_file": "aurora.py"},
+                )
+
         arbitration = {
             "text": "", "source": "", "semantic_authority": 0.0,
             "articulation_quality": 0.0, "confidence": 0.0,
             "meaning_preserved": _preserved, "rejection_reasons": list(_reasons),
         }
 
-        if _d2_unified_text and _preserved:
-            # Rule 3: composer improves fluency while preserving meaning
-            # (or stands alone when there was nothing to preserve) -- use it.
+        if _d2_unified_text and (_preserved or _standalone_composer_grounded):
+            # Rule 3: composer improves fluency while preserving meaning, or
+            # independently earns semantic grounding when there is no chain
+            # candidate to compare against.
             # Confidence reflects the winning candidate's own evidence,
             # never a rejected candidate's -- both inputs here genuinely
             # supported this text, so the stronger of the two is fair,
@@ -22131,7 +22194,10 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
             state.response_src = "composer_unified"
             arbitration.update(
                 text=_d2_unified_text, source="composer_unified",
-                semantic_authority=max(_grounded_authority, _composer_confidence),
+                semantic_authority=(
+                    max(_grounded_authority, _composer_confidence)
+                    if _grounded_text else _standalone_authority
+                ),
                 articulation_quality=_composer_confidence, confidence=resp_A.confidence,
             )
         elif _grounded_text and _grounded_authority >= _GROUNDED_AUTHORITY_FLOOR:
@@ -33827,6 +33893,22 @@ def _run_live_response_turn(
         # Pass the vitals into the parser so it perceives the GESTALT
         parser = UtteranceParser()
         _raw_understood = dict(parser.parse(user_text) or {})
+        try:
+            from aurora_internal.aurora_constraint_semantic_continuity import bind_external_interaction_event
+            _receiver_name = str(getattr(systems.get("core_identity"), "self_name", "") or "Aurora")
+            _raw_understood["relational_form"] = bind_external_interaction_event(
+                _raw_understood.get("relational_form") or {},
+                raw_text=user_text,
+                receiver=_receiver_name,
+                source="external_user_turn",
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="interaction_event:bind_initial_live_parse",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+            )
         # Enrich the parse with strata context
         _raw_understood["strata_context"] = {
             "mode": dual_strata_runtime.get("processing_mode"),
@@ -33899,6 +33981,22 @@ def _run_live_response_turn(
     try:
         _parse_text = str((systems.get("_inline_vocab_lookup") or {}).get("grounded_text", "") or user_text)
         turn_understood = dict(UtteranceParser().parse(_parse_text) or {})
+        try:
+            from aurora_internal.aurora_constraint_semantic_continuity import bind_external_interaction_event
+            _receiver_name_turn = str(getattr(systems.get("core_identity"), "self_name", "") or "Aurora")
+            turn_understood["relational_form"] = bind_external_interaction_event(
+                turn_understood.get("relational_form") or {},
+                raw_text=_parse_text,
+                receiver=_receiver_name_turn,
+                source="external_user_turn",
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="interaction_event:bind_authoritative_live_parse",
+                exc=_aurora_boundary_exc,
+                context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+            )
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
