@@ -487,7 +487,19 @@ __getattr__ fakes hasattr for any name, so a naive duck-type is fooled).
 honest minimal relief observation (PressureVec 0.30 on the crystallised axis ->
 relieved) with `notes={"source":"dream_earned"}`, AND always appends a durable ledger
 (`dream_earned.jsonl`) so earned growth is never lost, plus a `dream_crystal_earned`
-developmental event. The selves are never modified. LIVE-verified on her real boot:
+developmental event. The selves are never modified.
+
+Addendum (Communication Architecture Repair Directive 3.8): the `log_relief`
+gate in `_sediment_validated_fact` referenced above, plus an unguarded twin
+call in `process_teaching_input`, are fixed -- both now call aurora.py's
+`_log_learning_relief(genealogy, axis, magnitude, notes=...)`, a real
+`genealogy.observe()` event (PressureVec before/after, same discipline as
+`_resolve_relief_sink`/`_feed_her_growth` above), not the nonexistent
+`log_relief` API. In `boot_aurora()`'s live systems dict `systems["genealogy"]`
+is already the real `ConstraintGenealogyLogger` (confirmed at aurora.py:29249),
+distinct from the dream/RCEC context's routing-lanes dict described above.
+
+LIVE-verified on her real boot:
 genealogy event_log 0->8, dream_earned 0->8, tick_count +8, links unchanged (clean
 relief records, no spurious pair-links); ledger 8 entries.
 

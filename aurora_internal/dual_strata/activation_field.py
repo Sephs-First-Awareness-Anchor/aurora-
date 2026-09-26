@@ -237,6 +237,26 @@ class ActivationField:
                         entry["entity_role"] = str(
                             getattr(entity, "role", "") or ""
                         )
+                        # Directive 3.9 (relational identity conservation):
+                        # entity_name/entity_role alone answer "who is X"
+                        # but not "who is X TO YOU" -- relationship_to_aurora
+                        # is the field that actually carries perspective/edge
+                        # information, and it was being dropped here before
+                        # law_bindings_from_top() ever saw it. General for
+                        # every entity CoreRelationalIdentity tracks, not
+                        # branched on any specific name.
+                        entry["entity_relationship"] = str(
+                            getattr(entity, "relationship_to_aurora", "") or ""
+                        )
+                        entry["entity_aliases"] = list(
+                            getattr(entity, "aliases", []) or []
+                        )
+                        entry["entity_description"] = str(
+                            getattr(entity, "description", "") or ""
+                        )
+                        entry["entity_resonance"] = float(
+                            getattr(entity, "emotional_resonance", 0.0) or 0.0
+                        )
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(),
@@ -286,6 +306,10 @@ class ActivationField:
                 "wm_fact": meta.get("wm_fact", ""),
                 "entity_name": meta.get("entity_name", ""),
                 "entity_role": meta.get("entity_role", ""),
+                "entity_relationship": meta.get("entity_relationship", ""),
+                "entity_aliases": meta.get("entity_aliases", []),
+                "entity_description": meta.get("entity_description", ""),
+                "entity_resonance": meta.get("entity_resonance", 0.0),
                 "depth": meta.get("depth", 0.0),
                 "valence": meta.get("valence", 0.0),
             }
@@ -306,12 +330,20 @@ class ActivationField:
             defn = entry.get("definition", "")
             fact = entry.get("wm_fact", "")
             entity_name = entry.get("entity_name", "")
+            entity_relationship = entry.get("entity_relationship", "")
             noncomp = entry.get("noncomp_id", "")
 
-            summary = defn or fact or (
-                f"{entity_name} ({entry.get('entity_role', '')})"
-                if entity_name else ""
-            )
+            entity_summary = ""
+            if entity_name:
+                entity_summary = f"{entity_name} ({entry.get('entity_role', '')}"
+                # Directive 3.9: carry relationship_to_aurora into the same
+                # summary string entity_role already reaches -- this is the
+                # actual answer to "who is X to you", not just "who is X".
+                if entity_relationship:
+                    entity_summary += f"; {entity_relationship} to Aurora"
+                entity_summary += ")"
+
+            summary = defn or fact or entity_summary
             if not summary:
                 continue  # no grounded content — skip bare labels
 
@@ -330,6 +362,8 @@ class ActivationField:
                 binding["stated_fact"] = fact
             if entity_name:
                 binding["entity_name"] = entity_name
+            if entity_relationship:
+                binding["entity_relationship"] = entity_relationship
 
             bindings.append(binding)
             if len(bindings) >= n:

@@ -319,6 +319,18 @@ _CLAUSE_SUBORDINATORS: Tuple[str, ...] = (
 _CLAUSE_COORDINATORS: Tuple[str, ...] = ("and", "but", "so", "yet")
 _CLAUSE_HARD_MARKERS: Tuple[str, ...] = (" -- ", " \u2014 ", "; ")
 
+# Communication Architecture Repair Directive 3.11: a construction like
+# "need but without urgency" never clears the coordinator-split bar above
+# (no comma before "but", and "without urgency" has no finite verb for the
+# tail-side check) even though it is exactly the kind of contrast/exclusion
+# geometry the directive requires to survive. "without"/"lacking" are
+# general structural function words (the same status as the negation set
+# _split_intra_sentence_clauses's caller already treats "not"/"never"/"no"
+# as) -- not taught vocabulary -- so a coordinator immediately followed by
+# one of these is unambiguous exclusion-clause evidence on its own, with no
+# verb requirement needed on either side.
+_EXCLUSION_MARKERS: Tuple[str, ...] = ("without", "lacking")
+
 
 def _split_intra_sentence_clauses(raw: str) -> List[str]:
     """Split ONE sentence-terminal segment into its component clauses.
@@ -342,6 +354,28 @@ def _split_intra_sentence_clauses(raw: str) -> List[str]:
                 return out
 
     lower = text.lower()
+
+    # Bare coordinator + exclusion marker: "need but without urgency" has
+    # neither the comma nor the tail verb the general coordinator rule
+    # below requires, but "but without"/"and lacking" etc. are themselves
+    # unambiguous clause evidence -- the exclusion preposition is doing the
+    # same structural job a verb would. No comma required either, since
+    # this pattern is common unpunctuated ("X but without Y"). The marker
+    # word itself stays attached to the tail, so the recursive parse below
+    # can recognize the fragment as an exclusion clause.
+    for coord in _CLAUSE_COORDINATORS:
+        coord_marker = f" {coord} "
+        idx = lower.find(coord_marker)
+        if idx > 0:
+            after = text[idx + len(coord_marker):]
+            first_word = after.strip().lower().split(" ", 1)[0] if after.strip() else ""
+            if first_word in _EXCLUSION_MARKERS:
+                head = text[:idx].strip().rstrip(",")
+                tail = after.strip()
+                if head and tail:
+                    out = _split_intra_sentence_clauses(head)
+                    out.extend(_split_intra_sentence_clauses(tail))
+                    return out
 
     # Comma + coordinator: only a real clause break if a verb follows the
     # coordinator (so "trust, respect, and connection" stays one clause,
@@ -476,7 +510,33 @@ def extract_relational_form(
             extract_relational_form(seg, parsed={}, feed_lexical_grounding=feed_lexical_grounding)
             for seg in segments
         ]
-        active_index = next((i for i in range(len(parsed_segments) - 1, -1, -1) if parsed_segments[i].get("question")), len(parsed_segments) - 1)
+        # Directive 3.11: a segment produced by the coordinator+exclusion
+        # split in _split_intra_sentence_clauses() (e.g. "without urgency"
+        # out of "need but without urgency") names a property EXCLUDED
+        # relative to its sibling clause, not an independent assertion in
+        # its own right. Tag it so that contrast/exclusion geometry
+        # survives into the merged clauses list instead of reading as just
+        # another ordinary co-equal clause once combined.
+        for _seg_text, _seg_parsed in zip(segments, parsed_segments):
+            _seg_tokens = _tokens(_seg_text)
+            if _seg_tokens and _seg_tokens[0].lower() in _EXCLUSION_MARKERS:
+                _seg_parsed["exclusion"] = True
+                _seg_parsed["negated"] = True
+        # An exclusion fragment ("without urgency") is a modifier on its
+        # sibling clause, never the primary assertion -- prefer the last
+        # non-exclusion segment as active (question-bearing segments still
+        # win first, same as before), and only fall back to an exclusion
+        # segment itself when every segment is one.
+        active_index = next(
+            (i for i in range(len(parsed_segments) - 1, -1, -1)
+             if parsed_segments[i].get("question") and not parsed_segments[i].get("exclusion")),
+            None,
+        )
+        if active_index is None:
+            active_index = next(
+                (i for i in range(len(parsed_segments) - 1, -1, -1) if not parsed_segments[i].get("exclusion")),
+                len(parsed_segments) - 1,
+            )
         active = dict(parsed_segments[active_index])
         active["raw_text"] = raw
         active["clauses"] = [dict(item) for i, item in enumerate(parsed_segments) if i != active_index]
@@ -711,21 +771,43 @@ def extract_relational_form(
     )
     result = form.to_dict()
 
-    # Build 771 PR 5: "every scaffold-driven resolution is simultaneously
-    # a WARP-feeding observation" -- feed the word that ended up bound in
-    # the relation slot back to AuroraLexicalGrounding, tagged with this
-    # form's own relation_provenance. Off by default (see
+    # Build 771 PR 5 / Directive 3.5: "every scaffold-driven resolution is
+    # simultaneously a WARP-feeding observation" -- originally fed ONLY the
+    # word bound into the relation slot back to AuroraLexicalGrounding.
+    # That misses exactly the teaching shape the directive names: "wanna
+    # is related to want" binds "wanna" as SUBJECT and "is" as relation --
+    # the copula got observed, the actual novel word never did. Generalize
+    # to every content-bearing slot this form actually bound (subject,
+    # relation, obj, complement, unknown_descriptor), each as its own
+    # observation carrying the SAME full relational_form/provenance --
+    # _word_slot()/_lexical_geometry() in aurora_lexical_grounding.py
+    # already derive a word's structural role/neighbors/Difference geometry
+    # generically from wherever it sits in that form, so this adds no new
+    # per-word logic, just stops narrowing the target to one slot. Function
+    # words are skipped (structural glue, not content needing grounding) --
+    # the same _STRONG_FUNCTION_WORDS set aurora_proposition_frame.py
+    # already treats that way. Off by default (see
     # _CONSUME_LEXICAL_GROUNDING); best-effort and silent on failure, same
     # discipline as every other WARP confession call site -- this must
     # never affect what extract_relational_form() returns.
-    if _CONSUME_LEXICAL_GROUNDING and relation and feed_lexical_grounding:
+    if _CONSUME_LEXICAL_GROUNDING and feed_lexical_grounding:
         try:
             from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
-            get_lexical_grounding().observe_lexical_context(
-                word=relation,
-                relational_form=result,
-                provenance=result.get("relation_provenance", "inherited_scaffold"),
-            )
+            from aurora_internal.aurora_semantic_probe_battery import _STRONG_FUNCTION_WORDS
+            _grounding = get_lexical_grounding()
+            _rel_provenance = result.get("relation_provenance", "inherited_scaffold")
+            _fed_words: set = set()
+            for _slot_value in (relation, subject, obj, complement, unknown_descriptor):
+                for _w in str(_slot_value or "").lower().split():
+                    _w = _w.strip(".,!?;:\"'()")
+                    if not _w or _w in _fed_words or _w in _STRONG_FUNCTION_WORDS:
+                        continue
+                    _fed_words.add(_w)
+                    _grounding.observe_lexical_context(
+                        word=_w,
+                        relational_form=result,
+                        provenance=_rel_provenance,
+                    )
         except Exception:
             pass
 

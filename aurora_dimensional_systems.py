@@ -375,6 +375,61 @@ class Crystal:
     #              "achievements": int, "missteps": int}}
     failpoint_profile: Dict[str, Any] = field(default_factory=dict)
 
+    # Layer 2.5 -> Layer 3: separate evidence from each primitive perspective
+    # lineage ("P0", "P1"), kept side by side and NEVER averaged into one
+    # vector.  A crystal may carry P0 support only, P1 support only, or both;
+    # all are legitimate.  The lineage id is a key here, never an axis and
+    # never a representation dimension.  constraint_signature remains for
+    # backward compatibility, but it is no longer the only surviving record
+    # of the occurrence when perspective data exists.
+    perspective_profiles: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+
+    def absorb_perspective(self, projection: Any) -> bool:
+        """Fold ONE lineage's projection into that lineage's own profile.
+
+        Each lineage's profile is updated only from that lineage's
+        projection.  Nothing here reads, copies or infers from the other
+        lineage's profile.  Signed axis values are kept signed.  A lineage
+        that was silent for this occurrence contributes no support.
+        """
+        lineage = str(getattr(projection, "lineage_id", "") or "")
+        axes = dict(getattr(projection, "axis_projection", {}) or {})
+        if not lineage or not any(abs(float(v)) > 1e-9 for v in axes.values()):
+            return False
+        profile = self.perspective_profiles.setdefault(lineage, {
+            "axis_signature": {}, "source_predicates": {},
+            "evidence_count": 0, "confidence": 0.0, "maturity": 0.0,
+            "last_occurrence": "",
+        })
+        signature = profile["axis_signature"]
+        for axis, value in axes.items():
+            value = float(value)
+            prev = signature.get(axis)
+            signature[axis] = round(value if prev is None else prev * 0.8 + value * 0.2, 6)
+        sources = profile["source_predicates"]
+        for predicate in (getattr(projection, "provenance", ()) or ()):
+            sources[str(predicate)] = int(sources.get(str(predicate), 0)) + 1
+        profile["evidence_count"] = int(profile["evidence_count"]) + 1
+        profile["confidence"] = round(float(getattr(projection, "coherence", 0.0) or 0.0), 6)
+        profile["maturity"] = round(float(getattr(projection, "maturity", 0.0) or 0.0), 6)
+        profile["last_occurrence"] = str(getattr(projection, "occurrence_id", "") or "")
+        return True
+
+    def absorb_perspective_pair(self, pair: Any) -> List[str]:
+        """Fold both lineages of one occurrence in, each into its own
+        profile, independently.  Returns the lineages that supported."""
+        supported: List[str] = []
+        if pair is None:
+            return supported
+        for attr in ("p0", "p1"):
+            projection = getattr(pair, attr, None)
+            if projection is not None and self.absorb_perspective(projection):
+                supported.append(str(projection.lineage_id))
+        return supported
+
+    def perspective_support(self) -> List[str]:
+        return sorted(self.perspective_profiles)
+
     def add_facet(self, role: str, content: Any, confidence: float = 0.5) -> CrystalFacet:
         # Strengthen existing facet with same role
         for f in self.facets.values():
@@ -538,6 +593,7 @@ class Crystal:
             "axis_mean":           self.axis_mean,
             "axis_sample_count":   self.axis_sample_count,
             "failpoint_profile":   self.failpoint_profile,
+            "perspective_profiles": self.perspective_profiles,
         }
 
     @classmethod
@@ -552,6 +608,8 @@ class Crystal:
             axis_mean           = dict(d.get("axis_mean") or {}),
             axis_sample_count   = int(d.get("axis_sample_count", 0)),
             failpoint_profile   = dict(d.get("failpoint_profile") or {}),
+            perspective_profiles= {str(k): dict(v) for k, v in
+                                   (d.get("perspective_profiles") or {}).items()},
         )
         c.connections = dict(d.get("connections") or {})
         for fid, fd in (d.get("facets") or {}).items():
@@ -666,13 +724,18 @@ class CrystalProcessingSystem(WarpCapable):
         """Wire DER after both systems are created."""
         self._energy_system = energy_system
 
-    def process(self, envelope: IVMEnvelope) -> Optional[Dict[str, Any]]:
+    def process(self, envelope: IVMEnvelope,
+                perspective_pair: Any = None) -> Optional[Dict[str, Any]]:
         if not mode_gate(envelope, self.GATE):
             return None
 
         concept = str(envelope.data)[:100]
         crystal = self._get_or_create(concept)
         crystal.use()
+        # Perspective-conditioned birth: both lineages' evidence lands while
+        # the crystal is being formed, before any link/resonance work below.
+        _retained = crystal.absorb_perspective_pair(perspective_pair)
+        self._last_raw_perspective_support = (crystal.crystal_id, list(_retained))
 
         # Sample IVM axis state from envelope position → running mean
         try:
@@ -1127,6 +1190,7 @@ class CrystalProcessingSystem(WarpCapable):
         self,
         envelope: IVMEnvelope,
         signals: List['ConceptSignal'],
+        perspective_pair: Any = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Process an IVMEnvelope into crystals via pre-extracted ConceptSignals.
@@ -1143,7 +1207,7 @@ class CrystalProcessingSystem(WarpCapable):
         if not mode_gate(envelope, self.GATE):
             return None
         if not signals:
-            return self.process(envelope)
+            return self.process(envelope, perspective_pair=perspective_pair)
 
         # Causal-generation fix (AURORA DIRECTIVE, Phase 0): every signal in
         # `signals` is an independent reaction to the SAME envelope/occurrence.
@@ -1156,6 +1220,7 @@ class CrystalProcessingSystem(WarpCapable):
         processed = []
         touched_crystal_ids: List[str] = []
         pending_facets: List[Tuple['CrystalFacet', str]] = []
+        retained_by_crystal: Dict[str, List[str]] = {}
 
         for sig in signals:
             crystal = self._get_or_create(sig.concept)
@@ -1186,6 +1251,13 @@ class CrystalProcessingSystem(WarpCapable):
 
             if crystal.crystal_id not in touched_crystal_ids:
                 touched_crystal_ids.append(crystal.crystal_id)
+                # Layer 2.5 -> Layer 3: perspective-conditioned birth.  In
+                # Pass 1, once per crystal per occurrence (several signals may
+                # land on one crystal; one occurrence is one piece of
+                # evidence), and strictly BEFORE Pass 2's joint link/resonance
+                # work -- not stamped afterwards as metadata.
+                retained_by_crystal[crystal.crystal_id] = \
+                    crystal.absorb_perspective_pair(perspective_pair)
 
             processed.append({
                 'crystal_id': crystal.crystal_id,
@@ -1195,6 +1267,7 @@ class CrystalProcessingSystem(WarpCapable):
                 'evolved':    evolved,
                 'usage':      crystal.usage_count,
                 'role':       sig.role,
+                'perspective_support': list(retained_by_crystal.get(crystal.crystal_id, [])),
             })
 
         # Pass 2 -- joint/relational work, once per distinct touched entity,
@@ -3239,6 +3312,7 @@ class DimensionalSystems:
         self,
         envelope: IVMEnvelope,
         intent: Optional[str] = None,
+        perspective_pair: Any = None,
     ) -> Dict[str, Any]:
         """
         Semantic processing path.
@@ -3275,7 +3349,8 @@ class DimensionalSystems:
 
         if signals:
             p_before_dps = self._current_pressure_vec()
-            dps_result = self.dps.process_concepts(envelope, signals)
+            dps_result = self.dps.process_concepts(
+                envelope, signals, perspective_pair=perspective_pair)
             p_after_dps = self._current_pressure_vec()
             self._observe_semantic_operation(
                 op_name="process_concepts",
@@ -3294,7 +3369,7 @@ class DimensionalSystems:
                 signals=signals,
             )
         else:
-            dps_result = self.dps.process(envelope)
+            dps_result = self.dps.process(envelope, perspective_pair=perspective_pair)
             dmc_result = self.dmc.store(envelope)
 
         return {
@@ -3383,7 +3458,21 @@ class DimensionalSystems:
             _asm = getattr(synthesis, 'assembly', None)
             if _asm:
                 intent = getattr(_asm, 'frame_applied', None)
-        result = self.process_with_concepts(envelope, intent=intent)
+        # Layer 3 ordering (Primitive Perspective directive, Section 14): the
+        # PerspectivePair is complete before this call, and is passed INTO
+        # representation formation so it can condition crystal birth.  The
+        # collapsed constraint context below is still stamped afterwards for
+        # backward compatibility, but it is no longer the only record of the
+        # occurrence that representations retain.
+        perspective_pair = getattr(synthesis, 'perspective_pair', None) \
+            if synthesis is not None else None
+        result = self.process_with_concepts(
+            envelope, intent=intent, perspective_pair=perspective_pair)
+        if perspective_pair is not None:
+            result['perspective_occurrence'] = getattr(
+                perspective_pair, 'occurrence_id', '')
+            result['perspective_retention'] = self._perspective_retention(
+                perspective_pair, result.get('dps'))
 
         if synthesis is None:
             return result
@@ -3453,6 +3542,30 @@ class DimensionalSystems:
                     node.dimension_links.append(dominant)
 
         return result
+
+    def _perspective_retention(self, pair: Any, dps_result: Any) -> Dict[str, Any]:
+        """Section 20: whether representation birth retained each lineage.
+
+        Read-only.  Reports what Pass 1 already did; nothing here feeds back
+        into formation or development.
+        """
+        crystals: Dict[str, List[str]] = {}
+        if isinstance(dps_result, dict):
+            for info in dps_result.get('crystals', []) or []:
+                if info.get('crystal_id'):
+                    crystals[str(info['crystal_id'])] = list(info.get('perspective_support') or [])
+        raw = getattr(self.dps, '_last_raw_perspective_support', None)
+        if not crystals and raw and isinstance(dps_result, dict) \
+                and dps_result.get('crystal_id') == raw[0]:
+            crystals[str(raw[0])] = list(raw[1])
+        lineages = ("P0", "P1")
+        return {
+            'occurrence_id': str(getattr(pair, 'occurrence_id', '') or ''),
+            'crystals': crystals,
+            'retained': {lineage: any(lineage in supported for supported in crystals.values())
+                         for lineage in lineages},
+            'born': bool(crystals),
+        }
 
     def get_constraint_aggregate(self) -> Dict[str, float]:
         """

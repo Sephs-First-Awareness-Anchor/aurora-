@@ -974,6 +974,34 @@ def _restore_genealogy_state(
             )
             pass
 
+    # Canonical tick-state restore (tick_count + _last_promotion_tick) from
+    # tick_state.json, via ConstraintGenealogyLogger.restore_tick_state().
+    # The events_recent/tick_state fallback above already best-effort-restores
+    # tick_count alone; this additionally recovers _last_promotion_tick (the
+    # stagnation-clock anchor), which the links-derived max_created_at_tick
+    # above only approximates. take max() so this can only advance tick_count,
+    # never regress it below whatever was already restored.
+    if hasattr(logger, "restore_tick_state"):
+        try:
+            _tick_before = int(getattr(logger, "tick_count", 0) or 0)
+            if bool(logger.restore_tick_state()):
+                logger.tick_count = max(int(getattr(logger, "tick_count", 0) or 0), _tick_before)
+                restored["tick_state"] = int(logger.tick_count)
+                if verbose:
+                    print(
+                        f"  [RESTORE] Tick state: tick_count={logger.tick_count} "
+                        f"last_promotion_tick={logger._last_promotion_tick}"
+                    )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_runtime.py:_restore_genealogy_state:tick_state",
+                exc=_aurora_boundary_exc,
+                context={"function": "_restore_genealogy_state", "source_file": "aurora_runtime.py"},
+            )
+            pass
+
     if verbose:
         print(f"  [RESTORE] Genealogy: abilities={restored['abilities']} links={restored['links']} events={restored['events']}")
 

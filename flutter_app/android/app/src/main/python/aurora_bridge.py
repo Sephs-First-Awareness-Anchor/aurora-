@@ -24,6 +24,7 @@ import sys
 import threading
 import time
 import traceback
+from pathlib import Path
 from typing import Optional
 
 log = logging.getLogger("aurora_bridge")
@@ -128,6 +129,13 @@ _habitat = None
 # prior dialogue is witnessed as environmental history, not replayed as
 # present user turns and not scored against a historical assistant as truth.
 _historical_experience = None
+
+# Praxis bridge (Stage 6).  The Aurora-side half of the external experiential
+# environment: pulls world situations from a Praxis server and routes them
+# through her own constraint physics.  Praxis supplies terrain, never lessons.
+# Like historical experience, it yields to the present and serializes through
+# _lock -- live interaction with Sunni always outranks it.
+_praxis = None
 
 # Aurora Build 694, step 8: the Scout worker thread's own stop signal --
 # module-level so it survives past initialize() returning and can be
@@ -1716,8 +1724,8 @@ def _validate_boot(systems: dict) -> tuple:
     The only prior guard was `if _systems is None` — which only catches total
     failure, not silent partial initialisation.
     """
-    fatal    = [k for k in _BOOT_FATAL_SYSTEMS    if not systems.get(k)]
-    degraded = [k for k in _BOOT_DEGRADED_SYSTEMS if not systems.get(k)]
+    fatal    = _classify_missing(_BOOT_FATAL_SYSTEMS, systems)
+    degraded = _classify_missing(_BOOT_DEGRADED_SYSTEMS, systems)
     return fatal, degraded
 
 
@@ -1749,6 +1757,77 @@ _MOBILE_HEALTH_DEGRADED = (
 _MOBILE_HEALTH_OPTIONAL_SYSTEMS_KEYS = ("hardware", "sensory_integration")
 
 
+# Directive 3.21 (Communication Architecture Repair Directive): the checks
+# above -- and _validate_boot()'s identical pattern -- only ever tested
+# bool(systems.get(key)): a dictionary key containing a truthy object.
+# That misses exactly the failure modes the directive names: a detached
+# singleton (an instance that exists but never received the canonical
+# genealogy/warp_field this boot actually installed), an organ pointed at
+# a stale state directory, or one whose declared attach_systems()
+# dependency contract never actually ran. This adds those checks WHERE
+# the organ's own object shape exposes the information needed to make
+# them -- it never assumes an organ is unhealthy for lacking an attribute
+# it was never going to have (a plain sentinel/mock keeps passing exactly
+# as before); it only catches the case where the organ DOES expose e.g.
+# .genealogy and that genealogy is a different, real, non-canonical
+# object than systems["genealogy"].
+def _organ_health_detail(obj, systems: dict) -> bool:
+    if obj is None:
+        return False
+    if not isinstance(systems, dict):
+        return True
+
+    # Canonical genealogy identity: a detached genealogy singleton is
+    # exactly the "exists but wrong" case bool() alone cannot see.
+    canonical_genealogy = systems.get("genealogy")
+    organ_genealogy = getattr(obj, "genealogy", None)
+    if organ_genealogy is not None and canonical_genealogy is not None:
+        if organ_genealogy is not canonical_genealogy:
+            return False
+
+    # Canonical WARP field identity, for organs that hold one directly.
+    canonical_warp = systems.get("warp_field")
+    organ_warp = getattr(obj, "warp_field", None)
+    if organ_warp is not None and canonical_warp is not None:
+        if organ_warp is not canonical_warp:
+            return False
+
+    # Active state directory: an organ tracking its own state_dir must
+    # use the SAME directory this boot is actually using, not a stale
+    # fixture/temp path left over from construction.
+    active_state_dir = systems.get("state_dir")
+    organ_state_dir = getattr(obj, "state_dir", None)
+    if organ_state_dir is not None and active_state_dir:
+        try:
+            if Path(str(organ_state_dir)).resolve() != Path(str(active_state_dir)).resolve():
+                return False
+        except Exception:
+            pass
+
+    # Declared dependency-injection contract: an organ with an
+    # attach_systems() method promises its own .systems gets populated by
+    # it -- an organ that never received that call (attach_systems exists
+    # but .systems is still empty) never actually joined the live boot
+    # graph, even though the bare instance is truthy.
+    if hasattr(obj, "attach_systems") and hasattr(obj, "systems"):
+        if not getattr(obj, "systems", None):
+            return False
+
+    return True
+
+
+def _classify_missing(keys, systems: dict) -> list:
+    """Same truthiness gate as before, PLUS _organ_health_detail() for
+    whichever of these keys' objects expose checkable identity/wiring --
+    a key is "missing" here if it's None OR present-but-detached."""
+    missing = []
+    for key in keys:
+        obj = systems.get(key)
+        if not obj or not _organ_health_detail(obj, systems):
+            missing.append(key)
+    return missing
+
+
 def get_mobile_developmental_health() -> str:
     """Bounded, machine-readable developmental health snapshot for the
     Flutter Hub. Distinguishes "Aurora alive" from "Aurora alive but
@@ -1769,8 +1848,8 @@ def get_mobile_developmental_health() -> str:
     import json as _json
     systems = _systems or {}
 
-    fatal_missing = [k for k in _MOBILE_HEALTH_FATAL if not systems.get(k)]
-    degraded_missing = [k for k in _MOBILE_HEALTH_DEGRADED if not systems.get(k)]
+    fatal_missing = _classify_missing(_MOBILE_HEALTH_FATAL, systems)
+    degraded_missing = _classify_missing(_MOBILE_HEALTH_DEGRADED, systems)
 
     optional_status = {
         # aurora.py never stores anything under "_curiosity_engine" --
@@ -2138,9 +2217,67 @@ def resume_historical_experience() -> str:
     return get_historical_experience_status()
 
 
+def _praxis_live_idle() -> bool:
+    """Praxis yields to the present on exactly the same terms as historical
+    experience.  Delegating rather than copying keeps one definition of
+    "the live path is not claiming the field" for every background source."""
+    return _historical_experience_live_idle()
+
+
+def _praxis_endpoint(state_dir: str) -> str:
+    """Where the Praxis server lives.
+
+    An environment variable wins; otherwise a one-line file at
+    <state_dir>/praxis/endpoint.txt (the easy way to point the phone at a
+    Praxis server on the LAN); otherwise the bridge's own default.  An
+    unreachable endpoint is harmless -- the bridge reports offline and pulls
+    nothing.
+    """
+    env_value = os.environ.get("AURORA_PRAXIS_ENDPOINT", "").strip()
+    if env_value:
+        return env_value
+    try:
+        path = os.path.join(state_dir or "aurora_state", "praxis", "endpoint.txt")
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as handle:
+                value = handle.read().strip()
+            if value:
+                return value
+    except Exception:
+        pass
+    return "http://127.0.0.1:8787"
+
+
+def get_praxis_status() -> str:
+    import json as _json
+    bridge = _praxis
+    if bridge is None:
+        return _json.dumps({"status": "not_initialized", "thread_alive": False})
+    try:
+        return _json.dumps(bridge.status(), default=str)
+    except Exception as exc:
+        return _json.dumps({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+
+
+def pause_praxis() -> str:
+    bridge = _praxis
+    if bridge is None:
+        return get_praxis_status()
+    bridge.pause()
+    return get_praxis_status()
+
+
+def resume_praxis() -> str:
+    bridge = _praxis
+    if bridge is None:
+        return get_praxis_status()
+    bridge.resume()
+    return get_praxis_status()
+
+
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis
     # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()
     # tracing showed NO new markers at all -- confirmed still dying at the
     # exact same spot as before that fix existed. That means the crash is
@@ -2466,6 +2603,40 @@ def initialize(state_dir: str = "") -> str:
                 context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
             )
             log.warning("Historical experience environment failed to start: %s", _hist_exc)
+
+        # Praxis bridge: the Aurora-side half of the external experiential
+        # environment.  Started after historical experience for the same
+        # reasons -- the organism is booted and background-capable -- and on
+        # the same terms: it yields whenever present interaction is active and
+        # takes _lock non-blockingly, so it can never run concurrently with
+        # live synthesis.  An unreachable server is harmless: the bridge
+        # reports offline and pulls nothing.
+        _mark_boot_stage("starting praxis bridge")
+        try:
+            from aurora_praxis_bridge import start_praxis_bridge
+            _praxis_state_dir = state_dir if state_dir else "aurora_state"
+            _praxis = start_praxis_bridge(
+                _systems,
+                state_dir=_praxis_state_dir,
+                endpoint=_praxis_endpoint(_praxis_state_dir),
+                field_lock=_lock,
+                live_idle=_praxis_live_idle,
+            )
+            if _praxis is not None:
+                _systems["praxis_bridge"] = _praxis
+                log.info("Praxis bridge: %s", _praxis.status())
+            else:
+                log.warning("Praxis bridge did not start")
+        except Exception as _praxis_exc:
+            _praxis = None
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:praxis",
+                exc=_praxis_exc,
+                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
+            log.warning("Praxis bridge failed to start: %s", _praxis_exc)
 
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.
@@ -11272,6 +11443,37 @@ def get_cognitive_stats() -> str:
             stats["replayed_observations"] = 0
             stats["new_distinctions_from_replay"] = 0
             stats["promotions_from_replay"] = 0
+
+        # ── Praxis bridge ─────────────────────────────────────────────────
+        # Structural counters only.  There is deliberately no progress,
+        # completion or success figure here: Praxis has no notion of her doing
+        # well, so the Hub has nothing of the kind to render.  Flat mirrors
+        # follow the historical_* convention for the lightweight Dart parser.
+        try:
+            if _praxis is not None:
+                _praxis_status = _praxis.status()
+            else:
+                _praxis_status = {"status": "not_initialized"}
+            stats["praxis"] = _praxis_status
+            stats["praxis_status"] = str(_praxis_status.get("status", "not_initialized") or "not_initialized")
+            stats["praxis_online"] = bool(_praxis_status.get("online", False))
+            stats["praxis_paused"] = bool(_praxis_status.get("paused", False))
+            stats["praxis_situations_witnessed"] = int(_praxis_status.get("situations_witnessed", 0) or 0)
+            stats["praxis_pressure_injections"] = int(_praxis_status.get("pressure_injections", 0) or 0)
+            stats["praxis_sediment_deposits"] = int(_praxis_status.get("sediment_deposits", 0) or 0)
+            stats["praxis_contract_breaches"] = int(_praxis_status.get("contract_breaches", 0) or 0)
+        except Exception as _praxis_stats_exc:
+            stats["praxis"] = {
+                "status": "error",
+                "error": f"{type(_praxis_stats_exc).__name__}: {_praxis_stats_exc}",
+            }
+            stats["praxis_status"] = "error"
+            stats["praxis_online"] = False
+            stats["praxis_paused"] = False
+            stats["praxis_situations_witnessed"] = 0
+            stats["praxis_pressure_injections"] = 0
+            stats["praxis_sediment_deposits"] = 0
+            stats["praxis_contract_breaches"] = 0
 
         # ── Repair R (per Sunni, 2026-08-19): genealogy mapping + quasiarch
         # diagnostics for the Hub's auditing surface. Note this is the REAL

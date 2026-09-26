@@ -42,15 +42,18 @@ fabricating a constraint_genealogy PressureVec just to force a "learning"
 event into existence -- the same discipline applied to the resolver module
 built earlier this session.
 
-A SEPARATE FINDING, NOT FIXED HERE
---------------------------------------
+A SEPARATE FINDING -- FIXED (Communication Architecture Repair Directive 3.8)
+------------------------------------------------------------------------------
 While tracing genealogy call sites for this work, aurora.py's
 _sediment_validated_fact was found to gate its constraint-genealogy write
 on `hasattr(gen, "log_relief")` -- but no `log_relief` method exists
-anywhere in this codebase (confirmed via full-repo search). That gate is
-therefore always False, and that grounding step has been silently
-no-op-ing. Flagging for the known_fixes_registry; out of scope for this
-change.
+anywhere in this codebase (confirmed via full-repo search). That gate was
+therefore always False, and that grounding step was silently no-op-ing;
+process_teaching_input() had the same nonexistent call, unguarded. Both
+call sites now route through aurora.py's `_log_learning_relief()`, a real
+genealogy.observe() event with a genuine PressureVec before/after delta --
+the repository's one confirmed mutating chokepoint for genealogy writes,
+not a fabricated API.
 """
 
 import re

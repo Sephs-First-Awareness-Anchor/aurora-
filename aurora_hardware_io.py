@@ -1283,11 +1283,29 @@ from foundational_contract import (
 # foundational_contract, whose language_projection takes no mode argument).
 from aurora_constraint_engine import (
     ConstraintVector as _ConstraintVector,
+    ConstraintEngine as _ConstraintEngine,
     GovernorWeights as _GovernorWeights,
     ExistenceMode as _ExistenceMode,
+    IStatePredicate as _IStatePredicate,
     FoundationalContract as _FoundationalContract,
 )
+from aurora_internal.aurora_constraint_manifold_patched import Constraint as _Constraint
+from aurora_internal.aurora_noncomp_registry import REGISTRY as _NC_REGISTRY
+from aurora_internal.aurora_difference_buffer import make_difference_buffer as _make_difference_buffer
 _FC = _FoundationalContract()
+
+# Constitutive physics audit (2026-09-12): nothing in production ever called
+# ConstraintEngine.feed_evidence()/.govern() -- not from here, not from
+# aurora_interaction_engine.py, not even EngineRuntime.tick() despite its
+# own docstring calling it "the primary runtime method". This module-level
+# instance is shared across calls (one physical universe, not one per
+# call) and is wired into SensoryIntegrationEngine.speak() below in
+# OBSERVE-ONLY mode: it records what the governor would decide on a real
+# environmental action (Aurora speaking), but the decision does not gate
+# whether speech actually happens yet. Making it load-bearing is a live
+# behavior change to Aurora's actual output and needs its own deliberate
+# follow-up, not a guess bundled into this fix.
+_GOVERNOR_ENGINE = _ConstraintEngine()
 
 # Pattern types shared with aurora_expression_perception
 from aurora_perception_primitives import PatternType, DimensionalPattern
@@ -1559,6 +1577,19 @@ class SensoryConceptMemory:
         self.concepts: Dict[str, SensoryConcept] = {}
         self.grounding_log: List[Dict[str, Any]] = []
 
+        # A:POLARITY/DIFFERENCE (constitutive physics audit follow-up,
+        # 2026-09-12): aurora_hardware_io.py had zero references to
+        # contributor/attribution/causal_generation -- authorship was
+        # untracked for any non-communication agency. cluster_and_promote()
+        # below is a real memory-write moment (a percept cluster either
+        # becomes/updates a concept, or doesn't yet have enough
+        # observations) -- a genuine did/didn't signal, not fabricated.
+        self._a_promotion_count: int = 0
+        self._a_diff_buffer = _make_difference_buffer()
+        self.last_agency_claim = None
+        self.last_agency_cost: float = 0.0
+        self.last_agency_difference: float = 0.0
+
     def _canonical_label(self, label: str) -> str:
         cleaned = re.sub(r"[^a-z0-9]+", " ", str(label or "").lower()).strip()
         return " ".join(cleaned.split())
@@ -1776,6 +1807,7 @@ class SensoryConceptMemory:
         """
         percepts = self.raw_percepts.get(label, [])
         if len(percepts) < self.CLUSTER_THRESHOLD:
+            self._record_agency_claim(authored=False, label=label)
             return None
 
         # Calculate centroid
@@ -1808,7 +1840,39 @@ class SensoryConceptMemory:
 
         # Clear raw percepts after promotion
         self.raw_percepts[label] = []
+        self._record_agency_claim(authored=True, label=label)
         return concept
+
+    def _record_agency_claim(self, authored: bool, label: str) -> None:
+        """
+        A:POLARITY/DIFFERENCE (constitutive physics audit follow-up,
+        2026-09-12): real I_DID/I_DIDNT claim for this memory-write moment.
+        AGENTIC is fixed (not run through classify()) for the same reason
+        as aurora_interaction_engine.py's normalize_turn_event() -- "did/
+        didn't" is a per-action commitment, and there is no honest
+        per-call ontological_depth signal to feed classify() with instead.
+        Feeds the already-signed displacement (polarity_signed=True for A)
+        into the Difference buffer so promote/no-promote oscillation across
+        calls shows up as real, nonzero drift; cost uses abs().
+        """
+        try:
+            predicate = _IStatePredicate.I_DID if authored else _IStatePredicate.I_DIDNT
+            claim = _FC.make_claim(_ExistenceMode.AGENTIC, predicate, content=label)
+            self._a_promotion_count += 1
+            mags = {_Constraint.A: claim.displacement().A}
+            self._a_diff_buffer.record(self._a_promotion_count, mags)
+            snap = self._a_diff_buffer.snapshot(self._a_promotion_count, mags)
+            self.last_agency_claim = claim
+            self.last_agency_cost = _NC_REGISTRY.shift_cost(_Constraint.A, abs(claim.displacement().A))
+            self.last_agency_difference = snap.value(_Constraint.A)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_hardware_io.py:SensoryConceptMemory._record_agency_claim",
+                exc=_aurora_boundary_exc,
+                context={"function": "_record_agency_claim", "source_file": "aurora_hardware_io.py"},
+            )
 
     def find_matching_concept(self, feature_vector: List[float],
                               threshold: float = None) -> Optional[SensoryConcept]:
@@ -6587,6 +6651,23 @@ class SensoryIntegrationEngine:
         if not self.hardware or not self.hardware.voice:
             logger.warning("[SENSORY INTEGRATION] No voice available")
             return False
+
+        # Constitutive physics audit (2026-09-12): observe-only governor call
+        # (see _GOVERNOR_ENGINE above). primary_axis="A" is the honest
+        # classification for this event -- speaking is an agentic act -- not
+        # a softer choice picked to get a nicer-looking decision, since this
+        # phase only observes and does not act on the result.
+        try:
+            _GOVERNOR_ENGINE.feed_evidence({"text": text, "tone": str(tone or "neutral")})
+            _GOVERNOR_ENGINE.govern({"primary_axis": "A"})
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_hardware_io.py:SensoryIntegrationEngine.speak:governor_observe",
+                exc=_aurora_boundary_exc,
+                context={"function": "speak", "source_file": "aurora_hardware_io.py"},
+            )
 
         # Get speech parameters based on personality and tone
         params = self.voice_mapper.get_speech_parameters(tone, text)

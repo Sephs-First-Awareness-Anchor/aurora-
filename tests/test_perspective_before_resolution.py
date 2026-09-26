@@ -180,3 +180,34 @@ def test_public_projection_layer_has_no_direct_promotion_authority():
     source = open(rr.__file__, encoding="utf-8").read()
     assert ".resolve_field(" not in source
     assert "_in_complete_field_inquiry = True" not in source
+
+
+def test_projection_precedes_field_inquiry_on_the_real_structural_route():
+    """The live twin of the canary above.  No mocked candidate generator: the
+    mirror arrives exactly the way production finds one -- the ref's ability
+    is registered with genealogy, and genealogy's own collision finder
+    returns the real counterpart.  unresolved_field_candidates() is never
+    consulted on this route, and field inquiry must not run first."""
+    engine, base, source = _bare_engine(), _coarse(), _source()
+    ability_id = engine.ability_id_for_ref(base)
+    engine.genealogy = SimpleNamespace(
+        abilities={ability_id: object()},
+        tick_count=0,
+        representation_collision_candidates=lambda items, *a, **k: [{
+            "counterpart_representation_id": "REAL:source",
+            "collision_id": "c1",
+            "evidence": {"collision": True},
+            "pressure": 0.5,
+        }],
+        representation_gap_candidates=lambda items, *a, **k: [],
+    )
+    engine.inadequacy_pressure = lambda ref: 0.7
+    engine._ref_from_ability_id = lambda aid: source if aid == "REAL:source" else None
+    engine.unresolved_field_candidates = lambda ref: (_ for _ in ()).throw(
+        AssertionError("the real structural route must not need the capped generator"))
+    engine.stage_field_inquiry = lambda *a, **k: (_ for _ in ()).throw(
+        AssertionError("field inquiry must not run before perspective projection"))
+    staged = engine.investigate_if_pressured(base, consumer="test")
+    assert staged["mode"] == "perspective_projection"
+    assert staged["stage"] is None
+    assert engine.current_resolution(base).encode() == base.encode()

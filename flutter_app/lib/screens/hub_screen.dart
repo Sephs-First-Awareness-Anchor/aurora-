@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../aurora_bridge.dart';
 import '../habitat/habitat_bridge.dart';
+import '../praxis/praxis_bridge.dart';
 
 // ── Palette (matches app dark theme) ──────────────────────────────────────────
 const _bg        = Color(0xFF0D0D0F);
@@ -56,6 +57,7 @@ class HubScreen extends StatefulWidget {
 
 class _HubScreenState extends State<HubScreen> {
   Map<String, dynamic> _stats    = {};
+  bool _praxisSwitching = false;
   Map<String, dynamic> _room     = {};
   List<dynamic>        _notes    = [];
   List<dynamic>        _messages = [];
@@ -537,8 +539,90 @@ class _HubScreenState extends State<HubScreen> {
               : histStatus,
           valueColor: histStatus == 'completed' ? _green : _cyan,
         ),
+        _buildPraxisRow(),
       ])),
     ]);
+  }
+
+  // ── Praxis (Stage 6) ──────────────────────────────────────────────────
+  // Structural counters and one switch.  There is no progress bar, no
+  // completion figure and no "how she's doing" -- Praxis has no notion of
+  // her doing well, so the Hub has nothing of the kind to show.  Witnessed
+  // situations and breaches are counts of what crossed the wire, not of
+  // anything she concluded.
+  Color _praxisColor(String status) {
+    switch (status) {
+      case 'running': return _green;
+      case 'paused':  return _amber;
+      case 'offline': return _textDim;
+      case 'error':   return _red;
+      default:        return _textDim;
+    }
+  }
+
+  Future<void> _togglePraxis(bool currentlyPaused) async {
+    if (_praxisSwitching) return;
+    setState(() => _praxisSwitching = true);
+    try {
+      if (currentlyPaused) {
+        await PraxisBridge.resume();
+      } else {
+        await PraxisBridge.pause();
+      }
+      await _refresh();
+    } catch (_) {
+      // A failed switch leaves the displayed state as it was; the next
+      // refresh shows the truth.
+    } finally {
+      if (mounted) setState(() => _praxisSwitching = false);
+    }
+  }
+
+  Widget _buildPraxisRow() {
+    final status    = (_stats['praxis_status'] as String?) ?? 'not_initialized';
+    final paused    = _stats['praxis_paused'] == true;
+    final witnessed = _stats['praxis_situations_witnessed'] as int? ?? 0;
+    final breaches  = _stats['praxis_contract_breaches'] as int? ?? 0;
+    final available = status != 'not_initialized' && status != 'error';
+
+    final detail = available
+        ? '$witnessed witnessed · ${status.replaceAll('_', ' ')}'
+        : status.replaceAll('_', ' ');
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Column(children: [
+        Row(children: [
+          const Text('Praxis', style: TextStyle(color: _textDim, fontSize: 12)),
+          const Spacer(),
+          Text(detail, style: TextStyle(
+              color: _praxisColor(status), fontSize: 12, fontWeight: FontWeight.w600)),
+          if (available) ...[
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 26,
+              child: TextButton(
+                onPressed: _praxisSwitching ? null : () => _togglePraxis(paused),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  minimumSize: Size.zero,
+                  foregroundColor: paused ? _green : _amber,
+                ),
+                child: Text(
+                  _praxisSwitching ? '…' : (paused ? 'Resume' : 'Pause'),
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
+        ]),
+        // Breaches are shown only when they exist: a non-zero count means
+        // something tried to teach her and was stopped at the fence, which
+        // is worth Sunni seeing.  Zero is the normal state and needs no row.
+        if (breaches > 0)
+          _statRow('Praxis fence breaches', '$breaches', valueColor: _red),
+      ]),
+    );
   }
 
   // Build 772 (Historical Lexical Consequence Attribution and

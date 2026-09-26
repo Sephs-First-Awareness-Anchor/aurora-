@@ -32,11 +32,16 @@ from typing import Any, Dict, List, Optional
 
 from aurora_constraint_engine import (
     ConstraintVector as _ConstraintVector,
+    ManifoldViolation as _ManifoldViolation,
     FoundationalContract as _FoundationalContract,
     ExistenceMode as _ExistenceMode,
+    IStatePredicate as _IStatePredicate,
     GovernorWeights as _GovernorWeights,
 )
 _FC = _FoundationalContract()
+from aurora_internal.aurora_constraint_manifold_patched import Constraint as _Constraint
+from aurora_internal.aurora_noncomp_registry import REGISTRY as _NC_REGISTRY
+from aurora_internal.aurora_difference_buffer import make_difference_buffer as _make_difference_buffer
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -128,6 +133,19 @@ class ScreenObserver:
         # Circuit breaker: stop retrying capture after consecutive failures
         self._capture_fail_streak = 0
         self._capture_disabled    = False
+
+        # Per-constraint physics history (constitutive physics audit
+        # follow-up, 2026-09-12; generalized from X-only to X+T when T was
+        # completed). See the gate in _loop() for how these are used.
+        # Capture count stands in for "tick" -- one shared
+        # DifferenceHistoryBuffer tracks all constraints together (the same
+        # way EvolutionaryChamber's own buffer does), keyed by axis letter
+        # in the dicts below rather than one buffer per constraint.
+        self._capture_count: int = 0
+        self._diff_buffer = _make_difference_buffer()
+        self.last_claims: Dict[str, Any] = {}
+        self.last_costs: Dict[str, float] = {}
+        self.last_differences: Dict[str, float] = {}
 
         # Visual inquiry tracking — when Aurora sees something genuinely novel with
         # no concept match across multiple frames, she queues a structured observation
@@ -577,9 +595,72 @@ class ScreenObserver:
 
                 # 1. Capture screen
                 img, path = self._capture_frame()
-                if img is None:
+                # Existence admission gate (constitutive physics audit,
+                # 2026-09-12, X:OPERATOR finding): this loop already
+                # rejected a failed capture via `if img is None`, but that
+                # rejection was a bare boolean, disconnected from the
+                # physics substrate -- no ManifoldViolation, no typed
+                # occurrence. Routing the same condition through
+                # ConstraintVector's own X<=0 check makes the identical
+                # rejection real physics instead of parallel ad hoc logic,
+                # with no change in behavior (a successful capture always
+                # has X=1.0 and passes; a failed one always had X=0.0 and
+                # rejected exactly as before).
+                #
+                # POLARITY/COST/DIFFERENCE (2026-09-12 follow-up): a real
+                # OntologicalClaim (I_IS/I_ISNT) via
+                # FoundationalContract.make_claim(), ExistenceMode
+                # classified from self._frame_count (genuinely accumulated
+                # capture history), REGISTRY.shift_cost(X, ...) charged
+                # against the claim's own displacement, and a real Δ via
+                # the same DifferenceHistoryBuffer substrate the chamber
+                # uses (self._capture_count standing in for "tick", since
+                # this loop has no chamber-style tick counter of its own).
+                try:
+                    _ConstraintVector(
+                        X=(1.0 if img is not None else 0.0),
+                        T=0.5, N=0.5, B=0.5, A=0.5,
+                    )
+                except _ManifoldViolation:
+                    self.last_claims["X"] = _FC.make_claim(
+                        _ExistenceMode.REFERENCE, _IStatePredicate.I_ISNT, content=str(path)
+                    )
                     time.sleep(self._interval)
                     continue
+
+                _mode = _FC.classify({"connections": self._frame_count})
+                _x_claim = _FC.make_claim(_mode, _IStatePredicate.I_IS, content=str(path))
+                self.last_claims["X"] = _x_claim
+                _x_magnitude = abs(_x_claim.displacement().X)
+                self.last_costs["X"] = _NC_REGISTRY.shift_cost(_Constraint.X, _x_magnitude)
+
+                # T:POLARITY/COST/DIFFERENCE (T completion follow-up,
+                # 2026-09-12): T's own I-state pair is can/can't -- and this
+                # loop already has a real, pre-existing can/can't-continue
+                # signal in self._capture_disabled (the circuit breaker that
+                # trips after 5 consecutive capture failures). This is the
+                # first time that signal is expressed through the physics
+                # substrate instead of only gating the loop's own retry
+                # logic internally.
+                # I_CAN/I_CANNOT require ExistenceMode >= TRANSIENT (see
+                # IStatePredicate's own min_mode); _mode may be REFERENCE
+                # early on (low frame_count), which is valid for X's I_IS/
+                # I_ISNT (min_mode=REFERENCE) but would raise
+                # OntologicalViolation for T's predicates -- clamp up, never
+                # fabricate a mode the evidence doesn't support down.
+                _t_mode = _ExistenceMode(max(int(_mode), int(_ExistenceMode.TRANSIENT)))
+                _t_predicate = _IStatePredicate.I_CANNOT if self._capture_disabled else _IStatePredicate.I_CAN
+                _t_claim = _FC.make_claim(_t_mode, _t_predicate, content="capture_loop")
+                self.last_claims["T"] = _t_claim
+                _t_magnitude = abs(_t_claim.displacement().T)
+                self.last_costs["T"] = _NC_REGISTRY.shift_cost(_Constraint.T, _t_magnitude)
+
+                self._capture_count += 1
+                _mags = {_Constraint.X: _x_magnitude, _Constraint.T: _t_magnitude}
+                self._diff_buffer.record(self._capture_count, _mags)
+                _snap = self._diff_buffer.snapshot(self._capture_count, _mags)
+                self.last_differences["X"] = _snap.value(_Constraint.X)
+                self.last_differences["T"] = _snap.value(_Constraint.T)
 
                 # 2. Extract features
                 fv = self._extract_features(path, img)

@@ -111,7 +111,17 @@ _AXIS_SEMANTIC_TOKENS: Dict[str, List[str]] = {
 class ProtoLanguage:
     """
     The wordless comparison geometry that exists in the field before any
-    utterance path is selected. Fully structured meaning without words.
+    utterance path is selected.
+
+    Directive 3.12: this is a real, useful projection of the field's axis
+    state -- dominant axes, comparison type, tension/boundary load -- not
+    the full meaning representation on its own. It carries no participant
+    identity, role relations, clause/alternative structure, Difference
+    edges, or provenance back to the richer relational source; those live
+    upstream (RelationalForm/ConstraintSemanticState) and must be
+    consulted alongside this projection, not replaced by it. The previous
+    "fully structured meaning without words" framing overstated what this
+    class alone represents.
     """
     dominant_axes:    List[str]
     comparison_type:  str

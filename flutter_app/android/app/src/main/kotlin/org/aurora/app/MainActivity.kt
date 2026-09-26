@@ -323,6 +323,24 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    // Praxis (Stage 6): status and manual pause/resume only.
+                    // Flutter renders and switches; it never owns developmental
+                    // meaning, so there is no other Praxis method on this channel.
+                    "getPraxisStatus" -> {
+                        AuroraService.callPythonString("get_praxis_status") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "pausePraxis" -> {
+                        AuroraService.callPythonString("pause_praxis") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "resumePraxis" -> {
+                        AuroraService.callPythonString("resume_praxis") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     "getRoomState" -> {
                         AuroraService.getRoomState { json ->
                             runOnUiThread { result.success(json) }

@@ -255,27 +255,9 @@ class RepresentationalResolutionEngine(_BaseEngine):
         # epistemic cutoff. One cheapest untried view is staged at a time.
         structural = self._structural_projection_candidates(ref, charge_cost=True)
         if structural:
-            projections = self._projection_frontier(ref, structural)
-            untried = [
-                p for p in projections
-                if self._projection_attempt_counts.get(p["projection_id"], 0) == 0
-            ]
-            if untried:
-                candidate = dict(untried[0])
-                candidate["projection_frontier_size"] = len(projections)
-                candidate["projection_frontier_remaining"] = len(untried)
-                self._active_stage_for_ref[key] = {
-                    "mode": "perspective_projection",
-                    "stage": None,
-                    "candidate": candidate,
-                    "consumer": consumer,
-                    "context_scope": context_scope,
-                    "candidate_selection": "progressive_least_dimensional_lawful_projection",
-                }
-                self._provisional_reads[key] = 0
-                self._candidate_downstream_effects.pop(key, None)
-                self._projection_event(ref, self._active_stage_for_ref[key], "staged")
-                return self._active_stage_for_ref[key]
+            staged = self._stage_next_projection(ref, structural, consumer, context_scope)
+            if staged is not None:
+                return staged
 
             # Real structural mirrors existed and every lawful projection over
             # them has been tried. Only now may one of those structural field
@@ -290,9 +272,58 @@ class RepresentationalResolutionEngine(_BaseEngine):
         candidates = self.unresolved_field_candidates(ref)
         if not candidates:
             return None
+        # Ordering-invariant guard.  The two generators use the same collision
+        # and gap finders, so today a real mirror found here was also found by
+        # the uncapped scan above.  But the invariant must not depend on the
+        # two staying in agreement: a candidate backed by a REAL structural
+        # counterpart is a mirror whichever generator surfaced it, and a
+        # mirror is projected before any field inquiry.  Domain hypotheses are
+        # never mirrors and never take this path.
+        mirrors = [
+            c for c in candidates
+            if str(c.get("origin") or "") in ("collision", "gap")
+            and self._ref_from_ability_id(str(c.get("counterpart_ability_id") or "")) is not None
+        ]
+        if mirrors:
+            staged = self._stage_next_projection(ref, mirrors, consumer, context_scope)
+            if staged is not None:
+                return staged
         return self._stage_field_after_projection(
             ref, candidates, consumer, context_scope,
         )
+
+    def _stage_next_projection(self, ref, mirrors, consumer, context_scope):
+        """Stage the cheapest untried lawful projection over real mirrors.
+
+        Returns the staged record, or None when every lawful projection over
+        these mirrors has already been tried (the frontier is exhausted and
+        field inquiry may proceed).  One implementation, used by both the
+        primary structural route and the compatibility guard, so the two can
+        never stage projection differently.
+        """
+        key = ref.encode()
+        projections = self._projection_frontier(ref, mirrors)
+        untried = [
+            p for p in projections
+            if self._projection_attempt_counts.get(p["projection_id"], 0) == 0
+        ]
+        if not untried:
+            return None
+        candidate = dict(untried[0])
+        candidate["projection_frontier_size"] = len(projections)
+        candidate["projection_frontier_remaining"] = len(untried)
+        self._active_stage_for_ref[key] = {
+            "mode": "perspective_projection",
+            "stage": None,
+            "candidate": candidate,
+            "consumer": consumer,
+            "context_scope": context_scope,
+            "candidate_selection": "progressive_least_dimensional_lawful_projection",
+        }
+        self._provisional_reads[key] = 0
+        self._candidate_downstream_effects.pop(key, None)
+        self._projection_event(ref, self._active_stage_for_ref[key], "staged")
+        return self._active_stage_for_ref[key]
 
     def _projection_view_record(self, ref, candidate, *, consumer, context_scope, observed):
         try:

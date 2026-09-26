@@ -554,6 +554,35 @@ class LayerEnergyAccountant:
             self._replenishment_log.get(source, 0.0) + amount
         )
 
+    def withdraw(self, amount: float, sink: str = "external") -> float:
+        """
+        Remove up to `amount` energy from the pool for an external sink.
+
+        CONSTITUTIVE PHYSICS AUDIT (2026-09-12), N follow-up: replenish()'s
+        own docstring already documented this accountant as meant to be
+        called by "aurora_evolution_chamber.py replenish_from_lattice()
+        equivalent" -- confirming the chamber's energy economy and this
+        shared accountant were always intended to be connected, just never
+        were (EvolutionaryChamber constructed its own disconnected
+        EnergyBudget instead). This is the symmetric counterpart replenish()
+        was missing to make that connection a real, bounded transfer rather
+        than crediting the shared pool from nothing: returns the amount
+        actually withdrawn, which is less than requested if the pool
+        doesn't have enough (floors at 0.0, never goes negative).
+
+        Returns the amount actually withdrawn (<= amount).
+        """
+        if amount < 0:
+            raise ManifoldViolation(
+                f"Withdrawal amount must be non-negative, got {amount}"
+            )
+        actual = min(amount, self._pool)
+        self._pool -= actual
+        self._replenishment_log[sink] = (
+            self._replenishment_log.get(sink, 0.0) - actual
+        )
+        return actual
+
     # ------------------------------------------------------------------
     # PRESSURE API — set external pressure on a layer
     # ------------------------------------------------------------------
