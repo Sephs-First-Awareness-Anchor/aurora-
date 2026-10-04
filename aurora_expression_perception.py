@@ -312,6 +312,46 @@ _AXIS_ALIASES = {
 _AXES = ("X", "T", "N", "B", "A")
 
 
+def _crystal_waveform_match(sig, dominant_axis, live) -> float:
+    """How well a crystal's signature (its waveform distribution over X/T/N/B/A) fits the live one.
+
+    A crystal is a view of several waveforms at once, so the whole distribution counts, not just
+    the dominant axis: the score is the better of that axis's share of the signature (the
+    original rule, kept as a floor) and the cosine between the live axis activation and the
+    signature.  When the live activation carries sign, an opposite pole on the dominant axis
+    does not resonate; unsigned activation carries no polarity, so nothing is vetoed.
+    """
+    axes = ("X", "T", "N", "B", "A")
+    try:
+        values = {ax: float(sig.get(ax, 0.0) or 0.0) for ax in axes}
+    except Exception:
+        return 0.0
+    mag = sum(abs(v) for v in values.values()) or 1.0
+    share = abs(values.get(dominant_axis, 0.0)) / mag
+    if not live:
+        return share
+    try:
+        lv = {ax: float(live.get(ax, 0.0) or 0.0) for ax in axes}
+    except Exception:
+        return share
+    if any(v < 0.0 for v in lv.values()) and lv.get(dominant_axis, 0.0) * values.get(dominant_axis, 0.0) < 0.0:
+        return 0.0
+    dot = sum(abs(lv[a]) * abs(values[a]) for a in axes)
+    norm = (sum(lv[a] ** 2 for a in axes) ** 0.5) * (sum(values[a] ** 2 for a in axes) ** 0.5)
+    return max(share, dot / norm) if norm > 0.0 else share
+
+
+def _crystal_word_facets(crystal, limit: int = 24):
+    """A crystal's word facets, strongest first (confidence x coherence); faded RELIC facets are skipped."""
+    out = []
+    for f in getattr(crystal, "facets", {}).values():
+        if getattr(f, "role", "") != "word" or "RELIC" in str(getattr(f, "state", "")):
+            continue
+        out.append(f)
+    out.sort(key=lambda f: -(float(getattr(f, "confidence", 0.0) or 0.0) * float(getattr(f, "coherence", 1.0) or 0.0)))
+    return out[:limit]
+
+
 def assembly_axis_activation(adjusted_axes) -> Optional[Dict[str, float]]:
     """{X,T,N,B,A} activation from an assembly's adjusted axes, whichever names it uses.
 
@@ -470,7 +510,10 @@ class LexicalMemory:
 
     def find_by_noncomp(self, noncomp_id: str, valence_target: float = 0.0) -> List["LexicalEntry"]:
         """Find words mapped to a specific Non-Comp, sorted by valence proximity."""
-        matches = [e for e in self.entries.values() if e.noncomp_id == noncomp_id]
+        sink = getattr(self, "_crystal_sink", None)       # the crystals ARE the channel store
+        matches = [self.entries[w] for w in sink.words(noncomp_id) if w in self.entries] if sink is not None else []
+        if not matches:
+            matches = [e for e in self.entries.values() if e.noncomp_id == noncomp_id]
         if not matches:
             return []
         matches.sort(key=lambda e: abs(e.emotional_valence - valence_target))
@@ -535,12 +578,21 @@ class LexicalMemory:
         leader = max(votes.items(), key=lambda kv: kv[1])[0]
         entry = self.entries[word]
         if entry.noncomp_id != leader:
+            previous = entry.noncomp_id
             entry.noncomp_id = leader
             self._invalidate_noncomp_index()
+            sink = getattr(self, "_crystal_sink", None)
+            if sink is not None:
+                sink.move(word, previous, leader)
         return True
 
     def concept_words(self, noncomp_id: str) -> List["LexicalEntry"]:
         """The concept→words view: every word crystallized into a channel."""
+        sink = getattr(self, "_crystal_sink", None)
+        if sink is not None:
+            found = [self.entries[w] for w in sink.words(noncomp_id) if w in self.entries]
+            if found:
+                return found
         self._ensure_noncomp_index()
         return [self.entries[w] for w in self._noncomp_index.get(noncomp_id, ())
                 if w in self.entries]
@@ -3900,20 +3952,18 @@ class SentenceComposer:
         if dps is not None:
             try:
                 scored = []
+                _live_wave = getattr(self, "_axis_activation", None) or None
                 for _cr in getattr(dps, "crystals", {}).values():
                     sig = getattr(_cr, "constraint_signature", None)
                     if not sig:
                         continue
-                    dom = float(sig.get(dominant_axis, 0.0) or 0.0)
-                    mag = sum(abs(v) for v in sig.values()) or 1.0
-                    res = abs(dom) / mag           # axis share of the signature
+                    res = _crystal_waveform_match(sig, dominant_axis, _live_wave)
                     if res >= 0.3:
-                        scored.append((res, _cr))
+                        _lv = getattr(getattr(_cr, "level", None), "value", 0) or 0
+                        scored.append((res + 0.02 * float(_lv), _cr))   # a more integrated crystal wins a near tie
                 scored.sort(key=lambda rc: -rc[0])
                 for _res, _cr in scored[:5]:
-                    for _f in _cr.facets.values():
-                        if _f.role != "word":
-                            continue
+                    for _f in _crystal_word_facets(_cr):
                         _wd = str(_f.content or "").lower().strip()
                         if not _wd or _wd in seen:
                             continue

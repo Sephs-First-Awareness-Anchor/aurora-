@@ -410,6 +410,8 @@ class AuroraCommunicationEmergence(WarpCapable):
         self._profile_family: Dict[str, str] = {}
         self._seen_possibilities: Dict[str, float] = {}
         self._tick: int = 0
+        self._shape_expectations: Dict[str, Dict[str, Any]] = {}
+        self._shape_event_key = ("", -1)
         # Historical/counterfactual observations are checkpointed by their
         # owning environment.  Suspending eager writes while one is admitted
         # keeps the communication ledger and the historical cursor on the same
@@ -555,7 +557,45 @@ class AuroraCommunicationEmergence(WarpCapable):
     # Structural observation and trial influence
     # ------------------------------------------------------------------
 
+    def accept_representation(self, rep: Mapping[str, Any], context: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
+        """Adopt an EARNED discovered shape's expectation as a bounded orientation.
+
+        The expectation says which root the next event will load; like genealogy's
+        orientation it biases activation and never supplies lexical content or an
+        answer.  Only the newest event's expectations are held.
+        """
+        key = (str(context.get("stream", "")), int(context.get("event_index", -1)))
+        if key != self._shape_event_key:
+            self._shape_event_key = key
+            self._shape_expectations = {}
+        if str(rep.get("status")) != "earned" or rep.get("positional"):
+            return None
+        exp = dict(context.get("expectation") or {})
+        self._shape_expectations[str(rep.get("id", ""))] = {
+            "target": str(exp.get("target", "")).upper(),
+            "delta": abs(float(exp.get("p_high", 0.5) or 0.5) - float(exp.get("p_high_marginal", 0.5) or 0.5)),
+        }
+        return {"adopted": True}
+
+    def _shape_orientation(self) -> Dict[str, float]:
+        orientation = {ax: 0.0 for ax in AXES}
+        for item in self._shape_expectations.values():
+            if item.get("target") in orientation:
+                orientation[item["target"]] += float(item.get("delta") or 0.0)
+        return orientation
+
     def _possibility_activation(self, form: Mapping[str, Any]) -> Dict[str, float]:
+        base = self._possibility_activation_base(form)
+        shape = self._shape_orientation()
+        if not any(shape.values()):
+            return base
+        shape_profile = _normalise_axis_profile(shape)
+        return _normalise_axis_profile({
+            ax: 0.85 * float(base.get(ax, 0.0) or 0.0) + 0.15 * float(shape_profile.get(ax, 0.0) or 0.0)
+            for ax in AXES
+        })
+
+    def _possibility_activation_base(self, form: Mapping[str, Any]) -> Dict[str, float]:
         """Blend the present relation with proven genealogical orientation.
 
         The utterance configuration remains dominant.  Genealogy supplies a

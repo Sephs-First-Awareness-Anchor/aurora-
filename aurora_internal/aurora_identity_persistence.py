@@ -772,7 +772,14 @@ class OETSPersistence:
             relations_data = data.get("relations", {})
             for rel_id, rdata in relations_data.items():
                 rtype_val = rdata.get("relation_type", "related_to")
-                rtype = rtype_map.get(rtype_val, RelationType.RELATED_TO)
+                rtype = rtype_map.get(rtype_val)
+                if rtype is None:
+                    # A discovered kind persisted by an earlier session stays itself on reload.
+                    try:
+                        from aurora_internal.aurora_ontological_scaffolding import DiscoveredRelationKind
+                        rtype = web._open_kinds.setdefault(str(rtype_val), DiscoveredRelationKind(str(rtype_val)))
+                    except Exception:
+                        rtype = RelationType.RELATED_TO
 
                 source = rdata.get("source_word", "")
                 target = rdata.get("target_word", "")

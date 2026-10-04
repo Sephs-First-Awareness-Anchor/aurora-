@@ -36899,7 +36899,7 @@ def _delivered_text_echoes_prior_turn(text: str, systems: Dict[str, Any],
 
 
 @_turn_gated
-def process_external_user_turn(
+def _process_external_user_turn_impl(
     systems: Dict[str, Any],
     user_text: str,
     *,
@@ -37465,6 +37465,33 @@ def process_external_user_turn(
                 systems.pop("_current_turn_id", None)
             else:
                 systems["_current_turn_id"] = _prior_current_turn_id
+
+
+
+def process_external_user_turn(systems: Dict[str, Any], user_text: str, **kwargs: Any) -> Dict[str, Any]:
+    """Canonical public bridge into Aurora's live response engine (see the impl below).
+
+    Live turns feed the same resolution ledger and representation exchange that
+    historical experience feeds: the user's event is observed BEFORE generation
+    so every adopting subject can be shaped by what was learned, and Aurora's own
+    reply event is observed AFTER, scored against the same expectations.  Both
+    observations are best-effort and can never alter or block the turn.
+    """
+    live = None
+    session = str(kwargs.get("session_id", "") or "")
+    try:
+        if isinstance(systems, dict) and str(user_text or "").strip():
+            from aurora_internal import aurora_live_experience as live
+            live.observe_user_event(systems, str(user_text), session_id=session)
+    except Exception:
+        live = None
+    result = _process_external_user_turn_impl(systems, user_text, **kwargs)
+    try:
+        if live is not None:
+            live.observe_reply_event(systems, live.reply_text_of(result), session_id=session)
+    except Exception:
+        pass
+    return result
 
 
 def _run_surface_queued_turn(

@@ -1644,6 +1644,29 @@ class AuroraLexicalGrounding(WarpCapable):
             topology_gap_ref=rec.get("topology_gap_ref"),
         )
 
+    def accept_representation(self, rep: Mapping[str, Any], context: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
+        """Ground words by the ACT they occur in: tokens that separate the poles of an
+        earned discovered shape's target root, with no gloss and no English label.
+
+        This sits beside the slot-geometry grounding, never replacing it.
+        """
+        if str(rep.get("status")) != "earned" or rep.get("positional"):
+            return None
+        table = self.__dict__.setdefault("_act_grounded", {})
+        rep_id = str(rep.get("id", ""))
+        for word in list(table):
+            table[word].pop(rep_id, None)
+            if not table[word]:
+                table.pop(word)
+        for item in list(context.get("shape_words") or []):
+            table.setdefault(str(item.get("word", "")), {})[rep_id] = float(item.get("lift", 0.0) or 0.0)
+        return {"grounded_words": len(context.get("shape_words") or [])}
+
+    def act_grounded_words(self, word: Optional[str] = None) -> Dict[str, Any]:
+        """word -> {shape id: lift}; with ``word``, just that word's act groundings."""
+        table = self.__dict__.get("_act_grounded", {})
+        return dict(table.get(str(word), {})) if word is not None else {w: dict(v) for w, v in table.items()}
+
     def save(self) -> bool:
         return self._persist(force=True)
 

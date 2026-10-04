@@ -1201,6 +1201,35 @@ class BehavioralIdentityEngine:
     # FULL EPISODE INTEGRATION
     # ====================================================================
 
+    def accept_representation(self, rep: Dict[str, Any], context: Dict[str, Any]):
+        """Adopt an EARNED, non-positional discovered shape as a relic.
+
+        History reaches identity as a shape, never as raw input.  Success stays
+        neutral (0.5): a witnessed shape carries no verdict of ours, so it adds an
+        allele without moving survival impact.  Each shape is adopted once.
+        """
+        if str(rep.get("status")) != "earned" or rep.get("positional"):
+            return None
+        adopted = self.__dict__.setdefault("_shape_relics_adopted", set())
+        rep_id = str(rep.get("id", ""))
+        if rep_id in adopted:
+            return {"adopted": True, "already": True}
+        axes = ("X", "T", "N", "B", "A")
+        path = str(rep.get("path", "")).split(">")
+        relic = {
+            "theme": f"shape:{rep.get('path')}",
+            "stability": max(0.0, min(1.0, float(rep.get("z", 0.0) or 0.0) / 10.0)),
+            "seed_ids": [rep_id],
+            "emotional_bias": {},
+            "manifold_position": tuple(path.count(ax) / max(1, len(path)) for ax in axes),
+        }
+        self.process_episode(
+            {"success_rate": 0.5, "lessons_learned": [f"shape:{rep.get('path')}", f"subject:{rep.get('subject')}"]},
+            [relic], {}, ExistenceMode.BOUNDED,
+        )
+        adopted.add(rep_id)
+        return {"adopted": True, "already": False}
+
     def process_episode(self, episode_summary: Dict[str, Any],
                         relics: List[Dict[str, Any]],
                         pillar_scores: Dict[str, float],

@@ -1807,6 +1807,18 @@ class ConceptExtractor:
                     'B': 0.70 if concept in existing_crystals else 0.40,
                     'A': 0.80 if role in ('intent', 'action') else 0.50,
                 }
+            _wf_prov = getattr(self, "input_waveform_provider", None)
+            if _wf_prov is not None:
+                try:
+                    _wf = _wf_prov()
+                except Exception:
+                    _wf = None
+                if _wf and len(_wf) >= 5:
+                    # Stamp the INPUT's waveform distribution, not a mode default: the concept's own
+                    # character and the input's position on each root (its rank in the actor's own
+                    # distribution) weigh equally.
+                    cw = {ax: 0.5 * float(cw.get(ax, 0.0)) + 0.5 * float(_wf[i])
+                          for i, ax in enumerate(("X", "T", "N", "B", "A"))}
             signals.append(ConceptSignal(
                 concept=concept,
                 role=role,

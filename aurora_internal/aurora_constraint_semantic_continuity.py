@@ -216,7 +216,34 @@ def _looks_verb(token: str) -> bool:
     return False
 
 
+_SUBJECT_PRONOUNS = {"i", "you", "we", "they"}
+_BARE_VERB_STOP = {"and", "or", "but", "so", "yet", "to", "of", "in", "on", "at", "for", "with", "as",
+                   "the", "a", "an", "not", "never", "no"}
+
+
+def _bare_verb_after_pronoun(tokens: Sequence[str], start: int = 0) -> int:
+    """Fallback structural evidence for an otherwise-unknown bare verb.
+
+    A word directly after a subject pronoun (``I leave``, ``we charge``) occupies
+    the predicate slot strongly enough to delimit a clause.  Existing verb and
+    consequence-earned relation evidence always wins; this never assigns a gloss.
+    """
+    for i in range(max(0, start), len(tokens) - 1):
+        if str(tokens[i]).lower() in _SUBJECT_PRONOUNS and str(tokens[i + 1]).lower() not in _BARE_VERB_STOP:
+            return i + 1
+    return -1
+
+
+def _clause_has_verb(tokens: Sequence[str]) -> bool:
+    return any(_looks_verb(t) for t in tokens) or _bare_verb_after_pronoun(tokens) >= 0
+
+
 def _first_relation_index(tokens: Sequence[str], start: int = 0) -> int:
+    found = _first_relation_index_base(tokens, start)
+    return found if found >= 0 else _bare_verb_after_pronoun(tokens, start)
+
+
+def _first_relation_index_base(tokens: Sequence[str], start: int = 0) -> int:
     # Build 771 PR 5: scaffold heuristics run first, across the WHOLE
     # remaining span, before consumption gets any say at all. Codex review,
     # PR #182: has_promoted_relation_role() has no notion of today's
@@ -316,6 +343,7 @@ def _unknown_role(wh: str, *, wh_is_subject: bool, relation: str) -> str:
 # single-triple-per-sentence behavior, not a claim of complete coverage.
 _CLAUSE_SUBORDINATORS: Tuple[str, ...] = (
     "even though", "because", "since", "although", "though", "while", "whereas",
+    "if", "unless", "provided", "before", "after",
 )
 _CLAUSE_COORDINATORS: Tuple[str, ...] = ("and", "but", "so", "yet")
 _CLAUSE_HARD_MARKERS: Tuple[str, ...] = (" -- ", " \u2014 ", "; ")
@@ -331,6 +359,69 @@ _CLAUSE_HARD_MARKERS: Tuple[str, ...] = (" -- ", " \u2014 ", "; ")
 # one of these is unambiguous exclusion-clause evidence on its own, with no
 # verb requirement needed on either side.
 _EXCLUSION_MARKERS: Tuple[str, ...] = ("without", "lacking")
+
+
+def _split_clause_structure(raw: str) -> Tuple[List[str], List[Dict[str, str]]]:
+    """Recover bounded propositions while preserving the joining surface relation.
+
+    This does NOT say that ``if`` means condition or ``because`` means cause.  It
+    records only that two independently relation-bearing clauses were joined by
+    the same observed connector, plus whether the connector was fronted, medial,
+    or coordinating.  Meaning remains available for experience to discover.
+    """
+    text = str(raw or "").strip()
+    if not text:
+        return [text], []
+    lower = text.lower()
+
+    # Fronted relation: "If A, B" / "Because A, B" / "Before A, B".
+    front = re.match(
+        r"^(even\s+though|because|since|although|though|while|whereas|if|unless|provided|before|after)\s+(.+?),\s*(.+)$",
+        text, flags=re.IGNORECASE,
+    )
+    if front:
+        connector, dependent, main = front.group(1).lower(), front.group(2).strip(), front.group(3).strip()
+        if _clause_has_verb(_tokens(dependent)) and _clause_has_verb(_tokens(main)):
+            return [dependent, main], [{"connector": connector, "position": "fronted", "left": dependent, "right": main}]
+
+    # A WH question keeps its unresolved relation active; an attached clause is
+    # context on that unknown, not a co-equal assertion to promote as active.
+    question_head = text.endswith("?") and bool(_tokens(text)) and _tokens(text)[0].lower() in _WH
+
+    # Plain coordinated contrast only when BOTH sides are clauses.  This is the
+    # guard that keeps "the motor is tired but happy" as one proposition.
+    for connector in ("but", "whereas"):
+        marker = f" {connector} "
+        idx = lower.find(marker)
+        if idx > 0:
+            head, tail = text[:idx].strip().rstrip(","), text[idx + len(marker):].strip()
+            if head and tail and _clause_has_verb(_tokens(head)) and _clause_has_verb(_tokens(tail)):
+                return [head, tail], [{"connector": connector, "position": "coordinated", "left": head, "right": tail}]
+
+    # Medial subordinator: "A after B", "A unless B".  Do not split a WH
+    # question such as "What happens if A?"; the subordinate proposition
+    # constrains the unresolved answer rather than replacing it.
+    if not question_head:
+        for connector in sorted(_CLAUSE_SUBORDINATORS, key=len, reverse=True):
+            marker = f" {connector} "
+            idx = lower.find(marker)
+            if idx > 0:
+                head, tail = text[:idx].strip().rstrip(","), text[idx + len(marker):].strip()
+                if head and tail and _clause_has_verb(_tokens(head)) and _clause_has_verb(_tokens(tail)):
+                    return [head, tail], [{"connector": connector, "position": "medial", "left": head, "right": tail}]
+    else:
+        # In a WH question the attached proposition constrains the unresolved
+        # answer rather than becoming a competing active assertion.  Preserve
+        # the observed relation without splitting the question itself.
+        for connector in sorted(_CLAUSE_SUBORDINATORS, key=len, reverse=True):
+            marker = f" {connector} "
+            idx = lower.find(marker)
+            if idx > 0:
+                head, tail = text[:idx].strip().rstrip(","), text[idx + len(marker):].strip().rstrip("?")
+                if head and tail and _clause_has_verb(_tokens(tail)):
+                    return [text], [{"connector": connector, "position": "constraint", "left": head, "right": tail}]
+
+    return [text], []
 
 
 def _split_intra_sentence_clauses(raw: str) -> List[str]:
@@ -387,7 +478,7 @@ def _split_intra_sentence_clauses(raw: str) -> List[str]:
         if idx > 0:
             head = text[:idx].strip()
             tail = text[idx + len(marker):].strip()
-            if head and tail and any(_looks_verb(t) for t in _tokens(tail)):
+            if head and tail and _clause_has_verb(_tokens(tail)):
                 out = _split_intra_sentence_clauses(head)
                 out.extend(_split_intra_sentence_clauses(tail))
                 return out
@@ -405,8 +496,8 @@ def _split_intra_sentence_clauses(raw: str) -> List[str]:
             tail = text[match.end():].strip()
             if (
                 head and tail
-                and any(_looks_verb(t) for t in _tokens(head))
-                and any(_looks_verb(t) for t in _tokens(tail))
+                and _clause_has_verb(_tokens(head))
+                and _clause_has_verb(_tokens(tail))
             ):
                 out = _split_intra_sentence_clauses(head)
                 out.extend(_split_intra_sentence_clauses(tail))
@@ -432,6 +523,7 @@ class RelationalForm:
     owner: str = ""
     alternatives: List[Dict[str, str]] = field(default_factory=list)
     clauses: List[Dict[str, str]] = field(default_factory=list)
+    clause_relations: List[Dict[str, str]] = field(default_factory=list)
     confidence: float = 0.0
     source: str = "utterance_relation"
     # A live interaction can itself be the relation even when the surface
@@ -618,12 +710,15 @@ def extract_relational_form(
     # as one conversational configuration instead of stuffing both sentences
     # into the object slot.
     segments = [seg.strip() for seg in re.split(r"(?<=[.!?])\s+", raw) if seg.strip()]
+    clause_relations: List[Dict[str, str]] = []
     if len(segments) == 1:
-        # FIX-A008: a single sentence-terminal segment can still carry
-        # multiple relational claims (see _split_intra_sentence_clauses
-        # docstring). Only expand into the multi-clause path when a real
-        # boundary was found -- one clause back means nothing changes.
-        segments = _split_intra_sentence_clauses(segments[0])
+        # First preserve the joining relation itself.  The legacy recursive
+        # splitter remains the fallback for older hard-boundary/exclusion cases.
+        candidate = segments[0]
+        structured, clause_relations = _split_clause_structure(candidate)
+        _candidate_tokens = _tokens(candidate)
+        _wh_constraint_question = bool(candidate.endswith("?") and _candidate_tokens and _candidate_tokens[0].lower() in _WH)
+        segments = structured if len(structured) > 1 else ([candidate] if _wh_constraint_question else _split_intra_sentence_clauses(candidate))
     if len(segments) > 1:
         parsed_segments = [
             extract_relational_form(seg, parsed={}, feed_lexical_grounding=feed_lexical_grounding)
@@ -659,6 +754,8 @@ def extract_relational_form(
         active = dict(parsed_segments[active_index])
         active["raw_text"] = raw
         active["clauses"] = [dict(item) for i, item in enumerate(parsed_segments) if i != active_index]
+        if clause_relations:
+            active["clause_relations"] = [dict(item) for item in clause_relations]
         active["confidence"] = round(min(1.0, float(active.get("confidence", 0.0) or 0.0) + 0.04), 4)
         return active
 
@@ -889,6 +986,8 @@ def extract_relational_form(
         confidence=round(confidence, 4),
     )
     result = form.to_dict()
+    if clause_relations:
+        result["clause_relations"] = [dict(item) for item in clause_relations]
 
     # Build 771 PR 5 / Directive 3.5: "every scaffold-driven resolution is
     # simultaneously a WARP-feeding observation" -- originally fed ONLY the

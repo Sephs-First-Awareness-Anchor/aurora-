@@ -183,6 +183,15 @@ class HistoricalExperienceEnvironment:
                 }
         except Exception:
             pass
+        try:
+            resolution_ledger = self.systems.get("resolution_ledger")
+            if resolution_ledger is not None and hasattr(resolution_ledger, "status"):
+                state["resolution_ledger_diagnostics"] = dict(resolution_ledger.status())
+            exchange = self.systems.get("representation_exchange")
+            if exchange is not None and hasattr(exchange, "status"):
+                state["representation_exchange_diagnostics"] = dict(exchange.status())
+        except Exception:
+            pass
         return state
 
     # ------------------------------------------------------------------
@@ -404,6 +413,7 @@ class HistoricalExperienceEnvironment:
         self._prepared = True
         self._backfill_communication_apprenticeship()
         self._backfill_lexical_grounding()
+        self._backfill_resolution_ledger()
 
     def _backfill_communication_apprenticeship(self) -> None:
         """Migrate an already-witnessed prefix into communication development.
@@ -669,6 +679,15 @@ class HistoricalExperienceEnvironment:
         """
         saved_any = False
         success = True
+        # Representations are recorded on the crystals, so write them there BEFORE the
+        # crystal store is persisted below.
+        for _name, _method in (("resolution_ledger", "sync_crystals"), ("representation_exchange", "crystallize")):
+            _owner = self.systems.get(_name)
+            if _owner is not None and hasattr(_owner, _method):
+                try:
+                    getattr(_owner, _method)()
+                except Exception:
+                    success = False
         dimensional = self.systems.get("dimensional")
         if dimensional is not None and hasattr(dimensional, "save_state"):
             saved_any = True
@@ -708,6 +727,16 @@ class HistoricalExperienceEnvironment:
                 success = bool(lexical_grounding.save()) and success
             except Exception:
                 success = False
+
+        # The resolution ledger checkpoints with the same cursor.  It never
+        # counts as a crystal surface, so it cannot advance the cursor alone.
+        for _name in ("resolution_ledger", "representation_exchange"):
+            _surface = self.systems.get(_name)
+            if _surface is not None and hasattr(_surface, "save"):
+                try:
+                    success = bool(_surface.save()) and success
+                except Exception:
+                    success = False
 
         # If neither crystal surface exists, do not advance the durable cursor.
         return bool(saved_any and success)
@@ -947,6 +976,129 @@ class HistoricalExperienceEnvironment:
         self.systems["_historical_communication_apprenticeship"] = dict(compact)
         return compact
 
+    # ------------------------------------------------------------------
+    # Resolution ledger: representations as (subject, resolution)
+    # ------------------------------------------------------------------
+
+    def _resolution_ledger(self):
+        """The shared resolution ledger (live turns use the very same one)."""
+        try:
+            from aurora_internal.aurora_live_experience import ensure_runtime
+            return ensure_runtime(self.systems, state_dir=str(self.state_dir))[0]
+        except Exception:
+            return None
+
+    def _representation_exchange(self):
+        """The shared, subject-agnostic use-and-consequence exchange."""
+        try:
+            from aurora_internal.aurora_live_experience import ensure_runtime
+            return ensure_runtime(self.systems, state_dir=str(self.state_dir))[1]
+        except Exception:
+            return None
+
+    @staticmethod
+    def _role_subject(label: str) -> str:
+        try:
+            from aurora_internal.aurora_resolution_ledger import role_subject
+            return role_subject(label)
+        except Exception:
+            return label
+
+    @staticmethod
+    def _event_tokens(event: Mapping[str, Any]):
+        try:
+            from aurora_internal.aurora_live_experience import tokens_of
+            return tokens_of(str(event.get("text", "") or ""))
+        except Exception:
+            return []
+
+    def _resolution_event_kwargs(self, event: Mapping[str, Any], index: int) -> Dict[str, Any]:
+        episode_id = str(event.get("episode_id", "") or "")
+        episode = self._episodes.get(episode_id, {})
+        return {
+            "event_index": int(index),
+            "event_id": str(event.get("event_id", "") or ""),
+            "episode_id": episode_id,
+            "actor": self._role_subject(self._actor_label(str(event.get("actor", "") or ""))),
+            "text_length": len(str(event.get("text", "") or "")),
+            "elapsed_seconds": _safe_float(event.get("delta_seconds_from_previous_turn")),
+            "episode_gap_seconds": _safe_float(episode.get("previous_episode_gap_seconds")),
+            "tokens": self._event_tokens(event),
+        }
+
+    def _observe_resolution_ledger(self, event: Mapping[str, Any]) -> Dict[str, Any]:
+        """Offer one witnessed event's raw, label-free facts to the ledger.
+
+        Best-effort and silent on failure: the ledger must never disturb the
+        witness path.  Only chronology and size travel here, never meaning.
+        """
+        ledger = self._resolution_ledger()
+        if ledger is None:
+            return {}
+        try:
+            index = int(self._state.get("event_index", 0) or 0)
+            result = dict(ledger.observe_event(
+                warp_field=self.systems.get("warp_field"),
+                **self._resolution_event_kwargs(event, index),
+            ) or {})
+            exchange = self._representation_exchange()
+            if exchange is not None:
+                if index % 100 == 0:
+                    exchange.attach_systems(self.systems)
+                exchange.after_event(index, tokens=self._event_tokens(event))
+            return result
+        except Exception:
+            return {}
+
+    def _backfill_resolution_ledger(self) -> None:
+        """Offer the already-witnessed prefix to the ledger, once, idempotently.
+
+        The ledger's own event-index cursor makes repeat attempts harmless; it
+        never replays events it has already observed.
+        """
+        ledger = self._resolution_ledger()
+        if ledger is None or not hasattr(ledger, "next_event_index"):
+            return
+        durable_index = int(self._state.get("event_index", 0) or 0)
+        start = int(ledger.next_event_index() or 0)
+        if durable_index <= start:
+            return
+        try:
+            with self._open_events() as fh:
+                for index, line in enumerate(fh):
+                    if index >= durable_index:
+                        break
+                    if index < start or not line.strip():
+                        continue
+                    try:
+                        event = dict(json.loads(line) or {})
+                    except Exception:
+                        continue
+                    ledger.observe_event(
+                        warp_field=self.systems.get("warp_field"),
+                        **self._resolution_event_kwargs(event, index),
+                    )
+                    exchange = self._representation_exchange()
+                    if exchange is not None:
+                        exchange.after_event(index, tokens=self._event_tokens(event))
+            saved = bool(ledger.save()) if hasattr(ledger, "save") else False
+            exchange = self.systems.get("representation_exchange")
+            if exchange is not None and hasattr(exchange, "save"):
+                saved = bool(exchange.save()) and saved
+        except Exception as exc:
+            self._state["resolution_ledger_backfill"] = {
+                "status": "error",
+                "error": f"{type(exc).__name__}: {exc}"[:240],
+            }
+            return
+        self._state["resolution_ledger_backfill"] = {
+            "status": "completed" if saved else "checkpoint_pending",
+            "backfilled_through_event_index": int(ledger.next_event_index() or 0),
+            "completed_at": time.time(),
+        }
+        self._state["updated_at"] = time.time()
+        self._persist_state()
+
     def _witness(self, event: Mapping[str, Any]) -> Dict[str, Any]:
         gateway, stream_type, existence_mode = self._gateway_parts()
         if gateway is None:
@@ -974,13 +1126,19 @@ class HistoricalExperienceEnvironment:
             "provenance": str(event.get("provenance", "chatgpt_export_active_branch") or "chatgpt_export_active_branch"),
         }
 
-        response = gateway.receive(
-            content=self._observation_text(event),
-            stream_type=stream_type.SENSOR_DATA,
-            source=f"historical_experience:{actor}",
-            metadata=metadata,
-            mode=existence_mode.BOUNDED,
-        )
+        # The input's waveform distribution must exist BEFORE it is synthesized into crystals.
+        self._observe_resolution_ledger(event)
+        self.systems["_historical_witnessing"] = True
+        try:
+            response = gateway.receive(
+                content=self._observation_text(event),
+                stream_type=stream_type.SENSOR_DATA,
+                source=f"historical_experience:{actor}",
+                metadata=metadata,
+                mode=existence_mode.BOUNDED,
+            )
+        finally:
+            self.systems["_historical_witnessing"] = False
 
         # Expose only current environmental context, not a parallel semantic
         # interpretation.  Existing Aurora organs may inspect it if relevant.
@@ -996,6 +1154,7 @@ class HistoricalExperienceEnvironment:
             "total_events": int(self._manifest.get("event_count", 0) or 0),
         }
         communication_apprenticeship = self._observe_communication_possibility(event)
+        self._observe_resolution_ledger(event)
         self.systems["_historical_experience_context"]["communication_apprenticeship"] = dict(
             communication_apprenticeship or {}
         )

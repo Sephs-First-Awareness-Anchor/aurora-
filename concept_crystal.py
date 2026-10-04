@@ -443,6 +443,10 @@ class ConceptCrystalRegistry:
         self._nodes:     Dict[str, Any]               = {}  # DPS Crystal or ConceptCrystalNode
         self._ax_index:  Dict[tuple, str]             = {}
         self._promo_log: List[Dict[str, Any]]         = []
+        # One crystal store: when bound, _nodes IS the dimensional system's crystal dict.
+        self._bound:          bool                    = False
+        self._indexed_count:  int                     = 0
+        self._concept_index:  Optional[Dict[str, str]] = None
 
     # ── Axis bucket helpers ───────────────────────────────────────────────
 
@@ -452,6 +456,8 @@ class ConceptCrystalRegistry:
         return tuple(round(ax.get(k, 0.5) / r) * r for k in ("X", "T", "N", "B", "A"))
 
     def _nearest(self, target_or_ax: Any) -> Optional[str]:
+        if self._bound:
+            self._sync_index()
         # Accept either a pre-computed bucket tuple or an ax dict
         if isinstance(target_or_ax, dict):
             target = self._to_bucket(target_or_ax)
@@ -465,6 +471,48 @@ class ConceptCrystalRegistry:
                 best_d  = d
                 best_id = nid
         return best_id if best_d <= self.PROXIMITY_RADIUS else None
+
+    def bind(self, store: Dict[str, Any], concept_index: Optional[Dict[str, str]] = None) -> Dict[str, int]:
+        """One crystal store.  All crystals are the same crystals.
+
+        Re-points this registry at ``store`` (the dimensional system's crystal dict, the one
+        composition reads), merging any crystals it already held, so a coordinate has ONE
+        crystal that hosts every kind of facet.  Idempotent.  After binding the registry no
+        longer culls (the store's owner governs capacity) and no longer writes its own file
+        (the dimensional system persists every crystal).
+        """
+        if self._bound and self._nodes is store:
+            return {"merged": 0, "store": len(store)}
+        merged = 0
+        for cid, crystal in list(self._nodes.items()):
+            if cid not in store:
+                store[cid] = crystal
+                merged += 1
+            if concept_index is not None and getattr(crystal, "concept", None):
+                concept_index.setdefault(crystal.concept, cid)
+        self._nodes = store
+        self._concept_index = concept_index
+        self._bound = True
+        self._ax_index = {}
+        self._indexed_count = -1
+        self._sync_index()
+        return {"merged": merged, "store": len(store)}
+
+    def _sync_index(self) -> None:
+        """Keep the axis index current with a store other code adds crystals to."""
+        if len(self._nodes) == self._indexed_count:
+            return
+        for bkt, cid in list(self._ax_index.items()):
+            if cid not in self._nodes:
+                del self._ax_index[bkt]
+        indexed = set(self._ax_index.values())
+        for cid, crystal in self._nodes.items():
+            if cid in indexed:
+                continue
+            sig = getattr(crystal, "constraint_signature", None)
+            if sig:
+                self._ax_index.setdefault(self._to_bucket(sig), cid)
+        self._indexed_count = len(self._nodes)
 
     def _get_or_create(self, ax: Dict[str, float]) -> Any:
         nid = self._nearest(ax)
@@ -484,6 +532,8 @@ class ConceptCrystalRegistry:
             nid = crystal.crystal_id
             self._nodes[nid]    = crystal
             self._ax_index[bkt] = nid
+            if self._concept_index is not None:
+                self._concept_index.setdefault(crystal.concept, nid)
             return crystal
         else:
             # Fallback: legacy ConceptCrystalNode
@@ -509,6 +559,8 @@ class ConceptCrystalRegistry:
             return node
 
     def _cull(self) -> None:
+        if self._bound:
+            return   # one store: its owner governs capacity; the registry must never delete its crystals
         if _DPS_AVAILABLE:
             # Cull by usage_count (least used first)
             items = sorted(self._nodes.values(), key=lambda c: getattr(c, 'usage_count', 0))
@@ -763,6 +815,17 @@ class ConceptCrystalRegistry:
             return crystal if crystal.stage in ("composite", "higher_order", "quasi") else None
         return None
 
+    def crystal_at(self, ax: Dict[str, float]) -> Any:
+        """The crystal at this coordinate, created if there is none (no observation recorded)."""
+        return self._get_or_create(ax)
+
+    def crystal_by_id(self, crystal_id: str) -> Any:
+        return self._nodes.get(str(crystal_id or ""))
+
+    def all_crystals(self) -> List[Any]:
+        """Every crystal in the (one) store."""
+        return list(self._nodes.values())
+
     def promoted_nodes(self) -> List[Any]:
         """Return all crystals that have advanced beyond BASE."""
         if _DPS_AVAILABLE:
@@ -809,6 +872,8 @@ class ConceptCrystalRegistry:
     # ── Persistence ───────────────────────────────────────────────────────
 
     def save(self, state_dir: str) -> None:
+        if self._bound:
+            return   # one store: the dimensional system persists every crystal (save_crystals)
         path = os.path.join(state_dir, "concept_crystals.json.gz")
         try:
             data: Dict[str, Any] = {
@@ -932,3 +997,47 @@ class ConceptCrystalRegistry:
         the caller tracks the cursor; the log itself is kept for persistence.
         """
         return [p for p in self._promo_log if p.get("ts", 0.0) > since_ts]
+
+
+def unify_crystal_store(systems: Dict[str, Any]) -> Dict[str, int]:
+    """Bind the concept registry to the dimensional system's crystals (idempotent).
+
+    All crystals are the same crystals: the registry and the dimensional system share ONE
+    store, so what composition reads is what the registry observes.
+    """
+    registry = systems.get("_concept_crystal_registry") if isinstance(systems, dict) else None
+    dps = getattr(systems.get("dimensional"), "dps", None) if isinstance(systems, dict) else None
+    store = getattr(dps, "crystals", None)
+    if registry is None or not isinstance(store, dict) or getattr(registry, "_bound", False):
+        return {}
+    report = registry.bind(store, getattr(dps, "concept_index", None))
+    report["flat_repaired"] = repair_flat_signatures(store)
+    return report
+
+
+def repair_flat_signatures(store: Dict[str, Any]) -> int:
+    """A signature that is only the mode default carries no waveform information.
+
+    BOUNDED stamps (v, v, v, v, 0) with v = 0.7 on every crystal it forms, so thousands of crystals
+    share one coordinate and none can resonate with anything in particular.  Such a signature is
+    cleared (the original is kept as a ``meta:flat_signature`` facet) so the next real observation
+    stamps the input's own waveform distribution.  Idempotent.
+    """
+    fixed = 0
+    for crystal in list(store.values()):
+        sig = getattr(crystal, "constraint_signature", None)
+        if not isinstance(sig, dict) or not sig:
+            continue
+        try:
+            v = [float(sig.get(k, 0.0) or 0.0) for k in ("X", "T", "N", "B", "A")]
+        except Exception:
+            continue
+        if abs(v[4]) < 1e-9 and max(v[:4]) - min(v[:4]) < 1e-6 and abs(v[0] - 0.7) < 0.011:
+            if _DPS_AVAILABLE and hasattr(crystal, "facets"):
+                fid = f"{crystal.crystal_id}_meta_flat"
+                if fid not in crystal.facets:
+                    crystal.facets[fid] = _DPSCrystalFacet(
+                        facet_id=fid, role="meta:flat_signature", content=json.dumps(sig, sort_keys=True), confidence=0.1)
+            crystal.constraint_signature = None
+            fixed += 1
+    return fixed

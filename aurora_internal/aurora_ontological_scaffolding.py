@@ -117,6 +117,34 @@ class RelationType(Enum):
 
 
 # Relation weights — how much each type contributes to ontological depth
+class DiscoveredRelationKind:
+    """A relation kind Aurora discovered, first-class beside the seed ``RelationType``.
+
+    The seed enum is a starting vocabulary, not a ceiling.  A kind carries an axis
+    profile and lineage (its component id), never a gloss.  It duck-types the enum
+    wherever the web reads ``.value`` or uses a type as a key.
+    """
+
+    __slots__ = ("value", "axis_profile")
+
+    def __init__(self, value: str, axis_profile: Optional[Dict[str, float]] = None) -> None:
+        self.value = str(value)
+        self.axis_profile = dict(axis_profile or {})
+
+    @property
+    def name(self) -> str:
+        return self.value.upper()
+
+    def __hash__(self) -> int:
+        return hash(("discovered_relation_kind", self.value))
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, DiscoveredRelationKind) and other.value == self.value
+
+    def __repr__(self) -> str:
+        return f"DiscoveredRelationKind({self.value!r})"
+
+
 RELATION_DEPTH_WEIGHTS = {
     RelationType.IS_A: 0.9,         # Taxonomy is foundational
     RelationType.HAS_A: 0.7,        # Compositional understanding
@@ -800,6 +828,7 @@ class OntologicalWeb(WarpCapable):
         # what parentage) comes from WarpGenerator via the base class, not
         # authored here.
         self._relation_trial_usage: Dict[str, Dict[str, int]] = {}
+        self._open_kinds: Dict[str, "DiscoveredRelationKind"] = {}
         # FIX-A013: signature -> type_value -> {"uses","failures"}. Aggregates
         # across every entity pair that has ever shared a given structural
         # signature, so a recurring selection mistake shows up as a pattern
@@ -852,6 +881,7 @@ class OntologicalWeb(WarpCapable):
         that connection is the next step, not this one.
         """
         self._relation_trial_usage[component.component_id] = {"uses": 0, "successes": 0}
+        self._open_kinds[component.component_id] = DiscoveredRelationKind(component.component_id, component.axis_profile)
 
     def _score_trial(self, component: "WarpComponent") -> float:
         """Mirrors AuroraRecursiveCausalReasoningWaveform._score_trial's own
@@ -868,6 +898,7 @@ class OntologicalWeb(WarpCapable):
 
     def _dissolve_warp(self, component_id: str) -> None:
         self._relation_trial_usage.pop(str(component_id), None)
+        self._open_kinds.pop(str(component_id), None)
 
     def _warp_params(self, gap: "CoverageGap", parent_ids: List[str]) -> Dict[str, Any]:
         return {
@@ -924,6 +955,20 @@ class OntologicalWeb(WarpCapable):
     # function to the generic RELATED_TO/"co-occurrence" label. This is
     # read-only lookup metadata, not a rule to encode a classifier from.
     _NC1_COVERED_ROLE_PAIRS = (frozenset({"verb", "noun"}), frozenset({"adjective", "noun"}))
+
+    def record_relation_trial_use(self, component_id: str) -> None:
+        """A trial/promoted kind was selected.  (Nothing used to increment this, which left
+        every trial at its neutral floor forever.)"""
+        usage = self._relation_trial_usage.setdefault(str(component_id), {"uses": 0, "successes": 0})
+        usage["uses"] = int(usage.get("uses", 0) or 0) + 1
+
+    def record_relation_trial_outcome(self, component_id: str, success: bool) -> None:
+        """Consequence for a discovered kind, from any source that can judge it."""
+        usage = self._relation_trial_usage.setdefault(str(component_id), {"uses": 0, "successes": 0})
+        if success:
+            usage["successes"] = int(usage.get("successes", 0) or 0) + 1
+        else:
+            usage["failures"] = int(usage.get("failures", 0) or 0) + 1
 
     def underworked_relation_type_pairs(self, limit: int = 10) -> List[Dict[str, str]]:
         """Read-only enumeration of RELATED_TO relations whose role-pair
@@ -1002,6 +1047,7 @@ class OntologicalWeb(WarpCapable):
             _old_contribution = rel.depth_contribution()
             rel.strength = _clamp(rel.strength + strength * 0.2)
             rel.confidence = _clamp(max(rel.confidence, confidence))
+            self._note_trial_reinforcement(rel)
             _delta = rel.depth_contribution() - _old_contribution
             if source in self.nodes:
                 self.nodes[source].adjust_relation_contribution(_delta)
@@ -1284,7 +1330,42 @@ class OntologicalWeb(WarpCapable):
                         )
                         bucket["uses"] = int(bucket.get("uses", 0) or 0) + 1
                     return rtype, signature
+            # A promoted discovered kind can win selection too: the seed enum is not a ceiling.
+            promoted = self._warp_promoted.get(picked_value)
+            if promoted is not None:
+                kind = self._open_kinds.setdefault(
+                    picked_value, DiscoveredRelationKind(picked_value, getattr(promoted, "axis_profile", {}))
+                )
+                self.record_relation_trial_use(picked_value)
+                if commit:
+                    bucket = self._selection_outcomes.setdefault(signature, {}).setdefault(
+                        kind.value, {"uses": 0, "failures": 0}
+                    )
+                    bucket["uses"] = int(bucket.get("uses", 0) or 0) + 1
+                return kind, signature
 
+        # A trial kind is USED where the closed vocabulary had no answer (it would have been
+        # RELATED_TO), which is how a trial earns the use and consequence it needs to be scored.
+        try:
+            d15 = checker._ensure_full_dims(signal)
+            best_id_t, best_score_t = "", 0.0
+            for trial_id, comp in self._warp_trials.items():
+                if getattr(comp, "dissolved", False):
+                    continue
+                score_t = checker.cosine(dict(comp.axis_profile), d15)
+                if score_t > best_score_t:
+                    best_id_t, best_score_t = trial_id, score_t
+            if best_id_t and best_score_t >= _RELATION_SELECTION_THRESHOLD:
+                kind = self._open_kinds.setdefault(
+                    best_id_t, DiscoveredRelationKind(best_id_t, self._warp_trials[best_id_t].axis_profile))
+                self.record_relation_trial_use(best_id_t)
+                if commit:
+                    bucket = self._selection_outcomes.setdefault(signature, {}).setdefault(
+                        kind.value, {"uses": 0, "failures": 0})
+                    bucket["uses"] = int(bucket.get("uses", 0) or 0) + 1
+                return kind, signature
+        except Exception:
+            pass
         try:
             self.check_and_extend(signal, source=source, tick=self.total_relations_created)
         except Exception:
@@ -1302,7 +1383,19 @@ class OntologicalWeb(WarpCapable):
         )
         bucket["uses"] = int(bucket.get("uses", 0) or 0) + 1
 
+    def _note_trial_reinforcement(self, relation: Any) -> None:
+        """A typed relation was independently observed again: its kind held up (consequence)."""
+        value = str(getattr(getattr(relation, "relation_type", None), "value", "") or "")
+        if value in self._relation_trial_usage:
+            self.record_relation_trial_outcome(value, True)
+
     def register_selection_failure(self, relation: "SemanticRelation") -> None:
+        try:
+            _value = str(getattr(getattr(relation, "relation_type", None), "value", "") or "")
+            if _value in self._relation_trial_usage:
+                self.record_relation_trial_outcome(_value, False)      # contradicted: a use without success
+        except Exception:
+            pass
         """FIX-A013: called when a reconciliation (FIX-A012) contradicts a
         relation. Attributes the failure back to whatever (signature, type)
         pattern selected it -- not to the specific entities involved -- so
