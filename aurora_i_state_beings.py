@@ -798,6 +798,106 @@ class IStateCollective:
 
         return responses, active_count, silent_count
 
+    def _experience_derived_axis_snapshot(
+        self, envelope: IVMEnvelope, base_snapshot: Dict[str, Dict[str, Any]],
+    ) -> Dict[str, Dict[str, Any]]:
+        """Blend real, experience-accumulated per-word axis signal into the
+        base lattice snapshot, for any axis this turn's actual words have
+        genuine history for. Falls back to base_snapshot untouched for any
+        axis without real signal, and returns base_snapshot unchanged if no
+        OETS web reference is available (self._oets_web_ref, set once at
+        boot -- see boot_aurora's relational_comparison wiring in aurora.py)
+        or the turn's text touches no known words.
+
+        Confirmed this pass: SemanticNode.associated_axes
+        (aurora_relational_comparison.py's ground_to_self) is written
+        whenever real per-turn grounding finds an axis actively engaged
+        (active_pressures[ax] > 0.6) for a word -- built up through actual
+        RelationalComparisonEngine.compare()/ground_to_self() usage, which
+        itself draws on relations built by aurora_ontological_scaffolding.
+        py's infer_relations_from_context() (co-occurrence within an
+        utterance, stronger weight for adjacency, role-pair typing via
+        _select_relation_type -- confirmed live, reached through
+        ingest_interaction on real turns). associated_axes was never read
+        anywhere in the entire codebase before this -- a write-only field.
+        This is that missing read: not a static lexicon, not mode, not
+        system load, but each word's own accumulated history of which
+        axes it has actually, demonstrably engaged, and in which direction
+        (via emotional_valence), discovered through real usage over time
+        rather than assigned up front.
+        """
+        web = getattr(self, "_oets_web_ref", None)
+        if web is None:
+            return base_snapshot
+        text = str(getattr(envelope, "data", "") or "")
+        if not text:
+            return base_snapshot
+        import re
+        words = re.findall(r"[a-zA-Z]{3,}", text.lower())
+        if not words:
+            return base_snapshot
+
+        pos_scores: Dict[str, float] = {}
+        neg_scores: Dict[str, float] = {}
+        touched_any = False
+        for w in dict.fromkeys(words):  # dedupe, preserve first-seen order
+            try:
+                node = web.get_node(w)
+            except Exception:
+                node = None
+            if node is None:
+                continue
+            axes = list(getattr(node, "associated_axes", []) or [])
+            if not axes:
+                continue
+            valence = float(getattr(node, "emotional_valence", 0.0) or 0.0)
+            magnitude = abs(valence)
+            if magnitude <= 0.0:
+                continue  # axis was tagged, but this word carries no real
+                          # directional signal -- honest silence, not a
+                          # fabricated default
+            for ax in axes:
+                touched_any = True
+                if valence >= 0:
+                    pos_scores[ax] = pos_scores.get(ax, 0.0) + magnitude
+                else:
+                    neg_scores[ax] = neg_scores.get(ax, 0.0) + magnitude
+
+        if not touched_any:
+            return base_snapshot
+
+        # Confirmed this pass (same bug class as aurora_meaning_evolution.py's
+        # earlier fix): base_snapshot's real keys are the full axis names
+        # (existence/temporal/energy/boundary/agency, from lattice.vertices.
+        # axes), but associated_axes entries may carry either convention
+        # depending on what wrote them. Normalize both sides through the
+        # same axis_token()/AXIS_ALIASES utility already reused earlier
+        # tonight, rather than assuming one convention and silently
+        # dropping the other the way the original bug did.
+        try:
+            from aurora_internal.aurora_meaning_evolution import axis_token
+        except Exception:
+            axis_token = None
+        code_to_snapshot_key: Dict[str, str] = {}
+        for key in base_snapshot.keys():
+            code = axis_token(key) if axis_token is not None else None
+            code_to_snapshot_key[code or key] = key
+
+        snapshot = {ax: dict(vals) for ax, vals in base_snapshot.items()}
+        for ax in set(pos_scores) | set(neg_scores):
+            code = axis_token(ax) if axis_token is not None else None
+            snapshot_key = code_to_snapshot_key.get(code or ax)
+            if snapshot_key is None:
+                continue
+            p = pos_scores.get(ax, 0.0)
+            n = neg_scores.get(ax, 0.0)
+            total = p + n
+            if total <= 0.0:
+                continue
+            snapshot[snapshot_key]["positive_weight"] = p / total
+            snapshot[snapshot_key]["negative_weight"] = n / total
+        return snapshot
+
     def process(self, envelope: IVMEnvelope) -> SynthesisResult:
         # Layer 2.5: freeze the primitive occurrence BEFORE commit, while the
         # lattice still holds its pre-occurrence state. commit_generation
@@ -805,6 +905,7 @@ class IStateCollective:
         # taken afterwards would already carry this occurrence's own
         # consequences into perspective formation.
         lattice_snapshot = self._snapshot_lattice_axes()
+        lattice_snapshot = self._experience_derived_axis_snapshot(envelope, lattice_snapshot)
         observations = self.observe_generation(envelope, lattice_snapshot)
         primitive_snapshot = self._freeze_primitive_occurrence(
             envelope, observations, lattice_snapshot,

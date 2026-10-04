@@ -2365,7 +2365,7 @@ class EnergyRegulatorSystem:
     # PHYSICS TICK â€" FULLY VECTORIZED
     # ====================================================================
 
-    def tick(self, dt: float = 1.0):
+    def tick(self, dt: float = 1.0, actual_dt: Optional[float] = None):
         """
         Full physics tick. Restored from original:
         1. Presence monitoring (temporal + facet-energy-variance coherence)
@@ -2373,10 +2373,21 @@ class EnergyRegulatorSystem:
         3. Batch dispersal via adjacency matrix
         4. Curiosity injection for underexplored facets
         5. Budget enforcement
+
+        `dt` is a DURATION in ticks and may be any size: every time-dependent step is geometric in
+        it, (1 - rate) ** dt, which is exactly the old per-tick step at dt = 1, never negative, and
+        composes (two half-ticks = one whole tick). The old decay, energies *= (1 - rate * dt), went
+        negative once rate * dt > 1, so a clock-sized dt (a night is 96 ticks) was unusable; the
+        dispersal ignored dt altogether.
+
+        `actual_dt` is the real elapsed time in the SAME unit as dt. The presence monitor compares the
+        two; left to wall-clock seconds, a caller that ticks in clock units reads as maximal drift.
         """
         now = time.time()
-        actual_dt = now - self._last_tick
+        if actual_dt is None:
+            actual_dt = now - self._last_tick
         self._last_tick = now
+        dt = max(0.0, float(dt))
 
         # ---- 1. PRESENCE MONITORING ----
         # Temporal stability: smooth drift detection
@@ -2415,7 +2426,8 @@ class EnergyRegulatorSystem:
         fids = list(self.facet_energy.keys())
         if fids:
             energies = np.array([self.facet_energy[fid] for fid in fids])
-            energies *= (1.0 - current_decay * dt)
+            # Geometric retention: identical to (1 - decay) at dt = 1, valid for any dt.
+            energies *= max(0.0, 1.0 - current_decay) ** dt
             energies[energies < 0.001] = 0.0
             self.facet_energy = {fid: float(e) for fid, e in zip(fids, energies)}
 
@@ -2423,8 +2435,11 @@ class EnergyRegulatorSystem:
         self._batch_dispersal(dt)
 
         # ---- 4. CURIOSITY INJECTION ----
-        if self.curiosity_enabled and random.random() < 0.1:
-            self._inject_curiosity_energy()
+        if self.curiosity_enabled:
+            _expected = 0.1 * dt                       # one injection with probability 0.1 per tick
+            _n_inject = int(_expected) + (1 if random.random() < (_expected - int(_expected)) else 0)
+            for _ in range(min(_n_inject, 64)):
+                self._inject_curiosity_energy()
 
         # ---- 5. BUDGET ENFORCEMENT ----
         if self.facet_energy:
@@ -2445,6 +2460,8 @@ class EnergyRegulatorSystem:
         self.thermal_load = max(0.0, self.thermal_load - self._thermal_decay * dt)
 
         self.tracker.record('der', 'tick', self.presence)
+
+    _MAX_DISPERSAL_HOPS = 64
 
     def _batch_dispersal(self, dt: float):
         """
@@ -2475,18 +2492,25 @@ class EnergyRegulatorSystem:
         # Energy vector
         energy_vector = np.array([self.facet_energy[fid] for fid in fids])
 
-        # Only disperse from energized facets
-        dispersal_mask = energy_vector > 0.1
-        effective_dispersal = 0.3 * self.presence
+        # One hop per elapsed tick (a whole tick is exactly the old single step; a fractional
+        # remainder moves a proportional share), capped: a long span reaches equilibrium well before.
+        dt = max(0.0, float(dt))
+        whole = int(dt)
+        weights = [1.0] * min(whole, self._MAX_DISPERSAL_HOPS) + ([dt - whole] if dt - whole > 1e-9 else [])
+        base_dispersal = min(1.0, 0.3 * self.presence)
+        for hop in weights:
+            # Only disperse from energized facets
+            dispersal_mask = energy_vector > 0.1
+            effective_dispersal = 1.0 - (1.0 - base_dispersal) ** hop
 
-        # Compute outgoing energy
-        outgoing = energy_vector * effective_dispersal * dispersal_mask
+            # Compute outgoing energy
+            outgoing = energy_vector * effective_dispersal * dispersal_mask
 
-        # Compute incoming energy via matrix multiply
-        incoming = adjacency.T @ outgoing
+            # Compute incoming energy via matrix multiply
+            incoming = adjacency.T @ outgoing
 
-        # Update simultaneously
-        energy_vector = energy_vector - outgoing + incoming
+            # Update simultaneously
+            energy_vector = energy_vector - outgoing + incoming
 
         # Write back
         self.facet_energy = {fid: max(0.0, float(e)) for fid, e in zip(fids, energy_vector)}
@@ -2961,7 +2985,9 @@ class DimensionalSystems:
         # Try loading a cached 625 map if one wasn't passed in.
         if self.pressure_map is None and PRESSURE_MAP_AVAILABLE and Aurora625PressureMap is not None:
             try:
-                _pm = Aurora625PressureMap(state_dir=state_dir)
+                # descriptors_path is a required positional argument; load() (cached-map
+                # read) never touches it, so pass the same default the builder uses.
+                _pm = Aurora625PressureMap(descriptors_path="operation_descriptors.json", state_dir=state_dir)
                 if _pm.load():
                     self.pressure_map = _pm
             except Exception as _aurora_boundary_exc:
@@ -3402,9 +3428,14 @@ class DimensionalSystems:
         signals = self._last_signals
         extracted_in_recall = False
         if not signals:
+            # A class body that binds `mode = mode` looks the right-hand `mode`
+            # up in class scope, not the enclosing function, so it raised
+            # NameError on every recall fallback. Capture the argument first.
+            _recall_text, _recall_mode = text, mode
+
             class _Env:
-                data      = text
-                mode      = mode
+                data      = _recall_text
+                mode      = _recall_mode
                 data_type = 'recall_query'
                 node_id   = f"rq_{hashlib.md5(text.encode()).hexdigest()[:8]}"
             signals = self.concept_extractor.extract(

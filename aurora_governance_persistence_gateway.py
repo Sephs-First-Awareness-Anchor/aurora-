@@ -1130,15 +1130,42 @@ class NSpaceGateway:
         # Select frame based on mode
         frame = self._mode_to_frame(mode)
 
+        # Where this input sits on each axis, from the axes of its words. Without it the
+        # lattice places every input where the vertices already are -- the same coordinate
+        # for every turn -- and the beings (which then drive those same vertices) can never
+        # respond to what was said. Every packet crosses this door: live turns and the
+        # historical replay alike.
+        _input_phases = None
+        try:
+            from aurora_internal.aurora_input_pressure import content_phase_vector
+            _input_phases = content_phase_vector(self.perception, content)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_governance_persistence_gateway.py:input_pressure",
+                exc=_aurora_boundary_exc,
+                context={"function": "_synthesize", "source_file": "aurora_governance_persistence_gateway.py"},
+            )
+
         # L4: Consciousness assembly (routes through L1→L2→L3 internally)
         if self.consciousness:
             try:
+                _process_kw = {}
+                if _input_phases is not None:
+                    try:
+                        import inspect as _inspect
+                        if "phases" in _inspect.signature(self.consciousness.process).parameters:
+                            _process_kw["phases"] = _input_phases
+                    except (TypeError, ValueError):
+                        pass
                 assembly = self.consciousness.process(
                     payload=content,
                     payload_type=packet.stream_type.value,
                     evidence=evidence,
                     frame_name=frame,
                     thought_intent=thought_intent,
+                    **_process_kw,
                 )
                 result.assembly = assembly
             except Exception as _aurora_boundary_exc:

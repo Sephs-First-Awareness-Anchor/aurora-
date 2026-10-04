@@ -138,6 +138,16 @@ def _log_claim_resolution_relief(genealogy, **kwargs):
         return None
 
 
+def _axis_weights_carry_signal(weights) -> bool:
+    """`axis_weights or fallback` treated an all-zero dict as a real answer (a non-empty
+    dict is truthy), so the comprehension path handed the composer a zero assembly and
+    the perception's own axis activation was never used."""
+    try:
+        return bool(weights) and any(float(v or 0.0) > 0.0 for v in dict(weights).values())
+    except (TypeError, ValueError):
+        return False
+
+
 class WorkingMemory:
     """
     Per-session short-term memory that tracks what's being talked about,
@@ -3396,7 +3406,10 @@ class WorkingMemory:
                 grounded_assembly = AssemblyResult(
                     synthesis=SimpleNamespace(active_count=10),
                     frame_applied='comprehension_intent',
-                    adjusted_axes=axis_weights or dict(getattr(perception, '_axis_activation', {}) or {}),
+                    adjusted_axes=(
+                        axis_weights if _axis_weights_carry_signal(axis_weights)
+                        else dict(getattr(perception, '_axis_activation', {}) or {})
+                    ),
                     coherence=max(0.42, min(0.95, float(resolved.confidence or certainty or 0.7))),
                     entropy_state={},
                     ds_stats={},
@@ -5058,27 +5071,42 @@ class WorkingMemory:
 
         return out[:3]
 
-    def note_claims(self, text: str, source: str = 'user', understood: dict | None = None) -> List[Dict[str, Any]]:
+    def note_claims(self, text: str, source: str = 'user', understood: dict | None = None,
+                     *, aurora_src: str = '') -> List[Dict[str, Any]]:
         self._ensure_runtime_deques()
         raw_low = str(text or '').strip().lower()
-        if source == 'aurora' and raw_low.startswith((
-            'because if ',
-            'because ',
-            'it works by ',
-            "i don't have ",
-            'i do not have ',
-            "follow; ",
-            "track; that; ",
-            "understand; that; ",
-            "thread; hold; ",
-            "ground; claim; ",
-            'i hear you ',
-            'fair ',
-            'conflict; competing claims',
-            'coexist; claims',
-            'conflict; resolved',
-        )):
-            return []
+        if source == 'aurora':
+            # A hedge, boundary, or acknowledgement form makes no assertion about
+            # its own content -- it names what Aurora does or doesn't have, not a
+            # fact she is claiming. Recording it as a claim let a LATER turn's
+            # recursive_backprojection pull that reply's own wording back in to
+            # fill an empty subject/object slot (confirmed live: "My best read on
+            # that is it's about photosynthesis" became the claim {subject: "my
+            # best read on that", object: "...photosynthesis is"}, then leaked
+            # into the NEXT turn's parse). Prefix-matching each new template as it
+            # was written kept missing the next one it hadn't seen yet; classify
+            # by form instead (aurora._reply_form), which already exists for
+            # exactly this "is this an assertion" question.
+            try:
+                import aurora as _A
+                if _A._reply_form(aurora_src, text) != "assertion":
+                    return []
+            except Exception:
+                pass
+            if raw_low.startswith((
+                'because if ',
+                'because ',
+                'it works by ',
+                "follow; ",
+                "track; that; ",
+                "understand; that; ",
+                "thread; hold; ",
+                "ground; claim; ",
+                'conflict; competing claims',
+                'coexist; claims',
+                'conflict; resolved',
+            )):
+                return []
 
         claims = self._extract_claims(text, source=source, understood=understood)
         if not claims:
@@ -5664,7 +5692,8 @@ class WorkingMemory:
         candidates.sort(key=lambda rec: rec.get('score', 0.0), reverse=True)
         return candidates
 
-    def resolve_referents(self, user_text: str, understood: dict | None = None) -> Dict[str, Any]:
+    def resolve_referents(self, user_text: str, understood: dict | None = None,
+                           *, record: bool = True) -> Dict[str, Any]:
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
@@ -5690,7 +5719,8 @@ class WorkingMemory:
             'source': '',
         }
         if not refs:
-            self.last_referent_resolution = result
+            if record:
+                self.last_referent_resolution = result
             return result
 
         is_callback_request = (
@@ -5764,7 +5794,8 @@ class WorkingMemory:
 
         if search_parts:
             result['search_query'] = " ".join(search_parts)
-        self.last_referent_resolution = result
+        if record:
+            self.last_referent_resolution = result
         return result
 
     def surface_context(self, topic: str) -> bool:
@@ -5987,7 +6018,8 @@ class WorkingMemory:
             return facts.get(prop)
         return facts
 
-    def update_from_turn(self, understood: dict, user_text: str, aurora_text: str = ""):
+    def update_from_turn(self, understood: dict, user_text: str, aurora_text: str = "",
+                          aurora_src: str = ""):
         self._ensure_runtime_deques()
         self.turn_count += 1
         self.decay_active_contexts()
@@ -6081,7 +6113,7 @@ class WorkingMemory:
                 self._skip_next_aurora_claim_ingest or skip_aurora_claim_ingest
             )
             if not skip_aurora_claim_ingest:
-                self.note_claims(_aurora_text_clean, source='aurora')
+                self.note_claims(_aurora_text_clean, source='aurora', aurora_src=aurora_src)
                 self._register_response_mentions(_aurora_text_clean)
         self.refresh_claim_conflicts(preferred_claim=anchor_claim)
         if prior_control_response:

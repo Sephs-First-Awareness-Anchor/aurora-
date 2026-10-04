@@ -6080,6 +6080,21 @@ def _save_state(systems: Dict[str, Any]) -> None:
                     context={"function": "_save_state", "handler_line": 4608, "source_file": "aurora_daemon.py"},
                 )
                 pass
+        # Genealogy: the surface process's logger keeps its own session state (what its per-axis
+        # curves have learned, so pressure_orientation() does not restart flat each boot). The
+        # canonical genealogy is persisted by the subsurface runtime (flush_files), not here.
+        _genealogy_s = systems.get("genealogy")
+        if _genealogy_s is not None and getattr(_genealogy_s, "persist_scope", "") == "session_state":
+            try:
+                _genealogy_s.persist_session_state()
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora_daemon.py:_save_state:genealogy_session",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_save_state", "source_file": "aurora_daemon.py"},
+                )
         _log("  [SAVE] State saved.")
     except Exception as e:
         _aurora_record_exception_from_locals(

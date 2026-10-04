@@ -302,6 +302,104 @@ def _extract_rich_audio_features(
 # SECTION 1: PERCEPTION PIPELINE - PATTERN DETECTION
 # ============================================================================
 
+_AXIS_ALIASES = {
+    "x": "X", "existence": "X",
+    "t": "T", "temporal": "T", "time": "T",
+    "n": "N", "energy": "N",
+    "b": "B", "boundary": "B",
+    "a": "A", "agency": "A",
+}
+_AXES = ("X", "T", "N", "B", "A")
+
+
+def assembly_axis_activation(adjusted_axes) -> Optional[Dict[str, float]]:
+    """{X,T,N,B,A} activation from an assembly's adjusted axes, whichever names it uses.
+
+    The DCE names its axes existence/temporal/energy/boundary/agency; compose() looked
+    them up as "X"/"T"/"N"/"B"/"A", never matched, and fell back to 0.5 on every axis
+    on every turn -- the assembly's response to what was said never reached structure
+    selection. An axis the assembly does not carry takes the mean of those it does
+    (neutral, not a guess). None when it carries none.
+    """
+    if not isinstance(adjusted_axes, dict) or not adjusted_axes:
+        return None
+    found: Dict[str, float] = {}
+    for name, value in adjusted_axes.items():
+        ax = _AXIS_ALIASES.get(str(name).lower())
+        if ax is None:
+            continue
+        try:
+            found[ax] = float(value)
+        except (TypeError, ValueError):
+            continue
+    if not found:
+        return None
+    mean = sum(found.values()) / len(found)
+    return {ax: found.get(ax, mean) for ax in _AXES}
+
+
+def axis_corrections(activation: Dict[str, float]) -> Dict[str, float]:
+    """Each axis's pressure relative to the mean pressure -- the selector's own unit.
+
+    MotifLineage.best_for_pressure multiplies a motif's per-axis score by
+    clamp(correction, 0.5, 2.0), documented as "correction > 1.0 = consolidating". The
+    composer passed raw activations (the DCE's live in 0..~0.25), which that clamp
+    floors to 0.5 on every axis, so even correct names would have changed nothing.
+    Relative pressure is scale-free; 1.0 is neutral (no signal, or all axes equal).
+    """
+    vals = {ax: max(0.0, float(v)) for ax, v in activation.items()}
+    mean = (sum(vals.values()) / len(vals)) if vals else 0.0
+    if mean <= 1e-9:
+        return {ax: 1.0 for ax in activation}
+    return {ax: v / mean for ax, v in vals.items()}
+
+
+from aurora_internal.aurora_sender_state import fill_inactive_axes  # noqa: E402,F401  (one implementation)
+
+
+def split_absorb_sentences(text: str) -> list:
+    """The sentences (>= 3 words each) of a heard text.
+
+    GrammarEngine.observe_exchange tags the WHOLE text into one collapsed role
+    sequence. For a multi-sentence message that is one long, near-unique pattern
+    (median 43 roles, 99% unique on 400 real messages) that can never recur or gather
+    contexts, while compose()/best_for_pressure only use clause-shaped motifs
+    (median 5 roles, 47% unique per sentence, 71 shapes seen >= 5 times). Structure
+    is therefore observed per sentence.
+    """
+    parts = [p.strip() for p in re.split(r"(?<=[.!?])\s+|\n+", str(text or ""))]
+    return [p for p in parts if len(p.split()) >= 3]
+
+
+_BRIDGE_CHANNEL_ROLES = ("verb", "noun", "adjective", "adverb")
+
+
+def assign_bridged_channels(lexicon: Any, bridged: list, i_state: str) -> Dict[str, str]:
+    """Give OETS-bridged words a concept channel (role + I-state fallback).
+
+    _build_expression bridges topical words from the OETS neighbourhood into the
+    lexicon "so they can be chosen", but added them with no channel, so the selector's
+    channel branch (find_by_noncomp) could never see them: 83 of the 101 words gained
+    by living 300 historical events were channel-less. Same content-role bar as
+    ingest_interaction's own door; empty text means no geometry, so assign_batch takes
+    its role + I-state fallback.
+    """
+    items = [(w, r, v) for (w, r, v) in (bridged or []) if r in _BRIDGE_CHANNEL_ROLES]
+    if not items:
+        return {}
+    try:
+        from aurora_concept_derivation import assign_batch
+        return assign_batch(items, "", lexicon, oets=None, i_state=str(i_state or "i_is"))
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_expression_perception.py:assign_bridged_channels",
+            exc=_aurora_boundary_exc,
+            context={"function": "assign_bridged_channels", "source_file": "aurora_expression_perception.py"},
+        )
+        return {}
+
+
 class LexicalMemory:
     """Aurora's vocabulary. Grows through interaction, not pre-loading."""
 
@@ -2108,8 +2206,9 @@ class SentenceComposer:
         try:
             engine = getattr(self, "grammar_engine", None)
             if engine is not None and hasattr(engine, "observe_exchange"):
-                engine.observe_exchange("", text, success=True,
-                                        clarity=0.6, tone=tone)
+                for _sent in (split_absorb_sentences(text) or [text]):
+                    engine.observe_exchange("", _sent, success=True,
+                                            clarity=0.6, tone=tone)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -2642,8 +2741,12 @@ class SentenceComposer:
         # Live constraint orientation from the assembly's adjusted axes
         orientation = {}
         try:
-            for ax in ("X", "T", "N", "B", "A"):
-                orientation[ax] = float((assembly.adjusted_axes or {}).get(ax, 0.5))
+            orientation = assembly_axis_activation(getattr(assembly, "adjusted_axes", None)) or {
+                ax: 0.5 for ax in _AXES}
+            # Axes the observed node's mode leaves inactive carry nothing about HER: take them
+            # from her own axis state (see fill_inactive_axes).
+            orientation = fill_inactive_axes(
+                orientation, assembly_axis_activation(getattr(self, "_axis_activation", None)))
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -2658,6 +2761,11 @@ class SentenceComposer:
         if self._register_bias != 0.0:
             orientation["N"] = max(0.0, min(1.0, orientation["N"] + (0.15 * self._register_bias)))
         outlet = max(0.0, min(1.0, sum(orientation.values()) / max(1, len(orientation))))
+        # What the selector is handed is each axis's RELATIVE pressure (see axis_corrections).
+        _axis_corr = axis_corrections(orientation)
+        # Remembered so the outcome can be credited against the state this was composed in
+        # (see feedback(): a motif's per-axis score is "orientation at time of successful use").
+        self._last_axis_corrections = dict(_axis_corr)
 
         # Valence target derived from tone semantics (a scalar, not a script)
         _tone_valence = {
@@ -2702,7 +2810,7 @@ class SentenceComposer:
                     # Perturb orientation slightly per sentence so consecutive
                     # sentences draw different structures under similar pressure
                     _orient = {ax: v * (1.0 + 0.08 * ((s_i + hash(ax)) % 3 - 1))
-                               for ax, v in orientation.items()}
+                               for ax, v in _axis_corr.items()}
                     # PF1.3: when a PropositionFrame is present (PF1.2's
                     # transport), route motif selection through it instead
                     # of pressure-only scoring -- frame-absent turns keep
@@ -3220,6 +3328,10 @@ class SentenceComposer:
     # (meaning="oets:<keyword>", requires a pre-existing real OETS node to
     # trigger) are untouched by this cap.
     _UNVERIFIED_VOCAB_USAGE_FLOOR = 3
+    # Upper bound on how many relevance-anchored words may WIDEN a slot's candidate
+    # pool beyond the axis-gated sources (see _select_constraint_word). Bounds ranking
+    # cost only; relevance, not this number, decides what is chosen.
+    _RELEVANCE_WIDEN_MAX = 12
 
     _ABSTAIN_TEMPLATES = (
         "I'm not sure.",
@@ -3869,6 +3981,46 @@ class SentenceComposer:
                     )
                     pass
 
+        # Relevance-anchored widening. The pool above is gated by the dominant axis
+        # (DPS-crystal resonance, then channel matches) and relevance only RANKED it,
+        # so a topical word that was not already in an axis-resonant crystal or
+        # channel -- including every word _build_expression bridges in from the OETS
+        # neighbourhood "so it can be chosen" -- could never compete, and generic
+        # axis words ("truth", "happy") won every slot. Her own anchor set (input
+        # words + recent context + their one-hop OETS neighbours) now also admits
+        # words it scores above the distant floor, still POS-gated for the slot.
+        # Ranking and the relevance floor below are unchanged: an irrelevant pool
+        # still abstains.
+        _anchor_early = None
+        try:
+            _anchor_early = aurora_constraint_emission.build_relevance_anchor_set(
+                input_text, list(getattr(self, "_context_keywords", []) or []),
+                self._oets.web if self._has_oets else None,
+            )
+            _in_pool = {e.word.lower() for e in candidates}
+            _widened = 0
+            for _aw, _arel in sorted(_anchor_early.items(), key=lambda kv: -kv[1]):
+                if _widened >= self._RELEVANCE_WIDEN_MAX:
+                    break
+                if _arel <= aurora_constraint_emission.RELEVANCE_DISTANT_FLOOR:
+                    continue
+                if _aw in seen or _aw in _in_pool:
+                    continue
+                _ae = self.lexicon.entries.get(_aw)
+                if _ae is not None and self._pos_ok(_ae, role):
+                    candidates.append(_ae)
+                    _candidate_source.setdefault(_aw, "relevance_anchor")
+                    _in_pool.add(_aw)
+                    _widened += 1
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_expression_perception.py:relevance_widen",
+                exc=_aurora_boundary_exc,
+                context={"function": "_select_constraint_word", "source_file": "aurora_expression_perception.py"},
+            )
+
         if not candidates:
             # R1.9.4 Step 3b: last resort now searches every lexicon role
             # in the slot's full allowed category (e.g. connector also
@@ -3925,9 +4077,11 @@ class SentenceComposer:
         # pre-turn context, fed by set_context() on ingest, independent of
         # anything chosen so far in this response) stays unioned -- that IS
         # legitimate cross-turn relevance, not self-reference.
-        anchor_set = aurora_constraint_emission.build_relevance_anchor_set(
-            input_text, list(getattr(self, "_context_keywords", []) or []),
-            self._oets.web if self._has_oets else None,
+        anchor_set = _anchor_early if _anchor_early is not None else (
+            aurora_constraint_emission.build_relevance_anchor_set(
+                input_text, list(getattr(self, "_context_keywords", []) or []),
+                self._oets.web if self._has_oets else None,
+            )
         )
 
         # Relevance-primary score descending, then ascending usage_count as
@@ -4034,10 +4188,15 @@ class SentenceComposer:
                     self._log_motif_grounding(m.pattern_id, sent, grammatical, fitness, combined, success)
                     self._check_goodhart_divergence(m.pattern_id, grammatical, fitness)
                     if success:
+                        # The orientation this sentence was actually composed under. It was a
+                        # hard-coded {ax: 1.0} for every success, so no motif could ever acquire
+                        # axis character from the state it succeeded in (every learned score sat
+                        # at ~0.55 on every axis).
                         lineage.record_success(
                             m.role_sequence, ctx,
                             len(self._last_words_used),
-                            {ax: 1.0 for ax in ("X", "T", "N", "B", "A")},
+                            dict(getattr(self, "_last_axis_corrections", None)
+                                 or {ax: 1.0 for ax in ("X", "T", "N", "B", "A")}),
                         )
                     else:
                         lineage.record_fail(m.role_sequence)
@@ -5235,6 +5394,12 @@ class ExpressionPerceptionEngine(WarpCapable):
         self._dominant_axis: str = str(dominant_axis or "")
         self._dominant_emotion: str = str(dominant_emotion or "neutral")
         self._axis_depth: int = int(axis_depth)
+        # SentenceComposer reads `self._axis_activation` (its slot weighting takes B pressure
+        # from it, and compose() takes her agency from it), but this only stored it on
+        # perception, so the composer's copy was always {} -- b_pressure was always 0.0.
+        _composer = getattr(self, "composer", None)
+        if _composer is not None:
+            _composer._axis_activation = dict(self._axis_activation)
 
     def evo_status(self) -> Dict:
         """Return expression evolution status."""
@@ -5477,6 +5642,7 @@ class ExpressionPerceptionEngine(WarpCapable):
         if self.oets and self.composer._context_keywords:
             _oets_hits = 0
             _oets_checked = 0
+            _bridged: list = []
             for keyword in self.composer._context_keywords[:5]:
                 node = self.oets.web.get_node(keyword)
                 _oets_checked += 1
@@ -5500,6 +5666,7 @@ class ExpressionPerceptionEngine(WarpCapable):
                                 other, f"oets:{keyword}", role,
                                 valence=valence, lineage="oets"
                             )
+                            _bridged.append((other, role, valence))
                     # Bridge content words from best definition, same
                     # availability-only rationale.
                     if node.definitions:
@@ -5513,6 +5680,10 @@ class ExpressionPerceptionEngine(WarpCapable):
                                     w, f"def:{keyword}", role,
                                     valence=valence, lineage="oets"
                                 )
+                                _bridged.append((w, role, valence))
+
+            if _bridged:
+                assign_bridged_channels(self.lexicon, _bridged, i_state)
 
             # Telemetry: OETS coverage → semantic_precision confidence
             try:

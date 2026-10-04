@@ -59,6 +59,7 @@ from aurora_internal.aurora_constraint_semantic_continuity import (
     relational_axis_vector,
 )
 from aurora_internal.aurora_meaning_evolution import canonical_signature
+from aurora_internal.aurora_turn_persistence import batch_defer
 
 _NEGATIVE_ISTATE = {
     "X": "I_ISNT",
@@ -1309,9 +1310,16 @@ class AuroraCommunicationEmergence(WarpCapable):
         """Persist the complete communication/WARP lifecycle at a checkpoint."""
         return self._persist(force=True)
 
+    def flush_write_batch(self) -> bool:
+        """Real write for aurora_turn_persistence's end-of-turn flush."""
+        return self._persist(force=True)
+
     def _persist(self, *, force: bool = False) -> bool:
         if not self.persist or (self._persistence_suspended > 0 and not force):
             return False
+        # Turn-scoped batching (see aurora_turn_persistence).
+        if not force and batch_defer(self):
+            return True
         payload = {
             "schema_version": 3,
             "tick": self._tick,

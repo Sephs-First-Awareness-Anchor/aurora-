@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
 
 from aurora_persistence_utils import atomic_write_json
+from aurora_internal.aurora_turn_persistence import batch_defer
 
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")
 
@@ -411,6 +412,10 @@ class RuntimeUnderstandingContract:
             "expired_validations": [],
             "contract_domains": {},
             "history": [],
+            # Understandings whose DEEP half (geological write, identity shaped by deep memory) is waiting
+            # for the core clock: it runs during rest, faster than the exchange. Persisted, so a restart
+            # does not lose what she understood.
+            "core_queue": [],
             "last_saved_at": 0.0,
         }
 
@@ -441,9 +446,16 @@ class RuntimeUnderstandingContract:
                 default[key] = value
         self.state = default
 
-    def save(self) -> bool:
+    def flush_write_batch(self) -> bool:
+        """Real write for aurora_turn_persistence's end-of-turn flush."""
+        return self.save(force=True)
+
+    def save(self, force: bool = False) -> bool:
         if not self.persist:
             return False
+        # Turn-scoped batching: one live turn rewrote this file 5 times.
+        if not force and batch_defer(self):
+            return True
         try:
             os.makedirs(os.path.dirname(self.storage_path) or ".", exist_ok=True)
             self.state["last_saved_at"] = float(time.time())
@@ -2871,10 +2883,16 @@ class RuntimeUnderstandingContract:
 
         # ── STEP 4: RECONCILIATION ── resolve tension between original state and re-entered output
         tension = self._compute_tension(state_snapshot, reentry)
+        # Recorded on the result either way: the unresolved branch's consumer read
+        # understanding["tension_total"], which a failed reconciliation never produces.
+        try:
+            result["tension_total"] = float((tension or {}).get("total", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            result["tension_total"] = 0.0
         reconciled, flags = self._attempt_reconciliation(tension)
 
         if not reconciled:
-            self._flag_tension(systems, flags, state_snapshot, session_id=session_id)
+            self._flag_tension(systems, flags, state_snapshot, session_id=session_id, tension=tension)
             result["tension_flags"] = flags
             result["reflection_step"] = "RECONCILIATION_FAILED"
             return result
@@ -2889,6 +2907,39 @@ class RuntimeUnderstandingContract:
         )
         result["reached_understanding"] = True
         result["understanding"] = understanding
+
+        # Genealogy records the Understanding as its own event: the pressure the turn carried into
+        # reflection, and the pressure it resolved to. That relief IS genealogy's signal (section 8:
+        # "Constraint Basis recalibrated -- next turn begins from here"; the cascade used to dispatch
+        # genealogy.accept_understanding_update, a method that exists nowhere, and logged not_found
+        # on every resolved turn). Recorded BEFORE the cascade, so it observes the state as resolved.
+        try:
+            _resolved_state = copy.deepcopy(state_snapshot)
+            _resolved_state.setdefault("N", {})["total"] = understanding.get(
+                "resolved_cost", _resolved_state.get("N", {}).get("total", 0.25))
+            _resolved_state.setdefault("B", {})["ambiguity"] = understanding.get(
+                "resolved_boundary_ambiguity", _resolved_state.get("B", {}).get("ambiguity", 0.5))
+            _resolved_state.setdefault("A", {})["score"] = understanding.get(
+                "resolved_accuracy", _resolved_state.get("A", {}).get("score", 0.5))
+            self._record_genealogy_event(
+                systems,
+                phase="understanding",
+                before_state=state_snapshot,
+                after_state=_resolved_state,
+                notes={
+                    "resolved_meaning_topic": str(understanding.get("resolved_meaning_topic", "") or ""),
+                    "resolved_accuracy": understanding.get("resolved_accuracy"),
+                    "tension_at_resolution": dict(understanding.get("tension_at_resolution") or {}),
+                    "law": "AURORA_COGNITIVE_PHYSICS section 7: Understanding is reached only through RECONCILIATION",
+                },
+            )
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_internal/aurora_understanding_contract.py:understanding_genealogy",
+                exc=_aurora_boundary_exc,
+                context={"function": "run_reflection_cycle", "source_file": "aurora_internal/aurora_understanding_contract.py"},
+            )
 
         # Mandatory downward modulation cascade
         self._trigger_downward_cascade(systems, understanding)
@@ -2984,6 +3035,7 @@ class RuntimeUnderstandingContract:
         state_snapshot: Dict[str, Any],
         *,
         session_id: str = "",
+        tension: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Tension must never be silently suppressed.
@@ -2999,6 +3051,26 @@ class RuntimeUnderstandingContract:
             "law": "RECONCILIATION_REQUIRED — Understanding may not be emitted from unreconciled tension",
         }
         self._history_append(tension_record)
+
+        # AURORA_COGNITIVE_PHYSICS section 8: a failed RECONCILIATION flags the tension AND makes a
+        # "Surface Memory write (base crystal depth -- volatile, resolves or decays)". Only the
+        # flag was recorded; nothing was ever remembered.
+        _sedi_surface = systems.get("sedimemory")
+        if _sedi_surface is not None and hasattr(_sedi_surface, "surface_write"):
+            try:
+                _sedi_surface.surface_write({
+                    "flags": list(flags),
+                    "tension": dict(tension or {}),
+                    "topic": str(self.state.get("M", {}).get("active_topic", "") or ""),
+                    "time_index": int(self.state.get("time_index", 0) or 0),
+                })
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:surface_write",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_flag_tension", "source_file": "aurora_internal/aurora_understanding_contract.py"},
+                )
 
         # Surface tension into any connected tension bus (soft dispatch)
         tension_bus = systems.get("_tension_bus") or systems.get("tension_bus")
@@ -3042,6 +3114,118 @@ class RuntimeUnderstandingContract:
             "law": "AURORA_COGNITIVE_PHYSICS §7 Understanding — field at equilibrium across all noncomp manifolds",
         }
 
+    # ---- the core variant of Understanding ----------------------------------------------------------------
+    # The deep half of the cascade, on the core clock. Memory first, then identity shaped by what the strata
+    # now hold (AURORA_COGNITIVE_PHYSICS section 6), in the same order as the inline cascade. The core thinks
+    # fast (passes of settling, set by how stable she is) and remembers long (it never touches how fast
+    # memory decays).
+
+    CORE_QUEUE_MAX = 32
+    core_deferred = False          # set True on the instance by the metabolic clock's registration
+
+    @property
+    def core_pending(self) -> int:
+        return len(self.state.get("core_queue") or [])
+
+    def _core_soft(self, systems: Dict[str, Any], key: str, method: str, *args: Any, seen: set) -> bool:
+        obj = systems.get(key)
+        if obj is None or not hasattr(obj, method) or (id(obj), method) in seen:
+            return False                      # absent, or the same system under another key
+        seen.add((id(obj), method))
+        try:
+            getattr(obj, method)(*args)
+            return True
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_internal/aurora_understanding_contract.py:core_variant",
+                exc=_aurora_boundary_exc,
+                context={"function": "_core_soft", "target": key, "method": method, "source_file": __file__},
+            )
+            return False
+
+    def _run_core_variant(self, systems: Dict[str, Any], understanding: Dict[str, Any], passes: int = 1) -> None:
+        """Memory first, identity second. `passes` is how many core ticks of settling: the identity update
+        is a pure relaxation toward what the strata weigh (baseline += (target - baseline) * rate), so N
+        passes settle it as 1 - (1 - rate) ** N of the way, without any side effect to double-count."""
+        self._core_soft(systems, "sedimemory", "geological_write", understanding, seen=set())
+        shaped = dict(understanding)
+        sedi = systems.get("sedimemory")
+        if sedi is not None and hasattr(sedi, "deep_axis_weights"):
+            try:
+                shaped["deep_memory"] = sedi.deep_axis_weights()      # AFTER the write: what the strata now hold
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:core_deep_memory",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_core_variant", "source_file": __file__},
+                )
+        for _ in range(max(1, int(passes))):
+            seen: set = set()
+            for key in ("identity_field", "behavioral_identity", "identity_persistence"):
+                self._core_soft(systems, key, "accept_understanding_update", shaped, seen=seen)
+
+    @staticmethod
+    def _merge_understandings(older: Dict[str, Any], newer: Dict[str, Any]) -> Dict[str, Any]:
+        """Two Understandings as one, weighted by how many each already stands for. Numbers are averaged by
+        weight (recursively through dicts); everything else (text, flags, lists) is the newer one's, and the
+        index is the newest. `coalesced` counts how many turns the result carries, so no obligation is lost."""
+        wo = max(1, int(older.get("coalesced", 1) or 1))
+        wn = max(1, int(newer.get("coalesced", 1) or 1))
+
+        def _num(x: Any) -> bool:
+            return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+        def _blend(a: Any, b: Any) -> Any:
+            if _num(a) and _num(b):
+                return (a * wo + b * wn) / (wo + wn)
+            if isinstance(a, dict) and isinstance(b, dict):
+                return {k: (_blend(a[k], b[k]) if k in a and k in b else (b[k] if k in b else a[k]))
+                        for k in {**a, **b}}
+            return b
+        merged = {k: (_blend(older[k], newer[k]) if k in older and k in newer else
+                      (newer[k] if k in newer else older[k])) for k in {**older, **newer}}
+        for key in ("time_index", "coalesced"):
+            merged.pop(key, None)
+        if "time_index" in newer:
+            merged["time_index"] = newer["time_index"]
+        merged["coalesced"] = wo + wn
+        return merged
+
+    def _enqueue_core(self, systems: Dict[str, Any], understanding: Dict[str, Any]) -> None:
+        """Hand an Understanding to the core. This is ALL the surface does with it: the core clock decides when it
+        is consolidated. A queue that is full (a conversation with no rest at all) COALESCES its two oldest
+        entries into one rather than run either: running the oldest here put core work on the turn path of every
+        turn after the thirty-second, the surface secretly driving the core. Nothing is dropped (the obligation
+        count is conserved in `coalesced`) and nothing runs until she rests."""
+        queue = self.state.setdefault("core_queue", [])
+        if len(queue) >= self.CORE_QUEUE_MAX and len(queue) >= 2:
+            queue[0:2] = [self._merge_understandings(queue[0], queue[1])]
+            self.state["core_coalesced"] = int(self.state.get("core_coalesced", 0) or 0) + 1
+        queue.append(dict(understanding))
+
+    def process_core_queue(self, systems: Dict[str, Any], passes: int = 1, afford: Any = None,
+                           pay: Any = None, should_stop: Any = None) -> Dict[str, int]:
+        """Run the core variant for what is waiting, oldest first. `afford(passes)` is asked BEFORE each
+        one and `pay(passes)` after, so it is never run unpaid; `should_stop()` is checked between them, never
+        mid-one, so a turn arriving is not made to wait. What is not done stays queued."""
+        queue = self.state.setdefault("core_queue", [])
+        done = 0
+        while queue:
+            if should_stop is not None and should_stop():
+                break
+            if afford is not None and not afford(passes):
+                break
+            self._run_core_variant(systems, queue[0], passes=passes)
+            queue.pop(0)
+            if pay is not None:
+                pay(passes)
+            done += 1
+        if done:
+            self.save(force=True)
+        return {"processed": done, "remaining": len(queue), "passes": int(passes)}
+
     def _trigger_downward_cascade(
         self, systems: Dict[str, Any], understanding: Dict[str, Any]
     ) -> None:
@@ -3071,9 +3255,17 @@ class RuntimeUnderstandingContract:
             "dispatches": [],
         }
 
+        _dispatched = set()
+
         def _soft(target_key: str, method: str, *args):
             obj = systems.get(target_key)
+            if obj is not None and (id(obj), method) in _dispatched:
+                # Two keys can name the same system (consciousness / consciousness_engine,
+                # identity_field / behavioral_identity): a receiver must not run twice per cascade.
+                cascade_record["dispatches"].append(f"{target_key}.{method}:duplicate_target")
+                return
             if obj and hasattr(obj, method):
+                _dispatched.add((id(obj), method))
                 try:
                     getattr(obj, method)(*args)
                     cascade_record["dispatches"].append(f"{target_key}.{method}:ok")
@@ -3089,14 +3281,44 @@ class RuntimeUnderstandingContract:
             else:
                 cascade_record["dispatches"].append(f"{target_key}.{method}:not_found")
 
-        # 1. Identity field: King Quasicrystal reconfiguration
-        #    The NoncompField is the live 125-noncomp × 625-slot Identity field.
-        _soft("identity_field", "accept_understanding_update", understanding)
-        _soft("behavioral_identity", "accept_understanding_update", understanding)
-        _soft("identity_persistence", "accept_understanding_update", understanding)
+        # 1. Memory: the geological write -- the Understanding write, at quasicrystal depth
+        #    (AURORA_COGNITIVE_PHYSICS section 6/7/8). It goes FIRST: Memory "updates Identity
+        #    field configuration after each write" (section 6), so identity is shaped by what the
+        #    strata now hold, not authored by this turn (sections 2 and 9: Identity may not be
+        #    authored by a single turn).
+        # Understanding has two variants on two clocks (AURORA_TICK_CLOCK_MAP D1/D1b/D7). The SURFACE variant
+        # (steps 3-7 below) runs with the exchange. The CORE variant (steps 1-2: the deep write, and identity
+        # shaped by what the strata hold) runs on the core clock, during rest, where it is faster and paid for
+        # out of the rest. With no clock attached (core_deferred False) both run inline, exactly as before.
+        _core_deferred = bool(getattr(self, "core_deferred", False))
+        if not _core_deferred:
+            _soft("sedimemory", "geological_write", understanding)
 
-        # 2. Memory: geological stratum write (deepest — near-immutable)
-        _soft("sedimemory", "geological_write", understanding)
+        # 2. Identity: King Quasicrystal configuration updated, BY deep Memory. The field's
+        #    baseline moves toward what each axis's strata now weigh ("deep Memory shapes what
+        #    feels heavy now"). Received as part of the understanding so the receiver needs no
+        #    handle on sedimemory.
+        _understanding_in_memory = dict(understanding)
+        _sedi_for_identity = systems.get("sedimemory")
+        if _sedi_for_identity is not None and hasattr(_sedi_for_identity, "deep_axis_weights"):
+            try:
+                _understanding_in_memory["deep_memory"] = _sedi_for_identity.deep_axis_weights()
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(), module=__name__,
+                    operation="exception_handler:aurora_internal/aurora_understanding_contract.py:deep_memory",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_trigger_downward_cascade", "source_file": "aurora_internal/aurora_understanding_contract.py"},
+                )
+        if _core_deferred:
+            # `_understanding_in_memory` above still carries the strata as they stand, for the tensor
+            # layer's Memory-anchors-Presence coupling (step 6); only the WRITES wait for the core clock.
+            self._enqueue_core(systems, understanding)
+            cascade_record["dispatches"].append("core_variant:queued")
+        else:
+            _soft("identity_field", "accept_understanding_update", _understanding_in_memory)
+            _soft("behavioral_identity", "accept_understanding_update", _understanding_in_memory)
+            _soft("identity_persistence", "accept_understanding_update", _understanding_in_memory)
 
         # 3. Pressure topology: discharge and reset
         _soft("consciousness", "reset_pressure_topology", understanding)
@@ -3114,7 +3336,9 @@ class RuntimeUnderstandingContract:
         # 6. Composite crystal weights: update all five tensor expression crystals
         # This is the "composite crystal expression weights updated" in §8.
         # TensorExpressionLayer.receive_understanding() recalibrates all crystals.
-        _soft("tensor_expressions", "receive_understanding", understanding)
+        # Received WITH what the strata weigh: Memory anchors Presence (section 6), which the
+        # layer applies alongside the level-to-level couplings.
+        _soft("tensor_expressions", "receive_understanding", _understanding_in_memory)
         # Also dispatch to expression/perception layer (legacy)
         _soft("expression_perception", "update_crystal_weights", understanding)
 
@@ -3124,9 +3348,39 @@ class RuntimeUnderstandingContract:
 
         # 7. Constraint Basis: recalibrate — next turn begins from here
         # Dispatches to dimensional (DER/DMM) and genealogy trackers.
-        _soft("genealogy", "accept_understanding_update", understanding)
-        _soft("constraint_genealogy", "accept_understanding_update", understanding)
         # Dimensional layer owns the live constraint basis
         _soft("dimensional", "recalibrate_from_understanding", understanding)
+
+        # Reading a not_found above as "unbuilt" would be wrong for these (AURORA_COGNITIVE_PHYSICS
+        # section 8; Identity may not be directly implemented, sections 2 and 9):
+        #   identity_field / behavioral_identity / identity_persistence .accept_understanding_update
+        #       -> built: the field's baseline follows what deep Memory weighs (step 2 above).
+        #          identity_persistence is a separate system that is not registered in every profile.
+        #   prediction_field.reset_from_understanding
+        #       -> the Prediction crystal's priors are reset by tensor_expressions
+        #          .reset_prediction_priors (section 5), which lands above.
+        #   dimensional.recalibrate_from_understanding
+        #       -> DER is rebased from the turn's axis state once per turn by
+        #          DimensionalSystems.update_emotional_state.
+        #   genealogy / constraint_genealogy .accept_understanding_update
+        #       -> no longer dispatched (the method existed nowhere): run_reflection_cycle records the
+        #          Understanding as its own genealogy event (phase "understanding", before/after
+        #          pressure) just before this cascade.
+        #   consciousness_engine.* / expression_perception.update_crystal_weights
+        #       -> aliases of keys that are dispatched above / a legacy name.
+        #
+        # The other branches of the downward pass (section 8) are not dispatched from this
+        # cascade -- they happen where each function completes:
+        #   THOUGHT     -> ConsciousnessEngine.process(): the memory write from the thought's own
+        #                  constraint position, and the pressure discharge for a COMPLETE thought
+        #                  (all five axes active); Reflection follows it (run_reflection_cycle).
+        #                  Valuation has no weight state of its own -- it is derived from Salience
+        #                  and Meaning, whose weights the tensor layer modulates.
+        #   REASONING   -> TensorExpressionLayer.downward_modulation (Salience, Prediction); the
+        #                  internal signal pump puts reasoning pressure on B in the identity field.
+        #   VALUATION / EMOTION / ATTENTION / MEMORY
+        #               -> TensorExpressionLayer.downward_modulation, NoncompField
+        #                  .accept_emotion_topology, NoncompField.accept_understanding_update.
+        #   REFLECTION (failed RECONCILIATION) -> _flag_tension: the flag and the surface write.
 
         self._history_append(cascade_record)

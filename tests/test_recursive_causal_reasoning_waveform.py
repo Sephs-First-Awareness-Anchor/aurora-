@@ -251,3 +251,96 @@ def test_live_turn_without_rcrw_registered_leaves_relational_form_untouched(tmp_
 
     assert state.relational_form.get("subject") == original_form.get("subject")
     assert state.relational_form.get("relation") == original_form.get("relation")
+
+
+def test_unrelated_focus_claim_cannot_donate_participants_or_pressure(tmp_path):
+    """An active historical claim is not evidence merely because it is recent.
+
+    A sparse new carrier must not become a chimera made from the new relation
+    plus unrelated historical participants, and unrelated history should not
+    inject a continuity wavelet into the current cycle.
+    """
+    bridge = AuroraRecursiveCausalReasoningWaveform(state_dir=str(tmp_path), persist=False)
+    state = _semantic("Photosynthesis.")
+    out = bridge.prepare_semantic_state(
+        state,
+        raw_text="Photosynthesis.",
+        claim_resolution={
+            "focus_claim": {
+                "subject": "finding the blue key",
+                "relation": "means",
+                "object": "i own the blue key",
+                "negated": True,
+                "source": "user",
+            }
+        },
+    )
+
+    effective = out["relational_form"]
+    assert effective.get("subject", "") != "finding the blue key"
+    assert effective.get("obj", "") != "i own the blue key"
+    claim_wavelets = [
+        wave for wave in out["recursive_causal_waveform"]["control_wavelets"]
+        if wave.get("source") == "claim_continuity"
+    ]
+    assert claim_wavelets == []
+
+
+def test_negative_focus_relation_keeps_polarity_when_legitimately_restored(tmp_path):
+    """If history supplies the relation, its causal polarity is the relation too."""
+    bridge = AuroraRecursiveCausalReasoningWaveform(state_dir=str(tmp_path), persist=False)
+    state = _semantic("Why that?")
+    out = bridge.prepare_semantic_state(
+        state,
+        raw_text="Why that?",
+        referent_map={
+            "topic": "the response",
+            "referent_map": {"that": "the response"},
+        },
+        claim_resolution={
+            "focus_claim": {
+                "subject": "the response",
+                "relation": "failed",
+                "object": "meaning preservation",
+                "negated": True,
+                "source": "user",
+            }
+        },
+    )
+
+    effective = out["relational_form"]
+    assert effective["relation"] == "failed"
+    assert effective["negated"] is True
+    changes = out["recursive_causal_waveform"]["reconstruction"]["changes"]
+    assert any(
+        change.get("slot") == "negated"
+        and change.get("evidence") == "active_focus_claim_relation_polarity"
+        for change in changes
+    )
+
+
+def test_shared_entity_does_not_license_cross_relation_participant_splice(tmp_path):
+    """Entity continuity cannot flatten two different causal relations together."""
+    bridge = AuroraRecursiveCausalReasoningWaveform(state_dir=str(tmp_path), persist=False)
+    state = _semantic("The blue key vanished.")
+    out = bridge.prepare_semantic_state(
+        state,
+        raw_text="The blue key vanished.",
+        claim_resolution={
+            "focus_claim": {
+                "subject": "finding the blue key",
+                "relation": "means",
+                "object": "i own the blue key",
+                "negated": True,
+                "source": "user",
+            }
+        },
+    )
+
+    effective = out["relational_form"]
+    assert effective.get("relation", "").lower() != "means"
+    assert effective.get("obj", "") != "i own the blue key"
+    assert not any(
+        wave.get("source") == "claim_continuity"
+        for wave in out["recursive_causal_waveform"]["control_wavelets"]
+    )

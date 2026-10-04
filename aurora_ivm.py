@@ -930,7 +930,7 @@ class IVMNode:
         if not CONSTRAINT_MANIFOLD_AVAILABLE or ConstraintVector is None:
             return None
 
-        if vertices is not None:
+        if vertices is not None and not getattr(self, "input_phases", False):
             # Use live polarity from the toroidal vertex system (preferred)
             active_count = self.mode.value
             active = vertices.active_axes(self.mode)
@@ -1151,7 +1151,8 @@ class IVMLattice:
               payload_type: str,
               evidence: Dict[str, Any],
               node_id: str = None,
-              scale: int = 0) -> IVMNode:
+              scale: int = 0,
+              phases: Optional[List[float]] = None) -> IVMNode:
         """
         Admit an entity into the lattice.
 
@@ -1196,8 +1197,17 @@ class IVMLattice:
                 f"{payload_type}_{time.time()}_{self.total_created}".encode()
             ).hexdigest()[:16]
 
-        # ---- Compute position from toroidal vertices ----
-        phase_vector = self.vertices.get_phase_vector(profile.mode)
+        # ---- Compute position ----
+        # By default a node sits wherever the toroidal vertices currently are. That is
+        # self-referential for an INPUT: the beings resonate with the node's phases and
+        # then inject stimulus back onto the same vertices, so nothing the input actually
+        # says could ever move them (every user turn was the same coordinate). A caller
+        # that knows where the input sits on each axis supplies `phases` (as
+        # admit_at_mode() already allows) and the input becomes pressure on the manifold.
+        if phases is not None and len(phases) == len(AXIS_ORDER):
+            phase_vector = np.array([min(1.0, max(0.0, float(p))) for p in phases], dtype=float)
+        else:
+            phase_vector = self.vertices.get_phase_vector(profile.mode)
         position = IVMCoordinate(
             mode=profile.mode,
             phases=phase_vector,
@@ -1214,6 +1224,12 @@ class IVMLattice:
         )
 
         # ---- Initial constraint vector ----
+        # A node the caller placed by its own input phases takes its geometry from that
+        # coordinate. compute_constraint_vector(vertices) reads the LIVE vertices instead,
+        # which would silently replace the input's geometry with the lattice's own state
+        # (and again on every later update_constraint_vector tick).
+        if phases is not None and len(phases) == len(AXIS_ORDER):
+            node.input_phases = True
         node.update_constraint_vector(self.vertices)
 
         # ---- Store and index ----

@@ -113,6 +113,10 @@ def _worker_loop(worker_id: int) -> None:
             with _pending_lock:
                 _pending_words.discard(word)
             _dispatch_queue.task_done()
+            # This worker then blocks on get() for as long as the process lives; the
+            # loop variable would otherwise keep the last job's entire `systems` dict
+            # (every subsystem of a boot that may since have been shut down) alive.
+            systems = word = None
 
 
 def _research_one(systems: Dict[str, Any], word: str) -> None:

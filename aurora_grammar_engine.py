@@ -42,6 +42,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from dataclasses import dataclass, field
 from collections import Counter, defaultdict, deque
 from enum import Enum
+from aurora_internal.aurora_turn_persistence import batch_defer
 
 
 # ---------------------------------------------------------------------------
@@ -951,10 +952,18 @@ class MotifLineage:
         if self._update_n % self._SAVE_INTERVAL == 0:
             self._save()
 
+    def flush_write_batch(self):
+        """Real write for aurora_turn_persistence's end-of-turn flush."""
+        self._save(force=True)
+
     def save(self):
         self._save()
 
-    def _save(self):
+    def _save(self, force: bool = False):
+        # Turn-scoped batching: ~10 MB file, previously rewritten from
+        # prepare_response_trace every turn (~12% of turn wall time).
+        if not force and batch_defer(self):
+            return
         try:
             data = {
                 "motifs":    {k: v.to_dict() for k, v in self._motifs.items()},
@@ -963,7 +972,9 @@ class MotifLineage:
             }
             tmp = self._state_path + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
+                # Compact: this file is ~10 MB and was rewritten every turn with
+                # indent=2 (pure-Python encoder, ~12% of turn wall time). Same data.
+                json.dump(data, f, separators=(",", ":"))
             os.replace(tmp, self._state_path)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
@@ -1825,7 +1836,13 @@ class GrammarEngine:
         if drive == "exploratory":
             orientation["X"] = orientation.get("X", 1.0) * 1.2
         pattern    = self._tagger.extract_pattern(aurora_text)
-        ctx_hash   = self._context_hash(user_text)
+        # Heard language (composer.absorb) arrives with no user turn: user_text is "".
+        # md5("") is one constant, so every absorbed structure was filed under the SAME
+        # context ("d41d8cd9") and context diversity -- the promotion gate
+        # (>= 3 contexts, composability > 0.30) -- could never grow: 0 of 3,616 motifs
+        # were ever promoted. Fall back to the observed text itself, the idiom
+        # suggest_structure() already uses (context_text or raw_expression).
+        ctx_hash   = self._context_hash(user_text or aurora_text)
         n_tokens   = len(aurora_text.split())
 
         # Build reference anchors from this utterance

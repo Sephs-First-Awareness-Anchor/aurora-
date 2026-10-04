@@ -13,6 +13,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 from aurora_interaction_engine import InteractionEngine
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 from aurora_persistence_utils import atomic_write_json, checksum_dict
+from aurora_internal.aurora_turn_persistence import batch_defer
 
 
 @dataclass
@@ -362,7 +363,15 @@ class InteractionMemory:
             data = json.loads(self.indexes_path.read_text(encoding="utf-8"))
             self._indexes.update({k: dict(v) for k, v in dict(data.get("indexes") or {}).items()})
 
-    def _save(self) -> None:
+    def flush_write_batch(self) -> None:
+        """Real write for aurora_turn_persistence's end-of-turn flush."""
+        self._save(force=True)
+
+    def _save(self, force: bool = False) -> None:
+        # Turn-scoped batching: persist() called this ~10x per live turn, each
+        # time rewriting nodes.json + edges.json + indexes.json in full.
+        if not force and batch_defer(self):
+            return
         atomic_write_json(self.nodes_path, {"nodes": [node.to_dict() for node in self._nodes.values()]})
         atomic_write_json(self.edges_path, {"edges": [edge.to_dict() for edge in self._edges.values()]})
         atomic_write_json(self.indexes_path, {"indexes": self._indexes})

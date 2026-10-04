@@ -1284,7 +1284,18 @@ def _base_relation(value: str) -> str:
     if low.endswith("ies") and len(low) > 4:
         return low[:-3] + "y"
     if low.endswith("es") and len(low) > 4:
-        return low[:-2]
+        # "-es" is the suffix only after a sibilant stem (passes->pass, boxes->box,
+        # buzzes->buzz, watches->watch, wishes->wish). After anything else the
+        # verb is stem+"s" ending in silent e: causes->cause, uses->use,
+        # changes->change. Stripping "es" unconditionally made "causes" -> "caus",
+        # which never matched "cause", so "does not cause" could not be located as
+        # the negated form of the relation "causes".
+        # (Distinguished by the letters before "es": sses/zzes/xes/ches/shes/oes
+        # take "-es" -- passes, buzzes, boxes, watches, wishes, echoes -- while a
+        # single s/z/c/g before it means the base ends in silent e.)
+        if low.endswith(("sses", "zzes", "xes", "ches", "shes", "oes")):
+            return low[:-2]
+        return low[:-1]
     if low.endswith("s") and len(low) > 3:
         return low[:-1]
     return low
@@ -1731,11 +1742,32 @@ def derive_constraint_grounded_candidate(
             response = _directive_boundary_surface(form, systems=systems)
         elif clause:
             focus = subject or obj or complement
-            response = (
-                f"I understand what you are saying about {focus}."
-                if focus
-                else "I understand the relation you are describing."
+            # "I understand ..." claims a represented referent. If the word this
+            # acknowledgement names exists in her web only as a surface string
+            # (measured before this turn's observation -- see
+            # aurora._input_representation_state), that claim is wrong in this form;
+            # state the honest boundary instead of the acknowledgement.
+            _unrep = {
+                str(w).lower()
+                for w in ((systems or {}).get("_turn_input_state") or {}).get("unrepresented", [])
+            } if isinstance(systems, dict) else set()
+            _focus_unrepresented = bool(
+                focus and _unrep and any(
+                    tok.lower() in _unrep for tok in _tokens(str(focus)) if len(tok) >= 3
+                )
             )
+            if focus and _focus_unrepresented:
+                response = (
+                    f"I hear that you are saying something about {focus}, but I do not "
+                    f"yet have a grounded representation of it, so I will not claim to "
+                    f"understand it."
+                )
+            else:
+                response = (
+                    f"I understand what you are saying about {focus}."
+                    if focus
+                    else "I understand the relation you are describing."
+                )
         if response:
             basis = "emergent_constraint_operation_boundary_articulation"
             communicative_baseline = True
@@ -1864,9 +1896,52 @@ def relation_alignment(user_form: Mapping[str, Any], response_text: str) -> Dict
         )
     )
     relation_word = str(form.get("relation", "") or "").lower()
-    relation_present = not relation_word or relation_word in tokens or any(
-        token in tokens for token in {"is", "are", "means", "causes", "makes", "becomes", "has", "have"}
+    ordered_tokens = re.findall(r"[a-z][a-z0-9'-]{1,}", text)
+    relation_base = _base_relation(relation_word) if relation_word else ""
+    token_bases = [_base_relation(token) for token in ordered_tokens]
+    relation_indices = [
+        idx for idx, token_base in enumerate(token_bases)
+        if relation_base and token_base == relation_base
+    ]
+    relation_surface_present = bool(
+        not relation_word
+        or relation_word in tokens
+        or relation_indices
+        or any(
+            token in tokens
+            for token in {"is", "are", "means", "causes", "makes", "becomes", "has", "have"}
+        )
     )
+
+    # Polarity belongs to the causal relation.  A response that preserves the
+    # participants while reversing "does not mean" into "means" has not
+    # preserved the relation and must not receive positive developmental
+    # credit for doing so.  Read negation in the local relation neighborhood
+    # when possible so an unrelated "not" elsewhere in a long response does
+    # not flip the whole proposition.
+    expected_negated = bool(form.get("negated", False))
+    if relation_indices:
+        response_negated = any(
+            token in {"not", "never", "no"} or token.endswith("n't")
+            for idx in relation_indices
+            for token in ordered_tokens[max(0, idx - 2): idx + 3]
+        )
+        polarity_coherent = bool(expected_negated == response_negated)
+    else:
+        # The relation word itself is not in the response, so there is no
+        # asserted proposition whose polarity could be reversed. Scanning the
+        # WHOLE text for any negation and demanding equality here contradicted
+        # this block's own intent (an unrelated "not" must not flip a
+        # proposition): an honest abstention such as "I do not yet have enough
+        # grounded information to answer it" was scored as a polarity reversal
+        # of an affirmative question, dropping candidate alignment 1.0 -> 0.65
+        # (broke test_baseline_communication_apprenticeship's restart test).
+        # What still holds: if the user's statement was NEGATED, a response that
+        # carries no negation anywhere cannot have preserved it.
+        padded = f" {text} "
+        response_negated = any(marker in padded for marker in (" not ", "n't", " never ", " no "))
+        polarity_coherent = bool(response_negated) if expected_negated else True
+    relation_present = bool(relation_surface_present and polarity_coherent)
     addresses_unknown = True
     if form.get("question") or form.get("directive"):
         addresses_unknown = bool(text.strip()) and not leaked_unknown
@@ -1881,4 +1956,7 @@ def relation_alignment(user_form: Mapping[str, Any], response_text: str) -> Dict
         "missing_slots": missing,
         "leaked_unknown_token": leaked_unknown,
         "unknown_role": unknown,
+        "polarity_coherent": polarity_coherent,
+        "expected_negated": expected_negated,
+        "response_negated": response_negated,
     }

@@ -40,8 +40,10 @@ class _FakeGateway:
     def __init__(self):
         self.received = []
 
-    def receive(self, content, stream_type, source, mode):
+    def receive(self, content, stream_type, source, mode, metadata=None):
+        # The real gateway's receive() takes `metadata`; a replay declares itself internal there.
         self.received.append(content)
+        self.metadata = getattr(self, "metadata", []) + [metadata]
 
 
 def test_witness_stages_instead_of_committing_immediately():

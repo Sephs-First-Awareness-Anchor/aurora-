@@ -450,7 +450,7 @@ class OETSVisionBinder:
             node = web.get_node(label)
             if node is None:
                 web.add_node(label, role="visual_concept",
-                             definition=f"Visual pattern cluster: {label}")
+                             meaning=f"Visual pattern cluster: {label}")
 
             # Add visual context
             node = web.get_node(label)

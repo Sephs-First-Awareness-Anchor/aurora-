@@ -324,7 +324,24 @@ class MemoryEvent:
 
     @classmethod
     def from_envelope(cls, envelope: IVMEnvelope) -> MemoryEvent:
-        """Construct from an IVMEnvelope arriving from L1/L2."""
+        """Construct from an IVMEnvelope arriving from L1/L2.
+
+        The envelope's geometry is its `constraint_vector`. This used to read five
+        `*_weight` attributes IVMEnvelope does not have, so every envelope became the
+        same default vector; those weights remain only as the legacy fallback.
+        """
+        _env_cv = getattr(envelope, "constraint_vector", None)
+        if _env_cv is not None:
+            content: Dict[str, Any] = {}
+            if hasattr(envelope, "__dict__"):
+                for k, v in envelope.__dict__.items():
+                    if not k.startswith("_") and isinstance(v, (str, int, float, bool, list, dict)):
+                        content[k] = v
+            return cls.create(
+                content=content, constraint_vector=_env_cv,
+                source=getattr(envelope, "source", "envelope"),
+                existence_mode=getattr(envelope, "mode", ExistenceMode.PERSISTENT),
+            )
         try:
             cv = ConstraintVector(
                 X=float(getattr(envelope, 'existence_weight', 1.0)),
@@ -1783,6 +1800,106 @@ class SediMemory:
         )
         return self._ingest(event, oets=oets)
 
+    def geological_write(self, understanding: Dict[str, Any]) -> int:
+        """Resolved understanding becomes geological sediment: the B/A end of the strata.
+
+        The downward cascade (understanding_contract._trigger_downward_cascade) dispatches
+        "Memory: geological stratum write (deepest -> near-immutable)" here, and this method did
+        not exist, so the dispatch was swallowed as not_found on every turn and understanding
+        never reached deep sediment.
+
+        "Geological" is the slow end: the strata doctrine puts B and A there (A ticks at 0.0001,
+        near-frozen). The understanding's own quantities place it, with no constant added:
+            A = resolved_accuracy                  -- what she commits to
+            B = 1 - resolved_boundary_ambiguity    -- how well bounded it is
+            X just above the admissibility floor; T = N = 0, so the fast surface basins let it
+            fall through and only the slow ones catch it.
+        It fires only when reconciliation SUCCEEDED, which keeps it sparse -- sedimentation is a
+        geological-timescale process (docs/CONSTRAINT_ENGINE_SEED.md INV-12). Returns the
+        number of fragments deposited.
+        """
+        u = dict(understanding or {})
+
+        # AURORA_COGNITIVE_PHYSICS section 6 / 9 / 11: "No write may skip to geological depth
+        # without constraint significance justification." The justification is that this IS an
+        # Understanding: reconciliation succeeded, so it carries the tension it resolved at. The
+        # law is enforced here, not trusted to the caller.
+        if not (u.get("crystal_level") == "understanding" or isinstance(u.get("tension_at_resolution"), dict)):
+            return 0
+
+        def _unit(key: str, default: float) -> float:
+            try:
+                return max(0.0, min(1.0, float(u.get(key, default))))
+            except (TypeError, ValueError):
+                return default
+
+        accuracy = _unit("resolved_accuracy", 0.5)
+        ambiguity = _unit("resolved_boundary_ambiguity", 0.5)
+        vector = ConstraintVector(X=0.01, T=0.0, N=0.0, B=1.0 - ambiguity, A=accuracy)
+        return self.ingest_event(
+            content={
+                "type": "resolved_understanding",
+                "topic": str(u.get("resolved_meaning_topic", "") or "")[:80],
+                "resolved_accuracy": round(accuracy, 4),
+                "resolved_cost": _unit("resolved_cost", 0.0),
+                "resolved_boundary_ambiguity": round(ambiguity, 4),
+                "time_index": int(u.get("time_index", 0) or 0),
+                "crystal_level": str(u.get("crystal_level", "") or ""),
+            },
+            constraint_vector=vector,
+            source="understanding_cascade",
+        )
+
+    def surface_write(self, record: Dict[str, Any]) -> int:
+        """Unresolved tension is flagged AND remembered, at the volatile end of the strata.
+
+        AURORA_COGNITIVE_PHYSICS section 8: when Reflection's RECONCILIATION fails it "flags
+        unresolved tension... Surface Memory write (base crystal depth -- volatile, resolves or
+        decays)", and section 9: "Unresolved tension must be flagged -- never silently
+        suppressed." _flag_tension recorded the flag in history and nothing else.
+
+        Placement follows the decay scaling law, with no constant added: X is bare presence
+        (fastest decay), N is pressure-scaled so the tension itself sets how much it weighs, and
+        T/B/A stay zero so it never reaches the slow strata. It resolves (a later Understanding
+        supersedes it) or it decays. Returns the number of fragments deposited.
+        """
+        r = dict(record or {})
+        tension = r.get("tension") if isinstance(r.get("tension"), dict) else {}
+        try:
+            total = max(0.0, min(1.0, float(tension.get("total", r.get("tension_total", 0.0)) or 0.0)))
+        except (TypeError, ValueError):
+            total = 0.0
+        flags = r.get("flags") or []
+        return self.ingest_event(
+            # Keys are the strain filters' own vocabulary (CONSTRAINT/DIMENSION_CONTENT_KEYS), so
+            # each filter retains the slice that resonates with it: "pressure" is what N and the
+            # MAGNITUDE dimension take, "anomaly" is what the DIFFERENCE dimension takes.
+            content={
+                "type": "unresolved_tension",
+                "topic": str(r.get("topic", "") or "")[:80],
+                "pressure": round(total, 4),
+                "anomaly": ";".join(str(f) for f in list(flags)[:4])[:120],
+                "time_index": int(r.get("time_index", 0) or 0),
+            },
+            constraint_vector=ConstraintVector(X=1.0, T=0.0, N=total, B=0.0, A=0.0),
+            source="reflection_tension",
+        )
+
+    def deep_axis_weights(self) -> Dict[str, float]:
+        """What the strata currently weigh on each axis: persistent mass (active + compressed).
+
+        "Deep Memory shapes what feels heavy now" (AURORA_COGNITIVE_PHYSICS section 6). The
+        decay scaling law does the depth ordering: fast axes lose their fragments, slow ones keep
+        them, so persistent mass per axis already reflects stratigraphic depth.
+        """
+        out: Dict[str, float] = {}
+        for axis, row in (self.stats().get("by_axis") or {}).items():
+            try:
+                out[str(axis)] = float(row.get("active_fragments", 0)) + float(row.get("compressed_keys", 0))
+            except (TypeError, ValueError, AttributeError):
+                out[str(axis)] = 0.0
+        return out
+
     def _ingest(self, event: MemoryEvent, oets: Any = None) -> int:
         fragments, newly_discovered = self._column.ingest(event)
         self._event_log.append(event.event_id)
@@ -1855,21 +1972,14 @@ class SediMemory:
 
     def tick(self, delta_t: float = 1.0) -> Dict[str, int]:
         """
-        Advance decay clocks. TimeDilationGovernor scales delta_t when
-        Aurora is stable — she compresses faster when calm.
+        Advance decay clocks by the time that actually elapsed (the metabolic clock's wall time).
+
+        Sediment is NOT scaled by the TimeDilationGovernor. Thinking faster must not make sediment thousands of
+        times older: how long memory persists is each basin's own `tick_rate`, and a faster core changes how many
+        internal processes may OPERATE on sediment in a span (core Understanding passes, consolidation), never how
+        much time sediment itself has lived. Operations that alter it are paid for where they run. `_dilation` is
+        kept only so a status reader can see which governor exists; it is never applied here.
         """
-        if self._dilation is not None:
-            try:
-                delta_t = delta_t * getattr(self._dilation, 'current_factor', 1.0)
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_sedimemory.py:1580",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "tick", "handler_line": 1580, "source_file": "aurora_sedimemory.py"},
-                )
-                pass
         report = self._column.tick(delta_t)
         self._tick_log.append(delta_t)
         return report

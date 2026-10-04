@@ -1383,6 +1383,11 @@ class SemanticCrystalNode:
     wisdom_tone_bias:      float = 0.0
     wisdom_structure_bias: float = 0.0
 
+    # Cross-modal name assigned on promotion. Read by _inject_semantic_to_dps and
+    # by the naming code, but was never declared -- unnamed nodes raised
+    # AttributeError on every DPS injection.
+    name:        str   = ""
+
     def compute_fitness(self) -> float:
         coo  = _clamp01(self.co_occurrence_count / (CROSS_MODAL_MIN_COOCCURRENCE * 5))
         npmi = _clamp01((self.npmi + 1.0) / 2.0)

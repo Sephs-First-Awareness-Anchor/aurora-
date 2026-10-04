@@ -144,6 +144,123 @@ def _safe_text(value: Any, limit: int = 2000) -> str:
     return str(value or "")[:limit]
 
 
+
+
+_STRUCTURAL_TERMS = frozenset({
+    "is", "are", "am", "was", "were", "be", "been", "being",
+    "do", "does", "did", "done", "has", "have", "had", "having",
+    "what", "who", "whom", "whose", "which", "where", "when", "why", "how",
+})
+
+
+def _content_terms(value: Any) -> set[str]:
+    """Return content-bearing terms for continuity evidence.
+
+    RCRW already promises evidence-bounded reconstruction.  Historical focus
+    may therefore influence a new carrier only when the current carrier (or an
+    explicit referent binding for it) shares represented content with that
+    focus.  Function words/pronouns are structural scaffolding, not evidence
+    that two propositions are the same event.
+    """
+    import re
+
+    return {
+        token
+        for token in re.findall(r"[a-z][a-z0-9']+", str(value or "").lower())
+        if token not in _DETERMINER_STOPWORDS and len(token) > 1
+    }
+
+
+def _focus_claim_support(
+    provisional: Mapping[str, Any],
+    focus: Mapping[str, Any],
+    referent_map: Optional[Mapping[str, Any]],
+) -> Dict[str, Any]:
+    """Measure whether an active focus claim is evidence for this carrier.
+
+    This is a boundary check, not a topic classifier.  The historical claim
+    may participate when identity is continuous through shared represented
+    content or through a referent map already established elsewhere.  Recency
+    alone is deliberately insufficient.
+    """
+    current = dict(provisional or {})
+    historical = dict(focus or {})
+    refs = dict(referent_map or {})
+
+    current_terms: set[str] = set()
+    for key in ("raw_text", "subject", "obj", "complement", "relation"):
+        current_terms.update(_content_terms(current.get(key, "")))
+
+    focus_terms: set[str] = set()
+    for key in ("subject", "object", "obj", "complement", "topic", "summary"):
+        focus_terms.update(_content_terms(historical.get(key, "")))
+
+    referent_terms: set[str] = set()
+    referent_terms.update(_content_terms(refs.get("topic", "")))
+    for value in dict(refs.get("referent_map") or {}).values():
+        referent_terms.update(_content_terms(value))
+
+    direct_overlap = current_terms & focus_terms
+    referent_overlap = referent_terms & focus_terms
+
+    current_relation = str(current.get("relation", "") or "").strip().lower()
+    focus_relation = str(historical.get("relation", "") or "").strip().lower()
+
+    def _relation_key(value: str) -> str:
+        irregular = {
+            "is": "be", "are": "be", "am": "be", "was": "be", "were": "be",
+            "means": "mean", "does": "do", "did": "do",
+            "has": "have", "had": "have", "owns": "own",
+        }
+        value = irregular.get(value, value)
+        if len(value) > 3 and value.endswith("ies"):
+            return value[:-3] + "y"
+        if len(value) > 3 and value.endswith("s") and not value.endswith("ss"):
+            return value[:-1]
+        return value
+
+    current_relation_key = _relation_key(current_relation)
+    focus_relation_key = _relation_key(focus_relation)
+    relation_compatible = bool(
+        not current_relation_key
+        or not focus_relation_key
+        or current_relation_key == focus_relation_key
+    )
+
+    # Structural words never establish that two propositions share a participant.
+    # The copula/auxiliaries, wh-words and the RELATION words themselves (already
+    # checked separately as relation_compatible) passed _content_terms, so
+    # "What is photosynthesis?" was "supported" by the unrelated claim "co-author
+    # is Cael Devo" on the strength of the word "is" alone -- and recursive
+    # backprojection then filled the question's empty object with "cael devo"
+    # (confirmed live). Overlap must come from represented content.
+    structural = set(_STRUCTURAL_TERMS)
+    for _rel in (current_relation, focus_relation):
+        if _rel:
+            structural.add(_rel)
+            structural.add(_relation_key(_rel))
+    current_terms -= structural
+    focus_terms -= structural
+    referent_terms -= structural
+    direct_overlap = current_terms & focus_terms
+    referent_overlap = referent_terms & focus_terms
+
+    supported = bool(
+        focus_terms
+        and (direct_overlap or referent_overlap)
+        and relation_compatible
+    )
+    return {
+        "supported": supported,
+        "direct_overlap": sorted(direct_overlap),
+        "referent_overlap": sorted(referent_overlap),
+        "relation_compatible": relation_compatible,
+        "current_relation": current_relation,
+        "focus_relation": focus_relation,
+        "current_terms": sorted(current_terms),
+        "focus_terms": sorted(focus_terms),
+    }
+
 def _operation_record(name: str, payload: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
     spec = dict(_ROOT_PRIMITIVES[name])
     roots = tuple(spec.get("roots") or AXES)
@@ -906,8 +1023,15 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
 
         claim = dict(claim_resolution or {})
         focus = dict(claim.get("focus_claim") or {})
-        if focus:
-            add("continuity_phase_lock", 0.24, "history", "claim_continuity", {"focus_claim": focus})
+        focus_support = _focus_claim_support(rel, focus, referent_map) if focus else {"supported": False}
+        if focus and focus_support.get("supported"):
+            add(
+                "continuity_phase_lock",
+                0.24,
+                "history",
+                "claim_continuity",
+                {"focus_claim": focus, "support": focus_support},
+            )
 
         # Promoted WARP wavelets participate as smaller endogenous causes.
         for component_id, rec in list(self._promoted_wavelets.items())[:8]:
@@ -994,9 +1118,15 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
                     "operation": _operation_record("recursive_backprojection", {"slot": field_name}),
                 })
 
-        # A prior claim may restore a relation that the provisional parser lost,
-        # but only when the claim supplies an explicit structured field.
+        # A prior claim may restore structure only when the present carrier or
+        # an already-resolved referent supplies continuity evidence.  Recency
+        # by itself is not evidence: otherwise independent participants can be
+        # spliced into an unrelated live relation.
         focus = dict(dict(claim_resolution or {}).get("focus_claim") or {})
+        focus_support = _focus_claim_support(original, focus, referent_map) if focus else {"supported": False}
+        if not focus_support.get("supported"):
+            focus = {}
+
         if not effective.get("relation") and focus:
             candidate_relation = str(focus.get("relation", "") or "").strip()
             if candidate_relation:
@@ -1008,6 +1138,27 @@ class AuroraRecursiveCausalReasoningWaveform(WarpCapable):
                     "evidence": "active_focus_claim",
                     "operation": _operation_record("recursive_backprojection", {"slot": "relation"}),
                 })
+
+                # Negation is part of the causal relation, not decoration on
+                # its participants.  When RCRW legitimately restores the
+                # historical relation itself, restore that relation's polarity
+                # too unless the current carrier contains explicit negative
+                # evidence of its own (which is already preserved as True).
+                if not bool(original.get("negated", False)):
+                    historical_negated = bool(focus.get("negated", False))
+                    if bool(effective.get("negated", False)) != historical_negated:
+                        effective["negated"] = historical_negated
+                        changes.append({
+                            "slot": "negated",
+                            "before": bool(original.get("negated", False)),
+                            "after": historical_negated,
+                            "evidence": "active_focus_claim_relation_polarity",
+                            "operation": _operation_record(
+                                "recursive_backprojection",
+                                {"slot": "negated", "relation_restored": True},
+                            ),
+                        })
+
         for field_name, focus_key in (("subject", "subject"), ("obj", "object"), ("complement", "complement")):
             if effective.get(field_name):
                 continue

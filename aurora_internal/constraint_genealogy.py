@@ -1755,6 +1755,48 @@ class PressureComplexityCurve:
         self._pending_prediction: Optional[dict] = None
         self._error_ema: float = 0.0
 
+    # ---- Persistence -------------------------------------------------------
+    # The curve was only ever reported (get_stats), never saved, so what each axis had learned about
+    # its own pressure dynamics -- and therefore pressure_orientation(), the grammar engine's
+    # designed orientation source -- reset to a flat 1.0 on every boot.
+
+    _SCALAR_STATE = ("_correction", "_net_ema", "_peak_value", "_trough_value", "_error_ema")
+
+    def to_state(self) -> dict:
+        """Everything the curve has learned, as plain JSON-able data. The pending prediction is
+        transient (it belongs to the tick in flight) and is not kept."""
+        state = {name: float(getattr(self, name)) for name in self._SCALAR_STATE}
+        state.update({
+            "phase": str(self._phase), "prev_phase": str(self._prev_phase),
+            "last_correction_update": int(self._last_correction_update),
+            "samples": [dict(x) for x in self._samples],
+            "predictions": [dict(x) for x in self._predictions],
+            "transition_log": [dict(x) for x in self._transition_log],
+        })
+        return state
+
+    def load_state(self, state: Any) -> bool:
+        """Restore from to_state(); False (and the curve untouched) if the data is unusable."""
+        if not isinstance(state, dict):
+            return False
+        try:
+            scalars = {name: float(state[name]) for name in self._SCALAR_STATE}
+            phase, prev_phase = str(state["phase"]), str(state["prev_phase"])
+            last_update = int(state["last_correction_update"])
+            samples = [dict(x) for x in state["samples"]]
+            predictions = [dict(x) for x in state["predictions"]]
+            transitions = [dict(x) for x in state["transition_log"]]
+        except (KeyError, TypeError, ValueError):
+            return False
+        for name, value in scalars.items():
+            setattr(self, name, value)
+        self._phase, self._prev_phase, self._last_correction_update = phase, prev_phase, last_update
+        self._samples = deque(samples, maxlen=self.WINDOW)
+        self._predictions = deque(predictions, maxlen=self.WINDOW)
+        self._transition_log = deque(transitions, maxlen=20)
+        self._pending_prediction = None
+        return True
+
     # ---- Per-tick recording ------------------------------------------------
 
     def record_tick(
@@ -2417,6 +2459,12 @@ class ConstraintGenealogyLogger:
         self.tick_count += 1
         self._latest_pressure = pressure_after
 
+        # The outlet BEFORE this observation: the baseline each axis's injection is predicted
+        # against (see the per-axis curve loop below).
+        try:
+            _outlet_before_obs = self._outlet_fraction()
+        except Exception:
+            _outlet_before_obs = None
         raw_relief = pressure_after.relief_from(pressure_before)
         dominant_axis_hint = raw_relief.dominant_positive_axis() or "X"
         relief, tolerance_meta = self._apply_relief_tolerance(
@@ -2710,6 +2758,10 @@ class ConstraintGenealogyLogger:
 
             # Per-axis curves — each axis sees only its own links and pairs
             # dominant_axis_hint tells us which axis this tick's relief favoured
+            try:
+                _pb_axes = pressure_before.to_dict()
+            except Exception:
+                _pb_axes = {}
             for ax in AXES:
                 ax_links = [lnk for lnk in all_links
                             if (lnk.dominant_relief_axis or "X") == ax]
@@ -2728,7 +2780,23 @@ class ConstraintGenealogyLogger:
                     tick=self.tick_count,
                 )
                 # Axis outcome: outlet is shared, but per-axis correction
-                # converges independently via prediction residuals
+                # converges independently via prediction residuals.
+                #
+                # ...which only holds if the residual channel is ARMED. record_outcome() returns at
+                # once unless record_injection() left a pending prediction, and record_injection was
+                # only ever called from the training plateau path -- in live conversation it never
+                # was, so every axis's correction moved by phase trend alone, in lock-step, to the
+                # same 1.15 ceiling, and pressure_orientation() (the grammar engine's designed
+                # orientation source) was the same number on all five axes. Each observation IS a
+                # pressure injection on every axis: its own pressure_before is the raw injection,
+                # the outlet before it is the baseline, and the outlet after is the outcome.
+                if _outlet_before_obs is not None:
+                    self._axis_curves[ax].record_injection(
+                        raw_pressure=float(_pb_axes.get(ax, 0.0) or 0.0),
+                        n_links=ax_link_count,
+                        current_outlet=_outlet_before_obs,
+                        tick=self.tick_count,
+                    )
                 self._axis_curves[ax].record_outcome(current_outlet)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
@@ -2980,7 +3048,38 @@ class ConstraintGenealogyLogger:
         atomic_write_json(Path(path), {
             "tick_count": int(self.tick_count),
             "last_promotion_tick": int(self._last_promotion_tick),
+            "curves": self.axis_curve_state(),
         })
+
+    def axis_curve_state(self) -> dict:
+        """What the per-axis curves and the global curve have learned (see PressureComplexityCurve)."""
+        return {"axes": {ax: curve.to_state() for ax, curve in self._axis_curves.items()},
+                "global": self._complexity_curve.to_state()}
+
+    def restore_axis_curve_state(self, state: Any) -> int:
+        """Restore curves saved by axis_curve_state(); returns how many were restored."""
+        if not isinstance(state, dict):
+            return 0
+        restored = 0
+        for ax, saved in dict(state.get("axes") or {}).items():
+            curve = self._axis_curves.get(ax)
+            if curve is not None and curve.load_state(saved):
+                restored += 1
+        if self._complexity_curve.load_state(state.get("global")):
+            restored += 1
+        return restored
+
+    # What persist_session_state() writes. The canonical logger (the subsurface runtime / full
+    # profile) writes everything; the surface profile's logger restores the canonical state
+    # READ-ONLY and keeps only its own session state in its own directory, so the two processes
+    # never write the same file.
+    persist_scope: str = "canonical"
+
+    def persist_session_state(self) -> None:
+        if self.persist_scope == "canonical":
+            self.flush_files()
+        else:
+            self._write_tick_state_file()
 
     def restore_tick_state(self) -> bool:
         """
@@ -2998,10 +3097,13 @@ class ConstraintGenealogyLogger:
                 raw = json.load(fh)
             saved_tick = int(raw.get("tick_count", 0) or 0)
             saved_last = int(raw.get("last_promotion_tick", 0) or 0)
+            # Older files carry no curves; their absence is not an error.
+            curves_restored = self.restore_axis_curve_state(raw.get("curves")) > 0
             if saved_tick > 0:
                 self.tick_count = saved_tick
                 self._last_promotion_tick = saved_last
                 return True
+            return curves_restored
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -4603,19 +4705,49 @@ class ConstraintGenealogyLogger:
         Buckets group by shared native feature, not shared constraint
         signature -- this is what makes cross-family retrieval possible
         without an exhaustive Cartesian scan."""
+        # Scale repair (the same one Repairs K, L and M made for the other representation caches).
+        # This stamp used the BROAD dirty counter and len(_pair_stats), neither of which a relevance
+        # feature reads (lane, operator, axis, effect tags, lineage), so it changed on nearly every
+        # observation -- consequence-profile updates bump the broad counter "34 calls in a single
+        # real turn" and abilities arrive every turn -- and each change rebuilt the index over EVERY
+        # ability: 527,538 feature computations across three turns, ~16s of a 17.9s observe, and
+        # 5-18s turns on the full profile. The identity counter is the one that tracks what the
+        # features read; _pair_stats never mattered.
         stamp = (
-            len(self.links), len(self.abilities), len(self._pair_stats),
-            self._representation_index_dirty_counter,
+            len(self.links), len(self.abilities),
+            self._representation_identity_dirty_counter,
         )
         if self._representation_relevance_stamp == stamp:
             return self._representation_relevance_cache
-        index: Dict[str, List[str]] = defaultdict(list)
-        for iid in sorted(set(self.links.keys()) | set(self.abilities.keys())):
-            if not self.representation_is_eligible(iid):
-                continue
-            for feature in self._relevance_features_for_item(iid):
-                index[feature].append(iid)
-        self._representation_relevance_cache = dict(index)
+        current_ids = set(self.links.keys()) | set(self.abilities.keys())
+        indexed_ids = getattr(self, "_representation_relevance_ids", None)
+        indexed_identity = getattr(self, "_representation_relevance_identity", None)
+        if (indexed_ids is not None
+                and indexed_identity == self._representation_identity_dirty_counter
+                and indexed_ids <= current_ids
+                and isinstance(self._representation_relevance_cache, dict)):
+            # Only additions since the last build, and nothing an existing item's features read has
+            # changed. Eligibility is monotone ("a descendant never invalidates an ancestor") and a
+            # new item cannot change an old item's features or ancestors, so indexing just the new
+            # items is exactly a full rebuild -- buckets stay sorted, as the full build leaves them.
+            from bisect import insort
+            index = self._representation_relevance_cache
+            for iid in sorted(current_ids - indexed_ids):
+                if not self.representation_is_eligible(iid):
+                    continue
+                for feature in self._relevance_features_for_item(iid):
+                    insort(index.setdefault(feature, []), iid)
+        else:
+            index = defaultdict(list)
+            for iid in sorted(current_ids):
+                if not self.representation_is_eligible(iid):
+                    continue
+                for feature in self._relevance_features_for_item(iid):
+                    index[feature].append(iid)
+            index = dict(index)
+        self._representation_relevance_cache = index
+        self._representation_relevance_ids = current_ids
+        self._representation_relevance_identity = self._representation_identity_dirty_counter
         self._representation_relevance_stamp = stamp
         return self._representation_relevance_cache
 

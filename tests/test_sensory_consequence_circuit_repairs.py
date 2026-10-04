@@ -204,6 +204,12 @@ def test_mark_representation_index_dirty_also_forces_relevance_index_rebuild(tmp
         "sanity check: the stamp must NOT change from the replace alone"
     )
     genealogy.mark_representation_index_dirty()
+    # An in-place axis swap touches a field the relevance features read, so (Repair M) the live
+    # code -- aurora_sensory_crystal's learned-axis reassignment, and the effect_tags replacement
+    # in the genealogy -- marks BOTH counters. The relevance index is stamped on the identity
+    # counter so that consequence-profile-only updates (the broad marker alone, ~34 calls in one
+    # real turn) no longer rebuild it over every ability; this test now does what production does.
+    genealogy.mark_representation_identity_dirty()
     genealogy._representation_relevance_index()
     assert genealogy._representation_relevance_stamp != stamp_before
 

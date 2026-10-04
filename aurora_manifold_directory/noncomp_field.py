@@ -22,6 +22,7 @@ Interface expected by aurora.py and aurora_consciousness_engine.py:
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
+import collections
 import json
 import os
 import math
@@ -139,6 +140,10 @@ class NoncompField:
         }
         self._loaded_count = 0
         self._boot_done    = False
+        self._internal_signals = collections.deque(maxlen=64)
+        # The field's neutral reference per axis. Born at the fixed equilibrium; shaped by deep
+        # Memory over turns (accept_understanding_update).
+        self._baseline: Dict[int, float] = {i: REFERENCE_AXIS_PRESSURE for i in range(5)}
         self._load_index()
 
     def _load_index(self) -> None:
@@ -202,6 +207,38 @@ class NoncompField:
                 for prof in self._by_axis[ax_int]:
                     prof.apply_pressure(delta * 0.03)
 
+    def ingest_internal_signal(
+        self,
+        kind:        str,
+        magnitude:   float = 0.0,
+        source_axis: str   = "",
+    ) -> None:
+        """Her OWN state as pressure on the field.
+
+        aurora.py's internal signal pump ("consciousness emotional/entropy state -> identity
+        field... so the field continuously reflects her inner state"), the reflection cycle
+        (valuation on resolution, tension when unresolved) and the heartbeat all call this, each
+        behind `hasattr(field, 'ingest_internal_signal')` -- and it was defined nowhere, so every
+        one of those calls was silently skipped and no internal state ever reached the field.
+
+        kind is what the signal is (reasoning, memory, emotion, valuation, tension); the callers
+        fix its meaning by the axis they put it on: a positive pressure on `source_axis`, scaled
+        by `magnitude`. It runs through the same physics as an external input, so an internal
+        origin changes the provenance, not the mechanics.
+        """
+        axis = str(source_axis or "")
+        if axis not in _AXIS_STR_TO_INT:
+            return
+        self.ingest_external_input({axis: 1.0}, intensity=magnitude, source=f"internal:{kind}")
+        try:
+            self._internal_signals.append((str(kind), axis, round(max(0.0, min(1.0, float(magnitude or 0.0))), 4)))
+        except Exception:
+            pass
+
+    def recent_internal_signals(self) -> List[tuple]:
+        """The last internal signals received, oldest first: (kind, axis, magnitude)."""
+        return list(self._internal_signals)
+
     def axis_pressure(self, axis: int) -> float:
         return self._axis_p.get(axis, 0.0)
 
@@ -209,11 +246,67 @@ class NoncompField:
         """Return the field's own neutral reference state.
 
         This is deliberately an executable interface rather than a duplicated
-        constant in each consumer.  A future field implementation may replace
-        the fixed birth equilibrium with a rolling/local reference without
-        changing callers.
+        constant in each consumer. It began as the fixed birth equilibrium and is now the
+        rolling reference the docstring anticipated: deep Memory shapes it
+        (accept_understanding_update), so what counts as elevated pressure follows what the
+        strata have preserved. Consumers need no change.
         """
-        return {axis: REFERENCE_AXIS_PRESSURE for axis in _AXIS_STR_TO_INT}
+        return {axis: self._baseline[index] for axis, index in _AXIS_STR_TO_INT.items()}
+
+    def accept_emotion_topology(self, level: float) -> None:
+        """Emotion reshapes Pressure baselines across all channels.
+
+        AURORA_COGNITIVE_PHYSICS section 7: Emotion is the pressure topology -- "which channels are
+        hot, which suppressed" -- and "reshapes Pressure baselines across all channels". The
+        baseline moves toward the current topology's SHARE per axis (the total conserved, as with
+        deep Memory's shaping), by the same 0.05 step the tensor layer uses, scaled by how
+        emotional the field is, so a calm field barely moves it.
+        """
+        try:
+            strength = max(0.0, min(1.0, float(level or 0.0)))
+        except (TypeError, ValueError):
+            return
+        with self._lock:
+            total = sum(max(0.0, p) for p in self._axis_p.values())
+            if total <= 0.0 or strength <= 0.0:
+                return
+            for index in range(5):
+                target = REFERENCE_AXIS_PRESSURE * 5.0 * max(0.0, self._axis_p[index]) / total
+                self._baseline[index] += (target - self._baseline[index]) * 0.05 * strength
+
+    def accept_understanding_update(self, understanding: dict) -> None:
+        """Identity's configuration after an Understanding, shaped by what Memory preserved.
+
+        AURORA_COGNITIVE_PHYSICS section 6: Memory "shifts Pressure baselines (deep Memory shapes
+        what feels heavy now)" and "updates Identity field configuration after each write";
+        section 7: Understanding updates "the King Quasicrystal configuration"; sections 2 and 9:
+        Identity "MAY NOT be directly implemented" or "authored by a single turn". So this does
+        not author anything: the cascade has already made its geological write and hands over
+        what the strata now weigh per axis (`deep_memory`); the baseline moves toward each axis's
+        SHARE of that weight, gradually.
+
+        The total baseline is conserved (shares sum to 1, there are five axes), so memory
+        redistributes what feels heavy and never inflates the field. The step is the rate the
+        field already relaxes at when understanding resolves (reset_pressure_topology), so one
+        turn can only move it a fraction of the way.
+        """
+        u = understanding or {}
+        deep = u.get("deep_memory") or {}
+        try:
+            weights = {_AXIS_STR_TO_INT[str(ax)]: max(0.0, float(w)) for ax, w in dict(deep).items()
+                       if str(ax) in _AXIS_STR_TO_INT}
+        except (TypeError, ValueError):
+            return
+        total = sum(weights.values())
+        if total <= 0.0:
+            return
+        resolved = float(u.get("resolved_accuracy", 0.5) or 0.5)
+        rate = 0.10 + 0.20 * resolved
+        with self._lock:
+            for index in range(5):
+                share = weights.get(index, 0.0) / total
+                target = REFERENCE_AXIS_PRESSURE * 5.0 * share
+                self._baseline[index] += (target - self._baseline[index]) * rate
 
     def dimension_pressures(self) -> Dict[str, float]:
         """Current native activity aggregated by NonComp dimension.
@@ -249,7 +342,7 @@ class NoncompField:
             for prof in self._profiles:
                 prof.decay(decay_rate)
             for ax_int in self._axis_p:
-                self._axis_p[ax_int] = max(0.05, self._axis_p[ax_int] * (1.0 - decay_rate))
+                self._axis_p[ax_int] = max(0.5 * self._baseline[ax_int], self._axis_p[ax_int] * (1.0 - decay_rate))
 
     def status(self) -> dict:
         diag_live = sum(1 for p in self.diagonal_profiles() if p._pressure > 0.05)

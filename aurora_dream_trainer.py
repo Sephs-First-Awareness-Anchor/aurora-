@@ -3303,6 +3303,9 @@ class DreamTrainer:
                         content=f"[TRAIN_TXT] {sample}",
                         stream_type=stream_type.KNOWLEDGE_FEED,
                         source=source,
+                        # A replay is the system rehearsing, not the world repeating itself: say so, so that
+                        # entropy's conversational repeat penalty does not treat it as a repeated input.
+                        metadata={"internal_origin": "dream_replay"},
                         mode=existence_mode.BOUNDED,
                     )
             except Exception as _aurora_boundary_exc:

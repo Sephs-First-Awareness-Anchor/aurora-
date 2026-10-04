@@ -171,3 +171,44 @@ def test_ordinary_experience_question_does_not_activate_technical_reflection(tmp
     text = "What has your attention at the moment?"
     result = bridge.prepare_turn(text, UtteranceParser().parse(text), systems)
     assert result == {}
+
+
+def test_relation_alignment_treats_negative_relation_as_causal_structure():
+    form = {
+        "subject": "finding the blue key",
+        "relation": "means",
+        "obj": "i own the blue key",
+        "negated": True,
+        "question": False,
+        "directive": False,
+    }
+    inverted = relation_alignment(
+        form,
+        "Finding the blue key means I own the blue key.",
+    )
+    preserved = relation_alignment(
+        form,
+        "Finding the blue key does not mean I own the blue key.",
+    )
+
+    assert preserved["polarity_coherent"] is True
+    assert inverted["polarity_coherent"] is False
+    assert preserved["score"] > inverted["score"]
+    assert preserved["score"] >= 0.9
+
+
+def test_relation_alignment_penalizes_unearned_negative_inversion_too():
+    form = {
+        "subject": "the switch",
+        "relation": "causes",
+        "obj": "the light",
+        "negated": False,
+        "question": False,
+        "directive": False,
+    }
+    positive = relation_alignment(form, "The switch causes the light.")
+    inverted = relation_alignment(form, "The switch does not cause the light.")
+
+    assert positive["polarity_coherent"] is True
+    assert inverted["polarity_coherent"] is False
+    assert positive["score"] > inverted["score"]

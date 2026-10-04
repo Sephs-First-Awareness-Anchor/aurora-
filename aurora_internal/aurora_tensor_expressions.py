@@ -230,12 +230,27 @@ class PredictionTensor(TensorExpression):
         self._update_count += 1
         return self._activation
 
-    def reset_priors(self, understanding: Dict[str, Any]) -> None:
-        """Prediction-specific cascade: reset priors from resolved ground truth."""
+    def reset_priors(self, understanding: Dict[str, Any],
+                     pressures: Optional[Dict[str, float]] = None) -> None:
+        """Prediction-specific cascade: reset priors from resolved ground truth.
+
+        "Resolved state resets the prediction baseline toward actual current pressure" -- that was
+        the comment, but the code shrank the priors toward ZERO, so the anticipation the next turn
+        started from was a faded copy of the old one rather than the resolved state
+        (AURORA_COGNITIVE_PHYSICS section 8: "Prediction priors reset from new resolved ground
+        truth"). With the current pressures at hand they now move toward them, as far as the
+        resolved accuracy warrants; without them the old behaviour is kept.
+        """
         resolved_accuracy = float(understanding.get("resolved_accuracy", 0.5) or 0.5)
-        # Resolved state resets the prediction baseline toward actual current pressure
-        self._prior_t = self._prior_t * (1.0 - resolved_accuracy * 0.4)
-        self._prior_n = self._prior_n * (1.0 - resolved_accuracy * 0.4)
+        k = resolved_accuracy * 0.4
+        if pressures:
+            t_now = float(pressures.get('T', self._prior_t) or 0.0)
+            n_now = float(pressures.get('N', self._prior_n) or 0.0)
+            self._prior_t = self._prior_t + (t_now - self._prior_t) * k
+            self._prior_n = self._prior_n + (n_now - self._prior_n) * k
+        else:
+            self._prior_t = self._prior_t * (1.0 - k)
+            self._prior_n = self._prior_n * (1.0 - k)
         self.receive_cascade(understanding)
 
 
@@ -333,6 +348,29 @@ class TensorExpressionLayer:
         Thought threshold: higher — all axes must be simultaneously present
         Reflection threshold: moderate — self-directed attention required
     """
+
+    # ---- The downward pass between levels (AURORA_COGNITIVE_PHYSICS sections 5, 6, 7) -------------
+    # Each higher level reshapes the one below it. Only Salience's threshold and Prediction's priors
+    # had a downward effect; every other "Modulates down" line was a declared string
+    # (MODULATES_DOWN) that nothing implemented. One row per spec line, so the table IS the audit:
+    # (source kind, source, target crystal, target state, sign, the spec line it realizes).
+    # A source acts by how far its level sits from the mean of its peers (crystals against
+    # crystals, functions against functions), so the pass redistributes weight and never inflates
+    # it; the step is the 0.05 the layer's own receive_cascade / recalibrate already use; targets
+    # stay inside the bounds the layer already defines.
+    _DOWNWARD_STEP: float = 0.05
+    _DOWNWARD_COUPLINGS = (
+        ("crystal",  "attention", "activation", "weight",    +1, "Attention recalibrates Activation weights (section 5)"),
+        ("crystal",  "attention", "salience",   "weight",    +1, "Attention feeds back into Salience weighting (section 5)"),
+        ("crystal",  "meaning",   "salience",   "weight",    +1, "Meaning recalibrates Boundary definition edges; Salience is the B-bearing crystal (section 5)"),
+        ("function", "emotion",   "activation", "weight",    +1, "Emotion biases Activation gradients (section 7)"),
+        ("function", "emotion",   "salience",   "weight",    +1, "Emotion colors Salience: what rises to the surface (section 7)"),
+        ("function", "reasoning", "salience",   "weight",    +1, "Reasoning refines Boundary definitions; Salience is the B-bearing crystal (section 7)"),
+        ("function", "reasoning", "prediction", "weight",    +1, "Reasoning reshapes Prediction: conclusions inform future anticipation (section 7)"),
+        ("function", "valuation", "salience",   "threshold", -1, "Valuation: high-value actions lower the pressure threshold (section 7)"),
+        ("function", "valuation", "attention",  "weight",    +1, "Valuation reshapes Direction gradients; Attention carries A (section 7)"),
+        ("function", "valuation", "meaning",    "weight",    +1, "Valuation reshapes Direction gradients; Meaning carries A (section 7)"),
+    )
 
     EMOTION_THRESHOLD: float = 0.08      # N-dominant: low bar
     REASONING_THRESHOLD: float = 0.10    # B-dominant: moderate
@@ -637,6 +675,112 @@ class TensorExpressionLayer:
                 )
                 pass
         self._cached_state = None   # force recompute next tick
+        try:
+            self.downward_modulation(understanding)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/aurora_tensor_expressions.py:downward_modulation",
+                exc=_aurora_boundary_exc,
+                context={"function": "receive_understanding", "source_file": "aurora_internal/aurora_tensor_expressions.py"},
+            )
+
+    def _raw_levels(self, p: Dict[str, float]) -> Dict[str, float]:
+        """The crystals' levels WITHOUT their downward-modulated weights, and without touching any
+        state (compute() overwrites Prediction's priors as it reads). The pass reads these so a
+        weight can never feed its own driver: reading weight-scaled levels made every coupling an
+        integrator of its own output, and four hundred cascades drove Activation to its floor and
+        Attention/Meaning/Salience to their ceilings."""
+        g = self.activation._geomean
+        x, t, n, b, a = (float(p.get(k, 0.0) or 0.0) for k in ('X', 'T', 'N', 'B', 'A'))
+        t_bl = t * 0.7 + self.prediction._prior_t * 0.3
+        n_bl = n * 0.7 + self.prediction._prior_n * 0.3
+        return {
+            'activation': min(1.0, g(x, n)),
+            'salience':   min(1.0, g(n, b)),
+            'prediction': min(1.0, g(t_bl, n_bl)),
+            'attention':  min(1.0, g(x, n, a)),
+            'meaning':    min(1.0, g(t, b, a)),
+        }
+
+    def downward_modulation(self, understanding: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Each level reshapes the one below it (AURORA_COGNITIVE_PHYSICS sections 5, 6, 7).
+
+        Every row of _DOWNWARD_COUPLINGS says how a source's level, relative to its peers, pulls a
+        lower crystal's weight (or Salience's threshold). The rows that aim at the same target are
+        averaged into ONE target -- a neutral weight scaled by the sources' relative levels -- and
+        the target relaxes toward it by the layer's own 0.05 step. A relaxation has a fixed point
+        proportional to the levels; an accumulating nudge does not (it ran to the bounds). Two more
+        couplings need more than a level: Memory anchors Presence (what the strata preserved gives
+        context to new signals), and Emotion reshapes the field's Pressure baselines (which channels
+        are hot). Returns what was applied, row by row -- the pass is auditable.
+        """
+        raw = self._raw_levels(self._axis_pressures())
+        crystals = raw
+        functions = {
+            'emotion':   (raw['activation'] + raw['salience']) / 2.0,
+            'reasoning': (raw['salience'] + raw['attention'] + raw['meaning']) / 3.0,
+            'valuation': (raw['salience'] + raw['meaning']) / 2.0,
+        }
+        mean_c = sum(crystals.values()) / len(crystals)
+        mean_f = sum(functions.values()) / len(functions)
+
+        def _relative(level: float, mean: float) -> float:
+            return (level - mean) / mean if mean > 1e-9 else 0.0
+
+        by_name = {'activation': self.activation, 'salience': self.salience, 'prediction': self.prediction,
+                   'attention': self.attention, 'meaning': self.meaning}
+        pulls: Dict[tuple, List[float]] = {}
+        applied: List[Dict[str, Any]] = []
+        for kind, source, target, attr, sign, spec in self._DOWNWARD_COUPLINGS:
+            rel = _relative(crystals[source], mean_c) if kind == "crystal" else _relative(functions[source], mean_f)
+            pulls.setdefault((target, attr), []).append(sign * rel)
+            applied.append({"spec": spec, "deviation": round(rel, 4), "moved": None})
+
+        # Memory anchors Presence: more of the strata's weight on X means prior events give the new
+        # signal more context to be present in. Relative to an even spread across the axes.
+        deep = dict((understanding or {}).get("deep_memory") or {})
+        total = sum(max(0.0, float(v)) for v in deep.values())
+        if total > 0.0:
+            rel = 5.0 * max(0.0, float(deep.get("X", 0.0))) / total - 1.0
+            pulls.setdefault(("activation", "weight"), []).append(rel)
+            applied.append({"spec": "Memory anchors Presence (section 6)", "deviation": round(rel, 4), "moved": None})
+
+        for (target, attr), contributions in pulls.items():
+            crystal = by_name[target]
+            pull = sum(contributions) / len(contributions)
+            if attr == "weight":
+                goal = max(crystal._weight_min, min(crystal._weight_max, 1.0 + pull))
+                before = crystal._weight
+                crystal._weight = max(crystal._weight_min, min(crystal._weight_max,
+                                                               before + self._DOWNWARD_STEP * (goal - before)))
+                moved = crystal._weight - before
+            else:
+                # Salience's own born threshold, scaled by the pull; its own bounds.
+                goal = max(0.1, min(0.5, SalienceTensor._threshold * (1.0 + pull)))
+                before = crystal._threshold
+                crystal._threshold = max(0.1, min(0.5, before + self._DOWNWARD_STEP * (goal - before)))
+                moved = crystal._threshold - before
+            for row in applied:
+                if row["moved"] is None and any(row["spec"] == r[5] and r[2] == target and r[3] == attr
+                                                for r in self._DOWNWARD_COUPLINGS):
+                    row["moved"] = round(moved, 5)
+            if target == "activation" and attr == "weight":
+                for row in applied:
+                    if row["spec"].startswith("Memory anchors") and row["moved"] is None:
+                        row["moved"] = round(moved, 5)
+
+        # Emotion reshapes Pressure baselines across all channels (section 7): the field's baseline
+        # follows the pressure topology, as strongly as the field is emotional.
+        if self._field is not None and hasattr(self._field, "accept_emotion_topology"):
+            self._field.accept_emotion_topology(max(0.0, min(1.0, functions['emotion'])))
+            applied.append({"spec": "Emotion reshapes Pressure baselines (section 7)",
+                            "deviation": round(_relative(functions['emotion'], mean_f), 4), "moved": None})
+
+        self._cached_state = None
+        self._last_downward = applied
+        return applied
 
     def recalibrate_salience(self, understanding: Dict[str, Any]) -> None:
         """
@@ -661,7 +805,7 @@ class TensorExpressionLayer:
         AURORA_COGNITIVE_PHYSICS.md §8: Prediction priors reset after Understanding.
         """
         try:
-            self.prediction.reset_priors(understanding)
+            self.prediction.reset_priors(understanding, pressures=self._axis_pressures())
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),

@@ -92,6 +92,7 @@ import math
 import random
 import hashlib
 from typing import Dict, List, Any, Optional, Tuple
+from aurora_internal.aurora_sender_state import fill_assembly_axes_from_sender
 from dataclasses import dataclass, field
 from collections import defaultdict, deque
 from enum import Enum
@@ -195,6 +196,86 @@ class EntropicState:
     tick_count: int = 0
 
 
+_THOUGHT_AXIS_NAMES = {"existence": "X", "temporal": "T", "energy": "N", "boundary": "B", "agency": "A",
+                       "X": "X", "T": "T", "N": "N", "B": "B", "A": "A"}
+
+
+def _thought_axes(adjusted_axes: Any) -> Dict[str, float]:
+    """The assembly's adjusted axes as {X,T,N,B,A}, whichever naming it carries; {} if none."""
+    out: Dict[str, float] = {}
+    if isinstance(adjusted_axes, dict):
+        for name, value in adjusted_axes.items():
+            ax = _THOUGHT_AXIS_NAMES.get(str(name))
+            if ax is None:
+                continue
+            try:
+                out[ax] = float(value)
+            except (TypeError, ValueError):
+                continue
+    return out
+
+
+def _thought_is_complete(result: Any) -> bool:
+    """AURORA_COGNITIVE_PHYSICS section 7: Thought "MAY NOT be produced with any axis inactive --
+    partial convergence is not Thought". A killed thought, or one with an inactive axis, is not
+    a completed Thought and does not resolve tension."""
+    if getattr(result, "thought_killed", False):
+        return False
+    axes = _thought_axes(getattr(result, "adjusted_axes", None))
+    return len(axes) == 5 and all(v > 0.0 for v in axes.values())
+
+
+def _thought_constraint_vector(vector_cls: Any, adjusted_axes: Any, fallback: Any) -> Any:
+    """Where a thought sits in constraint space, from the thought itself.
+
+    "Writes to Memory at appropriate stratigraphic depth" (section 7): depth is decided by
+    constraint significance, so the deposit's geometry is the thought's own -- its adjusted axes,
+    each relative to the thought's strongest (the most-loaded axis at 1.0) -- not the observed
+    node's mode with B floored at 0.5 and A at 0.4 for every thought whatever it was. With her
+    agency now filled from the identity field the A floor ("agentic") is measured, not assumed.
+    Falls back to the caller's vector when the assembly carries no axes.
+    """
+    axes = _thought_axes(adjusted_axes)
+    peak = max(axes.values()) if axes else 0.0
+    if peak <= 0.0:
+        return fallback
+    return vector_cls(
+        X=max(0.01, axes.get("X", 0.0) / peak), T=axes.get("T", 0.0) / peak,
+        N=axes.get("N", 0.0) / peak, B=axes.get("B", 0.0) / peak, A=axes.get("A", 0.0) / peak,
+    )
+
+
+def _pattern_signature(payload_type: Any, payload: Any) -> Tuple[float, ...]:
+    """A signature that identifies WHAT was said, for entropy's repetition check.
+
+    It used to be (mode, hash(payload_type) % 100, hash(payload[:50]) % 100): two of three
+    components were identical for every user turn and the third a hash bucket, which is not
+    a similarity space. EntropicPressure calls two patterns "the same" above 0.85 similarity
+    (1 - sum|d| / n), so roughly 45% of unrelated inputs counted as repeats and, against up
+    to 50 stored patterns, nearly every turn took the repetition penalty -- coherence fell
+    ~0.23 per turn to zero in six turns whatever was said.
+
+    A repeat is the same utterance again: 32 components of a stable digest of the normalized
+    text. Identical text -> identical signature (similarity 1.0); different text -> mean
+    absolute difference ~1/3 per component, far below the threshold at 32 components.
+    """
+    import hashlib as _hl
+    import re as _re
+    norm = _re.sub(r"[^a-z0-9]+", " ", str(payload).lower()).strip()[:200]
+    digest = _hl.sha256((str(payload_type) + "|" + norm).encode("utf-8", errors="replace")).digest()
+    return tuple(b / 255.0 for b in digest)
+
+
+def _evidence_is_internal_origin(evidence: Any) -> bool:
+    """True when the producer declared the input an internal event (`internal_origin` in the packet's metadata,
+    which the gateway carries as `evidence['source_metadata']`). The producer knows what it is; the engine does
+    not guess from a source name or a text tag."""
+    if not isinstance(evidence, dict):
+        return False
+    meta = evidence.get("source_metadata")
+    return bool(isinstance(meta, dict) and meta.get("internal_origin"))
+
+
 class EntropicPressure:
     """
     The entropic layer. Applies constant decay to all equilibrium states.
@@ -240,6 +321,17 @@ class EntropicPressure:
         """
         self.state.tick_count += 1
 
+        # 0. A pattern already seen recently is not new information. Decided FIRST because it
+        #    governs novelty and stagnation below, not only the repetition penalty: with a
+        #    constant had_meaningful_input=True from process(), novelty sat at 1.0 and
+        #    stagnation at 0.0 through four identical inputs in a row.
+        is_repeat = False
+        if pattern_signature is not None:
+            is_repeat = self._check_repetition(pattern_signature)
+            if is_repeat:
+                self.repetition_count += 1
+                had_meaningful_input = False
+
         # 1. Coherence decays toward 0
         decay = self.COHERENCE_DECAY
         self.state.coherence = max(0.0, current_coherence - decay)
@@ -261,12 +353,9 @@ class EntropicPressure:
             self.state.stagnation_score = max(0.0, self.state.stagnation_score - 0.1)
 
         # 5. Pattern repetition penalty
-        if pattern_signature is not None:
-            is_repeat = self._check_repetition(pattern_signature)
-            if is_repeat:
-                self.repetition_count += 1
-                self.state.coherence = max(0.0,
-                    self.state.coherence - self.REPETITION_PENALTY)
+        if is_repeat:
+            self.state.coherence = max(0.0,
+                self.state.coherence - self.REPETITION_PENALTY)
 
         # 6. Vitality pressure = cost of maintaining current state
         self.state.vitality_pressure = (
@@ -276,6 +365,56 @@ class EntropicPressure:
         )
 
         return self.state
+
+    def register_input(self, pattern_signature: Optional[Tuple[float, ...]] = None) -> EntropicState:
+        """An input ARRIVED (the event clock). What depends on something arriving, not on time passing.
+
+        apply() did both on every call, so entropy aged per message. A new input boosts novelty and
+        relieves stagnation; a repeat of a recent pattern is not new information, so it fades novelty,
+        grows stagnation and takes the repetition penalty. Time-driven decay is erode(), on the clock.
+        """
+        is_repeat = False
+        if pattern_signature is not None:
+            is_repeat = self._check_repetition(pattern_signature)
+            if is_repeat:
+                self.repetition_count += 1
+        if is_repeat:
+            self.state.novelty = max(0.0, self.state.novelty - self.NOVELTY_DECAY)
+            self.state.stagnation_score += self.STAGNATION_RATE
+            self.state.coherence = max(0.0, self.state.coherence - self.REPETITION_PENALTY)
+        else:
+            self.state.novelty = min(1.0, self.state.novelty + 0.3)
+            self.state.stagnation_score = max(0.0, self.state.stagnation_score - 0.1)
+        self._refresh_vitality()
+        return self.state
+
+    def erode(self, operating_ticks: float = 1.0, current_alignment: Optional[float] = None) -> EntropicState:
+        """Time PASSED while she was operating (the metabolic clock).
+
+        Erosion is the cost of maintaining state while operating, so it is charged per OPERATING tick
+        (a tick that had turns in it); an idle tick does not erode -- she wakes rested, and recovery is
+        the rest economy's job. Without that, an eight-hour gap would be 96 ticks of decay (1.34 of
+        coherence) and wipe her. Same rates as apply(); `operating_ticks` is a duration, so it can be
+        fractional, and zero changes nothing.
+        """
+        n = max(0.0, float(operating_ticks))
+        if n <= 0.0:
+            return self.state
+        self.state.tick_count += max(1, int(round(n)))
+        self.state.coherence = max(0.0, self.state.coherence - self.COHERENCE_DECAY * n)
+        base = self.state.alignment if current_alignment is None else float(current_alignment)
+        self.state.alignment = 0.5 + (base - 0.5) * ((1.0 - self.ALIGNMENT_DRIFT) ** n)
+        self.state.novelty = max(0.0, self.state.novelty - self.NOVELTY_DECAY * n)
+        self.state.stagnation_score += self.STAGNATION_RATE * n
+        self._refresh_vitality()
+        return self.state
+
+    def _refresh_vitality(self) -> None:
+        self.state.vitality_pressure = (
+            (1.0 - self.state.coherence) * 0.3 +
+            self.state.stagnation_score * 0.2 +
+            (1.0 - self.state.novelty) * 0.1
+        )
 
     def _check_repetition(self, signature: Tuple[float, ...]) -> bool:
         """Check if this pattern is too similar to recent ones."""
@@ -442,6 +581,18 @@ class AssemblyResult:
 #  DCE â€” THE ASSEMBLY
 # ============================================================================
 
+def _envelope_has_constraint_origin(envelope) -> bool:
+    """Clause I (genetic origin): does this thought carry a constraint geometry?
+
+    IVMEnvelope's field is `constraint_vector`; this clause read `constraint_signature`,
+    which no envelope has ever had, so it reported "missing" on every turn by
+    construction. A legacy `constraint_signature` is still honoured when present.
+    """
+    if getattr(envelope, "constraint_signature", None):
+        return True
+    return getattr(envelope, "constraint_vector", None) is not None
+
+
 class DCEAssembly:
     """
     The Dimensional Consciousness Engine.
@@ -547,7 +698,7 @@ class DCEAssembly:
 
         # Step 4c: DEVELOPMENTAL_PERSONALITY_LAW enforcement
         # Clause I: Genetic Origin (IVM signature presence)
-        has_ivm_signature = bool(getattr(envelope, "constraint_signature", {}))
+        has_ivm_signature = _envelope_has_constraint_origin(envelope)
         
         # Clause II: Environmental Viability (Does it survive current entropy pressure?)
         # Must be within the viable band: high vitality, sufficient coherence
@@ -1152,6 +1303,9 @@ class ConsciousnessEngine:
         self.dimensional = dimensional
 
         self.entropy = EntropicPressure()
+        # True once the metabolic clock owns entropy's erosion (set at boot): a thought then only
+        # registers that an input arrived, and time-driven decay is charged per operating tick.
+        self.entropy_clock_driven = False
         self.dce = DCEAssembly(collective, dimensional, self.entropy)
         self.dpme = DPME(self.entropy, lattice, collective, dimensional)
         # Build 608 (D1): state_dir threaded through so this instance --
@@ -1298,6 +1452,7 @@ class ConsciousnessEngine:
                 sub_crests=_precomputed,
                 context_family=None,
                 dps=getattr(self.dimensional, "dps", None),
+                raw_axis_tensions=dict(getattr(getattr(result, "synthesis", None), "axis_tensions", {}) or {}),
             )
         except Exception as _cers_exc:
             _aurora_record_exception_from_locals(
@@ -1408,7 +1563,8 @@ class ConsciousnessEngine:
     def process(self, payload: Any, payload_type: str,
                 evidence: Dict[str, Any],
                 frame_name: str = 'balanced',
-                thought_intent: Optional[Dict[str, Any]] = None) -> AssemblyResult:
+                thought_intent: Optional[Dict[str, Any]] = None,
+                phases: Optional[List[float]] = None) -> AssemblyResult:
         """
         Process one input through the full stack.
 
@@ -1421,10 +1577,12 @@ class ConsciousnessEngine:
         halts processing or routes to simulation for resolution.
         """
         # Admit to lattice (ontology gate)
+        _admit_kw = {"phases": phases} if phases is not None else {}
         node = self.lattice.admit(
             payload=payload,
             payload_type=payload_type,
             evidence=evidence,
+            **_admit_kw,
         )
         envelope = IVMEnvelope.from_node(node)
 
@@ -1491,9 +1649,7 @@ class ConsciousnessEngine:
                 pass
 
         # Build pattern signature for entropy dedup
-        sig = (float(envelope.mode.value),
-               float(hash(payload_type) % 100) / 100.0,
-               float(hash(str(payload)[:50]) % 100) / 100.0)
+        sig = _pattern_signature(payload_type, payload)
 
         # Read tensor layer state once for this process() call.
         # Composite crystals determine which emergent functions are active.
@@ -1526,13 +1682,25 @@ class ConsciousnessEngine:
 
         # Emotion — N-dominant pressure topology shapes the processing context.
         # Activation(X+N) + Salience(N+B) together make EntropicPressure inevitable.
-        if _proc_emotion_gate():
-            self.entropy.apply(
-                current_coherence=self.entropy.state.coherence,
-                current_alignment=self.dimensional.dmm.state.alignment,
-                had_meaningful_input=True,
-                pattern_signature=sig,
-            )
+        # An INTERNAL event (a dream or training replay the system gave itself) is not an environmental input: it
+        # is not a repeated message from the world, so it does not register as one. Entropy's repetition,
+        # novelty and stagnation describe the conversational stream; they stay silent for it. The replay is still
+        # processed in full (and so still costs what processing it costs); how stale a rehearsal has become is
+        # for the systems that own internal rehearsal (the trainer's staging and dedupe), not for this penalty.
+        if _proc_emotion_gate() and not _evidence_is_internal_origin(evidence):
+            if getattr(self, "entropy_clock_driven", False):
+                # The metabolic clock erodes on operating ticks (see aurora_metabolic_clock.py);
+                # a thought only REGISTERS that an input arrived -- once per input: a second
+                # synthesis of the same input (recall-enriched, for reasoning) is not a new input.
+                if not (isinstance(evidence, dict) and evidence.get("input_already_registered")):
+                    self.entropy.register_input(pattern_signature=sig)
+            else:
+                self.entropy.apply(
+                    current_coherence=self.entropy.state.coherence,
+                    current_alignment=self.dimensional.dmm.state.alignment,
+                    had_meaningful_input=True,
+                    pattern_signature=sig,
+                )
 
         # Thought — all-dominant unified convergence.
         # When all five composite crystals are simultaneously active and coherent,
@@ -1550,6 +1718,41 @@ class ConsciousnessEngine:
                 ds_stats=self.dimensional.get_stats(),
                 thought_killed=True,
                 kill_reason="composite_crystals_not_fully_convergent",
+            )
+
+        # Her own agentic state. The observed user node is PERSISTENT, so its agency axis is zero
+        # by MODE -- which says nothing about her. Fill what the mode left inactive from the
+        # identity field (stateful, history-dependent), here at the source so every consumer of
+        # the assembly (composer, motif learning, the dual-strata predictor) sees it. Must run
+        # before _attach_dual_strata_snapshot, which reads these axes.
+        try:
+            _agency_filled = fill_assembly_axes_from_sender(result.adjusted_axes, self._identity_field)
+            if _agency_filled and isinstance(result.constraint_context, dict):
+                result.constraint_context["sender_axes_filled"] = list(_agency_filled)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_consciousness_engine.py:sender_agency_fill",
+                exc=_aurora_boundary_exc,
+                context={"function": "process", "source_file": "aurora_consciousness_engine.py"},
+            )
+
+        # A completed Thought resolves accumulated tension (AURORA_COGNITIVE_PHYSICS section 7:
+        # Thought "resets Pressure topology"; section 8 gives Understanding the FULL discharge).
+        # Only Understanding ever discharged the field, so on every turn that did not reach it
+        # X/T/N/B climbed to 1.0 and then collapsed into one uniform band -- the field's per-axis
+        # shape was lost. Same discharge physics as Understanding, with the thought's own
+        # coherence as its resolution; only for a COMPLETE thought (all five axes active, now that
+        # agency is filled), never for partial convergence.
+        try:
+            if _thought_is_complete(result):
+                self.reset_pressure_topology({"resolved_accuracy": float(result.coherence or 0.0)})
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora_consciousness_engine.py:thought_discharge",
+                exc=_aurora_boundary_exc,
+                context={"function": "process", "source_file": "aurora_consciousness_engine.py"},
             )
 
         # Attach SediMemory recall fragments to the result
@@ -1658,12 +1861,15 @@ class ConsciousnessEngine:
             try:
                 _coh = float(result.coherence or 0.0)
                 _frame = str(result.frame_applied or "")
-                _sedi_cv = type(envelope.constraint_vector)(
-                    X=float(envelope.constraint_vector.X),
-                    T=float(envelope.constraint_vector.T),
-                    N=float(envelope.constraint_vector.N),
-                    B=max(0.5, float(envelope.constraint_vector.B)),  # binding always active
-                    A=max(0.4, float(envelope.constraint_vector.A)),  # agentic: self-assembled
+                _sedi_cv = _thought_constraint_vector(
+                    type(envelope.constraint_vector), result.adjusted_axes,
+                    type(envelope.constraint_vector)(
+                        X=float(envelope.constraint_vector.X),
+                        T=float(envelope.constraint_vector.T),
+                        N=float(envelope.constraint_vector.N),
+                        B=max(0.5, float(envelope.constraint_vector.B)),  # legacy: no axes carried
+                        A=max(0.4, float(envelope.constraint_vector.A)),
+                    ),
                 )
                 self._sedimemory.ingest_event(
                     content={

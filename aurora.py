@@ -27,6 +27,8 @@ Nothing enters without validation. Nothing exits without personality.
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
+from aurora_internal.aurora_metabolic_clock import MetabolicClock as _MetabolicClock, turn_gated as _turn_gated
+from aurora_internal.aurora_metabolic_steps import register_default_steps as _register_default_steps
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
@@ -4394,6 +4396,12 @@ class ConstraintFieldBalancer:
         Log small relief events for starved axes so their promotion costs drop.
         Only injects for axes genuinely below ideal (gradient > threshold).
         """
+        # In the surface profile systems['genealogy'] is deferred to the
+        # subsurface runtime and can be a plain manifest dict (or None), not the
+        # ConstraintGenealogyLogger. Calling .observe on it raised AttributeError
+        # on every turn; without a real engine there is nothing to record onto.
+        if not callable(getattr(genealogy, "observe", None)):
+            return
         import hashlib as _hl
         from aurora_evolution_stack import PressureVec, TraceItem
         gradient = self.field_gradient()
@@ -5896,7 +5904,56 @@ def _compress_at_crest(user_text: str, systems, state) -> str:
                 for c in contribs[:6]
             ]
             systems["_last_crest_top_source"] = str(contribs[0].get("source", ""))
-        return str(contribs[0].get("content", "") or "").strip()
+
+        # Weighted blend, not winner-take-all: the top-salience contribution
+        # is always the backbone (dominant, per the design), but a second
+        # contribution that is genuinely CLOSE in salience -- not just
+        # present -- gets folded into the same output as a real clause
+        # rather than discarded. A contribution clearly behind the leader
+        # (below _CREST_BLEND_RATIO of its salience) is not blended into the
+        # text: it still exists in _last_crest_ranking above for
+        # observability/crystal-deposit, matching how a low-attention token
+        # in a context window still factors into the computation without
+        # visibly surfacing in the generated text. This is proportional
+        # weighting, not "everything gets concatenated."
+        _CREST_BLEND_RATIO = 0.75   # how close a rival needs to be to the
+                                    # leader's salience to earn a place in
+                                    # the output, not just the ranking
+        _CREST_MAX_BLENDED = 2      # backbone + at most this many rivals
+
+        primary = str(contribs[0].get("content", "") or "").strip()
+        if not primary:
+            return ""
+        top_salience = float(contribs[0].get("salience", 0.0) or 0.0)
+        blended = [primary]
+        blended_meta = [{"source": contribs[0].get("source"), "salience": top_salience}]
+        for c in contribs[1:]:
+            if len(blended) > _CREST_MAX_BLENDED:
+                break
+            c_sal = float(c.get("salience", 0.0) or 0.0)
+            if top_salience <= 0 or (c_sal / top_salience) < _CREST_BLEND_RATIO:
+                continue
+            c_content = str(c.get("content", "") or "").strip()
+            if not c_content or c_content.lower() in primary.lower():
+                continue  # skip empty or already-redundant with what's blended
+            blended.append(c_content)
+            blended_meta.append({"source": c.get("source"), "salience": c_sal})
+
+        if isinstance(systems, dict):
+            systems["_last_crest_blended_sources"] = blended_meta
+
+        if len(blended) == 1:
+            return primary
+
+        # Join as separate sentences rather than a raw space-join, so two
+        # independently-produced fragments don't run together grammatically.
+        joined_parts = []
+        for part in blended:
+            part = part.strip()
+            if part and part[-1] not in ".!?":
+                part += "."
+            joined_parts.append(part)
+        return " ".join(joined_parts).strip()
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -6188,7 +6245,12 @@ def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str
                 led = systems.get("contradiction_ledger")
                 if led is not None and hasattr(led, "record"):
                     try:
-                        led.record(f"use of '{subject}' as '{new_obj}' conflicts with taught meaning")
+                        _taught = ", ".join(sorted(established)[:6]) or "its taught meaning"
+                        led.record(
+                            f"'{subject}' was taught as: {_taught}",
+                            f"'{subject}' used as '{new_obj}' (conflicts with what was taught)",
+                            source_a="taught_meaning", source_b="live_use",
+                        )
                     except Exception as _aurora_boundary_exc:
                         _aurora_record_exception_from_locals(
                             locals(),
@@ -12961,6 +13023,115 @@ def _compute_self_relation(systems: Dict[str, Any], anchor: str) -> Dict[str, An
         return {}
 
 
+def _ensure_entity_node(web: Any, entity_name: str) -> Optional[Any]:
+    """Ensure a persistent OETS node exists for a named entity (a person or
+    other proper-noun referent), so RelationalComparisonEngine.compare() and
+    select_best_comparison_target() -- both already fully generic over any
+    two web nodes, confirmed by reading aurora_relational_comparison.py in
+    full -- have a real peer to find instead of only ever falling through
+    to ground_to_self(). add_node() is idempotent (returns the existing
+    node and calls its own .encounter() if already present, per its own
+    docstring), so calling this every turn a name appears is safe and just
+    reinforces the same node rather than duplicating it.
+
+    Uses role="noun" -- the file's own convention is grammatical roles
+    ("noun, verb, adjective, etc." per SemanticNode's own field comment),
+    and a proper noun naming a person is still, grammatically, a noun; this
+    deliberately does not invent a new "person" role the rest of the
+    ontological web has no existing convention for. Original capitalization
+    is preserved (not lowercased the way topic words are elsewhere) since
+    these are specifically proper nouns.
+    """
+    if web is None or not entity_name or not hasattr(web, "add_node"):
+        return None
+    try:
+        return web.add_node(
+            entity_name, "noun",
+            meaning=f"a person referenced in conversation: {entity_name}",
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_ensure_entity_node",
+            exc=_aurora_boundary_exc,
+            context={"function": "_ensure_entity_node", "source_file": "aurora.py"},
+        )
+        return None
+
+
+def _compute_peer_relation(systems: Dict[str, Any], anchor: str, understood: Dict[str, Any]) -> Dict[str, Any]:
+    """Sibling to _compute_self_relation -- purely additive. Does not
+    change _compute_self_relation's behavior, its call site, or its
+    summary["self_relation"] output; runs alongside it.
+
+    Wiring audit (this pass, verified by reading the full source of
+    aurora_relational_comparison.py): compare() and
+    select_best_comparison_target() were already fully generic over any two
+    web nodes, and select_best_comparison_target() already prefers an
+    external peer over self -- its own docstring says "Returns 'self' if no
+    better context word exists." That path has never run in production for
+    two narrow, confirmed reasons, neither of which is "this doesn't exist
+    yet": (a) nothing ever gave a named entity a real node in the web for
+    it to find, and (b) the one live caller, _compute_self_relation, always
+    calls ground_to_self() directly and never tries
+    select_best_comparison_target() first. This function is that missing
+    other half.
+
+    entities comes from UtteranceParser.parse()'s own 'entities' field
+    (proper-noun extraction that already runs on every turn, now read once
+    via the turn ledger rather than reparsed) -- no new extraction, just
+    finally using what was already being computed and discarded.
+    """
+    rce = systems.get("relational_comparison")
+    web = getattr(rce, "web", None)
+    if rce is None or web is None or not anchor or not hasattr(rce, "select_best_comparison_target"):
+        return {}
+    try:
+        entity_names = [str(e) for e in list(understood.get("entities", []) or []) if e]
+        topic_words = [str(w) for w in list(understood.get("topic_words", []) or []) if w]
+        for name in entity_names:
+            _ensure_entity_node(web, name)
+
+        # Entities first: a named person is a more meaningful peer than an
+        # incidental topic word, and select_best_comparison_target()
+        # returns the FIRST context word with a real node -- order here
+        # sets priority, not just inclusion.
+        context_words = entity_names + topic_words
+        if not context_words:
+            return {}
+
+        target = rce.select_best_comparison_target(anchor, context_words)
+        self_key = getattr(rce, "self_node_key", "self")
+        if not target or target == self_key or target.lower() == str(anchor).lower():
+            return {}  # no real peer found, or the "peer" is just a differently-cased
+                       # copy of the anchor itself (confirmed live: UtteranceParser
+                       # lowercases topic_words/anchor but preserves entity casing,
+                       # so the same name can independently qualify as both) --
+                       # existing self-relation path is unaffected either way
+
+        delta = rce.compare(anchor, target)
+        return {
+            "anchor": anchor,
+            "peer": target,
+            "peer_is_named_entity": target in entity_names,
+            "similarity": delta.similarity,
+            "pressure_delta": delta.pressure_delta,
+            "salience_gap": delta.salience_gap,
+            "relational_type": getattr(delta.relational_type, "value", str(delta.relational_type)),
+            "description": delta.description,
+        }
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_compute_peer_relation",
+            exc=_aurora_boundary_exc,
+            context={"function": "_compute_peer_relation", "source_file": "aurora.py"},
+        )
+        return {}
+
+
 def _apply_noncomp_input_guidance(
     systems: Dict[str, Any],
     state: Any,
@@ -12975,6 +13146,7 @@ def _apply_noncomp_input_guidance(
     understood = dict(getattr(state, "parsed", {}) or {})
     anchor = _select_noncomp_anchor(user_text, understood=understood, pipeline_state=pipeline_state)
     self_relation = _compute_self_relation(systems, anchor)
+    peer_relation = _compute_peer_relation(systems, anchor, understood)
     try:
         summary = dict(interpreter.interpret(user_text).to_dict() or {})
     except Exception as _aurora_boundary_exc:
@@ -12991,6 +13163,7 @@ def _apply_noncomp_input_guidance(
     summary["band_pos"] = band_pos
     summary["anchor"] = anchor
     summary["self_relation"] = self_relation
+    summary["peer_relation"] = peer_relation
     prefer_live_perspective = _should_prefer_live_perspective(
         user_text,
         understood=understood,
@@ -13988,7 +14161,13 @@ def _store_pending_hypothesis_offer(
 
     clean_anchor = str(anchor or "").strip()
     if not clean_anchor and source_text:
-        clean_anchor = _build_lookup_query(source_text, systems)
+        from aurora_turn_ledger import current_turn_ledger
+        _ledger = current_turn_ledger(systems)
+        _understood = (
+            _ledger.parsed if _ledger is not None and _ledger.parsed
+            and _ledger.parsed_source_text == source_text else None
+        )
+        clean_anchor = _build_lookup_query(source_text, systems, understood=_understood)
     offer = {
         'anchor': clean_anchor,
         'source_text': str(source_text or clean_anchor).strip()[:280],
@@ -14539,6 +14718,13 @@ def _detect_researchable_gap(
         )
         return None
 
+    from aurora_turn_ledger import current_turn_ledger
+    _ledger = current_turn_ledger(systems)
+    _understood = (
+        _ledger.parsed if _ledger is not None and _ledger.parsed
+        and _ledger.parsed_source_text == user_text else None
+    )
+
     # The stock detector stores only the first slang term as a gap to avoid
     # over-questioning.  Research has a different cost profile: it can resolve
     # the most specific public term without bothering the user, so prefer a
@@ -14575,7 +14761,7 @@ def _detect_researchable_gap(
             continue
         if _gap_information_source(user_text, gap=gap) != "public":
             continue
-        if _research_target_for_gap(user_text, systems, gap=gap):
+        if _research_target_for_gap(user_text, systems, gap=gap, understood=_understood):
             return gap
     return None
 
@@ -16483,9 +16669,22 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
                 float(meaning_state.get('semantic_pressure', 0.0) or 0.0), 4
             )
             axes_map = dict(meaning_state.get('constraint_meaning_axes', {}) or {})
-            signals['meaning_axes'] = {
-                axis: float(axes_map.get(axis, 0.0) or 0.0) for axis in axes_map
-            }
+            def _axis_scalar(v):
+                # constraint_meaning_axes values are per-axis records (dicts),
+                # not bare floats -- float(dict) raised TypeError on every
+                # turn, dropping meaning_axes from the pipeline signals.
+                if isinstance(v, dict):
+                    for k in ("pressure", "activation", "score", "value", "weight", "strength"):
+                        if isinstance(v.get(k), (int, float)) and not isinstance(v.get(k), bool):
+                            return float(v[k])
+                    nums = [float(x) for x in v.values()
+                            if isinstance(x, (int, float)) and not isinstance(x, bool)]
+                    return max(nums) if nums else 0.0
+                try:
+                    return float(v or 0.0)
+                except (TypeError, ValueError):
+                    return 0.0
+            signals['meaning_axes'] = {axis: _axis_scalar(axes_map.get(axis)) for axis in axes_map}
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -18118,6 +18317,12 @@ def _log_modulation_event(
     interpretation it followed, rather than rediscovered later from a
     poorer representation.
     """
+    # In the surface profile systems['genealogy'] is deferred to the
+    # subsurface runtime and can be a plain manifest dict (or None), not the
+    # ConstraintGenealogyLogger. Calling .observe on it raised AttributeError
+    # on every turn; without a real engine there is nothing to record onto.
+    if not callable(getattr(genealogy, "observe", None)):
+        return
     if not genealogy or not (text_changed or tone_changed):
         return
     try:
@@ -18223,6 +18428,12 @@ def _log_claim_resolution_relief(
     remaining_pairs: List[Tuple[str, str]],
     reason: str = "",
 ) -> None:
+    # In the surface profile systems['genealogy'] is deferred to the
+    # subsurface runtime and can be a plain manifest dict (or None), not the
+    # ConstraintGenealogyLogger. Calling .observe on it raised AttributeError
+    # on every turn; without a real engine there is nothing to record onto.
+    if not callable(getattr(genealogy, "observe", None)):
+        return
     if not genealogy or not resolved_pairs:
         return
     try:
@@ -18369,6 +18580,12 @@ def _log_learning_relief(genealogy: Any, axis: str, magnitude: float, *, notes: 
     the replacement for the nonexistent gen.log_relief(axis, magnitude,
     notes=...) this codebase used to (silently, always-falsely) gate on.
     Never raises; best-effort exactly like the dead code it replaces."""
+    # In the surface profile systems['genealogy'] is deferred to the
+    # subsurface runtime and can be a plain manifest dict (or None), not the
+    # ConstraintGenealogyLogger. Calling .observe on it raised AttributeError
+    # on every turn; without a real engine there is nothing to record onto.
+    if not callable(getattr(genealogy, "observe", None)):
+        return
     if not genealogy:
         return
     try:
@@ -18476,7 +18693,12 @@ def _confess_low_confidence_parse(user_text: str, parsed: Dict[str, Any]) -> Non
 def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
     """Stage 1 up -- Information (X axis): Existence gate -- parse input, OETS concept lookup."""
     try:
-        state.parsed = UtteranceParser().parse(user_text)
+        from aurora_turn_ledger import current_turn_ledger
+        _ledger = current_turn_ledger(systems)
+        if _ledger is not None and _ledger.parsed and _ledger.parsed_source_text == user_text:
+            state.parsed = dict(_ledger.parsed)
+        else:
+            state.parsed = UtteranceParser().parse(user_text)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -18558,6 +18780,7 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
                 from aurora_ivm import IVMEnvelope as _IVMEnvelope
                 _node = _coll.lattice.admit(
                     payload=user_text, payload_type="text", evidence=_turn_evidence,
+                    phases=_content_phase_vector(systems, user_text),
                 )
                 _env = _IVMEnvelope.from_node(_node)
                 _syn = _coll.process(_env)
@@ -18609,19 +18832,7 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
     try:
         _sedi = systems.get('sedimemory')
         if _sedi is not None:
-            _dim = systems.get('dimensional')
-            _cv = None
-            if _dim and hasattr(_dim, 'get_constraint_aggregate'):
-                _agg = _dim.get_constraint_aggregate()
-                if _agg:
-                    from aurora_internal.aurora_constraint_manifold_patched import ConstraintVector as _CV
-                    _cv = _CV(
-                        X=max(0.01, float(_agg.get('X', 0.5))),
-                        T=float(_agg.get('T', 0.3)),
-                        N=float(_agg.get('N', 0.3)),
-                        B=float(_agg.get('B', 0.3)),
-                        A=float(_agg.get('A', 0.3)),
-                    )
+            _cv = _aggregate_constraint_vector(systems, user_text)
             if _cv is not None:
                 _recalled = _sedi.surface_recall(_cv, max_results=4)
                 if _recalled and isinstance(state.pipeline_state, dict):
@@ -18653,8 +18864,13 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
         _wf_pump   = systems.get('pressure_pump')
         _wf_dim    = systems.get('dimensional')
         if _wf_pump is not None and _wf_ifield is not None and _wf_dim is not None:
-            _wf_agg = (_wf_dim.get_constraint_aggregate()
-                       if hasattr(_wf_dim, 'get_constraint_aggregate') else None)
+            # The disturbance is the UTTERANCE's pressure on each axis. It used to be the
+            # dimensional aggregate, which is the same for every utterance (measured: X .698,
+            # B .697, N .697, T .697, A .001 for "What is photosynthesis?" and for "Can you
+            # help me?" alike), so what was said never entered the identity field.
+            _wf_agg = _content_axis_loads(systems, user_text) or (
+                _wf_dim.get_constraint_aggregate()
+                if hasattr(_wf_dim, 'get_constraint_aggregate') else None)
             if _wf_agg:
                 from aurora_waveform_pressure import WaveformPressurePump as _WFPump
                 _wf_dist = _WFPump.from_axis_state(
@@ -19509,7 +19725,7 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
         contract = systems.get("understanding_contract")
         if contract and hasattr(contract, "state"):
             cst = contract.state or {}
-            state.belief_tension = float((cst.get("N") or {}).get("cost_signal", 0.0) or 0.0)
+            state.belief_tension = _belief_tension_from_n_cost(cst.get("N"))
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -19847,6 +20063,94 @@ def _chain_up5_understanding(user_text: str, systems: dict, state: Any, *, turn_
 # _chain_down6_apex removed -- hint propagation folded into _chain_down5_understanding
 
 
+# ---------------------------------------------------------------------------
+# Representational existence (which doctrine governs which state)
+#
+# Two rules coexist in this file and were tested as if they competed:
+#   * D2 Condition 2: a turn with nothing to ground must end in an honest
+#     constraint_abstain -- never a manufactured claim.
+#   * Build 769/770: a communicative baseline ("I understand what you are saying
+#     about X" / "My best read is ...") may never be erased by a weaker reply.
+# They govern different STATES OF REPRESENTATIONAL EXISTENCE. foundational_
+# contract.ExistenceMode is a dependency-ordered ladder of claims about what
+# something IS -- REFERENCE (exists only as relation/description) < TRANSIENT <
+# PERSISTENT < BOUNDED < AGENTIC, each rung requiring the one below
+# (FoundationalContract.classify raises OntologicalViolation otherwise). A token
+# with no lexical description and no ontological node has no rung at all: it is
+# OFF the ladder -- the state the abstain path already names when it confesses
+# WarpTrigger.MISSING_REPRESENTATION. A baseline acknowledgement asserts that
+# what was said is something Aurora can hold and report back; for content that is
+# off the ladder there is nothing to hold, so the honest speech act is the
+# abstain. For content that sits on the ladder (even at its lowest rung) the
+# baseline floor stays fully in force, exactly as Build 770 intends.
+#
+# The rung is not re-derived here: the comprehension gap detector already
+# measures exactly this (its unknown_words are the tokens with neither lexical
+# nor ontological existence), so this reads that measurement.
+# ---------------------------------------------------------------------------
+_ABSTAIN_OFF_LADDER_RATIO = 0.5  # more than half the content is off the ladder
+
+
+def _utterance_representational_state(systems: Dict[str, Any], state: Any,
+                                      user_text: str) -> Dict[str, Any]:
+    """Where the content of this utterance sits relative to the existence ladder.
+
+    Returns {"state": "represented" | "missing_representation" | "unmeasured",
+    "content": [...], "off_ladder": [...], "off_ladder_ratio": float}.
+    Fails OPEN ("unmeasured"): if the detector is unavailable the caller must
+    behave exactly as before this gate existed.
+    """
+    result: Dict[str, Any] = {"state": "unmeasured", "content": [], "off_ladder": [],
+                              "off_ladder_ratio": 0.0}
+    try:
+        # Reuse this turn's single early measurement (_input_representation_state)
+        # when there is one -- it was taken before observation created this turn's
+        # nodes, so it is the truer reading. Callers with no such record (unit
+        # tests, other entry points) fall through to measuring here, as before.
+        _turn = (systems.get("_turn_input_state") if isinstance(systems, dict) else None) or {}
+        if str(_turn.get("overall", "")) in ("unrepresented", "partial", "represented"):
+            result.update(
+                content=list(_turn.get("words", {}).keys()),
+                off_ladder=list(_turn.get("unrepresented") or []),
+                off_ladder_ratio=float(_turn.get("off_ladder_ratio", 0.0) or 0.0),
+            )
+            result["state"] = (
+                "missing_representation"
+                if result["off_ladder_ratio"] > _ABSTAIN_OFF_LADDER_RATIO else "represented"
+            )
+            return result
+        off = _detector_unknown_words(systems, user_text)
+        if off is None:
+            return result
+        parsed = getattr(state, "parsed", None) or {}
+        content = []
+        for w in list(parsed.get("topic_words") or []) + [str(e) for e in (parsed.get("entities") or [])]:
+            w = str(w).lower()
+            if w and w not in content:
+                content.append(w)
+        for w in sorted(off):
+            if w not in content:
+                content.append(w)
+        if not content:
+            result["state"] = "represented"  # nothing to hold, nothing missing
+            return result
+        off_content = [w for w in content if w in off]
+        ratio = len(off_content) / float(len(content))
+        result.update(content=content, off_ladder=off_content, off_ladder_ratio=round(ratio, 3))
+        result["state"] = (
+            "missing_representation" if ratio > _ABSTAIN_OFF_LADDER_RATIO else "represented"
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_utterance_representational_state",
+            exc=_aurora_boundary_exc,
+            context={"function": "_utterance_representational_state", "source_file": "aurora.py"},
+        )
+    return result
+
+
 def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                                auto_search_enabled: bool = True) -> None:
     """Stage 5 down -- Understanding (A axis): From apex understanding, derive what needs saying.
@@ -20098,6 +20402,21 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             ),
             systems=systems,
         ) or {})
+        if isinstance(state.pipeline_state, dict) and _constraint_candidate.get("communicative_baseline"):
+            _rep_state = _utterance_representational_state(systems, state, user_text)
+            state.pipeline_state["representational_existence"] = dict(_rep_state)
+            if _rep_state.get("state") == "missing_representation":
+                # Off the existence ladder: nothing here can be held and reported
+                # back, so the baseline acknowledgement would be a claim without a
+                # referent. Withhold it at the source (both consumers -- the early
+                # arbitration and the Build 770 floor -- read this candidate), so
+                # the D2 Condition 2 honest abstain stands.
+                state.pipeline_state["constraint_baseline_withheld"] = {
+                    "reason": "missing_representation",
+                    "off_ladder": list(_rep_state.get("off_ladder") or []),
+                    "off_ladder_ratio": _rep_state.get("off_ladder_ratio"),
+                }
+                _constraint_candidate = {}
         if isinstance(state.pipeline_state, dict):
             state.pipeline_state["constraint_grounded_candidate"] = dict(_constraint_candidate)
     except Exception as _aurora_boundary_exc:
@@ -21797,6 +22116,279 @@ _CIR_WORD_RE = re.compile(r"[A-Za-z']+")
 _GROUNDED_AUTHORITY_FLOOR = 0.3
 
 
+def _detector_unknown_words(systems: Dict[str, Any], text: str) -> Optional[set]:
+    """Tokens of `text` with neither lexical nor ontological existence.
+
+    This is the comprehension-gap detector's own measurement of the existence
+    ladder -- the single source both representational gates read. None means the
+    detector is unavailable (callers must then fail OPEN and gate nothing).
+    """
+    try:
+        gap_system = systems.get("comprehension_gap_system") if isinstance(systems, dict) else None
+        detector = getattr(gap_system, "detector", None)
+        if detector is None or not hasattr(detector, "detect"):
+            return None
+        perception = systems.get("perception")
+        report = detector.detect(
+            text,
+            lexicon=getattr(perception, "lexicon", None) if perception is not None else None,
+            oets=getattr(perception, "oets", None) if perception is not None else None,
+        ) or {}
+        return {str(w).lower() for w in (report.get("unknown_words") or []) if w}
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_detector_unknown_words",
+            exc=_aurora_boundary_exc,
+            context={"function": "_detector_unknown_words", "source_file": "aurora.py"},
+        )
+        return None
+
+
+def _input_representation_state(systems: Dict[str, Any], understood: Dict[str, Any],
+                                user_text: str = "") -> Dict[str, Any]:
+    """The representational state of the turn's input, measured ONCE per turn.
+
+    A reply is a claim made in a particular representational FORM, and it is wrong
+    in that form when the form claims more than the input's state supports -- not
+    wrong in the abstract. "I understand what you are saying about Zqxv" claims a
+    represented referent; an abstain claims only "I have this string". Which is
+    correct depends on the state measured here.
+
+    The rung is not re-derived: it is the comprehension-gap detector's existence
+    ladder (_detector_unknown_words). It must be read BEFORE this turn's own
+    observation, because observing a word creates its ontological node and the word
+    would then look represented. Stored on systems["_turn_input_state"] so every
+    consumer (the two abstain gates, the boundary surfaces, the reply-form record)
+    reads this one measurement instead of measuring again.
+
+    overall: "unrepresented" (every content word is off the ladder), "partial",
+    "represented", "no_content" (nothing to measure) or "unmeasured" (detector
+    unavailable). Only "unrepresented" ever gates anything; the rest fail open.
+    """
+    off = _detector_unknown_words(systems, user_text)
+    if off is None:
+        return {"overall": "unmeasured", "words": {}, "unrepresented": [],
+                "off_ladder_ratio": 0.0}
+    content: list = []
+    if isinstance(understood, dict):
+        for w in list(understood.get("topic_words") or []) + [str(e) for e in (understood.get("entities") or [])]:
+            w = str(w).lower()
+            if w and w not in content:
+                content.append(w)
+    for w in sorted(off):
+        if w not in content:
+            content.append(w)
+    if not content:
+        return {"overall": "no_content", "words": {}, "unrepresented": [],
+                "off_ladder_ratio": 0.0}
+    words = {w: ("unrepresented" if w in off else "represented") for w in content}
+    off_content = [w for w in content if w in off]
+    ratio = round(len(off_content) / float(len(content)), 3)
+    overall = ("unrepresented" if len(off_content) == len(content)
+               else "partial" if off_content else "represented")
+    return {"overall": overall, "words": words, "unrepresented": sorted(off_content),
+            "off_ladder_ratio": ratio}
+
+
+_ABSTAIN_FORM_SOURCES = frozenset({
+    "constraint_abstain", "constraint_seek", "honest_abstain", "comprehension_gap",
+})
+
+
+def _reply_form(src: str, text: str) -> str:
+    """The representational form a delivered reply speaks in.
+
+    boundary        -- states only what she has (a string) and what she lacks
+    hedged_read     -- "my best read ..." : a claim about STRUCTURE, offered for checking
+    acknowledgement -- "I understand what you are saying about X": claims a referent
+    assertion       -- any grounded answer / composed statement
+    """
+    src = str(src or "")
+    low = str(text or "").strip().lower()
+    if src in _ABSTAIN_FORM_SOURCES:
+        return "boundary"
+    if low.startswith("my best read"):
+        return "hedged_read"
+    if low.startswith("i understand what you are saying") or low.startswith("i understand the relation"):
+        return "acknowledgement"
+    if low.startswith("i hear that you are saying") or "do not yet have" in low or "not yet have enough" in low:
+        return "boundary"
+    return "assertion"
+
+
+def _record_reply_form_state(systems: Dict[str, Any], ledger: Any, resp_A: Any, user_text: str) -> None:
+    """Record whether the delivered form was supported by the input's state.
+
+    A mismatch is not just "a bad answer": it is a specific form claimed at a
+    specific representational state. It is written to the turn ledger (and from
+    there the turn's crystal) and confessed to WARP as FAILED_COMPREHENSION -- the
+    existing trigger for "claimed comprehension that was not there" -- so what is
+    learned is which form was wrong for which state, and a later upgrade in a
+    word's state legitimately unlocks a higher form for the same string.
+    """
+    try:
+        state = dict((systems or {}).get("_turn_input_state") or {})
+        overall = str(state.get("overall", "") or "")
+        if not overall or overall in ("no_content", "unmeasured"):
+            return
+        src = str(getattr(resp_A, "src", "") or "")
+        text = str(getattr(resp_A, "content", "") or "")
+        form = _reply_form(src, text)
+        unrep = [str(w).lower() for w in state.get("unrepresented", [])]
+        named_unrep = [w for w in unrep if w and w in text.lower()]
+        # Over-claims: any non-boundary form for wholly-unrepresented input, or an
+        # acknowledgement/assertion that names a word that exists only as a string.
+        mismatch = bool(
+            form != "boundary" and (
+                overall == "unrepresented"
+                or (form in ("acknowledgement", "assertion") and named_unrep)
+            )
+        )
+        record = {"form": form, "input_state": overall, "unrepresented": unrep,
+                  "named_unrepresented": named_unrep, "mismatch": mismatch}
+        if ledger is not None:
+            ledger.form_state = record
+        if mismatch:
+            from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
+            _warp_guard(
+                source="expression", layer="articulation",
+                trigger=_WT.FAILED_COMPREHENSION, unresolved_text=str(user_text or ""),
+                severity=0.5, persistence_key=f"form:{form}:{str(user_text or '')[:40]}",
+            )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_record_reply_form_state",
+            exc=_aurora_boundary_exc,
+            context={"function": "_record_reply_form_state", "source_file": "aurora.py"},
+        )
+
+
+def _content_axis_loads(systems: Dict[str, Any], text: str) -> Optional[Dict[str, float]]:
+    """See aurora_internal.aurora_input_pressure.content_axis_loads."""
+    try:
+        from aurora_internal.aurora_input_pressure import content_axis_loads
+        return content_axis_loads(systems.get("perception") if isinstance(systems, dict) else None, text)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_content_axis_loads",
+            exc=_aurora_boundary_exc,
+            context={"function": "_content_axis_loads", "source_file": "aurora.py"},
+        )
+        return None
+
+
+def _aggregate_constraint_vector(systems: Dict[str, Any], text: Optional[str] = None) -> Any:
+    """The turn's constraint vector as the dimensional systems currently aggregate it.
+
+    One place for what the turn deposit into SediMemory used to build inline, so the
+    other deposits made during a turn can be located in the same constraint space.
+    None when the dimensional systems expose no aggregate.
+
+    With `text`, the vector is the UTTERANCE's own pressure on the axes (its words' channel
+    axes) when any word has a channel: the aggregate is the same for every utterance, so a
+    deposit or read-back located by it could never tell one stimulus from another. The
+    aggregate remains the fallback for text no word of which has a channel.
+    """
+    try:
+        if text is not None:
+            _loads = _content_axis_loads(systems, text)
+            if _loads:
+                from aurora_internal.aurora_constraint_manifold_patched import ConstraintVector as _CVs
+                return _CVs(
+                    X=max(0.01, float(_loads.get("X", 0.0))),
+                    T=float(_loads.get("T", 0.0)), N=float(_loads.get("N", 0.0)),
+                    B=float(_loads.get("B", 0.0)), A=float(_loads.get("A", 0.0)),
+                )
+        _dim = systems.get("dimensional") if isinstance(systems, dict) else None
+        if not (_dim and hasattr(_dim, "get_constraint_aggregate")):
+            return None
+        _agg = _dim.get_constraint_aggregate()
+        if not _agg:
+            return None
+        from aurora_internal.aurora_constraint_manifold_patched import ConstraintVector as _CV
+        return _CV(
+            X=max(0.01, float(_agg.get("X", 0.5))),
+            T=float(_agg.get("T", 0.3)),
+            N=float(_agg.get("N", 0.3)),
+            B=float(_agg.get("B", 0.3)),
+            A=float(_agg.get("A", 0.3)),
+        )
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_aggregate_constraint_vector",
+            exc=_aurora_boundary_exc,
+            context={"function": "_aggregate_constraint_vector", "source_file": "aurora.py"},
+        )
+        return None
+
+
+def _content_phase_vector(systems: Dict[str, Any], text: str) -> Optional[list]:
+    """See aurora_internal.aurora_input_pressure.content_phase_vector."""
+    try:
+        from aurora_internal.aurora_input_pressure import content_phase_vector
+        return content_phase_vector(systems.get("perception") if isinstance(systems, dict) else None, text)
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:_content_phase_vector",
+            exc=_aurora_boundary_exc,
+            context={"function": "_content_phase_vector", "source_file": "aurora.py"},
+        )
+        return None
+
+
+def _belief_tension_from_n_cost(n_cost: Any) -> float:
+    """Belief tension is what pursuing this turn costs: the N axis's cost.
+
+    The understanding contract's N axis carries a cost BREAKDOWN (coherence_cost,
+    contradiction_cost, boundary_cost, ..., total). No producer ever wrote the old
+    "cost_signal" key this was read from, so belief tension was exactly 0.0 on every
+    turn -- even for a direct contradiction -- and _record_pressure_experience (which
+    needs >= 0.05) never recorded a conversation experience. "cost_signal" is still
+    honoured when present; otherwise the contract's own "total" is used.
+    """
+    n = n_cost if isinstance(n_cost, dict) else {}
+    try:
+        return float(n.get("cost_signal", n.get("total", 0.0)) or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _composer_text_repeats_itself(text: str, span: int = 4) -> bool:
+    """True when the same run of `span`+ words occurs more than once in `text`.
+
+    A standalone composer (no chain candidate to compare against) has only its own
+    alignment score to earn acceptance. With the copula now matched by lemma
+    ("am" -> be), degenerate strings such as
+        "I am that's all for now. I exist that's all for now."
+        "I am it is about what is my name. I am it is about what is my name."
+    scored high enough to be delivered at confidence 1.0. Both are the composer
+    pasting the same clause into a template twice; a genuine answer does not repeat
+    a four-word span verbatim within two sentences.
+    """
+    import re as _re
+    # The same sentence delivered twice ("I am snorbel. I am snorbel.") is degenerate
+    # at any length -- catch it before the span test, which needs 2*span words.
+    sents = [_re.sub(r"\s+", " ", x).strip(" .!?").lower()
+             for x in _re.split(r"(?<=[.!?])\s+", str(text or "").strip()) if x.strip(" .!?")]
+    if len(sents) >= 2 and len(set(sents)) < len(sents) and any(len(x.split()) >= 2 for x in sents):
+        return True
+    toks = _re.findall(r"[a-z0-9']+", str(text or "").lower())
+    if len(toks) < span * 2:
+        return False
+    seen = set()
+    for i in range(len(toks) - span + 1):
+        gram = tuple(toks[i:i + span])
+        if gram in seen:
+            return True
+        seen.add(gram)
+    return False
+
+
 def _grounded_semantic_authority(text: str, user_text: str, systems: dict, confidence: float) -> float:
     """Communication Integrity Repair (2026-08-04): how much weight a
     candidate's CONTENT carries as an actual answer, independent of
@@ -22122,6 +22714,25 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
         )
         if _d2_unified_text in _d2_composer_abstain_templates:
             _d2_unified_text = ""
+        # A composer surface that repeats a multi-word span verbatim ("I am saying
+        # about hello. I am saying about hello.") is the template being filled twice
+        # with the same clause, not fluent output. It reached delivery at confidence
+        # 1.0 through the "meaning preserved" route as well as the standalone route
+        # (they share the same content words as the grounded text, so the
+        # preservation check passes), so reject it here, before either route runs.
+        if _d2_unified_text and _composer_text_repeats_itself(_d2_unified_text):
+            _d2_unified_text = ""
+        # An assertion-form composer surface ("I am snorbel.") claims a referent. When
+        # the input's content is mostly off the existence ladder there is none, so it
+        # is the same over-claim the constraint baseline is withheld for -- read from
+        # the same gate (_utterance_representational_state, same threshold), not a new
+        # one. Verified live: "Kwerp flimz is a snorbel." was delivered as
+        # composer_unified at confidence 1.0.
+        if _d2_unified_text and (
+            _utterance_representational_state(systems, state, user_text).get("state")
+            == "missing_representation"
+        ):
+            _d2_unified_text = ""
 
         _grounded_text = str(getattr(resp_A, "content", "") or "").strip()
         _grounded_confidence = float(getattr(resp_A, "confidence", 0.0) or 0.0)
@@ -22158,6 +22769,7 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
                 _standalone_composer_grounded = bool(
                     float(_standalone_alignment.get("score", 0.0) or 0.0) >= 0.58
                     and _standalone_authority >= _GROUNDED_AUTHORITY_FLOOR
+                    and not _composer_text_repeats_itself(_d2_unified_text)
                 )
                 _reasons = list(_reasons) + [
                     "standalone_relation_grounded"
@@ -24284,12 +24896,22 @@ def _run_reasoning_pipeline(
                             try:
                                 _sedi = systems.get('sedimemory')
                                 if _sedi and hasattr(_sedi, 'ingest_event'):
-                                    _sedi.ingest_event({
-                                        'type': 'expression_misfit',
-                                        'fitness': _fit_result.combined_fitness,
-                                        'lane': getattr(_intention, 'semantic_lane', 'unknown'),
-                                        'source': 'LanguageStructureFitness',
-                                    })
+                                    # ingest_event(content, constraint_vector, ...) REQUIRES the
+                                    # vector; this call passed only the dict, so it raised
+                                    # TypeError (swallowed below) and no misfit ever deposited.
+                                    # It lands where this turn's geometry is.
+                                    _misfit_cv = _aggregate_constraint_vector(systems, user_text)
+                                    if _misfit_cv is not None:
+                                        _sedi.ingest_event(
+                                            {
+                                                'type': 'expression_misfit',
+                                                'fitness': _fit_result.combined_fitness,
+                                                'lane': getattr(_intention, 'semantic_lane', 'unknown'),
+                                                'source': 'LanguageStructureFitness',
+                                            },
+                                            constraint_vector=_misfit_cv,
+                                            source='expression_misfit',
+                                        )
                             except Exception as _aurora_boundary_exc:
                                 _aurora_record_exception_from_locals(
                                     locals(),
@@ -24553,7 +25175,10 @@ def _run_reasoning_pipeline(
                     import pathlib as _rpt_pl
                     _rpt_path = _rpt_pl.Path(str(systems.get("state_dir") or "aurora_state")) / "response_pressure_tuner.json"
                     if _rpt_path.exists() and hasattr(_rpt, "load_state"):
-                        _rpt.load_state(str(_rpt_path))
+                        # load_state() takes the state DICT; handing it the path string
+                        # made it return immediately, so nothing was ever restored.
+                        import json as _rpt_json
+                        _rpt.load_state(_rpt_json.loads(_rpt_path.read_text(encoding="utf-8")))
                 except Exception as _aurora_boundary_exc:
                     _aurora_record_exception_from_locals(
                         locals(),
@@ -25004,7 +25629,11 @@ def _run_reasoning_pipeline(
             processed2,
             mode,
             thought_intent=_derive_thought_intent(systems, state),
-            extra_evidence=_strata_evidence,
+            # The turn's input was already registered with entropy by the gateway.receive()
+            # synthesis above. This is the SAME input again, enriched with recall and the dual-strata
+            # evidence, so it is not a second input: registering it twice made every repeated
+            # message cost twice the repetition penalty (about 0.2 coherence, not 0.1).
+            extra_evidence={**(_strata_evidence or {}), "input_already_registered": True},
         )
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -25534,19 +26163,7 @@ def _run_reasoning_pipeline(
     try:
         _sedi = systems.get('sedimemory')
         if _sedi is not None:
-            _dim = systems.get('dimensional')
-            _cv = None
-            if _dim and hasattr(_dim, 'get_constraint_aggregate'):
-                _agg = _dim.get_constraint_aggregate()
-                if _agg:
-                    from aurora_internal.aurora_constraint_manifold_patched import ConstraintVector as _CV
-                    _cv = _CV(
-                        X=max(0.01, float(_agg.get('X', 0.5))),
-                        T=float(_agg.get('T', 0.3)),
-                        N=float(_agg.get('N', 0.3)),
-                        B=float(_agg.get('B', 0.3)),
-                        A=float(_agg.get('A', 0.3)),
-                    )
+            _cv = _aggregate_constraint_vector(systems, user_text)
             if _cv is not None:
                 # Communication Integrity Repair (2026-08-04), memory-
                 # admission gate: SediMemory had no wellformedness check
@@ -25605,7 +26222,11 @@ def _run_reasoning_pipeline(
                     source='turn_pipeline',
                     oets=_oets_for_sedi,
                 )
-                _sedi.tick(1.0)
+                # A tick is a span of real time now (aurora_internal/aurora_metabolic_clock.py): the
+                # clock ages sediment when a tick closes AFTER a turn. Only a systems dict booted
+                # without a clock keeps the legacy one-unit-per-message tick.
+                if not systems.get('metabolic_clock'):
+                    _sedi.tick(1.0)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -25803,7 +26424,15 @@ def _run_observation_pipeline(
     try:
         wm = systems.get("working_memory")
         if wm:
-            obs.referent_map = wm.resolve_referents(other_text) or {}
+            # record=False: this observes Aurora's OWN just-produced reply, not the
+            # real conversational turn. resolve_referents() otherwise writes its
+            # result to working_memory.last_referent_resolution unconditionally --
+            # confirmed live: the reply's own "saying something about X" boundary
+            # text was overwriting it, and the NEXT real user turn (in
+            # _build_comprehension_response's search-query anchor fallback, aurora.
+            # py ~14280) read that stale reply-derived value back as if it were
+            # fresh context, leaking one turn's reply into the next turn's parse.
+            obs.referent_map = wm.resolve_referents(other_text, record=False) or {}
             inferred_belief["referents"] = dict(obs.referent_map)
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
@@ -28752,32 +29381,13 @@ def boot_aurora(
     })
     if verbose: print(f"  ({len(collective.beings)} beings)")
 
-    # CBU boot registration — NonComp channels + I-State beings (CBU directive Steps 4-5)
-    try:
-        from aurora_internal.aurora_noncomp_registry import boot_register_noncomp_cbus
-        _nc_count = boot_register_noncomp_cbus()
-        if verbose: print(f"  [CBU] NonComp CBUs registered: {_nc_count}")
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:20213",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 20213, "source_file": "aurora.py"},
-        )
-        pass
-    try:
-        _is_count = collective.boot_register_cbus()
-        if verbose: print(f"  [CBU] I-State CBUs registered: {_is_count}")
-    except Exception as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora.py:20218",
-            exc=_aurora_boundary_exc,
-            context={"function": "boot_aurora", "handler_line": 20218, "source_file": "aurora.py"},
-        )
-        pass
+    # CBU boot registration (NonComp channels + I-State beings) removed: it called
+    # aurora_noncomp_registry.boot_register_noncomp_cbus() and
+    # IStateCollective.boot_register_cbus(), neither of which exists -- the CBU
+    # registry design (aurora_cbu_registry.py / aurora_constraint_profile.py) was
+    # superseded by aurora_constraint_unit_adapter.build_constraint_profile, which
+    # every subsystem now calls directly and which has no central registry to
+    # register into. Both calls raised on every boot and wrote two fault records.
 
     # Constraint emitter — the 2026-06-30 migration intended this to replace
     # FGAE/StateVoice/SentenceComposer, but that migration was never
@@ -29633,12 +30243,16 @@ def boot_aurora(
     # Wire L7 → L3.5: update time_dilation + episode sediment now that SimulationEngine is up
     if systems.get('sedimemory') is not None:
         try:
-            _td = (
-                getattr(simulation, "_time_dilation_governor", None)
-                or getattr(simulation, "time_dilation", None)
-            )
-            if _td is not None:
-                systems['sedimemory']._dilation = _td
+            # Sediment is deliberately NOT attached to a governor here. This block used to look for
+            # `simulation._time_dilation_governor` / `simulation.time_dilation`; the simulation keeps its governor
+            # at `simulation.session.governor`, so the wire was dead from the start (its error swallowed), and the
+            # session governor's output is consumed by nothing but the daemon/hub display. Correcting the
+            # attribute would have attached the SIMULATION's governor (a factor reflecting simulated episodes) to
+            # LIVE sediment, scaling her real-time aging. Sediment is never dilated, by any governor: it ages by the
+            # time that actually elapsed (SediMemory.tick). A faster core changes how many internal processes may
+            # operate on sediment in a span, not how old sediment is. The reference is kept for status and audit,
+            # never wired in.
+            systems['_simulation_governor'] = getattr(getattr(simulation, "session", None), "governor", None)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -29668,6 +30282,48 @@ def boot_aurora(
     if surface_profile:
         if verbose:
             print("  [EVO] Evolutionary chain deferred to subsurface runtime")
+        # The deferral is of the CHAIN (chamber, link promotion, evolution). The genealogy LOGGER
+        # is not part of it -- it builds in 0.01s -- yet the surface left systems['genealogy']
+        # empty, so every consumer that reads it (the contract's per-turn genealogy events, the
+        # grammar engine's pressure_orientation(), the relief injection) silently did nothing or
+        # fell back to a constant, and the surface process had no genealogy at all. It now has a
+        # real logger: state restored READ-ONLY from what the subsurface runtime persists, writing
+        # only to its own directory so the two processes can never collide on a file.
+        try:
+            from aurora_evolution_stack import ConstraintGenealogyLogger, GenealogyConfig
+            from aurora_runtime import _restore_genealogy_state
+            import datetime as _dt
+            _gen_src = os.path.join(state_dir, "genealogy")
+            _gen_dir = os.path.join(state_dir, "genealogy_surface")
+            os.makedirs(_gen_dir, exist_ok=True)
+            _surface_genealogy = ConstraintGenealogyLogger(
+                run_id="surface_" + _dt.datetime.now().strftime("%Y-%m-%d_%H%M%S"),
+                config=GenealogyConfig(),
+                output_dir=_gen_dir,
+            )
+            # This logger restores the canonical state read-only and persists ONLY its own session
+            # state (the per-axis curves, tick state) to its own directory -- never the canonical files.
+            _surface_genealogy.persist_scope = "session_state"
+            _restored = _restore_genealogy_state(_surface_genealogy, _gen_src)
+            systems['genealogy'] = _surface_genealogy
+            if verbose:
+                print(f"  [EVO] Surface genealogy logger live (restored {_restored})")
+            _function_lineage_live = systems.get('function_lineage')
+            if _function_lineage_live is not None and hasattr(_function_lineage_live, 'attach_genealogy'):
+                _function_lineage_live.attach_genealogy(_surface_genealogy)
+            _dps_g = getattr(systems.get('dimensional'), 'dps', None)
+            if _dps_g is not None:
+                if hasattr(_dps_g, 'set_warp_genealogy'):
+                    _dps_g.set_warp_genealogy(_surface_genealogy)
+                if hasattr(_surface_genealogy, 'set_dps'):
+                    _surface_genealogy.set_dps(_dps_g)
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__,
+                operation="exception_handler:aurora.py:surface_genealogy_logger",
+                exc=_aurora_boundary_exc,
+                context={"function": "boot_aurora", "source_file": "aurora.py"},
+            )
     else:
         try:
             from aurora_internal.aurora_evolution_chamber import EvolutionaryChamber
@@ -30129,6 +30785,19 @@ def boot_aurora(
             systems['relational_comparison'] = _RCE(_oets_web)
             if verbose:
                 print(f"  [RELATIONAL] RelationalComparisonEngine active")
+            # Attach the same real OETS web reference to the already-
+            # constructed I-State collective (built earlier this boot) so
+            # IStateBeing resonance can read real, experience-accumulated
+            # per-word axis signal (SemanticNode.associated_axes +
+            # emotional_valence) instead of only the self-referential
+            # lattice snapshot. Post-construction attribute, not a
+            # constructor change -- every other IStateCollective()
+            # construction site (tests included) is unaffected, and
+            # _experience_derived_axis_snapshot() degrades to the existing
+            # behavior whenever this attribute is absent.
+            _collective_ref = systems.get('collective')
+            if _collective_ref is not None:
+                _collective_ref._oets_web_ref = _oets_web
     except Exception as _rce_e:
         if verbose:
             print(f"  [RELATIONAL] RelationalComparisonEngine unavailable: {_rce_e}")
@@ -31280,6 +31949,37 @@ def boot_aurora(
                 context={"function": "boot_aurora", "source_file": __file__},
             )
 
+    # The metabolic clock: a tick is a span of real time, not a message (see
+    # aurora_internal/aurora_metabolic_clock.py and AURORA_TICK_CLOCK_MAP.md). Built last, so every
+    # subsystem it drives exists. The turn gate on process_external_user_turn guarantees nothing
+    # consolidates mid-turn; AURORA_TICK_SECONDS overrides the five-minute default.
+    try:
+        try:
+            _tick_seconds = float(os.environ.get("AURORA_TICK_SECONDS", "") or 300.0)
+        except ValueError:
+            _tick_seconds = 300.0
+        _clock = _MetabolicClock(
+            tick_seconds=_tick_seconds,
+            state_path=os.path.join(state_dir, "metabolic_clock.json"),
+            background=True,
+        )
+        _clock.restore()            # time away still counts: the tide that came in while she was gone
+        _clock.bind(systems)
+
+        # sediment, entropy, the Dimensional Energy Regulator and the lattice (aurora_metabolic_steps.py)
+        _register_default_steps(_clock, systems)
+        _clock.start_heartbeat()        # close due ticks while she is idle: she wakes already rested
+        systems['metabolic_clock'] = _clock
+        if verbose:
+            print(f"  [CLOCK] Metabolic clock live ({_tick_seconds:g}s tick; steps: {', '.join(_clock.step_names)})")
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora.py:boot_aurora:metabolic_clock",
+            exc=_aurora_boundary_exc,
+            context={"function": "boot_aurora", "source_file": "aurora.py"},
+        )
+
     return systems
 
 
@@ -31325,6 +32025,19 @@ def shutdown_aurora(systems: Dict[str, Any]) -> None:
                 context={"function": "shutdown_aurora", "source_file": __file__},
             )
 
+    metabolic_clock = systems.get('metabolic_clock')
+    if metabolic_clock is not None and hasattr(metabolic_clock, 'stop_heartbeat'):
+        try:
+            metabolic_clock.stop_heartbeat()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:shutdown_aurora:metabolic_clock",
+                exc=_aurora_boundary_exc,
+                context={"function": "shutdown_aurora", "source_file": __file__},
+            )
+
     connectivity_monitor = systems.get('_connectivity_monitor')
     if connectivity_monitor is not None and hasattr(connectivity_monitor, 'stop'):
         try:
@@ -31350,6 +32063,20 @@ def shutdown_aurora(systems: Dict[str, Any]) -> None:
             exc=_aurora_boundary_exc,
             context={"function": "shutdown_aurora", "source_file": __file__},
         )
+
+    if systems.get('_curiosity_engine') is not None:
+        try:
+            from aurora_curiosity_engine import stop_curiosity_background
+            stop_curiosity_background()
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora.py:shutdown_aurora:curiosity",
+                exc=_aurora_boundary_exc,
+                context={"function": "shutdown_aurora", "source_file": __file__},
+            )
+    systems['_curiosity_engine'] = None
 
     screen_observer = systems.get('screen_observer')
     if screen_observer is not None and hasattr(screen_observer, 'stop'):
@@ -33032,12 +33759,15 @@ def dual_question_pipeline(
             self.emotional_tone = emotional_tone
             self.confidence = confidence
 
-    _pre_parsed = dict(systems.get("_pre_parsed_utterance") or {})
+    from aurora_turn_ledger import current_turn_ledger
+    _ledger = current_turn_ledger(systems)
+    _pre_parsed = dict(_ledger.parsed) if _ledger is not None and _ledger.parsed else dict(systems.get("_pre_parsed_utterance") or {})
     intent = _classify_input_intent(
         user_text,
         _parsed=_pre_parsed if _pre_parsed else None,
     )
-    systems.pop("_pre_parsed_utterance", None)
+    # No pop. The ledger is turn-scoped and reset at the top of
+    # _run_live_response_turn -- every other consumer this turn still needs it.
 
     # ── Directive dispatch ───────────────────────────────────────────────────
     # When the utterance parser identifies a directive/imperative frame,
@@ -33089,7 +33819,11 @@ def dual_question_pipeline(
 
     understood = None
     quasiarch_events: List[Dict[str, Any]] = []
-    lookup_request = _resolve_lookup_request(user_text, systems)
+    lookup_request = _resolve_lookup_request(
+        user_text, systems,
+        understood=(_ledger.parsed if _ledger is not None and _ledger.parsed
+                    and _ledger.parsed_source_text == user_text else None),
+    )
     hypothesis_offer = {} if lookup_request else _resolve_hypothesis_offer(user_text, systems)
     manual_lookup = bool(lookup_request)
     search_query_text = str((lookup_request or {}).get('query') or user_text)
@@ -33581,6 +34315,145 @@ def dual_question_pipeline(
     )
 
 
+def _deposit_turn_experience_into_crystals(
+    systems: Dict[str, Any],
+    ledger: "TurnLedger",
+) -> None:
+    """General per-turn experiential write -- the crystal deposit
+    _deposit_poedex_result_into_crystals was never meant to be, since that
+    one only ever stored a looked-up concept definition. This stores what
+    actually happened: the input, how it was understood, which contribution
+    won the crest ranking and why, and the response that went out. Same
+    write pattern (dps._get_or_create / add_facet / use / evolve) already
+    verified in _deposit_poedex_result_into_crystals -- no new crystal API.
+    """
+    if not isinstance(systems, dict) or ledger is None:
+        return
+    dim = systems.get("dimensional")
+    dps = getattr(dim, "dps", None) if dim is not None else None
+    if dps is None:
+        return
+    try:
+        tick = ledger.turn_tick if ledger.turn_tick is not None else 0
+        crystal = dps._get_or_create(f"turn:{tick}")
+        crystal.add_facet("input", str(ledger.user_text or "")[:200], confidence=0.90)
+        crystal.add_facet(
+            "systems_touched",
+            ", ".join(ledger.systems_touched)[:200],
+            confidence=0.70,
+        )
+        if ledger.crest_top_source:
+            crystal.add_facet(
+                "crest_winner",
+                f"{ledger.crest_top_source}: " + str(
+                    (ledger.crest_contributions[0].get("content", "")
+                     if ledger.crest_contributions else "")
+                )[:150],
+                confidence=0.75,
+            )
+        crystal.add_facet("output", str(ledger.final_response or "")[:200], confidence=0.85)
+        _fs = getattr(ledger, "form_state", None) or {}
+        if _fs:
+            crystal.add_facet(
+                "form_state",
+                f"{_fs.get('form')} @ {_fs.get('input_state')}"
+                + (" MISMATCH" if _fs.get("mismatch") else ""),
+                confidence=0.80,
+            )
+        crystal.use()
+        crystal.evolve()
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_deposit_turn_experience_into_crystals",
+            exc=_aurora_boundary_exc,
+            context={"function": "_deposit_turn_experience_into_crystals", "source_file": "aurora.py"},
+        )
+        pass
+
+
+def _get_or_create_curiosity_engine(systems: Dict[str, Any]) -> Optional[Any]:
+    """Lazily construct and cache a real CuriosityEngine on systems.
+
+    aurora_curiosity_engine.CuriosityEngine has never been instantiated
+    anywhere in this codebase -- confirmed by checking every one of its
+    public classes (CuriosityObject, Conclusion, ChallengeResult,
+    CuriosityEngine itself) against aurora.py: zero references before this
+    function. This constructs it for real, from six dependencies verified
+    against their actual source modules rather than assumed:
+      - pressure_source: systems['dimensional'] -- confirmed via
+        aurora_dimensional_systems.DimensionalSystems._current_pressure_vec,
+        the same accessor aurora_constraint_reasoner.py, aurora_thought_
+        formation.py and aurora_daemon.py already call this way.
+      - field_map: aurora_constraint_field_map.ConstraintFieldAccumulator --
+        confirmed never constructed anywhere in the repo, but its __init__
+        takes only optional numeric defaults, so building one fresh here is
+        not standing up new infrastructure, just finally calling a
+        zero-dependency constructor that already existed.
+      - tool_mind: aurora_tool_mind._TOOL_OBSERVER, the module's own
+        already-instantiated singleton.
+      - sedimemory: systems['sedimemory'], already real and populated
+        during boot_aurora.
+      - self_grounder: aurora_self_grounding.SelfGroundingFallback(),
+        confirmed constructed the same no-arg way at
+        aurora_internal/tool_registry.py:859.
+      - tension_monitor: aurora_self_grounding._TENSION_MONITOR, the
+        module's own already-instantiated singleton.
+
+    Best-effort: returns None (never raises) if a dependency is genuinely
+    unavailable this boot, so a missing piece degrades curiosity rather
+    than breaking the turn it's called from.
+
+    On first construction this also starts the engine's own real background
+    thread (aurora_curiosity_engine.start_curiosity_background) -- the
+    actual mechanism this module was built with for running "independently
+    of user input," already verified working in the mobile bridge
+    (flutter_app/.../aurora_bridge.py:1687, tick_interval_s=90.0, matched
+    here) and in scripts/aurora_ci_segment.py. That thread, not this
+    function's caller, is what actually runs curiosity cycles going
+    forward -- this function's caller only needs to ensure the engine gets
+    constructed and its thread started once per boot.
+    """
+    if not isinstance(systems, dict):
+        return None
+    existing = systems.get("_curiosity_engine")
+    if existing is not None:
+        return existing
+    try:
+        from aurora_curiosity_engine import CuriosityEngine, start_curiosity_background
+        from aurora_constraint_field_map import ConstraintFieldAccumulator
+        from aurora_tool_mind import _TOOL_OBSERVER
+        from aurora_self_grounding import SelfGroundingFallback, _TENSION_MONITOR
+
+        field_map = systems.get("_constraint_field_accumulator")
+        if field_map is None:
+            field_map = ConstraintFieldAccumulator()
+            systems["_constraint_field_accumulator"] = field_map
+
+        engine = CuriosityEngine(
+            pressure_source=systems.get("dimensional"),
+            field_map=field_map,
+            tool_mind=_TOOL_OBSERVER,
+            sedimemory=systems.get("sedimemory"),
+            self_grounder=SelfGroundingFallback(),
+            tension_monitor=_TENSION_MONITOR,
+            systems=systems,
+        )
+        systems["_curiosity_engine"] = engine
+        start_curiosity_background(engine, tick_interval_s=90.0)
+        return engine
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="exception_handler:aurora.py:_get_or_create_curiosity_engine",
+            exc=_aurora_boundary_exc,
+            context={"function": "_get_or_create_curiosity_engine", "source_file": "aurora.py"},
+        )
+        return None
+
+
 def _run_live_response_turn(
     systems: Dict[str, Any],
     user_text: str,
@@ -33645,6 +34518,15 @@ def _run_live_response_turn(
     systems.pop("_last_concept_crystal_trace", None)
     systems.pop("_last_gap_result", None)
     systems.pop("_last_rubric_evidence", None)
+    systems.pop("_turn_input_state", None)
+
+    # Canonical per-turn ledger: single source of truth for this turn's
+    # parse, crest ranking, and chain-down trace. Replaces the previous
+    # pattern where systems["_pre_parsed_utterance"] was consumed-and-popped
+    # by whichever function happened to read it first, leaving every other
+    # consumer to silently reparse from scratch.
+    from aurora_turn_ledger import reset_turn_ledger
+    _turn_ledger = reset_turn_ledger(systems, user_text, turn_tick=turn_tick)
 
     # Measure the previous emitted response against the current receiver turn
     # before observation validation clears the pending contract record.  The
@@ -33672,6 +34554,8 @@ def _run_live_response_turn(
 
     if turn_tick is None:
         turn_tick = int(getattr(working_memory, 'turn_count', 0) or 0) + 1
+    if _turn_ledger is not None:
+        _turn_ledger.turn_tick = turn_tick
 
     # ---- THOUGHT BRAID — STATE phase: tap braid, build ThoughtState for this turn ----
     try:
@@ -33981,6 +34865,15 @@ def _run_live_response_turn(
     try:
         _parse_text = str((systems.get("_inline_vocab_lookup") or {}).get("grounded_text", "") or user_text)
         turn_understood = dict(UtteranceParser().parse(_parse_text) or {})
+        if _turn_ledger is not None:
+            _turn_ledger.parsed = dict(turn_understood or {})
+            _turn_ledger.parsed_source_text = _parse_text
+        # Measured now, before ingest_interaction / process_interaction create nodes
+        # for this turn's words -- afterwards every word would look "represented".
+        _turn_input_state = _input_representation_state(systems, turn_understood, user_text)
+        systems["_turn_input_state"] = _turn_input_state
+        if _turn_ledger is not None:
+            _turn_ledger.input_state = dict(_turn_input_state)
         try:
             from aurora_internal.aurora_constraint_semantic_continuity import bind_external_interaction_event
             _receiver_name_turn = str(getattr(systems.get("core_identity"), "self_name", "") or "Aurora")
@@ -34432,6 +35325,12 @@ def _run_live_response_turn(
                     exc=_aurora_boundary_exc,
                     context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
                 )
+        _record_reply_form_state(systems, _turn_ledger, resp_A, user_text)
+        if _turn_ledger is not None:
+            _turn_ledger.final_response = str(resp_A.content if hasattr(resp_A, "content") else resp_A or "")
+            _turn_ledger.crest_contributions = list(systems.get("_last_crest_ranking") or [])
+            _turn_ledger.crest_top_source = str(systems.get("_last_crest_top_source", "") or "")
+            _deposit_turn_experience_into_crystals(systems, _turn_ledger)
         return {
             'input': user_text,
             'resp_A': resp_A,
@@ -34959,6 +35858,7 @@ def _run_live_response_turn(
                 understood,
                 user_text,
                 aurora_text=getattr(resp_A, 'content', '') or "",
+                aurora_src=str(getattr(resp_A, 'src', '') or ''),
             )
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
@@ -35148,11 +36048,14 @@ def _run_live_response_turn(
             _ifield_refl = systems.get('identity_field')
             if _ifield_refl is not None and hasattr(_ifield_refl, 'ingest_internal_signal'):
                 try:
-                    _refl_tension = float(_refl.get('understanding', {}).get('tension_total', 0.0) or 0.0)
+                    _refl_tension = float(_refl.get('tension_total', _refl.get('understanding', {}).get('tension_total', 0.0)) or 0.0)
                     _refl_reached = bool(_refl.get('reached_understanding', False))
                     if _refl_reached:
                         # Resolved understanding — release pressure via valuation signal
-                        _ifield_refl.ingest_internal_signal('valuation', magnitude=0.6, source_axis='A')
+                        # Its strength is how accurate the resolved understanding is. It was a hard-coded 0.6, which
+                        # held agency on a flat plateau (~0.93) after every resolved turn whatever had been resolved.
+                        _refl_acc = float(_refl.get('understanding', {}).get('resolved_accuracy', 0.5) or 0.0)
+                        _ifield_refl.ingest_internal_signal('valuation', magnitude=max(0.0, min(1.0, _refl_acc)), source_axis='A')
                     else:
                         # Unresolved tension — drives N-axis pressure
                         _mag = min(1.0, 0.3 + _refl_tension)
@@ -35342,7 +36245,14 @@ def _run_live_response_turn(
         systems["_rpt_save_count"] = _rpt_sc
         if _rpt_ex and _rpt_sc % 8 == 0 and hasattr(_rpt_ex, "export_state"):
             import pathlib as _rpt_pl2
-            _rpt_ex.export_state(str(_rpt_pl2.Path(str(systems.get("state_dir") or "aurora_state")) / "response_pressure_tuner.json"))
+            # export_state() returns the state dict and takes no path -- it never wrote
+            # a file. The old call passed a path, so it raised TypeError on every 8th
+            # save and the tuner's history was never persisted.
+            from aurora_persistence_utils import atomic_write_json as _rpt_write
+            _rpt_write(
+                _rpt_pl2.Path(str(systems.get("state_dir") or "aurora_state")) / "response_pressure_tuner.json",
+                _rpt_ex.export_state(), indent=2, default=str,
+            )
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -35410,6 +36320,27 @@ def _run_live_response_turn(
                     operation="exception_handler:aurora.py:24398",
                     exc=_aurora_boundary_exc,
                     context={"function": "_run_live_response_turn", "handler_line": 24398, "source_file": "aurora.py"},
+                )
+                pass
+        if turn_tick % 15 == 0:
+            # aurora_curiosity_engine.CuriosityEngine has a complete, real
+            # background-thread scheduler already (start_curiosity_
+            # background / stop_curiosity_background) -- verified already
+            # wired into the mobile bridge and scripts/aurora_ci_segment.py,
+            # just never into this desktop path. This block only needs to
+            # trigger the one-time construction (which starts that thread);
+            # actual cycles then run on the thread's own 90s timer, fully
+            # decoupled from turn count -- this is not where cycles happen.
+            try:
+                _get_or_create_curiosity_engine(systems)
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="exception_handler:aurora.py:_run_live_response_turn:curiosity_cycle",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+
                 )
                 pass
         if turn_tick % 50 == 0:
@@ -35639,8 +36570,9 @@ def _run_live_response_turn(
                 _compiled = None
                 if hasattr(_ec, "compile_from_buffer"):
                     _compiled = _ec.compile_from_buffer(_ebuf, session_id=str(session_id or "live"))
-                elif hasattr(_ec, "compile_from_json"):
-                    _compiled = _ec.compile_from_json(_ebuf, session_id=str(session_id or "live"))
+                # (compile_from_json takes a file path, not a turn buffer -- the old
+                # fallback here passed it a list plus a session_id kwarg and raised
+                # TypeError; compile_from_buffer now exists, so no fallback is needed.)
                 if _compiled and hasattr(_compiled, "to_dict"):
                     systems["_last_episode_pack"] = _compiled.to_dict()
                 elif _compiled:
@@ -35853,7 +36785,7 @@ def _run_live_response_turn(
     try:
         _wf_pump_out = systems.get('pressure_pump') if isinstance(systems, dict) else None
         _wf_ifield_out = systems.get('identity_field') if isinstance(systems, dict) else None
-        _out_axes = dict(_last_turn_state_out.axis_activation or {}) if _last_turn_state_out is not None else {}
+        _out_axes = dict(getattr(_last_turn_state_out, "axis_activation", None) or {}) if _last_turn_state_out is not None else {}
         if _wf_pump_out is not None and _wf_ifield_out is not None and _out_axes and _final_text_fb:
             from aurora_waveform_pressure import WaveformPressurePump as _WFPumpOut
             _out_dist = _WFPumpOut.from_axis_state(
@@ -35966,6 +36898,7 @@ def _delivered_text_echoes_prior_turn(text: str, systems: Dict[str, Any],
         return {"echoed": False}
 
 
+@_turn_gated
 def process_external_user_turn(
     systems: Dict[str, Any],
     user_text: str,
@@ -36001,6 +36934,13 @@ def process_external_user_turn(
         return {}
     existence_mode = systems.get("ExistenceMode")
     if existence_mode is None:
+        return {}
+    # A blank / whitespace-only message is not a turn. Previously it was run through
+    # the whole pipeline: it advanced the turn counter, was written to memory, and got
+    # a confident (conf 1.0) reply stitched from the PREVIOUS turn's content
+    # ("I am it is about what is my name..."). Same empty result the function already
+    # returns for an unusable systems dict; callers all read it with .get("resp_A").
+    if not str(user_text or "").strip():
         return {}
 
     selected_mode = mode_override
@@ -36257,6 +37197,13 @@ def process_external_user_turn(
                 context={"function": "process_external_user_turn", "source_file": "aurora.py"},
             )
             _si_episode_id = ""
+    # Turn-scoped write batching (aurora_turn_persistence): hot state files that
+    # were rewritten dozens of times per turn are now written once, in `finally`.
+    try:
+        from aurora_internal.aurora_turn_persistence import begin_write_batch
+        _write_batch_targets = begin_write_batch(systems)
+    except Exception:
+        _write_batch_targets = []
     try:
         result = _run_live_response_turn(
             systems=systems,
@@ -36465,6 +37412,11 @@ def process_external_user_turn(
                 pass
         raise
     finally:
+        try:
+            from aurora_internal.aurora_turn_persistence import end_write_batch
+            end_write_batch(_write_batch_targets)
+        except Exception:
+            pass
         # Build 613 (Reflective-Introspection Misrouting Repair B): a
         # reflective context (pending or active) must never survive past
         # the turn that produced it -- success, exception, or otherwise.

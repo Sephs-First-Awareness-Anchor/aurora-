@@ -333,6 +333,7 @@ class TopologicalSemanticCoordinator:
         sub_crests: Sequence[Any] = (),
         context_family: Optional[str] = None,
         dps: Any = None,
+        raw_axis_tensions: Optional[Dict[str, float]] = None,
     ) -> CoordinatorSnapshot:
         if turn_id and turn_id == self.last_observed_turn_id and self.latest_snapshot is not None:
             self._observation_log.append({"turn_id": turn_id, "fresh": False, "ts": time.time()})
@@ -340,6 +341,77 @@ class TopologicalSemanticCoordinator:
 
         adjusted_axes = dict(adjusted_axes or {})
         canonical_signature, rank_meaning_profiles = _get_meaning_evolution()
+
+        # Confirmed bug (this pass): adjusted_axes arrives keyed by full
+        # axis names (existence/temporal/energy/boundary/agency) -- verified
+        # by instrumenting a real live turn. _derive_base_meaning_form and
+        # rank_meaning_profiles both key their lookups by the single-letter
+        # codes (X/T/N/B/A, via AXES/AXIS_ORDER), so every .get(axis, 0.0)
+        # silently missed and defaulted to 0.0 -- for the entire history of
+        # this system (confirmed: 0 of 4039 real mtsl_shadow_comparison.jsonl
+        # entries ever had a non-empty base_forms).
+        #
+        # CORRECTED (same pass): the first version of this fix hand-wrote
+        # its own 5-pair translation dict here. That was a mistake --
+        # aurora_meaning_evolution.py already defines exactly this
+        # normalization as axis_token()/AXIS_ALIASES, richer than the
+        # hand-written version (it also covers "unity"/"causality"/
+        # "potential"/"cost"/"structure"/"information"/"accuracy"/
+        # "correction"/"understanding"/"interpretation", not just the 5
+        # literal axis names), sitting unused in the very file that needed
+        # it. Reusing it here instead of the parallel version.
+        # adjusted_axes itself is intentionally left untouched below --
+        # resolve_pressure_coordinate() and TopologyFrame.from_vectors()
+        # both already work correctly with the full-word keys as given.
+        try:
+            from ..aurora_meaning_evolution import axis_token as _axis_token
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/topological_semantic_coordinator.py:axis_token_import",
+                exc=_aurora_boundary_exc,
+                context={"function": "observe_turn", "source_file": "aurora_internal/dual_strata/topological_semantic_coordinator.py"},
+            )
+            _axis_token = None
+        _axes_by_code = dict(adjusted_axes)
+        if _axis_token is not None:
+            for _raw_key, _raw_val in adjusted_axes.items():
+                _code = _axis_token(_raw_key)
+                if _code is not None and _code not in _axes_by_code:
+                    _axes_by_code[_code] = _raw_val
+
+        # Second, separate bug found in the same pass, deeper than the key
+        # mismatch above: SituationalFrame.apply() (aurora_consciousness_
+        # engine.py) computes adjusted_axes as tension * weight, where the
+        # four default frames' weights are a normalized ~1.0-summing
+        # distribution (0.1-0.35 per axis, "balanced" frame caps every axis
+        # at exactly 0.2) -- a RELATIVE-EMPHASIS scale, not an absolute
+        # intensity. rank_meaning_profiles' min_axis_activation=0.45 default
+        # expects an absolute 0-1 intensity. With every current frame's max
+        # weight capped at 0.35, adjusted_axes cannot mathematically reach
+        # 0.45 on any axis regardless of how intense the turn actually is --
+        # confirmed structurally, not just empirically thin data.
+        #
+        # raw_axis_tensions (when the caller provides it -- optional,
+        # additive parameter, existing callers unaffected) is
+        # SynthesisResult.axis_tensions itself, BEFORE frame-weighting:
+        # pos_resonance - neg_resonance per axis (foundational_contract.py's
+        # AXES pairs), a genuine, unscaled measure of how strongly this turn
+        # engaged that axis in either direction. It is signed, so abs() is
+        # used -- a strongly one-sided negative tension is still strong
+        # engagement, not silently clipped to zero the way
+        # rank_meaning_profiles' own max(0.0, ...) would otherwise treat it.
+        # This takes priority over the frame-weighted values above for
+        # meaning-classification specifically; adjusted_axes itself (and
+        # its behavior for every other consumer in this function) is
+        # unchanged.
+        if raw_axis_tensions and _axis_token is not None:
+            for _raw_key, _raw_val in raw_axis_tensions.items():
+                _code = _axis_token(_raw_key)
+                if _code is not None:
+                    _axes_by_code[_code] = abs(float(_raw_val or 0.0))
+
 
         coord = None
         try:
@@ -354,7 +426,7 @@ class TopologicalSemanticCoordinator:
             )
             coord = None
         manifold_slot_id = coord.slot_id if coord is not None else None
-        base_meaning_form = _derive_base_meaning_form(adjusted_axes, canonical_signature)
+        base_meaning_form = _derive_base_meaning_form(_axes_by_code, canonical_signature)
 
         frame = TopologyFrame.from_vectors(
             turn_id=turn_id,
@@ -435,7 +507,7 @@ class TopologicalSemanticCoordinator:
         base_forms = []
         if rank_meaning_profiles is not None:
             try:
-                base_forms = rank_meaning_profiles(adjusted_axes)
+                base_forms = rank_meaning_profiles(_axes_by_code)
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),

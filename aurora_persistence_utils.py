@@ -19,15 +19,49 @@ def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
+# Payloads whose compact form is at most this many bytes are still written
+# indented (readable, byte-identical to the historical format). Larger ones are
+# written compact: json only uses its C encoder when indent is None -- with
+# indent set it falls back to a pure-Python encoder (measured: 21M
+# _iterencode_dict calls in one live turn), which made multi-hundred-KB state
+# files the single largest write cost. Content is identical either way.
+_READABLE_JSON_LIMIT_BYTES = 32 * 1024
+_SERIALIZE_RETRIES = 3
+
+
+def _serialize_json(data: Any, indent: Optional[int], default) -> str:
+    """Serialize to one string (one write, instead of json.dump's per-chunk
+    writes), compact for large payloads, and retry the mutation race.
+
+    Other threads legitimately mutate live state dicts while a persist runs
+    ("dictionary changed size during iteration" was observed in
+    atomic_write_json under real load); a retry almost always succeeds because
+    the mutation window is microseconds.
+    """
+    last_exc: Optional[BaseException] = None
+    for attempt in range(_SERIALIZE_RETRIES):
+        try:
+            compact = json.dumps(data, default=default, separators=(",", ":"))
+            if indent is None or len(compact) > _READABLE_JSON_LIMIT_BYTES:
+                return compact
+            return json.dumps(data, indent=indent, default=default)
+        except RuntimeError as exc:  # dict/list/set changed during iteration
+            last_exc = exc
+            time.sleep(0.005 * (attempt + 1))
+    assert last_exc is not None
+    raise last_exc
+
+
 def atomic_write_json(path: Path, data: Dict[str, Any], *, indent: int = 2, default=None) -> bool:
     """Atomically write JSON to disk under a process-wide persistence lock."""
     tmp = None
     with PERSISTENCE_LOCK:
         try:
             _ensure_parent(path)
+            text = _serialize_json(data, indent, default)
             fd, tmp = __import__('tempfile').mkstemp(dir=str(path.parent), suffix='.tmp')
             with os.fdopen(fd, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=indent, default=default)
+                f.write(text)
                 f.flush()
                 os.fsync(f.fileno())
             os.replace(tmp, path)

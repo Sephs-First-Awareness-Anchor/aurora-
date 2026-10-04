@@ -85,12 +85,22 @@ from aurora_internal.aurora_constraint_manifold_patched import (
     ManifoldViolation,
     RecursionLevel,
 )
-from aurora_ivm import (
-    ALIGNMENT_VOTE_WEIGHT,
-    REACT_GAIN,
-    ALIGN_GAIN,
-    LEVEL_TO_AXIS,
-)
+# NOTE: this module used to `from aurora_ivm import (ALIGNMENT_VOTE_WEIGHT, REACT_GAIN,
+# ALIGN_GAIN, LEVEL_TO_AXIS)` and never used any of them. That dead import closed an import
+# cycle -- aurora_ivm -> aurora_constraint_manifold -> aurora_constraint_engine -> this
+# module -> aurora_ivm (ALIGNMENT_VOTE_WEIGHT is defined 150 lines AFTER aurora_ivm's own
+# manifold import) -- so whenever aurora_ivm (or `aurora`) was imported first, the manifold
+# import failed, was caught, and CONSTRAINT_MANIFOLD_AVAILABLE became False for the whole
+# process: no node ever carried a constraint vector. The names stay reachable lazily below
+# for any external caller, without the import-time edge.
+_IVM_FORWARDED = frozenset({"ALIGNMENT_VOTE_WEIGHT", "REACT_GAIN", "ALIGN_GAIN", "LEVEL_TO_AXIS"})
+
+
+def __getattr__(name):  # PEP 562: lazy forward, resolved after both modules are loaded
+    if name in _IVM_FORWARDED:
+        import aurora_ivm as _ivm
+        return getattr(_ivm, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 # ===========================================================================

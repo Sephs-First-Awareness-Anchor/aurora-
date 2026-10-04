@@ -383,12 +383,47 @@ class ConversationEpisodeCompiler:
         raw_convs = _load_conversations(json_path)
         if not raw_convs:
             return []
+        parsed: List[Tuple[Any, List[Tuple[str, str]]]] = []
+        for conv in raw_convs[:max_conversations]:
+            conv_id = conv.get("id") or conv.get("title") or _generate_id("conv")
+            parsed.append((conv_id, _extract_messages_from_conversation(conv)))
+        return self._compile_parsed(parsed)
 
+    def compile_from_buffer(
+        self,
+        turns: List[Dict[str, Any]],
+        session_id: str = "live",
+    ) -> List[DreamEpisodePack]:
+        """Compile episode packs from an in-memory session turn buffer.
+
+        aurora.py's live turn loop (every 10th turn) already tried
+        compile_from_buffer() first and fell back to compile_from_json() --
+        which expects a FILE PATH and, given a list plus a session_id kwarg,
+        raised TypeError every time, so no live session was ever compiled.
+        This is the entry point that call site was written against: it takes
+        the {"user": ..., "aurora": ...} turn dicts the live loop buffers and
+        feeds the same scoring/pack pipeline compile_from_json uses.
+        """
+        messages: List[Tuple[str, str]] = []
+        for turn in list(turns or []):
+            if not isinstance(turn, dict):
+                continue
+            user_text = str(turn.get("user") or "").strip()
+            reply_text = str(turn.get("aurora") or turn.get("assistant") or "").strip()
+            if user_text:
+                messages.append(("user", user_text))
+            if reply_text:
+                messages.append(("assistant", reply_text))
+        return self._compile_parsed([(session_id or "live", messages)])
+
+    def _compile_parsed(
+        self,
+        parsed: List[Tuple[Any, List[Tuple[str, str]]]],
+    ) -> List[DreamEpisodePack]:
+        """Shared scoring + pack pipeline over already-extracted (id, messages)."""
         # Parse and score
         scored_payloads: List[ConversationPayload] = []
-        for i, conv in enumerate(raw_convs[:max_conversations]):
-            conv_id = conv.get("id") or conv.get("title") or _generate_id("conv")
-            messages = _extract_messages_from_conversation(conv)
+        for conv_id, messages in parsed:
             if len(messages) < 4:  # Skip very short conversations
                 continue
 

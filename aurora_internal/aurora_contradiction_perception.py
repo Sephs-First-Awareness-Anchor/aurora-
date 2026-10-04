@@ -96,6 +96,9 @@ def _load_contradicts_pairs(state_dir):
     return pairs
 
 
+_PAIR_LOG_TAIL_BYTES = 2 * 1024 * 1024
+
+
 def _recent_window_pairs(pair_log_path, current_turn_id, window_turns):
     """Read relation_pair_log.jsonl, return records from the
     `window_turns` most recent DISTINCT turn_ids strictly before
@@ -105,8 +108,17 @@ def _recent_window_pairs(pair_log_path, current_turn_id, window_turns):
         return []
     records = []
     try:
-        with open(pair_log_path, "r", encoding="utf-8") as f:
-            for line in f:
+        # The log is append-only and grows every turn; only the recent window is
+        # ever used, so read at most the last _PAIR_LOG_TAIL_BYTES instead of
+        # re-parsing the whole file each turn (cost grew linearly forever).
+        _size = os.path.getsize(pair_log_path)
+        with open(pair_log_path, "rb") as _raw:
+            if _size > _PAIR_LOG_TAIL_BYTES:
+                _raw.seek(_size - _PAIR_LOG_TAIL_BYTES)
+                _raw.readline()  # discard the partial line at the seek point
+            _text = _raw.read().decode("utf-8", errors="replace")
+        if True:
+            for line in _text.splitlines():
                 line = line.strip()
                 if not line:
                     continue
@@ -151,16 +163,17 @@ def _recent_window_pairs(pair_log_path, current_turn_id, window_turns):
 
 
 def _safe_int(v):
+    """int(v), or None when v is not an integer.
+
+    A missing/non-numeric turn_id is EXPECTED data here (991 of the 1,298
+    records in the shipped relation_pair_log.jsonl predate turn_id), not a
+    fault: the caller filters those records out. This used to write a full
+    runtime-fault record for each one, 2-3 times per record per turn -- 1,982
+    fault records in a 14-turn session, ~1 MB of fault log, all noise.
+    """
     try:
         return int(v)
-    except (TypeError, ValueError) as _aurora_boundary_exc:
-        _aurora_record_exception_from_locals(
-            locals(),
-            module=__name__,
-            operation="exception_handler:aurora_internal/aurora_contradiction_perception.py:127",
-            exc=_aurora_boundary_exc,
-            context={"function": "_safe_int", "handler_line": 127, "source_file": "aurora_internal/aurora_contradiction_perception.py"},
-        )
+    except (TypeError, ValueError):
         return None
 
 

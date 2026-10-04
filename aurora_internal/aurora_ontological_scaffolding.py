@@ -2751,7 +2751,16 @@ class OntologicalScaffoldingEngine:
         """Append a StudyEvent to the study log file."""
         try:
             import json as _j
-            log_path = "aurora_state/study_log.jsonl"
+            import os
+            # `os` was never imported in this module, so this raised NameError on
+            # every call and study events were silently never logged. The path was
+            # also cwd-relative, ignoring the boot's real state directory.
+            try:
+                from aurora_internal.aurora_state_context import get_active_state_dir
+                _study_dir = get_active_state_dir() or "aurora_state"
+            except Exception:
+                _study_dir = "aurora_state"
+            log_path = os.path.join(str(_study_dir), "study_log.jsonl")
             os.makedirs(os.path.dirname(log_path), exist_ok=True)
             with open(log_path, 'a') as f:
                 f.write(_j.dumps(event.to_dict()) + "\n")

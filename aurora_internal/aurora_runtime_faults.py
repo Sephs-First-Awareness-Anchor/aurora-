@@ -116,6 +116,15 @@ def _offer_fault_as_lived_consequence(target: Dict[str, Any], record: Mapping[st
         target.pop("_runtime_fault_experience_guard", None)
 
 
+# Per-(state_dir, operation, traceback) counts for disk-log throttling: the first
+# _FAULT_LOG_BURST occurrences are written verbatim, then every _FAULT_LOG_EVERY-th
+# (carrying repeat_count), so a fault storm stays visible without flooding the log.
+_FAULT_LOG_COUNTS: Dict[Any, int] = {}
+_FAULT_LOG_BURST = 25
+_FAULT_LOG_EVERY = 100
+_FAULT_LOG_MAX_KEYS = 5000
+
+
 def record_runtime_fault(systems: Optional[Dict[str, Any]], *, subsystem: str, operation: str,
                          exc: Optional[BaseException] = None, severity: str = "auto",
                          context: Optional[Dict[str, Any]] = None,
@@ -138,8 +147,29 @@ def record_runtime_fault(systems: Optional[Dict[str, Any]], *, subsystem: str, o
             "traceback_hash": hashlib.sha256(trace.encode("utf-8", "replace")).hexdigest()[:16],
             "context": dict(context or {}),
         }
-        with open(active_state_dir / "runtime_faults.jsonl", "a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
+        # Throttle only the DISK append for a fault that keeps repeating. Every
+        # in-memory / status / lived-experience effect below is unchanged. A
+        # single repeating fault (same operation + traceback) was writing
+        # thousands of identical lines per session (1,982 in one 14-turn run).
+        _rk = (str(active_state_dir), record["operation"], record["traceback_hash"])
+        _n = _FAULT_LOG_COUNTS.get(_rk, 0) + 1
+        if len(_FAULT_LOG_COUNTS) > _FAULT_LOG_MAX_KEYS:
+            _FAULT_LOG_COUNTS.clear()
+        _FAULT_LOG_COUNTS[_rk] = _n
+        if _n <= _FAULT_LOG_BURST or _n % _FAULT_LOG_EVERY == 0:
+            if _n > _FAULT_LOG_BURST:
+                record["repeat_count"] = _n  # this line stands for the repeats since the last one
+            with open(active_state_dir / "runtime_faults.jsonl", "a", encoding="utf-8") as handle:
+                handle.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
+        # Directive 3.20: a CONSEQUENTIAL fault (invariant_violation /
+        # subsystem_degradation) belongs in Aurora's native developmental
+        # timeline, not only in operational telemetry. The projection function
+        # was written (and tested) but never called, so the timeline never
+        # received a single fault. Once per distinct failure signature per
+        # process -- a repeating fault must not flood the stream -- and routine
+        # expected fallbacks (severity "warning") are deliberately excluded.
+        if _n == 1 and normalized_severity in ("invariant_violation", "subsystem_degradation"):
+            _project_fault_to_developmental_stream(record, active_state_dir)
         if target:
             faults = list(target.get("_runtime_faults", []) or [])
             faults.append(dict(record))

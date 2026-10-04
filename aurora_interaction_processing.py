@@ -17,28 +17,19 @@ from aurora_constraint_engine import (
     GovernorWeights as _GovernorWeights,
 )
 _FC = _FoundationalContract()
+# Package paths first: the top-level `quasiarch_observer` and
+# `dimensional_processing_system_standalone_demo` modules no longer exist in this
+# tree, so importing them first raised ImportError and wrote two fault records on
+# every boot before falling back to the package that actually works. Legacy
+# top-level names remain as the fallback for old checkouts.
 try:
-    from quasiarch_observer import CrystalInstance, CrystalOrder
-except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_interaction_processing.py:21",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 21, "source_file": "aurora_interaction_processing.py"},
-    )
     from aurora_internal.quasiarch_observer import CrystalInstance, CrystalOrder
+except ImportError:
+    from quasiarch_observer import CrystalInstance, CrystalOrder
 try:
-    from dimensional_processing_system_standalone_demo import RelationalPoint
-except ImportError as _aurora_boundary_exc:
-    _aurora_record_exception_from_locals(
-        locals(),
-        module=__name__,
-        operation="exception_handler:aurora_interaction_processing.py:25",
-        exc=_aurora_boundary_exc,
-        context={"function": "<module>", "handler_line": 25, "source_file": "aurora_interaction_processing.py"},
-    )
     from aurora_internal.quasiarch_observer.dimensional_processing import RelationalPoint
+except ImportError:
+    from dimensional_processing_system_standalone_demo import RelationalPoint
 
 from aurora_interaction_engine import (
     BASE_INTERACTION_FACETS,

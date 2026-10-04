@@ -69,6 +69,7 @@ from aurora_warp_protocol import (
     warp_guard,
 )
 from aurora_internal.aurora_constraint_semantic_continuity import AXES
+from aurora_internal.aurora_turn_persistence import batch_defer
 
 _NEGATIVE_ISTATE = {"X": "I_ISNT", "T": "I_CANNOT", "N": "I_DONOT", "B": "I_SOUGHT", "A": "I_DIDNT"}
 _POSITIVE_ISTATE = {"X": "I_IS", "T": "I_CAN", "N": "I_DO", "B": "I_SAW", "A": "I_DID"}
@@ -1646,9 +1647,17 @@ class AuroraLexicalGrounding(WarpCapable):
     def save(self) -> bool:
         return self._persist(force=True)
 
+    def flush_write_batch(self) -> bool:
+        """Real write for aurora_turn_persistence's end-of-turn flush."""
+        return self._persist(force=True)
+
     def _persist(self, *, force: bool = False) -> bool:
         if not self.persist or (self._persistence_suspended > 0 and not force):
             return False
+        # Turn-scoped batching (see aurora_turn_persistence): this rewrites the
+        # whole 140 KB+ state file, and one live turn called it ~87 times.
+        if not force and batch_defer(self):
+            return True
         payload = {
             "schema_version": 1,
             "tick": self._tick,

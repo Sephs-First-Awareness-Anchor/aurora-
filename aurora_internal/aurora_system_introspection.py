@@ -583,14 +583,58 @@ class AuroraSystemIntrospection:
         score += 0.8 * len(q_tokens & corpus_tokens)
         return score
 
+    def _match_features(self) -> Dict[str, Tuple[str, str, frozenset]]:
+        """Per-function static match features, built once per index object.
+
+        _score_function_match() recomputed these (three str.lower() calls, a
+        " ".join over the call list and a regex tokenisation of the whole
+        corpus text) for every one of ~10k functions on every query, and one
+        live turn issues ~24 queries -- about 240,000 scorings, ~30% of the
+        turn's wall time (measured with a sampling profiler). None of it
+        depends on the query. The index is only ever replaced wholesale, so
+        the cache is keyed on the index object's identity.
+        """
+        idx = self._function_index
+        cached = getattr(self, "_match_feature_cache", None)
+        if cached is not None and cached[0] is idx:
+            return cached[1]
+        feats: Dict[str, Tuple[str, str, frozenset]] = {}
+        for fid, rec in idx.items():
+            fid_low = fid.lower()
+            qual_low = str(rec.get("qualname", "")).lower()
+            doc_low = str(rec.get("doc", "")).lower()
+            calls_low = " ".join(str(x).lower() for x in rec.get("calls", []) or [])
+            corpus = frozenset(re.findall(r"[a-z0-9_]+", f"{fid_low} {doc_low} {calls_low}"))
+            feats[fid] = (fid_low, qual_low, corpus)
+        self._match_feature_cache = (idx, feats)
+        return feats
+
+    @staticmethod
+    def _score_from_features(q: str, q_tokens: set, feat: Tuple[str, str, frozenset]) -> float:
+        # Identical arithmetic to _score_function_match, on precomputed features.
+        fid_low, qual_low, corpus = feat
+        score = 0.0
+        if q == fid_low:
+            score += 10.0
+        if fid_low.endswith(q) or qual_low == q:
+            score += 7.0
+        if q in fid_low:
+            score += 4.0
+        score += 0.8 * len(q_tokens & corpus)
+        return score
+
     def find_functions(self, query: str, limit: int = 8) -> List[Dict[str, Any]]:
         if not self._function_index:
             self.ensure_system_map()
         ranked: List[Tuple[float, str, Dict[str, Any]]] = []
-        for fid, rec in self._function_index.items():
-            score = self._score_function_match(query, fid, rec)
-            if score > 0.0:
-                ranked.append((score, fid, dict(rec)))
+        q = str(query or "").strip().lower()
+        if q:
+            q_tokens = set(re.findall(r"[a-z0-9_]+", q))
+            feats = self._match_features()
+            for fid, rec in self._function_index.items():
+                score = self._score_from_features(q, q_tokens, feats[fid])
+                if score > 0.0:
+                    ranked.append((score, fid, dict(rec)))
         ranked.sort(key=lambda item: (-item[0], item[1]))
         out = []
         for score, fid, rec in ranked[: max(1, int(limit))]:

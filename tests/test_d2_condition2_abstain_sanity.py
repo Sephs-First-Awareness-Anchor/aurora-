@@ -100,8 +100,22 @@ def test_pure_gibberish_turn_abstains_honestly_live():
         src = str(getattr(resp_a, "src", "") or "")
         content = str(getattr(resp_a, "content", "") or "")
 
-        assert src == "constraint_abstain", (
+        # The honest-abstain family. Repair G (2026-08-19, per Sunni) made the
+        # abstain path an effort to seek resolution through the user rather than a
+        # dead end, so the first-contact form of the SAME single path
+        # (_emit_honest_abstain_and_seek) is src="constraint_seek" ("What do you
+        # mean by 'X'?"); "constraint_abstain" is the form when there is nothing to
+        # seek about. This test predates Repair G and pinned the literal older
+        # label; what it actually guards is unchanged and asserted below: off-ladder
+        # input (no lexical or ontological existence -- see
+        # _utterance_representational_state) must never receive a manufactured
+        # claim of understanding.
+        assert src in ("constraint_abstain", "constraint_seek"), (
             f"pure-gibberish turn did not honestly abstain: src={src!r} content={content!r}"
+        )
+        _low = content.lower()
+        assert "understand what you are saying" not in _low and "best read" not in _low, (
+            f"pure-gibberish turn was given a manufactured claim of understanding: {content!r}"
         )
         assert content.strip(), "an abstain response must still say something to the user"
 

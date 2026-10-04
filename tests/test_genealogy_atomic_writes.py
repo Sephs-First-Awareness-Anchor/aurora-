@@ -62,7 +62,12 @@ def test_write_abilities_file_uses_atomic_replace_not_truncating_open(tmp_path, 
     def _boom(*args, **kwargs):
         raise RuntimeError("simulated interruption mid-write")
 
+    # atomic_write_json serializes with json.dumps (C encoder; json.dump always
+    # takes the slow pure-Python path). Fail BOTH entry points so this test
+    # exercises "serialization dies partway" regardless of which one the
+    # writer uses -- the invariant under test is the same either way.
     monkeypatch.setattr(cg_mod.json, "dump", _boom)
+    monkeypatch.setattr(cg_mod.json, "dumps", _boom)
     logger.abilities["A:2"] = AbilityProfile(id="A:2", axis="X", requires=("X",), cost={}, risk={}, effect_tags=(), notes="")
     logger._write_abilities_file()  # must not raise (writer methods are best-effort)
 
@@ -97,4 +102,8 @@ def test_write_tick_state_file_round_trips(tmp_path):
     path = os.path.join(str(tmp_path), "tick_state.json")
     with open(path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
-    assert data == {"tick_count": 42, "last_promotion_tick": 7}
+    # The file also carries the pressure curves now (what pressure_orientation() learned), so the
+    # tick fields are asserted by value and the shape by its keys; restore tolerates a file that
+    # predates them (test_genealogy_curve_persistence).
+    assert data["tick_count"] == 42 and data["last_promotion_tick"] == 7
+    assert set(data) == {"tick_count", "last_promotion_tick", "curves"}

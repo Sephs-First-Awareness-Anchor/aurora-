@@ -82,6 +82,10 @@ class ComprehensionGap:
     resolved_at: Optional[float] = None
     resolution_text: str = ""     # The answer received
     resolution_applied: bool = False
+    # Axis polarities at the moment the gap opened. aurora_constraint_emission.
+    # _route_comprehension_gap has always passed this, but the field did not exist,
+    # so every gap it tried to register raised TypeError and was silently dropped.
+    axis_tension: Any = field(default_factory=dict)
 
 
 @dataclass
