@@ -137,6 +137,13 @@ _historical_experience = None
 # _lock -- live interaction with Sunni always outranks it.
 _praxis = None
 
+# Praxis messenger.  Her direct messages with other AI models (ChatGPT,
+# Gemini, Claude) hosted by Praxis's praxis_social.py.  Partners may explain
+# and correct; only her own understanding decides what changes.  Same terms as
+# the bridge above: yields to the present, takes _lock non-blockingly, and
+# only her own expression is ever sent back -- never a scripted fallback.
+_praxis_messenger = None
+
 # Aurora Build 694, step 8: the Scout worker thread's own stop signal --
 # module-level so it survives past initialize() returning and can be
 # used to independently stop the worker later (spec: "independently
@@ -2275,9 +2282,32 @@ def resume_praxis() -> str:
     return get_praxis_status()
 
 
+def get_praxis_messenger_status() -> str:
+    import json as _json
+    messenger = _praxis_messenger
+    if messenger is None:
+        return _json.dumps({"status": "not_initialized", "thread_alive": False})
+    try:
+        return _json.dumps(messenger.status(), default=str)
+    except Exception as exc:
+        return _json.dumps({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+
+
+def pause_praxis_messenger() -> str:
+    if _praxis_messenger is not None:
+        _praxis_messenger.pause()
+    return get_praxis_messenger_status()
+
+
+def resume_praxis_messenger() -> str:
+    if _praxis_messenger is not None:
+        _praxis_messenger.resume()
+    return get_praxis_messenger_status()
+
+
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis, _praxis_messenger
     # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()
     # tracing showed NO new markers at all -- confirmed still dying at the
     # exact same spot as before that fix existed. That means the crash is
@@ -2637,6 +2667,31 @@ def initialize(state_dir: str = "") -> str:
                 context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
             )
             log.warning("Praxis bridge failed to start: %s", _praxis_exc)
+
+        # Praxis messenger: same server, same idle predicate, same lock.
+        _mark_boot_stage("starting praxis messenger")
+        try:
+            from aurora_praxis_messenger import start_praxis_messenger
+            _messenger_state_dir = state_dir if state_dir else "aurora_state"
+            _praxis_messenger = start_praxis_messenger(
+                _systems,
+                state_dir=_messenger_state_dir,
+                endpoint=_praxis_endpoint(_messenger_state_dir),
+                field_lock=_lock,
+                live_idle=_praxis_live_idle,
+            )
+            _systems["praxis_messenger"] = _praxis_messenger
+            log.info("Praxis messenger: %s", _praxis_messenger.status())
+        except Exception as _messenger_exc:
+            _praxis_messenger = None
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:initialize:praxis_messenger",
+                exc=_messenger_exc,
+                context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
+            )
+            log.warning("Praxis messenger failed to start: %s", _messenger_exc)
 
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.
