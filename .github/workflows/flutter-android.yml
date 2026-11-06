@@ -34,6 +34,15 @@ jobs:
           $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
             "ndk;25.1.8937393" "cmake;3.22.1"
 
+      # Chaquopy builds the app's Python with the runner's python3, which must
+      # match the app's Python (3.12, flutter_app/android/app/build.gradle).
+      # ubuntu-latest now ships python3 = 3.14, which broke every build after
+      # the October 2026 runner migration -- pin 3.12 explicitly.
+      - name: Set up Python 3.12 for Chaquopy
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
