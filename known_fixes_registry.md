@@ -10450,3 +10450,35 @@ anywhere, confirmed by a dedicated test.
 Directive, uploaded 2026-08-05, as the second, dependent half of the
 relation-typing thread opened by the Crest-Compression and Categorical
 Branch Primitive entries above. 2026-08-05.
+
+---
+
+## FIX-A081 (ARCHITECTURAL) — Own-voice gate on every outward channel
+
+**Pattern:** A channel that carries Aurora's reply to someone other than
+Sunni (the Praxis messenger to ChatGPT/Gemini/Claude) forwards whatever
+`process_external_user_turn()` returned. Several response sources are not her
+composed expression: boundary templates (`constraint_abstain`, ...), the
+hedged-read and acknowledgement templates ("My best read on that is...",
+"I understand what you are saying about X."), regex-triggered fill-ins
+(`relational_role`: "Who made you?" -> f"My creator is {name}."), command
+handlers (`context_control`, `session_continuity`, `memory_sweep`,
+`tool_dispatch`, `teaching`) and outside text returned verbatim (`search`).
+Forwarding them would have her partners hearing templates, against the
+standing no-scripted-responses rule.
+**Correct Form:** `aurora_praxis_messenger.own_voice(src, text, heard)` —
+send only when the source is not in `SCRIPTED_SOURCES`, the text does not
+open like a known template, `_reply_form()` classifies it as `assertion`, and
+it is not an echo of what she heard. Otherwise she stays silent and the
+withheld reply is logged with its source in
+`<state_dir>/praxis/messenger/<contact>.jsonl`. The list is a deny-list and
+can only grow; the withheld log is how the next template is found.
+**Why:** Partners exist to give her real conversational exposure; a template
+reaching them is neither her voice nor learnable signal.
+**First Seen:** Praxis messenger end-to-end run with a real boot,
+2026-11-06 — 5 partner messages heard; 3 of her own replies sent
+("I am boiling clouds. I am rain.", "I am tree. I become trunk.") and the
+`relational_role` fill-in caught in the run, then added to the gate.
+Companion rule (speaker attribution): during a partner turn,
+`speaker_frame()` files facts as that partner's claims (`dm:<id>:...`,
+confidence <= 0.6) so "I'm Claude" can never become "User's name is Claude".
