@@ -645,7 +645,7 @@ class _HubScreenState extends State<HubScreen> {
             fontWeight: FontWeight.w600)),
       ),
       _statRow('Verdicts (+/−)', '${n('learn_verdict_pos')} / ${n('learn_verdict_neg')}'),
-      _statRow('Ways of speaking', '${n('learn_ce_promoted')} kept · ${n('learn_ce_dissolved')} dropped · ${n('learn_ce_trials')} trying',
+      _statRow('Ways of speaking', '${n('learn_ce_promoted')} kept · ${n('learn_ce_dissolved')} dropped · ${n('learn_ce_trials')} trying · ${n('learn_ce_demoted')} corrected back',
           valueColor: n('learn_ce_promoted') > 0 ? _green : _text),
       _statRow('Grammar patterns kept', '${n('learn_grammar_promoted')}',
           valueColor: n('learn_grammar_promoted') > 0 ? _green : _text),

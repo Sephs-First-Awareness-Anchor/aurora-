@@ -10549,3 +10549,18 @@ The pressure_experience path produces no text (no authored seed words).
 indeterminate to landing on the exact reply; first verdict-driven
 dissolutions in communication emergence; grammar 0 -> 9 kept patterns;
 1 corroborated fact, 1 contradiction from two contacts.
+
+## FIX-A084 (ARCHITECTURAL) — Communication emergence: lower bar, evidence clock, corrections undo promotion
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule:** A communication operation is kept after 2 receiver-validated uses
+in 2 wordings with at least 1 understood (was 4 / 3 / 2). Its trial clock
+runs only when new receiver evidence arrives (CommunicationEmergence
+overrides evaluate_warp_trials; the shared WARP ten-tick clock is unchanged
+for every other system). A trial is dropped when the evidence says it fails
+(>= 4 validated, EMA < 0.40) or after 120 evaluations with no evidence.
+A kept operation that receivers misunderstand >= 2 times since promotion,
+more often than they understood it, goes back to trial (demoted_operations).
+Overfit penalty now keys off _MIN_DISTINCT_SURFACES instead of a fixed 3.
+**First Seen:** 2026-11-07 loop run: 0 kept, 8 dropped -- trials ran out
+of ticks before receivers answered. After fix, same real-boot loop:
+1 kept, 0 dropped, 13 trying.

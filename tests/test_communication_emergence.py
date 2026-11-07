@@ -154,8 +154,10 @@ def test_varied_receiver_validated_trials_promote_into_genealogy(tmp_path):
     assert genealogy.payloads
     payload = genealogy.payloads[0]
     assert payload["canonical_signature"] == "X^1*N^1*B^1*A^1"
-    assert payload["evidence_count"] == 10
-    assert payload["distinct_surfaces"] >= 3
+    # Bar lowered 2026-11-07 (corrections can now undo a promotion): the
+    # operation is kept at its second understood use in a second wording.
+    assert payload["evidence_count"] == 2
+    assert payload["distinct_surfaces"] >= 2
     assert field.active_operations()[0]["genealogy_ability_id"] == "A:COMM_TEST"
 
 

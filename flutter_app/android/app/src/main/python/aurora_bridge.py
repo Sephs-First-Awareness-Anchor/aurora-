@@ -11577,6 +11577,7 @@ def get_cognitive_stats() -> str:
             stats["learn_ce_trials"] = int(_ce_s.get("trial_operations", 0) or 0)
             stats["learn_ce_promoted"] = int(_ce_s.get("promoted_operations", 0) or 0)
             stats["learn_ce_dissolved"] = int(_ce_s.get("dissolved_operations", 0) or 0)
+            stats["learn_ce_demoted"] = int(_ce_s.get("demoted_operations", 0) or 0)
             _lg = _systems.get("lexical_grounding") if _systems else None
             _lg_s = _lg.status() if _lg is not None and hasattr(_lg, "status") else {}
             stats["learn_lex_trials"] = int(_lg_s.get("trial_count", 0) or 0)

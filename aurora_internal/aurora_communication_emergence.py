@@ -80,9 +80,24 @@ _RECURSION_DIMS = ("REC_SURFACE", "REC_SHALLOW", "REC_MODERATE", "REC_DEEP", "RE
 # Promotion still goes through WarpCapable's own ten-tick / EMA gate.  These
 # additional minima prevent a candidate from earning a high score by repeating
 # one wording or by succeeding only before receiver validation arrives.
-_MIN_VALIDATED_TRIALS = 4
-_MIN_DISTINCT_SURFACES = 3
-_MIN_POSITIVE_RECEIVER_OUTCOMES = 2
+# Sunni, 2026-11-07: "with the ability to be corrected ... her bar [should]
+# be more lax ... without the time drag."  Lower bar, made safe by the other
+# half of the change: a promoted operation that receivers keep failing to
+# understand goes back to trial (see _maybe_demote).  Was 4 / 3 / 2.
+_MIN_VALIDATED_TRIALS = 2
+_MIN_DISTINCT_SURFACES = 2
+_MIN_POSITIVE_RECEIVER_OUTCOMES = 1
+# Evidence-paced clock (replaces the shared WARP ten-tick deadline for this
+# system only): a trial is evaluated when NEW receiver evidence arrives, and
+# is never dissolved merely for waiting.  It is dissolved when the evidence
+# says it is failing, or when it has waited this many evaluations with none.
+_EVIDENCE_EMA_KEEP = 0.5
+_DISSOLVE_AFTER_VALIDATED = 4
+_DISSOLVE_SCORE = 0.40
+_MAX_EVIDENCE_WAITS = 120
+# Correction undoes promotion: negatives since promotion >= this and
+# outnumbering positives since promotion -> back to trial.
+_DEMOTE_NEGATIVES = 2
 _MAX_OBSERVATIONS = 800
 _MAX_FAMILIES = 240
 _MAX_PENDING = 300
@@ -133,6 +148,10 @@ class EmergentCommunicationOperation:
     created_at: float = field(default_factory=time.time)
     evidence: List[Dict[str, Any]] = field(default_factory=list)
     genealogy_ability_id: str = ""
+    promoted_at: float = 0.0
+    evidence_seen: int = 0
+    evidence_waits: int = 0
+    demotions: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -543,7 +562,7 @@ class AuroraCommunicationEmergence(WarpCapable):
         alignment = sum(_clip01(e.get("relation_alignment", 0.0)) for e in validated) / max(1, len(validated))
         receiver = sum(_clip01(e.get("receiver_score", 0.0)) for e in validated) / max(1, len(validated))
         regression_penalty = min(0.55, 0.18 * len(negative))
-        overfit_penalty = 0.0 if len(surfaces) >= max(3, len(validated) // 2) else 0.10
+        overfit_penalty = 0.0 if len(surfaces) >= max(_MIN_DISTINCT_SURFACES, len(validated) // 2) else 0.10
         score = 0.52 * alignment + 0.48 * receiver - regression_penalty - overfit_penalty
         return _clip01(score)
 
@@ -1060,20 +1079,98 @@ class AuroraCommunicationEmergence(WarpCapable):
             for evidence in reversed(operation.evidence):
                 if str(evidence.get("response_id", "") or "") == rid:
                     evidence["validated"] = True
+                    evidence["validated_at"] = time.time()
                     evidence["outcome_kind"] = str(receiver.get("outcome_kind", "") or "indeterminate")
                     evidence["receiver_score"] = _clip01(receiver.get("score", 0.0))
                     evidence["observed_effect"] = str(receiver.get("observed_effect", "") or "")
                     break
 
+        demoted = self._maybe_demote(component_id)
         promoted, dissolved = self.evaluate_development()
         self._persist()
         return {
             "matched": True,
+            "demoted": demoted,
             "response_id": rid,
             "trial_component_id": component_id,
             "promoted": promoted,
             "dissolved": dissolved,
         }
+
+    def evaluate_warp_trials(self) -> Tuple[List[str], List[str]]:
+        """Evidence-paced trial evaluation for communication operations.
+
+        Overrides the shared WarpCapable clock for this system only (every
+        other WARP system keeps its ten-tick EMA gate).  Under the shared
+        clock a trial was dissolved at tick ten whenever its receiver evidence
+        had not arrived yet -- the eight "dissolutions" in the 2026-11-07
+        loop run were trials that ran out of time, not trials that failed.
+        """
+        from aurora_warp_protocol import PROMOTION_SCORE
+        promoted: List[str] = []
+        dissolved: List[str] = []
+        for comp_id in list(self._warp_trials):
+            comp = self._warp_trials[comp_id]
+            operation = self._operations.get(comp_id)
+            validated = [e for e in (operation.evidence if operation else []) if e.get("validated")]
+            if operation is None:
+                continue
+            if len(validated) <= operation.evidence_seen:
+                operation.evidence_waits += 1
+                if operation.evidence_waits > _MAX_EVIDENCE_WAITS:
+                    comp.dissolved = True
+                    self._dissolve_warp(comp_id)
+                    del self._warp_trials[comp_id]
+                    dissolved.append(comp_id)
+                    self._warp_dissolved_count = getattr(self, "_warp_dissolved_count", 0) + 1
+                continue
+            operation.evidence_seen = len(validated)
+            operation.evidence_waits = 0
+            score = self._score_trial(comp)
+            comp.trial_score_ema = (score if comp.trial_tick == 0 else
+                                    _EVIDENCE_EMA_KEEP * comp.trial_score_ema
+                                    + (1.0 - _EVIDENCE_EMA_KEEP) * score)
+            comp.trial_tick += 1
+            if score > 0.34 and comp.trial_score_ema >= PROMOTION_SCORE:
+                comp.promoted = True
+                self._warp_promoted[comp_id] = comp
+                del self._warp_trials[comp_id]
+                self._sediment_warp_traversal(comp, "warp_trial_promoted")
+                promoted.append(comp_id)
+            elif len(validated) >= _DISSOLVE_AFTER_VALIDATED and comp.trial_score_ema < _DISSOLVE_SCORE:
+                comp.dissolved = True
+                self._dissolve_warp(comp_id)
+                del self._warp_trials[comp_id]
+                dissolved.append(comp_id)
+                self._warp_dissolved_count = getattr(self, "_warp_dissolved_count", 0) + 1
+        return promoted, dissolved
+
+    def _maybe_demote(self, component_id: str) -> bool:
+        """Correction undoes promotion.  A promoted operation that receivers
+        have failed to understand at least _DEMOTE_NEGATIVES times since its
+        promotion -- more often than they understood it -- returns to trial
+        and has to earn its place again with new evidence."""
+        operation = self._operations.get(str(component_id or ""))
+        if operation is None or operation.status != "promoted":
+            return False
+        since = [e for e in operation.evidence
+                 if e.get("validated") and float(e.get("validated_at", 0.0) or 0.0) >= operation.promoted_at]
+        negatives = sum(1 for e in since if e.get("outcome_kind") == "negative")
+        positives = sum(1 for e in since if e.get("outcome_kind") == "positive")
+        if negatives < _DEMOTE_NEGATIVES or negatives <= positives:
+            return False
+        comp = self._warp_promoted.pop(operation.component_id, None)
+        if comp is not None:
+            comp.promoted = False
+            comp.trial_tick = 0
+            comp.trial_score_ema = 0.0
+            self._warp_trials[operation.component_id] = comp
+        operation.status = "trial"
+        operation.demotions += 1
+        operation.evidence_seen = sum(1 for e in operation.evidence if e.get("validated"))
+        operation.evidence_waits = 0
+        self._demoted_count = int(getattr(self, "_demoted_count", 0) or 0) + 1
+        return True
 
     def evaluate_development(self) -> Tuple[List[str], List[str]]:
         promoted, dissolved = self.evaluate_warp_trials()
@@ -1082,6 +1179,7 @@ class AuroraCommunicationEmergence(WarpCapable):
             if operation is None:
                 continue
             operation.status = "promoted"
+            operation.promoted_at = time.time()
             operation.genealogy_ability_id = self._register_genealogy(operation, self._warp_promoted.get(component_id))
         for component_id in dissolved:
             operation = self._operations.get(component_id)
@@ -1107,6 +1205,7 @@ class AuroraCommunicationEmergence(WarpCapable):
             "trial_operations": sum(1 for op in self._operations.values() if op.status == "trial"),
             "promoted_operations": sum(1 for op in self._operations.values() if op.status == "promoted"),
             "dissolved_operations": sum(1 for op in self._operations.values() if op.status == "dissolved"),
+            "demoted_operations": int(getattr(self, "_demoted_count", 0) or 0),
             "warp": self.warp_status(),
             "storage_path": self.storage_path,
         }
@@ -1306,6 +1405,10 @@ class AuroraCommunicationEmergence(WarpCapable):
                     created_at=float(rec.get("created_at", time.time()) or time.time()),
                     evidence=list(rec.get("evidence") or []),
                     genealogy_ability_id=str(rec.get("genealogy_ability_id", "") or ""),
+                    promoted_at=float(rec.get("promoted_at", 0.0) or 0.0),
+                    evidence_seen=int(rec.get("evidence_seen", 0) or 0),
+                    evidence_waits=int(rec.get("evidence_waits", 0) or 0),
+                    demotions=int(rec.get("demotions", 0) or 0),
                 )
                 self._operations[op.component_id] = op
             self._warp_trials = {
@@ -1321,6 +1424,7 @@ class AuroraCommunicationEmergence(WarpCapable):
                 for key, value in dict(raw.get("warp_gap_counter") or {}).items()
             }
             self._warp_dissolved_count = int(raw.get("warp_dissolved_count", 0) or 0)
+            self._demoted_count = int(raw.get("demoted_count", 0) or 0)
         except Exception:
             self._operations = {}
             self._observations = []
@@ -1373,6 +1477,7 @@ class AuroraCommunicationEmergence(WarpCapable):
             "warp_promoted": {cid: asdict(comp) for cid, comp in self._warp_promoted.items()},
             "warp_gap_counter": dict(self._gap_counter),
             "warp_dissolved_count": int(getattr(self, "_warp_dissolved_count", 0) or 0),
+            "demoted_count": int(getattr(self, "_demoted_count", 0) or 0),
             "warp_status": self.warp_status(),
             "saved_at": time.time(),
         }
