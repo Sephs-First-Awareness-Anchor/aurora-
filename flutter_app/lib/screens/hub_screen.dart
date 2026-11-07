@@ -622,8 +622,40 @@ class _HubScreenState extends State<HubScreen> {
         if (breaches > 0)
           _statRow('Praxis fence breaches', '$breaches', valueColor: _red),
         ..._buildMessengerRows(),
+        ..._buildLearningRows(),
       ]),
     );
+  }
+
+  // Learning scoreboard: promotions only happen on receiver-validated
+  // evidence, so these are the numbers that separate learning from filing.
+  List<Widget> _buildLearningRows() {
+    int n(String k) => _stats[k] as int? ?? 0;
+    final novel = (_stats['learn_last_novel'] as String?) ?? '';
+    final probe = (_stats['learn_probe'] as String?) ?? '';
+    Widget note(String label, String value) => Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 2),
+      child: Text('$label  $value', maxLines: 3, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: _textDim, fontSize: 11)),
+    );
+    return [
+      const Padding(
+        padding: EdgeInsets.only(top: 8, bottom: 2),
+        child: Text('Learning', style: TextStyle(color: _text, fontSize: 12,
+            fontWeight: FontWeight.w600)),
+      ),
+      _statRow('Verdicts (+/−)', '${n('learn_verdict_pos')} / ${n('learn_verdict_neg')}'),
+      _statRow('Ways of speaking', '${n('learn_ce_promoted')} kept · ${n('learn_ce_dissolved')} dropped · ${n('learn_ce_trials')} trying',
+          valueColor: n('learn_ce_promoted') > 0 ? _green : _text),
+      _statRow('Grammar patterns kept', '${n('learn_grammar_promoted')}',
+          valueColor: n('learn_grammar_promoted') > 0 ? _green : _text),
+      _statRow('Word meanings', '${n('learn_lex_promoted')} kept · ${n('learn_lex_trials')} trying'),
+      _statRow('Facts by agreement', '${n('learn_corroborated')}'),
+      _statRow('Contradictions found', '${n('learn_contradictions')}'),
+      _statRow('New phrasings', '${n('learn_novel_phrasings')}'),
+      if (novel.isNotEmpty) note('Latest', novel),
+      if (probe.isNotEmpty) note('Weekly probe', probe),
+    ];
   }
 
   // Praxis messenger: her DMs with other AI models.  Raw counts, plus the

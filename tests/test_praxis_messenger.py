@@ -397,3 +397,25 @@ def test_revisits_stop_after_max_attempts(tmp_path, monkeypatch):
     for _ in range(6):
         messenger.pull_once()
     assert messenger.pending["claude"]["attempts"] == M.MAX_ATTEMPTS
+
+
+def test_new_phrasings_are_pairs_no_contact_said(tmp_path):
+    messenger, praxis, _, _ = make(
+        tmp_path, [msg(1, "Do you like music?"), msg(2, "Rain falls from clouds.")],
+        [("composer_unified", "you like music"), ("composer_unified", "rain sings softly")])
+    messenger.pull_once()
+    assert messenger.counters.get("novel_phrasings", 0) == 1
+    assert "rain sings" in messenger.last_novel["pairs"]
+
+
+def test_internal_learners_are_not_attributed_to_the_partner():
+    memory = ConversationMemory()
+    systems = {"conversation_memory": memory}
+    with M.speaker_frame(systems, "gemini", "Gemini"):
+        systems["conversation_memory"].learn_fact(
+            "what creates friction when approached with warm acknowledgment", source="retained_learning",
+            confidence=0.7)
+        systems["conversation_memory"].learn_fact("Deeni is a ferret", source="user_statement")
+    facts = {f["fact"]: f["source"] for f in memory.learned_facts}
+    assert facts["what creates friction when approached with warm acknowledgment"] == "retained_learning"
+    assert facts["Gemini said: Deeni is a ferret"].startswith("dm:gemini:")

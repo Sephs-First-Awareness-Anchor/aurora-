@@ -10520,3 +10520,32 @@ but every reply was a template, withheld by FIX-A081. After the gate (real
 boot): "Do you like music?" -> "I understand music. I am real. You want
 music."; "Rain is water that falls from clouds..." -> "I am boiling rain. I am
 clouds."; questions now register T/N/B root pressure ~0.32.
+
+---
+
+## FIX-A083 (ARCHITECTURAL) — Receiver verdicts that can actually close a loop
+
+**Pattern:** Every receiver-gated learning loop (communication emergence 13
+trials, lexical grounding 49, grammar 3,616 motifs) had zero promotions. The
+understanding contract kept ONE global pending reply, so with Sunni and
+several Praxis contacts the next message could score the wrong reply; and
+natural replies ("That sounds lovely! Does it feel heavy?") were
+engaged_followup -> indeterminate, so nothing was ever finalized either way.
+**Correct Form:** `_activate_session_pending(session_id)` swaps each
+conversation's pending reply into the active slot at ingest (others parked,
+max 24). New positive label `reconstructed`: the receiver says back at least
+two terms Aurora herself contributed (her reply minus the words she had just
+heard; one term if she contributed <= 3). Praxis contacts are asked, in
+words only, to say "I don't understand what you mean by that" when lost and
+to say back what they understood when not. Early exits (memory sweep,
+teaching acknowledgements) now pass the voice gate. Triangulation
+(aurora_social_corroboration.py): the same world claim from two different
+contacts becomes her fact (confidence 0.8, sourced to them); the same claim
+with opposite polarity goes to ContradictionLedger.record(). The speaker
+frame attributes only speaker-originated facts. Gate also blocks parroting
+from any source, aurora_constraint_emission.py canned lines, and [markers].
+The pressure_experience path produces no text (no authored seed words).
+**First Seen:** 2026-11-07 real-boot loop runs: verdicts went from all
+indeterminate to landing on the exact reply; first verdict-driven
+dissolutions in communication emergence; grammar 0 -> 9 kept patterns;
+1 corroborated fact, 1 contradiction from two contacts.

@@ -82,6 +82,38 @@ def _terms(text: Any) -> List[str]:
     return re.findall(r"[a-z0-9]{3,}", str(text or "").lower())
 
 
+_UPTAKE_FUNCTION_WORDS = frozenset({
+    "the", "and", "for", "are", "was", "were", "has", "have", "had", "but", "not",
+    "you", "your", "yours", "that", "this", "with", "from", "they", "them", "their",
+    "there", "here", "what", "when", "where", "which", "who", "why", "how", "can",
+    "could", "would", "should", "will", "does", "did", "doing", "done", "just",
+    "really", "very", "about", "into", "than", "then", "too", "also", "its", "it's",
+    "i'm", "im", "am", "is", "been", "being", "our", "ours", "mine", "myself",
+    "yourself", "aurora", "hey", "hi", "hello", "yes", "yeah", "okay", "sure",
+})
+
+
+def _uptake_terms(text: Any) -> List[str]:
+    return [t for t in _terms(text) if t not in _UPTAKE_FUNCTION_WORDS]
+
+
+def _receiver_reconstructed(pending: Mapping[str, Any], receiver_text: str) -> bool:
+    """Did the receiver say back what AURORA contributed?
+
+    Her contribution is the content of her reply minus the words she had
+    just heard (otherwise any reply that echoed the question would look like
+    it was understood).  Uptake = the receiver's words include at least two
+    of those contributed terms, or one when she contributed three or fewer.
+    """
+    contributed = set(_uptake_terms(pending.get("summary", ""))) - set(
+        _uptake_terms(pending.get("heard_text", ""))
+    )
+    if not contributed:
+        return False
+    overlap = contributed & set(_uptake_terms(receiver_text))
+    return len(overlap) >= 2 or (len(overlap) >= 1 and len(contributed) <= 3)
+
+
 def _structured_receiver_correction(understood: Optional[Mapping[str, Any]]) -> bool:
     """Recognize a correction from the parsed relation, not a phrase list.
 
@@ -1934,6 +1966,17 @@ class RuntimeUnderstandingContract:
         elif _has_marker(agreement_markers):
             score = 0.86
             label = "accepted"
+        elif _receiver_reconstructed(pending, text_low):
+            # Uptake (2026-11-07): the receiver said back, in their own words,
+            # something Aurora herself contributed -- not words they had
+            # already used.  That is direct evidence her meaning crossed the
+            # boundary, and the commonest way people show understanding.
+            # Without it, every polite reply ("That sounds lovely! Does it
+            # feel heavy?") was "engaged_followup" -> indeterminate, and no
+            # receiver-gated loop ever promoted anything.
+            score = 0.86
+            label = "reconstructed"
+            matched_expectation = True
         elif is_question and (is_callback or pending.get("action_type") in {"meaning_reasoning", "grounded_answer"}):
             score = 0.74
             label = "coherent_followup"
@@ -2424,6 +2467,11 @@ class RuntimeUnderstandingContract:
         source: str = "",
         session_id: str = "",
     ) -> Dict[str, Any]:
+        # Per-conversation receiver validation (2026-11-07): the reply being
+        # validated must be the one Aurora gave in THIS conversation.  With
+        # Sunni and several Praxis contacts talking to her, a single global
+        # pending record let Gemma's message score her reply to Gemini.
+        self._activate_session_pending(session_id)
         before_state = copy.deepcopy(self.state)
         observation = self._derive_observation(user_text, understood)
         # Keep the application projection intact long enough to route the
@@ -2739,6 +2787,7 @@ class RuntimeUnderstandingContract:
             "projected_accuracy": round(_clip01(projected_accuracy, 0.5), 4),
             "response_source": str(response_source or ""),
             "summary": str(response_text or "")[:240],
+            "heard_text": str(user_text or "")[:240],
             "tone": str(tone or ""),
             "session_id": str(session_id or ""),
             "contributors": copy.deepcopy(dict(contributors or {})),
@@ -2803,6 +2852,33 @@ class RuntimeUnderstandingContract:
             "cost": dict(cost_state),
             "policy_delta": policy_delta,
         }
+
+    MAX_PARKED_SESSIONS = 24
+
+    def _activate_session_pending(self, session_id: str) -> None:
+        """Make pending_validation hold THIS conversation's last reply.
+
+        The active slot is what every existing reader uses
+        (_evaluate_previous_accuracy, the communication-emergence response id,
+        attach_pending_contributors), so conversations are swapped in and out
+        of it rather than changing every reader.  A pending reply from another
+        conversation is parked, not discarded, and comes back when that
+        conversation speaks again.
+        """
+        key = str(session_id or "")
+        parked = dict(self.state.get("pending_validation_by_session", {}) or {})
+        active = dict(self.state.get("pending_validation", {}) or {})
+        active_key = str(active.get("session_id", "") or "")
+        if active and active_key != key:
+            parked[active_key] = active
+            active = {}
+        if not active and key in parked:
+            active = dict(parked.pop(key) or {})
+        if len(parked) > self.MAX_PARKED_SESSIONS:
+            for old_key in list(parked)[: len(parked) - self.MAX_PARKED_SESSIONS]:
+                parked.pop(old_key, None)
+        self.state["pending_validation_by_session"] = parked
+        self.state["pending_validation"] = active
 
     def attach_pending_contributors(self, contributors: Optional[Dict[str, Any]] = None) -> bool:
         """Merge late-created contributor IDs into the current pending response.

@@ -247,8 +247,22 @@ class SpeakerScopedMemory:
     def _source(self, source: str) -> str:
         return f"dm:{self._pid}:{source or 'conversation'}"
 
+    # Sources that file what the SPEAKER said.  Internal learners that write
+    # their own analysis during the turn (e.g. "retained_learning") are hers,
+    # not the partner's, and pass through unchanged.
+    SPEAKER_SOURCES = ("user", "statement", "introduction", "conversation", "told",
+                       "direct", "explicit")
+
+    def _speaker_originated(self, source: str, fact: str) -> bool:
+        low = str(source or "").lower()
+        return (any(marker in low for marker in self.SPEAKER_SOURCES)
+                or _reattribute(fact, self._name)[1])
+
     def learn_fact(self, fact: str, source: str = "conversation",
                    confidence: float = 0.7, *args: Any, **kwargs: Any) -> Any:
+        if not self._speaker_originated(source, fact):
+            return self._inner.learn_fact(fact, source=source, confidence=confidence,
+                                          *args, **kwargs)
         text, changed = _reattribute(fact, self._name)
         if not changed:
             text = f"{self._name} said: {text}"
@@ -358,6 +372,22 @@ class PraxisMessenger:
         # contact -> {"message", "attempts", "last_attempt"}: the latest thing
         # said to her that she has not yet answered in her own words.
         self.pending: Dict[str, Dict[str, Any]] = {}
+        # New phrasings: word pairs she says that no contact ever said to her.
+        # A parrot only recombines what it heard; a learner produces pairs it
+        # never heard (the "goed" signature).  Counted, not judged.
+        self.heard_pairs_path = self.root / "heard_pairs.json"
+        try:
+            self.heard_pairs = set(json.loads(self.heard_pairs_path.read_text(encoding="utf-8")))
+        except Exception:
+            self.heard_pairs = set()
+        self.last_novel: Dict[str, Any] = {}
+        # Knowing by triangulation: claims from different contacts that agree
+        # become her facts; opposite claims go to her contradiction ledger.
+        try:
+            from aurora_social_corroboration import SocialCorroboration
+            self.corroboration: Optional[Any] = SocialCorroboration(str(Path(state_dir or "aurora_state")))
+        except Exception:
+            self.corroboration = None
         self.online = False
         self.last_error = ""
         self.last_pull_at = 0.0
@@ -411,6 +441,24 @@ class PraxisMessenger:
             except Exception:
                 pass
 
+    MAX_HEARD_PAIRS = 50000
+
+    @staticmethod
+    def _pairs(text: str) -> List[str]:
+        words = re.findall(r"[a-z']+", str(text or "").lower())
+        return [f"{a} {b}" for a, b in zip(words, words[1:])]
+
+    def _remember_heard_pairs(self, text: str) -> None:
+        self.heard_pairs.update(self._pairs(text))
+        if len(self.heard_pairs) > self.MAX_HEARD_PAIRS:
+            self.heard_pairs = set(list(self.heard_pairs)[-self.MAX_HEARD_PAIRS:])
+        try:
+            tmp = self.heard_pairs_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(sorted(self.heard_pairs)), encoding="utf-8")
+            tmp.replace(self.heard_pairs_path)
+        except Exception:
+            pass
+
     def handle_message(self, message: Dict[str, Any], *, reentry: bool = False) -> Dict[str, Any]:
         pid, name, text = message["persona_id"], message["display_name"], message["text"]
         started = time.time()
@@ -421,6 +469,7 @@ class PraxisMessenger:
             self._log(pid, {"dir": "heard", "seq": message["seq"], "from": name,
                             "text": text, "at": started})
             self._feed_exemplar(text)
+            self._remember_heard_pairs(text)
 
         with speaker_frame(self.systems, pid, name):
             result = self.process_turn(
@@ -433,6 +482,11 @@ class PraxisMessenger:
                 run_periodic_maintenance=False,
                 mode_name="BOUNDED",
             ) or {}
+        if not reentry and self.corroboration is not None:
+            try:
+                self.corroboration.observe_message(self.systems, pid, name, text)
+            except Exception as exc:
+                self.last_error = f"corroboration: {type(exc).__name__}: {exc}"[:300]
         reply = self.extract_reply(result)
         src = str(result.get("src", "") if isinstance(result, Mapping) else "")
         # The voice gate in her turn already decided what is hers; its label
@@ -471,6 +525,11 @@ class PraxisMessenger:
                             "src": src, "at": time.time()})
             self.last_spoke = {"to": name, "text": reply[:160], "src": src, "at": time.time()}
             self.pending.pop(pid, None)
+            novel = [pair for pair in self._pairs(reply) if pair not in self.heard_pairs]
+            if novel:
+                self.counters["novel_phrasings"] = self.counters.get("novel_phrasings", 0) + 1
+                self.last_novel = {"to": name, "text": reply[:160], "pairs": novel[:3],
+                                   "at": time.time()}
         else:
             self.counters["errors"] += 1
             self.last_error = f"send refused: {(response or {}).get('error', 'no response')}"
@@ -603,6 +662,8 @@ class PraxisMessenger:
                 "withheld_reasons": dict(self.withheld_reasons),
                 "last_withheld": dict(self.last_withheld),
                 "last_spoke": dict(self.last_spoke),
+                "corroboration": (self.corroboration.status() if self.corroboration is not None else {}),
+                "last_novel": dict(self.last_novel),
                 "pending": {pid: {"attempts": e.get("attempts", 0),
                                   "pressure": round(self._pressure(pid), 4)}
                             for pid, e in self.pending.items()}}

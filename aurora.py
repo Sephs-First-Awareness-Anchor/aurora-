@@ -7001,7 +7001,8 @@ def _classify_validated_communication(
         or (gap_action in {"ask", "applied"} and not meaning_issue)
     )
 
-    positive_labels = {"confirmed", "accepted", "clarification_supplied", "selection_supplied"}
+    positive_labels = {"confirmed", "accepted", "clarification_supplied", "selection_supplied",
+                       "reconstructed"}
     if label in positive_labels and score >= 0.80:
         effect = "resolved_fully"
         kind = "positive"
@@ -21623,23 +21624,13 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                 _sig = _PEL.get().conditioning_signal(_anchor)
                 if _sig["sample_count"] >= 2 and _sig["conditional"]:
                     # Concept has variable history -- say so specifically, don't reflect input
-                    # Sunni, 2026-11-07 (no scripted replies): this used to be a
-                    # finished f-string sentence passed through the renderer
-                    # verbatim.  The experience is real -- her pressure ledger
-                    # shows this concept resolving differently each time -- so
-                    # the ledger's facts become the seed and her renderer forms
-                    # the words.
-                    state.response_content = _render_runtime_intent(
-                        systems,
-                        f"{_anchor}; outcomes; vary",
-                        emotion_tone="attentive",
-                        certainty=0.62,
-                        supporting_concepts=[str(_anchor)],
-                    )
-                    state.response_tone = "attentive"
-                    state.response_confidence = 0.62
-                    state.response_src = "pressure_experience"
-                    _record_response_revision(state, "chain_down2_pressure_experience", "", 0.0)
+                    # Sunni, 2026-11-07 (no scripted replies -- twice over):
+                    # this was a finished f-string sentence, then briefly a
+                    # seed with words that were not hers ("outcomes; vary").
+                    # Neither is her voice.  This path now produces no text;
+                    # the voice gate's pressure articulation (her own stance,
+                    # her own renderer) or silence takes the turn instead.
+                    state.response_content = ""
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -35247,6 +35238,26 @@ def _run_live_response_turn(
             systems.pop("_live_contract_observation_done", None)
             return {}
 
+    def _gate_early_response(response: Any) -> Any:
+        """Early exits return before the main voice-gate seam; gate them too.
+
+        The work behind them still happens (a taught fact is still recorded);
+        only a canned acknowledgement is kept from being her voice.
+        """
+        try:
+            from aurora_voice_gate import (apply_voice_gate as _early_gate,
+                                           record_gate_in_trace as _early_gate_trace)
+            gated = _early_gate(systems, response, user_text, session_id=session_id)
+            _early_gate_trace(systems, response, gated, user_text)
+            return gated
+        except Exception as _early_gate_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__, operation="voice_gate:early_exit",
+                exc=_early_gate_exc,
+                context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+            )
+            return response
+
     def _commit_early_response(response: Any, response_source: str) -> Dict[str, Any]:
         """Keep high-priority responses learnable by the next receiver turn."""
         _early_contributors: Dict[str, Any] = {}
@@ -35326,7 +35337,8 @@ def _run_live_response_turn(
             confidence=0.0,
             src="memory_sweep",
         )
-        _early_application = _commit_early_response(resp_A, "memory_sweep")
+        resp_A = _gate_early_response(resp_A)
+        _early_application = _commit_early_response(resp_A, str(getattr(resp_A, "src", "") or "memory_sweep"))
         # Build 774: this is an early exit -- resp_A is fully decided right
         # here, same as the main path's callback point below, so a Surface
         # caller must be notified here too or it never hears back at all.
@@ -35372,7 +35384,8 @@ def _run_live_response_turn(
         if teach_reply:
              _early_validation = _finalize_early_validation()
              resp_A = SimpleNamespace(content=teach_reply, emotional_tone="happy", confidence=0.95, src="teaching")
-             _early_application = _commit_early_response(resp_A, "teaching")
+             resp_A = _gate_early_response(resp_A)
+             _early_application = _commit_early_response(resp_A, str(getattr(resp_A, "src", "") or "teaching"))
              if on_surface_ready is not None:
                  try:
                      on_surface_ready(resp_A)
@@ -35385,7 +35398,7 @@ def _run_live_response_turn(
                      )
              return {
                  'input': user_text, 'resp_A': resp_A, 'resp_B': None, 'offered_lookup': False,
-                 'is_question': False, 'elapsed_A': 0.0, 'src': "teaching", 'turn_tick': turn_tick,
+                 'is_question': False, 'elapsed_A': 0.0, 'src': str(getattr(resp_A, "src", "") or "teaching"), 'turn_tick': turn_tick,
                  'trace_id': trace_id, 'interaction_runtime': {}, 'quasiarch_runtime': None,
                  'understanding_observation': understanding_observation, 'understanding_application': _early_application,
                  'validated_communication': _early_validation,
@@ -35396,7 +35409,8 @@ def _run_live_response_turn(
         if offer_reply:
              _early_validation = _finalize_early_validation()
              resp_A = SimpleNamespace(content=offer_reply, emotional_tone="attentive", confidence=0.90, src="teaching")
-             _early_application = _commit_early_response(resp_A, "teaching")
+             resp_A = _gate_early_response(resp_A)
+             _early_application = _commit_early_response(resp_A, str(getattr(resp_A, "src", "") or "teaching"))
              if on_surface_ready is not None:
                  try:
                      on_surface_ready(resp_A)
@@ -35409,7 +35423,7 @@ def _run_live_response_turn(
                      )
              return {
                  'input': user_text, 'resp_A': resp_A, 'resp_B': None, 'offered_lookup': False,
-                 'is_question': False, 'elapsed_A': 0.0, 'src': "teaching", 'turn_tick': turn_tick,
+                 'is_question': False, 'elapsed_A': 0.0, 'src': str(getattr(resp_A, "src", "") or "teaching"), 'turn_tick': turn_tick,
                  'trace_id': trace_id, 'interaction_runtime': {}, 'quasiarch_runtime': None,
                  'understanding_observation': understanding_observation, 'understanding_application': _early_application,
                  'validated_communication': _early_validation,

@@ -196,3 +196,41 @@ def test_trace_records_what_actually_left(tmp_path):
     final = json.loads((tmp_path / "last_articulation_trace.json").read_text())["final_delivered"]
     assert final["delivered_text"] == gated.content
     assert final["voice_gate"]["blocked_source"] == "relational_role"
+
+
+# -- found in the real-boot loop run (2026-11-07) ------------------------------------
+
+def test_parroting_is_blocked_from_any_source():
+    systems, _ = systems_for({"subject": "rain", "relation": "is", "obj": "water", "question": False})
+    heard = "So you mean real want music? Rain is water that falls from clouds."
+    out = G.apply_voice_gate(systems, resp(heard, "generative"), heard,
+                             session_id="praxis_dm_gemma", render=lambda *a, **k: "")
+    assert out.content == "" and systems["_last_voice_gate"]["blocked"] == "echo"
+
+
+def test_her_reuse_of_a_word_is_not_parroting():
+    systems, _ = systems_for(MUSIC)
+    out = G.apply_voice_gate(systems, resp("I want music. I did music.", "composer_unified"),
+                             "Do you like music?", session_id="praxis_dm_gemini")
+    assert out.content == "I want music. I did music."
+
+
+@pytest.mark.parametrize("text", [
+    "I'm not landing on 'music' exactly yet — I'll keep sitting with that one.",
+    "Let me try it: rain falls — and I already had 'rain' connected to water.",
+    "Got it — thank you for the correction. What did it actually refer to?",
+    "Can you give me an example of 'friend'?",
+])
+def test_constraint_emission_templates_are_blocked(text):
+    assert G.scripted_reason("sedimemory_recall", text) == "template"
+
+
+def test_internal_markers_are_not_speech():
+    assert G.scripted_reason("composer_unified", "I am [internal. I want light.").startswith("machine_output")
+
+
+def test_no_authored_seed_words_remain_in_the_pressure_experience_path():
+    code = [line for line in (ROOT / "aurora.py").read_text(encoding="utf-8").splitlines()
+            if not line.strip().startswith("#")]
+    assert not any("outcomes; vary" in line for line in code)
+    assert not any("I get different outcomes depending on" in line for line in code)

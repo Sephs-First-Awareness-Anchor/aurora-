@@ -2682,6 +2682,18 @@ def initialize(state_dir: str = "") -> str:
             )
             _systems["praxis_messenger"] = _praxis_messenger
             log.info("Praxis messenger: %s", _praxis_messenger.status())
+            # Weekly learning probe: the same 20 fresh questions, compared
+            # week to week (aurora_learning_probe.py).  Same idle predicate
+            # and non-blocking lock.
+            try:
+                from aurora_learning_probe import LearningProbe
+                _learning_probe = LearningProbe(
+                    _systems, state_dir=_messenger_state_dir,
+                    field_lock=_lock, live_idle=_praxis_live_idle)
+                _learning_probe.start()
+                _systems["learning_probe"] = _learning_probe
+            except Exception as _probe_exc:
+                log.warning("Learning probe failed to start: %s", _probe_exc)
         except Exception as _messenger_exc:
             _praxis_messenger = None
             _aurora_record_exception_from_locals(
@@ -11554,6 +11566,49 @@ def get_cognitive_stats() -> str:
         except Exception as _messenger_stats_exc:
             stats["messenger_status"] = "error"
             stats["messenger_last_error"] = f"{type(_messenger_stats_exc).__name__}: {_messenger_stats_exc}"
+
+        # ── Learning scoreboard (2026-11-07) ─────────────────────────────
+        # "Is she developing understanding or just organizing memory?"  The
+        # receiver-gated loops below promote only on validated evidence, so
+        # promotions here mean something crossed and was understood.  Flat.
+        try:
+            _ce = _systems.get("communication_emergence") if _systems else None
+            _ce_s = _ce.status() if _ce is not None and hasattr(_ce, "status") else {}
+            stats["learn_ce_trials"] = int(_ce_s.get("trial_operations", 0) or 0)
+            stats["learn_ce_promoted"] = int(_ce_s.get("promoted_operations", 0) or 0)
+            stats["learn_ce_dissolved"] = int(_ce_s.get("dissolved_operations", 0) or 0)
+            _lg = _systems.get("lexical_grounding") if _systems else None
+            _lg_s = _lg.status() if _lg is not None and hasattr(_lg, "status") else {}
+            stats["learn_lex_trials"] = int(_lg_s.get("trial_count", 0) or 0)
+            stats["learn_lex_promoted"] = int(_lg_s.get("promoted_count", 0) or 0)
+            _ge = _systems.get("grammar_engine") if _systems else None
+            _motifs = dict(getattr(getattr(_ge, "_lineage", None), "_motifs", {}) or {})
+            stats["learn_grammar_promoted"] = sum(1 for _mo in _motifs.values() if getattr(_mo, "promoted", False))
+            _outcomes = list((_systems or {}).get("_finalized_communication_outcomes") or [])
+            stats["learn_verdict_pos"] = sum(1 for _o in _outcomes if _o.get("outcome_kind") == "positive")
+            stats["learn_verdict_neg"] = sum(1 for _o in _outcomes if _o.get("outcome_kind") == "negative")
+            _cl = (_systems or {}).get("contradiction_ledger")
+            stats["learn_contradictions"] = len(getattr(_cl, "_records", {}) or {}) if _cl is not None else 0
+            _ms = _praxis_messenger.status() if _praxis_messenger is not None else {}
+            _co = dict(_ms.get("corroboration") or {})
+            stats["learn_corroborated"] = int(_co.get("corroborated", 0) or 0)
+            stats["learn_novel_phrasings"] = int(_ms.get("novel_phrasings", 0) or 0)
+            _nv = dict(_ms.get("last_novel") or {})
+            stats["learn_last_novel"] = (f"\"{_nv.get('text', '')}\" (new: {', '.join(_nv.get('pairs') or [])})"
+                                         if _nv else "")
+            _pr = (_systems or {}).get("learning_probe")
+            _ps = _pr.summary() if _pr is not None else {}
+            if _ps.get("runs"):
+                _probe_line = (f"{_ps.get('latest_own_voice', 0)}/{_ps.get('latest_total', 0)} own words, "
+                               f"{_ps.get('latest_silent', 0)} silent")
+                if "changed_vs_previous" in _ps:
+                    _probe_line += (f"; vs last week {_ps['changed_vs_previous']} changed, "
+                                    f"own words {_ps['own_voice_delta']:+d}")
+                stats["learn_probe"] = _probe_line
+            else:
+                stats["learn_probe"] = "first run within a week of install"
+        except Exception as _learn_exc:
+            stats["learn_probe"] = f"scoreboard error: {type(_learn_exc).__name__}"
 
         # ── Repair R (per Sunni, 2026-08-19): genealogy mapping + quasiarch
         # diagnostics for the Hub's auditing surface. Note this is the REAL

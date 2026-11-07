@@ -105,6 +105,17 @@ TEMPLATE_PREFIXES: Tuple[str, ...] = (
     "active axes:",
     "my creator is ",
     "when i work with ",
+    # aurora_constraint_emission.py canned lines (surfaced as sedimemory_recall)
+    "got it — thank you for the correction",
+    "let me try it:",
+    "let me try '",
+    "i already have '",
+    "i don't have anything of my own for",
+    "can you give me an example of '",
+    "good — that's it",
+    "i'm not landing on",
+    "i don't have that yet",
+    "i'm not making a connection yet",
     "aurora is still initializing",
     "i'm mid curiosity session",
     "i'm out playing",
@@ -139,6 +150,8 @@ def machine_output_reason(text: str) -> str:
     """Log records and telemetry are not speech ("Code evolution outcome for
     mutation_id=DREAM:... accepted=False.. operator_key=...")."""
     raw = str(text or "")
+    if "[" in raw or "]" in raw:
+        return "machine_output:marker"
     if len(_KEY_VALUE.findall(raw)) >= 2:
         return "machine_output:key_value"
     if len(_SNAKE.findall(raw)) >= 2:
@@ -324,6 +337,19 @@ def _echo_ratio(text: str, heard: str) -> float:
     return sum(1 for t in said if t in heard_set) / len(said)
 
 
+def parrot_reason(text: str, heard: str) -> str:
+    """'echo' when the reply is mostly the speaker's own words handed back."""
+    said = [t.lower() for t in _tokens(text)]
+    content = [t for t in said if len(t) >= 3]
+    if len(content) < 2:
+        return ""
+    heard_low = " ".join(t.lower() for t in _tokens(heard))
+    ratio = _echo_ratio(text, heard)
+    if ratio >= 0.8 and (len(content) >= 4 or " ".join(said) in heard_low):
+        return "echo"
+    return ""
+
+
 def articulation_rejection(text: str, heard: str) -> str:
     """'' when the articulation may stand; otherwise why not."""
     out = str(text or "").strip()
@@ -397,6 +423,11 @@ def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
     text = str(getattr(resp, "content", "") or "").strip()
     src = str(getattr(resp, "src", "") or "")
     reason = scripted_reason(src, text, dm=dm) if text else "silent"
+    # Parroting is not her voice from ANY source.  The retired baseline floor
+    # used to catch input echo (by replacing it with a template); with the
+    # templates gone, the gate has to catch it itself.
+    if not reason and parrot_reason(text, heard):
+        reason = "echo"
     record: Dict[str, Any] = {"channel": channel, "pressure": round(level, 4),
                               "original_src": src, "at": time.time()}
 

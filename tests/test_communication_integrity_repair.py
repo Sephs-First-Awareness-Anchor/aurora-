@@ -388,7 +388,9 @@ def test_persisted_trace_file_matches_the_actual_delivered_response():
             run_periodic_maintenance=False, mode_name="AGENTIC",
         )
         delivered = str(getattr(result.get("resp_A"), "content", "") or "")
-        assert delivered
+        # 2026-11-07 (no scripted replies): silence is a legitimate delivery
+        # now, so this no longer requires non-empty text -- only that the
+        # persisted trace matches whatever was actually delivered, "" included.
 
         trace_path = os.path.join(scratch_state, "last_articulation_trace.json")
         assert os.path.exists(trace_path)
