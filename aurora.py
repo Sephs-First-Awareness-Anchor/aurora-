@@ -7761,6 +7761,17 @@ def _render_runtime_intent(
     return _repair_unarticulated_surface_response("", minimal, systems=systems)
 
 
+# Sunni, 2026-11-07: no scripted replies.  The "communicative baseline"
+# surfaces ("My best read on that is...", "I understand what you are saying
+# about X.") used to displace her own composed reply whenever it looked weak --
+# her generative sources were on the "weak" list -- and to fill any reply
+# judged below the floor.  They no longer displace anything: her words or, at
+# the voice gate (aurora_voice_gate.py), her pressure-driven articulation or
+# silence.  The baseline candidate is still derived, so its relation analysis
+# keeps feeding the turn; it just never speaks.
+_SCRIPTED_BASELINE_MAY_DISPLACE = False
+
+
 def _generative_only_responses_enabled(systems: Optional[Dict[str, Any]] = None) -> bool:
     if isinstance(systems, dict):
         systems["_generative_only_responses"] = True
@@ -20663,7 +20674,8 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             )
         )
         _baseline_candidate_better = bool(
-            _candidate_is_baseline
+            _SCRIPTED_BASELINE_MAY_DISPLACE
+            and _candidate_is_baseline
             and _candidate_text
             and _candidate_conf >= 0.64
             and float(_candidate_alignment.get("score", 0.0) or 0.0) >= 0.58
@@ -21611,15 +21623,18 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                 _sig = _PEL.get().conditioning_signal(_anchor)
                 if _sig["sample_count"] >= 2 and _sig["conditional"]:
                     # Concept has variable history -- say so specifically, don't reflect input
+                    # Sunni, 2026-11-07 (no scripted replies): this used to be a
+                    # finished f-string sentence passed through the renderer
+                    # verbatim.  The experience is real -- her pressure ledger
+                    # shows this concept resolving differently each time -- so
+                    # the ledger's facts become the seed and her renderer forms
+                    # the words.
                     state.response_content = _render_runtime_intent(
                         systems,
-                        (
-                            f"when I work with {_anchor}, I get different outcomes depending on "
-                            f"what I was trying to do -- it doesn't resolve the same way each time. "
-                            f"What aspect of it matters most to you here?"
-                        ),
+                        f"{_anchor}; outcomes; vary",
                         emotion_tone="attentive",
                         certainty=0.62,
+                        supporting_concepts=[str(_anchor)],
                     )
                     state.response_tone = "attentive"
                     state.response_confidence = 0.62
@@ -23015,7 +23030,7 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
                     or (_relation_damaged and not _delivered_has_grounded_answer)
                     or _repair_was_lost
                 )
-                if _delivery_below_floor:
+                if _delivery_below_floor and _SCRIPTED_BASELINE_MAY_DISPLACE:
                     resp_A.content = _baseline_text
                     resp_A.emotional_tone = "attentive"
                     resp_A.confidence = _baseline_confidence
@@ -35472,6 +35487,29 @@ def _run_live_response_turn(
             locals(), module=__name__,
             operation="reflective_readdressing:core_delivery_invariant",
             exc=_aurora_boundary_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
+
+    # Voice gate (Sunni, 2026-11-07: "Get rid of the scripting and use her
+    # pressure system to encourage a response").  resp_A is final here and
+    # everything below only reads it -- including
+    # communication_emergence.observe_turn(), which a canned reply used to
+    # zero out.  A scripted reply never leaves; being addressed builds
+    # pressure through her WaveformPressurePump; under enough pressure she
+    # articulates from her own stance through her own renderer; otherwise she
+    # is silent, and that silence is what lets communication emergence feel
+    # the unresolved obligation.  See aurora_voice_gate.py.
+    try:
+        from aurora_voice_gate import (apply_voice_gate as _apply_voice_gate,
+                                       record_gate_in_trace as _record_gate_in_trace)
+        _pre_gate_resp = resp_A
+        resp_A = _apply_voice_gate(systems, resp_A, user_text, session_id=session_id)
+        _record_gate_in_trace(systems, _pre_gate_resp, resp_A, user_text)
+    except Exception as _voice_gate_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="voice_gate:apply",
+            exc=_voice_gate_exc,
             context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
         )
 

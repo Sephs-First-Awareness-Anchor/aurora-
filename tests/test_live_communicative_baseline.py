@@ -221,7 +221,12 @@ class LiveCommunicativeBaselineTests(unittest.TestCase):
             self.assertIn("try again more directly", candidate["text"].lower())
             self.assertNotIn("you missed my question", candidate["text"].lower())
 
-    def test_final_authority_replaces_recycled_hint_with_baseline(self):
+    def test_final_authority_never_displaces_with_scripted_baseline(self):
+        # Sunni, 2026-11-07: no scripted replies.  This test used to assert
+        # the opposite -- that the communicative-baseline template replaced
+        # a weak reply.  The baseline is still derived (its relation analysis
+        # still feeds the turn) but it never speaks; aurora_voice_gate.py
+        # decides what leaves.
         with tempfile.TemporaryDirectory() as td:
             field = _field(Path(td))
             _seed_causal_trial(field)
@@ -263,18 +268,10 @@ class LiveCommunicativeBaselineTests(unittest.TestCase):
             finally:
                 aurora._emit_honest_abstain_and_seek = original_abstain
 
-            self.assertEqual(response.content, baseline["text"])
-            self.assertEqual(
-                response.src, "constraint_communication_baseline"
-            )
-            self.assertEqual(state.response_content, baseline["text"])
-            self.assertEqual(response.confidence, baseline["confidence"])
-            self.assertIn(
-                "constraint_communication_baseline_floor",
-                state.pipeline_state["articulation_arbitration"][
-                    "rejection_reasons"
-                ],
-            )
+            self.assertTrue(baseline.get("text"))          # still derived
+            self.assertNotEqual(response.content, baseline["text"])
+            self.assertNotEqual(response.src, "constraint_communication_baseline")
+            self.assertFalse(aurora._SCRIPTED_BASELINE_MAY_DISPLACE)
 
 
 if __name__ == "__main__":

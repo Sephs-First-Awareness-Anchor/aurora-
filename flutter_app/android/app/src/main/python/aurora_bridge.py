@@ -11544,7 +11544,9 @@ def get_cognitive_stats() -> str:
             _w = _m.get("last_withheld") or {}
             stats["messenger_last_withheld"] = (
                 f"to {_w.get('to', '?')}: \"{_w.get('text', '')}\" "
-                f"[{_w.get('reason', '')}; {_w.get('src', '') or 'no src'}]") if _w else ""
+                f"[{_w.get('reason', '')}; {_w.get('src', '') or 'no src'}"
+                f"{'; pressure ' + format(float(_w.get('pressure') or 0.0), '.2f') if _w.get('pressure') is not None else ''}"
+                f"{'; ' + str(_w.get('articulation')) if _w.get('articulation') else ''}]") if _w else ""
             _sp = _m.get("last_spoke") or {}
             stats["messenger_last_spoke"] = (
                 f"to {_sp.get('to', '?')}: \"{_sp.get('text', '')}\"") if _sp else ""

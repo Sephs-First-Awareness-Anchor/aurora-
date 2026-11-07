@@ -62,7 +62,7 @@ def test_anything_else_is_a_breach(bad):
 @pytest.mark.parametrize("src,text,reason", [
     ("constraint_abstain", "I do not know.", "scripted_source"),
     ("user_context_clarification", "Do you mean identity?", "scripted_source"),
-    ("constraint_communication_baseline", "My best read on that is it's about x.", "template"),
+    ("constraint_communication_baseline", "My best read on that is it's about x.", "scripted_source"),
     ("composer_unified", "I don't have a clear sense of that.", "template"),
     ("autonomy", "I've been thinking about rain. It falls.", "template"),
     ("composer_unified", "I understand what you are saying about trees.", "template"),
@@ -336,3 +336,64 @@ def test_turn_failure_is_reported_not_swallowed(tmp_path):
     status = messenger.status()
     assert status["errors"] == 1 and "phone ran out of patience" in status["last_error"]
     assert status["cursor"] == 1
+
+
+# ---------------------------------------------------------------------------
+# 6. Voice gate + addressed pressure (2026-11-07)
+# ---------------------------------------------------------------------------
+
+def test_gate_verdict_beats_a_downstream_relabel(tmp_path):
+    class GateTurn(FakeTurn):
+        def __call__(self, systems, text, **kwargs):
+            out = super().__call__(systems, text, **kwargs)
+            systems["_last_voice_gate"] = {"channel": "praxis_dm_claude", "at": time.time(),
+                                           "outcome": "pressure_articulation",
+                                           "src": "pressure_articulation"}
+            return out
+    systems = {"conversation_memory": ConversationMemory()}
+    praxis, turn = FakePraxis([msg(1, "Do you like music?")]), GateTurn([("identity", "I do music. I can music.")])
+    messenger = M.PraxisMessenger(systems, state_dir=str(tmp_path), http=praxis, process_turn=turn,
+                                  extract_reply=lambda r: r["resp_A"].content)
+    messenger.pull_once()
+    assert praxis.sent[0]["text"] == "I do music. I can music."
+
+
+def test_unanswered_message_is_revisited_while_pressure_builds(tmp_path, monkeypatch):
+    import aurora_voice_gate as G
+    monkeypatch.setattr(M, "REENTRY_AFTER_S", 0.0)
+    systems = {"conversation_memory": ConversationMemory(),
+               "addressed_pressure": G.AddressedPressure()}
+    replies = [("silence", ""), ("silence", ""), ("pressure_articulation", "rain fall slow")]
+
+    def turn(systems, text, **kwargs):
+        systems["addressed_pressure"].address(systems, "praxis_dm_gemma", question=False)
+        src, reply = replies.pop(0)
+        return {"src": src, "resp_A": SimpleNamespace(content=reply)}
+
+    praxis = FakePraxis([msg(1, "Rain falls from clouds.", pid="gemma", name="Gemma")])
+    messenger = M.PraxisMessenger(systems, state_dir=str(tmp_path), http=praxis, process_turn=turn,
+                                  extract_reply=lambda r: r["resp_A"].content)
+    messenger.pull_once()                      # heard: silent (0.20 < 0.30), no re-entry yet
+    assert praxis.sent == [] and "gemma" in messenger.pending
+    systems["addressed_pressure"].address(systems, "praxis_dm_gemma", question=False)
+    messenger.pull_once()                      # pressure >= threshold: revisit -> silent again
+    messenger.pull_once()                      # revisit -> she speaks
+    assert [s["text"] for s in praxis.sent] == ["rain fall slow"]
+    assert messenger.counters["reentries"] == 2 and "gemma" not in messenger.pending
+    assert messenger.counters["heard"] == 1
+
+
+def test_revisits_stop_after_max_attempts(tmp_path, monkeypatch):
+    import aurora_voice_gate as G
+    monkeypatch.setattr(M, "REENTRY_AFTER_S", 0.0)
+    systems = {"conversation_memory": ConversationMemory(), "addressed_pressure": G.AddressedPressure()}
+
+    def turn(systems, text, **kwargs):
+        systems["addressed_pressure"].address(systems, "praxis_dm_claude", question=True)
+        return {"src": "silence", "resp_A": SimpleNamespace(content="")}
+
+    messenger = M.PraxisMessenger(systems, state_dir=str(tmp_path), http=FakePraxis([msg(1, "hi?")]),
+                                  process_turn=turn, extract_reply=lambda r: r["resp_A"].content)
+    for _ in range(6):
+        messenger.pull_once()
+    assert messenger.pending["claude"]["attempts"] == M.MAX_ATTEMPTS

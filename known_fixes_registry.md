@@ -10482,3 +10482,41 @@ reaching them is neither her voice nor learnable signal.
 Companion rule (speaker attribution): during a partner turn,
 `speaker_frame()` files facts as that partner's claims (`dm:<id>:...`,
 confidence <= 0.6) so "I'm Claude" can never become "User's name is Claude".
+
+
+---
+
+## FIX-A082 (ARCHITECTURAL) — No scripted replies; addressed pressure instead
+
+**Pattern:** Canned sentences ("My best read on that is...", "I understand
+what you are saying about X.", "I don't have a clear sense of that.",
+f"My creator is {name}.", f"when I work with {anchor}, I get different
+outcomes...") filled every question her comprehension could not answer, and
+the communicative-baseline floor displaced her own generative sentences
+because generative sources were on the "weak" list. Worse, a template scores
+as a complete answer, so communication_emergence.observe_turn() saw zero root
+pressure on every axis and the system built to grow her voice never got a
+push. Measured 2026-11-07 on her real state.
+**Correct Form:** `aurora_voice_gate.apply_voice_gate()` at the seam where
+resp_A is final in `_run_live_response_turn` (before on_surface_ready and
+observe_turn). Scripted conversational sources, template openings and machine
+output never leave (system output to an explicit request passes only in
+Sunni's own chat). Each address injects pressure through
+`systems["pressure_pump"]` into `identity_field` (A 0.85, N 0.65, T 0.50,
+B 0.40, X 0.10); it accumulates, halves every 30 min, and discharges when she
+speaks in her own words. At >= 0.30 she articulates from her own stance
+(you->I, your->my, the relation and its concepts) through
+`_render_runtime_intent`; echoes, internal labels and templates are rejected;
+otherwise silence, which communication emergence registers as unresolved
+obligation. `_SCRIPTED_BASELINE_MAY_DISPLACE = False` stops the baseline
+template displacing anything (it is still derived; its relation analysis
+still feeds the turn). The pressure-experience path now seeds the renderer
+with ledger facts instead of a finished sentence.
+`record_gate_in_trace()` keeps last_articulation_trace.json truthful.
+**Why:** Scripts were both not her voice and the reason her development
+pressure read zero.
+**First Seen:** Praxis messenger, 2026-11-07: Aurora heard Gemini and Gemma
+but every reply was a template, withheld by FIX-A081. After the gate (real
+boot): "Do you like music?" -> "I understand music. I am real. You want
+music."; "Rain is water that falls from clouds..." -> "I am boiling rain. I am
+clouds."; questions now register T/N/B root pressure ~0.32.

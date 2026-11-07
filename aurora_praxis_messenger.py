@@ -117,6 +117,22 @@ TEMPLATE_PREFIXES: Tuple[str, ...] = (
 )
 
 
+try:   # the voice gate is the single source of truth for what is scripted
+    from aurora_voice_gate import (SCRIPTED_CONVERSATIONAL_SOURCES as _GATE_SCRIPTED,
+                                   SYSTEM_OUTPUT_SOURCES as _GATE_SYSTEM,
+                                   TEMPLATE_PREFIXES as _GATE_PREFIXES,
+                                   ARTICULATION_THRESHOLD, addressed_pressure)
+    SCRIPTED_SOURCES = frozenset(SCRIPTED_SOURCES | _GATE_SCRIPTED | _GATE_SYSTEM)
+    TEMPLATE_PREFIXES = tuple(dict.fromkeys(TEMPLATE_PREFIXES + _GATE_PREFIXES))
+except Exception:  # pragma: no cover - gate missing: the local lists still hold
+    ARTICULATION_THRESHOLD = 0.30
+    addressed_pressure = None  # type: ignore[assignment]
+
+# Re-entry: an unanswered message is revisited while pressure builds.
+REENTRY_AFTER_S = 120.0
+MAX_ATTEMPTS = 3
+
+
 class MessengerContractBreach(ValueError):
     pass
 
@@ -334,11 +350,14 @@ class PraxisMessenger:
         self._paused = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self.counters = {"heard": 0, "spoke": 0, "withheld": 0, "breaches": 0,
-                         "busy_skips": 0, "errors": 0}
+                         "busy_skips": 0, "errors": 0, "reentries": 0}
         self.withheld_reasons: Dict[str, int] = {}
         # What she last tried to say, so Sunni can see it on the Hub.
         self.last_withheld: Dict[str, Any] = {}
         self.last_spoke: Dict[str, Any] = {}
+        # contact -> {"message", "attempts", "last_attempt"}: the latest thing
+        # said to her that she has not yet answered in her own words.
+        self.pending: Dict[str, Dict[str, Any]] = {}
         self.online = False
         self.last_error = ""
         self.last_pull_at = 0.0
@@ -392,12 +411,16 @@ class PraxisMessenger:
             except Exception:
                 pass
 
-    def handle_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+    def handle_message(self, message: Dict[str, Any], *, reentry: bool = False) -> Dict[str, Any]:
         pid, name, text = message["persona_id"], message["display_name"], message["text"]
-        self.counters["heard"] += 1
-        self._log(pid, {"dir": "heard", "seq": message["seq"], "from": name,
-                        "text": text, "at": time.time()})
-        self._feed_exemplar(text)
+        started = time.time()
+        if reentry:
+            self.counters["reentries"] = self.counters.get("reentries", 0) + 1
+        else:
+            self.counters["heard"] += 1
+            self._log(pid, {"dir": "heard", "seq": message["seq"], "from": name,
+                            "text": text, "at": started})
+            self._feed_exemplar(text)
 
         with speaker_frame(self.systems, pid, name):
             result = self.process_turn(
@@ -412,6 +435,13 @@ class PraxisMessenger:
             ) or {}
         reply = self.extract_reply(result)
         src = str(result.get("src", "") if isinstance(result, Mapping) else "")
+        # The voice gate in her turn already decided what is hers; its label
+        # is the truth even if later stages relabel the source.
+        gate = dict(self.systems.get("_last_voice_gate") or {})
+        if (gate.get("channel") == f"praxis_dm_{pid}"
+                and float(gate.get("at", 0.0) or 0.0) >= started - 1.0
+                and gate.get("outcome") in ("own_voice", "pressure_articulation")):
+            src = str(gate.get("src") or src)
         ok, reason = own_voice(src, reply, heard=text)
         outcome = {"seq": message["seq"], "persona_id": pid, "reply": reply,
                    "src": src, "sent": False, "reason": reason}
@@ -422,7 +452,15 @@ class PraxisMessenger:
             self._log(pid, {"dir": "withheld", "reply_to": message["seq"], "text": reply,
                             "src": src, "reason": reason, "at": time.time()})
             self.last_withheld = {"to": name, "text": reply[:160], "src": src,
-                                  "reason": reason, "at": time.time()}
+                                  "reason": reason, "at": time.time(),
+                                  "pressure": gate.get("pressure"),
+                                  "articulation": gate.get("articulation", "")}
+            entry = self.pending.get(pid) or {"message": message, "attempts": 0}
+            if entry["message"].get("seq") != message.get("seq"):
+                entry = {"message": message, "attempts": 0}
+            entry["attempts"] = int(entry.get("attempts", 0)) + 1
+            entry["last_attempt"] = time.time()
+            self.pending[pid] = entry
             return outcome
         response = self.http("POST", "/social/send", {
             "persona_id": pid, "text": reply[:MAX_TEXT_CHARS], "in_reply_to": message["seq"]})
@@ -432,6 +470,7 @@ class PraxisMessenger:
             self._log(pid, {"dir": "spoke", "reply_to": message["seq"], "text": reply,
                             "src": src, "at": time.time()})
             self.last_spoke = {"to": name, "text": reply[:160], "src": src, "at": time.time()}
+            self.pending.pop(pid, None)
         else:
             self.counters["errors"] += 1
             self.last_error = f"send refused: {(response or {}).get('error', 'no response')}"
@@ -485,6 +524,45 @@ class PraxisMessenger:
             # so one bad message can never wedge the loop.
             self.cursor = message["seq"]
             self._save_cursor()
+        outcomes.extend(self._reenter_pending())
+        return outcomes
+
+    def _pressure(self, pid: str) -> float:
+        if addressed_pressure is None:
+            return 0.0
+        try:
+            return float(addressed_pressure(self.systems).level(f"praxis_dm_{pid}"))
+        except Exception:
+            return 0.0
+
+    def _reenter_pending(self) -> List[Dict[str, Any]]:
+        """Being left unanswered keeps pushing.  While pressure for a contact
+        stays at or above the articulation threshold, she revisits the last
+        thing they said (each revisit addresses her again, so pressure
+        builds), up to MAX_ATTEMPTS, spaced REENTRY_AFTER_S apart."""
+        outcomes: List[Dict[str, Any]] = []
+        now = time.time()
+        for pid, entry in list(self.pending.items()):
+            if int(entry.get("attempts", 0)) >= MAX_ATTEMPTS:
+                continue
+            if now - float(entry.get("last_attempt", 0.0)) < REENTRY_AFTER_S:
+                continue
+            if self._pressure(pid) < ARTICULATION_THRESHOLD:
+                continue
+            if not self.live_idle():
+                break
+            if self.field_lock is not None and not self.field_lock.acquire(blocking=False):
+                self.counters["busy_skips"] += 1
+                break
+            try:
+                outcomes.append(self.handle_message(dict(entry["message"]), reentry=True))
+            except Exception as exc:
+                self.counters["errors"] += 1
+                self.last_error = f"turn failed: {type(exc).__name__}: {exc}"[:300]
+                entry["attempts"] = MAX_ATTEMPTS
+            finally:
+                if self.field_lock is not None:
+                    self.field_lock.release()
         return outcomes
 
     # -- lifecycle -------------------------------------------------------------------
@@ -524,7 +602,10 @@ class PraxisMessenger:
                 "last_error": self.last_error, **self.counters,
                 "withheld_reasons": dict(self.withheld_reasons),
                 "last_withheld": dict(self.last_withheld),
-                "last_spoke": dict(self.last_spoke)}
+                "last_spoke": dict(self.last_spoke),
+                "pending": {pid: {"attempts": e.get("attempts", 0),
+                                  "pressure": round(self._pressure(pid), 4)}
+                            for pid, e in self.pending.items()}}
 
 
 _MESSENGER: Optional[PraxisMessenger] = None
