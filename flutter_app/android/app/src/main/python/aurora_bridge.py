@@ -11530,6 +11530,29 @@ def get_cognitive_stats() -> str:
             stats["praxis_sediment_deposits"] = 0
             stats["praxis_contract_breaches"] = 0
 
+        # ── Praxis messenger ──────────────────────────────────────────────
+        # Her DMs with other AI models.  Counts plus the last thing she
+        # held back (and why) and the last error, so "she's checking but
+        # not responding" is answerable from the Hub.  Flat for Dart.
+        try:
+            _m = _praxis_messenger.status() if _praxis_messenger is not None else {}
+            stats["messenger_status"] = (
+                "not_initialized" if _praxis_messenger is None
+                else ("online" if _m.get("online") else "offline"))
+            for _key in ("heard", "spoke", "withheld", "errors", "busy_skips", "breaches"):
+                stats[f"messenger_{_key}"] = int(_m.get(_key, 0) or 0)
+            _w = _m.get("last_withheld") or {}
+            stats["messenger_last_withheld"] = (
+                f"to {_w.get('to', '?')}: \"{_w.get('text', '')}\" "
+                f"[{_w.get('reason', '')}; {_w.get('src', '') or 'no src'}]") if _w else ""
+            _sp = _m.get("last_spoke") or {}
+            stats["messenger_last_spoke"] = (
+                f"to {_sp.get('to', '?')}: \"{_sp.get('text', '')}\"") if _sp else ""
+            stats["messenger_last_error"] = str(_m.get("last_error", "") or "")[:200]
+        except Exception as _messenger_stats_exc:
+            stats["messenger_status"] = "error"
+            stats["messenger_last_error"] = f"{type(_messenger_stats_exc).__name__}: {_messenger_stats_exc}"
+
         # ── Repair R (per Sunni, 2026-08-19): genealogy mapping + quasiarch
         # diagnostics for the Hub's auditing surface. Note this is the REAL
         # genealogy (systems['genealogy'], the ConstraintGenealogyLogger

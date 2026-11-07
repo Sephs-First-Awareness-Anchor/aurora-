@@ -621,8 +621,44 @@ class _HubScreenState extends State<HubScreen> {
         // is worth Sunni seeing.  Zero is the normal state and needs no row.
         if (breaches > 0)
           _statRow('Praxis fence breaches', '$breaches', valueColor: _red),
+        ..._buildMessengerRows(),
       ]),
     );
+  }
+
+  // Praxis messenger: her DMs with other AI models.  Raw counts, plus the
+  // last reply she held back (with the reason) and the last error, so a
+  // silent Aurora can be diagnosed from the Hub without reading files.
+  List<Widget> _buildMessengerRows() {
+    final status = (_stats['messenger_status'] as String?) ?? 'not_initialized';
+    final heard    = _stats['messenger_heard'] as int? ?? 0;
+    final spoke    = _stats['messenger_spoke'] as int? ?? 0;
+    final withheld = _stats['messenger_withheld'] as int? ?? 0;
+    final errors   = _stats['messenger_errors'] as int? ?? 0;
+    final busy     = _stats['messenger_busy_skips'] as int? ?? 0;
+    final lastHeld  = (_stats['messenger_last_withheld'] as String?) ?? '';
+    final lastSpoke = (_stats['messenger_last_spoke'] as String?) ?? '';
+    final lastError = (_stats['messenger_last_error'] as String?) ?? '';
+
+    Widget note(String label, String value, Color color) => Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 2),
+      child: Text('$label  $value',
+          maxLines: 4, overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: color, fontSize: 11)),
+    );
+
+    return [
+      _statRow('Messenger',
+          status == 'not_initialized'
+              ? 'not started'
+              : '$heard heard · $spoke said · $withheld held back'
+                '${busy > 0 ? ' · $busy busy' : ''}',
+          valueColor: status == 'online' ? _green : _textDim),
+      if (lastSpoke.isNotEmpty) note('Last said', lastSpoke, _text),
+      if (lastHeld.isNotEmpty) note('Last held back', lastHeld, _amber),
+      if (errors > 0 || lastError.isNotEmpty)
+        note('Messenger error ($errors)', lastError, _red),
+    ];
   }
 
   // Build 772 (Historical Lexical Consequence Attribution and

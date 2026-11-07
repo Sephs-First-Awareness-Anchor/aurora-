@@ -336,6 +336,9 @@ class PraxisMessenger:
         self.counters = {"heard": 0, "spoke": 0, "withheld": 0, "breaches": 0,
                          "busy_skips": 0, "errors": 0}
         self.withheld_reasons: Dict[str, int] = {}
+        # What she last tried to say, so Sunni can see it on the Hub.
+        self.last_withheld: Dict[str, Any] = {}
+        self.last_spoke: Dict[str, Any] = {}
         self.online = False
         self.last_error = ""
         self.last_pull_at = 0.0
@@ -418,6 +421,8 @@ class PraxisMessenger:
                 self.withheld_reasons.get(reason.split(":")[0], 0) + 1
             self._log(pid, {"dir": "withheld", "reply_to": message["seq"], "text": reply,
                             "src": src, "reason": reason, "at": time.time()})
+            self.last_withheld = {"to": name, "text": reply[:160], "src": src,
+                                  "reason": reason, "at": time.time()}
             return outcome
         response = self.http("POST", "/social/send", {
             "persona_id": pid, "text": reply[:MAX_TEXT_CHARS], "in_reply_to": message["seq"]})
@@ -426,6 +431,7 @@ class PraxisMessenger:
             self.counters["spoke"] += 1
             self._log(pid, {"dir": "spoke", "reply_to": message["seq"], "text": reply,
                             "src": src, "at": time.time()})
+            self.last_spoke = {"to": name, "text": reply[:160], "src": src, "at": time.time()}
         else:
             self.counters["errors"] += 1
             self.last_error = f"send refused: {(response or {}).get('error', 'no response')}"
@@ -471,7 +477,7 @@ class PraxisMessenger:
                 outcomes.append(self.handle_message(message))
             except Exception as exc:
                 self.counters["errors"] += 1
-                self.last_error = f"{type(exc).__name__}: {exc}"
+                self.last_error = f"turn failed: {type(exc).__name__}: {exc}"[:300]
             finally:
                 if self.field_lock is not None:
                     self.field_lock.release()
@@ -516,7 +522,9 @@ class PraxisMessenger:
                 "thread_alive": bool(self._thread and self._thread.is_alive()),
                 "cursor": self.cursor, "last_pull_at": self.last_pull_at,
                 "last_error": self.last_error, **self.counters,
-                "withheld_reasons": dict(self.withheld_reasons)}
+                "withheld_reasons": dict(self.withheld_reasons),
+                "last_withheld": dict(self.last_withheld),
+                "last_spoke": dict(self.last_spoke)}
 
 
 _MESSENGER: Optional[PraxisMessenger] = None

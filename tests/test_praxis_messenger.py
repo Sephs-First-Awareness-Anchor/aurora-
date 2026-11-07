@@ -312,3 +312,27 @@ def test_same_device_messenger_loop(tmp_path):
         proc.stdin.close()
         proc.terminate()
         proc.wait(5)
+
+
+def test_status_shows_what_she_held_back_and_said(tmp_path):
+    messenger, _, _, _ = make(
+        tmp_path, [msg(1, "What is a tree?"), msg(2, "Do you like rain?")],
+        [("constraint_abstain", "I don't have a clear sense of that."),
+         ("generative", "rain cool on glass")])
+    messenger.pull_once()
+    status = messenger.status()
+    assert status["last_withheld"]["text"] == "I don't have a clear sense of that."
+    assert status["last_withheld"]["reason"].startswith("scripted_source")
+    assert status["last_spoke"]["text"] == "rain cool on glass"
+    assert status["heard"] == 2 and status["spoke"] == 1 and status["withheld"] == 1
+
+
+def test_turn_failure_is_reported_not_swallowed(tmp_path):
+    def boom(systems, text, **kwargs):
+        raise RuntimeError("phone ran out of patience")
+    messenger = M.PraxisMessenger({}, state_dir=str(tmp_path), http=FakePraxis([msg(1, "hi")]),
+                                  process_turn=boom)
+    messenger.pull_once()
+    status = messenger.status()
+    assert status["errors"] == 1 and "phone ran out of patience" in status["last_error"]
+    assert status["cursor"] == 1
