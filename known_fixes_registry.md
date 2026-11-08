@@ -10589,3 +10589,32 @@ rock" (Gemini vs Gemma) -> she reached Claude: "moon, made. rock."; Claude's
 answer validated it positive (0.8) on the trial operation that shaped it.
 Same run surfaced "A you becomes curious when it turns effort into effective
 change without needless cost" and "Light: foundational:light." to contacts.
+
+## FIX-A086 (PERFORMANCE) — Phone overload: update boots, rebuilds, background pacing
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule:** Results unchanged; only cost. (1) UniversalFunctionLineage:
+_legacy_lookup uses a lowercase index built once per rebuild (was 465M
+str.lower calls); imported-call resolution uses a dotted-tail index (was 73M
+endswith calls); rebuild 147.6 s -> 10.1 s, 0 mismatches over 10,499
+functions / 120,643 calls. verify_source_freshness proves "unchanged" from
+content hashes before any AST parse, records new mtimes so the next boot
+takes the stat-only path, and hands its scan to rebuild() (one scan, not
+two). Manifest strings shared on load (live heap 100 MB -> 55 MB).
+(2) ManualCodeLineageAssimilator.assimilate: code-ability records built once
+per batch and refreshed only for the ids a registration writes; signature
+helpers cached; lineage journal saved once per batch
+(LiveLineageJournal.record_events). 209-file update: 129.9 s -> 6.8 s,
+results identical. Skips the function-lineage rebuild when the lineage is
+already current. (3) aurora_bridge: _FieldLock records release time; every
+background source (historical replay, Praxis bridge, messenger/initiative,
+learning probe, proactive loop, evolution sim) waits BOOT_SETTLE_S=120 after
+boot and BACKGROUND_GAP_S=20 after any turn (90 on battery < 20% not
+charging). (4) Learning probe: first run after 1 h uptime; scheduled run asks
+one question per idle window.
+**First Seen:** 2026-11-07 — Sunni: phone slows dramatically, app sometimes
+crashes and restarts before initializing. First boot after new code: 219 s
+CPU, 639 MB here (~10-15 min on a phone, inside the boot lock; a kill
+mid-rebuild restarted it from zero). After fix: 16.3 s.
+**Still open:** ~575 MB RSS after boot; ~226 MB of live heap is JSON-decoded
+state. Her code autoevolver writes evolved blocks into source files; each
+accepted mutation rebuilds the lineage (now ~10 s, was ~147 s).

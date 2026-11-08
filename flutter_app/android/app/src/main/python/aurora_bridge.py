@@ -114,7 +114,50 @@ class _BootStageTee:
         return getattr(self._real, name)
 
 _systems       = None
-_lock          = threading.Lock()
+
+
+class _FieldLock:
+    """The cognitive field lock, plus when it was last released.
+
+    Behaves exactly like threading.Lock for every caller (acquire / release /
+    locked / with).  The release time lets background sources leave the
+    phone breathing room between their turns -- see
+    _background_breathing_room() (phone overload fix, 2026-11-07).
+    """
+
+    def __init__(self) -> None:
+        self._inner = threading.Lock()
+        self.last_released = 0.0
+
+    def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
+        return self._inner.acquire(blocking, timeout)
+
+    def release(self) -> None:
+        self.last_released = time.time()
+        self._inner.release()
+
+    def locked(self) -> bool:
+        return self._inner.locked()
+
+    def __enter__(self) -> bool:
+        self._inner.acquire()
+        return True
+
+    def __exit__(self, *exc) -> None:
+        self.release()
+
+
+_lock          = _FieldLock()
+_boot_completed_at: float = 0.0
+# Background pacing (phone overload fix, 2026-11-07).  Every background
+# source -- historical replay, Praxis bridge, messenger and her reach-outs,
+# learning probe, proactive loop, evolution sim -- runs her full pipeline.
+# Back to back they pinned the CPU right after boot and Android killed the
+# app.  Nothing is skipped; it is spaced.
+BOOT_SETTLE_S = 120.0          # no background thinking while she first settles
+BACKGROUND_GAP_S = 20.0        # quiet time after any turn before a background turn
+LOW_BATTERY_GAP_S = 90.0       # wider spacing on low battery, not charging
+LOW_BATTERY_PCT = 20.0
 _last_response: str = ""      # Aurora's previous output
 _last_path_key: str = ""      # LSA path key that produced it
 
@@ -2194,7 +2237,25 @@ def _historical_experience_live_idle() -> bool:
     now = time.time()
     if _last_output_time > 0.0 and (now - _last_output_time) < 8.0:
         return False
-    return True
+    return _background_breathing_room(now)
+
+
+def _background_breathing_room(now: float = 0.0) -> bool:
+    """False while she is settling after boot, or too soon after the last
+    turn released the field (wider on low battery).  Shared by every
+    background source so they cannot run back to back."""
+    now = now or time.time()
+    if _boot_completed_at <= 0.0 or now - _boot_completed_at < BOOT_SETTLE_S:
+        return False
+    gap = BACKGROUND_GAP_S
+    try:
+        battery = _hardware_sensors.get("battery_pct")
+        if (battery is not None and float(battery) < LOW_BATTERY_PCT
+                and not _hardware_sensors.get("charging")):
+            gap = LOW_BATTERY_GAP_S
+    except Exception:
+        pass
+    return now - float(getattr(_lock, "last_released", 0.0) or 0.0) >= gap
 
 
 def get_historical_experience_status() -> str:
@@ -2395,6 +2456,8 @@ def initialize(state_dir: str = "") -> str:
         finally:
             sys.stdout = _real_stdout
         _mark_boot_stage("boot_aurora() returned")
+        global _boot_completed_at
+        _boot_completed_at = time.time()
         if _systems is None:
             return "error: boot_aurora returned None"
 
@@ -9246,7 +9309,7 @@ def _self_monitor_loop() -> None:
             # grow crystal structures from compressed constraint-physics evolution.
             # Only fires when not in an active user turn (lock not held).
             if _tick % 5 == 0 and _evo_sim is not None and _concept_registry is not None:
-                if _lock.acquire(blocking=False):
+                if _background_breathing_room() and _lock.acquire(blocking=False):
                     try:
                         with _axis_state_lock:
                             _evo_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
@@ -9865,6 +9928,10 @@ def _proactive_loop() -> None:
             if _systems.get("_ambient_perceptual") is not None:
                 _systems["_ambient_perceptual"]["observation"] = obs
 
+            # Phone breathing room: not while settling after boot, not right
+            # after another turn (see _background_breathing_room).
+            if not _background_breathing_room():
+                continue
             # Non-blocking lock — skip this tick rather than stall a user turn
             if not _lock.acquire(blocking=False):
                 continue

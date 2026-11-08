@@ -127,6 +127,15 @@ class LiveLineageJournal:
         self._append_event(dict(event or {}))
         self.save()
 
+    def record_events(self, events: List[Dict[str, Any]]) -> None:
+        """record_event() for a batch: same resulting journal (append in
+        order, same 240-event cap), one reload and one save instead of one
+        full-file rewrite per event."""
+        self._reload_if_changed()
+        for event in events:
+            self._append_event(dict(event or {}))
+        self.save()
+
     def observe_systems(self, systems: Dict[str, Any], *, source: str = "runtime", emit: bool = True) -> List[Dict[str, Any]]:
         new_events: List[Dict[str, Any]] = []
         genealogy = systems.get("genealogy")

@@ -162,7 +162,9 @@ def test_mtime_only_change_with_identical_content_still_reports_current(tmp_path
 
     probe = UniversalFunctionLineage(repo_root=str(repo), auto_build=False)
     result = probe.verify_source_freshness()
-    assert result.get("fast_path") is None  # mtime differs -> fell through
+    # mtime differs -> fell through the stat-only shortcut to a real content
+    # check (since 2026-11-07 the content-hash check runs before any parse).
+    assert result.get("fast_path") != "mtime_size_match"
     assert result["source_current"] is True  # content hash still matches
     assert result["changed_files"] == []
 
@@ -178,5 +180,46 @@ def test_missing_file_stats_in_older_manifest_falls_back_gracefully(tmp_path):
 
     probe = UniversalFunctionLineage(repo_root=str(repo), auto_build=False)
     result = probe.verify_source_freshness()
-    assert result.get("fast_path") is None
+    assert result.get("fast_path") != "mtime_size_match"
     assert result["source_current"] is True
+
+
+# -- phone boot, 2026-11-07 ---------------------------------------------------
+
+def test_new_mtimes_same_content_is_current_without_parsing(tmp_path, monkeypatch):
+    """Every APK install re-extracts every file with a new mtime.  Identical
+    content must be proven current from hashes alone, and the new stats
+    recorded so the following boot takes the stat-only path."""
+    repo = _make_synthetic_repo(tmp_path)
+    UniversalFunctionLineage(repo_root=str(repo), auto_build=True)
+    later = time.time() + 100
+    for f in (repo / "pkg").glob("*.py"):
+        os.utime(f, (later, later))
+    again = UniversalFunctionLineage(repo_root=str(repo), auto_build=False)
+
+    def no_parse():
+        raise AssertionError("parsed every file just to compare hashes")
+    monkeypatch.setattr(again, "_scan_surfaces", no_parse)
+    report = again.verify_source_freshness()
+    assert report["source_current"] is True
+    assert report["fast_path"] == "content_hash_match"
+    third = UniversalFunctionLineage(repo_root=str(repo), auto_build=False)
+    assert third.verify_source_freshness()["fast_path"] == "mtime_size_match"
+
+
+def test_changed_code_is_scanned_once_and_still_rebuilt(tmp_path, monkeypatch):
+    repo = _make_synthetic_repo(tmp_path)
+    UniversalFunctionLineage(repo_root=str(repo), auto_build=True)
+    (repo / "pkg" / "b.py").write_text(
+        "from pkg.a import alpha\n\ndef gamma():\n    return alpha()\n\n"
+        "def delta():\n    return gamma()\n")
+    lineage = UniversalFunctionLineage(repo_root=str(repo), auto_build=False)
+    scans = []
+    real = lineage._scan_surfaces
+    monkeypatch.setattr(lineage, "_scan_surfaces", lambda: scans.append(1) or real())
+    assert lineage.verify_source_freshness()["source_current"] is False
+    lineage.rebuild()
+    assert len(scans) == 1, "the stale check and the rebuild share one scan"
+    assert any(fid.endswith("delta") for fid in lineage._functions)
+    assert lineage._pending_scan is None
+    assert lineage.verify_source_freshness()["source_current"] is True

@@ -35,6 +35,14 @@ PROBE_VERSION = "aurora_learning_probe_v1"
 PROBE_SESSION = "learning_probe"
 PROBE_INTERVAL_S = 7 * 24 * 3600
 CHECK_EVERY_S = 30 * 60
+# Phone load (2026-11-07): the scheduled run used to ask all 20 questions
+# back to back holding the field lock -- minutes of pinned CPU, and on a
+# fresh install it was due right after boot.  Now the first run waits until
+# she has been up a while, and the scheduled run asks ONE question per idle
+# window, QUESTION_EVERY_S apart.  run_once() still runs all of them at once
+# for explicit use.
+FIRST_RUN_AFTER_S = 60 * 60
+QUESTION_EVERY_S = 3 * 60
 
 QUESTIONS = (
     "What do you like?",
@@ -92,6 +100,8 @@ class LearningProbe:
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self.last_error = ""
+        self.started_at = self.clock()
+        self._partial: List[Dict[str, Any]] = []   # answers of the run in progress
 
     # -- history ----------------------------------------------------------------
 
@@ -108,7 +118,50 @@ class LearningProbe:
 
     def due(self) -> bool:
         runs = self.runs()
-        return not runs or self.clock() - float(runs[-1].get("at", 0.0)) >= PROBE_INTERVAL_S
+        if not runs:
+            return self.clock() - self.started_at >= FIRST_RUN_AFTER_S
+        return self.clock() - float(runs[-1].get("at", 0.0)) >= PROBE_INTERVAL_S
+
+    def _ask(self, question: str) -> Dict[str, Any]:
+        result = self.process_turn(
+            self.systems, question,
+            source_label="learning_probe", session_id=PROBE_SESSION,
+            auto_search_enabled=False, record_exchange=False,
+            update_interactive_state=False, run_periodic_maintenance=False,
+            mode_name="BOUNDED",
+        ) or {}
+        gate = dict(self.systems.get("_last_voice_gate") or {})
+        return {
+            "q": question,
+            "a": self.extract_reply(result),
+            "src": str(result.get("src", "") if isinstance(result, dict) else ""),
+            "voice": str(gate.get("outcome", "") or ""),
+        }
+
+    def step(self) -> Optional[Dict[str, Any]]:
+        """Ask the next question of the run in progress, if she is idle.
+        Returns the finished record after the last question, else None."""
+        if len(self._partial) >= len(QUESTIONS):
+            self._partial = []
+        if not self.live_idle():
+            return None
+        if self.field_lock is not None and not self.field_lock.acquire(blocking=False):
+            return None
+        try:
+            self._partial.append(self._ask(QUESTIONS[len(self._partial)]))
+        except Exception as exc:
+            self.last_error = f"{type(exc).__name__}: {exc}"[:300]
+            return None
+        finally:
+            if self.field_lock is not None:
+                self.field_lock.release()
+        if len(self._partial) < len(QUESTIONS):
+            return None
+        record = {"version": PROBE_VERSION, "at": self.clock(), "answers": list(self._partial)}
+        self._partial = []
+        with self.path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record) + "\n")
+        return record
 
     # -- one run --------------------------------------------------------------------
 
@@ -188,9 +241,9 @@ class LearningProbe:
             self._thread.join(timeout)
 
     def _run(self) -> None:
-        while not self._stop.wait(CHECK_EVERY_S):
+        while not self._stop.wait(QUESTION_EVERY_S if self._partial else CHECK_EVERY_S):
             try:
-                if self.due():
-                    self.run_once()
+                if self._partial or self.due():
+                    self.step()
             except Exception as exc:
                 self.last_error = f"{type(exc).__name__}: {exc}"[:300]

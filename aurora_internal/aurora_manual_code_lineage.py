@@ -13,6 +13,7 @@ branch.
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
+import functools
 import hashlib
 import json
 import os
@@ -94,6 +95,14 @@ def _axis_signature(constraints: Iterable[str]) -> str:
 
 
 def _signature_counts(signature: str) -> Dict[str, int]:
+    return dict(_signature_counts_cached(str(signature or "")))
+
+
+@functools.lru_cache(maxsize=8192)
+def _signature_counts_cached(signature: str) -> Tuple[Tuple[str, int], ...]:
+    # Pure function of the signature string; cached because boot-time
+    # assimilation scores every changed file against every code ability
+    # (10M calls on a 208-file update -- phone boot, 2026-11-07).
     counts = {axis: 0 for axis in AXES}
     for raw in str(signature or "").split("*"):
         token = raw.strip()
@@ -117,12 +126,17 @@ def _signature_counts(signature: str) -> Dict[str, int]:
                 context={"function": "_signature_counts", "handler_line": 110, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
             )
             continue
-    return counts
+    return tuple(counts.items())
 
 
 def _signature_similarity(left: str, right: str) -> float:
-    l_counts = _signature_counts(left)
-    r_counts = _signature_counts(right)
+    return _signature_similarity_cached(str(left or ""), str(right or ""))
+
+
+@functools.lru_cache(maxsize=65536)
+def _signature_similarity_cached(left: str, right: str) -> float:
+    l_counts = dict(_signature_counts_cached(left))
+    r_counts = dict(_signature_counts_cached(right))
     overlap = 0.0
     total = 0.0
     for axis in AXES:
@@ -415,25 +429,50 @@ class ManualCodeLineageAssimilator:
             "descriptor_rows": len(rows),
         }
 
+    @staticmethod
+    def _ability_record(aid: Any, profile: Any) -> Optional[Dict[str, Any]]:
+        tags = [str(x) for x in (getattr(profile, "effect_tags", ()) or ())]
+        if "code_evolution" not in tags and "manual_code_lineage" not in tags:
+            return None
+        modules = [tag.split(":", 1)[1] for tag in tags if tag.startswith("mutation_module:")]
+        signatures = [tag.split(":", 1)[1] for tag in tags if tag.startswith("origin_signature:")]
+        rewrite_profiles = [tag.split(":", 1)[1] for tag in tags if tag.startswith("rewrite_profile:")]
+        return {
+            "ability_id": str(aid or ""),
+            "axis": str(getattr(profile, "axis", "X") or "X"),
+            "modules": modules,
+            "signatures": signatures,
+            "rewrite_profiles": rewrite_profiles,
+            "notes": str(getattr(profile, "notes", "") or ""),
+        }
+
     def _code_ability_records(self, genealogy: Any) -> List[Dict[str, Any]]:
         abilities = dict(getattr(genealogy, "abilities", {}) or {}) if genealogy is not None else {}
         rows: List[Dict[str, Any]] = []
         for aid, profile in abilities.items():
-            tags = [str(x) for x in (getattr(profile, "effect_tags", ()) or ())]
-            if "code_evolution" not in tags and "manual_code_lineage" not in tags:
-                continue
-            modules = [tag.split(":", 1)[1] for tag in tags if tag.startswith("mutation_module:")]
-            signatures = [tag.split(":", 1)[1] for tag in tags if tag.startswith("origin_signature:")]
-            rewrite_profiles = [tag.split(":", 1)[1] for tag in tags if tag.startswith("rewrite_profile:")]
-            rows.append({
-                "ability_id": str(aid or ""),
-                "axis": str(getattr(profile, "axis", "X") or "X"),
-                "modules": modules,
-                "signatures": signatures,
-                "rewrite_profiles": rewrite_profiles,
-                "notes": str(getattr(profile, "notes", "") or ""),
-            })
+            row = self._ability_record(aid, profile)
+            if row is not None:
+                rows.append(row)
         return rows
+
+    def _refresh_ability_records(self, genealogy: Any, records: List[Optional[Dict[str, Any]]],
+                                 positions: Dict[str, int], ability_ids: Iterable[str]) -> None:
+        """Keep a batch's ability records equal to _code_ability_records().
+
+        register_manual_code_assimilation() writes only the ability it
+        returns (new -> appended to genealogy.abilities; existing -> replaced
+        in place), so refreshing exactly those ids reproduces a full
+        recomputation, including iteration order."""
+        abilities = getattr(genealogy, "abilities", {}) or {}
+        for aid in dict.fromkeys(str(a or "") for a in ability_ids):
+            if not aid or aid not in abilities:
+                continue
+            row = self._ability_record(aid, abilities[aid])
+            if aid in positions:
+                records[positions[aid]] = row
+            elif row is not None:
+                positions[aid] = len(records)
+                records.append(row)
 
     def _score_family(self, change_meta: Dict[str, Any], family: Dict[str, Any]) -> float:
         score = 0.0
@@ -462,9 +501,12 @@ class ManualCodeLineageAssimilator:
             score += 0.16
         return round(float(max(0.0, min(1.0, score))), 6)
 
-    def _best_family(self, genealogy: Any, change_meta: Dict[str, Any]) -> Dict[str, Any]:
+    def _best_family(self, genealogy: Any, change_meta: Dict[str, Any],
+                     records: Optional[List[Optional[Dict[str, Any]]]] = None) -> Dict[str, Any]:
         best: Dict[str, Any] = {"score": 0.0}
-        for family in self._code_ability_records(genealogy):
+        for family in (self._code_ability_records(genealogy) if records is None else records):
+            if family is None:
+                continue
             score = self._score_family(change_meta, family)
             if score > float(best.get("score", 0.0) or 0.0):
                 best = {**family, "score": score}
@@ -486,6 +528,30 @@ class ManualCodeLineageAssimilator:
                 context={"function": "_record_journal_event", "handler_line": 377, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
             )
             pass
+
+    def _record_journal_events(self, systems: Any, events: List[Dict[str, Any]]) -> None:
+        """One journal write for the whole batch (same final journal as one
+        record_event() per change, which rewrote the full file each time)."""
+        if not events:
+            return
+        journal = _system_get(systems, "lineage_emergence_journal")
+        if journal is None:
+            return
+        if hasattr(journal, "record_events"):
+            try:
+                journal.record_events(events)
+                return
+            except Exception as _aurora_boundary_exc:
+                _aurora_record_exception_from_locals(
+                    locals(),
+                    module=__name__,
+                    operation="manual_code_lineage:record_journal_events",
+                    exc=_aurora_boundary_exc,
+                    context={"function": "_record_journal_events", "source_file": __file__},
+                )
+                return
+        for event in events:
+            self._record_journal_event(systems, event)
 
     def assimilate(self, systems: Any, *, source: str = "runtime.boot", force: bool = False) -> List[Dict[str, Any]]:
         current_manifest = self._scan_manifest()
@@ -512,11 +578,18 @@ class ManualCodeLineageAssimilator:
 
         genealogy = _system_get(systems, "genealogy")
         results: List[Dict[str, Any]] = []
+        # Phone boot (2026-11-07): the code-ability records used to be
+        # rebuilt from all ~13k abilities for EVERY changed file, and the
+        # whole lineage journal rewritten to disk per file.  Built once here
+        # and kept current as registrations land; journal saved once.
+        records: List[Optional[Dict[str, Any]]] = list(self._code_ability_records(genealogy))
+        positions = {str(r["ability_id"]): i for i, r in enumerate(records) if r is not None}
+        journal_events: List[Dict[str, Any]] = []
         for change in changes:
             if str(change.get("kind", "") or "") == "deleted":
                 continue
             meta = self._constraints_for_file(str(change.get("file", "") or ""))
-            family = self._best_family(genealogy, meta)
+            family = self._best_family(genealogy, meta, records)
             matched_ability_id = str(family.get("ability_id", "") or "") if float(family.get("score", 0.0) or 0.0) >= 0.82 else ""
             payload = {
                 "change_id": str(change.get("change_id", "") or ""),
@@ -551,6 +624,9 @@ class ManualCodeLineageAssimilator:
                         context={"function": "assimilate", "handler_line": 430, "source_file": "aurora_internal/aurora_manual_code_lineage.py"},
                     )
                     reg = {"registered": False, "ability_id": matched_ability_id}
+            if genealogy is not None:
+                self._refresh_ability_records(genealogy, records, positions,
+                                              (reg.get("ability_id", ""), matched_ability_id))
             result = {
                 "change_id": payload["change_id"],
                 "file": payload["target_files"][0],
@@ -566,8 +642,7 @@ class ManualCodeLineageAssimilator:
                 "timestamp": float(time.time()),
             }
             results.append(result)
-            self._record_journal_event(
-                systems,
+            journal_events.append(
                 {
                     "timestamp": result["timestamp"],
                     "source": source,
@@ -616,11 +691,26 @@ class ManualCodeLineageAssimilator:
                     )
                     pass
 
+        self._record_journal_events(systems, journal_events)
+
         if results:
             function_lineage = _system_get(systems, "function_lineage")
             if function_lineage is not None and hasattr(function_lineage, "rebuild"):
                 try:
-                    lineage_status = dict(function_lineage.rebuild() or {})
+                    # The function lineage verifies itself against the source
+                    # when it is constructed at boot (and rebuilds if stale),
+                    # so on a boot after an update it is usually already
+                    # current here.  Rebuilding again was a second full scan
+                    # of the whole tree on every first boot after an APK
+                    # install (phone boot, 2026-11-07).  Freshness is checked,
+                    # not assumed: a stale lineage still rebuilds.
+                    _fresh = False
+                    if hasattr(function_lineage, "verify_source_freshness"):
+                        _fresh = bool(dict(function_lineage.verify_source_freshness() or {})
+                                      .get("source_current"))
+                    lineage_status = dict(
+                        (function_lineage.status() if _fresh and hasattr(function_lineage, "status")
+                         else function_lineage.rebuild()) or {})
                     if genealogy is not None and hasattr(function_lineage, "attach_genealogy"):
                         function_lineage.attach_genealogy(genealogy)
                     for result in results:

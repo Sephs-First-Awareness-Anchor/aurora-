@@ -522,7 +522,38 @@ def _legacy_constraints(repo_root: Path) -> Dict[str, Tuple[str, ...]]:
         return {}
 
 
-def _legacy_lookup(function_id: str, legacy: Mapping[str, Tuple[str, ...]]) -> Tuple[str, ...]:
+def _share_identical_strings(obj: Any, pool: Dict[str, str]) -> Any:
+    """Replace equal strings in a decoded JSON tree with one shared object."""
+    if isinstance(obj, str):
+        return pool.setdefault(obj, obj)
+    if isinstance(obj, list):
+        for i, value in enumerate(obj):
+            obj[i] = _share_identical_strings(value, pool)
+        return obj
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            obj[key] = _share_identical_strings(value, pool)
+        return obj
+    return obj
+
+
+def _legacy_lower_index(legacy: Mapping[str, Tuple[str, ...]]) -> Dict[str, Tuple[str, ...]]:
+    """lowercased key -> axes of the FIRST key (in iteration order) with that
+    lowercase form -- exactly what the old linear case-insensitive scan found."""
+    index: Dict[str, Tuple[str, ...]] = {}
+    for legacy_key, axes in legacy.items():
+        index.setdefault(legacy_key.lower(), axes)
+    return index
+
+
+def _legacy_lookup(function_id: str, legacy: Mapping[str, Tuple[str, ...]],
+                   lower_index: Optional[Mapping[str, Tuple[str, ...]]] = None) -> Tuple[str, ...]:
+    # Performance (2026-11-07, phone boot): the case-insensitive fallbacks
+    # used to rescan the whole legacy table up to four times per function --
+    # 465M str.lower() calls, 106 s of a 147 s rebuild.  Same lookup order and
+    # results, via a lowercase index built once per rebuild.
+    if lower_index is None:
+        lower_index = _legacy_lower_index(legacy)
     exact = legacy.get(function_id)
     if exact:
         return exact
@@ -530,16 +561,17 @@ def _legacy_lookup(function_id: str, legacy: Mapping[str, Tuple[str, ...]]) -> T
     for key in (function_id.split(".")[-1], ".".join(function_id.split(".")[-2:]), ".".join(function_id.split(".")[-3:])):
         if key in legacy:
             return legacy[key]
-        for legacy_key, axes in legacy.items():
-            if legacy_key.lower() == key.lower():
-                return axes
-    for legacy_key, axes in legacy.items():
-        if legacy_key.lower() == low:
-            return axes
+        hit = lower_index.get(key.lower())
+        if hit is not None:
+            return hit
+    hit = lower_index.get(low)
+    if hit is not None:
+        return hit
     return tuple()
 
 
-def _root_evidence(surface: _FunctionSurface, legacy: Mapping[str, Tuple[str, ...]]) -> Tuple[Dict[str, float], Dict[str, List[str]]]:
+def _root_evidence(surface: _FunctionSurface, legacy: Mapping[str, Tuple[str, ...]],
+                   lower_index: Optional[Mapping[str, Tuple[str, ...]]] = None) -> Tuple[Dict[str, float], Dict[str, List[str]]]:
     scores = {axis: 0.08 for axis in AXES}
     evidence: Dict[str, List[str]] = {axis: [] for axis in AXES}
     m = surface.metrics
@@ -592,7 +624,7 @@ def _root_evidence(surface: _FunctionSurface, legacy: Mapping[str, Tuple[str, ..
             add("A", 0.16, f"effectful call {call}")
 
     # Existing canonical labels are weak historical testimony, never the sole source.
-    for axis in _legacy_lookup(surface.function_id, legacy):
+    for axis in _legacy_lookup(surface.function_id, legacy, lower_index):
         add(axis, 0.20, "prior canonical ancestry")
 
     normalized = _normalize_scores(scores)
@@ -623,6 +655,7 @@ class UniversalFunctionLineage:
         self._functions: Dict[str, Dict[str, Any]] = {}
         self._children: Dict[str, List[str]] = {}
         self._suffix_index: Dict[str, List[str]] = {}
+        self._pending_scan: Optional[Tuple[Any, Any]] = None
         self._systems: Optional[Dict[str, Any]] = None
         if self.manifest_path.exists():
             self.load()
@@ -651,6 +684,34 @@ class UniversalFunctionLineage:
                 continue
             if path.is_file():
                 yield path
+
+    def _content_hashes(self) -> Tuple[Dict[str, str], Dict[str, List[int]]]:
+        """sha256 of every tracked file's text, computed exactly as
+        _scan_surfaces() computes it, but without parsing.  ~1 s instead of
+        a full AST scan (phone boot, 2026-11-07)."""
+        hashes: Dict[str, str] = {}
+        stats: Dict[str, List[int]] = {}
+        for path in sorted(self._iter_files()):
+            rel = str(path.relative_to(self.repo_root)).replace(os.sep, "/")
+            try:
+                st = path.stat()
+                source = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            stats[rel] = [int(st.st_mtime_ns), int(st.st_size)]
+            hashes[rel] = hashlib.sha256(source.encode("utf-8", "replace")).hexdigest()
+        return hashes, stats
+
+    def _scan_surfaces_once(self) -> Tuple[Dict[str, _FunctionSurface], Dict[str, str], List[Dict[str, str]], Dict[str, List[int]]]:
+        """_scan_surfaces(), reusing a scan verify_source_freshness() just
+        made of the very same files (same stat for every file).  A stale
+        manifest used to cost two full AST scans back to back -- one to
+        prove it stale, one to rebuild.  The cached scan is consumed here."""
+        cached = getattr(self, "_pending_scan", None)
+        self._pending_scan = None
+        if cached is not None and cached[0] == self._quick_file_stats():
+            return cached[1]
+        return self._scan_surfaces()
 
     def _quick_file_stats(self) -> Dict[str, List[int]]:
         """Cheap staleness probe: (mtime_ns, size) per file, from stat()
@@ -706,7 +767,14 @@ class UniversalFunctionLineage:
         suffix: Dict[str, List[str]] = defaultdict(list)
         class_methods: Dict[Tuple[str, str, str], List[str]] = defaultdict(list)
         classes: Dict[Tuple[str, str], str] = {}
+        # Every dotted tail of every function id: "a.b.c" -> "a.b.c", "b.c", "c".
+        # Replaces a scan of all functions with endswith() per imported call
+        # (73M calls, 19 s of the phone-boot rebuild); same set of matches.
+        dotted_tail: Dict[str, Set[str]] = defaultdict(set)
         for fid, surface in surfaces.items():
+            _fid_parts = fid.split(".")
+            for _k in range(len(_fid_parts)):
+                dotted_tail[".".join(_fid_parts[_k:])].add(fid)
             simple = surface.qualname.split(".")[-1]
             module_simple[(surface.module, simple)].append(fid)
             suffix[simple].append(fid)
@@ -720,6 +788,7 @@ class UniversalFunctionLineage:
             "suffix": suffix,
             "class_methods": class_methods,
             "classes": classes,
+            "dotted_tail": dotted_tail,
         }
 
     @staticmethod
@@ -749,7 +818,11 @@ class UniversalFunctionLineage:
             candidate_id = alias_target if len(parts) == 1 else alias_target + "." + ".".join(parts[1:])
             if candidate_id in surfaces:
                 return candidate_id, "import_exact"
-            imported_match = self._pick_unique(fid for fid in surfaces if fid == candidate_id or fid.endswith("." + candidate_id))
+            dotted_tail = indices.get("dotted_tail")
+            if dotted_tail is not None:
+                imported_match = self._pick_unique(dotted_tail.get(candidate_id, ()))
+            else:
+                imported_match = self._pick_unique(fid for fid in surfaces if fid == candidate_id or fid.endswith("." + candidate_id))
             if imported_match:
                 return imported_match, "import_suffix"
 
@@ -908,9 +981,10 @@ class UniversalFunctionLineage:
     def rebuild(self) -> Dict[str, Any]:
         with self._lock:
             started = time.time()
-            surfaces, file_hashes, parse_errors, file_stats = self._scan_surfaces()
+            surfaces, file_hashes, parse_errors, file_stats = self._scan_surfaces_once()
             indices = self._build_indices(surfaces)
             legacy = _legacy_constraints(self.repo_root)
+            legacy_lower = _legacy_lower_index(legacy)
 
             direct_weights: Dict[str, Dict[str, float]] = {}
             root_evidence: Dict[str, Dict[str, List[str]]] = {}
@@ -919,7 +993,7 @@ class UniversalFunctionLineage:
             unresolved: Dict[str, List[str]] = {}
 
             for fid, surface in surfaces.items():
-                weights, evidence = _root_evidence(surface, legacy)
+                weights, evidence = _root_evidence(surface, legacy, legacy_lower)
                 direct_weights[fid] = weights
                 root_evidence[fid] = evidence
                 deps: List[str] = []
@@ -1143,6 +1217,12 @@ class UniversalFunctionLineage:
     def load(self) -> Dict[str, Any]:
         with self._lock:
             raw = json.loads(self.manifest_path.read_text(encoding="utf-8") or "{}")
+            # Memory (phone, 2026-11-07): the same function ids recur
+            # thousands of times across parents / children / root_paths, and
+            # json creates a separate string object for every occurrence.
+            # Sharing identical strings halves the manifest's live heap
+            # (100 MB -> 55 MB measured) without changing any value.
+            _share_identical_strings(raw, {})
             funcs = raw.get("functions", {}) if isinstance(raw, dict) else {}
             if not isinstance(funcs, dict):
                 raise ValueError("universal lineage manifest has no function map")
@@ -1301,7 +1381,43 @@ class UniversalFunctionLineage:
                 "fast_path": "mtime_size_match",
             }
 
-        surfaces, file_hashes, parse_errors, _file_stats = self._scan_surfaces()
+        # Content check before any parsing: identical file set and identical
+        # content hashes prove the manifest describes this source, because
+        # the function inventory is derived from exactly that content.
+        persisted_hashes_quick = dict(self._manifest.get("file_hashes", {}) or {})
+        if persisted_hashes_quick and self._functions:
+            quick_hashes, quick_stats = self._content_hashes()
+            if quick_hashes == persisted_hashes_quick:
+                persisted_hash = str(self._manifest.get("source_manifest_hash", "") or "")
+                if quick_stats and self._manifest.get("file_stats") != quick_stats:
+                    self._manifest["file_stats"] = quick_stats
+                    if self.persist:
+                        try:
+                            self._write_manifest()
+                        except Exception:
+                            pass
+                return {
+                    "source_current": True,
+                    "current_source_manifest_hash": persisted_hash,
+                    "persisted_source_manifest_hash": persisted_hash,
+                    "source_manifest_hash_matches": True,
+                    "current_function_count": len(self._functions),
+                    "manifest_function_count": len(self._functions),
+                    "missing_from_manifest_count": 0,
+                    "obsolete_in_manifest_count": 0,
+                    "changed_file_count": 0,
+                    "removed_file_count": 0,
+                    "scan_parse_errors": len(self._manifest.get("parse_errors", []) or []),
+                    "missing_from_manifest": [],
+                    "obsolete_in_manifest": [],
+                    "changed_files": [],
+                    "removed_files": [],
+                    "fast_path": "content_hash_match",
+                }
+
+        _stats_before_scan = self._quick_file_stats()
+        surfaces, file_hashes, parse_errors, current_file_stats = self._scan_surfaces()
+        self._pending_scan = (_stats_before_scan, (surfaces, file_hashes, parse_errors, current_file_stats))
         current_ids = set(surfaces.keys())
         manifest_ids = set(self._functions.keys())
 
@@ -1334,6 +1450,19 @@ class UniversalFunctionLineage:
             and not removed_files
             and hash_match
         )
+        if source_current:
+            self._pending_scan = None          # nothing to rebuild; don't hold the scan
+        if source_current and current_file_stats and self._manifest.get("file_stats") != current_file_stats:
+            # Same source, new mtimes (every APK install re-extracts the
+            # files).  Content is proven identical above, so record the new
+            # stats: the next boot takes the stat-only fast path instead of
+            # re-parsing every file again (phone boot, 2026-11-07).
+            self._manifest["file_stats"] = current_file_stats
+            if self.persist:
+                try:
+                    self._write_manifest()
+                except Exception:
+                    pass
         return {
             "source_current": source_current,
             "current_source_manifest_hash": current_source_manifest_hash,
