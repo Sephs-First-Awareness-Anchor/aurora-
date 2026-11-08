@@ -10804,7 +10804,10 @@ verdicts settle it; operations/candidates keyed by structure
 answering one gap family differently are recorded as divergences; unformed
 patterns join by core (SIMILAR). Already-lived conversations are skipped by
 the next run (lived_episodes). Shipped gzipped in aurora_internal/ (gradle
-now bundles aurora_internal/**/*.json.gz).
+now bundles aurora_internal/**/*.jsonl.gz). JSON lines (header + one
+record per line) absorbed in chunks of ABSORB_CHUNK: her phone never holds the
+whole harvest decoded; an absorbed file is recognised by its bytes' signature
+without decoding.
 ABSORPTION (bridge, at boot, once per harvest_id): absorb_clone_paths /
 absorb_clone_operations / absorb_clone_candidates / absorb_clone_patterns --
 nothing arrives promoted, her own evaluate_development / WARP decide. Lived

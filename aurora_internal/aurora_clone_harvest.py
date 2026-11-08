@@ -72,7 +72,11 @@ from dataclasses import asdict
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 HARVEST_VERSION = "aurora_clone_harvest_v1"
-HARVEST_FILE = "aurora_clone_harvest.json.gz"   # bundled with the app (gradle copies aurora_internal/**/*.json.gz)
+# JSON lines, gzipped: a header line, then one record per line, so her phone
+# absorbs it in small chunks and never holds the whole harvest decoded.
+# Bundled with the app (gradle copies aurora_internal/**/*.jsonl.gz).
+HARVEST_FILE = "aurora_clone_harvest.jsonl.gz"
+ABSORB_CHUNK = 200
 LEDGER_FILE = "clone_harvest_absorbed.json"
 DEFAULT_HARVEST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), HARVEST_FILE)
 # A wear/dissolution in one clone is evidence, not a verdict: a path worn in
@@ -150,6 +154,19 @@ def _ce_evidence_id(e: Mapping[str, Any]) -> str:
                      str(e.get("surface_hash", "") or "")))
 
 
+# A trial's `parameters` are read only by _integrate_warp at its birth, which
+# absorption bypasses (it builds the operation/candidate directly), so a trial
+# travels slim -- the harvest is decoded on her phone.
+_TRIAL_FIELDS = ("level", "axis_profile", "parent_ids", "name", "sixth_axis_signal", "topology_gap_ref")
+
+
+def _slim_trial(trial: Mapping[str, Any], *, drop_profile: bool = False) -> Dict[str, Any]:
+    out = {k: trial[k] for k in _TRIAL_FIELDS if k in dict(trial or {})}
+    if drop_profile:
+        out.pop("axis_profile", None)        # the candidate carries the same profile
+    return out
+
+
 def _grown(start: Mapping[str, Any], end: Mapping[str, Any], trials_start: Mapping[str, Any],
            trials_end: Mapping[str, Any], *, keep, ident, record_key: str) -> List[Dict[str, Any]]:
     out = []
@@ -159,7 +176,8 @@ def _grown(start: Mapping[str, Any], end: Mapping[str, Any], trials_start: Mappi
         if not fresh:
             continue
         out.append({record_key: {**rec, "evidence": fresh},
-                    "trial": dict(trials_end.get(cid) or trials_start.get(cid) or {}),
+                    "trial": _slim_trial(dict(trials_end.get(cid) or trials_start.get(cid) or {}),
+                                         drop_profile=record_key == "candidate"),
                     "status_in_clone": rec.get("status")})
     return out
 
@@ -321,7 +339,9 @@ def _merge_evidence_groups(yields: List[Mapping[str, Any]], field: str, record_k
             key = keyfn(rec)
             g = groups.get(key)
             if g is None:
-                g = groups[key] = {record_key: {**rec, "evidence": []}, "trial": dict(item.get("trial") or {}),
+                g = groups[key] = {record_key: {**rec, "evidence": []},
+                                   "trial": _slim_trial(dict(item.get("trial") or {}),
+                                                        drop_profile=record_key == "candidate"),
                                    "clones": set(), "_ids": set(), "promoted_in": 0}
             g["clones"].add(y["clone_id"])
             if item.get("status_in_clone") == "promoted":
@@ -440,58 +460,105 @@ def _apply_wear(rp: Any, worn: List[Mapping[str, Any]]) -> int:
     return count
 
 
+def _add_result(total: Dict[str, Any], part: Mapping[str, Any]) -> None:
+    for k, v in dict(part or {}).items():
+        if isinstance(v, bool) or not isinstance(v, (int, float, list)):
+            total[k] = v
+        elif isinstance(v, list):
+            total.setdefault(k, [])
+            total[k] = list(total[k]) + list(v)
+        else:
+            total[k] = total.get(k, 0) + v
+
+
 def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = None,
                    state_dir: Optional[str] = None) -> Dict[str, Any]:
+    """Absorb a harvest once, streaming it in chunks of ABSORB_CHUNK records."""
     state_dir = str(state_dir or systems.get("state_dir") or "aurora_state")
     path = harvest_path or DEFAULT_HARVEST_PATH
     if not os.path.exists(path):
         return {"status": "no_harvest"}
+    # Every boot passes through here: recognise an already-absorbed harvest
+    # from its bytes' signature, without decoding any of it.
     try:
-        harvest = load_harvest(path)
+        with open(path, "rb") as fh:
+            file_sig = hashlib.sha1(fh.read()).hexdigest()[:16]
+        ledger = load_ledger(state_dir)
+        seen_files = dict(ledger.get("files") or {})
+        if file_sig in seen_files:
+            return {"status": "already_absorbed", "harvest_id": seen_files[file_sig]}
+        header = read_header(path)
     except Exception as exc:
         return {"status": "unreadable", "error": f"{type(exc).__name__}: {exc}"}
-    if harvest.get("version") != HARVEST_VERSION:
+    if header.get("version") != HARVEST_VERSION:
         return {"status": "unknown_version"}
-    ledger = load_ledger(state_dir)
-    hid = str(harvest.get("harvest_id") or "")
+    hid = str(header.get("harvest_id") or "")
+    ledger.setdefault("files", {})[file_sig] = hid
     if hid in ledger["absorbed"]:
+        _write_ledger(state_dir, ledger)
         return {"status": "already_absorbed", "harvest_id": hid, **dict(ledger["absorbed"][hid])}
     lived = set(ledger.get("episodes") or [])
-    new_eps = [e for e in list(harvest.get("episodes") or []) if e not in lived]
-    if harvest.get("episodes") and not new_eps:
+    new_eps = [e for e in list(header.get("episodes") or []) if e not in lived]
+    if header.get("episodes") and not new_eps:
         ledger["absorbed"][hid] = {"at": time.time(), "skipped": "every conversation already lived"}
         _write_ledger(state_dir, ledger)
         return {"status": "already_lived", "harvest_id": hid}
 
-    results: Dict[str, Any] = {}
+    organs = {"path": ("paths", "reasoning_paths", lambda o, recs: o.absorb_clone_paths(recs)),
+              "worn": ("paths", "reasoning_paths", lambda o, recs: {"worn": _apply_wear(o, recs)}),
+              "operation": ("operations", "communication_emergence",
+                            lambda o, recs: o.absorb_clone_operations(recs)),
+              "candidate": ("candidates", "lexical_grounding",
+                            lambda o, recs: o.absorb_clone_candidates(recs)),
+              "pattern": ("unformed", "unformed_patterns",
+                          lambda o, recs: o.absorb_clone_patterns({"reference": {}, "patterns": recs})),
+              "unformed_reference": ("unformed", "unformed_patterns",
+                                     lambda o, recs: o.absorb_clone_patterns({"reference": recs[0], "patterns": []}))}
+    results: Dict[str, Dict[str, Any]] = {}
+    buffers: Dict[str, List[Dict[str, Any]]] = {}
 
-    def _organ(name, key, fn):
+    def _flush(kind: str) -> None:
+        recs = buffers.pop(kind, [])
+        if not recs:
+            return
+        name, key, fn = organs[kind]
         organ = systems.get(key)
+        total = results.setdefault(name, {})
         if organ is None:
-            results[name] = {"status": "absent"}
+            total["status"] = "absent"
             return
         try:
-            results[name] = fn(organ)
+            _add_result(total, fn(organ, recs))
         except Exception as exc:
-            results[name] = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
+            total["status"] = "error"
+            total["error"] = f"{type(exc).__name__}: {exc}"
 
-    _organ("paths", "reasoning_paths",
-           lambda o: {**o.absorb_clone_paths(list(harvest.get("paths") or [])),
-                      "worn": _apply_wear(o, list(harvest.get("worn") or []))})
-    _organ("operations", "communication_emergence",
-           lambda o: o.absorb_clone_operations(list(harvest.get("operations") or [])))
-    _organ("candidates", "lexical_grounding",
-           lambda o: o.absorb_clone_candidates(list(harvest.get("candidates") or [])))
-    _organ("unformed", "unformed_patterns",
-           lambda o: o.absorb_clone_patterns(dict(harvest.get("unformed") or {})))
+    try:
+        for rec in iter_harvest(path):
+            kind = str(rec.pop("kind", "") or "")
+            if kind not in organs:
+                continue
+            buffers.setdefault(kind, []).append(rec)
+            if kind == "unformed_reference" or len(buffers[kind]) >= ABSORB_CHUNK:
+                _flush(kind)
+        for kind in list(buffers):
+            _flush(kind)
+    except Exception as exc:
+        results["stream"] = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
+    for name, key in (("paths", "reasoning_paths"), ("operations", "communication_emergence"),
+                      ("candidates", "lexical_grounding"), ("unformed", "unformed_patterns")):
+        if name not in results and systems.get(key) is None:
+            results[name] = {"status": "absent"}
 
-    record = {"at": time.time(), "clones": int(harvest.get("clones", 0) or 0),
+    record = {"at": time.time(), "clones": int(header.get("clones", 0) or 0),
               "episodes": len(new_eps), "results": results,
-              "divergences": {k: len(v or []) for k, v in dict(harvest.get("divergences") or {}).items()}}
+              "divergences": {k: len(v or []) for k, v in dict(header.get("divergences") or {}).items()}}
     ledger["absorbed"][hid] = record
     ledger["episodes"] = sorted(lived | set(new_eps))
     ledger["last"] = {"harvest_id": hid, **record}
     _write_ledger(state_dir, ledger)
+    import gc
+    gc.collect()
     return {"status": "absorbed", "harvest_id": hid, **record}
 
 
@@ -544,7 +611,7 @@ def run_clone(index: int, count: int, *, state_dir: str = "aurora_state", out_pa
 
     lived_before: List[str] = []
     try:
-        lived_before = list(load_harvest(harvest_path or DEFAULT_HARVEST_PATH).get("lived_episodes") or [])
+        lived_before = list(read_header(harvest_path or DEFAULT_HARVEST_PATH).get("lived_episodes") or [])
     except Exception:
         pass
     lived_set = set(lived_before)
@@ -614,15 +681,54 @@ def load_yield(path: str) -> Dict[str, Any]:
         return dict(json.load(fh) or {})
 
 
-load_harvest = load_yield
+_BODY = (("paths", "path"), ("worn", "worn"), ("operations", "operation"), ("candidates", "candidate"))
 
 
 def write_harvest(path: str, harvest: Mapping[str, Any]) -> None:
-    opener = gzip.open if str(path).endswith(".gz") else open
     tmp = str(path) + ".tmp"
-    with opener(tmp, "wt", encoding="utf-8") as fh:
-        json.dump(harvest, fh, separators=(",", ":"))
+    dump = lambda rec: json.dumps(rec, separators=(",", ":")) + "\n"
+    with gzip.open(tmp, "wt", encoding="utf-8") as fh:
+        header = {k: v for k, v in harvest.items() if k not in ("paths", "worn", "operations", "candidates", "unformed")}
+        fh.write(dump({"kind": "header", **header}))
+        for field, kind in _BODY:
+            for rec in list(harvest.get(field) or []):
+                fh.write(dump({"kind": kind, **rec}))
+        unformed = dict(harvest.get("unformed") or {})
+        fh.write(dump({"kind": "unformed_reference", **dict(unformed.get("reference") or {})}))
+        for rec in list(unformed.get("patterns") or []):
+            fh.write(dump({"kind": "pattern", **rec}))
     os.replace(tmp, path)
+
+
+def iter_harvest(path: str):
+    with gzip.open(path, "rt", encoding="utf-8") as fh:
+        for line in fh:
+            if line.strip():
+                yield json.loads(line)
+
+
+def read_header(path: str) -> Dict[str, Any]:
+    for rec in iter_harvest(path):
+        return {k: v for k, v in rec.items() if k != "kind"} if rec.get("kind") == "header" else {}
+    return {}
+
+
+def load_harvest(path: str) -> Dict[str, Any]:
+    """The whole harvest as one dict -- for the merge job and tests, never the phone."""
+    out: Dict[str, Any] = {"paths": [], "worn": [], "operations": [], "candidates": [],
+                           "unformed": {"reference": {}, "patterns": []}}
+    kinds = {kind: field for field, kind in _BODY}
+    for rec in iter_harvest(path):
+        kind = rec.pop("kind", "")
+        if kind == "header":
+            out.update(rec)
+        elif kind in kinds:
+            out[kinds[kind]].append(rec)
+        elif kind == "unformed_reference":
+            out["unformed"]["reference"] = rec
+        elif kind == "pattern":
+            out["unformed"]["patterns"].append(rec)
+    return out
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -650,7 +756,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"skip {p}: {exc}")
     lived_before: List[str] = []
     try:
-        lived_before = list(load_harvest(args.out).get("lived_episodes") or [])
+        lived_before = list(read_header(args.out).get("lived_episodes") or [])
     except Exception:
         pass
     harvest = merge_yields(yields, lived_before=lived_before)

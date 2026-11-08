@@ -139,13 +139,14 @@ def test_absorb_once_records_lived_conversations_and_history_skips_their_rehears
     systems = {"reasoning_paths": ReasoningPaths(state_dir=str(state)),
                "unformed_patterns": UnformedPatterns(state_dir=str(state)), "state_dir": str(state)}
     harvest = CH.merge_yields([y("c1", [path(LAND_A)], eps=["E1", "E2"]), y("c2", [path(LAND_A)], eps=["E3"])])
-    hp = tmp_path / "h.json.gz"
+    hp = tmp_path / "h.jsonl.gz"
     CH.write_harvest(str(hp), harvest)
     out = CH.absorb_harvest(systems, harvest_path=str(hp), state_dir=str(state))
     assert out["status"] == "absorbed" and out["episodes"] == 3
     assert out["results"]["operations"] == {"status": "absent"}
     assert out["results"]["paths"]["carved"] == 1
     assert CH.absorb_harvest(systems, harvest_path=str(hp), state_dir=str(state))["status"] == "already_absorbed"
+    assert len(CH.load_ledger(str(state))["files"]) == 1            # recognised by bytes, no decode next boot
     assert CH.absorbed_episodes(str(state)) == {"E1", "E2", "E3"}
 
     import aurora_historical_experience_environment as H
@@ -173,3 +174,34 @@ def test_clone_yield_is_the_processed_parts_only():
     assert abs(gains[0] - CARVE_WEIGHT) < 1e-6 and abs(gains[1] - 0.2) < 1e-3   # 0.5 -> 0.6 is a 0.2 confirmation
     assert out["unformed"]["reference"]["n"] == 1 and out["unformed"]["reference"]["counts"] == {"f": 1, "g": 1}
     assert len(out["operations"]) == 1
+
+
+def test_trials_travel_slim():
+    item = _op(["bind"], 1)
+    item["trial"]["parameters"] = {"structural_family": "x" * 500}
+    harvest = CH.merge_yields([y("c1", ops=[item])])
+    assert "parameters" not in harvest["operations"][0]["trial"]
+    assert harvest["operations"][0]["trial"]["axis_profile"] == {"I_IS": 0.2}
+
+
+def test_streamed_absorption_in_tiny_chunks_matches_the_whole(tmp_path, monkeypatch):
+    monkeypatch.setattr(CH, "ABSORB_CHUNK", 1)
+    state = tmp_path / "state"
+    systems = {"reasoning_paths": ReasoningPaths(state_dir=str(state)),
+               "unformed_patterns": UnformedPatterns(state_dir=str(state)),
+               "communication_emergence": AuroraCommunicationEmergence(state_dir=str(state), persist=True)}
+    other = {**AX, "X": 0.9, "N": 0.1}
+    harvest = CH.merge_yields([
+        y("c1", [path(LAND_A), {**path(LAND_B), "centroid": other}], ops=[_op(["bind"], 1), _op(["admit"], 2)],
+          patterns=[{"feature_counts": {"open:obj": 1}, "occurrences": 1, "covered": 0, "axis_sum": {}}],
+          ref={"n": 2, "counts": {"form:question": 2}, "axis_sum": {"N": 1.0}, "axis_sq": {"N": 0.5}})])
+    hp = tmp_path / "h.jsonl.gz"
+    CH.write_harvest(str(hp), harvest)
+    assert CH.read_header(str(hp))["harvest_id"] == harvest["harvest_id"]
+    assert CH.load_harvest(str(hp))["operations"] == harvest["operations"]
+    out = CH.absorb_harvest(systems, harvest_path=str(hp), state_dir=str(state))
+    assert out["results"]["paths"]["carved"] == 2
+    assert out["results"]["operations"]["added"] == 2
+    assert out["results"]["unformed"]["added"] == 1 and out["results"]["unformed"]["reference_turns"] == 2
+    assert out["results"]["candidates"] == {"status": "absent"}
+    assert systems["unformed_patterns"].ref_n == 2

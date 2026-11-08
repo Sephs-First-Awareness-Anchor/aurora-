@@ -15,7 +15,7 @@ name: Aurora Clones
 # arrive with the weight of that convergence; divergent landings are kept as
 # divergences; operations / lexical candidates union their validated evidence;
 # unformed patterns join by core -- and commits it as
-# aurora_internal/aurora_clone_harvest.json.gz, then starts an app build.  On
+# aurora_internal/aurora_clone_harvest.jsonl.gz, then starts an app build.  On
 # her phone the harvest is absorbed once at boot through each organ's own
 # rules (nothing arrives promoted), and her history stream stops spending a
 # full turn re-rehearsing the conversations the clones already lived.
@@ -149,7 +149,7 @@ jobs:
             exit 0
           fi
           python -m aurora_internal.aurora_clone_harvest merge \
-            --out aurora_internal/aurora_clone_harvest.json.gz "${files[@]}"
+            --out aurora_internal/aurora_clone_harvest.jsonl.gz "${files[@]}"
           echo "merged=true" >> "$GITHUB_OUTPUT"
 
       - name: Commit the harvest
@@ -157,7 +157,7 @@ jobs:
         run: |
           git config user.name  "aurora-clones"
           git config user.email "aurora-clones@users.noreply.github.com"
-          git add -f aurora_internal/aurora_clone_harvest.json.gz
+          git add -f aurora_internal/aurora_clone_harvest.jsonl.gz
           if git diff --cached --quiet; then
             echo "harvest unchanged"
             exit 0
