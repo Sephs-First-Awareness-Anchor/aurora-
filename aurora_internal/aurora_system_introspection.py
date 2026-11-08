@@ -26,6 +26,7 @@ Authors: Sunni (Sir) Morningstar & Ceph
 from __future__ import annotations
 
 import ast
+import copy
 import hashlib
 import inspect
 import json
@@ -624,8 +625,28 @@ class AuroraSystemIntrospection:
         return score
 
     def find_functions(self, query: str, limit: int = 8) -> List[Dict[str, Any]]:
+        # Phone load (2026-11-08): record_step() asks for the same function
+        # names every turn, and each ask scored all ~10.5k functions and
+        # copied every partial match (3.1 s in four turns).  The answer only
+        # changes when the function index or the code lineage is replaced,
+        # so it is memoised against both objects (held, so their ids cannot
+        # be reused) and handed out as a copy.
         if not self._function_index:
             self.ensure_system_map()
+        lineage = self._systems.get("function_lineage") if isinstance(self._systems, dict) else None
+        lineage_funcs = getattr(lineage, "_functions", None)
+        cache = self.__dict__.setdefault("_find_cache", {})
+        key = (str(query or ""), int(limit))
+        hit = cache.get(key)
+        if hit is not None and hit[0] is self._function_index and hit[1] is lineage_funcs:
+            return copy.deepcopy(hit[2])
+        if len(cache) > 512:
+            cache.clear()
+        out = self._find_functions_uncached(query, limit)
+        cache[key] = (self._function_index, lineage_funcs, copy.deepcopy(out))
+        return out
+
+    def _find_functions_uncached(self, query: str, limit: int = 8) -> List[Dict[str, Any]]:
         ranked: List[Tuple[float, str, Dict[str, Any]]] = []
         q = str(query or "").strip().lower()
         if q:

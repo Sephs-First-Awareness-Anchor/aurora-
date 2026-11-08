@@ -10618,3 +10618,35 @@ mid-rebuild restarted it from zero). After fix: 16.3 s.
 **Still open:** ~575 MB RSS after boot; ~226 MB of live heap is JSON-decoded
 state. Her code autoevolver writes evolved blocks into source files; each
 accepted mutation rebuilds the lineage (now ~10 s, was ~147 s).
+
+## FIX-A087 (ARCHITECTURAL) — Commit and pull; reads settle instead of being retained and re-applied
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-08):** "why is she recomputing over and over and not
+committing to memory and pulling" / "those reads should only effect change ...
+to retain [them] permanently seems like a handicap". Results unchanged except
+where the old behaviour was itself the handicap (one sentence fed lexical
+grounding as ~17 observations per turn).
+- Turn writes: one batch around the whole public turn (the impl's batch opened
+  ~300 lines in); genealogy (flush_files, 20 MB read + write) and the lineage
+  journal enrolled; write-behind across turns (WRITE_BEHIND_S=30, flush_due on
+  the idle heartbeat under the field lock, flush_all at exit;
+  AURORA_WRITE_BEHIND_S=0 restores per-turn writes). Genealogy skips its merge
+  re-read when the file is exactly as it last wrote it.
+- Recommendation hub: append-only tail reader (was 167k json.loads per four
+  turns over ever-growing logs); settle_recommendations ages out pending items
+  after 7 days and releases decided ones from the logs (inbox written first).
+- One reading, one observation: extract_relational_form memoised per turn
+  (turn_scoped_cache, cleared when the outer turn batch opens), keyed on the
+  text AND her promoted relation words, so a promotion re-derives the parse.
+- _select_active_abilities: tag metadata cached per effect_tags tuple; result
+  dicts built for winners only (0/40 mismatches vs old). find_functions
+  memoised against the function index and code lineage objects (0 mismatches).
+- normalize_ability_origins: fixed-point fingerprints committed under a
+  code+data version; matching abilities pulled (13,316/13,318), anything new,
+  changed, drifting, or after any update derived in full.
+**First Seen:** 2026-11-08 turn profile: 8 turns 90 s, turn time 5.9 s -> 16.3 s
+as she ran; over half was whole-file rewrites. After: 8 turns 31 s.
+**Not built:** action channels that skip chain stages. After these fixes the
+reasoning pipeline is ~2.5 s/turn here, 0.75 s of it a scout-binding sleep and
+the rest spread ~0.1-0.15 s across the ten chain stages -- where understanding
+forms. Skipping them would save ~1 s/turn at real risk to her development.

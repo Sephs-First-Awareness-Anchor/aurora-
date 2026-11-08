@@ -1121,6 +1121,58 @@ def bind_referential_continuity(
     return result
 
 
+
+# One reading, one observation (Sunni, 2026-11-08).  A live turn parsed the same
+# sentence ~17 times, and every call also fed lexical grounding, appending a new
+# evidence entry each time -- one sentence heard once was recorded as seventeen
+# observations of its words.  The relational form depends only on the text (the
+# lexical feed is documented as never affecting it), so within a turn it is
+# computed -- and fed -- once per distinct text; later calls get a copy.
+def _promoted_relation_words() -> Tuple[str, ...]:
+    try:
+        from aurora_internal.aurora_lexical_grounding import get_lexical_grounding
+        candidates = getattr(get_lexical_grounding(), "_candidates", {}) or {}
+        return tuple(sorted({
+            str(c.word) for c in list(candidates.values())
+            if c.status == "promoted" and dict(c.structural_geometry or {}).get("slot") == "relation"
+        }))
+    except Exception:
+        return ("<unavailable>",)
+
+
+def _turn_memoized_relational_form(fn):
+    import copy as _copy
+    import functools as _functools
+    try:
+        from aurora_internal.aurora_turn_persistence import turn_scoped_cache
+        cache = turn_scoped_cache()
+    except Exception:
+        return fn
+
+    @_functools.wraps(fn)
+    def wrapper(text, parsed=None, *, feed_lexical_grounding=True):
+        if parsed:
+            return fn(text, parsed, feed_lexical_grounding=feed_lexical_grounding)
+        # The parse DOES depend on her learning: a word she has promoted into
+        # the relation slot changes how the same text parses
+        # (_has_promoted_relation_role).  That set is part of the key, so a
+        # promotion mid-turn re-derives every affected form.
+        key = (str(text or "").strip(), bool(feed_lexical_grounding), _promoted_relation_words())
+        hit = cache.get(key)
+        if hit is not None:
+            return _copy.deepcopy(hit)
+        out = fn(text, parsed, feed_lexical_grounding=feed_lexical_grounding)
+        if len(cache) > 256:
+            cache.clear()
+        cache[key] = _copy.deepcopy(out)
+        return out
+
+    wrapper.__wrapped_uncached__ = fn
+    return wrapper
+
+
+extract_relational_form = _turn_memoized_relational_form(extract_relational_form)
+
 def derive_constraint_semantic_state(
     form: Mapping[str, Any],
     *,

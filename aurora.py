@@ -16053,6 +16053,9 @@ def _instinctive_understanding(systems: Any) -> Dict[str, Any]:
     return out
 
 
+_SELECT_ABILITY_META_CACHE: Dict[int, Tuple[Any, Dict[str, Any]]] = {}
+
+
 def _select_active_abilities(
     axis_activation: Dict[str, float],
     dominant_axis: str,
@@ -16157,6 +16160,27 @@ def _select_active_abilities(
                     pass
         return meta
 
+    # Phone load (2026-11-08): the tag metadata above was re-parsed for every
+    # ability on every turn (106k calls in eight turns) and a result dict was
+    # built for every one of ~13k candidates to return five.  Metadata is now
+    # cached per effect_tags TUPLE (immutable, so it cannot go stale; the
+    # cache holds the tuple, so its id is never reused), and dicts are built
+    # only for the winners.  Same keys, same stable sort, same output.
+    meta_cache: Dict[int, Tuple[Any, Dict[str, Any]]] = _SELECT_ABILITY_META_CACHE
+    if len(meta_cache) > 3 * max(1, len(abilities)):
+        meta_cache.clear()
+
+    def _cached_metadata(ab: Any) -> Dict[str, Any]:
+        tags_obj = getattr(ab, "effect_tags", None) if not isinstance(ab, dict) else None
+        if not isinstance(tags_obj, tuple):
+            return _ability_metadata(ab)
+        hit = meta_cache.get(id(tags_obj))
+        if hit is not None and hit[0] is tags_obj:
+            return hit[1]
+        meta = _ability_metadata(ab)
+        meta_cache[id(tags_obj)] = (tags_obj, meta)
+        return meta
+
     candidates = []
     for ab in abilities.values():
         # AbilityProfile objects (the normal runtime type) have direct attributes;
@@ -16164,15 +16188,15 @@ def _select_active_abilities(
         if isinstance(ab, dict):
             ax       = str(ab.get("axis", "") or "")
             cost_dict = ab.get("cost") or {}
-            tags      = list(ab.get("effect_tags") or [])
+            tags      = None
         elif hasattr(ab, "axis") and hasattr(ab, "effect_tags"):
             ax       = str(ab.axis or "")
-            cost_dict = dict(ab.cost) if hasattr(ab, "cost") else {}
-            tags      = list(ab.effect_tags or [])
+            cost_dict = ab.cost if hasattr(ab, "cost") else {}
+            tags      = None
         else:
             continue
         ax_val = float(axis_activation.get(ax, 0.0) or 0.0) if ax in axis_activation else 0.0
-        meta = _ability_metadata(ab)
+        meta = _cached_metadata(ab)
         viability = float(meta.get("viable_band_alignment", 1.0) or 1.0)
         ontological_status = str(meta.get("ontological_status", "") or "").strip().lower()
 
@@ -16199,17 +16223,23 @@ def _select_active_abilities(
             round(total_cost, 4),
             -round(viability_weight, 4),
         )
+        candidates.append((sort_key, ab, ax, viability_weight, ontological_status, active_weight))
+    candidates.sort(key=lambda tc: tc[0])
+    out: List[Dict[str, Any]] = []
+    for _, ab, ax, viability_weight, ontological_status, active_weight in candidates[:max_n]:
         # normalise to dict so downstream code uses .get() uniformly
-        if not isinstance(ab, dict):
-            ab = {"axis": ax, "cost": cost_dict, "effect_tags": tags,
+        if isinstance(ab, dict):
+            cost_dict = ab.get("cost") or {}
+        else:
+            cost_dict = dict(ab.cost) if hasattr(ab, "cost") else {}
+            ab = {"axis": ax, "cost": cost_dict, "effect_tags": list(ab.effect_tags or []),
                   "id": str(getattr(ab, "id", "") or "")}
         ab = dict(ab)
         ab["viable_band_alignment"] = viability_weight
         ab["ontological_status"] = ontological_status or str(ab.get("ontological_status", "") or "")
         ab["active_weight"] = active_weight
-        candidates.append((sort_key, ab))
-    candidates.sort(key=lambda tc: tc[0])
-    return [ab for _, ab in candidates[:max_n]]
+        out.append(ab)
+    return out
 
 
 def _derive_applied_effects(
@@ -37529,21 +37559,39 @@ def process_external_user_turn(systems: Dict[str, Any], user_text: str, **kwargs
     reply event is observed AFTER, scored against the same expectations.  Both
     observations are best-effort and can never alter or block the turn.
     """
-    live = None
-    session = str(kwargs.get("session_id", "") or "")
+    # One write batch around the WHOLE turn (phone load, 2026-11-07).  The
+    # impl opens its own batch ~300 lines in, so everything before it (and
+    # the live-experience observations here) rewrote hot state files in full
+    # -- lexical grounding alone 74 times in four turns.  Batches nest: the
+    # impl's inner batch becomes a no-op and the flush happens once, here.
     try:
-        if isinstance(systems, dict) and str(user_text or "").strip():
-            from aurora_internal import aurora_live_experience as live
-            live.observe_user_event(systems, str(user_text), session_id=session)
+        from aurora_internal.aurora_turn_persistence import begin_write_batch, end_write_batch
+        _outer_batch = begin_write_batch(systems)
     except Exception:
+        end_write_batch = None
+        _outer_batch = []
+    try:
         live = None
-    result = _process_external_user_turn_impl(systems, user_text, **kwargs)
-    try:
-        if live is not None:
-            live.observe_reply_event(systems, live.reply_text_of(result), session_id=session)
-    except Exception:
-        pass
-    return result
+        session = str(kwargs.get("session_id", "") or "")
+        try:
+            if isinstance(systems, dict) and str(user_text or "").strip():
+                from aurora_internal import aurora_live_experience as live
+                live.observe_user_event(systems, str(user_text), session_id=session)
+        except Exception:
+            live = None
+        result = _process_external_user_turn_impl(systems, user_text, **kwargs)
+        try:
+            if live is not None:
+                live.observe_reply_event(systems, live.reply_text_of(result), session_id=session)
+        except Exception:
+            pass
+        return result
+    finally:
+        if end_write_batch is not None:
+            try:
+                end_write_batch(_outer_batch)
+            except Exception:
+                pass
 
 
 def _run_surface_queued_turn(

@@ -9305,6 +9305,19 @@ def _self_monitor_loop() -> None:
                     (_systems or {}).get("identity_field"),
                 )
             _tick += 1
+            # Write-behind (aurora_turn_persistence): commit state whose
+            # window has passed while she is idle, under the field lock so
+            # nothing is serialised while a turn is changing it.
+            try:
+                from aurora_internal.aurora_turn_persistence import (
+                    any_due as _any_due, flush_due as _flush_due)
+                if _any_due() and _lock.acquire(blocking=False):
+                    try:
+                        _flush_due()
+                    finally:
+                        _lock.release()
+            except Exception:
+                pass
             # Evolutionary sim tick — every 5 ticks (~60s) run one generation to
             # grow crystal structures from compressed constraint-physics evolution.
             # Only fires when not in an active user turn (lock not held).

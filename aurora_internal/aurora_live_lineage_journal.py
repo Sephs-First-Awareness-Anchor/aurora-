@@ -82,7 +82,13 @@ class LiveLineageJournal:
         if current > int(self._storage_mtime_ns or 0):
             self._load()
 
-    def save(self) -> bool:
+    def save(self, *, force: bool = False) -> bool:
+        # Turn-scoped batching (aurora_turn_persistence): the whole journal
+        # (~9 MB, indented) was rewritten from observe_systems() inside turns.
+        if not force:
+            from aurora_internal.aurora_turn_persistence import batch_defer
+            if batch_defer(self):
+                return True
         try:
             os.makedirs(os.path.dirname(self.storage_path) or ".", exist_ok=True)
             payload = {
@@ -116,6 +122,10 @@ class LiveLineageJournal:
                 context={"function": "save", "handler_line": 88, "source_file": "aurora_internal/aurora_live_lineage_journal.py"},
             )
             return False
+
+    def flush_write_batch(self) -> bool:
+        """Real write for aurora_turn_persistence's end-of-turn flush."""
+        return self.save(force=True)
 
     def _append_event(self, event: Dict[str, Any]) -> None:
         self.events.append(event)

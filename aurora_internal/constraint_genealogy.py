@@ -3032,8 +3032,16 @@ class ConstraintGenealogyLogger:
             "function_lineage": self.function_lineage_status(),
         }
 
-    def flush_files(self) -> None:
+    def flush_files(self, *, force: bool = False) -> None:
         """Write abilities + links + couplings + pair_stats + rolling event snapshot."""
+        # Turn-scoped batching (aurora_turn_persistence): inside a live turn
+        # this rewrote -- and first re-read -- the whole 20 MB abilities file
+        # every time code evolution registered an outcome (23 times in eight
+        # turns, 18.8 s).  Deferred to one write at the end of the turn.
+        if not force:
+            from aurora_internal.aurora_turn_persistence import batch_defer
+            if batch_defer(self):
+                return
         self._write_events_recent_file()
         self._write_abilities_file()
         self._write_links_file()
@@ -6640,19 +6648,94 @@ class ConstraintGenealogyLogger:
         ))
         return aid
 
+    # Commit and pull (Sunni, 2026-11-08: "why is she recomputing over and
+    # over and not committing to memory").  Every boot re-derived origin
+    # lineage for all ~13k abilities (11.6 s here) although the derivation is
+    # idempotent: run on its own output it changes nothing (measured: a
+    # second pass changes 0 abilities that were not newly registered in
+    # between).  So the fingerprint of every derived profile is committed,
+    # under a version of the code and data the derivation depends on; an
+    # ability whose current state matches a committed fingerprint IS that
+    # derivation's output and is pulled as is.  New, changed, or any code /
+    # data update -> derived in full, exactly as before.
+    _ORIGIN_FP_FILE = "ability_origin_fingerprints.json"
+
+    @staticmethod
+    def _origin_fingerprint(ap: "AbilityProfile") -> str:
+        payload = (
+            ap.id, ap.axis, ap.origin_axis, tuple(ap.requires or ()),
+            tuple(ap.effect_tags or ()), str(ap.notes or ""),
+            tuple(sorted((str(k), float(v)) for k, v in dict(ap.cost or {}).items())),
+            tuple(sorted((str(k), float(v)) for k, v in dict(ap.risk or {}).items())),
+        )
+        return hashlib.sha1(repr(payload).encode("utf-8", "replace")).hexdigest()[:20]
+
+    @staticmethod
+    def _origin_code_version() -> str:
+        here = os.path.dirname(os.path.abspath(__file__))
+        digest = hashlib.sha1()
+        for name in ("constraint_genealogy.py", "lineage_canonical.py",
+                     "universal_function_constraints.json"):
+            try:
+                with open(os.path.join(here, name), "rb") as fh:
+                    digest.update(fh.read())
+            except OSError:
+                digest.update(b"missing:" + name.encode())
+        try:
+            root = os.path.dirname(here)
+            with open(os.path.join(root, "aurora_closure_basis.py"), "rb") as fh:
+                digest.update(fh.read())
+        except OSError:
+            digest.update(b"missing:aurora_closure_basis.py")
+        return digest.hexdigest()[:20]
+
     def normalize_ability_origins(self) -> int:
         """Backfill universal origin lineage tags for all abilities."""
         count = 0
         updated: Dict[str, AbilityProfile] = {}
+        fp_path = os.path.join(str(getattr(self, "output_dir", "") or ""), self._ORIGIN_FP_FILE)
+        version = self._origin_code_version()
+        committed: set = set()
+        try:
+            with open(fp_path, "r", encoding="utf-8") as fh:
+                raw = json.load(fh) or {}
+            if raw.get("code_version") == version:
+                committed = set(raw.get("fingerprints") or [])
+        except Exception:
+            committed = set()
+        produced: set = set()
+        pulled = 0
         for aid, ap in dict(self.abilities).items():
             if not isinstance(ap, AbilityProfile):
                 continue
+            fp = self._origin_fingerprint(ap)
+            if fp in committed:
+                updated[str(aid)] = ap
+                produced.add(fp)
+                pulled += 1
+                continue
             new_ap = _augment_ability_profile_with_origin(ap)
             updated[str(aid)] = new_ap
+            new_fp = self._origin_fingerprint(new_ap)
+            # Commit only a FIXED POINT -- a profile the derivation returns
+            # unchanged -- so a pulled ability is always exactly what a full
+            # re-derivation would give.  (A few abilities keep gaining tags
+            # pass after pass; they stay uncommitted and are derived every
+            # boot, as before.)
+            if new_fp == fp or self._origin_fingerprint(_augment_ability_profile_with_origin(new_ap)) == new_fp:
+                produced.add(new_fp)
             if new_ap.notes != ap.notes or tuple(new_ap.effect_tags) != tuple(ap.effect_tags):
                 count += 1
         if updated:
             self.abilities = updated
+        self._origin_pulled_last = pulled
+        if produced != committed and getattr(self, "output_dir", None):
+            try:
+                from pathlib import Path
+                atomic_write_json(Path(fp_path), {"code_version": version,
+                                                  "fingerprints": sorted(produced)})
+            except Exception:
+                pass
         return int(count)
 
     def register_emergent_communication_operation(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -9239,6 +9322,10 @@ class ConstraintGenealogyLogger:
     def _write_event(self, record: ReliefRecord) -> None:
         pass  # in-memory deque (_event_log) is the canonical store; flushed by _write_events_recent_file
 
+    def flush_write_batch(self) -> None:
+        """Real write for aurora_turn_persistence's end-of-turn flush."""
+        self.flush_files(force=True)
+
     def _write_abilities_file(self) -> None:
         path = os.path.join(self.output_dir, self.cfg.ABILITIES_FILE)
         data = {k: v.to_dict() for k, v in self.abilities.items()}
@@ -9246,7 +9333,17 @@ class ConstraintGenealogyLogger:
         # process (e.g. corpus runner) that aren't yet in this instance's memory.
         try:
             source_path = path if os.path.exists(path) else path + ".gz"
-            if os.path.exists(source_path):
+            # Phone load (2026-11-08): this merge re-read the whole 20 MB file
+            # before every write.  If the file is exactly as this instance last
+            # wrote it (same mtime and size), no other process has added
+            # anything, so there is nothing to merge.
+            try:
+                _st = os.stat(source_path)
+                _unchanged = (getattr(self, "_abilities_written_sig", None)
+                              == (source_path, _st.st_mtime_ns, _st.st_size))
+            except OSError:
+                _unchanged = False
+            if os.path.exists(source_path) and not _unchanged:
                 opener = gzip.open if source_path.endswith(".gz") else open
                 with opener(source_path, "rt", encoding="utf-8") as fh:
                     on_disk = json.load(fh)
@@ -9270,6 +9367,11 @@ class ConstraintGenealogyLogger:
         # that json.load() then fails on at next boot -- restoring nothing.
         from pathlib import Path
         atomic_write_json(Path(path), data, indent=2)
+        try:
+            _st = os.stat(path)
+            self._abilities_written_sig = (path, _st.st_mtime_ns, _st.st_size)
+        except OSError:
+            self._abilities_written_sig = None
 
     def _write_links_file(self) -> None:
         path = os.path.join(self.output_dir, self.cfg.LINKS_FILE)
