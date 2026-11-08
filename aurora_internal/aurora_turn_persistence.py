@@ -48,6 +48,7 @@ BATCHED_SYSTEM_KEYS = (
     "genealogy",               # ConstraintGenealogyLogger.flush_files (20 MB abilities, read + write)
     "lineage_emergence_journal",  # LiveLineageJournal.save (~9 MB)
     "reasoning_paths",         # ReasoningPaths (aurora_reasoning_paths.py)
+    "unformed_patterns",       # UnformedPatterns (aurora_unformed_patterns.py)
 )
 
 # systems key -> attribute holding the object that actually owns the write

@@ -7373,6 +7373,15 @@ def _finalize_validated_communication(
                 exc=_comm_emergence_outcome_exc,
                 context={"function": "_finalize_validated_communication", "response_id": evidence_id},
             )
+    _unformed_verdict = systems.get("unformed_patterns")
+    if _unformed_verdict is not None:
+        try:
+            finalized["unformed_patterns"] = dict(_unformed_verdict.record_receiver_outcome(evidence_id, kind) or {})
+        except Exception as _unformed_verdict_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__, operation="unformed_patterns:receiver_outcome",
+                exc=_unformed_verdict_exc, context={"function": "_finalize_validated_communication"},
+            )
     _paths_verdict = systems.get("reasoning_paths")
     if _paths_verdict is not None:
         try:
@@ -31364,6 +31373,16 @@ def boot_aurora(
     except Exception as _reasoning_paths_exc:
         if verbose:
             print(f"  [PATHS] unavailable: {_reasoning_paths_exc}")
+    # What has yet to form (aurora_unformed_patterns.py): the residue that
+    # separates an uncarried turn from everything she represents, collected
+    # into forming patterns and handed to every system that accepts gaps.
+    systems["unformed_patterns"] = None
+    try:
+        from aurora_internal.aurora_unformed_patterns import UnformedPatterns
+        systems["unformed_patterns"] = UnformedPatterns(state_dir=state_dir, persist=True)
+    except Exception as _unformed_exc:
+        if verbose:
+            print(f"  [UNFORMED] unavailable: {_unformed_exc}")
 
     # Communication emergence field: cultivates missing communicative
     # operations as WARP trials derived from X/T/N/B/A pressure.  It does not
@@ -37440,6 +37459,7 @@ def _process_external_user_turn_impl(
                 systems["_last_communication_emergence"] = dict(_ce_record)
                 if isinstance(result, dict) and _ce_record:
                     result["communication_emergence"] = _ce_record
+                _path_offered_this_turn = False
                 _paths_end = systems.get("reasoning_paths")
                 if _paths_end is not None:
                     try:
@@ -37450,10 +37470,32 @@ def _process_external_user_turn_impl(
                             "offered": (_path_record.get("offered") or {}).get("path_id", ""),
                             "comparison": _path_record.get("comparison"),
                         }
+                        _path_offered_this_turn = bool(_path_record.get("offered"))
                     except Exception as _paths_end_exc:
                         _aurora_record_exception_from_locals(
                             locals(), module=__name__, operation="reasoning_paths:end_turn",
                             exc=_paths_end_exc, context={"function": "process_external_user_turn"},
+                        )
+                _unformed = systems.get("unformed_patterns")
+                _uf_gate = dict(systems.get("_last_voice_gate") or {})
+                if (_unformed is not None and str(user_text or "").strip()
+                        and float(_uf_gate.get("at", 0.0) or 0.0) >= time.time() - 600.0):
+                    try:
+                        _uf_engaged = []
+                        if _path_offered_this_turn:
+                            _uf_engaged.append("path")
+                        if dict(_ce_semantics.get("emergent_operation") or {}):
+                            _uf_engaged.append("operation")
+                        _uf_comp = dict(systems.get("_turn_composer_candidate") or {})
+                        if str(_uf_comp.get("text") or "").strip() and str(_uf_comp.get("heard") or "").strip() == str(user_text).strip():
+                            _uf_engaged.append("composer")
+                        systems["_last_unformed"] = _unformed.observe_turn(
+                            _ce_pipeline, gate=_uf_gate, engaged=_uf_engaged,
+                            response_id=_ce_response_id, systems=systems)
+                    except Exception as _unformed_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(), module=__name__, operation="unformed_patterns:observe_turn",
+                            exc=_unformed_exc, context={"function": "process_external_user_turn"},
                         )
             except Exception as _comm_emergence_turn_exc:
                 _aurora_record_exception_from_locals(

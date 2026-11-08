@@ -10716,3 +10716,29 @@ nothing, the chain is not authoritative, and Rule 6 emits a scripted seek.
 With scripts blocked she has the seed articulation only: it READS the right
 words ("I; experienced; anything" from "Have you experienced anything new")
 but renders them as a word list ("I, experienced. anything.").
+
+## FIX-A091 (ARCHITECTURAL) — Recognising what has yet to form
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-08):** "provide her with the ability to recognize the
+missing patterning outlier that separates all she represents currently from
+what it is we discovered has yet to form" -- not a recogniser for any kind of
+message. aurora_internal/aurora_unformed_patterns.py. A turn's signature is
+her own outputs only (filled/open relational slots, unknown role, query type,
+stance, pragmatic signal roles, obligation, meaning label, dominant axis,
+which representations engaged, axis activation) -- no message words. Carried
+= her own voice stood (own_voice / own_composition); carried turns a receiver
+understood form the REFERENCE. On an uncarried turn the RESIDUE is the
+features departing from the reference (smoothed absence >= 0.80; axis z >=
+1.5). Similar residues (Jaccard on core >= 0.5) form a pattern; from the 3rd
+recurrence each occurrence is handed to EVERY WarpCapable system she booted
+(registry + systems) -- read-only coverage check first, check_and_extend only
+where it is a gap for that system, one open trial per pattern per system --
+and confessed via warp_guard(MISSING_REPRESENTATION, persistence_key=pattern).
+Understood carried turns containing a pattern's core cover it; 3 => formed.
+Hub: Yet to form, Handed to her systems, Carried / not, Most recurring gap,
+Last hand-off.
+**First Seen:** 2026-11-08 real boot via the messenger: one pattern recurred
+x11 across the open questions; hand-offs reached 10 systems (1 covered);
+14 trials grew in braid stream, communication emergence, dimensional
+crystals, execution foundry and lexical grounding (before the one-open-trial
+rule).

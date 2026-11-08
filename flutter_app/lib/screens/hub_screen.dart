@@ -654,6 +654,16 @@ class _HubScreenState extends State<HubScreen> {
       _statRow('Verdicts (+/−)', '${n('learn_verdict_pos')} / ${n('learn_verdict_neg')}'),
       _statRow('Ways of speaking', '${n('learn_ce_promoted')} kept · ${n('learn_ce_dissolved')} dropped · ${n('learn_ce_trials')} trying · ${n('learn_ce_demoted')} corrected back',
           valueColor: n('learn_ce_promoted') > 0 ? _green : _text),
+      _statRow('Yet to form',
+          '${n('learn_unformed_forming')} forming · ${n('learn_unformed_recurring')} recurring · ${n('learn_unformed_formed_patterns')} formed',
+          valueColor: n('learn_unformed_formed_patterns') > 0 ? _green : _text),
+      _statRow('Handed to her systems',
+          '${n('learn_unformed_handoffs')} hand-offs · ${n('learn_unformed_system_extensions')} trials grown'),
+      _statRow('Carried / not', '${n('learn_unformed_carried')} / ${n('learn_unformed_uncarried')} · reference ${n('learn_unformed_reference_turns')}'),
+      if (((_stats['learn_unformed_top'] as String?) ?? '').isNotEmpty)
+        note('Most recurring gap', (_stats['learn_unformed_top'] as String?) ?? ''),
+      if (((_stats['learn_unformed_last_handoff'] as String?) ?? '').isNotEmpty)
+        note('Last hand-off', (_stats['learn_unformed_last_handoff'] as String?) ?? ''),
       _statRow('Remembered paths',
           '${n('learn_paths_paths')} (${n('learn_paths_strong_paths')} strong) · offered ${n('learn_paths_offered')}',
           valueColor: n('learn_paths_strong_paths') > 0 ? _green : _text),

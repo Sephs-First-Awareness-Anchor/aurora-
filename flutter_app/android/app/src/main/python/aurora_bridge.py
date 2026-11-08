@@ -11693,6 +11693,18 @@ def get_cognitive_stats() -> str:
             stats["learn_ce_promoted"] = int(_ce_s.get("promoted_operations", 0) or 0)
             stats["learn_ce_dissolved"] = int(_ce_s.get("dissolved_operations", 0) or 0)
             stats["learn_ce_demoted"] = int(_ce_s.get("demoted_operations", 0) or 0)
+            # What has yet to form (aurora_unformed_patterns.py).
+            _up = _systems.get("unformed_patterns") if _systems else None
+            _up_s = _up.status() if _up is not None and hasattr(_up, "status") else {}
+            for _key in ("forming", "recurring", "formed_patterns", "handoffs",
+                         "system_extensions", "reference_turns", "carried", "uncarried"):
+                stats[f"learn_unformed_{_key}"] = int(_up_s.get(_key, 0) or 0)
+            stats["learn_unformed_top"] = (
+                f"x{int(_up_s.get('top_occurrences', 0) or 0)}: " + ", ".join(list(_up_s.get("top_core") or [])[:5])
+            ) if _up_s.get("top_core") else ""
+            _lh = dict(_up_s.get("last_handoff") or {})
+            stats["learn_unformed_last_handoff"] = ", ".join(
+                f"{k}={v.split(':')[0]}" for k, v in dict(_lh.get("results") or {}).items())
             # Remembered reasoning paths (aurora_reasoning_paths.py).
             _rp = _systems.get("reasoning_paths") if _systems else None
             _rp_s = _rp.status() if _rp is not None and hasattr(_rp, "status") else {}
