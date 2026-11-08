@@ -11563,6 +11563,20 @@ def get_cognitive_stats() -> str:
             stats["messenger_last_spoke"] = (
                 f"to {_sp.get('to', '?')}: \"{_sp.get('text', '')}\"") if _sp else ""
             stats["messenger_last_error"] = str(_m.get("last_error", "") or "")[:200]
+            # Her own reach-outs (aurora_praxis_initiative.py).
+            _ini = _m.get("initiative") or {}
+            for _key in ("initiated", "withheld", "answered"):
+                stats[f"messenger_reach_{_key}"] = int(_ini.get(_key, 0) or 0)
+            _lv = dict(_ini.get("levels") or {})
+            stats["messenger_reach_pull"] = (
+                ", ".join(f"{k} {float(v):.2f}" for k, v in sorted(_lv.items(), key=lambda kv: -kv[1])[:3]))
+            _li = _ini.get("last_initiated") or {}
+            stats["messenger_reach_last"] = (
+                f"to {_li.get('to', '?')} about {_li.get('topic', '?')}: \"{_li.get('text', '')}\""
+                f"{' (kept operation)' if _li.get('operation') == 'promoted' else ''}") if _li else ""
+            _lw = _ini.get("last_withheld") or {}
+            stats["messenger_reach_last_withheld"] = (
+                f"to {_lw.get('to', '?')} about \"{_lw.get('about', '')}\" [{_lw.get('reason', '')}]") if _lw else ""
         except Exception as _messenger_stats_exc:
             stats["messenger_status"] = "error"
             stats["messenger_last_error"] = f"{type(_messenger_stats_exc).__name__}: {_messenger_stats_exc}"

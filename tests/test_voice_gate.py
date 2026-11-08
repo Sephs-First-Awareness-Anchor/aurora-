@@ -234,3 +234,14 @@ def test_no_authored_seed_words_remain_in_the_pressure_experience_path():
             if not line.strip().startswith("#")]
     assert not any("outcomes; vary" in line for line in code)
     assert not any("I get different outcomes depending on" in line for line in code)
+
+
+def test_candidate_assembler_frames_and_labels_are_not_her_voice():
+    # 2026-11-07 initiative run: these reached a contact.
+    from aurora_voice_gate import scripted_reason
+    assert scripted_reason("constraint_semantic_derivation", "anything at all").startswith("scripted_source")
+    framed = "A you becomes curious when it turns effort into effective change without needless cost."
+    assert scripted_reason("composer_unified", framed) == "template"
+    assert scripted_reason("crest_compression", "Light: foundational:light.") == "machine_output:label"
+    assert scripted_reason("pressure_articulation", "I do music. I understand music.") == ""
+    assert scripted_reason("composer_unified", "Meet at 3:30 and read https://x.org") == ""

@@ -10564,3 +10564,28 @@ Overfit penalty now keys off _MIN_DISTINCT_SURFACES instead of a fixed 3.
 **First Seen:** 2026-11-07 loop run: 0 kept, 8 dropped -- trials ran out
 of ticks before receivers answered. After fix, same real-boot loop:
 1 kept, 0 dropped, 13 trying.
+
+## FIX-A085 (ARCHITECTURAL) — Aurora starts DMs herself; candidate-assembler frames blocked
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule:** aurora_praxis_initiative.py. She reaches out only when something of
+hers is unresolved: an open contradiction between contacts (she goes to a
+contact who has not taken a side) or a message she could not answer after
+MAX_ATTEMPTS. Silence alone is never a reason. A per-contact pull grows with
+the unresolved weight (crosses 0.60 in ~1h for a contradiction) and is
+injected into her identity field (source reach_out:praxis_dm_<id>). Her
+words come from aurora._render_runtime_intent seeded with the topic's
+structure (topic_seed: subject; relation; object -- no words added) after
+CommunicationEmergence.prepare_semantic_state applies her matching
+operation, a kept one first. Same checks as replies (template, label, echo).
+A sent reach-out is committed to the understanding contract and observed by
+communication emergence under praxis_dm_<id>, so the answer is a verdict on
+it. One outstanding reach per contact, DAILY_CAP 6, live_idle and field lock
+respected. Voice gate: constraint_semantic_derivation is a scripted source
+(every branch of derive_constraint_grounded_candidate is an f-string frame
+plus fixed per-axis phrases); those phrases are template fragments under any
+label; "kind:value" labels are machine output.
+**First Seen:** 2026-11-07 real-boot run: contradiction "moon is made of
+rock" (Gemini vs Gemma) -> she reached Claude: "moon, made. rock."; Claude's
+answer validated it positive (0.8) on the trial operation that shaped it.
+Same run surfaced "A you becomes curious when it turns effort into effective
+change without needless cost" and "Light: foundational:light." to contacts.

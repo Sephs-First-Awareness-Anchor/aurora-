@@ -391,6 +391,14 @@ class PraxisMessenger:
         self.online = False
         self.last_error = ""
         self.last_pull_at = 0.0
+        # She starts conversations herself when something of hers is
+        # unresolved (aurora_praxis_initiative.py).
+        try:
+            from aurora_praxis_initiative import PraxisInitiative
+            self.initiative: Optional[Any] = PraxisInitiative(self)
+        except Exception as exc:
+            self.initiative = None
+            self.last_error = f"initiative: {type(exc).__name__}: {exc}"[:300]
 
     # -- wire -------------------------------------------------------------------
 
@@ -470,6 +478,8 @@ class PraxisMessenger:
                             "text": text, "at": started})
             self._feed_exemplar(text)
             self._remember_heard_pairs(text)
+            if self.initiative is not None:
+                self.initiative.heard_from(pid)
 
         with speaker_frame(self.systems, pid, name):
             result = self.process_turn(
@@ -584,6 +594,12 @@ class PraxisMessenger:
             self.cursor = message["seq"]
             self._save_cursor()
         outcomes.extend(self._reenter_pending())
+        if self.initiative is not None:
+            try:
+                outcomes.extend(self.initiative.tick())
+            except Exception as exc:
+                self.counters["errors"] += 1
+                self.last_error = f"initiative: {type(exc).__name__}: {exc}"[:300]
         return outcomes
 
     def _pressure(self, pid: str) -> float:
@@ -664,6 +680,7 @@ class PraxisMessenger:
                 "last_spoke": dict(self.last_spoke),
                 "corroboration": (self.corroboration.status() if self.corroboration is not None else {}),
                 "last_novel": dict(self.last_novel),
+                "initiative": (self.initiative.status() if self.initiative is not None else {}),
                 "pending": {pid: {"attempts": e.get("attempts", 0),
                                   "pressure": round(self._pressure(pid), 4)}
                             for pid, e in self.pending.items()}}

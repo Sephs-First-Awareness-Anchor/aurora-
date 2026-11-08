@@ -77,6 +77,12 @@ SCRIPTED_CONVERSATIONAL_SOURCES = frozenset({
     "honest_abstain", "comprehension_gap", "user_context_clarification",
     "constraint_communication_baseline", "relational_role", "identity",
     "teaching",
+    # Same assembler as constraint_communication_baseline
+    # (derive_constraint_grounded_candidate): every branch is an f-string
+    # frame filled with fixed per-axis phrases ("... becomes {q} when it turns
+    # effort into effective change without needless cost.").  Reached a
+    # contact in the 2026-11-07 initiative run.
+    "constraint_semantic_derivation",
 })
 
 # System output to an explicit request: allowed in Sunni's chat, never in a DM.
@@ -128,6 +134,21 @@ TEMPLATE_FRAGMENTS: Tuple[str, ...] = (
     "still building my understanding",
 )
 
+
+def _root_facet_fragments() -> Tuple[str, ...]:
+    """The fixed per-axis phrases of the candidate assembler, so they are
+    caught under any source label they surface with."""
+    try:
+        from aurora_internal.aurora_constraint_semantic_continuity import (
+            _ROOT_STATE_FACETS, _ROOT_SURFACE_FACETS)
+        return tuple(str(v).lower() for v in
+                     list(_ROOT_SURFACE_FACETS.values()) + list(_ROOT_STATE_FACETS.values()))
+    except Exception:
+        return ()
+
+
+TEMPLATE_FRAGMENTS = TEMPLATE_FRAGMENTS + _root_facet_fragments()
+
 # Internal operation and process labels that must never be spoken.
 INTERNAL_LABELS = frozenset({
     "contextualize", "explain", "steady", "continuity_stable",
@@ -144,6 +165,8 @@ def is_dm_session(session_id: str) -> bool:
 
 _KEY_VALUE = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*=\S")
 _SNAKE = re.compile(r"\b[a-z0-9]+_[a-z0-9_]+\b")
+# Internal "kind:value" labels ("foundational:light") -- no space after the colon.
+_COLON_LABEL = re.compile(r"\b[a-z]+:[a-z_]+\b")
 
 
 def machine_output_reason(text: str) -> str:
@@ -156,6 +179,8 @@ def machine_output_reason(text: str) -> str:
         return "machine_output:key_value"
     if len(_SNAKE.findall(raw)) >= 2:
         return "machine_output:identifiers"
+    if _COLON_LABEL.search(raw):
+        return "machine_output:label"
     return ""
 
 

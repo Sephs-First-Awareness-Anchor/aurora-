@@ -671,6 +671,12 @@ class _HubScreenState extends State<HubScreen> {
     final lastHeld  = (_stats['messenger_last_withheld'] as String?) ?? '';
     final lastSpoke = (_stats['messenger_last_spoke'] as String?) ?? '';
     final lastError = (_stats['messenger_last_error'] as String?) ?? '';
+    final reached    = _stats['messenger_reach_initiated'] as int? ?? 0;
+    final reachHeld  = _stats['messenger_reach_withheld'] as int? ?? 0;
+    final reachAnswered = _stats['messenger_reach_answered'] as int? ?? 0;
+    final reachPull  = (_stats['messenger_reach_pull'] as String?) ?? '';
+    final reachLast  = (_stats['messenger_reach_last'] as String?) ?? '';
+    final reachLastHeld = (_stats['messenger_reach_last_withheld'] as String?) ?? '';
 
     Widget note(String label, String value, Color color) => Padding(
       padding: const EdgeInsets.only(top: 2, bottom: 2),
@@ -688,6 +694,12 @@ class _HubScreenState extends State<HubScreen> {
           valueColor: status == 'online' ? _green : _textDim),
       if (lastSpoke.isNotEmpty) note('Last said', lastSpoke, _text),
       if (lastHeld.isNotEmpty) note('Last held back', lastHeld, _amber),
+      _statRow('She reached out',
+          '$reached started · $reachAnswered answered · $reachHeld held back',
+          valueColor: reached > 0 ? _green : _textDim),
+      if (reachPull.isNotEmpty) note('Pull toward', reachPull, _textDim),
+      if (reachLast.isNotEmpty) note('Last started', reachLast, _text),
+      if (reachLastHeld.isNotEmpty) note('Last reach held back', reachLastHeld, _amber),
       if (errors > 0 || lastError.isNotEmpty)
         note('Messenger error ($errors)', lastError, _red),
     ];
