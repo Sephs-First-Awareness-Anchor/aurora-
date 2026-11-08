@@ -7373,6 +7373,15 @@ def _finalize_validated_communication(
                 exc=_comm_emergence_outcome_exc,
                 context={"function": "_finalize_validated_communication", "response_id": evidence_id},
             )
+    _paths_verdict = systems.get("reasoning_paths")
+    if _paths_verdict is not None:
+        try:
+            finalized["reasoning_paths"] = dict(_paths_verdict.record_receiver_outcome(evidence_id, kind) or {})
+        except Exception as _paths_verdict_exc:
+            _aurora_record_exception_from_locals(
+                locals(), module=__name__, operation="reasoning_paths:receiver_outcome",
+                exc=_paths_verdict_exc, context={"function": "_finalize_validated_communication"},
+            )
     if kind == "negative":
         dream_trainer = systems.get("dream_trainer")
         ledger = getattr(dream_trainer, "ledger", None) if dream_trainer is not None else None
@@ -16181,6 +16190,13 @@ def _select_active_abilities(
         meta_cache[id(tags_obj)] = (tags_obj, meta)
         return meta
 
+    # A remembered reasoning path, when one is offered this turn, leans on
+    # abilities it used -- scaled by its earned weight, capped, never more.
+    _path_lean = None
+    _paths_sys = systems.get("reasoning_paths") if isinstance(systems, dict) else None
+    if _paths_sys is not None and (getattr(_paths_sys, "offer", None) or {}).get("path"):
+        _path_lean = _paths_sys.ability_lean
+
     candidates = []
     for ab in abilities.values():
         # AbilityProfile objects (the normal runtime type) have direct attributes;
@@ -16215,6 +16231,10 @@ def _select_active_abilities(
         active_weight = round((viability_weight * 0.7) + (support_weight * 0.3), 4)
         if ax == dominant_axis:
             active_weight = round(min(1.0, active_weight + 0.08), 4)
+        if _path_lean is not None:
+            _lean = _path_lean(str(ab.get("id", "") if isinstance(ab, dict) else getattr(ab, "id", "")))
+            if _lean:
+                active_weight = round(min(1.0, active_weight + _lean), 4)
         # prefer viable, dominant-axis abilities; among similarly viable
         # abilities, keep the cheaper one first.
         sort_key = (
@@ -16994,6 +17014,10 @@ def _build_established_strata_evidence(
         "recent_context_mode": str(pipeline_state.get("recent_context_mode", "present") or "present"),
     }
     evidence["surface_input"] = surface_input
+    # A remembered reasoning path offered this turn sits beside memory,
+    # continuity and grounding as evidence every later stage can see.
+    if pipeline_state.get("remembered_path"):
+        evidence["remembered_path"] = dict(pipeline_state.get("remembered_path") or {})
     native_meaning_bundle = dict(
         pipeline_state.get("native_meaning_bundle")
         or systems.get("_native_meaning_bundle")
@@ -24615,6 +24639,21 @@ def _run_reasoning_pipeline(
     # state.axis_activation and state.dominant_axis are populated by _chain_up3_purpose.
     # Select the most affordable abilities whose axis is currently active, then stamp
     # their effect_tags into pipeline_state so the downward chain knows HOW to reason.
+    # Remembered reasoning path: offered to this turn's stages (participates,
+    # never skips -- see aurora_reasoning_paths.py).
+    try:
+        _paths = systems.get("reasoning_paths")
+        if _paths is not None and isinstance(state.pipeline_state, dict) and state.axis_activation:
+            _path_offer = _paths.begin_turn(state.pipeline_state, state.axis_activation)
+            if _path_offer:
+                state.pipeline_state["remembered_path"] = dict(_path_offer)
+            else:
+                state.pipeline_state.pop("remembered_path", None)
+    except Exception as _paths_offer_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__, operation="reasoning_paths:begin_turn",
+            exc=_paths_offer_exc, context={"function": "_run_reasoning_pipeline"},
+        )
     try:
         _genealogy = systems.get("genealogy")
         if _genealogy and hasattr(_genealogy, "abilities") and state.axis_activation:
@@ -24627,6 +24666,7 @@ def _run_reasoning_pipeline(
             )
             if _sel_abs and isinstance(state.pipeline_state, dict):
                 state.pipeline_state["active_abilities"] = [a.get("id", "") for a in _sel_abs]
+                systems["_last_active_ability_ids"] = list(state.pipeline_state["active_abilities"])
                 # Flatten effect_tags; strip lineage/origin metadata tags (not reasoning strategies)
                 _ab_fx: set = set()
                 for _a in _sel_abs:
@@ -31301,6 +31341,18 @@ def boot_aurora(
         if verbose:
             print(f"  [RCRW] unavailable: {_recursive_causal_e}")
 
+    # Remembered reasoning paths (aurora_reasoning_paths.py): validated
+    # pressure -> stage landings, offered back to her stages as evidence and
+    # as an earned lean on ability selection.  They participate; they never
+    # skip a stage or choose a reply.
+    systems["reasoning_paths"] = None
+    try:
+        from aurora_internal.aurora_reasoning_paths import ReasoningPaths
+        systems["reasoning_paths"] = ReasoningPaths(state_dir=state_dir, persist=True)
+    except Exception as _reasoning_paths_exc:
+        if verbose:
+            print(f"  [PATHS] unavailable: {_reasoning_paths_exc}")
+
     # Communication emergence field: cultivates missing communicative
     # operations as WARP trials derived from X/T/N/B/A pressure.  It does not
     # install intent handlers or fixed language functions.
@@ -37376,6 +37428,21 @@ def _process_external_user_turn_impl(
                 systems["_last_communication_emergence"] = dict(_ce_record)
                 if isinstance(result, dict) and _ce_record:
                     result["communication_emergence"] = _ce_record
+                _paths_end = systems.get("reasoning_paths")
+                if _paths_end is not None:
+                    try:
+                        _path_record = _paths_end.end_turn(
+                            _ce_pipeline, _ce_response_id,
+                            list(systems.get("_last_active_ability_ids") or []))
+                        systems["_last_reasoning_path"] = {
+                            "offered": (_path_record.get("offered") or {}).get("path_id", ""),
+                            "comparison": _path_record.get("comparison"),
+                        }
+                    except Exception as _paths_end_exc:
+                        _aurora_record_exception_from_locals(
+                            locals(), module=__name__, operation="reasoning_paths:end_turn",
+                            exc=_paths_end_exc, context={"function": "process_external_user_turn"},
+                        )
             except Exception as _comm_emergence_turn_exc:
                 _aurora_record_exception_from_locals(
                     locals(), module=__name__,

@@ -11672,6 +11672,16 @@ def get_cognitive_stats() -> str:
             stats["learn_ce_promoted"] = int(_ce_s.get("promoted_operations", 0) or 0)
             stats["learn_ce_dissolved"] = int(_ce_s.get("dissolved_operations", 0) or 0)
             stats["learn_ce_demoted"] = int(_ce_s.get("demoted_operations", 0) or 0)
+            # Remembered reasoning paths (aurora_reasoning_paths.py).
+            _rp = _systems.get("reasoning_paths") if _systems else None
+            _rp_s = _rp.status() if _rp is not None and hasattr(_rp, "status") else {}
+            for _key in ("paths", "strong_paths", "offered", "agreed", "diverged",
+                         "deepened", "worn", "reconsidered"):
+                stats[f"learn_paths_{_key}"] = int(_rp_s.get(_key, 0) or 0)
+            _ld = dict(_rp_s.get("last_divergence") or {})
+            stats["learn_paths_last_divergence"] = "; ".join(
+                f"{name}: path {d.get('path')!s} vs now {d.get('live')!s}"
+                for name, d in list(dict(_ld.get("differences") or {}).items())[:3])
             _lg = _systems.get("lexical_grounding") if _systems else None
             _lg_s = _lg.status() if _lg is not None and hasattr(_lg, "status") else {}
             stats["learn_lex_trials"] = int(_lg_s.get("trial_count", 0) or 0)

@@ -647,6 +647,13 @@ class _HubScreenState extends State<HubScreen> {
       _statRow('Verdicts (+/−)', '${n('learn_verdict_pos')} / ${n('learn_verdict_neg')}'),
       _statRow('Ways of speaking', '${n('learn_ce_promoted')} kept · ${n('learn_ce_dissolved')} dropped · ${n('learn_ce_trials')} trying · ${n('learn_ce_demoted')} corrected back',
           valueColor: n('learn_ce_promoted') > 0 ? _green : _text),
+      _statRow('Remembered paths',
+          '${n('learn_paths_paths')} (${n('learn_paths_strong_paths')} strong) · offered ${n('learn_paths_offered')}',
+          valueColor: n('learn_paths_strong_paths') > 0 ? _green : _text),
+      _statRow('Paths vs live reasoning',
+          '${n('learn_paths_agreed')} agreed · ${n('learn_paths_diverged')} diverged · ${n('learn_paths_reconsidered')} reconsidered · ${n('learn_paths_worn')} worn'),
+      if (((_stats['learn_paths_last_divergence'] as String?) ?? '').isNotEmpty)
+        note('Last divergence', (_stats['learn_paths_last_divergence'] as String?) ?? ''),
       _statRow('Grammar patterns kept', '${n('learn_grammar_promoted')}',
           valueColor: n('learn_grammar_promoted') > 0 ? _green : _text),
       _statRow('Word meanings', '${n('learn_lex_promoted')} kept · ${n('learn_lex_trials')} trying'),

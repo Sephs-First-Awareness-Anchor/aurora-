@@ -47,6 +47,7 @@ BATCHED_SYSTEM_KEYS = (
     # Phone load (2026-11-07): rewritten whole inside turns, not batched.
     "genealogy",               # ConstraintGenealogyLogger.flush_files (20 MB abilities, read + write)
     "lineage_emergence_journal",  # LiveLineageJournal.save (~9 MB)
+    "reasoning_paths",         # ReasoningPaths (aurora_reasoning_paths.py)
 )
 
 # systems key -> attribute holding the object that actually owns the write

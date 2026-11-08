@@ -10650,3 +10650,26 @@ as she ran; over half was whole-file rewrites. After: 8 turns 31 s.
 reasoning pipeline is ~2.5 s/turn here, 0.75 s of it a scout-binding sleep and
 the rest spread ~0.1-0.15 s across the ten chain stages -- where understanding
 forms. Skipping them would save ~1 s/turn at real risk to her development.
+
+## FIX-A088 (ARCHITECTURAL) — Remembered reasoning paths participate, never skip
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-08):** "Why can't the paths participate in reasoning
+rather than skip?" aurora_internal/aurora_reasoning_paths.py. A path is a
+pressure signature (unit axis activation + utterance shape: unknown role,
+question/statement, relation, object, stance) and the stage LANDINGS of a
+receiver-validated turn (meaning label + signature, dominant axis, conscious
+action, response operation, deep emotion, reactive bias, active abilities,
+salient concepts) -- no words. Resonance (same shape, cosine >= 0.92) offers
+the path to the turn: as `remembered_path` in established strata evidence and
+as an earned lean on ability selection (<= 0.12 x weight x resonance). Every
+stage still reasons in full. After the turn live landings are compared
+(understanding, action, operation are core: any difference is divergence).
+Verdicts only: understood+agreed deepens; understood+diverged carves the new
+landings and reconsiders the old path (x0.85); misunderstood+agreed wears it
+(x0.6); misunderstood+diverged lets it regain (+0.05). New paths start faint
+(0.12); below the offer floor (0.10) a path dissolves. Hub: Remembered paths,
+Paths vs live reasoning, Last divergence.
+**First Seen:** 2026-11-08 real boot through the messenger: 2 verdict-carved
+paths; one offered twice on recurring "Do you like ...?" pressure; both times
+live reasoning diverged on meaning label/signature (topic-specific
+understanding) -- recorded as divergence, not overwritten.
