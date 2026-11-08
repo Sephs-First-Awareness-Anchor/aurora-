@@ -767,10 +767,11 @@ class _HubScreenState extends State<HubScreen> {
               style: const TextStyle(color: _text, fontSize: 11, fontWeight: FontWeight.w600)),
         ]),
         const SizedBox(height: 6),
-        // Rehearsal: her own replies to Sunni's historical messages, compared
-        // with what was really said and fed through her verdict loop.
+        // Rehearsal: she takes Sunni's side of her history -- answers what the
+        // other side said, compared with what Sunni really said back, and fed
+        // through her verdict loop.
         _statRow('Rehearsed',
-            '${_stats['rehearsal_rehearsed'] as int? ?? 0} · ${_stats['rehearsal_silent'] as int? ?? 0} silent'),
+            '${_stats['rehearsal_rehearsed'] as int? ?? 0} · ${_stats['rehearsal_silent'] as int? ?? 0} silent · ${_stats['rehearsal_lived_by_clones'] as int? ?? 0} lived by clones'),
         _statRow('Rehearsal vs real',
             '${_stats['rehearsal_match'] as int? ?? 0} close · ${_stats['rehearsal_partial'] as int? ?? 0} partial · ${_stats['rehearsal_mismatch'] as int? ?? 0} apart · ${_stats['rehearsal_fanned_out'] as int? ?? 0} learned from'),
         if (((_stats['rehearsal_last'] as String?) ?? '').isNotEmpty)
@@ -778,6 +779,15 @@ class _HubScreenState extends State<HubScreen> {
             child: Text((_stats['rehearsal_last'] as String?) ?? '', maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(color: _textDim, fontSize: 11))),
+        // Her clones (FIX-A105): what many Auroras carved rehearsing her
+        // history, absorbed through her own organs' rules.
+        if ((_stats['clone_harvests'] as int? ?? 0) > 0) ...[
+          _statRow('Clones',
+              '${_stats['clone_count'] as int? ?? 0} clones · ${_stats['clone_conversations'] as int? ?? 0} conversations lived'),
+          _statRow('Clone paths', (_stats['clone_paths'] as String?) ?? ''),
+          _statRow('Clone operations', (_stats['clone_operations'] as String?) ?? ''),
+          _statRow('Clone gaps', (_stats['clone_patterns'] as String?) ?? ''),
+        ],
         // Codex review, PR #193: backfilled_through_event_index only ever
         // advances inside the one-time _backfill_lexical_grounding() catch-
         // up pass at boot -- every event witnessed LIVE after that also

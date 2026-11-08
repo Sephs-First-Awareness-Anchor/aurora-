@@ -25,6 +25,7 @@ task preparePythonSources {
         include "**/*.py"
         include "aurora_manifold_directory/**"
         include "aurora_internal/**/*.json"
+        include "aurora_internal/**/*.json.gz"
         include "aurora_genealogy/**"
         include "*.py"
         exclude "**/__pycache__/**"
@@ -79,6 +80,8 @@ task preparePythonSources {
             from("${repoRoot}/aurora_internal") {
                 include "**/*.py"
                 include "**/*.json"
+                // FIX-A093: the clone harvest ships gzipped.
+                include "**/*.json.gz"
                 exclude "**/__pycache__/**"
             }
             into "${destDir}/aurora_internal"

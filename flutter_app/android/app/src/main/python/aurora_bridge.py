@@ -2692,6 +2692,20 @@ def initialize(state_dir: str = "") -> str:
         # is active and serializes each witness event through the same _lock as
         # live synthesis, so historical experience cannot run concurrently
         # through the cognitive field.
+        # FIX-A105: what her clones carved while rehearsing her history.
+        # Bundled with the app; absorbed once per harvest, through each
+        # organ's own rules, before her history stream starts (so the stream
+        # already knows which conversations the clones lived).
+        _mark_boot_stage("absorbing clone harvest")
+        try:
+            from aurora_internal.aurora_clone_harvest import absorb_harvest
+            with _lock:
+                _clone_absorb = absorb_harvest(_systems, state_dir=(state_dir if state_dir else "aurora_state"))
+            _systems["_clone_harvest_absorb"] = _clone_absorb
+            log.info("Clone harvest: %s", {k: _clone_absorb.get(k) for k in ("status", "harvest_id", "clones", "episodes")})
+        except Exception as _clone_exc:
+            log.warning("Clone harvest absorption failed: %s", _clone_exc)
+
         _mark_boot_stage("starting historical experience environment")
         try:
             from aurora_historical_experience_environment import start_historical_experience_environment
@@ -11562,11 +11576,13 @@ def get_cognitive_stats() -> str:
             stats["historical_events_experienced"] = int(_hist_status.get("events_experienced", 0) or 0)
             # Rehearsal of her history (2026-11-08).
             _reh = dict(_hist_status.get("rehearsal") or {})
-            for _key in ("rehearsed", "silent", "compared", "match", "partial", "mismatch", "fanned_out"):
+            for _key in ("rehearsed", "silent", "compared", "match", "partial", "mismatch", "fanned_out",
+                         "lived_by_clones"):
                 stats[f"rehearsal_{_key}"] = int(_reh.get(_key, 0) or 0)
             _rl = dict(_reh.get("last") or {})
             stats["rehearsal_last"] = (
-                f"you: \"{_rl.get('heard', '')[:60]}\" · her: \"{_rl.get('her_reply', '')[:60]}\" · "
+                f"they said: \"{_rl.get('heard', '')[:50]}\" · her: \"{_rl.get('her_reply', '')[:50]}\" · "
+                f"you: \"{_rl.get('real_reply', '')[:50]}\" · "
                 f"{_rl.get('label', '').replace('rehearsal_', '')} {float(_rl.get('score', 0.0) or 0.0):.2f}"
             ) if _rl else ""
             stats["historical_total_events"] = int(_hist_status.get("total_events", 0) or 0)
@@ -11724,6 +11740,25 @@ def get_cognitive_stats() -> str:
             stats["learn_paths_last_divergence"] = "; ".join(
                 f"{name}: path {d.get('path')!s} vs now {d.get('live')!s}"
                 for name, d in list(dict(_ld.get("differences") or {}).items())[:3])
+            # Her clones (aurora_clone_harvest.py, FIX-A105).
+            try:
+                from aurora_internal.aurora_clone_harvest import harvest_status as _clone_hs
+                _ch = _clone_hs(str((_systems or {}).get("state_dir") or "aurora_state"))
+            except Exception:
+                _ch = {}
+            _chl = dict(_ch.get("last") or {})
+            _chr = dict(_chl.get("results") or {})
+            stats["clone_harvests"] = int(_ch.get("harvests", 0) or 0)
+            stats["clone_conversations"] = int(_ch.get("episodes_lived_by_clones", 0) or 0)
+            stats["clone_count"] = int(_chl.get("clones", 0) or 0)
+            _chp, _cho = dict(_chr.get("paths") or {}), dict(_chr.get("operations") or {})
+            _chu, _chc = dict(_chr.get("unformed") or {}), dict(_chr.get("candidates") or {})
+            stats["clone_paths"] = (f"{int(_chp.get('carved', 0) or 0)} new · {int(_chp.get('deepened', 0) or 0)} "
+                                    f"joined hers · {int(_chp.get('divergent', 0) or 0)} divergent") if _chp else ""
+            stats["clone_operations"] = (f"{int(_cho.get('added', 0) or 0)} new · {int(_cho.get('joined', 0) or 0)} joined · "
+                                         f"{len(_cho.get('promoted') or [])} promoted by her") if _cho else ""
+            stats["clone_patterns"] = (f"{int(_chu.get('added', 0) or 0)} new · {int(_chu.get('joined', 0) or 0)} joined · "
+                                       f"words {int(_chc.get('added', 0) or 0)}+{int(_chc.get('joined', 0) or 0)}") if _chu else ""
             _lg = _systems.get("lexical_grounding") if _systems else None
             _lg_s = _lg.status() if _lg is not None and hasattr(_lg, "status") else {}
             stats["learn_lex_trials"] = int(_lg_s.get("trial_count", 0) or 0)

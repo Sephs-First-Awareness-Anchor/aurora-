@@ -59,6 +59,8 @@ def env_with(replies):
     env.rehearsal_counters = {"rehearsed": 0, "silent": 0, "compared": 0, "match": 0,
                               "partial": 0, "mismatch": 0, "fanned_out": 0, "errors": 0}
     env.last_rehearsal = {}
+    env.skip_absorbed = False            # FIX-A105's clone ledger is tested in test_clone_harvest.py
+    env._absorbed_episodes = set()
     return env, fake, systems
 
 

@@ -397,6 +397,60 @@ class UnformedPatterns:
         self._save()
         return {"matched": True, "effect": effect}
 
+    # -- what her clones found yet to form (FIX-A105) -------------------------------------
+
+    def absorb_clone_patterns(self, harvest: Mapping[str, Any]) -> Dict[str, Any]:
+        """Take in the reference turns and forming patterns her clones met.
+
+        The reference is additive (more understood, carried turns she can
+        compare against).  A clone pattern joins the forming pattern of hers
+        whose core it shares (the same SIMILAR rule a live residue uses), so
+        the same gap found by several clones -- and by her -- recurs as one
+        pattern.  Hand-offs are not replayed: once a joined pattern has
+        recurred, her next live occurrence hands it to every system."""
+        ref = dict(harvest.get("reference") or {})
+        joined, added = 0, 0
+        with self._lock:
+            self.ref_n += int(ref.get("n", 0) or 0)
+            for f, c in dict(ref.get("counts") or {}).items():
+                self.ref_counts[str(f)] = self.ref_counts.get(str(f), 0) + int(c or 0)
+            for ax in AXES:
+                self.ref_axis_sum[ax] += _f(dict(ref.get("axis_sum") or {}).get(ax))
+                self.ref_axis_sq[ax] += _f(dict(ref.get("axis_sq") or {}).get(ax))
+            for item in list(harvest.get("patterns") or []):
+                counts = {str(k): int(v or 0) for k, v in dict(item.get("feature_counts") or {}).items()}
+                occ = int(item.get("occurrences", 0) or 0)
+                if not counts or occ <= 0:
+                    continue
+                probe = {"feature_counts": counts, "occurrences": occ}
+                pid = self._match(self.core(probe) or sorted(counts))
+                if pid is None:
+                    pid = "UP:" + hashlib.sha1(json.dumps(sorted(counts)).encode()).hexdigest()[:12]
+                    self.patterns[pid] = {"feature_counts": {}, "occurrences": 0, "axis_sum": {ax: 0.0 for ax in AXES},
+                                          "status": "forming", "first_at": self.clock(), "covered": 0,
+                                          "handoffs": 0, "extended_by": {}}
+                    added += 1
+                else:
+                    joined += 1
+                p = self.patterns[pid]
+                p["occurrences"] = int(p.get("occurrences", 0)) + occ
+                for f, c in counts.items():
+                    p["feature_counts"][f] = p["feature_counts"].get(f, 0) + c
+                for ax in AXES:
+                    p["axis_sum"][ax] = _f(p["axis_sum"].get(ax)) + _f(dict(item.get("axis_sum") or {}).get(ax))
+                p["covered"] = int(p.get("covered", 0)) + int(item.get("covered", 0) or 0)
+                p["clones"] = int(p.get("clones", 0) or 0) + int(item.get("clones", 1) or 1)
+                p["last_at"] = self.clock()
+                if p.get("status") == "forming" and p["covered"] >= COVERED_TO_FORM:
+                    p["status"] = "formed"
+                    p["formed_at"] = self.clock()
+                    self.counters["formed"] += 1
+            self.counters["clone_patterns_joined"] = int(self.counters.get("clone_patterns_joined", 0)) + joined
+            self.counters["clone_patterns_added"] = int(self.counters.get("clone_patterns_added", 0)) + added
+            self._prune()
+        self.flush_write_batch()
+        return {"joined": joined, "added": added, "reference_turns": int(ref.get("n", 0) or 0)}
+
     def status(self) -> Dict[str, Any]:
         with self._lock:
             forming = [p for p in self.patterns.values() if p.get("status") == "forming"]

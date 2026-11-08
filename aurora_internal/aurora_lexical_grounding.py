@@ -305,6 +305,15 @@ def _geometry_similarity(current: Mapping[str, Any], candidate: Mapping[str, Any
     return round(_clip01(score), 6)
 
 
+def clone_candidate_key(rec: Mapping[str, Any]) -> str:
+    """What makes two lexical candidates the same grounding, whichever
+    instance of her grew it: the word, where it applies, and the constraints
+    its profile leans on."""
+    rec = dict(rec or {})
+    return "|".join((str(rec.get("word", "") or ""), str(rec.get("applicability_family", "") or ""),
+                     ",".join(sorted(str(c) for c in list(rec.get("dominant_constraints") or [])))))
+
+
 @dataclass
 class LexicalCandidate:
     """One Aurora-native representational hypothesis for how a word
@@ -1666,6 +1675,71 @@ class AuroraLexicalGrounding(WarpCapable):
         """word -> {shape id: lift}; with ``word``, just that word's act groundings."""
         table = self.__dict__.get("_act_grounded", {})
         return dict(table.get(str(word), {})) if word is not None else {w: dict(v) for w, v in table.items()}
+
+    # Words her clones grounded (FIX-A105) --------------------------------------
+
+    def absorb_clone_candidates(self, harvested: List[Mapping[str, Any]]) -> Dict[str, Any]:
+        """Take in lexical candidates her clones grew while rehearsing.
+
+        Only validated live-turn evidence travels (candidate_support counts
+        nothing else); historical_possibility and
+        developmental_replay evidence is produced by her own history stream
+        and replay, so carrying it would count it twice.  A candidate matching
+        one of hers (same word, applicability family and dominant
+        constraints) adds its evidence; a new one enters as a TRIAL.  Her own
+        WARP evaluation decides promotion -- nothing arrives promoted."""
+        joined, added, skipped, fresh_total = 0, 0, 0, 0
+        local = ("historical_possibility", "developmental_replay")
+        by_key = {clone_candidate_key(c.to_dict()): c for c in self._candidates.values()}
+        for item in list(harvested or []):
+            rec = dict(item.get("candidate") or {})
+            evidence = [dict(e) for e in list(rec.get("evidence") or [])
+                        if dict(e or {}).get("validated")
+                        and str(dict(e or {}).get("provenance", "") or "") not in local]
+            if not rec or not evidence or not str(rec.get("word", "") or ""):
+                skipped += 1
+                continue
+            for e in evidence:
+                e.setdefault("carried_from", "clone")
+            key = clone_candidate_key(rec)
+            target = by_key.get(key)
+            if target is not None:
+                if target.status == "dissolved":
+                    skipped += 1
+                    continue
+                have = {str(e.get("evidence_id", "") or "") for e in target.evidence}
+                fresh = [e for e in evidence if str(e.get("evidence_id", "") or "") not in have]
+                target.evidence.extend(fresh)
+                fresh_total += len(fresh)
+                joined += 1
+                continue
+            component_id = str(rec.get("component_id", "") or "")
+            if not component_id or component_id in self._candidates:
+                component_id = "warp_lexical_role_grounding_c" + _stable_hash(key, 8)
+            candidate = LexicalCandidate(
+                candidate_id=str(rec.get("candidate_id", "") or ("LEX:" + _stable_hash(key, 14))),
+                word=str(rec.get("word", "") or ""),
+                component_id=component_id,
+                axis_profile={str(k): float(v or 0.0) for k, v in dict(rec.get("axis_profile") or {}).items()},
+                applicability_family=str(rec.get("applicability_family", "") or ""),
+                parent_ids=list(rec.get("parent_ids") or []),
+                structural_geometry=dict(rec.get("structural_geometry") or {}),
+                dominant_constraints=list(rec.get("dominant_constraints") or []),
+                status="trial",
+                evidence=evidence,
+            )
+            trial = dict(item.get("trial") or {})
+            trial.update({"component_id": component_id, "trial_tick": 0, "trial_score_ema": 0.0,
+                          "promoted": False, "dissolved": False})
+            trial.setdefault("level", "lexical_role_grounding")
+            trial.setdefault("axis_profile", dict(candidate.axis_profile))
+            self._candidates[component_id] = candidate
+            self._warp_trials[component_id] = self._restore_warp_component(trial)
+            by_key[key] = candidate
+            fresh_total += len(evidence)
+            added += 1
+        self._persist(force=True)
+        return {"joined": joined, "added": added, "skipped": skipped, "evidence": fresh_total}
 
     def save(self) -> bool:
         return self._persist(force=True)

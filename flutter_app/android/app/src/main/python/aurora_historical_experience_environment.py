@@ -154,8 +154,13 @@ class HistoricalExperienceEnvironment:
         self.rehearse = REHEARSE_DEFAULT
         self._rehearsal: Optional[Dict[str, Any]] = None
         self.rehearsal_counters = {"rehearsed": 0, "silent": 0, "compared": 0, "match": 0,
-                                   "partial": 0, "mismatch": 0, "fanned_out": 0, "errors": 0}
+                                   "partial": 0, "mismatch": 0, "fanned_out": 0, "errors": 0,
+                                   "lived_by_clones": 0}
         self.last_rehearsal: Dict[str, Any] = {}
+        # FIX-A105: conversations her clones already rehearsed (their harvest
+        # was absorbed) are still WITNESSED here, but not rehearsed again.
+        self.skip_absorbed = True
+        self._absorbed_episodes: Optional[set] = None
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -1250,6 +1255,11 @@ class HistoricalExperienceEnvironment:
         text = str(event.get("text", "") or "").strip()
         if new_episode:
             self._retire_rehearsal()
+            self._absorbed_episodes = None          # re-read the ledger at each boundary
+        if (getattr(self, "skip_absorbed", True) and actor == REHEARSAL_HEARD_SIDE
+                and self._lived_by_clones(episode_id)):
+            self.rehearsal_counters["lived_by_clones"] = int(self.rehearsal_counters.get("lived_by_clones", 0)) + 1
+            return {"skipped": "lived_by_clones"}
         # She takes Sunni's position: she answers what the other side said and
         # is compared with what Sunni really said back -- never with the
         # other assistant's words.
@@ -1259,6 +1269,17 @@ class HistoricalExperienceEnvironment:
         if actor == REHEARSAL_REAL_SIDE and text and self._rehearsal:
             return self._compare_rehearsal(aurora_mod, text)
         return {}
+
+    def _lived_by_clones(self, episode_id: str) -> bool:
+        if not episode_id:
+            return False
+        if getattr(self, "_absorbed_episodes", None) is None:
+            try:
+                from aurora_internal.aurora_clone_harvest import absorbed_episodes
+                self._absorbed_episodes = absorbed_episodes(str(getattr(self, "state_dir", "aurora_state")))
+            except Exception:
+                self._absorbed_episodes = set()
+        return episode_id in self._absorbed_episodes
 
     def _rehearse_reply(self, aurora_mod: Any, text: str, episode_id: str,
                         event: Mapping[str, Any]) -> Dict[str, Any]:

@@ -172,6 +172,25 @@ def _stable_hash(payload: Any, length: int = 14) -> str:
     return hashlib.sha1(raw.encode("utf-8", errors="ignore")).hexdigest()[:length]
 
 
+def clone_operation_key(rec: Mapping[str, Any]) -> str:
+    """The structure that makes two operations the same operation, whichever
+    instance of her grew it: the gap family it answers, where it applies, the
+    constraint signature and the primitive sequence it performs."""
+    rec = dict(rec or {})
+    return "|".join((
+        str(rec.get("structural_family", "") or ""),
+        str(rec.get("applicability_family", "") or ""),
+        str(rec.get("canonical_signature", "") or ""),
+        ">".join(str(p) for p in list(rec.get("primitive_sequence") or [])),
+    ))
+
+
+def _evidence_identity(evidence: Mapping[str, Any]) -> str:
+    e = dict(evidence or {})
+    return "|".join((str(e.get("observation_id", "") or ""), str(e.get("response_id", "") or ""),
+                     str(e.get("surface_hash", "") or "")))
+
+
 def _normalise_axis_profile(profile: Mapping[str, Any]) -> Dict[str, float]:
     vals = {ax: max(0.0, float(dict(profile or {}).get(ax, 0.0) or 0.0)) for ax in AXES}
     total = sum(vals.values()) or 1.0
@@ -1209,6 +1228,78 @@ class AuroraCommunicationEmergence(WarpCapable):
             "warp": self.warp_status(),
             "storage_path": self.storage_path,
         }
+
+    # ------------------------------------------------------------------
+    # Operations her clones grew (FIX-A105)
+    # ------------------------------------------------------------------
+
+    def absorb_clone_operations(self, harvested: List[Mapping[str, Any]]) -> Dict[str, Any]:
+        """Take in operations her clones grew while rehearsing her history.
+
+        Only validated, receiver-facing evidence travels (_score_trial counts
+        nothing else; environmental counterfactuals
+        are witnessed by her own history stream, so carrying them would count
+        them twice).  An operation matching one of hers by structure
+        (clone_operation_key) adds its evidence to hers; a new one enters as
+        a TRIAL with its evidence -- never as promoted.  Promotion is decided
+        here, by her own evaluate_development() over the combined evidence,
+        so operations several clones grew independently arrive with the
+        distinct surfaces and validated outcomes that convergence brings."""
+        joined, added, skipped, fresh_total = 0, 0, 0, 0
+        by_key = {clone_operation_key(op.to_dict()): op for op in self._operations.values()}
+        for item in list(harvested or []):
+            rec = dict(item.get("operation") or {})
+            evidence = [dict(e) for e in list(rec.get("evidence") or [])
+                        if dict(e or {}).get("validated")
+                        and str(dict(e or {}).get("observation_context", "") or "") != "environmental_counterfactual"]
+            if not rec or not evidence:
+                skipped += 1
+                continue
+            for e in evidence:
+                e.setdefault("carried_from", "clone")
+            key = clone_operation_key(rec)
+            target = by_key.get(key)
+            if target is not None:
+                if target.status == "dissolved":
+                    skipped += 1
+                    continue
+                have = {_evidence_identity(e) for e in target.evidence}
+                fresh = [e for e in evidence if _evidence_identity(e) not in have]
+                target.evidence = (list(target.evidence) + fresh)[-160:]
+                fresh_total += len(fresh)
+                joined += 1
+                continue
+            component_id = str(rec.get("component_id", "") or "")
+            if not component_id or component_id in self._operations:
+                component_id = "warp_communication_emergence_c" + _stable_hash(key, 8)
+            op = EmergentCommunicationOperation(
+                operation_id=str(rec.get("operation_id", "") or ("COMM:" + _stable_hash(key, 14))),
+                component_id=component_id,
+                structural_family=str(rec.get("structural_family", "") or ""),
+                applicability_family=str(rec.get("applicability_family", "") or ""),
+                root_constraints=list(rec.get("root_constraints") or []),
+                canonical_signature=str(rec.get("canonical_signature", "") or canonical_signature(AXES)),
+                primitive_sequence=list(rec.get("primitive_sequence") or []),
+                parent_ids=list(rec.get("parent_ids") or []),
+                invariants=list(rec.get("invariants") or []),
+                axis_gain={ax: float(dict(rec.get("axis_gain") or {}).get(ax, 0.0) or 0.0) for ax in AXES},
+                applicability_shape=dict(rec.get("applicability_shape") or {}),
+                status="trial",
+                evidence=evidence[-160:],
+            )
+            trial = dict(item.get("trial") or {})
+            trial.update({"component_id": component_id, "trial_tick": 0, "trial_score_ema": 0.0,
+                          "promoted": False, "dissolved": False})
+            trial.setdefault("level", "communication_emergence")
+            self._operations[component_id] = op
+            self._warp_trials[component_id] = self._restore_warp_component(trial)
+            by_key[key] = op
+            fresh_total += len(evidence)
+            added += 1
+        promoted, dissolved = self.evaluate_development()
+        self._persist(force=True)
+        return {"joined": joined, "added": added, "skipped": skipped, "evidence": fresh_total,
+                "promoted": list(promoted), "dissolved": list(dissolved)}
 
     def latest_gap(self) -> Dict[str, Any]:
         return copy.deepcopy(self._observations[-1]) if self._observations else {}

@@ -68,6 +68,9 @@ DISSOLVE_WEIGHT = 0.10
 AGREE_THRESHOLD = 0.60
 MAX_ABILITY_LEAN = 0.12
 MAX_PATHS = 400
+# Paths carved by many clones can arrive strong, never certain: her own live
+# verdicts must always be able to wear one down.
+CLONE_WEIGHT_CAP = 0.90
 MAX_PENDING = 64
 CENTROID_KEEP = 0.8
 
@@ -345,6 +348,67 @@ class ReasoningPaths:
                     self.counters["dissolved"] += 1
         self._save()
         return {"matched": True, "effect": effect}
+
+    # -- paths carved by her clones (FIX-A105) -----------------------------------------
+
+    def find_same_path(self, shape: str, centroid: Mapping[str, Any],
+                       path_landings: Mapping[str, Any]) -> Optional[str]:
+        """A path of hers under the same pressure that landed the same way."""
+        for pid, path in self.paths.items():
+            if (path.get("shape") == shape
+                    and _cosine(path.get("centroid") or {}, centroid) >= RESONANCE_FLOOR
+                    and compare(path.get("landings") or {}, path_landings)["agreement"] >= 0.999):
+                return pid
+        return None
+
+    def absorb_clone_paths(self, harvested: List[Mapping[str, Any]]) -> Dict[str, Any]:
+        """Take in paths her clones carved (already merged across clones).
+
+        A path several clones carved independently arrives with the weight of
+        that convergence.  Where it matches a path she already holds, the two
+        combine as independent confirmations: w = 1 - (1 - w_hers)(1 - w_clones).
+        A divergent path (other clones landed elsewhere under the same pressure)
+        arrives as a divergence: it is kept, at its share of the weight, and
+        her own live verdicts settle it -- nothing here picks a winner."""
+        deepened, carved, divergent = 0, 0, 0
+        with self._lock:
+            for item in harvested:
+                shape = str(item.get("shape") or "")
+                centroid = _unit(item.get("centroid") or {})
+                path_landings = dict(item.get("landings") or {})
+                weight = min(CLONE_WEIGHT_CAP, max(CARVE_WEIGHT, _f(item.get("weight"))))
+                clones = int(item.get("clones", 1) or 1)
+                pid = self.find_same_path(shape, centroid, path_landings)
+                if pid is not None:
+                    path = self.paths[pid]
+                    path["weight"] = round(min(CLONE_WEIGHT_CAP, 1.0 - (1.0 - _f(path.get("weight"))) * (1.0 - weight)), 4)
+                    path["confirmations"] = int(path.get("confirmations", 0) or 0) + int(item.get("confirmations", 0) or 0)
+                    path["clones"] = int(path.get("clones", 0) or 0) + clones
+                    deepened += 1
+                else:
+                    pid = "RP:" + hashlib.sha1(json.dumps([shape, centroid, path_landings], sort_keys=True).encode()).hexdigest()[:12]
+                    self.paths[pid] = {"shape": shape, "centroid": centroid, "landings": path_landings,
+                                       "weight": round(weight, 4),
+                                       "confirmations": int(item.get("confirmations", 1) or 1),
+                                       "misled": int(item.get("misled", 0) or 0), "clones": clones,
+                                       "created_at": self.clock(), "last_used": self.clock()}
+                    carved += 1
+                if item.get("divergent_with"):
+                    divergent += 1
+                    self.last_divergence = {"path_id": pid, "source": "clones",
+                                            "clones": clones, "share": item.get("share"),
+                                            "differences": dict(item.get("differences") or {}),
+                                            "at": self.clock()}
+            self.counters["clone_deepened"] = int(self.counters.get("clone_deepened", 0)) + deepened
+            self.counters["clone_carved"] = int(self.counters.get("clone_carved", 0)) + carved
+            self.counters["clone_divergent"] = int(self.counters.get("clone_divergent", 0)) + divergent
+            if len(self.paths) > MAX_PATHS:
+                ranked = sorted(self.paths.items(), key=lambda kv: (_f(kv[1].get("weight")), _f(kv[1].get("last_used"))))
+                for pid, _ in ranked[: len(self.paths) - MAX_PATHS]:
+                    del self.paths[pid]
+                    self.counters["dissolved"] += 1
+        self.flush_write_batch()
+        return {"deepened": deepened, "carved": carved, "divergent": divergent}
 
     def status(self) -> Dict[str, Any]:
         with self._lock:

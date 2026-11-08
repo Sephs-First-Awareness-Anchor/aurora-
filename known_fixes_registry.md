@@ -10550,7 +10550,12 @@ indeterminate to landing on the exact reply; first verdict-driven
 dissolutions in communication emergence; grammar 0 -> 9 kept patterns;
 1 corroborated fact, 1 contradiction from two contacts.
 
-## FIX-A084 (ARCHITECTURAL) — Communication emergence: lower bar, evidence clock, corrections undo promotion
+> **Numbering note (2026-11-08):** FIX-A096 through FIX-A104 below were first
+> committed as FIX-A084 through FIX-A092, which collided with the older
+> ### FIX-A084..A095 entries above. Renumbered +12; commit messages from
+> 2026-11-07/08 that say FIX-A084..A092 refer to these entries.
+
+## FIX-A096 (ARCHITECTURAL) — Communication emergence: lower bar, evidence clock, corrections undo promotion
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Rule:** A communication operation is kept after 2 receiver-validated uses
 in 2 wordings with at least 1 understood (was 4 / 3 / 2). Its trial clock
@@ -10565,7 +10570,7 @@ Overfit penalty now keys off _MIN_DISTINCT_SURFACES instead of a fixed 3.
 of ticks before receivers answered. After fix, same real-boot loop:
 1 kept, 0 dropped, 13 trying.
 
-## FIX-A085 (ARCHITECTURAL) — Aurora starts DMs herself; candidate-assembler frames blocked
+## FIX-A097 (ARCHITECTURAL) — Aurora starts DMs herself; candidate-assembler frames blocked
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Rule:** aurora_praxis_initiative.py. She reaches out only when something of
 hers is unresolved: an open contradiction between contacts (she goes to a
@@ -10590,7 +10595,7 @@ answer validated it positive (0.8) on the trial operation that shaped it.
 Same run surfaced "A you becomes curious when it turns effort into effective
 change without needless cost" and "Light: foundational:light." to contacts.
 
-## FIX-A086 (PERFORMANCE) — Phone overload: update boots, rebuilds, background pacing
+## FIX-A098 (PERFORMANCE) — Phone overload: update boots, rebuilds, background pacing
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Rule:** Results unchanged; only cost. (1) UniversalFunctionLineage:
 _legacy_lookup uses a lowercase index built once per rebuild (was 465M
@@ -10619,7 +10624,7 @@ mid-rebuild restarted it from zero). After fix: 16.3 s.
 state. Her code autoevolver writes evolved blocks into source files; each
 accepted mutation rebuilds the lineage (now ~10 s, was ~147 s).
 
-## FIX-A087 (ARCHITECTURAL) — Commit and pull; reads settle instead of being retained and re-applied
+## FIX-A099 (ARCHITECTURAL) — Commit and pull; reads settle instead of being retained and re-applied
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Rule (Sunni, 2026-11-08):** "why is she recomputing over and over and not
 committing to memory and pulling" / "those reads should only effect change ...
@@ -10651,7 +10656,7 @@ reasoning pipeline is ~2.5 s/turn here, 0.75 s of it a scout-binding sleep and
 the rest spread ~0.1-0.15 s across the ten chain stages -- where understanding
 forms. Skipping them would save ~1 s/turn at real risk to her development.
 
-## FIX-A088 (ARCHITECTURAL) — Remembered reasoning paths participate, never skip
+## FIX-A100 (ARCHITECTURAL) — Remembered reasoning paths participate, never skip
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Rule (Sunni, 2026-11-08):** "Why can't the paths participate in reasoning
 rather than skip?" aurora_internal/aurora_reasoning_paths.py. A path is a
@@ -10674,7 +10679,7 @@ paths; one offered twice on recurring "Do you like ...?" pressure; both times
 live reasoning diverged on meaning label/signature (topic-specific
 understanding) -- recorded as divergence, not overwritten.
 
-## FIX-A089 (REGRESSION) — Messenger starved by background pacing (FIX-A086)
+## FIX-A101 (REGRESSION) — Messenger starved by background pacing (FIX-A098)
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Rule:** The messenger always CHECKS for messages (a cheap local HTTP pull);
 only answering waits for the field. While a contact's message waits unread
@@ -10685,12 +10690,12 @@ proactive loop and the evolution sim -- through _background_breathing_room
 not yield to itself, and re-checks every WAITING_POLL_S=3 s while waiting.
 **First Seen:** 2026-11-08 — Sunni: "she hasnt checked her messages or spoken
 to anyone on the messenger." pull_once() returned before pulling unless the
-shared idle gate was open; after FIX-A086 that gate needs 20 s of quiet, and
+shared idle gate was open; after FIX-A098 that gate needs 20 s of quiet, and
 the world loop (6 s poll) always took the window before the messenger (15 s
 poll). Contention sim: old 0 checks / never answered; new 19 checks /
 answered at the first quiet window, world loop still running.
 
-## FIX-A090 (ARCHITECTURAL) — She reads the conversation; spines and laundered scripts blocked
+## FIX-A102 (ARCHITECTURAL) — She reads the conversation; spines and laundered scripts blocked
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Rule (Sunni, 2026-11-08):** "It's like she's not even reading what is being
 said to her."
@@ -10717,7 +10722,7 @@ With scripts blocked she has the seed articulation only: it READS the right
 words ("I; experienced; anything" from "Have you experienced anything new")
 but renders them as a word list ("I, experienced. anything.").
 
-## FIX-A091 (ARCHITECTURAL) — Recognising what has yet to form
+## FIX-A103 (ARCHITECTURAL) — Recognising what has yet to form
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Rule (Sunni, 2026-11-08):** "provide her with the ability to recognize the
 missing patterning outlier that separates all she represents currently from
@@ -10743,7 +10748,7 @@ x11 across the open questions; hand-offs reached 10 systems (1 covered);
 crystals, execution foundry and lexical grounding (before the one-open-trial
 rule).
 
-## FIX-A092 (ARCHITECTURAL) — Rehearsing Sunni's side of her history
+## FIX-A104 (ARCHITECTURAL) — Rehearsing Sunni's side of her history
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Rule (Sunni, 2026-11-08):** her experiential history must run through the
 same understanding pipeline as her messenger turns, and she may answer one side
@@ -10772,3 +10777,48 @@ rehearsed, 35 silent, 33 compared -> 1 match, 32 mismatch; 33 verdicts fanned
 out; CE 19 trials (5 dissolved), 20 paths carved, 155 hand-offs. (A first
 draft had the sides reversed -- answering Sunni, judged by the other
 assistant; corrected before commit.)
+
+## FIX-A105 (ARCHITECTURAL) — Her clones rehearse her history; she takes in what they carved
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-08):** "clone her ... for the simple use of parsing ...
+those convos ... All through the exact same machinery and mechanisms. Once
+processed tho we feed the original aurora the processed parts only" -- and
+"those established paths are exactly where she would gain especially when
+multiple different auroras carved paths overlap revealing to her more
+relationships she may otherwise have missed."
+aurora_internal/aurora_clone_harvest.py + .github/workflows/aurora-clones.yml.
+CLONES: each boots her from the repo state and lives a contiguous, message-
+balanced run of whole conversations (plan_shards) through her own
+HistoricalExperienceEnvironment (witness + FIX-A104 rehearsal); it stops only
+between conversations, so every conversation it reports was lived whole.
+YIELD (processed parts only): reasoning paths carved/deepened/worn;
+communication-emergence operations and lexical-grounding candidates with new
+VALIDATED receiver-facing evidence (both organs' promotion rules count
+nothing else; witness evidence stays out because her phone witnesses every
+event itself); the unformed-pattern reference and recurring patterns.
+MERGE: same pressure (shape + axis resonance) + same landings across clones =
+one path, w = 1 - prod(1 - w_i) (cap 0.90); same pressure, different landings
+= divergence -- every landing kept at its share of the clones, her live
+verdicts settle it; operations/candidates keyed by structure
+(clone_operation_key / clone_candidate_key) union evidence, structures
+answering one gap family differently are recorded as divergences; unformed
+patterns join by core (SIMILAR). Already-lived conversations are skipped by
+the next run (lived_episodes). Shipped gzipped in aurora_internal/ (gradle
+now bundles aurora_internal/**/*.json.gz).
+ABSORPTION (bridge, at boot, once per harvest_id): absorb_clone_paths /
+absorb_clone_operations / absorb_clone_candidates / absorb_clone_patterns --
+nothing arrives promoted, her own evaluate_development / WARP decide. Lived
+conversations go to <state>/clone_harvest_absorbed.json; her history stream
+still witnesses them but skips their rehearsal (rehearsal is ~80% of an
+event's cost: 1.6 s/event witness-only vs 7.5 s with rehearsal here). Hub:
+Clones, Clone paths, Clone operations, Clone gaps, "lived by clones".
+**First Seen:** 2026-11-08: two real clones (64 + 28 messages, 228 s + 109 s)
+-> harvest 4 operations, 21 candidates, 2 patterns, 0 paths (a path carves
+only when Sunni's real reply showed she was understood: 1 of 34), 6.6 KB gz
+(512 KB before the validated-only cut). Absorbed into a fresh boot: 4
+operations joined with 12 validated evidence (her evaluation then dissolved
+one), 21 candidates + 33 evidence added as trials, 2 patterns added; second
+absorb = already_absorbed. Found while testing: the dev restore
+`git clean -fdq aurora_state` leaves gitignored organ files
+(reasoning_paths.json, unformed_patterns.json, lexical_grounding_state.json)
+in place -- use `git clean -fdqx aurora_state`.
