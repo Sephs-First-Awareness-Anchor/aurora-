@@ -270,12 +270,19 @@ class _HubScreenState extends State<HubScreen> {
     )),
   );
 
+  // Long values wrap under themselves, right-aligned, instead of running off
+  // the card (2026-11-08: "Ways of speaking" / "Paths vs live reasoning").
   Widget _statRow(String label, String value, {Color valueColor = _text}) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 3),
-    child: Row(children: [
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label, style: const TextStyle(color: _textDim, fontSize: 12)),
-      const Spacer(),
-      Text(value, style: TextStyle(color: valueColor, fontSize: 12, fontWeight: FontWeight.w600)),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Text(value,
+            textAlign: TextAlign.right,
+            softWrap: true,
+            style: TextStyle(color: valueColor, fontSize: 12, fontWeight: FontWeight.w600)),
+      ),
     ]),
   );
 
