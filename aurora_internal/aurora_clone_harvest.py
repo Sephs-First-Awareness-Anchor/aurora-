@@ -594,9 +594,15 @@ def _events(env: Any):
                     continue
 
 
+def _log(*parts: Any) -> None:
+    # Flushed: the CLI ends with os._exit, which skips stdout's buffer, so
+    # unflushed progress lines never reached the Actions log.
+    print(*parts, flush=True)
+
+
 def run_clone(index: int, count: int, *, state_dir: str = "aurora_state", out_path: str,
               max_seconds: float = 18000.0, harvest_path: Optional[str] = None,
-              log=print) -> Dict[str, Any]:
+              log=_log) -> Dict[str, Any]:
     """Boot one Aurora and live her shard of history through her own machinery."""
     t0 = time.time()
     import aurora as A
