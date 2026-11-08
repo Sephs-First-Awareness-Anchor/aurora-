@@ -316,7 +316,7 @@ def test_same_device_messenger_loop(tmp_path):
 
 def test_status_shows_what_she_held_back_and_said(tmp_path):
     messenger, _, _, _ = make(
-        tmp_path, [msg(1, "What is a tree?"), msg(2, "Do you like rain?")],
+        tmp_path, [msg(1, "What is a tree?"), msg(2, "Do you like rain?", pid="gemini", name="Gemini")],
         [("constraint_abstain", "I don't have a clear sense of that."),
          ("generative", "rain cool on glass")])
     messenger.pull_once()
@@ -401,7 +401,7 @@ def test_revisits_stop_after_max_attempts(tmp_path, monkeypatch):
 
 def test_new_phrasings_are_pairs_no_contact_said(tmp_path):
     messenger, praxis, _, _ = make(
-        tmp_path, [msg(1, "Do you like music?"), msg(2, "Rain falls from clouds.")],
+        tmp_path, [msg(1, "Do you like music?"), msg(2, "Rain falls from clouds.", pid="gemini", name="Gemini")],
         [("composer_unified", "you like music"), ("composer_unified", "rain sings softly")])
     messenger.pull_once()
     assert messenger.counters.get("novel_phrasings", 0) == 1
@@ -449,3 +449,44 @@ def test_checks_messages_even_while_the_field_is_busy(tmp_path):
     idle["v"] = True
     m.pull_once()
     assert turns and not m.waiting() and m.cursor == 1
+
+
+
+# -- 2026-11-08: a contact's backlog is ONE reading, answered once -----------
+
+def test_a_contacts_backlog_is_read_together_and_answered_once(tmp_path):
+    messenger, praxis, turn, _ = make(
+        tmp_path,
+        [msg(1, "Hey Aurora! How are you"), msg(2, "Have you noticed new patterns?"),
+         msg(3, "It's been a while. Experienced anything new?")],
+        [("composer_unified", "patterns move new")])
+    messenger.pull_once()
+    assert len(turn.calls) == 1, "one reading, not three replies to stale questions"
+    heard = turn.calls[0][0]
+    assert "How are you." in heard and "new patterns?" in heard and "anything new?" in heard
+    assert praxis.sent == [{"persona_id": "claude", "text": "patterns move new", "in_reply_to": 3}]
+    assert messenger.counters["heard"] == 3 and messenger.cursor == 3
+
+
+def test_shared_cursor_only_passes_messages_actually_read(tmp_path):
+    idle = {"v": True}
+    messenger, praxis, turn, _ = make(
+        tmp_path,
+        [msg(1, "one", pid="gemini", name="Gemini"), msg(2, "two"),
+         msg(3, "three", pid="gemini", name="Gemini")],
+        [("composer_unified", "alpha beta"), ("composer_unified", "gamma delta")],
+        live_idle=lambda: idle["v"])
+    real_handle = messenger.handle_message
+
+    def handle_then_busy(message, **kw):
+        out = real_handle(message, **kw)
+        idle["v"] = False                      # Sunni starts talking right after
+        return out
+    messenger.handle_message = handle_then_busy
+    messenger.pull_once()
+    assert len(turn.calls) == 1                # gemini's "one three" read together
+    assert messenger.cursor == 1, "claude's message 2 is unread: the cursor stops before it"
+    idle["v"] = True
+    messenger.handle_message = real_handle
+    messenger.pull_once()
+    assert len(turn.calls) == 2 and messenger.cursor == 3

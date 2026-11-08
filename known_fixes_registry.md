@@ -10689,3 +10689,30 @@ shared idle gate was open; after FIX-A086 that gate needs 20 s of quiet, and
 the world loop (6 s poll) always took the window before the messenger (15 s
 poll). Contention sim: old 0 checks / never answered; new 19 checks /
 answered at the first quiet window, world loop still running.
+
+## FIX-A090 (ARCHITECTURAL) — She reads the conversation; spines and laundered scripts blocked
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-08):** "It's like she's not even reading what is being
+said to her."
+- Backlog read together: everything one contact sent since her last reply is
+  ONE reading (merge_backlog), answered once in reply to the latest. The shared
+  cursor only passes messages actually read; read_ahead stops a re-read.
+- Sentence spines: MeaningAnchors (35, used below 0.70 certainty), the
+  TemplateEvolutionEngine seeds and the structured-draft openers are matched
+  (blanks as wildcards; whole reply, each sentence, adjacent pairs) and
+  blocked as templates. "It seems to me that noticing." and "Something
+  changed. I think it is anything." reached Gemini.
+- Laundering: every line blocked as scripted is remembered and blocked again
+  under any label ("What do you mean by 'great'?" came back next turn as
+  sedimemory_recall). constraint_emission seek forms added to the prefixes.
+- Her composer's own draft for the turn (_turn_composer_candidate, after its
+  own filters) is the gate's first fallback when a script is blocked -- the
+  arbitration had graded it against the scripted candidate. Must pass every
+  check and share content with what was said.
+- Gate record now keeps original_text; _last_articulation_seed recorded.
+**Finding (not fixed, her development):** for open conversational messages
+("How are you doing?", "What does that feel like?") her composer produces
+nothing, the chain is not authoritative, and Rule 6 emits a scripted seek.
+With scripts blocked she has the seed articulation only: it READS the right
+words ("I; experienced; anything" from "Have you experienced anything new")
+but renders them as a word list ("I, experienced. anything.").

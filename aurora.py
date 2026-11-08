@@ -22793,6 +22793,18 @@ def _finalize_articulation(resp_A: Any, resp_B: Any, state: Any, systems: dict, 
             == "missing_representation"
         ):
             _d2_unified_text = ""
+        # Her composer's own draft for this turn, after its own quality
+        # filters (2026-11-08).  The arbitration below grades it against
+        # resp_A -- which may be a scripted line the voice gate will block --
+        # so the gate keeps it as her first fallback before a bare-seed
+        # articulation.  Kept, never forced: the gate re-checks it.
+        if isinstance(systems, dict):
+            systems["_turn_composer_candidate"] = {
+                "text": _d2_unified_text,
+                "confidence": float(getattr(resp_B, "confidence", 0.0) or 0.0) if resp_B is not None else 0.0,
+                "tone": str(getattr(resp_B, "emotional_tone", "") or "") if resp_B is not None else "",
+                "heard": str(user_text or ""),
+            }
 
         _grounded_text = str(getattr(resp_A, "content", "") or "").strip()
         _grounded_confidence = float(getattr(resp_A, "confidence", 0.0) or 0.0)

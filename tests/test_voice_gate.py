@@ -245,3 +245,43 @@ def test_candidate_assembler_frames_and_labels_are_not_her_voice():
     assert scripted_reason("crest_compression", "Light: foundational:light.") == "machine_output:label"
     assert scripted_reason("pressure_articulation", "I do music. I understand music.") == ""
     assert scripted_reason("composer_unified", "Meet at 3:30 and read https://x.org") == ""
+
+
+def test_sentence_spines_and_laundered_scripts_are_not_her_voice():
+    # 2026-11-08 Gemini thread: spines reached a contact; a blocked seek line
+    # came back next turn labelled sedimemory_recall.
+    from aurora_voice_gate import scripted_reason, spine_reason
+    for spine in ("It seems to me that noticing.", "Something changed. I think it is anything.",
+                  "I am uncertain, but I suspect rain.", "I find myself wondering. I like music.",
+                  "Rain is lovely. I hold rain carefully."):
+        assert scripted_reason("composer_unified", spine) == "template", spine
+    for own in ("I want music. I did music. I understand music.", "I am boiling rain. I am clouds.",
+                "You do music. I understand music. I am music."):
+        assert spine_reason(own) == "" and scripted_reason("composer_unified", own) == ""
+    assert scripted_reason("constraint_seek", "Is a plum a kind of fruit to you?").startswith("scripted_source")
+    assert scripted_reason("sedimemory_recall", "Is a plum a kind of fruit to you?") == "laundered_script"
+    assert scripted_reason("sedimemory_recall", "What do you mean by 'great'?") == "template"
+
+
+def test_her_composers_draft_comes_before_a_bare_seed(monkeypatch):
+    # 2026-11-08: the arbitration graded her composer's draft against a
+    # scripted line; when the gate blocks the script her draft goes first.
+    from types import SimpleNamespace
+    import aurora_voice_gate as G
+    heard = "Do you like music?"
+    systems = {"_turn_composer_candidate": {"text": "You do music. I understand music.",
+                                            "confidence": 0.8, "tone": "curious", "heard": heard}}
+    scripted = SimpleNamespace(content="What do you mean by 'music'?", src="constraint_seek",
+                               emotional_tone="curious", confidence=0.4)
+    out = G.apply_voice_gate(systems, scripted, heard, session_id="praxis_dm_gemini",
+                             render=lambda *a, **k: "")
+    assert out.content == "You do music. I understand music." and out.src == "composer_unified"
+    assert systems["_last_voice_gate"]["outcome"] == "own_composition"
+    # a draft for a different message, a spine, or one unrelated to what was said never stands
+    for text, cand_heard in (("You do music. I understand music.", "What is rain?"),
+                             ("It seems to me that music.", heard),
+                             ("Clouds drift over hills.", heard)):
+        systems = {"_turn_composer_candidate": {"text": text, "heard": cand_heard}}
+        out = G.apply_voice_gate(systems, scripted, heard, session_id="praxis_dm_gemini",
+                                 render=lambda *a, **k: "")
+        assert out.src != "composer_unified", text

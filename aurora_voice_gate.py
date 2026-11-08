@@ -60,6 +60,7 @@ from __future__ import annotations
 
 import math
 import re
+from collections import OrderedDict
 import time
 from types import SimpleNamespace
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
@@ -127,7 +128,33 @@ TEMPLATE_PREFIXES: Tuple[str, ...] = (
     "i'm out playing",
     "curiosity session stopping",
     "play session stopping",
+    # constraint_emission seek slots (agent "What do you mean" + " by '<w>'?"),
+    # also resurfaced under sedimemory_recall (2026-11-08 Gemini replay)
+    "what do you mean by '",
+    "i'm still working out what you mean by",
 )
+
+
+# Laundering (2026-11-08): a scripted line the gate blocked was stored and came
+# back one turn later as "sedimemory_recall" -- a memory of a script is still
+# the script.  Every line blocked as scripted is remembered and blocked again
+# under any label.
+_BLOCKED_SCRIPT_LINES: "OrderedDict[str, None]" = OrderedDict()
+_BLOCKED_CAP = 4000
+
+
+def _norm_line(text: str) -> str:
+    return re.sub(r"[^a-z0-9' ]+", "", str(text or "").lower()).strip()
+
+
+def remember_blocked_script(text: str) -> None:
+    key = _norm_line(text)
+    if len(key) < 6:
+        return
+    _BLOCKED_SCRIPT_LINES[key] = None
+    _BLOCKED_SCRIPT_LINES.move_to_end(key)
+    while len(_BLOCKED_SCRIPT_LINES) > _BLOCKED_CAP:
+        _BLOCKED_SCRIPT_LINES.popitem(last=False)
 TEMPLATE_FRAGMENTS: Tuple[str, ...] = (
     "did i catch the right pieces",
     "tell me if i've got it wrong",
@@ -148,6 +175,59 @@ def _root_facet_fragments() -> Tuple[str, ...]:
 
 
 TEMPLATE_FRAGMENTS = TEMPLATE_FRAGMENTS + _root_facet_fragments()
+
+
+# Sentence spines (Sunni, 2026-11-08 -- "It seems to me that noticing." and
+# "Something changed. I think it is anything." reached Gemini).  The renderer's
+# MeaningAnchors fills one of 35 authored spines below 0.70 certainty, the
+# TemplateEvolutionEngine breeds from authored seeds, and the structured draft
+# bolts on stock openers.  A spine filled with her concepts is still a script.
+_SPINE_SLOT = re.compile(r"\{[A-Z0-9_]+\}")
+_SPINE_OPENERS: Tuple[str, ...] = (
+    "i want to say this carefully", "i find myself wondering", "i am clear about this",
+    "when i think about it,", "i am not entirely certain, but",
+)
+_SPINES: Optional[List[Any]] = None
+
+
+def _spine_patterns() -> List[Any]:
+    global _SPINES
+    if _SPINES is not None:
+        return _SPINES
+    templates: List[str] = []
+    try:
+        from aurora_internal.aurora_language_state import MeaningAnchors, TemplateEvolutionEngine
+        templates += [str(t[0]) for t in MeaningAnchors.ANCHOR_TEMPLATES]
+        templates += [str(t) for t in TemplateEvolutionEngine.DEFAULT_SEEDS]
+    except Exception:
+        pass
+    patterns = []
+    for tmpl in templates:
+        pieces = _SPINE_SLOT.split(tmpl.strip())
+        body = "(.+?)".join(re.escape(p) for p in pieces)
+        body = body.rstrip("\\.") if body.endswith("\\.") else body
+        try:
+            patterns.append(re.compile(r"^\s*" + body + r"[.!?]*\s*$", re.IGNORECASE))
+        except re.error:
+            continue
+    _SPINES = patterns
+    return _SPINES
+
+
+def spine_reason(text: str) -> str:
+    """'template' when the reply, a sentence of it, or two adjacent sentences
+    are an authored spine with its blanks filled."""
+    raw = str(text or "").strip().lstrip(".\u2026 ").strip()
+    low = raw.lower()
+    if any(low.startswith(o) for o in _SPINE_OPENERS):
+        return "template"
+    sentences = [x.strip() for x in re.split(r"(?<=[.!?])\s+", raw) if x.strip()]
+    windows = [raw] + sentences + [" ".join(sentences[i:i + 2]) for i in range(len(sentences) - 1)]
+    for pattern in _spine_patterns():
+        for window in windows:
+            if pattern.match(window):
+                return "template"
+    return ""
 
 # Internal operation and process labels that must never be spoken.
 INTERNAL_LABELS = frozenset({
@@ -186,10 +266,19 @@ def machine_output_reason(text: str) -> str:
 
 def scripted_reason(src: str, text: str, *, dm: bool = True) -> str:
     """'' when the reply may stand; otherwise why it is scripted."""
+    reason = _scripted_reason(src, text, dm=dm)
+    if reason and not reason.startswith("system_output_in_dm"):
+        remember_blocked_script(text)
+    return reason
+
+
+def _scripted_reason(src: str, text: str, *, dm: bool = True) -> str:
     source = str(src or "").strip()
     low = str(text or "").strip().lower()
     if source in SCRIPTED_CONVERSATIONAL_SOURCES:
         return f"scripted_source:{source}"
+    if _norm_line(text) in _BLOCKED_SCRIPT_LINES:
+        return "laundered_script"
     if dm and source in SYSTEM_OUTPUT_SOURCES:
         return f"system_output_in_dm:{source}"
     for prefix in TEMPLATE_PREFIXES:
@@ -198,6 +287,9 @@ def scripted_reason(src: str, text: str, *, dm: bool = True) -> str:
     for fragment in TEMPLATE_FRAGMENTS:
         if fragment in low:
             return "template"
+    spine = spine_reason(text)
+    if spine:
+        return spine
     return machine_output_reason(text)
 
 
@@ -405,6 +497,8 @@ def articulate_from_pressure(systems: Dict[str, Any], heard: str, pressure: floa
     """(text, reason).  text is her own articulation or ''."""
     form = _relational_form(systems)
     seed, focus = stance_seed(form)
+    if isinstance(systems, dict):
+        systems["_last_articulation_seed"] = seed
     if not seed:
         return "", "no_stance"
     if render is None:
@@ -434,6 +528,22 @@ def _is_question(systems: Mapping[str, Any], heard: str) -> bool:
     return str(heard or "").strip().endswith("?")
 
 
+def own_composition(systems: Dict[str, Any], heard: str) -> str:
+    """Her composer's draft for this turn, if it may stand as her reply."""
+    cand = dict((systems or {}).get("_turn_composer_candidate") or {})
+    text = str(cand.get("text") or "").strip()
+    if not text or str(cand.get("heard") or "").strip() != str(heard or "").strip():
+        return ""
+    if scripted_reason("composer_unified", text) or parrot_reason(text, heard):
+        return ""
+    if articulation_rejection(text, heard):
+        return ""
+    heard_words = set(_content_words(heard, limit=12))
+    if not heard_words & set(_content_words(text, limit=12)):
+        return ""                              # does not connect to what was said
+    return text
+
+
 def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
                      session_id: str = "",
                      render: Optional[Callable[..., str]] = None) -> Any:
@@ -454,7 +564,10 @@ def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
     if not reason and parrot_reason(text, heard):
         reason = "echo"
     record: Dict[str, Any] = {"channel": channel, "pressure": round(level, 4),
-                              "original_src": src, "at": time.time()}
+                              "original_src": src, "original_text": text[:200],
+                              "at": time.time()}
+    if isinstance(systems, dict):
+        systems["_last_articulation_seed"] = ""
 
     if not reason:
         pressure.discharge(channel)
@@ -463,6 +576,19 @@ def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
         return resp
 
     record["blocked"] = reason
+    # Her composer's own draft for this turn comes first (2026-11-08): the
+    # arbitration graded it against the scripted candidate that was just
+    # blocked.  Same checks as any reply, and it must connect to what was said.
+    composed = own_composition(systems, heard)
+    if composed:
+        pressure.discharge(channel)
+        record.update({"outcome": "own_composition", "src": "composer_unified"})
+        systems["_last_voice_gate"] = record
+        cand = dict(systems.get("_turn_composer_candidate") or {})
+        return SimpleNamespace(content=composed,
+                               emotional_tone=str(cand.get("tone") or getattr(resp, "emotional_tone", "") or "curious"),
+                               confidence=round(float(cand.get("confidence", 0.5) or 0.5), 4),
+                               src="composer_unified")
     articulated, why = ("", "below_threshold")
     if level >= ARTICULATION_THRESHOLD:
         articulated, why = articulate_from_pressure(

@@ -194,6 +194,23 @@ def _words(text: str) -> List[str]:
     return re.findall(r"[a-z']+", str(text or "").lower())
 
 
+def merge_backlog(group: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """One contact's unread messages, in order, as a single reading.  Replies
+    go to the latest; the text is everything they said."""
+    if len(group) == 1:
+        return dict(group[0])
+    parts = []
+    for m in group:
+        t = str(m.get("text") or "").strip()
+        if t and t[-1] not in ".!?":
+            t += "."
+        if t:
+            parts.append(t)
+    last = dict(group[-1])
+    last["text"] = " ".join(parts)[:MAX_TEXT_CHARS * 2]
+    return last
+
+
 def own_voice(src: str, text: str, heard: str = "") -> Tuple[bool, str]:
     """(True, "") if this is her own expression; otherwise (False, reason)."""
     reply = str(text or "").strip()
@@ -396,6 +413,9 @@ class PraxisMessenger:
         self.last_pull_at = 0.0
         self.unread_waiting = 0
         self.unread_seen_at = 0.0
+        # Messages already read that sit beyond the shared cursor (another
+        # contact's earlier message is still unread) -- never read twice.
+        self.read_ahead: set = set()
         # She starts conversations herself when something of hers is
         # unresolved (aurora_praxis_initiative.py).
         try:
@@ -474,6 +494,7 @@ class PraxisMessenger:
 
     def handle_message(self, message: Dict[str, Any], *, reentry: bool = False) -> Dict[str, Any]:
         pid, name, text = message["persona_id"], message["display_name"], message["text"]
+        self._last_heard = text
         started = time.time()
         if reentry:
             self.counters["reentries"] = self.counters.get("reentries", 0) + 1
@@ -509,7 +530,7 @@ class PraxisMessenger:
         gate = dict(self.systems.get("_last_voice_gate") or {})
         if (gate.get("channel") == f"praxis_dm_{pid}"
                 and float(gate.get("at", 0.0) or 0.0) >= started - 1.0
-                and gate.get("outcome") in ("own_voice", "pressure_articulation")):
+                and gate.get("outcome") in ("own_voice", "own_composition", "pressure_articulation")):
             src = str(gate.get("src") or src)
         ok, reason = own_voice(src, reply, heard=text)
         outcome = {"seq": message["seq"], "persona_id": pid, "reply": reply,
@@ -570,22 +591,51 @@ class PraxisMessenger:
             return []
         outcomes: List[Dict[str, Any]] = []
         unread = [r for r in (payload.get("messages") or [])
-                  if isinstance(r, Mapping) and isinstance(r.get("seq"), int) and r["seq"] > self.cursor]
+                  if isinstance(r, Mapping) and isinstance(r.get("seq"), int) and r["seq"] > self.cursor
+                  and r["seq"] not in getattr(self, "read_ahead", ())]
         self.unread_waiting = len(unread)
         self.unread_seen_at = time.time()
+        # Read a contact's backlog TOGETHER (Sunni, 2026-11-08: "it's like
+        # she's not even reading what is being said to her").  Answering five
+        # queued messages one by one put every reply against a question the
+        # contact had already moved past.  Everything a contact sent since her
+        # last reply is now one reading, answered once, in reply to the latest.
+        valid: List[Dict[str, Any]] = []
+        self.read_ahead = {q for q in self.read_ahead if q > self.cursor}
+        handled: set = set(self.read_ahead)
+        all_seqs: List[int] = []
         for raw in payload.get("messages") or []:
+            seq = raw.get("seq") if isinstance(raw, Mapping) else None
+            if not isinstance(seq, int) or seq <= self.cursor:
+                continue
+            all_seqs.append(seq)
+            if seq in self.read_ahead:
+                continue
             try:
-                message = validate_incoming_message(raw)
+                valid.append(validate_incoming_message(raw))
             except MessengerContractBreach as breach:
                 self.counters["breaches"] += 1
                 self.last_error = f"breach: {breach}"
-                seq = raw.get("seq") if isinstance(raw, Mapping) else None
-                if isinstance(seq, int) and seq > self.cursor:
-                    self.cursor = seq            # dropped whole; never re-read
-                    self._save_cursor()
-                continue
-            if message["seq"] <= self.cursor:
-                continue
+                handled.add(seq)                 # dropped whole; never re-read
+        groups: Dict[str, List[Dict[str, Any]]] = {}
+        for message in valid:
+            groups.setdefault(message["persona_id"], []).append(message)
+
+        def _advance() -> None:
+            # The cursor is shared by every contact: move it only across
+            # messages that have actually been read.
+            moved = False
+            for seq in sorted(all_seqs):
+                if seq <= self.cursor:
+                    continue
+                if seq not in handled:
+                    break
+                self.cursor, moved = seq, True
+            if moved:
+                self._save_cursor()
+
+        _advance()
+        for group in sorted(groups.values(), key=lambda g: g[0]["seq"]):
             if not self.live_idle():
                 break                            # Sunni is here; he comes first
             acquired = True
@@ -594,19 +644,25 @@ class PraxisMessenger:
             if not acquired:
                 self.counters["busy_skips"] += 1
                 break                            # unread; next pass
+            message = merge_backlog(group)
             try:
                 outcomes.append(self.handle_message(message))
+                if len(group) > 1:
+                    self.counters["heard"] += len(group) - 1
+                    self.counters["backlogs_read_together"] = self.counters.get("backlogs_read_together", 0) + 1
             except Exception as exc:
                 self.counters["errors"] += 1
                 self.last_error = f"turn failed: {type(exc).__name__}: {exc}"[:300]
             finally:
                 if self.field_lock is not None:
                     self.field_lock.release()
-            # Advance past a message once handled (even if her turn failed),
-            # so one bad message can never wedge the loop.
-            self.cursor = message["seq"]
-            self._save_cursor()
-            self.unread_waiting = max(0, self.unread_waiting - 1)
+            # Past a reading once handled (even if her turn failed), so one bad
+            # message can never wedge the loop.
+            handled.update(m["seq"] for m in group)
+            self.read_ahead.update(m["seq"] for m in group)
+            _advance()
+            self.read_ahead = {q for q in self.read_ahead if q > self.cursor}
+            self.unread_waiting = max(0, self.unread_waiting - len(group))
         outcomes.extend(self._reenter_pending())
         if self.initiative is not None:
             try:
