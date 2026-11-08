@@ -98,3 +98,22 @@ def test_shared_idle_predicate_includes_breathing_room(calm, monkeypatch):
     monkeypatch.setattr(ab, "_boot_completed_at", time.time() - 3600)
     calm.last_released = 0.0
     assert ab._historical_experience_live_idle() is True
+
+
+def test_a_waiting_message_outranks_other_background_work(calm, monkeypatch):
+    class Waiting:
+        def __init__(self, w):
+            self.w = w
+
+        def waiting(self):
+            return self.w
+
+    monkeypatch.setattr(ab, "_boot_completed_at", time.time() - 3600)
+    calm.last_released = 0.0
+    monkeypatch.setattr(ab, "_systems", {"praxis_messenger": Waiting(True)})
+    assert ab._historical_experience_live_idle() is False     # replay yields
+    assert ab._praxis_live_idle() is False                    # world loop / probe yield
+    assert ab._background_breathing_room() is False           # proactive / evo sim yield
+    assert ab._messenger_live_idle() is True                  # the messenger goes
+    monkeypatch.setattr(ab, "_systems", {"praxis_messenger": Waiting(False)})
+    assert ab._historical_experience_live_idle() is True

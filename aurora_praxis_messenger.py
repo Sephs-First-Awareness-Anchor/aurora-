@@ -72,6 +72,9 @@ MAX_TEXT_CHARS = 1200
 
 DEFAULT_ENDPOINT = "http://127.0.0.1:8787"
 POLL_S = 15.0
+# While a contact's message is waiting unread, look again this often (it is
+# a cheap local HTTP call; only the turn itself waits for the field).
+WAITING_POLL_S = 3.0
 HTTP_TIMEOUT_S = 6.0
 PULL_LIMIT = 20
 TRANSCRIPT_DIR = "messenger"
@@ -391,6 +394,8 @@ class PraxisMessenger:
         self.online = False
         self.last_error = ""
         self.last_pull_at = 0.0
+        self.unread_waiting = 0
+        self.unread_seen_at = 0.0
         # She starts conversations herself when something of hers is
         # unresolved (aurora_praxis_initiative.py).
         try:
@@ -548,7 +553,11 @@ class PraxisMessenger:
     # -- one pass ------------------------------------------------------------------
 
     def pull_once(self) -> List[Dict[str, Any]]:
-        if self._paused.is_set() or not self.live_idle():
+        # Phone fix (2026-11-08): checking for messages is NOT gated on the
+        # field being idle -- only answering is.  Gating the check starved
+        # the messenger: faster background loops always took the quiet
+        # window first, so she never even looked.
+        if self._paused.is_set():
             return []
         try:
             payload = self.http("GET", f"/social/pull?after={self.cursor}&limit={PULL_LIMIT}", None)
@@ -560,6 +569,10 @@ class PraxisMessenger:
         if not self.online:
             return []
         outcomes: List[Dict[str, Any]] = []
+        unread = [r for r in (payload.get("messages") or [])
+                  if isinstance(r, Mapping) and isinstance(r.get("seq"), int) and r["seq"] > self.cursor]
+        self.unread_waiting = len(unread)
+        self.unread_seen_at = time.time()
         for raw in payload.get("messages") or []:
             try:
                 message = validate_incoming_message(raw)
@@ -593,6 +606,7 @@ class PraxisMessenger:
             # so one bad message can never wedge the loop.
             self.cursor = message["seq"]
             self._save_cursor()
+            self.unread_waiting = max(0, self.unread_waiting - 1)
         outcomes.extend(self._reenter_pending())
         if self.initiative is not None:
             try:
@@ -661,8 +675,13 @@ class PraxisMessenger:
     def resume(self) -> None:
         self._paused.clear()
 
+    def waiting(self) -> bool:
+        """A contact's message is waiting unread (seen within the last minute)."""
+        return (int(getattr(self, "unread_waiting", 0) or 0) > 0
+                and time.time() - float(getattr(self, "unread_seen_at", 0.0) or 0.0) < 60.0)
+
     def _run(self) -> None:
-        while not self._stop.wait(self.poll_s):
+        while not self._stop.wait(WAITING_POLL_S if self.waiting() else self.poll_s):
             try:
                 self.pull_once()
             except Exception as exc:
@@ -674,6 +693,7 @@ class PraxisMessenger:
                 "online": self.online, "paused": self._paused.is_set(),
                 "thread_alive": bool(self._thread and self._thread.is_alive()),
                 "cursor": self.cursor, "last_pull_at": self.last_pull_at,
+                "unread_waiting": int(getattr(self, "unread_waiting", 0) or 0),
                 "last_error": self.last_error, **self.counters,
                 "withheld_reasons": dict(self.withheld_reasons),
                 "last_withheld": dict(self.last_withheld),

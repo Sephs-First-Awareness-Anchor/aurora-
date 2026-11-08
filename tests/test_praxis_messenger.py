@@ -419,3 +419,33 @@ def test_internal_learners_are_not_attributed_to_the_partner():
     facts = {f["fact"]: f["source"] for f in memory.learned_facts}
     assert facts["what creates friction when approached with warm acknowledgment"] == "retained_learning"
     assert facts["Gemini said: Deeni is a ferret"].startswith("dm:gemini:")
+
+
+# -- phone fix, 2026-11-08: she must always CHECK; only answering waits -------
+
+def test_checks_messages_even_while_the_field_is_busy(tmp_path):
+    import threading as _t
+
+    class Server:
+        def __init__(self):
+            self.pulls = 0
+
+        def __call__(self, method, path, payload):
+            if path.startswith("/social/pull"):
+                self.pulls += 1
+                return {"messages": [{"seq": 1, "persona_id": "gemini", "display_name": "Gemini",
+                                      "text": "Hi Aurora", "sent_at": 1.0}], "latest_seq": 1}
+            return {"accepted": True}
+
+    server = Server()
+    idle = {"v": False}
+    turns = []
+    m = M.PraxisMessenger({}, state_dir=str(tmp_path), http=server, field_lock=_t.Lock(),
+                          live_idle=lambda: idle["v"], poll_s=999,
+                          process_turn=lambda *a, **k: turns.append(1) or {"resp_A": None})
+    assert m.pull_once() == []
+    assert server.pulls == 1, "she looked, even though the field was busy"
+    assert m.waiting() and m.status()["unread_waiting"] == 1 and turns == []
+    idle["v"] = True
+    m.pull_once()
+    assert turns and not m.waiting() and m.cursor == 1

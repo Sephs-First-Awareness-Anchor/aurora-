@@ -10673,3 +10673,19 @@ Paths vs live reasoning, Last divergence.
 paths; one offered twice on recurring "Do you like ...?" pressure; both times
 live reasoning diverged on meaning label/signature (topic-specific
 understanding) -- recorded as divergence, not overwritten.
+
+## FIX-A089 (REGRESSION) — Messenger starved by background pacing (FIX-A086)
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule:** The messenger always CHECKS for messages (a cheap local HTTP pull);
+only answering waits for the field. While a contact's message waits unread
+(PraxisMessenger.waiting(), seen within 60 s), every other background source
+yields -- historical replay, the Praxis world loop, the learning probe, the
+proactive loop and the evolution sim -- through _background_breathing_room
+(yield_to_messenger=True); the messenger uses _messenger_live_idle, which does
+not yield to itself, and re-checks every WAITING_POLL_S=3 s while waiting.
+**First Seen:** 2026-11-08 — Sunni: "she hasnt checked her messages or spoken
+to anyone on the messenger." pull_once() returned before pulling unless the
+shared idle gate was open; after FIX-A086 that gate needs 20 s of quiet, and
+the world loop (6 s poll) always took the window before the messenger (15 s
+poll). Contention sim: old 0 checks / never answered; new 19 checks /
+answered at the first quiet window, world loop still running.

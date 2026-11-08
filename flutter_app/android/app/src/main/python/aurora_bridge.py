@@ -2218,7 +2218,23 @@ def habitat_reset() -> str:
     return json.dumps({"success": True})
 
 
-def _historical_experience_live_idle() -> bool:
+def _messenger_waiting() -> bool:
+    """A contact's DM is waiting unread.  Someone waiting outranks replay,
+    the world loop, the probe, proactive thought and the evolution sim."""
+    try:
+        m = (_systems or {}).get("praxis_messenger")
+        return bool(m is not None and hasattr(m, "waiting") and m.waiting())
+    except Exception:
+        return False
+
+
+def _messenger_live_idle() -> bool:
+    """The messenger's own gate: the same terms as every background source,
+    without yielding to itself."""
+    return _historical_experience_live_idle(yield_to_messenger=False)
+
+
+def _historical_experience_live_idle(yield_to_messenger: bool = True) -> bool:
     """True only when the live app path is not currently claiming the field.
 
     Historical experience yields to the present.  The shared cognitive lock
@@ -2237,14 +2253,19 @@ def _historical_experience_live_idle() -> bool:
     now = time.time()
     if _last_output_time > 0.0 and (now - _last_output_time) < 8.0:
         return False
-    return _background_breathing_room(now)
+    return _background_breathing_room(now, yield_to_messenger=yield_to_messenger)
 
 
-def _background_breathing_room(now: float = 0.0) -> bool:
+def _background_breathing_room(now: float = 0.0, *, yield_to_messenger: bool = True) -> bool:
     """False while she is settling after boot, or too soon after the last
     turn released the field (wider on low battery).  Shared by every
-    background source so they cannot run back to back."""
+    background source so they cannot run back to back.  While a contact's
+    message waits, every other background source yields to the messenger
+    (phone fix, 2026-11-08: the faster loops always took the quiet window
+    first and the messenger starved)."""
     now = now or time.time()
+    if yield_to_messenger and _messenger_waiting():
+        return False
     if _boot_completed_at <= 0.0 or now - _boot_completed_at < BOOT_SETTLE_S:
         return False
     gap = BACKGROUND_GAP_S
@@ -2741,7 +2762,7 @@ def initialize(state_dir: str = "") -> str:
                 state_dir=_messenger_state_dir,
                 endpoint=_praxis_endpoint(_messenger_state_dir),
                 field_lock=_lock,
-                live_idle=_praxis_live_idle,
+                live_idle=_messenger_live_idle,
             )
             _systems["praxis_messenger"] = _praxis_messenger
             log.info("Praxis messenger: %s", _praxis_messenger.status())
