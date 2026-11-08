@@ -11560,6 +11560,15 @@ def get_cognitive_stats() -> str:
             # compatible while the full structured status remains available
             # to direct bridge callers.
             stats["historical_events_experienced"] = int(_hist_status.get("events_experienced", 0) or 0)
+            # Rehearsal of her history (2026-11-08).
+            _reh = dict(_hist_status.get("rehearsal") or {})
+            for _key in ("rehearsed", "silent", "compared", "match", "partial", "mismatch", "fanned_out"):
+                stats[f"rehearsal_{_key}"] = int(_reh.get(_key, 0) or 0)
+            _rl = dict(_reh.get("last") or {})
+            stats["rehearsal_last"] = (
+                f"you: \"{_rl.get('heard', '')[:60]}\" · her: \"{_rl.get('her_reply', '')[:60]}\" · "
+                f"{_rl.get('label', '').replace('rehearsal_', '')} {float(_rl.get('score', 0.0) or 0.0):.2f}"
+            ) if _rl else ""
             stats["historical_total_events"] = int(_hist_status.get("total_events", 0) or 0)
             stats["historical_progress"] = float(_hist_status.get("progress", 0.0) or 0.0)
             stats["historical_status"] = str(_hist_status.get("status", "not_initialized") or "not_initialized")

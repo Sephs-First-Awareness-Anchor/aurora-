@@ -7002,8 +7002,14 @@ def _classify_validated_communication(
     )
 
     positive_labels = {"confirmed", "accepted", "clarification_supplied", "selection_supplied",
-                       "reconstructed"}
-    if label in positive_labels and score >= 0.80:
+                       "reconstructed", "rehearsal_match"}
+    if label == "rehearsal_mismatch":
+        # Historical rehearsal (2026-11-08): her rehearsed reply went
+        # somewhere the conversation did not -- a divergence, not a refusal
+        # of meaning by a receiver.
+        effect = "resolved_partially__followup_gap_appeared"
+        kind = "negative"
+    elif label in positive_labels and score >= 0.80:
         effect = "resolved_fully"
         kind = "positive"
     elif label == "expression_unclear" or clarification_request:

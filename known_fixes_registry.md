@@ -10742,3 +10742,33 @@ x11 across the open questions; hand-offs reached 10 systems (1 covered);
 14 trials grew in braid stream, communication emergence, dimensional
 crystals, execution foundry and lexical grounding (before the one-open-trial
 rule).
+
+## FIX-A092 (ARCHITECTURAL) — Rehearsing Sunni's side of her history
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-08):** her experiential history must run through the
+same understanding pipeline as her messenger turns, and she may answer one side
+and be compared with the real reply -- "have her compare with my responses not
+chat gpts as if she was rehearsing my position in the history".
+flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py.
+Ordinary witnessing (gateway, resolution ledger, structural + lexical
+possibility) is unchanged. In addition, when the OTHER side speaks
+(REHEARSAL_HEARD_SIDE = historical_other_assistant) she answers it through the full
+process_external_user_turn (source_label="historical_rehearsal", BOUNDED, no
+exchange recorded, no interactive state, no auto-search), and when Sunni's
+real reply arrives (REHEARSAL_REAL_SIDE = historical_user) the two are compared: score = 0.6 *
+precision of her words found in the real reply + 0.4 * uptake of the relation
+asked about; zero precision is always a mismatch. Labels rehearsal_match
+(>= 0.45) / rehearsal_mismatch (< 0.15) go through
+_finalize_validated_communication with her held pending entry -- the same
+verdict path a live receiver uses -- so communication emergence, reasoning
+paths and unformed patterns all learn from it; partials are recorded only.
+Her pending entry is retired from the contract the moment she has answered
+(silent or not), so the next historical message is never mistaken for a
+receiver's verdict on her. New episode / no reply => rehearsal retired.
+Hub: Rehearsed, Rehearsal vs real.
+**First Seen:** 2026-11-08 real boot, first 140 archive events (221 s), she
+answering the other side and compared with Sunni's real replies: 73
+rehearsed, 35 silent, 33 compared -> 1 match, 32 mismatch; 33 verdicts fanned
+out; CE 19 trials (5 dissolved), 20 paths carved, 155 hand-offs. (A first
+draft had the sides reversed -- answering Sunni, judged by the other
+assistant; corrected before commit.)

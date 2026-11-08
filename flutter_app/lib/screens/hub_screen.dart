@@ -767,6 +767,17 @@ class _HubScreenState extends State<HubScreen> {
               style: const TextStyle(color: _text, fontSize: 11, fontWeight: FontWeight.w600)),
         ]),
         const SizedBox(height: 6),
+        // Rehearsal: her own replies to Sunni's historical messages, compared
+        // with what was really said and fed through her verdict loop.
+        _statRow('Rehearsed',
+            '${_stats['rehearsal_rehearsed'] as int? ?? 0} · ${_stats['rehearsal_silent'] as int? ?? 0} silent'),
+        _statRow('Rehearsal vs real',
+            '${_stats['rehearsal_match'] as int? ?? 0} close · ${_stats['rehearsal_partial'] as int? ?? 0} partial · ${_stats['rehearsal_mismatch'] as int? ?? 0} apart · ${_stats['rehearsal_fanned_out'] as int? ?? 0} learned from'),
+        if (((_stats['rehearsal_last'] as String?) ?? '').isNotEmpty)
+          Padding(padding: const EdgeInsets.only(top: 2, bottom: 4),
+            child: Text((_stats['rehearsal_last'] as String?) ?? '', maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: _textDim, fontSize: 11))),
         // Codex review, PR #193: backfilled_through_event_index only ever
         // advances inside the one-time _backfill_lexical_grounding() catch-
         // up pass at boot -- every event witnessed LIVE after that also

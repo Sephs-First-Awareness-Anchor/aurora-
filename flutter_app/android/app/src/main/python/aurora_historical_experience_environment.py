@@ -23,6 +23,59 @@ _STATE_SCHEMA = "aurora_historical_experience_runtime_v2"
 _DEFAULT_ARCHIVE_NAME = "experiential_baseline_v1.zip"
 _MAX_PENDING_USER_TEXT = 12000
 
+# Rehearsal (Sunni, 2026-11-08): history used to be witnessed only as sensor
+# data, so none of the receiver-validated development ran on it.  Now, on each
+# of Sunni's historical messages, she also takes a real turn through her live
+# pipeline in a rehearsal session (nothing is sent anywhere), and when the
+# real reply arrives her rehearsed reply is compared with it -- words and
+# structure -- and the result enters the SAME verdict fan-out a live
+# receiver's verdict does (_finalize_validated_communication).
+REHEARSE_DEFAULT = True
+REHEARSAL_MATCH = 0.45       # comparison score at or above -> rehearsal_match
+REHEARSAL_MISMATCH = 0.15    # below -> rehearsal_mismatch; between -> no verdict
+REHEARSAL_HEARD_SIDE = "historical_other_assistant"   # what she answers
+REHEARSAL_REAL_SIDE = "historical_user"               # Sunni: what she is compared with
+
+
+def _rehearsal_words(text: str) -> set:
+    import re as _re
+    stop = {"the", "and", "you", "your", "are", "was", "that", "this", "with", "for", "have",
+            "has", "but", "not", "can", "will", "just", "its", "it's", "from", "what", "how",
+            "they", "them", "there", "here", "about", "would", "could", "should", "been"}
+    return {w for w in _re.findall(r"[a-z][a-z']+", str(text or "").lower())
+            if len(w) >= 3 and w not in stop}
+
+
+def rehearsal_comparison(her_reply: str, real_reply: str, user_form: Mapping[str, Any]) -> Dict[str, Any]:
+    """How close her rehearsed reply came to what was really said next.
+
+    precision: share of her content words the real reply also used (she is
+    not penalised for the real reply being longer); uptake: whether her reply
+    took up the relation she was addressed with (the same check her live
+    arbitration uses).  Words AND structure, per Sunni.
+    """
+    mine, real = _rehearsal_words(her_reply), _rehearsal_words(real_reply)
+    precision = len(mine & real) / len(mine) if mine else 0.0
+    uptake = 0.0
+    try:
+        from aurora_internal.aurora_constraint_semantic_continuity import relation_alignment
+        uptake = float(dict(relation_alignment(dict(user_form or {}), her_reply) or {}).get("score", 0.0) or 0.0)
+    except Exception:
+        uptake = 0.0
+    score = round(0.6 * precision + 0.4 * uptake, 4)
+    if mine and real and precision == 0.0:
+        # Nothing she said was in what was really said: echoing the relation
+        # she was asked about does not make that a partial match.
+        label = "rehearsal_mismatch"
+    elif score >= REHEARSAL_MATCH:
+        label = "rehearsal_match"
+    elif score < REHEARSAL_MISMATCH:
+        label = "rehearsal_mismatch"
+    else:
+        label = "rehearsal_partial"
+    return {"label": label, "score": score, "precision": round(precision, 4),
+            "uptake": round(uptake, 4), "shared": sorted(mine & real)[:12]}
+
 
 def _safe_float(value: Any) -> Optional[float]:
     try:
@@ -98,6 +151,11 @@ class HistoricalExperienceEnvironment:
         self._baseline_id = ""
         self._state: Dict[str, Any] = {}
         self._state_guard = threading.Lock()
+        self.rehearse = REHEARSE_DEFAULT
+        self._rehearsal: Optional[Dict[str, Any]] = None
+        self.rehearsal_counters = {"rehearsed": 0, "silent": 0, "compared": 0, "match": 0,
+                                   "partial": 0, "mismatch": 0, "fanned_out": 0, "errors": 0}
+        self.last_rehearsal: Dict[str, Any] = {}
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -192,6 +250,7 @@ class HistoricalExperienceEnvironment:
                 state["representation_exchange_diagnostics"] = dict(exchange.status())
         except Exception:
             pass
+        state["rehearsal"] = self.rehearsal_status()
         return state
 
     # ------------------------------------------------------------------
@@ -1158,6 +1217,13 @@ class HistoricalExperienceEnvironment:
         self.systems["_historical_experience_context"]["communication_apprenticeship"] = dict(
             communication_apprenticeship or {}
         )
+        rehearsal: Dict[str, Any] = {}
+        if self.rehearse:
+            try:
+                rehearsal = self._rehearse(event, actor, episode_id, is_new_episode)
+            except Exception as exc:
+                self.rehearsal_counters["errors"] += 1
+                rehearsal = {"error": f"{type(exc).__name__}: {exc}"[:200]}
 
         return {
             "baseline_id": self._baseline_id,
@@ -1169,8 +1235,102 @@ class HistoricalExperienceEnvironment:
             "gateway_response_id": str(getattr(response, "response_id", "") or ""),
             "gateway_confidence": float(getattr(response, "confidence", 0.0) or 0.0),
             "communication_apprenticeship": dict(communication_apprenticeship or {}),
+            "rehearsal": rehearsal,
             "observed_at": time.time(),
         }
+
+    # ------------------------------------------------------------------
+    # Rehearsal
+    # ------------------------------------------------------------------
+
+    def _rehearse(self, event: Mapping[str, Any], actor: str, episode_id: str,
+                  new_episode: bool) -> Dict[str, Any]:
+        import sys
+        aurora_mod = self.systems.get("aurora_module") or sys.modules.get("aurora")
+        text = str(event.get("text", "") or "").strip()
+        if new_episode:
+            self._retire_rehearsal()
+        # She takes Sunni's position: she answers what the other side said and
+        # is compared with what Sunni really said back -- never with the
+        # other assistant's words.
+        if actor == REHEARSAL_HEARD_SIDE and text:
+            self._retire_rehearsal()               # a reply that never came
+            return self._rehearse_reply(aurora_mod, text[:_MAX_PENDING_USER_TEXT], episode_id, event)
+        if actor == REHEARSAL_REAL_SIDE and text and self._rehearsal:
+            return self._compare_rehearsal(aurora_mod, text)
+        return {}
+
+    def _rehearse_reply(self, aurora_mod: Any, text: str, episode_id: str,
+                        event: Mapping[str, Any]) -> Dict[str, Any]:
+        process = getattr(aurora_mod, "process_external_user_turn", None)
+        if process is None:
+            return {}
+        session = f"rehearsal_{episode_id or 'history'}"
+        result = process(self.systems, text, source_label="historical_rehearsal",
+                         session_id=session, auto_search_enabled=False,
+                         record_exchange=False, update_interactive_state=False,
+                         run_periodic_maintenance=False, mode_name="BOUNDED") or {}
+        resp = result.get("resp_A") if isinstance(result, dict) else None
+        reply = str(getattr(resp, "content", "") or "").strip()
+        self.rehearsal_counters["rehearsed"] += 1
+        contract = self.systems.get("understanding_contract")
+        pending = {}
+        if contract is not None and hasattr(contract, "snapshot"):
+            pending = dict(dict(contract.snapshot() or {}).get("pending_validation") or {})
+        # Retire it from the contract NOW (a copy is held for the comparison):
+        # the next historical message answered the real reply, not hers, and
+        # must never be read as a receiver's verdict on it -- silent or not.
+        self._retire_pending(session)
+        if not reply:
+            self.rehearsal_counters["silent"] += 1
+            return {"rehearsed": True, "reply": ""}
+        form = dict(dict(self.systems.get("_last_pipeline_state") or {}).get("relational_form") or {})
+        self._rehearsal = {"session": session, "reply": reply, "pending": pending, "form": form,
+                           "event_id": str(event.get("event_id", "") or ""), "heard": text[:200]}
+        return {"rehearsed": True, "reply": reply[:200]}
+
+    def _compare_rehearsal(self, aurora_mod: Any, real_reply: str) -> Dict[str, Any]:
+        held = dict(self._rehearsal or {})
+        self._rehearsal = None
+        cmp = rehearsal_comparison(held.get("reply", ""), real_reply, held.get("form") or {})
+        self.rehearsal_counters["compared"] += 1
+        self.rehearsal_counters[cmp["label"].split("_", 1)[1]] += 1
+        fanned = {}
+        pending = dict(held.get("pending") or {})
+        finalize = getattr(aurora_mod, "_finalize_validated_communication", None)
+        if pending and finalize is not None and cmp["label"] != "rehearsal_partial":
+            observation = {"validated_response": pending,
+                           "accuracy": {"label": cmp["label"],
+                                        "score": max(0.80, cmp["score"]) if cmp["label"] == "rehearsal_match"
+                                        else cmp["score"]}}
+            fanned = dict(finalize(self.systems, observation, "", session_id=held.get("session", "")) or {})
+            self.rehearsal_counters["fanned_out"] += 1
+        self._retire_pending(held.get("session", ""))
+        self.last_rehearsal = {"heard": held.get("heard", ""), "her_reply": held.get("reply", "")[:160],
+                               "real_reply": real_reply[:160], **cmp,
+                               "outcome": fanned.get("outcome_kind", "none"), "at": time.time()}
+        return {"compared": True, **cmp, "outcome": fanned.get("outcome_kind", "none")}
+
+    def _retire_rehearsal(self) -> None:
+        if self._rehearsal:
+            self._retire_pending(self._rehearsal.get("session", ""))
+        self._rehearsal = None
+
+    def _retire_pending(self, session: str) -> None:
+        """The real conversation answered the historical reply, not hers --
+        her rehearsed reply must never be judged by the next historical message."""
+        contract = self.systems.get("understanding_contract")
+        if contract is None or not session or not hasattr(contract, "_activate_session_pending"):
+            return
+        try:
+            contract._activate_session_pending(session)
+            contract.state["pending_validation"] = {}
+        except Exception:
+            pass
+
+    def rehearsal_status(self) -> Dict[str, Any]:
+        return {"enabled": bool(self.rehearse), **self.rehearsal_counters,
+                "last": dict(self.last_rehearsal)}
 
     # ------------------------------------------------------------------
     # Stream / cadence
