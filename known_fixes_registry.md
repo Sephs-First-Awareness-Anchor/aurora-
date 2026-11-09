@@ -10975,3 +10975,31 @@ first line whole -- in rehearsal, the historical assistant's statements.
 a quote request (is_quote_request: "what did I (just) say", "what did you
 say", "repeat", "say that again", "what was that"); otherwise the recalled
 line stays material, not her answer.
+
+## FIX-A112 (ARCHITECTURAL) — She rehearses both positions: Sunni's and GPT's
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-09):** "reverse the rehearsal so she also learns from the
+chat gpt responses. Because i know some of my replies arent as properly
+articulated or grammer correct where as gpt is plus the gpt responses are
+longer and id like her to practice on long tesponses like that as well."
+(Learning from GPT's replies as demonstrations is not using an outside LLM as
+her voice: nothing calls any model at runtime; it is her own history.)
+aurora_historical_experience_environment.py: REHEARSAL_POSITIONS maps the
+heard speaker to the position she takes -- GPT speaks -> she answers as
+Sunni, judged and taught by Sunni's real reply; Sunni speaks -> she answers
+as GPT, judged and taught by GPT's real reply. Each message first judges the
+rehearsal waiting for that speaker's reply (answered_by), then is answered
+by a new one. Sessions "rehearsal_<ep>" / "rehearsal_gpt_<ep>"; counters per
+position (rehearsal_by_position); demonstrations tagged demonstrated_by and
+GPT's credit up to 8 sentences of structure (Sunni's 4). Hub: "As you",
+"As GPT". The development experiment traces both positions.
+**First Seen:** 2026-11-09, 60 real messages: 59 comparisons (yours 29: 7
+matched; GPT's 30: 2 matched, 20 silent), 59 demonstrated paths, 271
+sentence structures credited. Cost ~23 s/message locally (4.8 with Sunni's
+side only): listening to GPT's long replies is the heavy part.
+Also (FIX-A111, fourth route): _answer_from_session_readdress_request's final
+fallback wrapped the stored line in a fixed frame ("the earlier statement I
+resolved is <line>"); it now returns nothing when re-reading produced
+nothing of hers. "remind" mode still quotes.
+Pre-existing, not touched: tests/test_reflective_readdressing.py has 7
+failures that predate this session (KeyError 'mode').

@@ -11577,12 +11577,17 @@ def get_cognitive_stats() -> str:
             # Rehearsal of her history (2026-11-08).
             _reh = dict(_hist_status.get("rehearsal") or {})
             for _key in ("rehearsed", "silent", "compared", "match", "partial", "mismatch", "fanned_out",
-                         "lived_by_clones", "silent_judged"):
+                         "lived_by_clones", "silent_judged", "demonstrated"):
                 stats[f"rehearsal_{_key}"] = int(_reh.get(_key, 0) or 0)
+            # FIX-A112: per position (your side / GPT's side).
+            for _pos, _pc in dict(_reh.get("by_position") or {}).items():
+                for _key in ("rehearsed", "compared", "match", "partial", "mismatch", "silent_judged"):
+                    stats[f"rehearsal_{_pos}_{_key}"] = int(dict(_pc or {}).get(_key, 0) or 0)
             _rl = dict(_reh.get("last") or {})
+            _as_gpt = str(_rl.get("position") or "sunni") == "assistant"
             stats["rehearsal_last"] = (
-                f"they said: \"{_rl.get('heard', '')[:50]}\" · her: \"{_rl.get('her_reply', '')[:50]}\" · "
-                f"you: \"{_rl.get('real_reply', '')[:50]}\" · "
+                f"{'you' if _as_gpt else 'they'} said: \"{_rl.get('heard', '')[:50]}\" · her: \"{_rl.get('her_reply', '')[:50]}\" · "
+                f"{'GPT' if _as_gpt else 'you'}: \"{_rl.get('real_reply', '')[:50]}\" · "
                 f"{_rl.get('label', '').replace('rehearsal_', '')} {float(_rl.get('score', 0.0) or 0.0):.2f}"
             ) if _rl else ""
             stats["historical_total_events"] = int(_hist_status.get("total_events", 0) or 0)

@@ -43,6 +43,20 @@ REHEARSAL_EXPRESSION_FORMED = 0.5
 REHEARSAL_DEMONSTRATE = True
 REHEARSAL_HEARD_SIDE = "historical_other_assistant"   # what she answers
 REHEARSAL_REAL_SIDE = "historical_user"               # Sunni: what she is compared with
+# FIX-A112 (Sunni, 2026-11-09): she rehearses BOTH positions.  "I know some
+# of my replies arent as properly articulated or grammar correct where as gpt
+# is plus the gpt responses are longer and id like her to practice on long
+# responses like that as well."  heard speaker -> the position she takes in
+# answering it (and whose real reply then judges and teaches her).
+REHEARSAL_POSITIONS = {
+    "historical_other_assistant": "sunni",       # she answers GPT; Sunni's real reply judges her
+    "historical_user": "assistant",              # she answers Sunni; GPT's real reply judges her
+}
+_POSITION_REPLIER = {"sunni": "historical_user", "assistant": "historical_other_assistant"}
+_POSITION_SESSION = {"sunni": "rehearsal", "assistant": "rehearsal_gpt"}
+# A demonstration credits up to this many sentences of the real reply's
+# structure; GPT's long replies are part of what she is practising.
+DEMONSTRATION_SENTENCES = {"sunni": 4, "assistant": 8}
 
 
 def _rehearsal_words(text: str) -> set:
@@ -206,6 +220,10 @@ class HistoricalExperienceEnvironment:
         self.skip_absorbed = True
         self._absorbed_episodes: Optional[set] = None
         self.demonstrate = REHEARSAL_DEMONSTRATE
+        self.positions = dict(REHEARSAL_POSITIONS)
+        self.rehearsal_by_position: Dict[str, Dict[str, int]] = {
+            p: {"rehearsed": 0, "compared": 0, "match": 0, "partial": 0, "mismatch": 0, "silent_judged": 0}
+            for p in set(REHEARSAL_POSITIONS.values())}
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -1301,19 +1319,25 @@ class HistoricalExperienceEnvironment:
         if new_episode:
             self._retire_rehearsal()
             self._absorbed_episodes = None          # re-read the ledger at each boundary
-        if (getattr(self, "skip_absorbed", True) and actor == REHEARSAL_HEARD_SIDE
-                and self._lived_by_clones(episode_id)):
+        positions = dict(getattr(self, "positions", None) or {REHEARSAL_HEARD_SIDE: "sunni"})
+        result: Dict[str, Any] = {}
+        # 1. Is this the real reply to the position she was rehearsing?
+        held = getattr(self, "_rehearsal", None)
+        if text and held and actor == str(held.get("answered_by") or REHEARSAL_REAL_SIDE):
+            result = dict(self._compare_rehearsal(aurora_mod, text) or {})
+        # 2. Heard: she takes the position that answers it (FIX-A112 -- both
+        #    sides: Sunni's when GPT speaks, GPT's when Sunni speaks).
+        position = positions.get(actor)
+        if not (text and position):
+            return result
+        if getattr(self, "skip_absorbed", True) and self._lived_by_clones(episode_id):
             self.rehearsal_counters["lived_by_clones"] = int(self.rehearsal_counters.get("lived_by_clones", 0)) + 1
-            return {"skipped": "lived_by_clones"}
-        # She takes Sunni's position: she answers what the other side said and
-        # is compared with what Sunni really said back -- never with the
-        # other assistant's words.
-        if actor == REHEARSAL_HEARD_SIDE and text:
-            self._retire_rehearsal()               # a reply that never came
-            return self._rehearse_reply(aurora_mod, text[:_MAX_PENDING_USER_TEXT], episode_id, event)
-        if actor == REHEARSAL_REAL_SIDE and text and self._rehearsal:
-            return self._compare_rehearsal(aurora_mod, text)
-        return {}
+            return {**result, "skipped": "lived_by_clones"}
+        self._retire_rehearsal()                   # a reply that never came
+        rehearsed = self._rehearse_reply(aurora_mod, text[:_MAX_PENDING_USER_TEXT], episode_id, event,
+                                         position=position)
+        return {**result, **{k: v for k, v in dict(rehearsed or {}).items() if k not in result},
+                "position": position}
 
     def _demonstrate(self, aurora_mod: Any, held: Mapping[str, Any], real_reply: str) -> Dict[str, Any]:
         """FIX-A110 -- Sunni's real reply as a demonstration, not just a verdict.
@@ -1340,6 +1364,7 @@ class HistoricalExperienceEnvironment:
             sig = dict(dict(getattr(rp, "pending", {}) or {}).get(rid) or {}).get("signature")
         heard = str(held.get("heard", "") or "")
         listen_session = f"demo_{held.get('session', '')}"
+        out["position"] = str(held.get("position") or "sunni")
         try:
             aurora_mod.process_external_user_turn(
                 self.systems, real_reply[:_MAX_PENDING_USER_TEXT],
@@ -1359,7 +1384,9 @@ class HistoricalExperienceEnvironment:
         grammar = self.systems.get("grammar_engine")
         if grammar is not None and hasattr(grammar, "observe_demonstration"):
             try:
-                out["motifs"] = int(grammar.observe_demonstration(real_reply, context_text=heard) or 0)
+                out["motifs"] = int(grammar.observe_demonstration(
+                    real_reply, context_text=heard,
+                    max_sentences=DEMONSTRATION_SENTENCES.get(str(held.get("position") or "sunni"), 4)) or 0)
                 self.rehearsal_counters["demo_motifs"] = int(self.rehearsal_counters.get("demo_motifs", 0)) + out["motifs"]
             except Exception as exc:
                 out["motif_error"] = f"{type(exc).__name__}: {exc}"[:160]
@@ -1368,7 +1395,8 @@ class HistoricalExperienceEnvironment:
             try:
                 out["word"] = dict(lexical.observe_demonstration(
                     raw_text=real_reply, context_text=heard,
-                    demonstration_id=str(held.get("event_id", "") or "")) or {})
+                    demonstration_id=str(held.get("event_id", "") or ""),
+                    demonstrated_by=str(held.get("position") or "sunni")) or {})
                 if out["word"].get("validated"):
                     self.rehearsal_counters["demo_words"] = int(self.rehearsal_counters.get("demo_words", 0)) + 1
             except Exception as exc:
@@ -1388,11 +1416,12 @@ class HistoricalExperienceEnvironment:
         return episode_id in self._absorbed_episodes
 
     def _rehearse_reply(self, aurora_mod: Any, text: str, episode_id: str,
-                        event: Mapping[str, Any]) -> Dict[str, Any]:
+                        event: Mapping[str, Any], *, position: str = "sunni") -> Dict[str, Any]:
         process = getattr(aurora_mod, "process_external_user_turn", None)
         if process is None:
             return {}
-        session = f"rehearsal_{episode_id or 'history'}"
+        session = f"{_POSITION_SESSION.get(position, 'rehearsal')}_{episode_id or 'history'}"
+        answered_by = _POSITION_REPLIER.get(position, REHEARSAL_REAL_SIDE)
         result = process(self.systems, text, source_label="historical_rehearsal",
                          session_id=session, auto_search_enabled=False,
                          record_exchange=False, update_interactive_state=False,
@@ -1400,6 +1429,10 @@ class HistoricalExperienceEnvironment:
         resp = result.get("resp_A") if isinstance(result, dict) else None
         reply = str(getattr(resp, "content", "") or "").strip()
         self.rehearsal_counters["rehearsed"] += 1
+        _by = getattr(self, "rehearsal_by_position", None)
+        if isinstance(_by, dict):
+            _by.setdefault(position, {})
+            _by[position]["rehearsed"] = int(_by[position].get("rehearsed", 0)) + 1
         contract = self.systems.get("understanding_contract")
         pending = {}
         if contract is not None and hasattr(contract, "snapshot"):
@@ -1422,11 +1455,13 @@ class HistoricalExperienceEnvironment:
             # what it understood, Sunni's real reply still judges it.
             if pending:
                 self._rehearsal = {"session": session, "reply": "", "pending": pending, "form": form,
-                                   "path_signature": path_signature,
+                                   "path_signature": path_signature, "position": position,
+                                   "answered_by": answered_by,
                                    "event_id": str(event.get("event_id", "") or ""), "heard": text[:200]}
             return {"rehearsed": True, "reply": ""}
         self._rehearsal = {"session": session, "reply": reply, "pending": pending, "form": form,
-                           "path_signature": path_signature,
+                           "path_signature": path_signature, "position": position,
+                           "answered_by": answered_by,
                            "event_id": str(event.get("event_id", "") or ""), "heard": text[:200]}
         return {"rehearsed": True, "reply": reply[:200]}
 
@@ -1440,6 +1475,12 @@ class HistoricalExperienceEnvironment:
         _key = cmp["label"].split("_", 1)[1]
         _key = "silent_judged" if _key == "silent" else _key
         self.rehearsal_counters[_key] = int(self.rehearsal_counters.get(_key, 0)) + 1
+        _position = str(held.get("position") or "sunni")
+        _by = getattr(self, "rehearsal_by_position", None)
+        if isinstance(_by, dict):
+            _by.setdefault(_position, {})
+            for _k in ("compared", _key):
+                _by[_position][_k] = int(_by[_position].get(_k, 0)) + 1
         fanned = {}
         finalize = getattr(aurora_mod, "_finalize_validated_communication", None)
         if pending and finalize is not None:
@@ -1456,7 +1497,8 @@ class HistoricalExperienceEnvironment:
             self.rehearsal_counters["fanned_out"] += 1
         demo = self._demonstrate(aurora_mod, held, str(real_reply or ""))
         self._retire_pending(held.get("session", ""))
-        self.last_rehearsal = {"heard": held.get("heard", ""), "her_reply": held.get("reply", "")[:160],
+        self.last_rehearsal = {"position": str(held.get("position") or "sunni"),
+                               "heard": held.get("heard", ""), "her_reply": held.get("reply", "")[:160],
                                "real_reply": real_reply[:160], **cmp,
                                "outcome": fanned.get("outcome_kind", "none"),
                                "demonstration": {k: v for k, v in demo.items() if not k.endswith("_error")},
@@ -1482,6 +1524,7 @@ class HistoricalExperienceEnvironment:
 
     def rehearsal_status(self) -> Dict[str, Any]:
         return {"enabled": bool(self.rehearse), **self.rehearsal_counters,
+                "by_position": {p: dict(c) for p, c in dict(getattr(self, "rehearsal_by_position", {}) or {}).items()},
                 "last": dict(self.last_rehearsal)}
 
     # ------------------------------------------------------------------

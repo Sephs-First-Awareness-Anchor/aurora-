@@ -8286,14 +8286,13 @@ def _answer_from_session_readdress_request(
     finally:
         systems.pop("_session_readdress_reprocessing", None)
 
-    rendered = _render_runtime_intent(
-        systems,
-        f"the earlier statement I resolved is {prior_text}",
-        emotion_tone="precise",
-        certainty=confidence,
-        supporting_concepts=[anchor_term, prior_text],
-    )
-    return (rendered, "precise", confidence)
+    # FIX-A111 (fourth route, 2026-11-09): when re-reading the earlier
+    # statement produced nothing of her own, this used to wrap the stored
+    # line in a fixed frame -- "the earlier statement I resolved is <line>" --
+    # a script and a re-voiced utterance at once.  Nothing came from
+    # reprocessing, so nothing is handed back; her other paths compose.  An
+    # explicit request to be reminded ("remind" mode, above) still quotes.
+    return None
 
 
 def _should_try_ability_guided_recall(

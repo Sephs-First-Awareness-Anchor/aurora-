@@ -88,13 +88,13 @@ def test_after_each_comparison_she_listens_to_his_reply_and_learns_where_it_land
             calls.append(("retire", session))
 
     class Grammar:
-        def observe_demonstration(self, text, *, context_text=""):
-            calls.append(("grammar", text, context_text))
+        def observe_demonstration(self, text, *, context_text="", max_sentences=4):
+            calls.append(("grammar", text, context_text, max_sentences))
             return 2
 
     class Lexical:
-        def observe_demonstration(self, *, raw_text, context_text="", demonstration_id=""):
-            calls.append(("lexical", raw_text, demonstration_id))
+        def observe_demonstration(self, *, raw_text, context_text="", demonstration_id="", demonstrated_by="sunni"):
+            calls.append(("lexical", raw_text, demonstration_id, demonstrated_by))
             return {"admitted": True, "validated": True}
 
     systems = {"reasoning_paths": rp, "understanding_contract": Contract(), "grammar_engine": Grammar(),

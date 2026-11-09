@@ -227,7 +227,6 @@ def _events(env: Any):
 
 def live_traced(systems: Mapping[str, Any], env: Any, episodes: List[str], *, arm: str,
                 trace_path: str, log=print) -> Dict[str, Any]:
-    from aurora_historical_experience_environment import REHEARSAL_HEARD_SIDE, REHEARSAL_REAL_SIDE
     web = find_web(systems)
     wanted = set(episodes)
     done: Set[str] = set()
@@ -260,10 +259,14 @@ def live_traced(systems: Mapping[str, Any], env: Any, episodes: List[str], *, ar
             keys = after
             rehearsal = dict(result.get("rehearsal") or {})
             held = getattr(env, "_rehearsal", None)
-            if actor == REHEARSAL_HEARD_SIDE and held and id(held) != before_turn:
-                rec["turn"] = _turn_view(systems, held)
-            if actor == REHEARSAL_REAL_SIDE and rehearsal.get("compared"):
-                rec["comparison"] = {k: rehearsal.get(k) for k in ("label", "score", "precision", "uptake", "shared", "outcome")}
+            # Both positions (FIX-A112): a message can judge the rehearsal
+            # held before it AND be answered by a new one.
+            if held and id(held) != before_turn:
+                rec["turn"] = {**_turn_view(systems, held), "position": held.get("position", "sunni")}
+            if rehearsal.get("compared"):
+                rec["comparison"] = {k: rehearsal.get(k) for k in ("label", "score", "precision", "uptake", "shared",
+                                                                    "outcome")}
+                rec["comparison"]["position"] = dict(getattr(env, "last_rehearsal", {}) or {}).get("position", "sunni")
             if rehearsal.get("skipped") or result.get("error"):
                 rec["note"] = rehearsal.get("skipped") or result.get("error")
             out.write(json.dumps(rec, default=str) + "\n")

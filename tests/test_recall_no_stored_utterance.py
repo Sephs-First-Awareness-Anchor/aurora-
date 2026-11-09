@@ -94,3 +94,24 @@ def test_conversation_memory_fallback_does_not_revoice_a_stored_line(monkeypatch
     assert line[:30] not in str(out or "")
     asked = wm.answer_from_context_carryover("what did you say about the king", systems=systems)
     assert line[:30] in str(asked or "")
+
+
+def test_readdress_with_nothing_of_her_own_returns_nothing(monkeypatch):
+    _identity(monkeypatch)
+
+    class WM:
+        def resolve_session_readdress(self, text, **kw):
+            return {"matched": True, "mode": "readdress", "confidence": 0.8, "anchor_term": "king",
+                    "matched_utterance": {"text": "What? I didn't even plan that.", "intent": "statement"}}
+
+        def answer_from_semantic_frames(self, *a, **k):
+            return ""
+
+        def answer_from_meanings(self, *a, **k):
+            return ""
+
+        def answer_from_claims(self, *a, **k):
+            return ""
+
+    out = aurora._answer_from_session_readdress_request({"working_memory": WM()}, "go back to what I said")
+    assert not out

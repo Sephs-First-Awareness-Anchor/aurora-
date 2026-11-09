@@ -981,7 +981,7 @@ class AuroraLexicalGrounding(WarpCapable):
         return {"recorded": False, "reason": "unknown_evidence_id"}
 
     def observe_demonstration(self, *, raw_text: str, context_text: str = "",
-                              demonstration_id: str = "") -> Dict[str, Any]:
+                              demonstration_id: str = "", demonstrated_by: str = "sunni") -> Dict[str, Any]:
         """FIX-A110: Sunni's real reply to what she was rehearsing.  The
         relation word of his reply, in its structural position, is observed
         through the ordinary entrance (observe_lexical_context, provenance
@@ -1000,7 +1000,7 @@ class AuroraLexicalGrounding(WarpCapable):
             provenance="demonstration",
             extra_evidence={"demonstration_id": str(demonstration_id or ""),
                             "context_surface_hash": _surface_hash(str(context_text or "")),
-                            "demonstrated_by": "sunni"},
+                            "demonstrated_by": str(demonstrated_by or "sunni")},
         )
         candidate_id = str(observation.get("candidate_id", "") or "")
         evidence_id = str(observation.get("evidence_id", "") or "")
