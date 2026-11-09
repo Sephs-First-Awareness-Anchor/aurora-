@@ -10825,3 +10825,22 @@ absorb = already_absorbed. Found while testing: the dev restore
 `git clean -fdq aurora_state` leaves gitignored organ files
 (reasoning_paths.json, unformed_patterns.json, lexical_grounding_state.json)
 in place -- use `git clean -fdqx aurora_state`.
+
+## FIX-A106 (PERFORMANCE + DEVELOPMENT) — Co-occurrence reaches nearby words, not the whole essay
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Decision (Sunni, 2026-11-08):** "whatever is most beneficial for her development."
+aurora_internal/aurora_ontological_scaffolding.py, OntologicalWeb.
+infer_relations_from_context: the exhaustive pairwise co-occurrence loop
+related every content word of an utterance to every other. For a long message
+(a 5,200-char ChatGPT reply in her history, a long Praxis partner reply) that
+was ~40,000 "related" pairs per pass -- nearly all between words paragraphs
+apart, i.e. noise in her web -- and a cost that grew with the square of the
+message length (120,146 add_relation calls, 14.3 s of a 31 s turn). Now a
+word relates to the content words within CO_OCCURRENCE_REACH = 24 (two
+disambiguation context windows) after it. An utterance of up to 24 content
+words relates every pair exactly as before; adjacency pass and
+_select_relation_type unchanged.
+**First Seen:** 2026-11-08: clone 2 of the 50-clone run lived only 378
+messages in 5 h (49 s/message) because her history's ChatGPT replies run long
+(median 1,016 chars, p90 3,462). After: scaffolding 14.3 s -> 1.5 s on the
+5,200-char turn (whole turn ~31 s -> ~14 s); short turns unchanged.

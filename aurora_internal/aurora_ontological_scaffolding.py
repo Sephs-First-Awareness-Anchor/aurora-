@@ -202,6 +202,11 @@ _RELATION_SELECTION_THRESHOLD = 0.70
 # selection or escalate to WARP pressure -- guards against one unlucky
 # early reconciliation looking like a pattern.
 _SELECTION_FAILURE_MIN_USES = 3
+# FIX-A106 (Sunni & Cael, 2026-11-08): co-occurrence reaches this many content
+# words.  An utterance of up to this many content words relates every pair, as
+# it always has; past it, a word relates to the content words near it, not to
+# words paragraphs away.  Two disambiguation context windows (12) wide.
+CO_OCCURRENCE_REACH = 24
 # FIX-A013: aggregated failure rate (failures / uses) for a (signature,
 # type) pairing above which it counts as a genuine recurring gap, not
 # noise -- deliberately below 1.0 since a pairing that's right most of the
@@ -1474,8 +1479,13 @@ class OntologicalWeb(WarpCapable):
         # _select_relation_type()'s nearest-fit selection over the same
         # already-declared axis-profile table -- see that method's
         # docstring. No pair-specific case is decided in this loop anymore.
+        # FIX-A106: pairs within CO_OCCURRENCE_REACH content words of each
+        # other.  Short utterances keep every pair; a long one (a 5,000-char
+        # essay) no longer links every word to every other -- that was
+        # ~40,000 "related" pairs per pass, nearly all of them noise, and a
+        # turn cost that grew with the square of the message length.
         for i, w1 in enumerate(known):
-            for w2 in known[i+1:]:
+            for w2 in known[i+1:i+CO_OCCURRENCE_REACH]:
                 r1, r2 = self.nodes[w1].role, self.nodes[w2].role
                 rtype, _rtype_sig = self._select_relation_type(
                     r1, r2, source=f"infer_relations_from_context:{r1}+{r2}",

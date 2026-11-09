@@ -173,3 +173,30 @@ def test_adjacency_loop_still_runs_after_pairwise_loop():
     # (rel.strength + 0.3*0.2 = 0.26) rather than erroring or being
     # skipped -- confirming both loops actually ran on this pair.
     assert engine.web.relations[rel_id].strength > 0.2
+
+
+# ---- FIX-A106: co-occurrence reaches nearby words, not the whole essay ------
+
+def test_short_utterance_still_relates_every_pair():
+    from aurora_internal.aurora_ontological_scaffolding import CO_OCCURRENCE_REACH
+    engine = OntologicalScaffoldingEngine()
+    words = [f"w{i}" for i in range(CO_OCCURRENCE_REACH)]
+    for w in words:
+        engine.web.add_node(w, "noun")
+    engine.web.infer_relations_from_context(words)
+    pairs = {frozenset((r.source_word, r.target_word)) for r in engine.web.relations.values()}
+    assert frozenset((words[0], words[-1])) in pairs
+    assert len(pairs) == CO_OCCURRENCE_REACH * (CO_OCCURRENCE_REACH - 1) // 2
+
+
+def test_long_utterance_relates_near_words_only():
+    from aurora_internal.aurora_ontological_scaffolding import CO_OCCURRENCE_REACH
+    engine = OntologicalScaffoldingEngine()
+    words = [f"w{i}" for i in range(200)]
+    for w in words:
+        engine.web.add_node(w, "noun")
+    engine.web.infer_relations_from_context(words)
+    pairs = {frozenset((r.source_word, r.target_word)) for r in engine.web.relations.values()}
+    assert frozenset(("w0", f"w{CO_OCCURRENCE_REACH - 1}")) in pairs
+    assert frozenset(("w0", f"w{CO_OCCURRENCE_REACH}")) not in pairs
+    assert frozenset(("w0", "w199")) not in pairs
