@@ -29,15 +29,19 @@ on:
       clone_count:
         description: "How many clones (each takes an equal share of the not-yet-lived conversations)"
         required: false
-        default: "50"
+        default: "100"
+      clones_per_job:
+        description: "Clones living side by side on one runner (4 cores, 16 GB; one Aurora uses ~1 core)"
+        required: false
+        default: "6"
       max_minutes:
         description: "Per-clone budget in minutes (a clone stops only between conversations)"
         required: false
-        default: "300"
+        default: "290"
       max_parallel:
-        description: "Clones running at once (public repos get up to 20 free concurrent jobs)"
+        description: "Runners at once (public repos get 20 free concurrent jobs; leave room for builds)"
         required: false
-        default: "20"
+        default: "17"
       build_app:
         description: "Start an Aurora app build with the new harvest"
         required: false
@@ -59,7 +63,10 @@ jobs:
     steps:
       - id: plan
         run: |
-          python3 -c "import json; print('indices=' + json.dumps(list(range(int('${{ github.event.inputs.clone_count || '50' }}')))))" >> "$GITHUB_OUTPUT"
+          # One matrix entry per RUNNER; each runner hosts clones_per_job clones
+          # (Sunni, 2026-11-09: several clones per job -- one Aurora uses about
+          # one of a runner's 4 cores, so one clone per runner left 3 idle).
+          python3 -c "import json, math; n=int('${{ github.event.inputs.clone_count || '100' }}'); k=max(1, int('${{ github.event.inputs.clones_per_job || '6' }}')); print('indices=' + json.dumps(list(range(math.ceil(n / k)))))" >> "$GITHUB_OUTPUT"
 
   clone:
     needs: plan
@@ -67,7 +74,7 @@ jobs:
     timeout-minutes: 355
     strategy:
       fail-fast: false
-      max-parallel: ${{ fromJSON(github.event.inputs.max_parallel || '20') }}
+      max-parallel: ${{ fromJSON(github.event.inputs.max_parallel || '17') }}
       matrix:
         index: ${{ fromJSON(needs.plan.outputs.indices) }}
     steps:
@@ -86,19 +93,42 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-core.txt
 
-      - name: Live this clone's share of her history
+      - name: Live these clones' shares of her history, side by side
         env:
           AURORA_SKIP_DEP_INSTALL: "1"
           PYTHONPATH: ".:flutter_app/android/app/src/main/python"
+          # One core each: no BLAS thread pools fighting over the runner's 4.
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
         run: |
-          mkdir -p yields
-          python -m aurora_internal.aurora_clone_harvest clone \
-            --index ${{ matrix.index }} \
-            --count ${{ github.event.inputs.clone_count || '50' }} \
-            --max-seconds $(( ${{ github.event.inputs.max_minutes || '300' }} * 60 )) \
-            --out yields/clone-${{ matrix.index }}.json.gz
+          count=${{ github.event.inputs.clone_count || '100' }}
+          per=${{ github.event.inputs.clones_per_job || '6' }}
+          budget=$(( ${{ github.event.inputs.max_minutes || '290' }} * 60 ))
+          job=${{ matrix.index }}
+          mkdir -p "$GITHUB_WORKSPACE/yields"
+          for k in $(seq 0 $(( per - 1 ))); do
+            i=$(( job * per + k ))
+            if [ "$i" -ge "$count" ]; then break; fi
+            # Each clone needs its own copy of her: she writes her state and
+            # even her own source files as she lives.
+            d="$RUNNER_TEMP/clone-$i"
+            mkdir -p "$d"
+            tar --exclude=./.git --exclude=./yields -cf - . | tar -xf - -C "$d"
+            ( cd "$d" && python -m aurora_internal.aurora_clone_harvest clone \
+                --index "$i" --count "$count" --max-seconds "$budget" \
+                --out "$GITHUB_WORKSPACE/yields/clone-$i.json.gz" \
+                > "$GITHUB_WORKSPACE/yields/clone-$i.log" 2>&1 ) &
+            sleep 20                     # stagger the boots
+          done
+          wait
+          for f in "$GITHUB_WORKSPACE"/yields/clone-*.log; do
+            echo "== $f"; grep -E "^clone [0-9]+(/| done)|Traceback|Error" "$f" | tail -4
+          done
+          ls -la "$GITHUB_WORKSPACE/yields"
 
-      - name: Hand back what it carved
+      - name: Hand back what they carved
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: clone-yield-${{ matrix.index }}
@@ -162,7 +192,7 @@ jobs:
             echo "harvest unchanged"
             exit 0
           fi
-          git commit -m "Clone harvest: ${{ github.event.inputs.clone_count || '50' }} clones (run ${{ github.run_number }})"
+          git commit -m "Clone harvest: ${{ github.event.inputs.clone_count || '100' }} clones (run ${{ github.run_number }})"
           for attempt in 1 2 3 4 5; do
             git pull --rebase -X theirs origin main && git push origin HEAD:main && exit 0
             sleep $(( attempt * 10 ))
