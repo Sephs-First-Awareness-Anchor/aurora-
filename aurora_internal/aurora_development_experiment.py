@@ -353,7 +353,8 @@ def thaw(repo_root: str, tar_path: str) -> None:
 # ----------------------------------------------------------------------------
 
 def run_arm(arm: str, history: List[str], *, repo_root: str, state_dir: str, out_dir: str,
-            seed: int, thaw_from: Optional[str] = None, freeze_to: Optional[str] = None, log=print) -> Dict[str, Any]:
+            seed: int, thaw_from: Optional[str] = None, freeze_to: Optional[str] = None, log=print,
+            positions: str = "both") -> Dict[str, Any]:
     os.makedirs(out_dir, exist_ok=True)
     if thaw_from:
         thaw(repo_root, thaw_from)
@@ -367,6 +368,9 @@ def run_arm(arm: str, history: List[str], *, repo_root: str, state_dir: str, out
     env._prepare()
     env.rehearse = True
     env.skip_absorbed = False
+    if positions == "sunni":              # FIX-A112 positions: her answers to GPT only
+        from aurora_historical_experience_environment import REHEARSAL_HEARD_SIDE
+        env.positions = {REHEARSAL_HEARD_SIDE: "sunni"}
     seed_everything(seed)                 # again, after boot's own draws
     log(f"[{arm}] boot {time.time() - t0:.0f}s, {len(history)} conversations", flush=True)
     stats = live_traced(systems, env, history, arm=arm, trace_path=os.path.join(out_dir, f"trace_{arm}.jsonl.gz"), log=log)
@@ -537,7 +541,7 @@ def compare_states(ab: Mapping[str, Any], ba: Mapping[str, Any], traces: Mapping
 
 def analyze(in_dir: str) -> Dict[str, Any]:
     traces = {}
-    for arm in ("A", "B", "A_rep", "AB", "BA"):
+    for arm in ("A", "B", "A_rep", "B_rep", "AB", "BA"):
         p = os.path.join(in_dir, f"trace_{arm}.jsonl.gz")
         if os.path.exists(p):
             traces[arm] = load_trace(p)
@@ -553,11 +557,13 @@ def analyze(in_dir: str) -> Dict[str, Any]:
                                                                        for a, t in traces.items()}}
     if "A" in traces and "A_rep" in traces:
         report["noise_floor"] = compare_on_history(traces["A"], traces["A_rep"], None, None, label="A vs A_rep (identical histories)")
+    if "B" in traces and "B_rep" in traces:
+        report["noise_floor_B"] = compare_on_history(traces["B"], traces["B_rep"], None, None, label="B vs B_rep (identical histories)")
     if "A" in traces and "BA" in traces:
         report["B_history_on_A"] = compare_on_history(traces["A"], traces["BA"], traces.get("A_rep"), traces.get("B"),
                                                       label="History A: first encounter (A) vs after History B (BA)")
     if "B" in traces and "AB" in traces:
-        report["A_history_on_B"] = compare_on_history(traces["B"], traces["AB"], None, traces.get("A"),
+        report["A_history_on_B"] = compare_on_history(traces["B"], traces["AB"], traces.get("B_rep"), traces.get("A"),
                                                       label="History B: first encounter (B) vs after History A (AB)")
     if "AB" in states and "BA" in states:
         report["order"] = compare_states(states["AB"], states["BA"], traces)
@@ -569,7 +575,7 @@ def render_markdown(report: Mapping[str, Any]) -> str:
              "Authors: Sunni (Sir) Morningstar & Cael Devo", ""]
     for arm, s in dict(report.get("arms") or {}).items():
         lines.append(f"- **{arm}**: {s.get('messages')} messages in {s.get('seconds')} s; rehearsal {s.get('rehearsal')}")
-    for key in ("noise_floor", "B_history_on_A", "A_history_on_B"):
+    for key in ("noise_floor", "noise_floor_B", "B_history_on_A", "A_history_on_B"):
         c = report.get(key)
         if not c:
             continue
@@ -616,13 +622,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--messages", type=int, default=100)
     p.add_argument("--out", required=True)
     r = sub.add_parser("arm")
-    r.add_argument("--arm", required=True, choices=["A", "B", "A_rep", "AB", "BA"])
+    r.add_argument("--arm", required=True, choices=["A", "B", "A_rep", "B_rep", "AB", "BA"])
     r.add_argument("--plan", required=True)
     r.add_argument("--out-dir", required=True)
     r.add_argument("--seed", type=int, default=20261108)
     r.add_argument("--thaw")
     r.add_argument("--freeze")
     r.add_argument("--state-dir", default="aurora_state")
+    r.add_argument("--positions", default="both", choices=["both", "sunni"])
     a = sub.add_parser("analyze")
     a.add_argument("--in-dir", required=True)
     a.add_argument("--out-dir", required=True)
@@ -642,9 +649,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.cmd == "arm":
         with open(args.plan, encoding="utf-8") as fh:
             plan = json.load(fh)
-        history = plan["B"] if args.arm in ("B", "AB") else plan["A"]
+        history = plan["B"] if args.arm in ("B", "B_rep", "AB") else plan["A"]
         run_arm(args.arm, history, repo_root=os.getcwd(), state_dir=args.state_dir, out_dir=args.out_dir,
-                seed=args.seed, thaw_from=args.thaw, freeze_to=args.freeze)
+                seed=args.seed, thaw_from=args.thaw, freeze_to=args.freeze, positions=args.positions)
         os._exit(0)
     report = analyze(args.in_dir)
     os.makedirs(args.out_dir, exist_ok=True)

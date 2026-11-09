@@ -21,15 +21,19 @@ on:
       start:
         description: "Index of the first conversation of History A (B follows it)"
         required: false
-        default: "100"
+        default: "598"
       messages:
         description: "Messages per history (each history is whole conversations)"
         required: false
-        default: "100"
+        default: "90"
       seed:
         description: "Seed shared by every arm"
         required: false
         default: "20261108"
+      positions:
+        description: "Rehearsal positions: both (as Sunni and as GPT) or sunni"
+        required: false
+        default: "both"
 
 concurrency:
   group: aurora-development-experiment
@@ -57,8 +61,8 @@ jobs:
         run: |
           mkdir -p exp
           python -m aurora_internal.aurora_development_experiment plan \
-            --start ${{ github.event.inputs.start || '100' }} \
-            --messages ${{ github.event.inputs.messages || '100' }} --out exp/plan.json
+            --start ${{ github.event.inputs.start || '598' }} \
+            --messages ${{ github.event.inputs.messages || '90' }} --out exp/plan.json
       - uses: actions/upload-artifact@v4
         with:
           name: exp-plan
@@ -72,7 +76,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arm: [A, B, A_rep]
+        # B_rep: the noise floor for History B too (FIX-A107 follow-up).
+        arm: [A, B, A_rep, B_rep]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -90,9 +95,10 @@ jobs:
       - name: Live the history, traced
         run: |
           freeze=""
-          if [ "${{ matrix.arm }}" != "A_rep" ]; then freeze="--freeze exp/S_${{ matrix.arm }}.tar.gz"; fi
+          case "${{ matrix.arm }}" in A|B) freeze="--freeze exp/S_${{ matrix.arm }}.tar.gz";; esac
           python -m aurora_internal.aurora_development_experiment arm --arm ${{ matrix.arm }} \
-            --plan exp/plan.json --out-dir exp --seed ${{ github.event.inputs.seed || '20261108' }} $freeze
+            --plan exp/plan.json --out-dir exp --seed ${{ github.event.inputs.seed || '20261108' }} \
+            --positions ${{ github.event.inputs.positions || 'both' }} $freeze
       - uses: actions/upload-artifact@v4
         with:
           name: exp-trace-${{ matrix.arm }}
@@ -100,7 +106,7 @@ jobs:
             exp/trace_*.jsonl.gz
             exp/state_*.json.gz
           retention-days: 14
-      - if: matrix.arm != 'A_rep'
+      - if: matrix.arm == 'A' || matrix.arm == 'B'
         uses: actions/upload-artifact@v4
         with:
           name: exp-frozen-${{ matrix.arm }}
@@ -141,7 +147,8 @@ jobs:
         run: |
           python -m aurora_internal.aurora_development_experiment arm --arm ${{ matrix.arm }} \
             --thaw exp/S_${{ matrix.frozen }}.tar.gz \
-            --plan exp/plan.json --out-dir exp --seed ${{ github.event.inputs.seed || '20261108' }}
+            --plan exp/plan.json --out-dir exp --seed ${{ github.event.inputs.seed || '20261108' }} \
+            --positions ${{ github.event.inputs.positions || 'both' }}
       - uses: actions/upload-artifact@v4
         with:
           name: exp-trace-${{ matrix.arm }}
