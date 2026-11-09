@@ -1,0 +1,177 @@
+name: Aurora Development Experiment
+
+# Authors: Sunni (Sir) Morningstar & Cael Devo
+#
+# Is her learning history-dependent?  (aurora_internal/aurora_development_experiment.py)
+#
+# Same historical experiences, same architecture, different developmental
+# histories preceding the encounter.  Every clone starts from this
+# repository's state with the same seeds; nothing here feeds back into her.
+#
+#   phase 1: A lives History A, B lives History B, A_rep lives History A again
+#            (the noise floor); A's and B's learned states are frozen.
+#   phase 2: AB = A's frozen state lives History B; BA = B's lives History A.
+#   analyze: A vs BA on History A, B vs AB on History B (beyond the noise
+#            floor, with every difference traced to where it formed in the
+#            earlier history), and A->B vs B->A final states.
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "Index of the first conversation of History A (B follows it)"
+        required: false
+        default: "100"
+      messages:
+        description: "Messages per history (each history is whole conversations)"
+        required: false
+        default: "100"
+      seed:
+        description: "Seed shared by every arm"
+        required: false
+        default: "20261108"
+
+concurrency:
+  group: aurora-development-experiment
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AURORA_SKIP_DEP_INSTALL: "1"
+  PYTHONPATH: ".:flutter_app/android/app/src/main/python"
+  PYTHONHASHSEED: "0"
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Choose History A and History B
+        run: |
+          mkdir -p exp
+          python -m aurora_internal.aurora_development_experiment plan \
+            --start ${{ github.event.inputs.start || '100' }} \
+            --messages ${{ github.event.inputs.messages || '100' }} --out exp/plan.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exp-plan
+          path: exp/plan.json
+          retention-days: 14
+
+  phase1:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [A, B, A_rep]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-core.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: exp-plan
+          path: exp
+      - name: Live the history, traced
+        run: |
+          freeze=""
+          if [ "${{ matrix.arm }}" != "A_rep" ]; then freeze="--freeze exp/S_${{ matrix.arm }}.tar.gz"; fi
+          python -m aurora_internal.aurora_development_experiment arm --arm ${{ matrix.arm }} \
+            --plan exp/plan.json --out-dir exp --seed ${{ github.event.inputs.seed || '20261108' }} $freeze
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exp-trace-${{ matrix.arm }}
+          path: |
+            exp/trace_*.jsonl.gz
+            exp/state_*.json.gz
+          retention-days: 14
+      - if: matrix.arm != 'A_rep'
+        uses: actions/upload-artifact@v4
+        with:
+          name: exp-frozen-${{ matrix.arm }}
+          path: exp/S_${{ matrix.arm }}.tar.gz
+          retention-days: 3
+
+  phase2:
+    needs: phase1
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arm: AB
+            frozen: A
+          - arm: BA
+            frozen: B
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-core.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: exp-plan
+          path: exp
+      - uses: actions/download-artifact@v4
+        with:
+          name: exp-frozen-${{ matrix.frozen }}
+          path: exp
+      - name: Live the other history from the frozen state
+        run: |
+          python -m aurora_internal.aurora_development_experiment arm --arm ${{ matrix.arm }} \
+            --thaw exp/S_${{ matrix.frozen }}.tar.gz \
+            --plan exp/plan.json --out-dir exp --seed ${{ github.event.inputs.seed || '20261108' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exp-trace-${{ matrix.arm }}
+          path: |
+            exp/trace_*.jsonl.gz
+            exp/state_*.json.gz
+          retention-days: 14
+
+  analyze:
+    needs: phase2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-core.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: exp-trace-*
+          merge-multiple: true
+          path: exp
+      - name: What changed, and why
+        run: python -m aurora_internal.aurora_development_experiment analyze --in-dir exp --out-dir exp/report
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exp-report
+          path: exp/report/
+          retention-days: 30

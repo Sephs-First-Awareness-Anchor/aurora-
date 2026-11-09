@@ -10844,3 +10844,31 @@ _select_relation_type unchanged.
 messages in 5 h (49 s/message) because her history's ChatGPT replies run long
 (median 1,016 chars, p90 3,462). After: scaffolding 14.3 s -> 1.5 s on the
 5,200-char turn (whole turn ~31 s -> ~14 s); short turns unchanged.
+
+## FIX-A107 (INSTRUMENT) — Is her learning history-dependent? (development experiment)
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Design (Sunni, 2026-11-08):** "Same historical experiences. Same underlying
+architecture. Different developmental histories preceding the encounter.
+That's the variable." Compare A on History A vs B-after-B on History A (and
+the reverse), trace "what changed and why", freeze learned states, control
+seeds, and A->B vs B->A. "I wouldn't change her learning mechanisms to make
+the experiment work. I'd instrument the existing ones."
+aurora_internal/aurora_development_experiment.py +
+.github/workflows/aurora-development-experiment.yml. Watches only: nothing
+feeds back into her or the clone harvest. Arms from the same repo state and
+seed: A, B, A_rep (noise floor: her machinery runs on the clock, so identical
+runs can differ), AB (A's frozen state -- aurora_state plus autoevolved
+sources -- lives B), BA. Per message: relations in her web among that
+message's content words (strength >= 0.25), births/promotions in every organ,
+and on rehearsal turns the landings, offered path, voice-gate outcome,
+unformed residue and the comparison with Sunni's real reply. Analysis counts
+only differences beyond the replicate, and traces a recognized relation /
+offered path / ability back to the message in the earlier history where it
+formed. Order: final-state comparison of relations, operations, word
+groundings, abilities, paths.
+**First Seen:** 2026-11-08 local pilot (episodes 101 + 102, 6 + 4 messages):
+noise floor 0.0; on History A, BA engaged 1 relation A never did, dropped 6,
+and one reasoning landing moved from B-axis to X-axis abilities that existed
+before B's history (selection statistics shifted -- visible, not yet pinned
+to a single message); A->B vs B->A: relations jaccard 0.96, word groundings
+0.29.
