@@ -11577,7 +11577,7 @@ def get_cognitive_stats() -> str:
             # Rehearsal of her history (2026-11-08).
             _reh = dict(_hist_status.get("rehearsal") or {})
             for _key in ("rehearsed", "silent", "compared", "match", "partial", "mismatch", "fanned_out",
-                         "lived_by_clones"):
+                         "lived_by_clones", "silent_judged"):
                 stats[f"rehearsal_{_key}"] = int(_reh.get(_key, 0) or 0)
             _rl = dict(_reh.get("last") or {})
             stats["rehearsal_last"] = (

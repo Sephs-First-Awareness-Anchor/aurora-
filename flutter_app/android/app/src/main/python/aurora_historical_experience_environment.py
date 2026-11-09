@@ -33,6 +33,9 @@ _MAX_PENDING_USER_TEXT = 12000
 REHEARSE_DEFAULT = True
 REHEARSAL_MATCH = 0.45       # comparison score at or above -> rehearsal_match
 REHEARSAL_MISMATCH = 0.15    # below -> rehearsal_mismatch; between -> no verdict
+# Her reply "held together" (expression) at or above this on her own
+# grammaticality measure (FIX-A108).
+REHEARSAL_EXPRESSION_FORMED = 0.5
 REHEARSAL_HEARD_SIDE = "historical_other_assistant"   # what she answers
 REHEARSAL_REAL_SIDE = "historical_user"               # Sunni: what she is compared with
 
@@ -46,14 +49,31 @@ def _rehearsal_words(text: str) -> set:
             if len(w) >= 3 and w not in stop}
 
 
-def rehearsal_comparison(her_reply: str, real_reply: str, user_form: Mapping[str, Any]) -> Dict[str, Any]:
+def rehearsal_comparison(her_reply: str, real_reply: str, user_form: Mapping[str, Any],
+                         *, expression_score: Optional[float] = None) -> Dict[str, Any]:
     """How close her rehearsed reply came to what was really said next.
 
     precision: share of her content words the real reply also used (she is
     not penalised for the real reply being longer); uptake: whether her reply
     took up the relation she was addressed with (the same check her live
     arbitration uses).  Words AND structure, per Sunni.
+
+    FIX-A108 -- every comparison is a diagnosis on two sides, so it can
+    adjust her understanding whatever the result (Sunni, 2026-11-09: "Every
+    comparison to my responses should adjust the parameters of her
+    understanding"):
+      meaning    -- she took up what Sunni's reply took up: some of her words
+                    are in his reply and max(precision, uptake) clears
+                    REHEARSAL_MATCH;
+      expression -- her reply held together, on her own grammaticality
+                    measure for the reply she formed (None when unknown).
+    label: match = both sides right; partial = meaning right, expression
+    not formed; mismatch = meaning missed; silent = she formed nothing.
     """
+    if not str(her_reply or "").strip():
+        return {"label": "rehearsal_silent", "score": 0.0, "precision": 0.0, "uptake": 0.0, "shared": [],
+                "meaning_positive": False, "expression_positive": None,
+                "meaning_score": 0.0, "expression_score": None}
     mine, real = _rehearsal_words(her_reply), _rehearsal_words(real_reply)
     precision = len(mine & real) / len(mine) if mine else 0.0
     uptake = 0.0
@@ -63,18 +83,36 @@ def rehearsal_comparison(her_reply: str, real_reply: str, user_form: Mapping[str
     except Exception:
         uptake = 0.0
     score = round(0.6 * precision + 0.4 * uptake, 4)
-    if mine and real and precision == 0.0:
-        # Nothing she said was in what was really said: echoing the relation
-        # she was asked about does not make that a partial match.
-        label = "rehearsal_mismatch"
-    elif score >= REHEARSAL_MATCH:
+    meaning_score = round(max(precision, uptake), 4)
+    # Nothing she said was in what was really said: echoing the relation she
+    # was asked about does not make that understanding.
+    meaning_positive = bool(precision > 0.0 and meaning_score >= REHEARSAL_MATCH)
+    expression_positive = (None if expression_score is None
+                           else bool(float(expression_score) >= REHEARSAL_EXPRESSION_FORMED))
+    if meaning_positive and expression_positive is not False:
         label = "rehearsal_match"
-    elif score < REHEARSAL_MISMATCH:
-        label = "rehearsal_mismatch"
-    else:
+    elif meaning_positive:
         label = "rehearsal_partial"
+    else:
+        label = "rehearsal_mismatch"
     return {"label": label, "score": score, "precision": round(precision, 4),
-            "uptake": round(uptake, 4), "shared": sorted(mine & real)[:12]}
+            "uptake": round(uptake, 4), "shared": sorted(mine & real)[:12],
+            "meaning_positive": meaning_positive, "expression_positive": expression_positive,
+            "meaning_score": meaning_score,
+            "expression_score": None if expression_score is None else round(float(expression_score), 4)}
+
+
+def rehearsal_expression_score(pending: Mapping[str, Any]) -> Optional[float]:
+    """Her own grammaticality measure for the reply she formed, from the
+    contributors the turn registered -- not a judgement made here."""
+    contributors = dict(dict(pending or {}).get("contributors") or {})
+    values = []
+    for key, field in (("expression", "grammaticality"), ("representation", "grammaticality"),
+                       ("grammar_motif", "constraint_fit")):
+        v = _safe_float(dict(contributors.get(key) or {}).get(field))
+        if v is not None and v > 0.0:
+            values.append(v)
+    return max(values) if values else None
 
 
 def _safe_float(value: Any) -> Optional[float]:
@@ -155,7 +193,7 @@ class HistoricalExperienceEnvironment:
         self._rehearsal: Optional[Dict[str, Any]] = None
         self.rehearsal_counters = {"rehearsed": 0, "silent": 0, "compared": 0, "match": 0,
                                    "partial": 0, "mismatch": 0, "fanned_out": 0, "errors": 0,
-                                   "lived_by_clones": 0}
+                                   "lived_by_clones": 0, "silent_judged": 0}
         self.last_rehearsal: Dict[str, Any] = {}
         # FIX-A105: conversations her clones already rehearsed (their harvest
         # was absorbed) are still WITNESSED here, but not rehearsed again.
@@ -1302,10 +1340,15 @@ class HistoricalExperienceEnvironment:
         # the next historical message answered the real reply, not hers, and
         # must never be read as a receiver's verdict on it -- silent or not.
         self._retire_pending(session)
+        form = dict(dict(self.systems.get("_last_pipeline_state") or {}).get("relational_form") or {})
         if not reply:
             self.rehearsal_counters["silent"] += 1
+            # FIX-A108: silence is an outcome too.  If the turn registered
+            # what it understood, Sunni's real reply still judges it.
+            if pending:
+                self._rehearsal = {"session": session, "reply": "", "pending": pending, "form": form,
+                                   "event_id": str(event.get("event_id", "") or ""), "heard": text[:200]}
             return {"rehearsed": True, "reply": ""}
-        form = dict(dict(self.systems.get("_last_pipeline_state") or {}).get("relational_form") or {})
         self._rehearsal = {"session": session, "reply": reply, "pending": pending, "form": form,
                            "event_id": str(event.get("event_id", "") or ""), "heard": text[:200]}
         return {"rehearsed": True, "reply": reply[:200]}
@@ -1313,18 +1356,26 @@ class HistoricalExperienceEnvironment:
     def _compare_rehearsal(self, aurora_mod: Any, real_reply: str) -> Dict[str, Any]:
         held = dict(self._rehearsal or {})
         self._rehearsal = None
-        cmp = rehearsal_comparison(held.get("reply", ""), real_reply, held.get("form") or {})
-        self.rehearsal_counters["compared"] += 1
-        self.rehearsal_counters[cmp["label"].split("_", 1)[1]] += 1
-        fanned = {}
         pending = dict(held.get("pending") or {})
+        cmp = rehearsal_comparison(held.get("reply", ""), real_reply, held.get("form") or {},
+                                   expression_score=rehearsal_expression_score(pending))
+        self.rehearsal_counters["compared"] += 1
+        _key = cmp["label"].split("_", 1)[1]
+        _key = "silent_judged" if _key == "silent" else _key
+        self.rehearsal_counters[_key] = int(self.rehearsal_counters.get(_key, 0)) + 1
+        fanned = {}
         finalize = getattr(aurora_mod, "_finalize_validated_communication", None)
-        if pending and finalize is not None and cmp["label"] != "rehearsal_partial":
+        if pending and finalize is not None:
+            # Every comparison fans out (FIX-A108), each side with its own
+            # polarity, and Sunni's real reply goes in as the receiver's words.
             observation = {"validated_response": pending,
-                           "accuracy": {"label": cmp["label"],
-                                        "score": max(0.80, cmp["score"]) if cmp["label"] == "rehearsal_match"
-                                        else cmp["score"]}}
-            fanned = dict(finalize(self.systems, observation, "", session_id=held.get("session", "")) or {})
+                           "accuracy": {"label": cmp["label"], "score": cmp["score"], "rehearsal": True,
+                                        "meaning_positive": cmp["meaning_positive"],
+                                        "expression_positive": cmp["expression_positive"],
+                                        "meaning_score": cmp["meaning_score"],
+                                        "expression_score": cmp["expression_score"]}}
+            fanned = dict(finalize(self.systems, observation, str(real_reply or "")[:600],
+                                   session_id=held.get("session", "")) or {})
             self.rehearsal_counters["fanned_out"] += 1
         self._retire_pending(held.get("session", ""))
         self.last_rehearsal = {"heard": held.get("heard", ""), "her_reply": held.get("reply", "")[:160],

@@ -10872,3 +10872,53 @@ and one reasoning landing moved from B-axis to X-axis abilities that existed
 before B's history (selection statistics shifted -- visible, not yet pinned
 to a single message); A->B vs B->A: relations jaccard 0.96, word groundings
 0.29.
+
+## FIX-A108 (ARCHITECTURAL) — Every comparison with Sunni's real reply teaches her understanding
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-09):** "investigate why her rehearsal of the conversations
+are not improving her response and understanding abilities. Every comparison
+to my responses should adjust the parameters of her understanding."
+**Found (real rehearsal, 45 turns of one conversation):** only 23 of 45
+comparisons reached her organs. (1) Silent turns (19) were never compared.
+(2) Partials were recorded and dropped. (3) A mismatch set neither
+meaning_issue nor expression_issue, and six organs take a negative verdict
+only when one of them names the problem -- grammar motifs, language field,
+semantic variants, transition predictor, concept crystals, lexical grounding
+-- so every mismatch skipped all six (crystals / lexical moved on 5 of 23
+verdicts, positives only). (4) The verdict was finalized with user_text "",
+so no organ ever saw what Sunni actually said back.
+**Fix:** rehearsal_comparison diagnoses two sides: MEANING (she took up what
+his reply took up: shared words and max(precision, uptake) >= 0.45) and
+EXPRESSION (her own grammaticality measure for the reply she formed, from the
+turn's contributors; >= 0.5). match = both; partial = meaning right,
+expression not formed; mismatch = meaning missed; silent = she formed nothing
+(held and judged when the turn registered an understanding). Every
+comparison fans out with Sunni's real reply as the receiver's words.
+_classify_validated_communication reads the two sides for rehearsal (the
+real reply's wording was addressed to the other speaker, so it says nothing
+about HER expression). _finalize_validated_communication gives per-side
+polarity: meaning-side contributors (semantic variants, transition
+predictor, concept crystals, lexical grounding, reasoning paths, unformed
+patterns) take the meaning polarity; expression-side (grammar motifs,
+language field) the expression polarity. Live turns carry no per-side
+information and keep their original gating unchanged.
+**Verified:** same conversation after the fix: 44 of 45 rehearsals learned
+from (17 silences judged), concept crystals + lexical grounding on 44
+verdicts (was 5), grammar 15 (was 2), language field 18 (was 5).
+
+## FIX-A109 (BINDING RULE 1) — A recalled utterance is never handed back whole as her answer
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Found (development experiment, 2026-11-09):** 11-38% of her rehearsal
+replies were verbatim ChatGPT messages witnessed earlier, passed by the voice
+gate as own_voice. Source: _build_comprehension_response -> recall_question
+-> _deep_context_carryover_answer -> _answer_from_sedimemory_context, whose
+second loop returned the first recalled item's stored utterance (or a summary
+holding the full text of a truncated stored utterance) as her reply, with
+literal preservation armed. Sedimemory keeps rehearsal exchanges with the
+heard message as user_text.
+**Fix (Sunni: at the source only -- no provenance check at the gate, "i dont
+want her to be incapable of using words said to her"):** that loop no longer
+returns a stored utterance; a summary is used only when it is not a stored
+utterance (shared 48-char opening or containment). Explicit quote requests
+("what did I say") still quote. Verified on the conversation that leaked:
+no stored line comes back.

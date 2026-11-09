@@ -7003,6 +7003,35 @@ def _classify_validated_communication(
 
     positive_labels = {"confirmed", "accepted", "clarification_supplied", "selection_supplied",
                        "reconstructed", "rehearsal_match"}
+    if accuracy.get("rehearsal"):
+        # FIX-A108: a rehearsal comparison is a diagnosis on two sides.  The
+        # real reply was addressed to the other speaker, so its wording
+        # ("what do you mean", ...) says nothing about HER expression.
+        _mp = bool(accuracy.get("meaning_positive"))
+        _ep_raw = accuracy.get("expression_positive")
+        _ep = None if _ep_raw is None else bool(_ep_raw)
+        if _mp and _ep is not False:
+            effect, kind = "resolved_fully", "positive"
+        elif _mp:
+            effect, kind = "resolved_partially", "negative"
+        else:
+            effect, kind = "resolved_partially__followup_gap_appeared", "negative"
+        return {
+            "observed_effect": effect,
+            "outcome_kind": kind,
+            "label": label,
+            "score": score,
+            "evidence_confidence": max(score, 1.0 - score),
+            "fit_reason": str(accuracy.get("fit_reason") or ""),
+            "receiver_resonance": systems.get("_pending_receiver_resonance"),
+            "user_text": str(user_text or "")[:260],
+            "meaning_issue": not _mp,
+            "expression_issue": _ep is False,
+            "meaning_positive": _mp,
+            "expression_positive": _ep,
+            "meaning_score": accuracy.get("meaning_score"),
+            "expression_score": accuracy.get("expression_score"),
+        }
     if label == "rehearsal_mismatch":
         # Historical rehearsal (2026-11-08): her rehearsed reply went
         # somewhere the conversation did not -- a divergence, not a refusal
@@ -7064,6 +7093,20 @@ def _finalize_validated_communication(
     positive = kind == "positive"
     meaning_issue = bool(outcome.get("meaning_issue", False))
     expression_issue = bool(outcome.get("expression_issue", False))
+    # FIX-A108: per-side polarity.  A verdict may say the MEANING was right and
+    # the EXPRESSION was not (or the reverse); meaning-side contributors take
+    # the meaning polarity, expression-side contributors the expression
+    # polarity.  Without per-side information (live turns) both fall back to
+    # the overall kind with the original issue gating -- unchanged.
+    _mp = outcome.get("meaning_positive")
+    _ep = outcome.get("expression_positive")
+    meaning_apply = (positive or meaning_issue) if _mp is None else True
+    meaning_positive = positive if _mp is None else bool(_mp)
+    meaning_kind = kind if _mp is None else ("positive" if meaning_positive else "negative")
+    expression_apply = (positive or expression_issue) if _ep is None else True
+    expression_positive = positive if _ep is None else bool(_ep)
+    expression_clarity = (float(outcome.get("score", 0.0) or 0.0) if _ep is None
+                          else float(outcome.get("expression_score") or 0.0))
     evidence_id = str(pending.get("response_id") or f"{session_id}:{turn_tick}")
     receiver_meta = dict(outcome)
     receiver_meta["response_id"] = evidence_id
@@ -7118,13 +7161,13 @@ def _finalize_validated_communication(
             grammar.get("motif_id")
             and grammar_engine is not None
             and hasattr(grammar_engine, "record_motif_outcome")
-            and (positive or expression_issue)
+            and expression_apply
         ):
             try:
                 finalized["grammar"] = bool(grammar_engine.record_motif_outcome(
                     str(grammar["motif_id"]),
-                    "positive" if positive else "negative",
-                    clarity=float(outcome.get("score", 0.0) or 0.0),
+                    "positive" if expression_positive else "negative",
+                    clarity=expression_clarity,
                     context_text=user_text,
                 ))
             except Exception as _aurora_boundary_exc:
@@ -7145,13 +7188,13 @@ def _finalize_validated_communication(
             variant
             and coordinator is not None
             and hasattr(coordinator, "record_variant_outcome")
-            and (positive or meaning_issue)
+            and meaning_apply
         ):
             try:
                 routed = coordinator.record_variant_outcome(
                     manifold_slot_id=str(variant.get("manifold_slot_id") or ""),
                     topology_id=str(variant.get("topology_id") or ""),
-                    positive=positive,
+                    positive=meaning_positive,
                     dps=dps,
                 )
                 finalized["semantic_variant"] = bool(routed is not None)
@@ -7175,11 +7218,11 @@ def _finalize_validated_communication(
         if (
             transition_predictor is not None
             and hasattr(transition_predictor, "record_turn_outcome")
-            and (positive or meaning_issue)
+            and meaning_apply
         ):
             try:
                 finalized["variant_transition"] = bool(
-                    transition_predictor.record_turn_outcome(positive=positive)
+                    transition_predictor.record_turn_outcome(positive=meaning_positive)
                 )
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
@@ -7197,12 +7240,12 @@ def _finalize_validated_communication(
             language_field is not None
             and language.get("path_key")
             and hasattr(language_field, "apply_receiver_outcome")
-            and (positive or expression_issue)
+            and expression_apply
         ):
             try:
                 finalized["language_field"] = bool(language_field.apply_receiver_outcome(
                     str(language["path_key"]),
-                    float(outcome.get("score", 0.0) or 0.0),
+                    expression_clarity,
                     effect if effect != "pending_verification" else str(outcome.get("label") or ""),
                     float(outcome.get("evidence_confidence", 0.0) or 0.0),
                 ))
@@ -7250,19 +7293,19 @@ def _finalize_validated_communication(
             registry is not None
             and concept.get("crystal_id")
             and hasattr(registry, "record_receiver_outcome")
-            and (positive or meaning_issue)
+            and meaning_apply
         ):
             try:
-                dimension = "semantic_precision" if positive else "misunderstanding_repair"
+                dimension = "semantic_precision" if meaning_positive else "misunderstanding_repair"
                 applied = registry.record_receiver_outcome(
                     str(concept.get("crystal_id")),
                     str(concept.get("lsa_facet_role") or ""),
-                    positive=positive,
+                    positive=meaning_positive,
                     outcome_score=float(outcome.get("score", 0.0) or 0.0),
                     evidence_id=evidence_id,
                     failpoint_dimension=dimension,
                 )
-                if positive and concept.get("axis_bucket") and hasattr(registry, "observe_sedi"):
+                if meaning_positive and concept.get("axis_bucket") and hasattr(registry, "observe_sedi"):
                     registry.observe_sedi(dict(concept["axis_bucket"]), delta=round(float(outcome.get("score", 0.0) or 0.0) * 0.06, 4))
                 if hasattr(registry, "save"):
                     registry.save(str(systems.get("state_dir") or "aurora_state"))
@@ -7286,7 +7329,7 @@ def _finalize_validated_communication(
         # above: a word's structural-role interpretation is a MEANING-level
         # attribute, not an expression-clarity one.
         lexical_entries = list(contributors.get("lexical_grounding") or [])
-        if lexical_entries and (positive or meaning_issue):
+        if lexical_entries and meaning_apply:
             lexical_grounding = systems.get("lexical_grounding")
             if lexical_grounding is not None and hasattr(lexical_grounding, "record_evidence_outcome"):
                 applied_lexical = []
@@ -7300,7 +7343,7 @@ def _finalize_validated_communication(
                         _lex_result = lexical_grounding.record_evidence_outcome(
                             candidate_id=_lex_candidate_id,
                             evidence_id=_lex_evidence_id,
-                            outcome_kind=kind,
+                            outcome_kind=meaning_kind,
                             observed_effect=effect,
                         )
                         applied_lexical.append(bool(dict(_lex_result or {}).get("recorded")))
@@ -7382,7 +7425,8 @@ def _finalize_validated_communication(
     _unformed_verdict = systems.get("unformed_patterns")
     if _unformed_verdict is not None:
         try:
-            finalized["unformed_patterns"] = dict(_unformed_verdict.record_receiver_outcome(evidence_id, kind) or {})
+            # Meaning side (FIX-A108): understood or not, however it was said.
+            finalized["unformed_patterns"] = dict(_unformed_verdict.record_receiver_outcome(evidence_id, meaning_kind) or {})
         except Exception as _unformed_verdict_exc:
             _aurora_record_exception_from_locals(
                 locals(), module=__name__, operation="unformed_patterns:receiver_outcome",
@@ -7391,7 +7435,8 @@ def _finalize_validated_communication(
     _paths_verdict = systems.get("reasoning_paths")
     if _paths_verdict is not None:
         try:
-            finalized["reasoning_paths"] = dict(_paths_verdict.record_receiver_outcome(evidence_id, kind) or {})
+            # Meaning side (FIX-A108): a path is where her reasoning landed.
+            finalized["reasoning_paths"] = dict(_paths_verdict.record_receiver_outcome(evidence_id, meaning_kind) or {})
         except Exception as _paths_verdict_exc:
             _aurora_record_exception_from_locals(
                 locals(), module=__name__, operation="reasoning_paths:receiver_outcome",
@@ -8484,19 +8529,25 @@ def _answer_from_sedimemory_context(
             continue
         if str(item.get("source", "") or "").strip() == "afterthought":
             continue
-        user_line = _ut2
-        # Don't echo back user questions as Aurora's first-person memory.
-        if user_line and not user_line.endswith("?") and not any(user_line.startswith(p) for p in _malformed_prefixes):
-            return _render_runtime_intent(
-                systems,
-                user_line[:220],
-                emotion_tone='precise',
-                relationship_signal='recognition',
-                certainty=0.84,
-                supporting_concepts=[user_line[:220], 'earlier', 'utterance'],
-                constraints=['recall', 'memory'],
-            )
+        # FIX-A109: a remembered utterance is material she recalls FROM, not
+        # her answer (Sunni, 2026-11-09).  This loop used to hand back the first recalled
+        # item's stored utterance whole -- including history she only
+        # witnessed, so ChatGPT's sentences came out as "her" reply with
+        # literal preservation armed.  Explicit quote requests ("what did I
+        # say") are answered above; her words for anything else are her own.
+        # A summary that IS a stored utterance (stores keep the whole text in
+        # one field and a truncated copy in another) is the utterance.
+        _stored_lines = [
+            str(v).strip().lower() for v in [_ut2, *content.values()]
+            if isinstance(v, str) and len(str(v).strip()) >= 20
+        ]
         summary = str(item.get("summary", "") or "").strip()
+        _sum_low = summary.lower()
+        if summary and any(
+            _sum_low[:48] == line[:48] or line in _sum_low or _sum_low in line
+            for line in _stored_lines
+        ):
+            continue
         # Skip bare token strings that are internal system labels (intent codes, source names
         # like "wellbeing_query", "dna_crystallization", "simulation") — they are metadata,
         # not meaningful recall content. A valid summary contains spaces or is a sentence.

@@ -773,7 +773,9 @@ class _HubScreenState extends State<HubScreen> {
         _statRow('Rehearsed',
             '${_stats['rehearsal_rehearsed'] as int? ?? 0} · ${_stats['rehearsal_silent'] as int? ?? 0} silent · ${_stats['rehearsal_lived_by_clones'] as int? ?? 0} lived by clones'),
         _statRow('Rehearsal vs real',
-            '${_stats['rehearsal_match'] as int? ?? 0} close · ${_stats['rehearsal_partial'] as int? ?? 0} partial · ${_stats['rehearsal_mismatch'] as int? ?? 0} apart · ${_stats['rehearsal_fanned_out'] as int? ?? 0} learned from'),
+            // FIX-A108: partial = meaning right, expression not yet formed;
+            // every comparison (silence included) is learned from.
+            '${_stats['rehearsal_match'] as int? ?? 0} understood · ${_stats['rehearsal_partial'] as int? ?? 0} meant it, not said · ${_stats['rehearsal_mismatch'] as int? ?? 0} missed · ${_stats['rehearsal_silent_judged'] as int? ?? 0} silent · ${_stats['rehearsal_fanned_out'] as int? ?? 0} learned from'),
         if (((_stats['rehearsal_last'] as String?) ?? '').isNotEmpty)
           Padding(padding: const EdgeInsets.only(top: 2, bottom: 4),
             child: Text((_stats['rehearsal_last'] as String?) ?? '', maxLines: 3,
