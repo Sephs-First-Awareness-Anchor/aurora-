@@ -1783,6 +1783,26 @@ class GrammarEngine:
             orientation,
         )
 
+    def observe_demonstration(self, text: str, *, context_text: str = "", max_sentences: int = 4) -> int:
+        """FIX-A110: Sunni's real reply to what she was rehearsing is a
+        demonstration of structure that worked there.  Each sentence's role
+        pattern is credited as a SUCCESS in that context (her own motif
+        lineage, her own promotion rule) -- unlike observe_exemplar, which
+        only traces a pattern without crediting it.  Returns how many were
+        credited."""
+        credited = 0
+        orientation, _ = self._pressure_state()
+        context_hash = self._context_hash(context_text)
+        for sentence in re.split(r"(?<=[.!?])\s+", str(text or "").strip())[: max(1, int(max_sentences))]:
+            pattern = self._tagger.extract_pattern(sentence)
+            if not pattern:
+                continue
+            if self._lineage.record_outcome(pattern, "positive", context_hash=context_hash,
+                                            token_count=len(sentence.split()),
+                                            constraint_orientation=orientation):
+                credited += 1
+        return credited
+
     def record_motif_outcome(
         self,
         motif_id: str,

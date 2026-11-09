@@ -36,6 +36,11 @@ REHEARSAL_MISMATCH = 0.15    # below -> rehearsal_mismatch; between -> no verdic
 # Her reply "held together" (expression) at or above this on her own
 # grammaticality measure (FIX-A108).
 REHEARSAL_EXPRESSION_FORMED = 0.5
+# FIX-A110: after every comparison, Sunni's real reply is also a
+# DEMONSTRATION -- she listens to it through her own understanding and
+# learns where it lands (reasoning path), how it was built (grammar motif)
+# and the word it turned on (lexical grounding).
+REHEARSAL_DEMONSTRATE = True
 REHEARSAL_HEARD_SIDE = "historical_other_assistant"   # what she answers
 REHEARSAL_REAL_SIDE = "historical_user"               # Sunni: what she is compared with
 
@@ -193,12 +198,14 @@ class HistoricalExperienceEnvironment:
         self._rehearsal: Optional[Dict[str, Any]] = None
         self.rehearsal_counters = {"rehearsed": 0, "silent": 0, "compared": 0, "match": 0,
                                    "partial": 0, "mismatch": 0, "fanned_out": 0, "errors": 0,
-                                   "lived_by_clones": 0, "silent_judged": 0}
+                                   "lived_by_clones": 0, "silent_judged": 0, "demonstrated": 0,
+                                   "demo_paths": 0, "demo_motifs": 0, "demo_words": 0}
         self.last_rehearsal: Dict[str, Any] = {}
         # FIX-A105: conversations her clones already rehearsed (their harvest
         # was absorbed) are still WITNESSED here, but not rehearsed again.
         self.skip_absorbed = True
         self._absorbed_episodes: Optional[set] = None
+        self.demonstrate = REHEARSAL_DEMONSTRATE
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -1308,6 +1315,67 @@ class HistoricalExperienceEnvironment:
             return self._compare_rehearsal(aurora_mod, text)
         return {}
 
+    def _demonstrate(self, aurora_mod: Any, held: Mapping[str, Any], real_reply: str) -> Dict[str, Any]:
+        """FIX-A110 -- Sunni's real reply as a demonstration, not just a verdict.
+
+        1. She LISTENS to his reply through her own understanding (an
+           ordinary turn on it; its own reply is discarded and nothing is
+           registered for validation).  Where it lands in her -- meaning,
+           axis, concepts, the abilities it activates -- is carved as a
+           remembered path under the pressure of what she was answering, so
+           next time that pressure comes her ability selection leans toward
+           what his answer called on.
+        2. Each sentence's structure is credited to her grammar motifs as
+           structure that worked in that context.
+        3. The relation word his reply turned on is validated in her lexical
+           grounding as what that moment called for.
+        Her own promotion rules decide what any of it becomes."""
+        if not getattr(self, "demonstrate", REHEARSAL_DEMONSTRATE) or not real_reply.strip():
+            return {}
+        out: Dict[str, Any] = {}
+        rp = self.systems.get("reasoning_paths")
+        sig = held.get("path_signature")
+        rid = str(dict(held.get("pending") or {}).get("response_id") or "")
+        if not sig and rp is not None and rid:
+            sig = dict(dict(getattr(rp, "pending", {}) or {}).get(rid) or {}).get("signature")
+        heard = str(held.get("heard", "") or "")
+        listen_session = f"demo_{held.get('session', '')}"
+        try:
+            aurora_mod.process_external_user_turn(
+                self.systems, real_reply[:_MAX_PENDING_USER_TEXT],
+                source_label="historical_demonstration", session_id=listen_session,
+                auto_search_enabled=False, record_exchange=False, update_interactive_state=False,
+                run_periodic_maintenance=False, mode_name="BOUNDED")
+            pipeline_state = dict(self.systems.get("_last_pipeline_state") or {})
+            abilities = list(self.systems.get("_last_active_ability_ids") or [])
+            self._retire_pending(listen_session)
+            if rp is not None and sig and hasattr(rp, "carve_demonstration"):
+                from aurora_internal.aurora_reasoning_paths import landings as _landings
+                out["path"] = rp.carve_demonstration(sig, _landings(pipeline_state, abilities))
+                if out["path"].get("carved") or out["path"].get("deepened"):
+                    self.rehearsal_counters["demo_paths"] = int(self.rehearsal_counters.get("demo_paths", 0)) + 1
+        except Exception as exc:
+            out["listen_error"] = f"{type(exc).__name__}: {exc}"[:160]
+        grammar = self.systems.get("grammar_engine")
+        if grammar is not None and hasattr(grammar, "observe_demonstration"):
+            try:
+                out["motifs"] = int(grammar.observe_demonstration(real_reply, context_text=heard) or 0)
+                self.rehearsal_counters["demo_motifs"] = int(self.rehearsal_counters.get("demo_motifs", 0)) + out["motifs"]
+            except Exception as exc:
+                out["motif_error"] = f"{type(exc).__name__}: {exc}"[:160]
+        lexical = self.systems.get("lexical_grounding")
+        if lexical is not None and hasattr(lexical, "observe_demonstration"):
+            try:
+                out["word"] = dict(lexical.observe_demonstration(
+                    raw_text=real_reply, context_text=heard,
+                    demonstration_id=str(held.get("event_id", "") or "")) or {})
+                if out["word"].get("validated"):
+                    self.rehearsal_counters["demo_words"] = int(self.rehearsal_counters.get("demo_words", 0)) + 1
+            except Exception as exc:
+                out["word_error"] = f"{type(exc).__name__}: {exc}"[:160]
+        self.rehearsal_counters["demonstrated"] = int(self.rehearsal_counters.get("demonstrated", 0)) + 1
+        return out
+
     def _lived_by_clones(self, episode_id: str) -> bool:
         if not episode_id:
             return False
@@ -1341,15 +1409,24 @@ class HistoricalExperienceEnvironment:
         # must never be read as a receiver's verdict on it -- silent or not.
         self._retire_pending(session)
         form = dict(dict(self.systems.get("_last_pipeline_state") or {}).get("relational_form") or {})
+        # FIX-A110: the pressure she was under, held now -- the verdict
+        # consumes the turn's path record before the demonstration runs.
+        path_signature = None
+        _rp = self.systems.get("reasoning_paths")
+        _rid = str(dict(pending or {}).get("response_id") or "")
+        if _rp is not None and _rid:
+            path_signature = dict(dict(getattr(_rp, "pending", {}) or {}).get(_rid) or {}).get("signature")
         if not reply:
             self.rehearsal_counters["silent"] += 1
             # FIX-A108: silence is an outcome too.  If the turn registered
             # what it understood, Sunni's real reply still judges it.
             if pending:
                 self._rehearsal = {"session": session, "reply": "", "pending": pending, "form": form,
+                                   "path_signature": path_signature,
                                    "event_id": str(event.get("event_id", "") or ""), "heard": text[:200]}
             return {"rehearsed": True, "reply": ""}
         self._rehearsal = {"session": session, "reply": reply, "pending": pending, "form": form,
+                           "path_signature": path_signature,
                            "event_id": str(event.get("event_id", "") or ""), "heard": text[:200]}
         return {"rehearsed": True, "reply": reply[:200]}
 
@@ -1377,11 +1454,14 @@ class HistoricalExperienceEnvironment:
             fanned = dict(finalize(self.systems, observation, str(real_reply or "")[:600],
                                    session_id=held.get("session", "")) or {})
             self.rehearsal_counters["fanned_out"] += 1
+        demo = self._demonstrate(aurora_mod, held, str(real_reply or ""))
         self._retire_pending(held.get("session", ""))
         self.last_rehearsal = {"heard": held.get("heard", ""), "her_reply": held.get("reply", "")[:160],
                                "real_reply": real_reply[:160], **cmp,
-                               "outcome": fanned.get("outcome_kind", "none"), "at": time.time()}
-        return {"compared": True, **cmp, "outcome": fanned.get("outcome_kind", "none")}
+                               "outcome": fanned.get("outcome_kind", "none"),
+                               "demonstration": {k: v for k, v in demo.items() if not k.endswith("_error")},
+                               "at": time.time()}
+        return {"compared": True, **cmp, "outcome": fanned.get("outcome_kind", "none"), "demonstration": demo}
 
     def _retire_rehearsal(self) -> None:
         if self._rehearsal:

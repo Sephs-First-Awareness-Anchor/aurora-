@@ -980,6 +980,46 @@ class AuroraLexicalGrounding(WarpCapable):
                 return {"recorded": True, "candidate_id": candidate_id, "evidence_id": evidence_id}
         return {"recorded": False, "reason": "unknown_evidence_id"}
 
+    def observe_demonstration(self, *, raw_text: str, context_text: str = "",
+                              demonstration_id: str = "") -> Dict[str, Any]:
+        """FIX-A110: Sunni's real reply to what she was rehearsing.  The
+        relation word of his reply, in its structural position, is observed
+        through the ordinary entrance (observe_lexical_context, provenance
+        "demonstration") and that evidence entry is validated POSITIVE: his
+        reply is what that moment called for.  candidate_support() -- her
+        own promotion rule -- decides what it becomes."""
+        raw = str(raw_text or "").strip()
+        if not raw:
+            return {"admitted": False, "reason": "empty"}
+        relation, form = self._derive_relation_and_form(raw)
+        if form is None or not relation:
+            return {"admitted": False, "reason": "no_relational_configuration"}
+        observation = self.observe_lexical_context(
+            word=relation,
+            relational_form=form,
+            provenance="demonstration",
+            extra_evidence={"demonstration_id": str(demonstration_id or ""),
+                            "context_surface_hash": _surface_hash(str(context_text or "")),
+                            "demonstrated_by": "sunni"},
+        )
+        candidate_id = str(observation.get("candidate_id", "") or "")
+        evidence_id = str(observation.get("evidence_id", "") or "")
+        if not evidence_id and observation.get("action") == "trial_started":
+            founded = self._candidates.get(str(observation.get("component_id", "") or ""))
+            if founded is not None and founded.evidence:
+                candidate_id = founded.candidate_id
+                evidence_id = str(founded.evidence[-1].get("evidence_id", "") or "")
+        recorded: Dict[str, Any] = {}
+        if candidate_id and evidence_id:
+            recorded = self.record_evidence_outcome(candidate_id=candidate_id, evidence_id=evidence_id,
+                                                    outcome_kind="positive", observed_effect="demonstrated",
+                                                    evidence_source="demonstration")
+        # Keep the demonstration out of the next turn's contributors: those
+        # are for words SHE used.
+        self.drain_turn_consumption_trace()
+        return {"admitted": True, "word": relation, "action": observation.get("action"),
+                "validated": bool(recorded.get("recorded"))}
+
     def drain_turn_consumption_trace(self) -> List[Dict[str, str]]:
         """Read-and-clear: returns every (candidate_id, evidence_id) pair
         touched since the last drain, then empties the internal list.

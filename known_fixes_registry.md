@@ -10922,3 +10922,56 @@ returns a stored utterance; a summary is used only when it is not a stored
 utterance (shared 48-char opening or containment). Explicit quote requests
 ("what did I say") still quote. Verified on the conversation that leaked:
 no stored line comes back.
+
+## FIX-A110 (ARCHITECTURAL) — Sunni's real reply is a demonstration, not just a verdict
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Decision (Sunni, 2026-11-09):** "Yes lets do that" -- after FIX-A108 every
+comparison reached her organs, but the rerun experiment showed no improvement
+in her replies: ~80% of verdicts said "missed" and none showed what would
+have landed.
+flutter_app/.../aurora_historical_experience_environment.py `_demonstrate`,
+run after every comparison:
+1. She LISTENS to his reply through her own understanding (an ordinary turn,
+   source_label "historical_demonstration", session "demo_<rehearsal
+   session>"; its own reply is discarded and its pending validation retired).
+   Where it lands in her -- meaning label/signature, dominant axis, concepts,
+   the abilities it activates -- is carved by ReasoningPaths.
+   carve_demonstration() under the pressure signature of the turn she was
+   rehearsing (held at rehearsal time: the verdict consumes the turn's path
+   record first). action/operation/emotion/bias are left unnamed (his reply
+   cannot show what SHE chose to do) and compare() now treats a landing a
+   path does not name as unconstrained. DEMONSTRATION_WEIGHT 0.10 (= the
+   offer threshold; a lived carving is 0.12): offered from the first
+   showing, leaning her ability selection toward what his answer called on;
+   repeats deepen it, her live verdicts deepen or wear it.
+2. GrammarEngine.observe_demonstration: each sentence's role pattern is
+   credited as a SUCCESS in that context (her own motif lineage and
+   promotion rule) -- observe_exemplar only traced, never credited.
+3. AuroraLexicalGrounding.observe_demonstration: the relation word his reply
+   turned on goes through observe_lexical_context (provenance
+   "demonstration") and that evidence is validated positive; the turn
+   consumption trace is drained so her next turn does not claim his words.
+Note: her ability selection takes the cheapest abilities on the dominant
+axis, so a demonstrated path mostly carries the AXIS and meaning his reply
+lands on -- real but coarse signal.
+**First Seen:** 2026-11-09, 60 real messages: 29 demonstrations, 72 sentence
+structures credited, ~4.8 s/message with listening. Paths were 0 until the
+held-signature fix (the verdict had consumed the record).
+
+## FIX-A111 (BINDING RULE 1) — Recent-utterance recall quotes only when asked
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Found (2026-11-09):** FIX-A109 closed the sedimemory route, but the leak at
+the same message persisted intermittently (my first verification stopped one
+message short of it). Second route: WorkingMemory.
+answer_from_recent_utterance_recall (via _ability_guided_context_answer ->
+answer_from_context_carryover) re-voiced the best-matching recent utterance
+of the OTHER speaker as her reply at certainty >= 0.82 (kept literally). In
+rehearsal the other speaker is the historical assistant.
+Third route (same conversation, 5 leaks in 148 messages, every other
+sub-route ruled out by wrapping each): the last fallback of
+answer_from_context_carryover rendered conversation_memory.recall_about()'s
+first line whole -- in rehearsal, the historical assistant's statements.
+**Fix (at the source, per Sunni -- no gate check):** both routes answer only
+a quote request (is_quote_request: "what did I (just) say", "what did you
+say", "repeat", "say that again", "what was that"); otherwise the recalled
+line stays material, not her answer.

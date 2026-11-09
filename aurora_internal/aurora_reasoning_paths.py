@@ -71,6 +71,10 @@ MAX_PATHS = 400
 # Paths carved by many clones can arrive strong, never certain: her own live
 # verdicts must always be able to wear one down.
 CLONE_WEIGHT_CAP = 0.90
+# FIX-A110: a path Sunni's real reply demonstrated -- shown, not yet lived by
+# her -- starts lighter than one she carved by being understood, but at the
+# offer threshold: one showing is enough for it to be offered next time.
+DEMONSTRATION_WEIGHT = 0.10
 MAX_PENDING = 64
 CENTROID_KEEP = 0.8
 
@@ -141,11 +145,14 @@ def compare(path_landings: Mapping[str, Any], live: Mapping[str, Any]) -> Dict[s
     agreed, diverged = [], []
     for name in LANDING_FIELDS:
         a, b = str(path_landings.get(name) or ""), str(live.get(name) or "")
-        if not a and not b:
+        # A path that does not name a landing does not constrain it
+        # (FIX-A110: a demonstrated path names meaning, axis, concepts and
+        # abilities -- not what SHE chose to do, which Sunni's reply cannot show).
+        if not a:
             continue
         (agreed if a == b else diverged).append(name)
     pa, la = set(path_landings.get("abilities") or []), set(live.get("abilities") or [])
-    if pa or la:
+    if pa:
         overlap = len(pa & la) / max(1, len(pa | la))
         (agreed if overlap >= 0.5 else diverged).append("abilities")
     total = sum(FIELD_WEIGHT.get(n, 1.0) for n in agreed + diverged)
@@ -281,6 +288,40 @@ class ReasoningPaths:
                     self.pending.pop(next(iter(self.pending)))
         self._save()
         return record
+
+    def carve_demonstration(self, sig: Mapping[str, Any], demonstrated: Mapping[str, Any]) -> Dict[str, Any]:
+        """FIX-A110: under the pressure of what she was rehearsing (sig), Sunni's
+        real reply showed where it lands -- her own reading of his reply:
+        meaning, axis, concepts and the abilities it activates in her.  The
+        path leans her ability selection toward those abilities the next time
+        that pressure comes; her live verdicts deepen or wear it like any other."""
+        demo = {k: v for k, v in dict(demonstrated or {}).items()}
+        for k in ("action", "operation", "emotion", "bias"):
+            demo[k] = ""
+        if not (demo.get("abilities") or demo.get("meaning_label")):
+            return {"carved": False, "reason": "nothing_demonstrated"}
+        with self._lock:
+            for pid, path in self.paths.items():
+                if (path.get("shape") == sig.get("shape") and path.get("demonstrations")
+                        and _cosine(path.get("centroid") or {}, sig.get("axes") or {}) >= RESONANCE_FLOOR
+                        and compare(path.get("landings") or {}, demo)["agreement"] >= 0.999):
+                    path["weight"] = round(_f(path.get("weight")) + DEEPEN_RATE * DEMONSTRATION_WEIGHT / CARVE_WEIGHT
+                                           * (1.0 - _f(path.get("weight"))), 4)
+                    path["demonstrations"] = int(path.get("demonstrations", 0) or 0) + 1
+                    path["last_used"] = self.clock()
+                    self.counters["demonstrated"] = int(self.counters.get("demonstrated", 0)) + 1
+                    result = {"carved": False, "deepened": pid}
+                    break
+            else:
+                pid = "RP:" + hashlib.sha1(json.dumps(["demo", sig, demo], sort_keys=True).encode()).hexdigest()[:12]
+                self.paths[pid] = {"shape": sig.get("shape"), "centroid": dict(sig.get("axes") or {}),
+                                   "landings": demo, "weight": DEMONSTRATION_WEIGHT, "confirmations": 0,
+                                   "demonstrations": 1, "misled": 0,
+                                   "created_at": self.clock(), "last_used": self.clock()}
+                self.counters["demonstrated"] = int(self.counters.get("demonstrated", 0)) + 1
+                result = {"carved": True, "path_id": pid}
+        self._save()
+        return result
 
     def _carve(self, sig: Mapping[str, Any], live: Mapping[str, Any]) -> str:
         """Deepen a path with these exact landings under this pressure, or carve one."""

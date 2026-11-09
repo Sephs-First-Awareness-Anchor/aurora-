@@ -43,6 +43,19 @@ def _recall_semantic_sedimemory(systems, query, **kwargs):
         return []
 
 
+# FIX-A111: the request to hear an earlier utterance again ("what did I just
+# say", "what did you say", "repeat that", "what was that") -- a gate on
+# QUOTING only, never on what she understands.
+_QUOTE_REQUEST_RE = re.compile(
+    r"\bwhat (?:did|was|were) (?:i|you|he|she|they|we)(?: just)? (?:say|said|tell|told|saying|telling)\b"
+    r"|\brepeat\b|\bsay that again\b|\bwhat was that\b"
+)
+
+
+def is_quote_request(text: str) -> bool:
+    return bool(_QUOTE_REQUEST_RE.search(str(text or "").lower()))
+
+
 def _answer_from_sedimemory_context(user_text, recalled, **kwargs):
     try:
         from aurora import _answer_from_sedimemory_context as _fn
@@ -2369,6 +2382,14 @@ class WorkingMemory:
     ) -> str:
         if not self.recent_user_utterances:
             return ""
+        # FIX-A111 (Sunni, 2026-11-09 -- fix at the source): this re-voiced
+        # the best-matching recent utterance of the OTHER speaker as her
+        # reply, word for word.  In rehearsal the other speaker is the
+        # historical assistant, so its lines came back as "her" answer.  A
+        # remembered utterance is quoted only when someone asks what was said
+        # (is_quote_request).
+        if not is_quote_request(user_text):
+            return ""
         if understood is None:
             try:
                 understood = UtteranceParser().parse(user_text)
@@ -2539,7 +2560,12 @@ class WorkingMemory:
                     return rendered
 
         conversation_memory = systems.get('conversation_memory') if isinstance(systems, dict) else None
-        if conversation_memory is not None and hasattr(conversation_memory, 'recall_about'):
+        # FIX-A111 (third route, 2026-11-09): this fallback rendered the first
+        # line conversation memory recalled about a target as her answer --
+        # whole stored statements of the other speaker, kept literally.  A
+        # remembered line is quoted only when someone asks what was said.
+        if (conversation_memory is not None and hasattr(conversation_memory, 'recall_about')
+                and is_quote_request(user_text)):
             for target in targets[:4]:
                 try:
                     recalled = list(conversation_memory.recall_about(target) or [])
