@@ -140,6 +140,14 @@ def organ_snapshot(systems: Mapping[str, Any]) -> Dict[str, Any]:
     if lg is not None:
         snap["lg_cands"] = {cid: c.to_dict() for cid, c in dict(getattr(lg, "_candidates", {}) or {}).items()}
         snap["lg_trials"] = {cid: asdict(c) for cid, c in dict(getattr(lg, "_warp_trials", {}) or {}).items()}
+    ge = systems.get("grammar_engine")
+    lineage = getattr(ge, "_lineage", None)
+    if lineage is not None:
+        # FIX-A113: her motif lineage travels too -- what rehearsal credited or
+        # failed in each sentence shape, and in which contexts.
+        snap["motifs"] = {pid: {"seq": [r.value for r in m.role_sequence], "s": int(m.success_count),
+                                "f": int(m.fail_count), "ctx": sorted(m.contexts_seen)}
+                          for pid, m in dict(getattr(lineage, "_motifs", {}) or {}).items()}
     up = systems.get("unformed_patterns")
     if up is not None:
         snap["unformed"] = copy.deepcopy({"ref_n": up.ref_n, "ref_counts": dict(up.ref_counts),
@@ -245,8 +253,53 @@ def clone_yield(start: Mapping[str, Any], end: Mapping[str, Any], *, clone_id: s
                                       for ax, v in dict(p.get("axis_sum") or {}).items()}})
     return {"version": HARVEST_VERSION, "clone_id": clone_id, "episodes": list(episodes),
             "counters": dict(counters), "paths": paths, "worn": worn,
-            "operations": ce, "candidates": lg,
+            "operations": ce, "candidates": lg, "motifs": motif_deltas(start, end),
             "unformed": {"reference": reference, "patterns": patterns}}
+
+
+MOTIF_CONTEXT_CAP = 40
+
+
+def motif_deltas(start: Mapping[str, Any], end: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    """Validated motif evidence this clone gathered: success and failure
+    counts (demonstration credit, receiver outcomes) and the new contexts."""
+    m0, m1 = dict(start.get("motifs") or {}), dict(end.get("motifs") or {})
+    out = []
+    for pid, m in m1.items():
+        old = dict(m0.get(pid) or {})
+        ds = int(m.get("s", 0)) - int(old.get("s", 0) or 0)
+        df = int(m.get("f", 0)) - int(old.get("f", 0) or 0)
+        if ds <= 0 and df <= 0:
+            continue
+        ctx = sorted(set(m.get("ctx") or []) - set(old.get("ctx") or []))[:MOTIF_CONTEXT_CAP]
+        out.append({"seq": list(m.get("seq") or []), "s": max(0, ds), "f": max(0, df), "ctx": ctx})
+    return out
+
+
+def merge_motifs(yields: List[Mapping[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Clones lived different conversations, so their motif evidence adds up
+    -- as it would have if she had lived them all.  A shape some clones found
+    working and others found failing is kept, and reported as a divergence."""
+    merged: Dict[str, Dict[str, Any]] = {}
+    for y in yields:
+        for rec in list(y.get("motifs") or []):
+            key = "_".join(rec.get("seq") or [])
+            if not key:
+                continue
+            agg = merged.setdefault(key, {"seq": list(rec["seq"]), "s": 0, "f": 0, "ctx": set(),
+                                          "clones": 0, "_up": 0, "_down": 0})
+            agg["s"] += int(rec.get("s", 0))
+            agg["f"] += int(rec.get("f", 0))
+            agg["ctx"].update(rec.get("ctx") or [])
+            agg["clones"] += 1
+            agg["_up" if int(rec.get("s", 0)) >= int(rec.get("f", 0)) else "_down"] += 1
+    out, divergent = [], []
+    for key, agg in sorted(merged.items()):
+        if agg["_up"] and agg["_down"]:
+            divergent.append({"seq": agg["seq"], "working": agg["_up"], "failing": agg["_down"]})
+        out.append({"seq": agg["seq"], "s": agg["s"], "f": agg["f"], "clones": agg["clones"],
+                    "ctx": sorted(agg["ctx"])[:MOTIF_CONTEXT_CAP * 2]})
+    return out, divergent
 
 
 # ----------------------------------------------------------------------------
@@ -414,12 +467,14 @@ def merge_yields(yields: List[Mapping[str, Any]], *, lived_before: Iterable[str]
         for k, v in dict(y.get("counters") or {}).items():
             if isinstance(v, (int, float)):
                 counters[k] = counters.get(k, 0) + int(v)
-    body = {"paths": paths, "worn": worn, "operations": ops, "candidates": cands,
+    motifs, motif_div = merge_motifs(yields)
+    body = {"paths": paths, "worn": worn, "operations": ops, "candidates": cands, "motifs": motifs,
             "unformed": merge_unformed(yields)}
     return {"version": HARVEST_VERSION, "harvest_id": "CH:" + _sha([sorted(y["clone_id"] for y in yields), episodes, body]),
             "created_at": time.time(), "clones": len(yields), "episodes": episodes,
             "lived_episodes": sorted(set(lived_before) | set(episodes)), "counters": counters,
-            "divergences": {"paths": path_div, "operations": op_div, "candidates": cand_div}, **body}
+            "divergences": {"paths": path_div, "operations": op_div, "candidates": cand_div,
+                            "motifs": motif_div}, **body}
 
 
 # ----------------------------------------------------------------------------
@@ -510,6 +565,8 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
                             lambda o, recs: o.absorb_clone_operations(recs)),
               "candidate": ("candidates", "lexical_grounding",
                             lambda o, recs: o.absorb_clone_candidates(recs)),
+              "motif": ("motifs", "grammar_engine",
+                        lambda o, recs: o.absorb_clone_motifs(recs)),
               "pattern": ("unformed", "unformed_patterns",
                           lambda o, recs: o.absorb_clone_patterns({"reference": {}, "patterns": recs})),
               "unformed_reference": ("unformed", "unformed_patterns",
@@ -546,7 +603,8 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
     except Exception as exc:
         results["stream"] = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
     for name, key in (("paths", "reasoning_paths"), ("operations", "communication_emergence"),
-                      ("candidates", "lexical_grounding"), ("unformed", "unformed_patterns")):
+                      ("candidates", "lexical_grounding"), ("motifs", "grammar_engine"),
+                      ("unformed", "unformed_patterns")):
         if name not in results and systems.get(key) is None:
             results[name] = {"status": "absent"}
 
@@ -687,14 +745,16 @@ def load_yield(path: str) -> Dict[str, Any]:
         return dict(json.load(fh) or {})
 
 
-_BODY = (("paths", "path"), ("worn", "worn"), ("operations", "operation"), ("candidates", "candidate"))
+_BODY = (("paths", "path"), ("worn", "worn"), ("operations", "operation"), ("candidates", "candidate"),
+         ("motifs", "motif"))
 
 
 def write_harvest(path: str, harvest: Mapping[str, Any]) -> None:
     tmp = str(path) + ".tmp"
     dump = lambda rec: json.dumps(rec, separators=(",", ":")) + "\n"
     with gzip.open(tmp, "wt", encoding="utf-8") as fh:
-        header = {k: v for k, v in harvest.items() if k not in ("paths", "worn", "operations", "candidates", "unformed")}
+        header = {k: v for k, v in harvest.items()
+                  if k not in ("paths", "worn", "operations", "candidates", "motifs", "unformed")}
         fh.write(dump({"kind": "header", **header}))
         for field, kind in _BODY:
             for rec in list(harvest.get(field) or []):
@@ -721,7 +781,7 @@ def read_header(path: str) -> Dict[str, Any]:
 
 def load_harvest(path: str) -> Dict[str, Any]:
     """The whole harvest as one dict -- for the merge job and tests, never the phone."""
-    out: Dict[str, Any] = {"paths": [], "worn": [], "operations": [], "candidates": [],
+    out: Dict[str, Any] = {"paths": [], "worn": [], "operations": [], "candidates": [], "motifs": [],
                            "unformed": {"reference": {}, "patterns": []}}
     kinds = {kind: field for field, kind in _BODY}
     for rec in iter_harvest(path):

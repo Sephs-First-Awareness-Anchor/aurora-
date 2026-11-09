@@ -11003,3 +11003,48 @@ resolved is <line>"); it now returns nothing when re-reading produced
 nothing of hers. "remind" mode still quotes.
 Pre-existing, not touched: tests/test_reflective_readdressing.py has 7
 failures that predate this session (KeyError 'mode').
+
+## FIX-A113 (ARCHITECTURAL) — The confluence: every system feeds what she says; her live abilities decide how
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-09):** "her system is designed to feed varying information
+from multiple systems in order to form a response. Like how the human body is
+made up of multiple systems all communicating" ... "make sure you feed her
+actual abilities into the "how" of the confluence".
+**Pattern:** Only the relational form reached her voice (stance seed
+"I; want; start; rig; test"), and the renderer ignored it. Perception,
+knowledge (ontological web), affect, time, obligation and crest stayed internal.
+Rehearsal turns: 38% silent, 36% word lists, 3 compositions in 344.
+**Correct Form:** aurora_internal/aurora_confluence.py, wired into
+apply_voice_gate after own_composition and before pressure articulation
+(outcome/src "confluence"; same pressure threshold).
+- WHAT, per system: communication (relation re-centred on her, options),
+  perception (salient concepts), knowledge (her web relations from those
+  concepts to something the speaker did not say; typed/researched ranked above
+  co-occurrence; closed-class words and words used as the act in the sentence
+  are never related), affect (surface tone), time (time_ref), obligation
+  (a missing object is filled from her knowledge), crest (orientation).
+- HOW, from the abilities live this turn in her genealogy:
+  complexity_axes -> clause count; complexity_slots -> max motif length;
+  operator_action:operator_on_<axis> + purpose_lane + generation_role ->
+  axis order (A stance, B distinction/contrast, X knowledge, T time,
+  N affect); generation_role -> joining (SHEAR leans to contrast, "but" when
+  the content contrasts; BRIDGE "so"; ADJACENT "and"; PRIMARY one clause);
+  depth_score -> how far into her knowledge she reaches.
+- Order: her own motif lineage (promoted first, else shapes with success),
+  a shape may not drop a clause's core roles; her SlotFiller places tokens.
+  Only closed-class words are added. Echo/template/thin -> silence.
+- The motif she used goes on the turn's grammar trace, so the next validation
+  or the rehearsal comparison credits the structure she actually used.
+Also: SlotFiller.fill honoured reference anchors learned in token positions
+(2,886 motifs, mostly (0,1)) on ACTION slots -> "I it to start with...".
+Only an entity slot after its antecedent may become a reference now.
+Also: the clone harvest carries motif lineage deltas (success/fail/contexts per
+shape); GrammarEngine.absorb_clone_motifs adds them and her own
+should_promote()/should_demote() decide. Divergent shapes are reported.
+**First Seen:** 2026-11-09, same 47 real messages, same seed (start 598, both
+positions): baseline silence 17, matches 3, mean comparison score 0.19;
+with the confluence: silence 6, matches 9 (+1 partial), score 0.26;
+confluence spoke 15 turns. Her web's co-occurrence knowledge is noisy
+("Netflix is instance of minute") -- that is what she knows, said plainly.
+Seen but not touched: own_voice can loop on one line for 15+ turns
+("your plan that is your thoughts on that."), with or without the confluence.

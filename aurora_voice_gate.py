@@ -300,6 +300,7 @@ ADDRESS_GAIN_STATEMENT = 0.20
 DISCHARGE_ON_SPEECH = 0.15        # fraction left after she speaks in her own words
 HALF_LIFE_S = 30 * 60.0
 ARTICULATION_THRESHOLD = 0.30
+CONFLUENCE_ENABLED = True          # FIX-A113; off only for a measured baseline
 PRESSURE_CAP = 1.0
 
 # Being addressed: called to act (A), to spend energy responding (N),
@@ -589,6 +590,33 @@ def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
                                emotional_tone=str(cand.get("tone") or getattr(resp, "emotional_tone", "") or "curious"),
                                confidence=round(float(cand.get("confidence", 0.5) or 0.5), 4),
                                src="composer_unified")
+    # FIX-A113: the confluence -- every system that ran on this turn feeds
+    # what she says, and her live abilities decide how.  Same pressure
+    # condition as articulation: being addressed is what moves her to speak.
+    if level >= ARTICULATION_THRESHOLD and CONFLUENCE_ENABLED:
+        confluent, conf_record = "", {}
+        try:
+            from aurora_internal.aurora_confluence import compose, put_on_grammar_trace
+            confluent, conf_record = compose(systems, heard)
+            systems["_last_confluence"] = conf_record
+        except Exception as exc:
+            record["confluence_error"] = f"{type(exc).__name__}: {exc}"[:160]
+        if confluent:
+            pressure.discharge(channel)
+            try:
+                put_on_grammar_trace(systems, conf_record)
+            except Exception:
+                pass
+            record.update({"outcome": "confluence", "src": "confluence",
+                           "abilities": list(dict(conf_record.get("how") or {}).get("abilities") or [])[:5]})
+            systems["_last_voice_gate"] = record
+            tone = str(getattr(resp, "emotional_tone", "") or "curious")
+            if tone in ("self-aware", "informative"):
+                tone = "curious"
+            return SimpleNamespace(content=confluent, emotional_tone=tone,
+                                   confidence=round(min(0.9, 0.3 + 0.5 * level), 4),
+                                   src="confluence")
+        record["confluence"] = str(conf_record.get("why") or "")
     articulated, why = ("", "below_threshold")
     if level >= ARTICULATION_THRESHOLD:
         articulated, why = articulate_from_pressure(

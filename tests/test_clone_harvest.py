@@ -205,3 +205,40 @@ def test_streamed_absorption_in_tiny_chunks_matches_the_whole(tmp_path, monkeypa
     assert out["results"]["unformed"]["added"] == 1 and out["results"]["unformed"]["reference_turns"] == 2
     assert out["results"]["candidates"] == {"status": "absent"}
     assert systems["unformed_patterns"].ref_n == 2
+
+
+def test_motif_lineage_travels_and_her_promotion_rule_decides(tmp_path):
+    """FIX-A113: what clones' rehearsal credited in each sentence shape
+    reaches her lineage; promotion is still her own should_promote()."""
+    from aurora_grammar_engine import GrammarEngine, TokenRole as R
+    seq = (R.AGENT, R.ACTION, R.OBJECT)
+
+    def snap(s, f, ctx):
+        return {"motifs": {"agent_action_object": {"seq": [r.value for r in seq], "s": s, "f": f, "ctx": ctx}}}
+
+    y1 = {**y("c1", eps=["E1"]), "motifs": CH.motif_deltas(snap(2, 0, ["a"]), snap(5, 0, ["a", "b", "c", "e", "g"]))}
+    y2 = {**y("c2", eps=["E2"]), "motifs": CH.motif_deltas(snap(2, 0, ["a"]), snap(4, 1, ["a", "d", "h", "i"]))}
+    assert y1["motifs"] == [{"seq": ["agent", "action", "object"], "s": 3, "f": 0, "ctx": ["b", "c", "e", "g"]}]
+    harvest = CH.merge_yields([y1, y2])
+    assert harvest["motifs"][0]["s"] == 5 and harvest["motifs"][0]["clones"] == 2
+    hp = tmp_path / "h.jsonl.gz"
+    CH.write_harvest(str(hp), harvest)
+    assert CH.load_harvest(str(hp))["motifs"][0]["ctx"] == ["b", "c", "d", "e", "g", "h", "i"]
+
+    state = tmp_path / "state"
+    eng = GrammarEngine(state_dir=str(state))
+    eng._lineage._motifs.clear()
+    m = eng._lineage.get_or_create(seq)
+    m.success_count, m.contexts_seen = 2, {"a"}
+    out = CH.absorb_harvest({"grammar_engine": eng, "state_dir": str(state)}, harvest_path=str(hp),
+                            state_dir=str(state))
+    assert out["results"]["motifs"] == {"absorbed": 1, "promoted": 1, "demoted": 0}
+    assert (m.success_count, m.fail_count, len(m.contexts_seen)) == (7, 1, 8) and m.promoted
+
+
+def test_motif_evidence_alone_does_not_promote_a_thin_shape(tmp_path):
+    from aurora_grammar_engine import GrammarEngine, TokenRole as R
+    eng = GrammarEngine(state_dir=str(tmp_path))
+    eng._lineage._motifs.clear()
+    out = eng.absorb_clone_motifs([{"seq": ["agent", "action"], "s": 9, "f": 0, "ctx": ["only"]}])
+    assert out == {"absorbed": 1, "promoted": 0, "demoted": 0}       # one context: not composable yet

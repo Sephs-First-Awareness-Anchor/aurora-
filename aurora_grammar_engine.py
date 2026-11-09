@@ -1103,6 +1103,14 @@ class SlotFiller:
         for pos_a, pos_b in motif.reference_anchors:
             # The first of the pair sets the canonical token
             role_a = motif.role_sequence[pos_a] if pos_a < len(motif.role_sequence) else None
+            # FIX-A113: a reference word stands in for an ENTITY.  Anchors
+            # learned in token positions (2,886 of them, mostly (0, 1)) land
+            # on ACTION/DESCRIPTOR slots in role space and replaced her verb
+            # with "it" ("I it to start with the rig test").  Only an entity
+            # slot after its antecedent may become a reference.
+            role_b = motif.role_sequence[pos_b] if 0 <= pos_b < len(motif.role_sequence) else None
+            if role_b not in self._REFERENCE_WORDS or pos_b <= pos_a:
+                continue
             if role_a and role_a in token_pool and token_pool[role_a]:
                 anchor_map[pos_b] = self._REFERENCE_WORDS.get(role_a, "it")
 
@@ -1802,6 +1810,36 @@ class GrammarEngine:
                                             constraint_orientation=orientation):
                 credited += 1
         return credited
+
+    def absorb_clone_motifs(self, records: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """FIX-A113: what her clones' rehearsal credited or failed in each
+        sentence shape.  The counts are added to her own lineage and her own
+        promotion rule decides what becomes promoted."""
+        lineage = self._lineage
+        absorbed = promoted = demoted = 0
+        with lineage._lock:
+            for rec in list(records or []):
+                try:
+                    seq = tuple(TokenRole(r) for r in list(rec.get("seq") or []))
+                except ValueError:
+                    continue
+                if len(seq) < 2:
+                    continue
+                m = lineage.get_or_create(seq)
+                m.success_count += max(0, int(rec.get("s", 0) or 0))
+                m.fail_count += max(0, int(rec.get("f", 0) or 0))
+                for ctx in list(rec.get("ctx") or [])[:80]:
+                    m.contexts_seen.add(str(ctx))
+                absorbed += 1
+                if not m.promoted and m.should_promote():
+                    m.promoted = True
+                    promoted += 1
+                elif m.promoted and m.should_demote():
+                    m.promoted = False
+                    demoted += 1
+        if absorbed:
+            lineage.save()
+        return {"absorbed": absorbed, "promoted": promoted, "demoted": demoted}
 
     def record_motif_outcome(
         self,
