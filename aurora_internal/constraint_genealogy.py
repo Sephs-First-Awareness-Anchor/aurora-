@@ -2424,12 +2424,25 @@ class ConstraintGenealogyLogger:
         pattern as Repair K's _semantic_identity_for_item wrapper, safer
         for a function this large than a mass reindent.
         """
+        # Preserve every observation and its effects.  The profile only
+        # distinguishes waiting on the shared genealogy lock from actual
+        # genealogy computation; nothing is cached or skipped here.
+        _lock_wait_started = time.perf_counter()
         with self._concurrency_lock:
-            return self._observe_impl(
-                pressure_before, trace, pressure_after,
-                state_sig_before=state_sig_before, state_sig_after=state_sig_after,
-                notes=notes, difference_snapshot=difference_snapshot,
-            )
+            _lock_wait_ms = (time.perf_counter() - _lock_wait_started) * 1000.0
+            _observe_started = time.perf_counter()
+            try:
+                return self._observe_impl(
+                    pressure_before, trace, pressure_after,
+                    state_sig_before=state_sig_before, state_sig_after=state_sig_after,
+                    notes=notes, difference_snapshot=difference_snapshot,
+                )
+            finally:
+                self._last_observe_profile = {
+                    "tick": int(self.tick_count),
+                    "lock_wait_ms": round(_lock_wait_ms, 2),
+                    "compute_ms": round((time.perf_counter() - _observe_started) * 1000.0, 2),
+                }
 
     def _observe_impl(
         self,
@@ -2459,12 +2472,6 @@ class ConstraintGenealogyLogger:
         self.tick_count += 1
         self._latest_pressure = pressure_after
 
-        # The outlet BEFORE this observation: the baseline each axis's injection is predicted
-        # against (see the per-axis curve loop below).
-        try:
-            _outlet_before_obs = self._outlet_fraction()
-        except Exception:
-            _outlet_before_obs = None
         raw_relief = pressure_after.relief_from(pressure_before)
         dominant_axis_hint = raw_relief.dominant_positive_axis() or "X"
         relief, tolerance_meta = self._apply_relief_tolerance(
@@ -2498,6 +2505,15 @@ class ConstraintGenealogyLogger:
             # Still update governor (low fitness signal)
             self.governor.tick()
             return None
+
+        # The outlet baseline is only consumed for a real relief event's
+        # pressure-complexity curves. Its former pre-filter placement scanned
+        # every promoted link even on no-relief ticks, where the result was
+        # immediately discarded. Keep the same pre-promotion baseline here.
+        try:
+            _outlet_before_obs = self._outlet_fraction()
+        except Exception:
+            _outlet_before_obs = None
 
         # --- Accumulate trace costs + risks ---
         cost_total = _zero_vec()
@@ -2742,12 +2758,22 @@ class ConstraintGenealogyLogger:
             n_pairs_eval = max(len(self._pair_stats) - n_pairs_before, len(trace) - 1)
             current_outlet = self._outlet_fraction()
 
-            # Global curve — aggregate across all axes
+            # Aggregate the same link facts ONCE and distribute them to
+            # the global and five axis curves. Previously the global curve
+            # iterated the links, then each of five axes filtered all links
+            # again and summed its subset. The same order and arithmetic are
+            # retained for each axis, including zero-link behavior.
             all_links = list(self.links.values())
-            mean_depth = (
-                sum(lnk.depth for lnk in all_links) / len(all_links)
-                if all_links else 0.0
-            )
+            _axis_link_counts = {ax: 0 for ax in AXES}
+            _axis_depth_sums = {ax: 0 for ax in AXES}
+            _total_depth = 0
+            for _link in all_links:
+                _total_depth += _link.depth
+                _axis_key = _link.dominant_relief_axis or "X"
+                if _axis_key in _axis_link_counts:
+                    _axis_link_counts[_axis_key] += 1
+                    _axis_depth_sums[_axis_key] += _link.depth
+            mean_depth = _total_depth / len(all_links) if all_links else 0.0
             self._complexity_curve.record_tick(
                 n_pairs_evaluated=n_pairs_eval,
                 n_links=len(all_links),
@@ -2756,22 +2782,19 @@ class ConstraintGenealogyLogger:
             )
             self._complexity_curve.record_outcome(current_outlet)
 
-            # Per-axis curves — each axis sees only its own links and pairs
-            # dominant_axis_hint tells us which axis this tick's relief favoured
+            # Per-axis curves — same evidence, no redundant scans.
             try:
                 _pb_axes = pressure_before.to_dict()
             except Exception:
                 _pb_axes = {}
             for ax in AXES:
-                ax_links = [lnk for lnk in all_links
-                            if (lnk.dominant_relief_axis or "X") == ax]
-                ax_link_count = len(ax_links)
+                ax_link_count = _axis_link_counts[ax]
                 # Pairs attributed to this axis: fraction of total pairs
                 ax_pair_load = int(n_pairs_eval * (ax_link_count + 1) /
                                    max(1, len(all_links) + 1))
                 ax_mean_depth = (
-                    sum(lnk.depth for lnk in ax_links) / ax_link_count
-                    if ax_links else 0.0
+                    _axis_depth_sums[ax] / ax_link_count
+                    if ax_link_count else 0.0
                 )
                 self._axis_curves[ax].record_tick(
                     n_pairs_evaluated=ax_pair_load,
