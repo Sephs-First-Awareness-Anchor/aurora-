@@ -47,15 +47,14 @@ class OverlayService : Service() {
         startForeground(NOTIF_ID, buildNotification())
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         addAurora()
+        AuroraService.overlayVisible = true
         animHandler.post(animRunnable)
         stateHandler.postDelayed(stateRunnable, 4000L)
     }
 
     private fun refreshAxisState() {
         try {
-            val py  = com.chaquo.python.Python.getInstance()
-            val mod = py.getModule("aurora_bridge")
-            val raw = mod.callAttr("get_axis_state")?.toString() ?: return
+            val raw = AuroraService.latestAxisState ?: return
             val j   = org.json.JSONObject(raw)
             aurora.updateAxisState(
                 x        = j.optDouble("X", 0.5).toFloat(),
@@ -165,6 +164,7 @@ class OverlayService : Service() {
     }
 
     override fun onDestroy() {
+        AuroraService.overlayVisible = false
         super.onDestroy()
         animHandler.removeCallbacks(animRunnable)
         stateHandler.removeCallbacks(stateRunnable)

@@ -1718,7 +1718,7 @@ class AuroraLexicalGrounding(WarpCapable):
 
     # Words her clones grounded (FIX-A105) --------------------------------------
 
-    def absorb_clone_candidates(self, harvested: List[Mapping[str, Any]]) -> Dict[str, Any]:
+    def absorb_clone_candidates(self, harvested: List[Mapping[str, Any]], *, save: bool = True) -> Dict[str, Any]:
         """Take in lexical candidates her clones grew while rehearsing.
 
         Only validated live-turn evidence travels (candidate_support counts
@@ -1778,7 +1778,8 @@ class AuroraLexicalGrounding(WarpCapable):
             by_key[key] = candidate
             fresh_total += len(evidence)
             added += 1
-        self._persist(force=True)
+        if save:
+            self._persist(force=True)
         return {"joined": joined, "added": added, "skipped": skipped, "evidence": fresh_total}
 
     def save(self) -> bool:

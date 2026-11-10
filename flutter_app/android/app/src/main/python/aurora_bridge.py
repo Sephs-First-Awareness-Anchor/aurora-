@@ -24,6 +24,7 @@ import sys
 import threading
 import time
 import traceback
+from collections import deque
 from pathlib import Path
 from typing import Optional
 
@@ -66,8 +67,8 @@ def _apply_vocabulary_seed_once(state_dir: str) -> None:
     if os.path.exists(marker_path):
         return
     try:
-        bridge_dir = os.path.dirname(os.path.abspath(__file__))
-        seed_path = os.path.join(bridge_dir, "aurora_internal", "aurora_vocabulary_seed.json")
+        import aurora_internal
+        seed_path = os.path.join(os.path.dirname(aurora_internal.__file__), "aurora_vocabulary_seed.json")
         if not os.path.exists(seed_path):
             return  # older bundle without a seed file — nothing to apply, no marker either
         target_path = os.path.join(state_dir, "aurora_oets_web.json") if state_dir else "aurora_oets_web.json"
@@ -179,6 +180,14 @@ _historical_experience = None
 # Like historical experience, it yields to the present and serializes through
 # _lock -- live interaction with Sunni always outranks it.
 _praxis = None
+# A started Praxis *server* does not mean Aurora's local bridge constructed.
+# Preserve why local startup failed, and retry that small lifecycle step on a
+# bounded background schedule. Neither status calls nor Flutter must block.
+_praxis_boot_attempted = False
+_praxis_last_start_error = ""
+_praxis_recovery_running = False
+_praxis_next_recovery_at = 0.0
+_praxis_recovery_guard = threading.Lock()
 
 # Praxis messenger.  Her direct messages with other AI models (ChatGPT,
 # Gemini, Claude) hosted by Praxis's praxis_social.py.  Partners may explain
@@ -186,6 +195,11 @@ _praxis = None
 # the bridge above: yields to the present, takes _lock non-blockingly, and
 # only her own expression is ever sent back -- never a scripted fallback.
 _praxis_messenger = None
+_praxis_messenger_boot_attempted = False
+_praxis_messenger_last_start_error = ""
+_praxis_messenger_recovery_running = False
+_praxis_messenger_next_recovery_at = 0.0
+_praxis_messenger_recovery_guard = threading.Lock()
 
 # Aurora Build 694, step 8: the Scout worker thread's own stop signal --
 # module-level so it survives past initialize() returning and can be
@@ -424,28 +438,25 @@ _TURN_ADMISSION_TIMEOUT_S: float = 180.0
 # _proactive_expression so a late answer to what was just asked stays
 # diagnostically distinct from Aurora genuinely speaking unprompted, even
 # though both are delivered to Flutter through the same poll transport.
-_late_surface_response: str = ""
+# Multiple timed-out turns may complete before Kotlin's next poll. Preserve
+# each completed reply, in arrival order, instead of overwriting one global
+# string. This is transport only, never an extra cognitive response.
+_late_surface_responses = deque(maxlen=128)
 _late_surface_response_lock = threading.Lock()
 
 
 def _store_late_surface_response(turn_id: str, text: str) -> None:
-    global _late_surface_response
     if not text:
         return
     with _late_surface_response_lock:
-        _late_surface_response = text
+        _late_surface_responses.append(text)
     log.info("Late surface response stored for %s (%d chars)", turn_id, len(text))
 
 
 def get_late_surface_response() -> str:
-    """Called by AuroraService's polling loop, mirroring
-    get_proactive_expression(). Returns and clears any Surface response
-    that finished deciding after the Surface wait already timed out."""
-    global _late_surface_response
+    """Return the oldest completed late reply, exactly once, through Kotlin."""
     with _late_surface_response_lock:
-        val = _late_surface_response
-        _late_surface_response = ""
-    return val
+        return _late_surface_responses.popleft() if _late_surface_responses else ""
 
 
 # Build 774 PR3: turn diagnostics -- the ten observable states named by the
@@ -2337,10 +2348,63 @@ def _praxis_endpoint(state_dir: str) -> str:
     return "http://127.0.0.1:8787"
 
 
+def _schedule_praxis_bridge_recovery() -> None:
+    """Nonblocking local bridge recovery, not a second Aurora boot.
+
+    This is only for a *failed local bridge construction*. An initialized
+    bridge already retries handshake with the server on its own worker.
+    Repeated Hub polls never start repeated workers or repeat cognition.
+    """
+    global _praxis_recovery_running, _praxis_next_recovery_at
+    if _praxis is not None or _systems is None or not _praxis_boot_attempted:
+        return
+    with _praxis_recovery_guard:
+        if _praxis_recovery_running or time.monotonic() < _praxis_next_recovery_at:
+            return
+        _praxis_recovery_running = True
+        _praxis_next_recovery_at = time.monotonic() + 30.0
+
+    def _recover() -> None:
+        global _praxis, _praxis_last_start_error, _praxis_recovery_running
+        try:
+            from aurora_praxis_bridge import start_praxis_bridge
+            systems = _systems
+            if systems is None:
+                return
+            state_dir = str(systems.get("state_dir") or systems.get("_state_dir") or os.getcwd())
+            revived = start_praxis_bridge(
+                systems, state_dir=state_dir,
+                endpoint=_praxis_endpoint(state_dir),
+                field_lock=_lock, live_idle=_praxis_live_idle,
+            )
+            if revived is None:
+                _praxis_last_start_error = "Praxis bridge returned no instance"
+                return
+            _praxis = revived
+            systems["praxis_bridge"] = revived
+            _praxis_last_start_error = ""
+        except Exception as exc:
+            _praxis_last_start_error = f"{type(exc).__name__}: {exc}"
+            log.warning("Praxis local bridge retry failed: %s", _praxis_last_start_error)
+        finally:
+            with _praxis_recovery_guard:
+                _praxis_recovery_running = False
+
+    threading.Thread(target=_recover, daemon=True, name="praxis_bridge_recovery").start()
+
+
 def get_praxis_status() -> str:
     import json as _json
     bridge = _praxis
     if bridge is None:
+        _schedule_praxis_bridge_recovery()
+        if _praxis_boot_attempted:
+            return _json.dumps({
+                "status": "error" if _praxis_last_start_error else "reconnecting",
+                "thread_alive": False,
+                "error": _praxis_last_start_error,
+                "local_bridge": "recovery_pending",
+            })
         return _json.dumps({"status": "not_initialized", "thread_alive": False})
     try:
         return _json.dumps(bridge.status(), default=str)
@@ -2364,10 +2428,55 @@ def resume_praxis() -> str:
     return get_praxis_status()
 
 
+def _schedule_praxis_messenger_recovery() -> None:
+    """Revive only a missing local messenger; never replay a message or turn."""
+    global _praxis_messenger_recovery_running, _praxis_messenger_next_recovery_at
+    if _praxis_messenger is not None or _systems is None or not _praxis_messenger_boot_attempted:
+        return
+    with _praxis_messenger_recovery_guard:
+        if (_praxis_messenger_recovery_running or
+                time.monotonic() < _praxis_messenger_next_recovery_at):
+            return
+        _praxis_messenger_recovery_running = True
+        _praxis_messenger_next_recovery_at = time.monotonic() + 30.0
+
+    def _recover() -> None:
+        global _praxis_messenger, _praxis_messenger_last_start_error
+        global _praxis_messenger_recovery_running
+        try:
+            from aurora_praxis_messenger import start_praxis_messenger
+            systems = _systems
+            if systems is None:
+                return
+            state_dir = str(systems.get("state_dir") or systems.get("_state_dir") or os.getcwd())
+            recovered = start_praxis_messenger(
+                systems, state_dir=state_dir, endpoint=_praxis_endpoint(state_dir),
+                field_lock=_lock, live_idle=_messenger_live_idle,
+            )
+            _praxis_messenger = recovered
+            systems["praxis_messenger"] = recovered
+            _praxis_messenger_last_start_error = ""
+        except Exception as exc:
+            _praxis_messenger_last_start_error = f"{type(exc).__name__}: {exc}"
+            log.warning("Praxis local messenger retry failed: %s", _praxis_messenger_last_start_error)
+        finally:
+            with _praxis_messenger_recovery_guard:
+                _praxis_messenger_recovery_running = False
+
+    threading.Thread(target=_recover, daemon=True, name="praxis_messenger_recovery").start()
+
+
 def get_praxis_messenger_status() -> str:
     import json as _json
     messenger = _praxis_messenger
     if messenger is None:
+        _schedule_praxis_messenger_recovery()
+        if _praxis_messenger_boot_attempted:
+            return _json.dumps({
+                "status": "error" if _praxis_messenger_last_start_error else "reconnecting",
+                "thread_alive": False,
+                "last_error": _praxis_messenger_last_start_error,
+            })
         return _json.dumps({"status": "not_initialized", "thread_alive": False})
     try:
         return _json.dumps(messenger.status(), default=str)
@@ -2387,9 +2496,9 @@ def resume_praxis_messenger() -> str:
     return get_praxis_messenger_status()
 
 
-def initialize(state_dir: str = "") -> str:
-    """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis, _praxis_messenger
+def initialize(state_dir: str = "", *, android: bool = True) -> str:
+    """Boot the shared app stack once for the current host process."""
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis, _praxis_messenger, _praxis_boot_attempted, _praxis_last_start_error, _praxis_messenger_boot_attempted, _praxis_messenger_last_start_error
     # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()
     # tracing showed NO new markers at all -- confirmed still dying at the
     # exact same spot as before that fix existed. That means the crash is
@@ -2431,7 +2540,8 @@ def initialize(state_dir: str = "") -> str:
     # which crashes Chaquopy's Android Python.
     os.environ["AURORA_SKIP_DEP_INSTALL"] = "1"
     # Signal Android/Chaquopy context so tool registry skips desktop/Termux paths.
-    os.environ["AURORA_ANDROID"] = "1"
+    if android:
+        os.environ["AURORA_ANDROID"] = "1"
     # Change CWD to state_dir so all relative file writes (aurora_debug.log etc.)
     # land in the app's writable internal storage instead of crashing on a
     # read-only or missing path.
@@ -2461,19 +2571,8 @@ def initialize(state_dir: str = "") -> str:
         _real_stdout = sys.stdout
         try:
             sys.stdout = _BootStageTee(_real_stdout)
-            try:
-                with _lock:
-                    _systems = _aurora.boot_aurora(**kwargs)
-            except TypeError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1682",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "initialize", "handler_line": 1682, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                )
-                with _lock:
-                    _systems = _aurora.boot_aurora(state_dir=state_dir, verbose=True) if state_dir else _aurora.boot_aurora(verbose=True)
+            with _lock:
+                _systems = _aurora.boot_aurora(**kwargs)
         finally:
             sys.stdout = _real_stdout
         _mark_boot_stage("boot_aurora() returned")
@@ -2752,11 +2851,14 @@ def initialize(state_dir: str = "") -> str:
             )
             if _praxis is not None:
                 _systems["praxis_bridge"] = _praxis
+                _praxis_last_start_error = ""
                 log.info("Praxis bridge: %s", _praxis.status())
             else:
+                _praxis_last_start_error = "Praxis bridge returned no instance"
                 log.warning("Praxis bridge did not start")
         except Exception as _praxis_exc:
             _praxis = None
+            _praxis_last_start_error = f"{type(_praxis_exc).__name__}: {_praxis_exc}"
             _aurora_record_exception_from_locals(
                 locals(),
                 module=__name__,
@@ -2765,6 +2867,7 @@ def initialize(state_dir: str = "") -> str:
                 context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
             )
             log.warning("Praxis bridge failed to start: %s", _praxis_exc)
+        _praxis_boot_attempted = True
 
         # Praxis messenger: same server, same idle predicate, same lock.
         _mark_boot_stage("starting praxis messenger")
@@ -2780,6 +2883,7 @@ def initialize(state_dir: str = "") -> str:
             )
             _systems["praxis_messenger"] = _praxis_messenger
             log.info("Praxis messenger: %s", _praxis_messenger.status())
+            _praxis_messenger_last_start_error = ""
             # Weekly learning probe: the same 20 fresh questions, compared
             # week to week (aurora_learning_probe.py).  Same idle predicate
             # and non-blocking lock.
@@ -2794,6 +2898,7 @@ def initialize(state_dir: str = "") -> str:
                 log.warning("Learning probe failed to start: %s", _probe_exc)
         except Exception as _messenger_exc:
             _praxis_messenger = None
+            _praxis_messenger_last_start_error = f"{type(_messenger_exc).__name__}: {_messenger_exc}"
             _aurora_record_exception_from_locals(
                 locals(),
                 module=__name__,
@@ -2802,6 +2907,7 @@ def initialize(state_dir: str = "") -> str:
                 context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
             )
             log.warning("Praxis messenger failed to start: %s", _messenger_exc)
+        _praxis_messenger_boot_attempted = True
 
         # Surface degraded-boot state in the return value so the Flutter side
         # can show a warning without needing to parse _systems internals.
@@ -11699,11 +11805,14 @@ def get_cognitive_stats() -> str:
             if _praxis is not None:
                 _praxis_status = _praxis.status()
             else:
-                _praxis_status = {"status": "not_initialized"}
+                _praxis_status = _json.loads(get_praxis_status())
             stats["praxis"] = _praxis_status
             stats["praxis_status"] = str(_praxis_status.get("status", "not_initialized") or "not_initialized")
             stats["praxis_online"] = bool(_praxis_status.get("online", False))
             stats["praxis_paused"] = bool(_praxis_status.get("paused", False))
+            stats["praxis_last_error"] = str(
+                _praxis_status.get("error") or _praxis_status.get("last_error") or ""
+            )[:240]
             stats["praxis_situations_witnessed"] = int(_praxis_status.get("situations_witnessed", 0) or 0)
             stats["praxis_pressure_injections"] = int(_praxis_status.get("pressure_injections", 0) or 0)
             stats["praxis_sediment_deposits"] = int(_praxis_status.get("sediment_deposits", 0) or 0)
@@ -11716,6 +11825,7 @@ def get_cognitive_stats() -> str:
             stats["praxis_status"] = "error"
             stats["praxis_online"] = False
             stats["praxis_paused"] = False
+            stats["praxis_last_error"] = f"{type(_praxis_stats_exc).__name__}: {_praxis_stats_exc}"[:240]
             stats["praxis_situations_witnessed"] = 0
             stats["praxis_pressure_injections"] = 0
             stats["praxis_sediment_deposits"] = 0
@@ -11726,12 +11836,26 @@ def get_cognitive_stats() -> str:
         # held back (and why) and the last error, so "she's checking but
         # not responding" is answerable from the Hub.  Flat for Dart.
         try:
-            _m = _praxis_messenger.status() if _praxis_messenger is not None else {}
+            _m = (
+                _praxis_messenger.status() if _praxis_messenger is not None
+                else _json.loads(get_praxis_messenger_status())
+            )
             stats["messenger_status"] = (
-                "not_initialized" if _praxis_messenger is None
+                str(_m.get("status", "not_initialized"))
+                if _praxis_messenger is None
                 else ("online" if _m.get("online") else "offline"))
             for _key in ("heard", "spoke", "withheld", "errors", "busy_skips", "breaches"):
                 stats[f"messenger_{_key}"] = int(_m.get(_key, 0) or 0)
+            # Already-computed messenger status: expose transport queues and
+            # original addressed-pressure state with NO new cognitive query.
+            stats["messenger_delivery_pending"] = int(_m.get("delivery_pending", 0) or 0)
+            stats["messenger_delivery_blocked"] = int(_m.get("delivery_blocked", 0) or 0)
+            _pending_contacts = dict(_m.get("pending") or {})
+            stats["messenger_unanswered_contacts"] = len(_pending_contacts)
+            stats["messenger_max_addressed_pressure"] = round(
+                max((float(v.get("pressure", 0.0) or 0.0)
+                     for v in _pending_contacts.values()), default=0.0), 4
+            )
             _w = _m.get("last_withheld") or {}
             stats["messenger_last_withheld"] = (
                 f"to {_w.get('to', '?')}: \"{_w.get('text', '')}\" "

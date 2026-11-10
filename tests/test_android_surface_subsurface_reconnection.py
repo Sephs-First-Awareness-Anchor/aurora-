@@ -68,7 +68,7 @@ def _reset_bridge_state():
     aurora_bridge._capability_learning_mode = False
     aurora_bridge._capability_learning_context = {}
     aurora_bridge._pending_capability_gap = {}
-    aurora_bridge._late_surface_response = ""
+    aurora_bridge._late_surface_responses.clear()
     aurora_bridge._live_turn_diagnostics = {}
     aurora_bridge._last_output_time = 0.0
     aurora_bridge._void_pending = False
@@ -175,6 +175,14 @@ def test_surface_timeout_returns_empty_and_late_callback_delivers_exactly_once(m
     assert aurora_bridge.get_late_surface_response() == ""
 
 
+def test_multiple_late_responses_are_delivered_fifo_without_overwrite():
+    aurora_bridge._store_late_surface_response("turn_one", "first late reply")
+    aurora_bridge._store_late_surface_response("turn_two", "second late reply")
+    assert aurora_bridge.get_late_surface_response() == "first late reply"
+    assert aurora_bridge.get_late_surface_response() == "second late reply"
+    assert aurora_bridge.get_late_surface_response() == ""
+
+
 def test_transport_failure_before_any_callback_still_returns_promptly(monkeypatch):
     """An exception escaping process_external_user_turn before resp_A is
     ever decided must not hang handle_message() for the full Surface
@@ -275,7 +283,7 @@ def test_on_surface_ready_defaults_to_none_for_every_existing_caller():
     new kwarg must see byte-for-byte identical behavior -- confirmed here
     by construction (default value), not merely assumed."""
     import inspect
-    sig_outer = inspect.signature(aurora.process_external_user_turn)
+    sig_outer = inspect.signature(aurora._process_external_user_turn_impl)
     assert sig_outer.parameters["on_surface_ready"].default is None
     sig_inner = inspect.signature(aurora._run_live_response_turn)
     assert sig_inner.parameters["on_surface_ready"].default is None

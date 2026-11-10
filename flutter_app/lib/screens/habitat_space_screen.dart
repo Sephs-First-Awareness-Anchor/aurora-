@@ -14,7 +14,8 @@ const _text = Color(0xFFE2E8F0);
 const _textDim = Color(0xFF64748B);
 
 class SpaceScreen extends StatelessWidget {
-  const SpaceScreen({super.key});
+  const SpaceScreen({super.key, this.active = true});
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +35,8 @@ class SpaceScreen extends StatelessWidget {
               Text('shared', style: TextStyle(color: _textDim, fontSize: 12)),
             ]),
           ),
-          const Expanded(
-            child: HabitatInteractiveView(territory: 'space', humanCanCreate: true),
+          Expanded(
+            child: HabitatInteractiveView(territory: 'space', active: active),
           ),
         ]),
       ),

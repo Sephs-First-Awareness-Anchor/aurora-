@@ -18,11 +18,13 @@ import 'habitat_renderer.dart';
 class HabitatInteractiveView extends StatefulWidget {
   final String territory; // "space" | "self"
   final bool humanCanCreate;
+  final bool active;
 
   const HabitatInteractiveView({
     super.key,
     required this.territory,
     this.humanCanCreate = true,
+    this.active = true,
   });
 
   @override
@@ -36,6 +38,7 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
   bool _loading = true;
   String? _lastMessage;
   Timer? _stateRefreshTimer;
+  bool _refreshInFlight = false;
   // Repair S (per Sunni, 2026-08-19): "the shared space should inspire
   // interaction not just allow for it." Real presence signal -- was
   // Aurora (actor='aurora') genuinely active here recently -- not a
@@ -45,6 +48,18 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
   @override
   void initState() {
     super.initState();
+    _syncPolling();
+  }
+
+  @override
+  void didUpdateWidget(covariant HabitatInteractiveView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.active != widget.active) _syncPolling();
+  }
+
+  void _syncPolling() {
+    _stateRefreshTimer?.cancel();
+    if (!widget.active) return;
     _refresh();
     // UI synchronization only: observe canonical Habitat state changed by Aurora.
     _stateRefreshTimer = Timer.periodic(const Duration(seconds: 2), (_) => _refresh());
@@ -57,13 +72,33 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
   }
 
   Future<void> _refresh() async {
-    final state = await HabitatBridge.getState(territory: widget.territory, actor: 'human');
-    if (!mounted) return;
+    if (!mounted || !widget.active || _refreshInFlight) return;
+    _refreshInFlight = true;
+    try {
+      final state = await HabitatBridge.getState(territory: widget.territory, actor: 'human');
+      if (!mounted || !widget.active) return;
+      final auroraActive = await _fetchRecentActivity();
+      if (!mounted || !widget.active) return;
+      setState(() {
+        _state = state;
+        _loading = false;
+        _auroraRecentlyActive = auroraActive;
+        if (_selectedId != null && !_state.entities.any((e) => e.id == _selectedId)) {
+          _selectedId = null;
+        }
+      });
+    } catch (_) {
+      // The next visible poll can retry after boot or a temporary error.
+    } finally {
+      _refreshInFlight = false;
+    }
+  }
+
+  Future<bool> _fetchRecentActivity() async {
     // Repair S: real recent-history check, not inferred from state alone
     // -- an entity Aurora created a week ago shouldn't read as "she's
     // active right now." Bounded to the last 5 history entries so this
     // stays cheap on the same 2s refresh cadence as everything else here.
-    bool auroraActive = false;
     try {
       final history = await HabitatBridge.getHistory(territory: widget.territory, limit: 5);
       final nowSec = DateTime.now().millisecondsSinceEpoch / 1000.0;
@@ -71,23 +106,14 @@ class _HabitatInteractiveViewState extends State<HabitatInteractiveView> {
         final actor = h['actor'] as String?;
         final ts = (h['timestamp'] as num?)?.toDouble();
         if (actor == 'aurora' && ts != null && (nowSec - ts) < 120.0) {
-          auroraActive = true;
-          break;
+          return true;
         }
       }
     } catch (_) {
       // Best-effort presence signal -- a failed history fetch should
       // never block the core state refresh above it.
     }
-    if (!mounted) return;
-    setState(() {
-      _state = state;
-      _loading = false;
-      _auroraRecentlyActive = auroraActive;
-      if (_selectedId != null && !_state.entities.any((e) => e.id == _selectedId)) {
-        _selectedId = null;
-      }
-    });
+    return false;
   }
 
   HabitatEntity? get _selected =>

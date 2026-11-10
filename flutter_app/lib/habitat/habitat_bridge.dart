@@ -8,12 +8,12 @@
 // and submits interaction, it never owns developmental meaning (spec
 // section 20).
 import 'dart:convert';
-import 'package:flutter/services.dart';
+import '../platform_bridge.dart';
 
 import 'habitat_model.dart';
 
 class HabitatBridge {
-  static const _channel = MethodChannel('org.aurora.app/bridge');
+  static const _channel = PlatformBridge();
 
   static Future<Map<String, dynamic>> getAffordances() async {
     final raw = await _channel.invokeMethod<String>('habitatGetAffordances') ?? '{}';

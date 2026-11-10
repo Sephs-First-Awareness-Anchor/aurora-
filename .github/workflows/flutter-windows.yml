@@ -1,0 +1,49 @@
+name: Flutter Windows Build
+
+on:
+  pull_request:
+    paths:
+      - 'flutter_app/**'
+      - '*.py'
+      - 'aurora_internal/**'
+      - 'requirements-core.txt'
+      - 'scripts/*aurora_windows*'
+      - 'scripts/smoke_aurora_desktop.py'
+      - '.github/workflows/flutter-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.3'
+          channel: stable
+          cache: true
+      - name: Test Flutter lifecycle
+        working-directory: flutter_app
+        run: flutter test
+      - name: Build Flutter release
+        working-directory: flutter_app
+        run: flutter build windows --release
+      - name: Package local Python and Aurora
+        run: ./scripts/package_aurora_windows.ps1 -Destination "$env:RUNNER_TEMP/Aurora"
+      - name: Boot packaged Aurora and check the bridge offline
+        run: |
+          $bundle = "$env:RUNNER_TEMP/Aurora"
+          python scripts/smoke_aurora_desktop.py "$bundle/runtime/python/python.exe" "$bundle/runtime/engine/flutter_app/desktop/aurora_desktop_host.py"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Aurora-Windows-x64
+          path: ${{ runner.temp }}/Aurora
+          if-no-files-found: error

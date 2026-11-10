@@ -50,7 +50,12 @@ const _gauntletStageLabels = {
 };
 
 class HubScreen extends StatefulWidget {
-  const HubScreen({super.key});
+  const HubScreen({super.key, this.active = true});
+
+  // IndexedStack keeps this screen mounted even when Aurora/Space/Self
+  // is in front. Pause expensive Hub diagnostics when it is hidden.
+  final bool active;
+
   @override
   State<HubScreen> createState() => _HubScreenState();
 }
@@ -63,6 +68,7 @@ class _HubScreenState extends State<HubScreen> {
   List<dynamic>        _messages = [];
   List<dynamic>        _activity = [];
   bool _loading = true;
+  bool _refreshInFlight = false;
   Timer? _timer;
 
   // Build 774 live turn diagnostics -- on-device visibility into which of
@@ -84,12 +90,27 @@ class _HubScreenState extends State<HubScreen> {
   String _gauntletStage   = '';
   List<Map<String, dynamic>> _gauntletLog = [];
   Timer? _gauntletTimer;
+  bool _gauntletRefreshInFlight = false;
 
   @override
   void initState() {
     super.initState();
+    _syncPolling();
+  }
+
+  @override
+  void didUpdateWidget(covariant HubScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.active != widget.active) _syncPolling();
+  }
+
+  void _syncPolling() {
+    _timer?.cancel();
+    _gauntletTimer?.cancel();
+    if (!widget.active) return;
     _refresh();
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) => _refresh());
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
+    if (_gauntletRunning) _startGauntletPolling();
   }
 
   @override
@@ -100,14 +121,19 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   Future<void> _refresh() async {
+    if (_refreshInFlight || !mounted || !widget.active) return;
+    _refreshInFlight = true;
     try {
       final stats = await AuroraBridge.getCognitiveStats();
+      if (!mounted || !widget.active) return;
       final roomRaw = await AuroraBridge.getRoomState();
+      if (!mounted || !widget.active) return;
       final roomJson = roomRaw['raw'] as String? ?? '{}';
       final room = jsonDecode(roomJson) as Map<String, dynamic>;
       final habitatReport = await HabitatBridge.integrityReport();
+      if (!mounted || !widget.active) return;
       final turnDiagnostics = await AuroraBridge.getLiveTurnDiagnostics();
-      if (mounted) {
+      if (mounted && widget.active) {
         setState(() {
           _stats    = stats;
           _room     = room;
@@ -121,6 +147,8 @@ class _HubScreenState extends State<HubScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
+    } finally {
+      _refreshInFlight = false;
     }
   }
 
@@ -176,10 +204,12 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   Future<void> _refreshGauntlet() async {
+    if (!mounted || !widget.active || _gauntletRefreshInFlight) return;
+    _gauntletRefreshInFlight = true;
     try {
       final raw = await AuroraBridge.getGauntletStatus();
       final data = jsonDecode(raw) as Map<String, dynamic>;
-      if (!mounted) return;
+      if (!mounted || !widget.active) return;
       setState(() {
         _gauntletRunning = data['running'] as bool? ?? false;
         _gauntletStage   = data['stage']   as String? ?? '';
@@ -191,11 +221,16 @@ class _HubScreenState extends State<HubScreen> {
         _gauntletTimer?.cancel();
         _gauntletTimer = null;
       }
-    } catch (_) {}
+    } catch (_) {
+      // The next poll can retry.
+    } finally {
+      _gauntletRefreshInFlight = false;
+    }
   }
 
   void _startGauntletPolling() {
     _gauntletTimer?.cancel();
+    if (!widget.active) return;
     _gauntletTimer = Timer.periodic(
       const Duration(seconds: 2),
       (_) => _refreshGauntlet(),
@@ -590,7 +625,8 @@ class _HubScreenState extends State<HubScreen> {
     final paused    = _stats['praxis_paused'] == true;
     final witnessed = _stats['praxis_situations_witnessed'] as int? ?? 0;
     final breaches  = _stats['praxis_contract_breaches'] as int? ?? 0;
-    final available = status != 'not_initialized' && status != 'error';
+    final lastError = (_stats['praxis_last_error'] as String?) ?? '';
+    final available = status != 'not_initialized' && status != 'error' && status != 'reconnecting';
 
     final detail = available
         ? '$witnessed witnessed · ${status.replaceAll('_', ' ')}'
@@ -623,6 +659,16 @@ class _HubScreenState extends State<HubScreen> {
             ),
           ],
         ]),
+        if (lastError.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Praxis detail: $lastError',
+                maxLines: 3, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: _amber, fontSize: 11)),
+            ),
+          ),
         // Breaches are shown only when they exist: a non-zero count means
         // something tried to teach her and was stopped at the fence, which
         // is worth Sunni seeing.  Zero is the normal state and needs no row.
@@ -697,6 +743,10 @@ class _HubScreenState extends State<HubScreen> {
     final withheld = _stats['messenger_withheld'] as int? ?? 0;
     final errors   = _stats['messenger_errors'] as int? ?? 0;
     final busy     = _stats['messenger_busy_skips'] as int? ?? 0;
+    final deliveryPending = _stats['messenger_delivery_pending'] as int? ?? 0;
+    final deliveryBlocked = _stats['messenger_delivery_blocked'] as int? ?? 0;
+    final unanswered = _stats['messenger_unanswered_contacts'] as int? ?? 0;
+    final pressure = (_stats['messenger_max_addressed_pressure'] as num?)?.toDouble() ?? 0.0;
     final lastHeld  = (_stats['messenger_last_withheld'] as String?) ?? '';
     final lastSpoke = (_stats['messenger_last_spoke'] as String?) ?? '';
     final lastError = (_stats['messenger_last_error'] as String?) ?? '';
@@ -718,9 +768,20 @@ class _HubScreenState extends State<HubScreen> {
       _statRow('Messenger',
           status == 'not_initialized'
               ? 'not started'
-              : '$heard heard · $spoke said · $withheld held back'
+              : status == 'error'
+                  ? 'startup error'
+                  : status == 'reconnecting'
+                      ? 'reconnecting'
+                      : '$heard heard · $spoke said · $withheld held back'
                 '${busy > 0 ? ' · $busy busy' : ''}',
           valueColor: status == 'online' ? _green : _textDim),
+      if (unanswered > 0)
+        _statRow('Unanswered contact pressure',
+          '$unanswered contact(s) · peak ${pressure.toStringAsFixed(2)}', valueColor: _amber),
+      if (deliveryPending > 0)
+        _statRow('Replies awaiting delivery', '$deliveryPending', valueColor: _amber),
+      if (deliveryBlocked > 0)
+        _statRow('Replies refused by Praxis', '$deliveryBlocked', valueColor: _red),
       if (lastSpoke.isNotEmpty) note('Last said', lastSpoke, _text),
       if (lastHeld.isNotEmpty) note('Last held back', lastHeld, _amber),
       _statRow('She reached out',

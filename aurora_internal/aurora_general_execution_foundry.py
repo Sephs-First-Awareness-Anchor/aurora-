@@ -43,7 +43,10 @@ import math
 import multiprocessing as mp
 import os
 import queue
-import resource
+try:
+    import resource
+except ImportError:
+    resource = None
 import signal
 import sys
 import time
@@ -726,6 +729,8 @@ def execute_python_sandbox(source: str, input_value: Any, state: Optional[Mappin
     validation = validate_python_source(source)
     if not validation.get("valid"):
         return {"executed": False, **validation}
+    if resource is None:
+        return {"executed": False, "reason": "sandbox_resource_limits_unavailable"}
     lim = limits or ExecutionLimits()
     context = mp.get_context("spawn")
     parent_connection, child_connection = context.Pipe(duplex=False)

@@ -702,9 +702,9 @@ def _organs() -> Dict[str, Tuple[str, str, Any]]:
             "operation": ("operations", "communication_emergence",
                           lambda o, recs: o.absorb_clone_operations(recs)),
             "candidate": ("candidates", "lexical_grounding",
-                          lambda o, recs: o.absorb_clone_candidates(recs)),
+                          lambda o, recs: o.absorb_clone_candidates(recs, save=False)),
             "motif": ("motifs", "grammar_engine",
-                      lambda o, recs: o.absorb_clone_motifs(recs)),
+                      lambda o, recs: o.absorb_clone_motifs(recs, save=False)),
             "proposition": ("propositions", WEB,
                             lambda o, recs: _propositional().absorb_clone_propositions(o, recs)),
             "concept": ("concepts", WEB,
@@ -728,7 +728,7 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
     # its bytes' signature, without decoding any of it.
     try:
         with open(path, "rb") as fh:
-            file_sig = hashlib.sha1(fh.read()).hexdigest()[:16]
+            file_sig = hashlib.file_digest(fh, "sha1").hexdigest()[:16]
         ledger = load_ledger(state_dir)
         seen_files = dict(ledger.get("files") or {})
         if file_sig in seen_files:
@@ -750,6 +750,9 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
         if organ is None:
             total["status"] = "absent"
             return
+        if kind == "motif" and organ.clone_motifs_absorbed(str(state["header"].get("harvest_id") or "")):
+            total["status"] = "already_applied"
+            return
         try:
             _add_result(total, fn(organ, recs))
         except Exception as exc:
@@ -767,6 +770,16 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
         for kind in list(state["buffers"]):
             _flush(kind)
         results = state["results"]
+        lexical = systems.get("lexical_grounding")
+        if (results.get("candidates", {}).get("evidence")
+                and getattr(lexical, "persist", False) and not lexical.save()):
+            raise OSError("clone lexical candidates could not be saved")
+        motifs = results.get("motifs", {})
+        if motifs.get("status") == "error":
+            raise RuntimeError(motifs.get("error") or "clone motif absorption failed")
+        if motifs.get("absorbed") or motifs.get("status") == "already_applied":
+            if not systems["grammar_engine"].commit_clone_motifs(hid):
+                raise OSError("clone motifs could not be saved")
         for name, key in (("paths", "reasoning_paths"), ("operations", "communication_emergence"),
                           ("candidates", "lexical_grounding"), ("motifs", "grammar_engine"),
                           ("propositions", WEB), ("concepts", WEB), ("unformed", "unformed_patterns")):
@@ -812,15 +825,17 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
             if kind == "unformed_reference" or len(state["buffers"][kind]) >= ABSORB_CHUNK:
                 _flush(kind)
         _close_segment()
+        ledger.setdefault("files", {})[file_sig] = ",".join(str(x.get("harvest_id", "")) for x in segments)
     except Exception as exc:
         segments.append({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
-    ledger.setdefault("files", {})[file_sig] = ",".join(str(x.get("harvest_id", "")) for x in segments)
     _write_ledger(state_dir, ledger)
     import gc
     gc.collect()
     absorbed = [x for x in segments if x.get("status") == "absorbed"]
     if absorbed:
         return {"status": "absorbed", **absorbed[-1], "segments": segments}
+    if segments and segments[-1].get("status") == "error":
+        return {**segments[-1], "segments": segments}
     statuses = {x.get("status") for x in segments}
     status = ("already_lived" if statuses == {"already_lived"} else
               "unknown_version" if statuses == {"unknown_version"} else "already_absorbed")

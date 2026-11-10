@@ -244,6 +244,41 @@ def test_motif_evidence_alone_does_not_promote_a_thin_shape(tmp_path):
     assert out == {"absorbed": 1, "promoted": 0, "demoted": 0}       # one context: not composable yet
 
 
+def test_motif_chunks_save_once_and_survive_ledger_retry(tmp_path, monkeypatch):
+    from aurora_grammar_engine import GrammarEngine, TokenRole as R
+
+    monkeypatch.setattr(CH, "ABSORB_CHUNK", 1)
+    seq = (R.AGENT, R.ACTION)
+    harvest = CH.merge_yields([{**y("c1", eps=["E1"]), "motifs": [
+        {"seq": ["agent", "action"], "s": 5, "f": 0, "ctx": ["a", "b", "c"]},
+        {"seq": ["action", "object"], "s": 5, "f": 0, "ctx": ["d", "e", "f"]},
+    ]}])
+    path = tmp_path / "harvest.jsonl.gz"
+    CH.write_harvest(str(path), harvest)
+    state = tmp_path / "state"
+    grammar = GrammarEngine(state_dir=str(state))
+    grammar._lineage._motifs.clear()
+    writes = []
+    save = grammar._lineage._save
+
+    def count_save(**kwargs):
+        writes.append(kwargs)
+        return save(**kwargs)
+
+    monkeypatch.setattr(grammar._lineage, "_save", count_save)
+    out = CH.absorb_harvest({"grammar_engine": grammar}, harvest_path=str(path), state_dir=str(state))
+    assert out["results"]["motifs"]["absorbed"] == 2
+    assert len(writes) == 1
+    assert grammar._lineage.get_or_create(seq).success_count == 5
+
+    # A process may have committed the motifs and crashed before the harvest ledger.
+    (state / CH.LEDGER_FILE).unlink()
+    restarted = GrammarEngine(state_dir=str(state))
+    retry = CH.absorb_harvest({"grammar_engine": restarted}, harvest_path=str(path), state_dir=str(state))
+    assert retry["results"]["motifs"]["status"] == "already_applied"
+    assert restarted._lineage.get_or_create(seq).success_count == 5
+
+
 def _said_web(*statements):
     from aurora_internal.aurora_ontological_scaffolding import OntologicalWeb
     from aurora_internal.aurora_propositional_understanding import integrate_form

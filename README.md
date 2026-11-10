@@ -282,6 +282,16 @@ python3 aurora.py --feed "https://example.com"  # Ingest external data
 python3 aurora.py --status                # Show runtime status
 ```
 
+### Flutter on Windows
+
+Download **Aurora-Windows-x64** from a successful [Flutter Windows Build](https://github.com/Sephs-First-Awareness-Anchor/aurora-/actions/workflows/flutter-windows.yml), extract the entire archive, and open `Aurora.exe`. Keep the adjacent `runtime` and `data` folders with the executable.
+
+The Windows app includes typed chat, file uploads, Space, Self, Hub, and the same local Aurora and Praxis workers used by the Android app. Windows keeps its own learning and configuration in `%LOCALAPPDATA%\Aurora\aurora_state`. To reach a separate Praxis host, use the existing `AURORA_PRAXIS_ENDPOINT` environment variable or set the address in `praxis\endpoint.txt` inside that state folder.
+
+Camera, microphone, voice, accessibility screenshots and overlay controls belong to the Android app. The generated Python sandbox also requires OS resource limits unavailable on Windows. Aurora's internal program interpreter is available on both platforms.
+
+To build from source, install Python 3.12 x64, Flutter 3.22.3, and Visual Studio 2022 with Desktop development with C++. Run `flutter doctor -v` and then `run_gui_windows.bat` from this checkout.
+
 ---
 
 ## Autonomy Controls & Governance

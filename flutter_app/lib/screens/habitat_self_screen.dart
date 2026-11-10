@@ -17,7 +17,8 @@ const _text = Color(0xFFE2E8F0);
 const _textDim = Color(0xFF64748B);
 
 class SelfScreen extends StatelessWidget {
-  const SelfScreen({super.key});
+  const SelfScreen({super.key, this.active = true});
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +41,8 @@ class SelfScreen extends StatelessWidget {
           // humanCanCreate: false -- Self only ever gets new entities from
           // Aurora's own actions or from something offered/transferred in
           // from Space (spec section 3.3: "Aurora controls what enters").
-          const Expanded(
-            child: HabitatInteractiveView(territory: 'self', humanCanCreate: false),
+          Expanded(
+            child: HabitatInteractiveView(territory: 'self', humanCanCreate: false, active: active),
           ),
         ]),
       ),

@@ -12,7 +12,7 @@
 // situation, read what she concluded, or describe how she is doing -- Praxis
 // has no notion of her doing well, so there is nothing of the kind to fetch.
 import 'dart:convert';
-import 'package:flutter/services.dart';
+import '../platform_bridge.dart';
 
 class PraxisStatus {
   final String status;
@@ -64,7 +64,7 @@ class PraxisStatus {
 }
 
 class PraxisBridge {
-  static const _channel = MethodChannel('org.aurora.app/bridge');
+  static const _channel = PlatformBridge();
 
   static PraxisStatus _decode(String? raw) {
     try {
