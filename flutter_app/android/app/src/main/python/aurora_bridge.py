@@ -4783,6 +4783,9 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                         cognitive_stages=dict(
                             (_systems or {}).get("_last_live_turn_profile", {}).get("stages_ms", {})
                         ),
+                        shared_computation=dict(
+                            (_systems or {}).get("_last_live_turn_profile", {}).get("shared_computation", {})
+                        ),
                         understanding_stages=dict(
                             (_systems or {}).get("_last_understanding_profile") or {}
                         ),
