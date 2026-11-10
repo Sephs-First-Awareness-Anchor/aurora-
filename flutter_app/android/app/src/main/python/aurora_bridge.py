@@ -11856,6 +11856,16 @@ def get_cognitive_stats() -> str:
                 else ("online" if _m.get("online") else "offline"))
             for _key in ("heard", "spoke", "withheld", "errors", "busy_skips", "breaches"):
                 stats[f"messenger_{_key}"] = int(_m.get(_key, 0) or 0)
+            # Already-computed messenger status: expose transport queues and
+            # original addressed-pressure state with NO new cognitive query.
+            stats["messenger_delivery_pending"] = int(_m.get("delivery_pending", 0) or 0)
+            stats["messenger_delivery_blocked"] = int(_m.get("delivery_blocked", 0) or 0)
+            _pending_contacts = dict(_m.get("pending") or {})
+            stats["messenger_unanswered_contacts"] = len(_pending_contacts)
+            stats["messenger_max_addressed_pressure"] = round(
+                max((float(v.get("pressure", 0.0) or 0.0)
+                     for v in _pending_contacts.values()), default=0.0), 4
+            )
             _w = _m.get("last_withheld") or {}
             stats["messenger_last_withheld"] = (
                 f"to {_w.get('to', '?')}: \"{_w.get('text', '')}\" "
