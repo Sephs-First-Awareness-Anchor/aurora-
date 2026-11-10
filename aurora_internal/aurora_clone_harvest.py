@@ -1036,10 +1036,16 @@ def read_header(path: str) -> Dict[str, Any]:
 
 
 def lived_for(header: Mapping[str, Any], organs: Iterable[str]) -> set:
-    """Episodes every one of these organs has already been harvested for."""
+    """Episodes ANY of these organs has already been harvested for -- a run
+    never re-reports an organ for a conversation it already reported, so
+    organ groups are lived in separate passes (e.g. motifs,propositions,
+    concepts over all history; the legacy organs over what they have not
+    covered)."""
     by = dict(header.get("lived_by_organ") or {})
-    sets = [set(by.get(o) or []) for o in organs]
-    return set.intersection(*sets) if sets else set()
+    out: set = set()
+    for o in organs:
+        out |= set(by.get(o) or [])
+    return out
 
 
 def load_harvest(path: str) -> Dict[str, Any]:
