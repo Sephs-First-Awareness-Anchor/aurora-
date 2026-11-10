@@ -1235,6 +1235,11 @@ def start_praxis_bridge(
 ) -> Optional[PraxisBridge]:
     global _bridge
     if _bridge is not None:
+        # Android can reclaim the Python thread without resetting the module.
+        # Reuse the same learned/witnessed bridge instance, but revive its
+        # worker when it is no longer alive.
+        if not (_bridge._thread and _bridge._thread.is_alive()):
+            _bridge.start()
         return _bridge
     # Do not swallow startup errors. The Android host needs the actual
     # exception to display/report a failed local bridge rather than
