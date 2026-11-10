@@ -7148,8 +7148,14 @@ def _check_internal_health(systems: dict) -> None:
     if _reg is not None and hasattr(_reg, "_promo_log"):
         try:
             import time as _ht
-            _recent = [p for p in _reg._promo_log
-                       if p.get("ts", 0.0) > _ht.time() - 90]
+            _since = _ht.time() - 90.0
+            # Reuse the registry's timestamp-indexed lookup; scanning its
+            # complete lifelong promotion log on every live turn becomes
+            # increasingly expensive precisely as Aurora develops.
+            _recent = (_reg.drain_promotions(since_ts=_since)
+                       if hasattr(_reg, "drain_promotions")
+                       else [p for p in _reg._promo_log
+                             if p.get("ts", 0.0) > _since])
             if _recent:
                 _last_crystal_promotion_turn = _health_turn_counter
         except Exception as _aurora_boundary_exc:
