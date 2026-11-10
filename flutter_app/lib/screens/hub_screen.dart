@@ -50,7 +50,12 @@ const _gauntletStageLabels = {
 };
 
 class HubScreen extends StatefulWidget {
-  const HubScreen({super.key});
+  const HubScreen({super.key, this.active = true});
+
+  // IndexedStack keeps this screen mounted even when Aurora/Space/Self
+  // is in front. Pause expensive Hub diagnostics when it is hidden.
+  final bool active;
+
   @override
   State<HubScreen> createState() => _HubScreenState();
 }
@@ -63,6 +68,7 @@ class _HubScreenState extends State<HubScreen> {
   List<dynamic>        _messages = [];
   List<dynamic>        _activity = [];
   bool _loading = true;
+  bool _refreshInFlight = false;
   Timer? _timer;
 
   // Build 774 live turn diagnostics -- on-device visibility into which of
@@ -88,8 +94,19 @@ class _HubScreenState extends State<HubScreen> {
   @override
   void initState() {
     super.initState();
-    _refresh();
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) => _refresh());
+    if (widget.active) _refresh();
+    // Diagnostics are observation, not cognition. Sampling every four
+    // seconds previously queued four independent Python calls regardless
+    // of what Aurora was doing. Do not create overlapping refreshes.
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (widget.active) _refresh();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant HubScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.active && widget.active) _refresh();
   }
 
   @override
@@ -100,6 +117,8 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   Future<void> _refresh() async {
+    if (_refreshInFlight || !mounted || !widget.active) return;
+    _refreshInFlight = true;
     try {
       final stats = await AuroraBridge.getCognitiveStats();
       final roomRaw = await AuroraBridge.getRoomState();
@@ -121,6 +140,8 @@ class _HubScreenState extends State<HubScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
+    } finally {
+      _refreshInFlight = false;
     }
   }
 
