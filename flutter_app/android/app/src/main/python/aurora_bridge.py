@@ -24,6 +24,7 @@ import sys
 import threading
 import time
 import traceback
+from collections import deque
 from pathlib import Path
 from typing import Optional
 
@@ -437,28 +438,25 @@ _TURN_ADMISSION_TIMEOUT_S: float = 180.0
 # _proactive_expression so a late answer to what was just asked stays
 # diagnostically distinct from Aurora genuinely speaking unprompted, even
 # though both are delivered to Flutter through the same poll transport.
-_late_surface_response: str = ""
+# Multiple timed-out turns may complete before Kotlin's next poll. Preserve
+# each completed reply, in arrival order, instead of overwriting one global
+# string. This is transport only, never an extra cognitive response.
+_late_surface_responses = deque(maxlen=128)
 _late_surface_response_lock = threading.Lock()
 
 
 def _store_late_surface_response(turn_id: str, text: str) -> None:
-    global _late_surface_response
     if not text:
         return
     with _late_surface_response_lock:
-        _late_surface_response = text
+        _late_surface_responses.append(text)
     log.info("Late surface response stored for %s (%d chars)", turn_id, len(text))
 
 
 def get_late_surface_response() -> str:
-    """Called by AuroraService's polling loop, mirroring
-    get_proactive_expression(). Returns and clears any Surface response
-    that finished deciding after the Surface wait already timed out."""
-    global _late_surface_response
+    """Return the oldest completed late reply, exactly once, through Kotlin."""
     with _late_surface_response_lock:
-        val = _late_surface_response
-        _late_surface_response = ""
-    return val
+        return _late_surface_responses.popleft() if _late_surface_responses else ""
 
 
 # Build 774 PR3: turn diagnostics -- the ten observable states named by the
