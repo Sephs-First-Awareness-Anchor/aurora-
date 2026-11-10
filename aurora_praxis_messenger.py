@@ -526,9 +526,10 @@ class PraxisMessenger:
                 self.outbox.pop(key, None)
             else:
                 self.counters["errors"] += 1
-                self.last_error = (
-                    f"outbox send refused: {(response or {}).get('error', 'no response')}"
-                )[:300]
+                error = str((response or {}).get("error", "no response"))
+                self.last_error = f"outbox send refused: {error}"[:300]
+                if error in PERMANENT_SEND_ERRORS:
+                    entry["blocked_reason"] = error
             try:
                 self._save_outbox()
             except OSError as exc:
@@ -650,12 +651,14 @@ class PraxisMessenger:
                                    "at": time.time()}
         else:
             self.counters["errors"] += 1
-            self.last_error = f"send refused: {(response or {}).get('error', 'no response')}"
-            self._queue_unsent(pid, reply[:MAX_TEXT_CHARS], int(message["seq"]))
-            # Her answer exists. Only its delivery failed, so do not re-enter
-            # the cognitive pipeline to compose it again.
+            error = str((response or {}).get("error", "no response"))
+            self.last_error = f"send refused: {error}"
+            blocked = error if error in PERMANENT_SEND_ERRORS else ""
+            self._queue_unsent(pid, reply[:MAX_TEXT_CHARS], int(message["seq"]),
+                               blocked_reason=blocked)
+            # The answer already exists. Never rerun cognition for transport.
             self.pending.pop(pid, None)
-            outcome["reason"] = "delivery_queued"
+            outcome["reason"] = "delivery_blocked" if blocked else "delivery_queued"
         return outcome
 
     # -- one pass ------------------------------------------------------------------
@@ -667,7 +670,8 @@ class PraxisMessenger:
         # window first, so she never even looked.
         if self._paused.is_set():
             return []
-        self._retry_unsent()
+        # Look for new incoming speech before retrying queued outgoing
+        # deliveries; offline sends must not block contact discovery.
         try:
             payload = self.http("GET", f"/social/pull?after={self.cursor}&limit={PULL_LIMIT}", None)
         except Exception as exc:
@@ -677,6 +681,7 @@ class PraxisMessenger:
         self.last_pull_at = time.time()
         if not self.online:
             return []
+        self._retry_unsent()
         outcomes: List[Dict[str, Any]] = []
         unread = [r for r in (payload.get("messages") or [])
                   if isinstance(r, Mapping) and isinstance(r.get("seq"), int) and r["seq"] > self.cursor
@@ -861,6 +866,8 @@ class PraxisMessenger:
                 "last_spoke": dict(self.last_spoke),
                 "corroboration": (self.corroboration.status() if self.corroboration is not None else {}),
                 "last_novel": dict(self.last_novel),
+                "delivery_pending": sum(1 for e in self.outbox.values() if not e.get("blocked_reason")),
+                "delivery_blocked": sum(1 for e in self.outbox.values() if e.get("blocked_reason")),
                 "initiative": (self.initiative.status() if self.initiative is not None else {}),
                 "pending": {pid: {"attempts": e.get("attempts", 0),
                                   "pressure": round(self._pressure(pid), 4)}
