@@ -2508,6 +2508,7 @@ class ConstraintGenealogyLogger:
                     "tick": int(self.tick_count),
                     "lock_wait_ms": round(_lock_wait_ms, 2),
                     "compute_ms": round((time.perf_counter() - _observe_started) * 1000.0, 2),
+                    "stages_ms": dict(getattr(self, "_last_observe_details", {}) or {}),
                 }
 
     def _observe_impl(
@@ -2535,6 +2536,8 @@ class ConstraintGenealogyLogger:
             downstream consumers (genealogy analysis, corpus runner, etc.).
             Storing as dict preserves JSONL serializability.
         """
+        _observe_tick_started = time.perf_counter()
+        self._last_observe_details = {}
         self.tick_count += 1
         self._latest_pressure = pressure_after
 
@@ -2570,6 +2573,9 @@ class ConstraintGenealogyLogger:
             self.skipped_no_relief += 1
             # Still update governor (low fitness signal)
             self.governor.tick()
+            self._last_observe_details["no_relief_tick_ms"] = round(
+                (time.perf_counter() - _observe_tick_started) * 1000.0, 2
+            )
             return None
 
         # The outlet baseline is only consumed for a real relief event's
@@ -2626,6 +2632,7 @@ class ConstraintGenealogyLogger:
 
         dominant_axis = relief.dominant_positive_axis()
 
+        _coupling_started = time.perf_counter()
         coupling_meta = self._update_coupling_roots(
             trace=trace,
             relief=relief,
@@ -2641,6 +2648,9 @@ class ConstraintGenealogyLogger:
         # reflects which axes had accumulated pressure that was relieved.
         self._update_gradient_memory_from_relief(relief)
         self._update_causal_feedback(trace, relief)
+        self._last_observe_details["coupling_and_feedback_ms"] = round(
+            (time.perf_counter() - _coupling_started) * 1000.0, 2
+        )
 
         # Merge difference_snapshot into notes (serialisable dict form).
         # Type-contract guard: a caller passing a malformed difference_snapshot
@@ -2677,6 +2687,7 @@ class ConstraintGenealogyLogger:
         # bounded set of divergent same-basis candidates, and do not forward
         # any of them into PairStats or promotion unless they later genuinely
         # co-activate in a trace.
+        _collision_started = time.perf_counter()
         _collision_trace = list(trace)
         if self.cfg.TRACE_REWRITE_ON_PROMOTE and self._links_by_parents:
             _collision_trace = self.rewrite_trace(_collision_trace)
@@ -2702,15 +2713,23 @@ class ConstraintGenealogyLogger:
                 ],
             }
 
+        self._last_observe_details["collision_search_ms"] = round(
+            (time.perf_counter() - _collision_started) * 1000.0, 2
+        )
+
         # Bounded cross-family ('RI:') complementary-gap discovery, mirroring
         # the exact-signature collision discovery above around the same
         # actually-active operands. Discovery remains evidence-inert.
+        _gap_started = time.perf_counter()
         _gap_candidates = self.representation_gap_candidates(
             _collision_trace,
             difference_snapshot=difference_snapshot,
         )
         if _gap_candidates:
             self._record_representation_inquiries(_gap_candidates)
+        self._last_observe_details["gap_search_ms"] = round(
+            (time.perf_counter() - _gap_started) * 1000.0, 2
+        )
 
         # A caller in the middle of completing a staged representation
         # experiment (complete_representation_experiment) pre-populates
@@ -2804,6 +2823,7 @@ class ConstraintGenealogyLogger:
 
         # --- Pair accumulation + promotion ---
         n_pairs_before = len(self._pair_stats)
+        _pairs_started = time.perf_counter()
         try:
             # Sunni & Cael ("the architecture pass"): attribute this tick's
             # REAL measured relief to every representation that was active
@@ -2816,10 +2836,14 @@ class ConstraintGenealogyLogger:
             rewritten = self._accumulate_pairs(trace, relief, cost_total, x_risk_total)
         finally:
             self._active_relation_context = {}
+        self._last_observe_details["pair_and_consequence_ms"] = round(
+            (time.perf_counter() - _pairs_started) * 1000.0, 2
+        )
         if rewritten and self.cfg.TRACE_REWRITE_ON_PROMOTE:
             record.trace = rewritten
 
         # --- Complexity curve: record tick state and pressure outcomes ---
+        _curves_started = time.perf_counter()
         try:
             n_pairs_eval = max(len(self._pair_stats) - n_pairs_before, len(trace) - 1)
             current_outlet = self._outlet_fraction()
@@ -2886,6 +2910,12 @@ class ConstraintGenealogyLogger:
             )
             pass
 
+        self._last_observe_details["curve_stats_ms"] = round(
+            (time.perf_counter() - _curves_started) * 1000.0, 2
+        )
+        self._last_observe_details["total_relief_tick_ms"] = round(
+            (time.perf_counter() - _observe_tick_started) * 1000.0, 2
+        )
         return record
 
     def get_link(self, link_id: str) -> Optional[ConstraintLink]:
