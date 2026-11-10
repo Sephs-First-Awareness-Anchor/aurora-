@@ -335,7 +335,64 @@ def test_turn_failure_is_reported_not_swallowed(tmp_path):
     messenger.pull_once()
     status = messenger.status()
     assert status["errors"] == 1 and "phone ran out of patience" in status["last_error"]
-    assert status["cursor"] == 1
+    assert status["cursor"] == 0  # a failed turn was never read; retry later
+
+
+def test_failed_processing_backs_off_then_retries_without_losing_message(tmp_path, monkeypatch):
+    calls = []
+
+    def unstable(systems, text, **kwargs):
+        calls.append(text)
+        if len(calls) == 1:
+            raise RuntimeError("temporary cognitive failure")
+        return {"src": "composer_unified",
+                "resp_A": SimpleNamespace(content="rain moves through trees")}
+
+    praxis = FakePraxis([msg(1, "What is rain?")])
+    messenger = M.PraxisMessenger({}, state_dir=str(tmp_path), http=praxis,
+                                  process_turn=unstable,
+                                  extract_reply=lambda r: r["resp_A"].content)
+    messenger.pull_once()
+    assert messenger.cursor == 0
+    messenger.pull_once()
+    assert len(calls) == 1, "retry cooldown must prevent repeated full cognition"
+    monkeypatch.setattr(M, "REENTRY_AFTER_S", 0.0)
+    messenger.pull_once()
+    assert len(calls) == 2 and messenger.cursor == 1
+    assert praxis.sent[0]["in_reply_to"] == 1
+    assert not messenger.status()["failed_reads"]
+
+
+def test_send_failure_persists_outbox_and_retries_without_rethinking(tmp_path, monkeypatch):
+    class FlakyPraxis(FakePraxis):
+        attempts = 0
+
+        def __call__(self, method, path, payload):
+            if method == "POST" and path == "/social/send":
+                self.attempts += 1
+                if self.attempts == 1:
+                    return {"error": "temporarily_unavailable"}
+            return super().__call__(method, path, payload)
+
+    praxis = FlakyPraxis([msg(1, "How is rain?")])
+    turn = FakeTurn([("composer_unified", "rain moves through trees")])
+    state = {"conversation_memory": ConversationMemory()}
+    first = M.PraxisMessenger(state, state_dir=str(tmp_path), http=praxis,
+                              process_turn=turn,
+                              extract_reply=lambda r: r["resp_A"].content)
+    first.pull_once()
+    assert first.cursor == 1 and first.status()["outbox_pending"] == 1
+    assert len(turn.calls) == 1
+    # Restart from disk: the already-composed answer survives process death.
+    second = M.PraxisMessenger(state, state_dir=str(tmp_path), http=praxis,
+                               process_turn=turn,
+                               extract_reply=lambda r: r["resp_A"].content)
+    monkeypatch.setattr(M, "SEND_RETRY_AFTER_S", 0.0)
+    second.pull_once()
+    assert second.status()["outbox_pending"] == 0
+    assert len(turn.calls) == 1, "retrying transport cannot re-run her cognitive pipeline"
+    assert praxis.sent == [{"persona_id": "claude", "text": "rain moves through trees",
+                            "in_reply_to": 1}]
 
 
 # ---------------------------------------------------------------------------
