@@ -565,6 +565,7 @@ class MotifLineage:
         self._state_path  = state_path
         self._motifs:     Dict[str, StructuralMotif] = {}
         self._discourse:  Dict[str, DiscourseMotif]  = {}
+        self._clone_segments: Set[str] = set()
         self._update_n    = 0
         self._lock        = threading.Lock()
         # R1.9.3 L1: skeletons already logged as composition-ineligible
@@ -959,23 +960,29 @@ class MotifLineage:
     def save(self):
         self._save()
 
-    def _save(self, force: bool = False):
+    def _save(self, force: bool = False) -> bool:
         # Turn-scoped batching: ~10 MB file, previously rewritten from
         # prepare_response_trace every turn (~12% of turn wall time).
         if not force and batch_defer(self):
-            return
+            return True
         try:
-            data = {
-                "motifs":    {k: v.to_dict() for k, v in self._motifs.items()},
-                "discourse": {k: v.to_dict() for k, v in self._discourse.items()},
-                "saved_at":  time.time(),
-            }
             tmp = self._state_path + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
-                # Compact: this file is ~10 MB and was rewritten every turn with
-                # indent=2 (pure-Python encoder, ~12% of turn wall time). Same data.
-                json.dump(data, f, separators=(",", ":"))
+                # Stream one motif at a time. Building another full dictionary
+                # of serialized motifs can spike the phone's heap on large harvests.
+                encode = json.JSONEncoder(separators=(",", ":")).encode
+                f.write('{"motifs":{')
+                for index, (key, motif) in enumerate(list(self._motifs.items())):
+                    if index:
+                        f.write(",")
+                    f.write(encode(key) + ":" + encode(motif.to_dict()))
+                f.write('},"discourse":')
+                f.write(encode({key: motif.to_dict() for key, motif in self._discourse.items()}))
+                f.write(',"clone_segments":')
+                f.write(encode(sorted(self._clone_segments)))
+                f.write(',"saved_at":' + encode(time.time()) + "}")
             os.replace(tmp, self._state_path)
+            return True
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -984,7 +991,7 @@ class MotifLineage:
                 exc=_aurora_boundary_exc,
                 context={"function": "_save", "handler_line": 843, "source_file": "aurora_grammar_engine.py"},
             )
-            pass
+            return False
 
     def _load(self):
         try:
@@ -995,6 +1002,7 @@ class MotifLineage:
                     self._motifs[k] = StructuralMotif.from_dict(v)
                 for k, v in data.get("discourse", {}).items():
                     self._discourse[k] = DiscourseMotif.from_dict(v)
+                self._clone_segments = set(data.get("clone_segments") or [])
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -1811,7 +1819,7 @@ class GrammarEngine:
                 credited += 1
         return credited
 
-    def absorb_clone_motifs(self, records: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def absorb_clone_motifs(self, records: List[Dict[str, Any]], *, save: bool = True) -> Dict[str, Any]:
         """FIX-A113: what her clones' rehearsal credited or failed in each
         sentence shape.  The counts are added to her own lineage and her own
         promotion rule decides what becomes promoted."""
@@ -1837,9 +1845,20 @@ class GrammarEngine:
                 elif m.promoted and m.should_demote():
                     m.promoted = False
                     demoted += 1
-        if absorbed:
+        if absorbed and save:
             lineage.save()
         return {"absorbed": absorbed, "promoted": promoted, "demoted": demoted}
+
+    def clone_motifs_absorbed(self, harvest_id: str) -> bool:
+        return harvest_id in self._lineage._clone_segments
+
+    def commit_clone_motifs(self, harvest_id: str) -> bool:
+        lineage = self._lineage
+        with lineage._lock:
+            # Commit the segment ID with its evidence in the same file. On
+            # retry after a crash, the clone ledger may be one commit behind.
+            lineage._clone_segments.add(harvest_id)
+            return lineage._save(force=True)
 
     def record_motif_outcome(
         self,
