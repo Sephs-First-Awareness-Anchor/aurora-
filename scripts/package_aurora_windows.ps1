@@ -16,13 +16,18 @@ Get-ChildItem $pythonHome -File |
   Where-Object Name -Match '^(python\.exe|python\d*\.dll|vcruntime.*\.dll|LICENSE\.txt)$' |
   Copy-Item -Destination $python
 Copy-Item "$pythonHome/DLLs" $python -Recurse
-Get-ChildItem "$pythonHome/Lib" -Exclude 'site-packages', '__pycache__', 'test' |
+Get-ChildItem -LiteralPath "$pythonHome/Lib" |
+  Where-Object { $_.Name -notin @('site-packages', '__pycache__', 'test') } |
   Copy-Item -Destination "$python/Lib" -Recurse
 & "$pythonHome/python.exe" -m pip install --only-binary=:all: --target "$python/Lib/site-packages" -r "$repo/requirements-core.txt" Pillow
 if ($LASTEXITCODE -ne 0) { throw 'Installing Aurora runtime dependencies failed' }
 
-Get-ChildItem $repo -File -Filter '*.py' -Exclude 'test_*.py', 'conftest.py' |
+Get-ChildItem -LiteralPath $repo -File -Filter '*.py' |
+  Where-Object { $_.Name -notlike 'test_*.py' -and $_.Name -ne 'conftest.py' } |
   Copy-Item -Destination $engine
+if (!(Test-Path -LiteralPath "$engine/aurora.py" -PathType Leaf)) {
+  throw 'The packaged runtime is missing aurora.py'
+}
 foreach ($directory in 'aurora_internal', 'aurora_manifold_directory', 'aurora_genealogy') {
   Copy-Item "$repo/$directory" $engine -Recurse
 }
