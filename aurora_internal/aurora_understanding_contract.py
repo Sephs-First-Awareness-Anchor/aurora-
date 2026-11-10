@@ -2619,7 +2619,8 @@ class RuntimeUnderstandingContract:
                 after_state=self.state,
                 notes=notes,
             )
-        _prof_genealogy_ms = round((time.perf_counter() - _prof_genealogy_start) * 1000.0, 2)
+        _prof_genealogy_end = time.perf_counter()
+        _prof_genealogy_ms = round((_prof_genealogy_end - _prof_genealogy_start) * 1000.0, 2)
 
         self._history_append(
             {
@@ -2651,8 +2652,7 @@ class RuntimeUnderstandingContract:
                 "derivation_including_snapshot_ms": _prof_derived_ms,
                 "genealogy_ms": _prof_genealogy_ms,
                 "history_and_save_ms": round(
-                    (time.perf_counter() - _prof_genealogy_start) * 1000.0
-                    - _prof_genealogy_ms, 2
+                    (time.perf_counter() - _prof_genealogy_end) * 1000.0, 2
                 ),
                 "total_ms": round((time.perf_counter() - _prof_started) * 1000.0, 2),
                 "genealogy_observed": bool(accuracy.get("used")),
