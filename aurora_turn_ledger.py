@@ -18,6 +18,8 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 import time
 
+from aurora_internal.aurora_turn_compute_graph import TurnComputeGraph
+
 
 class TurnLedger:
     __slots__ = (
@@ -27,12 +29,17 @@ class TurnLedger:
         "input_state", "form_state",
         "crest_contributions", "crest_top_source",
         "chain_down_trace", "systems_touched", "final_response",
+        "computations",
     )
 
     def __init__(self, user_text: str, turn_tick: Optional[int] = None) -> None:
         self.user_text = user_text
         self.turn_tick = turn_tick
         self.started_at = time.time()
+        # This is the turn's ONLY shared computation cache. Other organs
+        # declare sources and dependencies rather than keeping private
+        # derived copies that drift from each other.
+        self.computations = TurnComputeGraph()
         self.parsed: Dict[str, Any] = {}
         self.parsed_source_text: str = ""
         # Representational state of THIS turn's input, measured before the turn's
@@ -71,6 +78,7 @@ class TurnLedger:
             "chain_down_trace": list(self.chain_down_trace or []),
             "systems_touched": list(self.systems_touched or []),
             "final_response": self.final_response,
+            "compute_graph": self.computations.status(),
         }
 
 
