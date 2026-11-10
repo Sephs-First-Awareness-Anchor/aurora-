@@ -43,18 +43,16 @@ class _AppShellState extends State<_AppShell> {
   // not just two more screens. IndexedStack keeps all four alive so
   // Space/Self state survives tab switches without a re-fetch, same as
   // Aurora/Hub already relied on.
-  static const _screens = [
-    HomeScreen(),
-    SpaceScreen(),
-    SelfScreen(),
-    HubScreen(),
-  ];
-
-  @override
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D0F),
-      body: IndexedStack(index: _tab, children: _screens),
+      body: IndexedStack(index: _tab, children: [
+        const HomeScreen(),
+        const SpaceScreen(),
+        const SelfScreen(),
+        HubScreen(active: _tab == 3),
+      ]),
       bottomNavigationBar: NavigationBar(
         backgroundColor: const Color(0xFF111118),
         indicatorColor: const Color(0xFFA020F0).withOpacity(0.25),
