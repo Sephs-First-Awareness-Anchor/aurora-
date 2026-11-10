@@ -4321,6 +4321,8 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
 
     import time as _tp_hm
     _now_hm = _tp_hm.time()
+    _processing_profile_started = _tp_hm.perf_counter()
+    _processing_profile = {}
 
     # ── Sleep inertia: capture dormancy level BEFORE resetting the clock ──────
     # _get_isolation_factor() still sees the old _last_output_time here, so it
@@ -4686,7 +4688,14 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         # waveforms emit from the highest achievable composite crest, not an
         # average. This is the difference between a surface ripple and the full
         # standing wave.
+        _processing_profile["bridge_pre_prime_ms"] = round(
+            (_tp_hm.perf_counter() - _processing_profile_started) * 1000.0, 2
+        )
+        _prime_started = _tp_hm.perf_counter()
         _prime_waveform_composite(_systems, text)
+        _processing_profile["waveform_prime_ms"] = round(
+            (_tp_hm.perf_counter() - _prime_started) * 1000.0, 2
+        )
 
         # Broadcast any crystal promotions that happened since last turn —
         # growth in the concept graph should ripple into identity field, SediMemory,
@@ -4702,8 +4711,12 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         # Cross-system health audit + file access awareness — both inject into
         # observation string so any concern or relational event rides through
         # synthesis as constraint physics, not a bolted-on message.
+        _checks_started = _tp_hm.perf_counter()
         _check_internal_health(_systems)
         _check_file_access(_systems)
+        _processing_profile["health_file_checks_ms"] = round(
+            (_tp_hm.perf_counter() - _checks_started) * 1000.0, 2
+        )
 
         # Snapshot axis state BEFORE synthesis — used to detect capability gaps
         # (A-axis drop) after the response is produced.
@@ -4761,7 +4774,22 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                         if _surface_text else _pending_report_now
                     )
                 if _surface_text:
-                    _record_turn_state(_turn_id, "surface_expressed", chars=len(_surface_text))
+                    _record_turn_state(
+                        _turn_id, "surface_expressed", chars=len(_surface_text),
+                        message_to_surface_ms=round(
+                            (_tp_hm.perf_counter() - _processing_profile_started) * 1000.0, 2
+                        ),
+                        bridge_stages_ms=dict(_processing_profile),
+                        cognitive_stages=dict(
+                            (_systems or {}).get("_last_live_turn_profile", {}).get("stages_ms", {})
+                        ),
+                        shared_computation=dict(
+                            (_systems or {}).get("_last_live_turn_profile", {}).get("shared_computation", {})
+                        ),
+                        understanding_stages=dict(
+                            (_systems or {}).get("_last_understanding_profile") or {}
+                        ),
+                    )
                 else:
                     # resp_A.content was legitimately empty and there was no
                     # ack/synthesis/report to append -- a real Aurora
@@ -4807,12 +4835,18 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
 
         def _continue_deep_turn() -> None:
             global _last_response, _last_path_key, _vacuum_reconciliation_debt
+            _admission_started = _tp_hm.perf_counter()
             try:
                 if _lock.locked():
                     _record_turn_state(_turn_id, "surface_queued")
                 with _lock:
                     _systems["_current_turn_id"] = _turn_id
-                    _record_turn_state(_turn_id, "surface_processing")
+                    _record_turn_state(
+                        _turn_id, "surface_processing",
+                        field_lock_wait_ms=round(
+                            (_tp_hm.perf_counter() - _admission_started) * 1000.0, 2
+                        ),
+                    )
                     _processing_started.set()
                     result = _aurora.process_external_user_turn(
                         _systems,
@@ -5221,7 +5255,15 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                         )
 
                 print(f"AURORA_BRIDGE: Response: {response}")
-                _record_turn_state(_turn_id, "subsurface_integrated")
+                # Application projection is often completed AFTER Surface
+                # delivery. Record it at deep-turn completion, not as a stale
+                # value in the earlier Surface response diagnostic.
+                _record_turn_state(
+                    _turn_id, "subsurface_integrated",
+                    application_understanding_stages=dict(
+                        (_systems or {}).get("_last_application_understanding_profile") or {}
+                    ),
+                )
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(), module=__name__,
@@ -7117,8 +7159,14 @@ def _check_internal_health(systems: dict) -> None:
     if _reg is not None and hasattr(_reg, "_promo_log"):
         try:
             import time as _ht
-            _recent = [p for p in _reg._promo_log
-                       if p.get("ts", 0.0) > _ht.time() - 90]
+            _since = _ht.time() - 90.0
+            # Reuse the registry's timestamp-indexed lookup; scanning its
+            # complete lifelong promotion log on every live turn becomes
+            # increasingly expensive precisely as Aurora develops.
+            _recent = (_reg.drain_promotions(since_ts=_since)
+                       if hasattr(_reg, "drain_promotions")
+                       else [p for p in _reg._promo_log
+                             if p.get("ts", 0.0) > _since])
             if _recent:
                 _last_crystal_promotion_turn = _health_turn_counter
         except Exception as _aurora_boundary_exc:

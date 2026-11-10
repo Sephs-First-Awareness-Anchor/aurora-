@@ -2040,6 +2040,72 @@ def _build_closure_status_summary(
     }
 
 
+def _bounded_collision_counterparts(
+    bucket: List[str],
+    active_id: str,
+    scan_budget: int,
+    tick_count: int,
+) -> List[str]:
+    """Select exactly the old bounded rotating set without copying the tail.
+
+    Buckets are unique identity lists built by _representation_index(). The
+    original algorithm first copied every other member into a new list, then
+    rotated the *entire* potentially large tail to take at most scan_budget
+    entries. Use virtual indices instead, preserving every selection and its
+    original order for the same active identity, tick and scan budget.
+    """
+    try:
+        excluded_at = bucket.index(active_id)
+    except ValueError:
+        excluded_at = -1
+    total = len(bucket) - int(excluded_at >= 0)
+
+    def item(index: int) -> str:
+        # Logical filtered list: all members except the active identity.
+        return bucket[index + int(excluded_at >= 0 and index >= excluded_at)]
+
+    if total <= scan_budget:
+        return [item(i) for i in range(total)]
+    head_count = max(1, scan_budget // 2)
+    tail_size = total - head_count
+    rotating_count = scan_budget - head_count
+    seed = int(hashlib.sha1(active_id.encode()).hexdigest()[:8], 16)
+    start = (int(tick_count) + seed) % tail_size
+    selected = [item(i) for i in range(head_count)]
+    selected.extend(
+        item(head_count + ((start + offset) % tail_size))
+        for offset in range(rotating_count)
+    )
+    return selected
+
+
+def _aggregate_link_curve_stats(links: Iterable[Any]) -> Tuple[int, float, Dict[str, int], Dict[str, float]]:
+    """One read of the live link collection shared by all six pressure curves.
+
+    The previous implementation took one global pass followed by five full
+    scans to construct per-axis subsets. Return the same global/per-axis
+    means in source order, including the old fallback of an unset axis to X.
+    No links or earned genealogy evidence are changed.
+    """
+    count = 0
+    total_depth = 0
+    axis_count = {axis: 0 for axis in AXES}
+    axis_depth = {axis: 0 for axis in AXES}
+    for link in links:
+        count += 1
+        total_depth += link.depth
+        axis = link.dominant_relief_axis or "X"
+        if axis in axis_count:
+            axis_count[axis] += 1
+            axis_depth[axis] += link.depth
+    mean = total_depth / count if count else 0.0
+    axis_means = {
+        axis: axis_depth[axis] / axis_count[axis] if axis_count[axis] else 0.0
+        for axis in AXES
+    }
+    return count, mean, axis_count, axis_means
+
+
 class ConstraintGenealogyLogger:
     """
     Core logger. Feed it (pressure_before, trace, pressure_after) every tick
@@ -2424,12 +2490,26 @@ class ConstraintGenealogyLogger:
         pattern as Repair K's _semantic_identity_for_item wrapper, safer
         for a function this large than a mass reindent.
         """
+        # Preserve every observation and its effects.  The profile only
+        # distinguishes waiting on the shared genealogy lock from actual
+        # genealogy computation; nothing is cached or skipped here.
+        _lock_wait_started = time.perf_counter()
         with self._concurrency_lock:
-            return self._observe_impl(
-                pressure_before, trace, pressure_after,
-                state_sig_before=state_sig_before, state_sig_after=state_sig_after,
-                notes=notes, difference_snapshot=difference_snapshot,
-            )
+            _lock_wait_ms = (time.perf_counter() - _lock_wait_started) * 1000.0
+            _observe_started = time.perf_counter()
+            try:
+                return self._observe_impl(
+                    pressure_before, trace, pressure_after,
+                    state_sig_before=state_sig_before, state_sig_after=state_sig_after,
+                    notes=notes, difference_snapshot=difference_snapshot,
+                )
+            finally:
+                self._last_observe_profile = {
+                    "tick": int(self.tick_count),
+                    "lock_wait_ms": round(_lock_wait_ms, 2),
+                    "compute_ms": round((time.perf_counter() - _observe_started) * 1000.0, 2),
+                    "stages_ms": dict(getattr(self, "_last_observe_details", {}) or {}),
+                }
 
     def _observe_impl(
         self,
@@ -2456,15 +2536,11 @@ class ConstraintGenealogyLogger:
             downstream consumers (genealogy analysis, corpus runner, etc.).
             Storing as dict preserves JSONL serializability.
         """
+        _observe_tick_started = time.perf_counter()
+        self._last_observe_details = {}
         self.tick_count += 1
         self._latest_pressure = pressure_after
 
-        # The outlet BEFORE this observation: the baseline each axis's injection is predicted
-        # against (see the per-axis curve loop below).
-        try:
-            _outlet_before_obs = self._outlet_fraction()
-        except Exception:
-            _outlet_before_obs = None
         raw_relief = pressure_after.relief_from(pressure_before)
         dominant_axis_hint = raw_relief.dominant_positive_axis() or "X"
         relief, tolerance_meta = self._apply_relief_tolerance(
@@ -2497,7 +2573,19 @@ class ConstraintGenealogyLogger:
             self.skipped_no_relief += 1
             # Still update governor (low fitness signal)
             self.governor.tick()
+            self._last_observe_details["no_relief_tick_ms"] = round(
+                (time.perf_counter() - _observe_tick_started) * 1000.0, 2
+            )
             return None
+
+        # The outlet baseline is only consumed for a real relief event's
+        # pressure-complexity curves. Its former pre-filter placement scanned
+        # every promoted link even on no-relief ticks, where the result was
+        # immediately discarded. Keep the same pre-promotion baseline here.
+        try:
+            _outlet_before_obs = self._outlet_fraction()
+        except Exception:
+            _outlet_before_obs = None
 
         # --- Accumulate trace costs + risks ---
         cost_total = _zero_vec()
@@ -2544,6 +2632,7 @@ class ConstraintGenealogyLogger:
 
         dominant_axis = relief.dominant_positive_axis()
 
+        _coupling_started = time.perf_counter()
         coupling_meta = self._update_coupling_roots(
             trace=trace,
             relief=relief,
@@ -2559,6 +2648,9 @@ class ConstraintGenealogyLogger:
         # reflects which axes had accumulated pressure that was relieved.
         self._update_gradient_memory_from_relief(relief)
         self._update_causal_feedback(trace, relief)
+        self._last_observe_details["coupling_and_feedback_ms"] = round(
+            (time.perf_counter() - _coupling_started) * 1000.0, 2
+        )
 
         # Merge difference_snapshot into notes (serialisable dict form).
         # Type-contract guard: a caller passing a malformed difference_snapshot
@@ -2595,6 +2687,7 @@ class ConstraintGenealogyLogger:
         # bounded set of divergent same-basis candidates, and do not forward
         # any of them into PairStats or promotion unless they later genuinely
         # co-activate in a trace.
+        _collision_started = time.perf_counter()
         _collision_trace = list(trace)
         if self.cfg.TRACE_REWRITE_ON_PROMOTE and self._links_by_parents:
             _collision_trace = self.rewrite_trace(_collision_trace)
@@ -2620,15 +2713,23 @@ class ConstraintGenealogyLogger:
                 ],
             }
 
+        self._last_observe_details["collision_search_ms"] = round(
+            (time.perf_counter() - _collision_started) * 1000.0, 2
+        )
+
         # Bounded cross-family ('RI:') complementary-gap discovery, mirroring
         # the exact-signature collision discovery above around the same
         # actually-active operands. Discovery remains evidence-inert.
+        _gap_started = time.perf_counter()
         _gap_candidates = self.representation_gap_candidates(
             _collision_trace,
             difference_snapshot=difference_snapshot,
         )
         if _gap_candidates:
             self._record_representation_inquiries(_gap_candidates)
+        self._last_observe_details["gap_search_ms"] = round(
+            (time.perf_counter() - _gap_started) * 1000.0, 2
+        )
 
         # A caller in the middle of completing a staged representation
         # experiment (complete_representation_experiment) pre-populates
@@ -2722,6 +2823,7 @@ class ConstraintGenealogyLogger:
 
         # --- Pair accumulation + promotion ---
         n_pairs_before = len(self._pair_stats)
+        _pairs_started = time.perf_counter()
         try:
             # Sunni & Cael ("the architecture pass"): attribute this tick's
             # REAL measured relief to every representation that was active
@@ -2734,45 +2836,45 @@ class ConstraintGenealogyLogger:
             rewritten = self._accumulate_pairs(trace, relief, cost_total, x_risk_total)
         finally:
             self._active_relation_context = {}
+        self._last_observe_details["pair_and_consequence_ms"] = round(
+            (time.perf_counter() - _pairs_started) * 1000.0, 2
+        )
         if rewritten and self.cfg.TRACE_REWRITE_ON_PROMOTE:
             record.trace = rewritten
 
         # --- Complexity curve: record tick state and pressure outcomes ---
+        _curves_started = time.perf_counter()
         try:
             n_pairs_eval = max(len(self._pair_stats) - n_pairs_before, len(trace) - 1)
             current_outlet = self._outlet_fraction()
 
-            # Global curve — aggregate across all axes
-            all_links = list(self.links.values())
-            mean_depth = (
-                sum(lnk.depth for lnk in all_links) / len(all_links)
-                if all_links else 0.0
+            # Aggregate the same link facts ONCE and distribute them to
+            # the global and five axis curves. Previously the global curve
+            # iterated the links, then each of five axes filtered all links
+            # again and summed its subset. The same order and arithmetic are
+            # retained for each axis, including zero-link behavior.
+            _link_count, mean_depth, _axis_link_counts, _axis_link_means = (
+                _aggregate_link_curve_stats(self.links.values())
             )
             self._complexity_curve.record_tick(
                 n_pairs_evaluated=n_pairs_eval,
-                n_links=len(all_links),
+                n_links=_link_count,
                 mean_link_depth=mean_depth,
                 tick=self.tick_count,
             )
             self._complexity_curve.record_outcome(current_outlet)
 
-            # Per-axis curves — each axis sees only its own links and pairs
-            # dominant_axis_hint tells us which axis this tick's relief favoured
+            # Per-axis curves — same evidence, no redundant scans.
             try:
                 _pb_axes = pressure_before.to_dict()
             except Exception:
                 _pb_axes = {}
             for ax in AXES:
-                ax_links = [lnk for lnk in all_links
-                            if (lnk.dominant_relief_axis or "X") == ax]
-                ax_link_count = len(ax_links)
+                ax_link_count = _axis_link_counts[ax]
                 # Pairs attributed to this axis: fraction of total pairs
                 ax_pair_load = int(n_pairs_eval * (ax_link_count + 1) /
-                                   max(1, len(all_links) + 1))
-                ax_mean_depth = (
-                    sum(lnk.depth for lnk in ax_links) / ax_link_count
-                    if ax_links else 0.0
-                )
+                                   max(1, _link_count + 1))
+                ax_mean_depth = _axis_link_means[ax]
                 self._axis_curves[ax].record_tick(
                     n_pairs_evaluated=ax_pair_load,
                     n_links=ax_link_count,
@@ -2808,6 +2910,12 @@ class ConstraintGenealogyLogger:
             )
             pass
 
+        self._last_observe_details["curve_stats_ms"] = round(
+            (time.perf_counter() - _curves_started) * 1000.0, 2
+        )
+        self._last_observe_details["total_relief_tick_ms"] = round(
+            (time.perf_counter() - _observe_tick_started) * 1000.0, 2
+        )
         return record
 
     def get_link(self, link_id: str) -> Optional[ConstraintLink]:
@@ -4478,23 +4586,13 @@ class ConstraintGenealogyLogger:
                 continue
             signature = self._collision_signature_for_item(active_id)
             ranked: List[Tuple[float, int, str, Dict[str, Any]]] = []
-            all_counterparts = [iid for iid in index.get(signature, []) if iid != active_id]
             scan_budget = max(
                 per_item,
                 int(getattr(self.cfg, "REPRESENTATION_COLLISION_SCAN_PER_ITEM", 64) or 64),
             )
-            if len(all_counterparts) > scan_budget:
-                # Keep a salient half and rotate through the remainder by tick.
-                # Thus work per event is bounded without making old, valid
-                # representations permanently unreachable.
-                head_count = max(1, scan_budget // 2)
-                head = all_counterparts[:head_count]
-                tail = all_counterparts[head_count:]
-                rotating_count = scan_budget - len(head)
-                seed = int(hashlib.sha1(active_id.encode()).hexdigest()[:8], 16)
-                start = (int(self.tick_count) + seed) % len(tail)
-                rotated = tail[start:] + tail[:start]
-                all_counterparts = head + rotated[:rotating_count]
+            all_counterparts = _bounded_collision_counterparts(
+                index.get(signature, []), active_id, scan_budget, self.tick_count,
+            )
 
             for counterpart_id in all_counterparts:
                 if counterpart_id == active_id or not self.representation_is_eligible(counterpart_id):

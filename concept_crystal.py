@@ -443,6 +443,10 @@ class ConceptCrystalRegistry:
         self._nodes:     Dict[str, Any]               = {}  # DPS Crystal or ConceptCrystalNode
         self._ax_index:  Dict[tuple, str]             = {}
         self._promo_log: List[Dict[str, Any]]         = []
+        # Promotion timestamps are appended in order in normal operation.
+        # A backwards wall-clock correction disables binary search so the
+        # original full-scan semantics remain available without losing events.
+        self._promo_log_monotonic: bool = True
         # One crystal store: when bound, _nodes IS the dimensional system's crystal dict.
         self._bound:          bool                    = False
         self._indexed_count:  int                     = 0
@@ -990,13 +994,32 @@ class ConceptCrystalRegistry:
                 "function_class": getattr(crystal, 'function_class', None),
                 "ts":           time.time(),
             })
+        if (len(self._promo_log) > 1
+                and float(self._promo_log[-1].get("ts", 0.0))
+                    < float(self._promo_log[-2].get("ts", 0.0))):
+            self._promo_log_monotonic = False
 
     def drain_promotions(self, since_ts: float = 0.0) -> List[Dict[str, Any]]:
         """
         Return all promotion events logged after since_ts. Non-destructive —
         the caller tracks the cursor; the log itself is kept for persistence.
         """
-        return [p for p in self._promo_log if p.get("ts", 0.0) > since_ts]
+        # A full scan every phone turn grew linearly with every promotion she
+        # had ever formed. For chronological event times use the rightmost
+        # boundary instead: O(log history + new events), same order and
+        # strict > since_ts contract. Fall back to the original scan if
+        # wall-clock time moved backwards while promotions were logged.
+        events = self._promo_log
+        if not self._promo_log_monotonic:
+            return [p for p in events if p.get("ts", 0.0) > since_ts]
+        lo, hi = 0, len(events)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if float(events[mid].get("ts", 0.0)) <= since_ts:
+                lo = mid + 1
+            else:
+                hi = mid
+        return events[lo:]
 
 
 def unify_crystal_store(systems: Dict[str, Any]) -> Dict[str, int]:

@@ -2471,14 +2471,19 @@ class RuntimeUnderstandingContract:
         # validated must be the one Aurora gave in THIS conversation.  With
         # Sunni and several Praxis contacts talking to her, a single global
         # pending record let Gemma's message score her reply to Gemini.
+        _prof_started = time.perf_counter()
         self._activate_session_pending(session_id)
         before_state = copy.deepcopy(self.state)
+        _prof_snapshot_ms = round((time.perf_counter() - _prof_started) * 1000.0, 2)
         observation = self._derive_observation(user_text, understood)
         # Keep the application projection intact long enough to route the
         # receiver evidence back to the exact response that created it.
         # _evaluate_previous_accuracy() reads the same record and the live
         # state clears it below, so taking this copy here is intentional.
-        validated_pending = copy.deepcopy(self.state.get("pending_validation", {}) or {})
+        # before_state is already a deep snapshot, including pending
+        # validation and its nested evidence. Reuse that independent copy
+        # rather than deep-copying the same evidence a second time.
+        validated_pending = before_state.get("pending_validation", {}) or {}
         accuracy = self._evaluate_previous_accuracy(systems, user_text, understood)
         self._record_pre_outcome_fail_if_applicable(systems, accuracy)
         meaning_state = self._derive_meaning_state(systems, user_text, understood)
@@ -2607,6 +2612,8 @@ class RuntimeUnderstandingContract:
             "matched_expectation": bool(accuracy.get("matched_expectation")),
         }
         notes["contract_domains"] = contract_domains.get("domains", {})
+        _prof_derived_ms = round((time.perf_counter() - _prof_started) * 1000.0, 2)
+        _prof_genealogy_start = time.perf_counter()
         if accuracy.get("used"):
             self._record_genealogy_event(
                 systems,
@@ -2615,6 +2622,8 @@ class RuntimeUnderstandingContract:
                 after_state=self.state,
                 notes=notes,
             )
+        _prof_genealogy_end = time.perf_counter()
+        _prof_genealogy_ms = round((_prof_genealogy_end - _prof_genealogy_start) * 1000.0, 2)
 
         self._history_append(
             {
@@ -2640,6 +2649,21 @@ class RuntimeUnderstandingContract:
             }
         )
         self.save()
+        if isinstance(systems, dict):
+            systems["_last_understanding_profile"] = {
+                "snapshot_ms": _prof_snapshot_ms,
+                "derivation_including_snapshot_ms": _prof_derived_ms,
+                "genealogy_ms": _prof_genealogy_ms,
+                "history_and_save_ms": round(
+                    (time.perf_counter() - _prof_genealogy_end) * 1000.0, 2
+                ),
+                "total_ms": round((time.perf_counter() - _prof_started) * 1000.0, 2),
+                "genealogy_observed": bool(accuracy.get("used")),
+                "genealogy_detail": (
+                    dict(getattr(systems.get("genealogy"), "_last_observe_profile", {}) or {})
+                    if accuracy.get("used") else {}
+                ),
+            }
         return {
             "time_index": int(self.state.get("time_index", 0) or 0),
             "observation": observation,
@@ -2672,7 +2696,9 @@ class RuntimeUnderstandingContract:
         session_id: str = "",
         contributors: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
+        _app_profile_started = time.perf_counter()
         before_state = copy.deepcopy(self.state)
+        _app_snapshot_ms = round((time.perf_counter() - _app_profile_started) * 1000.0, 2)
         meaning_state = self._derive_meaning_state(systems, user_text, understood)
         perspective_state = self._derive_perspective_state(
             systems,
@@ -2814,12 +2840,19 @@ class RuntimeUnderstandingContract:
             "meaning_signature": str(dominant_form.get("signature", "") or ""),
         }
         notes["contract_domains"] = contract_domains.get("domains", {})
+        _app_before_genealogy_ms = round((time.perf_counter() - _app_profile_started) * 1000.0, 2)
+        _app_genealogy_started = time.perf_counter()
         self._record_genealogy_event(
             systems,
             phase="application_projection",
             before_state=before_state,
             after_state=projected_state,
             notes=notes,
+        )
+        _app_genealogy_ended = time.perf_counter()
+        _app_genealogy_ms = round((_app_genealogy_ended - _app_genealogy_started) * 1000.0, 2)
+        _app_genealogy_detail = dict(
+            getattr(systems.get("genealogy"), "_last_observe_profile", {}) or {}
         )
 
         self._history_append(
@@ -2843,6 +2876,17 @@ class RuntimeUnderstandingContract:
             }
         )
         self.save()
+        if isinstance(systems, dict):
+            systems["_last_application_understanding_profile"] = {
+                "snapshot_ms": _app_snapshot_ms,
+                "derivation_including_snapshot_ms": _app_before_genealogy_ms,
+                "genealogy_ms": _app_genealogy_ms,
+                "genealogy_detail": _app_genealogy_detail,
+                "history_and_save_ms": round(
+                    (time.perf_counter() - _app_genealogy_ended) * 1000.0, 2
+                ),
+                "total_ms": round((time.perf_counter() - _app_profile_started) * 1000.0, 2),
+            }
         return {
             "time_index": int(self.state.get("time_index", 0) or 0),
             "policy": dict(policy_state),
