@@ -75,7 +75,8 @@ jobs:
             tests/test_praxis_messenger.py \
             tests/test_praxis_initiative.py \
             tests/test_app_bridge_praxis.py \
-            tests/test_phone_load_pacing.py
+            tests/test_phone_load_pacing.py \
+            tests/test_android_surface_subsurface_reconnection.py
 
       - name: Interaction-event action-handoff regression
         env:
