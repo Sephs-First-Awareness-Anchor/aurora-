@@ -1113,8 +1113,13 @@ class PraxisBridge:
         """Handshake when we have never succeeded or when the last attempt is
         stale; pull only through an open, compatible channel.  Fails closed:
         anything but `compatible` means no situations cross."""
-        stale = (time.time() - self.last_handshake_at) >= HANDSHAKE_RETRY_S
-        if self.discovery != "compatible" or stale:
+        # Even when the server is offline, an HTTP timeout must not turn
+        # every six-second loop into another full blocking probe. Poll the
+        # lightweight handshake at a bounded interval, independent of her
+        # cognitive capacity. An offline server gets a shorter retry than
+        # a compatible online peer so Praxis launch is noticed promptly.
+        retry_s = min(HANDSHAKE_RETRY_S, 10.0) if self.discovery != "compatible" else HANDSHAKE_RETRY_S
+        if self.last_handshake_at <= 0.0 or time.time() - self.last_handshake_at >= retry_s:
             self.handshake()
         return self.discovery == "compatible"
 
@@ -1145,8 +1150,12 @@ class PraxisBridge:
     def _run(self) -> None:
         while not self._stop.is_set():
             try:
-                if not self._paused.is_set() and self._capacity() \
-                        and self._channel_open():
+                # Server discovery is a tiny external health check, not a
+                # reasoning turn. Keep it responsive even during Aurora's
+                # two-minute boot settling or while the live field is busy.
+                # Only actual environmental witnessing competes for the field.
+                if not self._paused.is_set() and self._channel_open() \
+                        and self._capacity():
                     if self.field_lock is not None:
                         acquired = self.field_lock.acquire(blocking=False)
                         if acquired:
@@ -1227,14 +1236,14 @@ def start_praxis_bridge(
     global _bridge
     if _bridge is not None:
         return _bridge
-    try:
-        bridge = PraxisBridge(
-            systems, state_dir=state_dir, endpoint=endpoint,
-            field_lock=field_lock, live_idle=live_idle,
-            poll_interval_s=poll_interval_s,
-        )
-    except Exception:
-        return None
+    # Do not swallow startup errors. The Android host needs the actual
+    # exception to display/report a failed local bridge rather than
+    # falsely implying that the separate Praxis server was never started.
+    bridge = PraxisBridge(
+        systems, state_dir=state_dir, endpoint=endpoint,
+        field_lock=field_lock, live_idle=live_idle,
+        poll_interval_s=poll_interval_s,
+    )
     bridge.start()
     _bridge = bridge
     return bridge
