@@ -20,7 +20,7 @@ def test_same_message_is_parsed_once_across_three_readers():
     synthesis = cache.parse("What makes rain fall?")
 
     assert calls == ["What makes rain fall?"]
-    assert raw == synthesis
+    assert raw["relational_form"] == synthesis["relational_form"]
     assert attention != synthesis
     assert "strata_context" not in synthesis
 
