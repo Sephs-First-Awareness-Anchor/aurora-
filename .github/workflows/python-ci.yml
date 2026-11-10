@@ -63,6 +63,20 @@ jobs:
           python -m pip install -q pytest
           python -m pytest -q tests/test_live_turn_parse_cache.py tests/test_promotion_lookup_scaling.py tests/test_turn_compute_graph.py tests/test_genealogy_processing_reuse.py tests/test_understanding_genealogy_preservation.py tests/test_receiver_loop.py tests/test_core_understanding.py
 
+      - name: Praxis discovery, pressure, messenger, and phone overload regressions
+        env:
+          AURORA_SKIP_DEP_INSTALL: '1'
+        run: |
+          python -m pytest -q \
+            tests/test_praxis_discovery_and_pressure_preservation.py \
+            tests/test_phone_hub_monitoring_pacing.py \
+            tests/test_praxis_contract_fence.py \
+            tests/test_praxis_physics_routing.py \
+            tests/test_praxis_messenger.py \
+            tests/test_praxis_initiative.py \
+            tests/test_app_bridge_praxis.py \
+            tests/test_phone_load_pacing.py
+
       - name: Interaction-event action-handoff regression
         env:
           AURORA_SKIP_DEP_INSTALL: '1'
