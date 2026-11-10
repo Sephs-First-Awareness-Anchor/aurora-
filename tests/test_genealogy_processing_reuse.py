@@ -7,10 +7,11 @@ still advances the governor and records participation in the activity log.
 from __future__ import annotations
 
 from types import SimpleNamespace
+import hashlib
 
 from aurora_internal.constraint_genealogy import (
     AXES, ConstraintGenealogyLogger, GenealogyConfig, PressureVec, TraceItem,
-    _aggregate_link_curve_stats,
+    _aggregate_link_curve_stats, _bounded_collision_counterparts,
 )
 
 
@@ -87,3 +88,44 @@ def test_no_relief_tick_still_records_activity_without_wasted_outlet_scan(tmp_pa
     assert genealogy.activity_in_window(1).get("X:OBSERVE") == 1
     assert genealogy._last_observe_profile["tick"] == 1
     assert genealogy._last_observe_profile["compute_ms"] >= 0.0
+
+
+def _old_candidate_selection(bucket, active_id, scan_budget, tick):
+    all_counterparts = [iid for iid in bucket if iid != active_id]
+    if len(all_counterparts) > scan_budget:
+        head_count = max(1, scan_budget // 2)
+        head = all_counterparts[:head_count]
+        tail = all_counterparts[head_count:]
+        rotating_count = scan_budget - len(head)
+        seed = int(hashlib.sha1(active_id.encode()).hexdigest()[:8], 16)
+        start = (int(tick) + seed) % len(tail)
+        rotated = tail[start:] + tail[:start]
+        all_counterparts = head + rotated[:rotating_count]
+    return all_counterparts
+
+
+def test_bounded_candidate_rotation_preserves_exact_membership_and_order():
+    # No candidates may become permanently unreachable through this change.
+    for size in (0, 1, 2, 3, 8, 31, 32, 33, 64, 65, 132, 1500):
+        bucket = [f"R:{i}" for i in range(size)]
+        for active_id in ("R:0", f"R:{size // 2}", f"R:{size - 1}", "R:absent"):
+            for budget in (1, 2, 3, 16, 32, 64, 101):
+                for tick in (0, 1, 13, 5032):
+                    assert _bounded_collision_counterparts(bucket, active_id, budget, tick) == (
+                        _old_candidate_selection(bucket, active_id, budget, tick)
+                    )
+
+
+def test_large_candidate_search_never_materializes_entire_rotated_tail():
+    class NoSlices(list):
+        def __getitem__(self, index):
+            if isinstance(index, slice):
+                raise AssertionError("expensive tail copy and rotation attempted")
+            return super().__getitem__(index)
+
+    bucket = NoSlices(f"R:{i}" for i in range(100_000))
+    for tick in (0, 1, 193, 100_000):
+        result = _bounded_collision_counterparts(bucket, "R:9", 64, tick)
+        assert len(result) == 64
+        assert "R:9" not in result
+        assert result == _old_candidate_selection(list(bucket), "R:9", 64, tick)
