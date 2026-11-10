@@ -2040,6 +2040,45 @@ def _build_closure_status_summary(
     }
 
 
+def _bounded_collision_counterparts(
+    bucket: List[str],
+    active_id: str,
+    scan_budget: int,
+    tick_count: int,
+) -> List[str]:
+    """Select exactly the old bounded rotating set without copying the tail.
+
+    Buckets are unique identity lists built by _representation_index(). The
+    original algorithm first copied every other member into a new list, then
+    rotated the *entire* potentially large tail to take at most scan_budget
+    entries. Use virtual indices instead, preserving every selection and its
+    original order for the same active identity, tick and scan budget.
+    """
+    try:
+        excluded_at = bucket.index(active_id)
+    except ValueError:
+        excluded_at = -1
+    total = len(bucket) - int(excluded_at >= 0)
+
+    def item(index: int) -> str:
+        # Logical filtered list: all members except the active identity.
+        return bucket[index + int(excluded_at >= 0 and index >= excluded_at)]
+
+    if total <= scan_budget:
+        return [item(i) for i in range(total)]
+    head_count = max(1, scan_budget // 2)
+    tail_size = total - head_count
+    rotating_count = scan_budget - head_count
+    seed = int(hashlib.sha1(active_id.encode()).hexdigest()[:8], 16)
+    start = (int(tick_count) + seed) % tail_size
+    selected = [item(i) for i in range(head_count)]
+    selected.extend(
+        item(head_count + ((start + offset) % tail_size))
+        for offset in range(rotating_count)
+    )
+    return selected
+
+
 def _aggregate_link_curve_stats(links: Iterable[Any]) -> Tuple[int, float, Dict[str, int], Dict[str, float]]:
     """One read of the live link collection shared by all six pressure curves.
 
@@ -4517,23 +4556,13 @@ class ConstraintGenealogyLogger:
                 continue
             signature = self._collision_signature_for_item(active_id)
             ranked: List[Tuple[float, int, str, Dict[str, Any]]] = []
-            all_counterparts = [iid for iid in index.get(signature, []) if iid != active_id]
             scan_budget = max(
                 per_item,
                 int(getattr(self.cfg, "REPRESENTATION_COLLISION_SCAN_PER_ITEM", 64) or 64),
             )
-            if len(all_counterparts) > scan_budget:
-                # Keep a salient half and rotate through the remainder by tick.
-                # Thus work per event is bounded without making old, valid
-                # representations permanently unreachable.
-                head_count = max(1, scan_budget // 2)
-                head = all_counterparts[:head_count]
-                tail = all_counterparts[head_count:]
-                rotating_count = scan_budget - len(head)
-                seed = int(hashlib.sha1(active_id.encode()).hexdigest()[:8], 16)
-                start = (int(self.tick_count) + seed) % len(tail)
-                rotated = tail[start:] + tail[:start]
-                all_counterparts = head + rotated[:rotating_count]
+            all_counterparts = _bounded_collision_counterparts(
+                index.get(signature, []), active_id, scan_budget, self.tick_count,
+            )
 
             for counterpart_id in all_counterparts:
                 if counterpart_id == active_id or not self.representation_is_eligible(counterpart_id):
