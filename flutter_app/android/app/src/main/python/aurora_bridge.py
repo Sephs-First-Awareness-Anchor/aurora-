@@ -4776,12 +4776,15 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                 if _surface_text:
                     _record_turn_state(
                         _turn_id, "surface_expressed", chars=len(_surface_text),
-                        bridge_preflight_ms=round(
+                        message_to_surface_ms=round(
                             (_tp_hm.perf_counter() - _processing_profile_started) * 1000.0, 2
                         ),
                         bridge_stages_ms=dict(_processing_profile),
                         cognitive_stages=dict(
                             (_systems or {}).get("_last_live_turn_profile", {}).get("stages_ms", {})
+                        ),
+                        understanding_stages=dict(
+                            (_systems or {}).get("_last_understanding_profile") or {}
                         ),
                     )
                 else:
