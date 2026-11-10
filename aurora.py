@@ -34540,6 +34540,13 @@ def _run_live_response_turn(
     user_text = _normalize_identity_followup_text(user_text, systems)
     user_text = _strip_vocative_address(user_text)
 
+    # One per-turn parser for attention, receiver observation, and synthesis.
+    # Text-dependent cache; a grounded rewrite still gets a fresh parse.
+    from aurora_internal.aurora_turn_parse_cache import TurnParseCache
+    _turn_parse_cache = TurnParseCache(lambda utterance: UtteranceParser().parse(utterance))
+    _live_profile_start = time.perf_counter()
+    _live_profile_stages: Dict[str, float] = {}
+
     # Try/fail/correct-course: resolve any referent hypothesis this system
     # offered last turn against what the user actually said next, before
     # this turn builds anything new. See aurora_referent_hypothesis.py.
@@ -34786,7 +34793,7 @@ def _run_live_response_turn(
                 try:
                     _wm_sal = systems.get('working_memory')
                     _recent_topics = set(getattr(_wm_sal, '_recent_topics', []) or [])
-                    _tick_understood = UtteranceParser().parse(user_text) or {}
+                    _tick_understood = _turn_parse_cache.parse(user_text)
                     _parsed_topics = set(
                         str(_tick_understood.get('topic', '') or '').lower().split()
                     )
@@ -34844,8 +34851,7 @@ def _run_live_response_turn(
     # 3. Parse the signal as a perturbation of the above state
     try:
         # Pass the vitals into the parser so it perceives the GESTALT
-        parser = UtteranceParser()
-        _raw_understood = dict(parser.parse(user_text) or {})
+        _raw_understood = _turn_parse_cache.parse(user_text)
         try:
             from aurora_internal.aurora_constraint_semantic_continuity import bind_external_interaction_event
             _receiver_name = str(getattr(systems.get("core_identity"), "self_name", "") or "Aurora")
@@ -34933,7 +34939,7 @@ def _run_live_response_turn(
         pass
     try:
         _parse_text = str((systems.get("_inline_vocab_lookup") or {}).get("grounded_text", "") or user_text)
-        turn_understood = dict(UtteranceParser().parse(_parse_text) or {})
+        turn_understood = _turn_parse_cache.parse(_parse_text)
         if _turn_ledger is not None:
             _turn_ledger.parsed = dict(turn_understood or {})
             _turn_ledger.parsed_source_text = _parse_text
@@ -35251,6 +35257,8 @@ def _run_live_response_turn(
     # ~7-8s cost still ran synchronously, one level deeper and less
     # visibly. Real fix for this cost has to be inside ingest_observation/
     # _record_genealogy_event itself, not in when it's called.
+    _live_profile_stages["pre_contract_ms"] = round((time.perf_counter() - _live_profile_start) * 1000.0, 2)
+    _contract_profile_start = time.perf_counter()
     if understanding_contract is not None and hasattr(understanding_contract, 'ingest_observation'):
         try:
             understanding_observation = dict(
@@ -35275,6 +35283,9 @@ def _run_live_response_turn(
             )
             understanding_observation = {}
     systems["_last_understanding_observation"] = dict(understanding_observation or {})
+    _live_profile_stages["understanding_observation_ms"] = round(
+        (time.perf_counter() - _contract_profile_start) * 1000.0, 2
+    )
 
     def _finalize_early_validation() -> Dict[str, Any]:
         """Do not discard receiver evidence on high-priority early exits."""
@@ -35497,12 +35508,16 @@ def _run_live_response_turn(
                  'validated_communication': _early_validation,
              }
 
+    _dual_profile_start = time.perf_counter()
     resp_A, resp_B, offered_lookup = dual_question_pipeline(
         systems=systems,
         user_text=user_text,
         mode=mode,
         use_search=wants_search,
         auto_search_enabled=auto_search_enabled,
+    )
+    _live_profile_stages["dual_question_pipeline_ms"] = round(
+        (time.perf_counter() - _dual_profile_start) * 1000.0, 2
     )
     # Codex review, PR #176: this used to pop "_pressure_before" here,
     # before process_external_user_turn's RCRW completion block (further
@@ -35608,6 +35623,17 @@ def _run_live_response_turn(
             exc=_prop_exc,
             context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
         )
+
+    # Read-only diagnostic at the Surface boundary. Never changes the
+    # candidate or suppresses any developmental processing.
+    _live_profile_stages["surface_total_ms"] = round(
+        (time.perf_counter() - _live_profile_start) * 1000.0, 2
+    )
+    systems["_last_live_turn_profile"] = {
+        "turn_id": str(systems.get("_current_turn_id", "") or ""),
+        "session_id": str(session_id or ""),
+        "stages_ms": dict(_live_profile_stages),
+    }
 
     # Build 774 (Android Surface/Subsurface Live-Turn Reconnection): resp_A
     # is now fully decided -- nothing from here on ever mutates it, only
