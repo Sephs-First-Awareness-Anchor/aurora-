@@ -728,7 +728,7 @@ def absorb_harvest(systems: Mapping[str, Any], *, harvest_path: Optional[str] = 
     # its bytes' signature, without decoding any of it.
     try:
         with open(path, "rb") as fh:
-            file_sig = hashlib.sha1(fh.read()).hexdigest()[:16]
+            file_sig = hashlib.file_digest(fh, "sha1").hexdigest()[:16]
         ledger = load_ledger(state_dir)
         seen_files = dict(ledger.get("files") or {})
         if file_sig in seen_files:

@@ -67,8 +67,8 @@ def _apply_vocabulary_seed_once(state_dir: str) -> None:
     if os.path.exists(marker_path):
         return
     try:
-        bridge_dir = os.path.dirname(os.path.abspath(__file__))
-        seed_path = os.path.join(bridge_dir, "aurora_internal", "aurora_vocabulary_seed.json")
+        import aurora_internal
+        seed_path = os.path.join(os.path.dirname(aurora_internal.__file__), "aurora_vocabulary_seed.json")
         if not os.path.exists(seed_path):
             return  # older bundle without a seed file — nothing to apply, no marker either
         target_path = os.path.join(state_dir, "aurora_oets_web.json") if state_dir else "aurora_oets_web.json"
@@ -2496,8 +2496,8 @@ def resume_praxis_messenger() -> str:
     return get_praxis_messenger_status()
 
 
-def initialize(state_dir: str = "") -> str:
-    """Boot the Aurora stack. Called once from AuroraService on startup."""
+def initialize(state_dir: str = "", *, android: bool = True) -> str:
+    """Boot the shared app stack once for the current host process."""
     global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis, _praxis_messenger, _praxis_boot_attempted, _praxis_last_start_error, _praxis_messenger_boot_attempted, _praxis_messenger_last_start_error
     # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()
     # tracing showed NO new markers at all -- confirmed still dying at the
@@ -2540,7 +2540,8 @@ def initialize(state_dir: str = "") -> str:
     # which crashes Chaquopy's Android Python.
     os.environ["AURORA_SKIP_DEP_INSTALL"] = "1"
     # Signal Android/Chaquopy context so tool registry skips desktop/Termux paths.
-    os.environ["AURORA_ANDROID"] = "1"
+    if android:
+        os.environ["AURORA_ANDROID"] = "1"
     # Change CWD to state_dir so all relative file writes (aurora_debug.log etc.)
     # land in the app's writable internal storage instead of crashing on a
     # read-only or missing path.
@@ -2570,19 +2571,8 @@ def initialize(state_dir: str = "") -> str:
         _real_stdout = sys.stdout
         try:
             sys.stdout = _BootStageTee(_real_stdout)
-            try:
-                with _lock:
-                    _systems = _aurora.boot_aurora(**kwargs)
-            except TypeError as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:flutter_app/android/app/src/main/python/aurora_bridge.py:1682",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "initialize", "handler_line": 1682, "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
-                )
-                with _lock:
-                    _systems = _aurora.boot_aurora(state_dir=state_dir, verbose=True) if state_dir else _aurora.boot_aurora(verbose=True)
+            with _lock:
+                _systems = _aurora.boot_aurora(**kwargs)
         finally:
             sys.stdout = _real_stdout
         _mark_boot_stage("boot_aurora() returned")

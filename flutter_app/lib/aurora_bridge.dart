@@ -1,74 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:flutter/services.dart';
+import 'platform_bridge.dart';
 
-/// Dart wrapper around the Kotlin MethodChannel / EventChannel that talks to
-/// AuroraService.kt → Chaquopy → aurora_bridge.py.
+/// Typed app operations shared by the Android and Windows transports.
 class AuroraBridge {
-  static const _channel      = MethodChannel('org.aurora.app/bridge');
-  static const _eventChannel = EventChannel('org.aurora.app/events');
-
+  static const _channel = PlatformBridge();
+  static bool get isWindows => PlatformBridge.isWindows;
   static Stream<Map<String, dynamic>>? _events;
 
-  /// Stream of JSON events from AuroraService (ready/response/error),
-  /// native STT (source:"stt"), native TTS (source:"tts"), and
-  /// permission results (source:"permission").
-  static Stream<Map<String, dynamic>> get events {
-    _events ??= _eventChannel
-        .receiveBroadcastStream()
-        .map((raw) => _parseEvent(raw.toString()));
-    return _events!;
-  }
+  static Stream<Map<String, dynamic>> get events =>
+      _events ??= PlatformBridge.events.map(_parseEvent);
 
-  static Map<String, dynamic> _parseEvent(String json) {
-    final sourceMatch   = RegExp(r'"source"\s*:\s*"([^"]*)"').firstMatch(json);
-    final typeMatch     = RegExp(r'"type"\s*:\s*"([^"]*)"').firstMatch(json);
-    final textMatch     = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
-    final errorMatch    = RegExp(r'"error"\s*:\s*(\d+)').firstMatch(json);
-    final summaryMatch  = RegExp(r'"summary"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
-    // Sunni & Cael, "Autonomous Development Integrity" pass, blocker 6:
-    // AuroraService.kt's boot event nests record_boot_health()'s payload
-    // under "health" on every "ready"/"error" event -- {"overall":
-    // "healthy"|"degraded"|"fatal", "fatal_missing":[...],
-    // "degraded_missing":[...], ...}. Previously never extracted here, so
-    // it reached this file and went no further: the app could (and did)
-    // say "Aurora is online" even when major developmental systems were
-    // silently missing. "overall" is a key name unique to this payload
-    // shape elsewhere in the bridge, so a flat (non-nested) match is safe.
-    final healthOverallMatch = RegExp(r'"overall"\s*:\s*"([^"]*)"').firstMatch(json);
-    // Diagnostic hardening (per Sunni: silent crashes during boot):
-    // AuroraService.kt's installCrashHandler() writes any uncaught crash
-    // (including an OutOfMemoryError/StackOverflowError bootPython()'s own
-    // try/catch can't catch) to a file, then reports it exactly once on
-    // the *next* boot's "ready"/"error" event under this key -- same
-    // optional-field pattern as healthOverallMatch above.
-    final previousCrashMatch = RegExp(r'"previous_crash"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
-    return {
-      'source':    sourceMatch?.group(1) ?? 'aurora',
-      'type':      typeMatch?.group(1)   ?? 'unknown',
-      'text':      textMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
-      'summary':   summaryMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
-      'error':     errorMatch != null ? int.tryParse(errorMatch.group(1)!) : null,
-      'final':     json.contains('"final":true'),
-      'granted':   json.contains('"granted":true'),
-      // Emotional axis values — present on type=="axis_state" events
-      'X': _parseDouble(json, 'X'),
-      'T': _parseDouble(json, 'T'),
-      'N': _parseDouble(json, 'N'),
-      'B': _parseDouble(json, 'B'),
-      'A': _parseDouble(json, 'A'),
-      // Developmental health — present on type=="ready"/"error" boot events.
-      'healthOverall': healthOverallMatch?.group(1),
-      // Previous-run crash summary, if any — present on type=="ready"/"error".
-      'previous_crash': previousCrashMatch?.group(1)?.replaceAll(r'\"', '"'),
-      // Repair Q (per Sunni, 2026-08-19): front-camera face-proximity/gaze
-      // — present on type=="face_state" events.
-      'detected':     json.contains('"detected":true'),
-      'face_fraction': _parseDouble(json, 'face_fraction'),
-      'offset_x':     _parseDouble(json, 'offset_x'),
-      'offset_y':     _parseDouble(json, 'offset_y'),
-    };
+  static Map<String, dynamic> _parseEvent(String raw) {
+    try {
+      final event = jsonDecode(raw) as Map<String, dynamic>;
+      final health = event['health'];
+      return {
+        ...event,
+        'healthOverall': health is Map ? health['overall'] : null,
+        for (final key in ['X', 'T', 'N', 'B', 'A', 'face_fraction', 'offset_x', 'offset_y'])
+          key: (event[key] as num?)?.toDouble(),
+      };
+    } on FormatException {
+      return {};
+    } on TypeError {
+      return {};
+    }
   }
 
   static double? _parseDouble(String json, String key) {

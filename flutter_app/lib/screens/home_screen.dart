@@ -39,7 +39,11 @@ class _HomeScreenState extends State<HomeScreen>
 
   // ── AI state ──────────────────────────────────────────────────────────…[...]
   bool   _aiReady   = false;
+  bool   _sending   = false;
   String _statusTxt = 'Starting Aurora…';
+  String get _readyStatus => AuroraBridge.isWindows
+      ? 'Ready to chat'
+      : _inConversation ? 'Listening…' : 'Listening for "Aurora"…';
 
   // ── Aurora emotional axis state (X/T/N/B/A, each 0.0–1.0) ───────────────
   Map<String, double> _axisState = {
@@ -88,7 +92,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _init() async {
     _listenBridgeEvents();
-    setState(() => _embState = 'BACKGROUND');
+    setState(() => _embState = AuroraBridge.isWindows ? 'SUMMONED' : 'BACKGROUND');
+    if (AuroraBridge.isWindows) return;
     _refreshScreenObserverStatus();
     _startListening();
   }
@@ -159,15 +164,14 @@ class _HomeScreenState extends State<HomeScreen>
               }
             case 'axis_state':
               if (mounted) {
-                setState(() {
-                  _axisState = {
+                final next = {
                     'X': (event['X'] as double?) ?? _axisState['X']!,
                     'T': (event['T'] as double?) ?? _axisState['T']!,
                     'N': (event['N'] as double?) ?? _axisState['N']!,
                     'B': (event['B'] as double?) ?? _axisState['B']!,
                     'A': (event['A'] as double?) ?? _axisState['A']!,
-                  };
-                });
+                };
+                if (!mapEquals(next, _axisState)) setState(() => _axisState = next);
               }
             case 'face_state':
               // Repair Q: mirrors axis_state's exact update pattern.
@@ -204,8 +208,8 @@ class _HomeScreenState extends State<HomeScreen>
                 setState(() {
                   _aiReady = true;
                   _statusTxt = healthDegraded
-                      ? 'Listening… (developmental health: $healthOverall)'
-                      : 'Listening…';
+                      ? '$_readyStatus (developmental health: $healthOverall)'
+                      : _readyStatus;
                 });
               }
               _speak(healthDegraded
@@ -216,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen>
               if (mounted && text.isNotEmpty) {
                 setState(() {
                   _msgs.add(ChatMsg(text, isUser: false));
-                  _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…';
+                  if (!_sending) _statusTxt = _readyStatus;
                 });
                 _scrollToBottom();
                 if (!_quietMode) _speak(text);
@@ -320,8 +324,8 @@ class _HomeScreenState extends State<HomeScreen>
     });
     AuroraBridge.setState('BACKGROUND');
     final started = await AuroraBridge.startOverlay();
-    if (!started) {
-      setState(() => _statusTxt = 'Overlay permission needed');
+    if (mounted && !started) {
+      setState(() => _statusTxt = 'Overlay unavailable');
     }
   }
 
@@ -352,6 +356,8 @@ class _HomeScreenState extends State<HomeScreen>
   // ── STT ───────────────────────────────────────────────────────────……[...]
 
   void _startListening() {
+    if (!mounted || AuroraBridge.isWindows || _sending ||
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
     if (_listening || _speaking || _embState == 'DORMANT' || _quietMode) return;
     setState(() { _listening = true; _partialText = ''; });
     AuroraBridge.startListening();
@@ -360,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ── TTS ───────────────────────────────────────────────────────────……[...]
 
   Future<void> _speak(String text) async {
-    if (text.isEmpty) return;
+    if (!mounted || AuroraBridge.isWindows || text.isEmpty) return;
     AuroraBridge.stopListening();
     setState(() { _speaking = true; _listening = false; });
     await AuroraBridge.speak(text);
@@ -389,9 +395,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _sendMessage(String text) async {
     text = text.trim();
-    if (text.isEmpty) return;
+    if (!mounted || !_aiReady || _sending || text.isEmpty) return;
     _textCtrl.clear();
-    AuroraBridge.stopListening();
 
     // Sunni & Cael, UI observation session journal: bound one durable,
     // reconstructable record (timeline.jsonl + real screenshots) to
@@ -399,24 +404,45 @@ class _HomeScreenState extends State<HomeScreen>
     // response rendered -- rather than recording continuously. A failure
     // anywhere in this journaling path must never block the actual
     // conversation turn, so every call here is fire-and-forget.
-    unawaited(AuroraBridge.startUiObservationSession());
-    unawaited(AuroraBridge.markUiTransition('input_submitted'));
+    if (!AuroraBridge.isWindows) {
+      AuroraBridge.stopListening();
+      unawaited(AuroraBridge.startUiObservationSession());
+      unawaited(AuroraBridge.markUiTransition('input_submitted'));
+    }
 
     setState(() {
       _listening = false;
+      _sending = true;
       _msgs.add(ChatMsg(text, isUser: true));
       _statusTxt = 'Thinking…';
     });
     _scrollToBottom();
 
-    final reply = await AuroraBridge.sendMessage(text);
+    String reply;
+    try {
+      reply = await AuroraBridge.sendMessage(text);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _statusTxt = 'Message failed: $error';
+      });
+      if (!AuroraBridge.isWindows) {
+        unawaited(AuroraBridge.stopUiObservationSession());
+        _startListening();
+      }
+      return;
+    }
     if (!mounted) return;
 
-    unawaited(AuroraBridge.markUiTransition('response_available'));
+    if (!AuroraBridge.isWindows) {
+      unawaited(AuroraBridge.markUiTransition('response_available'));
+    }
 
     setState(() {
       if (reply.isNotEmpty) _msgs.add(ChatMsg(reply, isUser: false));
-      _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…';
+      _sending = false;
+      _statusTxt = _readyStatus;
     });
     if (reply.isNotEmpty) {
       _scrollToBottom();
@@ -428,6 +454,7 @@ class _HomeScreenState extends State<HomeScreen>
     } else {
       _startListening();
     }
+    if (AuroraBridge.isWindows) return;
     _resetConversationWindow();
 
     // Give the frame that just rendered the reply a beat to actually
@@ -450,8 +477,9 @@ class _HomeScreenState extends State<HomeScreen>
   // sent here is only ever a hint (file extension) -- the Python side
   // sniffs actual content and is the real authority on what this is.
   Future<void> _uploadFile() async {
+    if (!_aiReady || _sending) return;
     final picked = await FilePicker.platform.pickFiles(withData: true);
-    if (picked == null || picked.files.isEmpty) return;
+    if (!mounted || picked == null || picked.files.isEmpty) return;
     final file = picked.files.single;
     final bytes = file.bytes;
     if (bytes == null) {
@@ -476,7 +504,12 @@ class _HomeScreenState extends State<HomeScreen>
     });
     _scrollToBottom();
 
-    final result = await AuroraBridge.uploadContent(bytes, file.name, contentTypeHint);
+    Map<String, dynamic> result;
+    try {
+      result = await AuroraBridge.uploadContent(bytes, file.name, contentTypeHint);
+    } catch (error) {
+      result = {'ok': false, 'error': error.toString()};
+    }
     if (!mounted) return;
 
     String feedback;
@@ -501,7 +534,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     setState(() {
       _msgs.add(ChatMsg(feedback, isUser: false));
-      _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…';
+      _statusTxt = _readyStatus;
     });
     _scrollToBottom();
   }
@@ -522,6 +555,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (AuroraBridge.isWindows) return;
     if (state == AppLifecycleState.paused && _embState != 'DORMANT') {
       await _background();
     } else if (state == AppLifecycleState.resumed) {
@@ -569,7 +603,7 @@ class _HomeScreenState extends State<HomeScreen>
               state:         _embState,
               quietMode:     _quietMode,
               onQuietToggle: () => _toggleQuietMode(!_quietMode),
-              onBackground:  isSummoned ? _background : null,
+              onBackground:  isSummoned && !AuroraBridge.isWindows ? _background : null,
             ),
             if (isSummoned) ...[
               // ── Summoned: compact orb at top, chat below ─────────────────
@@ -585,7 +619,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
               const SizedBox(height: 6),
               statusWidget,
-              if (!_screenObserverReady) ...[
+              if (!AuroraBridge.isWindows && !_screenObserverReady) ...[
                 const SizedBox(height: 4),
                 TextButton(
                   onPressed: _requestScreenObserver,
@@ -665,8 +699,10 @@ class _HomeScreenState extends State<HomeScreen>
     _scrollCtrl.dispose();
     _bridgeSub?.cancel();
     _convTimer?.cancel();
-    AuroraBridge.stopListening();
-    AuroraBridge.stopSpeaking();
+    if (!AuroraBridge.isWindows) {
+      AuroraBridge.stopListening();
+      AuroraBridge.stopSpeaking();
+    }
     super.dispose();
   }
 }
@@ -698,7 +734,7 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          IconButton(
+          if (!AuroraBridge.isWindows) IconButton(
             icon: Icon(
               quietMode ? Icons.volume_off_rounded : Icons.volume_up_rounded,
               color: quietMode ? Colors.white38 : Colors.white54,
@@ -706,7 +742,7 @@ class _Header extends StatelessWidget {
             onPressed: onQuietToggle,
             tooltip: quietMode ? 'Quiet mode (tap to unmute)' : 'Quiet mode',
           ),
-          if (state == 'SUMMONED')
+          if (state == 'SUMMONED' && !AuroraBridge.isWindows)
             IconButton(
               icon: const Icon(Icons.visibility_rounded, color: Colors.white54),
               onPressed: () => AuroraBridge.captureVision(),
