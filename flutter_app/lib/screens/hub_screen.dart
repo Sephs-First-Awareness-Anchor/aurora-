@@ -611,7 +611,8 @@ class _HubScreenState extends State<HubScreen> {
     final paused    = _stats['praxis_paused'] == true;
     final witnessed = _stats['praxis_situations_witnessed'] as int? ?? 0;
     final breaches  = _stats['praxis_contract_breaches'] as int? ?? 0;
-    final available = status != 'not_initialized' && status != 'error';
+    final lastError = (_stats['praxis_last_error'] as String?) ?? '';
+    final available = status != 'not_initialized' && status != 'error' && status != 'reconnecting';
 
     final detail = available
         ? '$witnessed witnessed · ${status.replaceAll('_', ' ')}'
@@ -644,6 +645,16 @@ class _HubScreenState extends State<HubScreen> {
             ),
           ],
         ]),
+        if (lastError.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Praxis detail: $lastError',
+                maxLines: 3, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: _amber, fontSize: 11)),
+            ),
+          ),
         // Breaches are shown only when they exist: a non-zero count means
         // something tried to teach her and was stopped at the fence, which
         // is worth Sunni seeing.  Zero is the normal state and needs no row.
@@ -739,7 +750,11 @@ class _HubScreenState extends State<HubScreen> {
       _statRow('Messenger',
           status == 'not_initialized'
               ? 'not started'
-              : '$heard heard · $spoke said · $withheld held back'
+              : status == 'error'
+                  ? 'startup error'
+                  : status == 'reconnecting'
+                      ? 'reconnecting'
+                      : '$heard heard · $spoke said · $withheld held back'
                 '${busy > 0 ? ' · $busy busy' : ''}',
           valueColor: status == 'online' ? _green : _textDim),
       if (lastSpoke.isNotEmpty) note('Last said', lastSpoke, _text),
