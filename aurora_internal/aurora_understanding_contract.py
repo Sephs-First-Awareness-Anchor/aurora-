@@ -2480,7 +2480,10 @@ class RuntimeUnderstandingContract:
         # receiver evidence back to the exact response that created it.
         # _evaluate_previous_accuracy() reads the same record and the live
         # state clears it below, so taking this copy here is intentional.
-        validated_pending = copy.deepcopy(self.state.get("pending_validation", {}) or {})
+        # before_state is already a deep snapshot, including pending
+        # validation and its nested evidence. Reuse that independent copy
+        # rather than deep-copying the same evidence a second time.
+        validated_pending = before_state.get("pending_validation", {}) or {}
         accuracy = self._evaluate_previous_accuracy(systems, user_text, understood)
         self._record_pre_outcome_fail_if_applicable(systems, accuracy)
         meaning_state = self._derive_meaning_state(systems, user_text, understood)
