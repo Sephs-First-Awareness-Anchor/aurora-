@@ -16,7 +16,6 @@ import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Process
 import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -229,9 +228,7 @@ class MainActivity : FlutterActivity() {
     // safely rather than crashing -- but the actual behavior needs
     // confirming on real hardware, not assumed from this source alone.
     private val audioExecutor = Executors.newSingleThreadExecutor()
-    private var audioRecord: AudioRecord? = null
-    @Volatile private var audioCaptureRunning = false
-    private var lastAudioPushMs = 0L
+    @Volatile private var audioRecord: AudioRecord? = null
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -257,10 +254,13 @@ class MainActivity : FlutterActivity() {
                     "startOverlay" -> {
                         if (hasOverlayPermission()) {
                             val i = Intent(this, OverlayService::class.java)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                            try {
                                 startForegroundService(i)
-                            else startService(i)
-                            result.success(true)
+                                result.success(true)
+                            } catch (e: Exception) {
+                                Log.w(TAG, "overlay start unavailable: ${e.message}")
+                                result.success(false)
+                            }
                         } else {
                             requestOverlayPermission()
                             result.success(false)
@@ -482,13 +482,6 @@ class MainActivity : FlutterActivity() {
                 == PackageManager.PERMISSION_GRANTED) {
             startCameraCapture()
         }
-        // Start the PARALLEL ambient-audio path immediately if permission is
-        // already granted -- independent of whether/when SpeechRecognizer
-        // sessions happen (Section VI/VII).
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                == PackageManager.PERMISSION_GRANTED) {
-            startAmbientAudioCapture()
-        }
     }
 
     // ── Permissions ───────────────────────────────────────────────────────────
@@ -521,7 +514,9 @@ class MainActivity : FlutterActivity() {
                     JSONObject().put("source","permission").put("type","microphone").put("granted",true).toString()
                 )
             }
-            startAmbientAudioCapture()
+            if (lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) {
+                startAmbientAudioCapture()
+            }
         }
         if (granted(Manifest.permission.CAMERA)) startCameraCapture()
     }
@@ -646,8 +641,14 @@ class MainActivity : FlutterActivity() {
     private fun startCameraCapture() {
         ProcessCameraProvider.getInstance(this).also { future ->
             future.addListener({
-                cameraProvider = future.get()
-                bindCamera(front = false)
+                if (!isDestroyed) {
+                    try {
+                        cameraProvider = future.get()
+                        bindCamera(front = isCameraFront)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "camera initialization failed: ${e.message}")
+                    }
+                }
             }, ContextCompat.getMainExecutor(this))
         }
     }
@@ -660,12 +661,12 @@ class MainActivity : FlutterActivity() {
     // churn if called twice for the same state in a row.
     private fun switchCamera(front: Boolean) {
         if (front == isCameraFront) return
+        isCameraFront = front
         bindCamera(front)
     }
 
     private fun bindCamera(front: Boolean) {
         val provider = cameraProvider ?: return
-        isCameraFront = front
         // Sunni, 2026-08-21: OUTPUT_IMAGE_FORMAT_RGBA_8888 used to be
         // requested here, which routes every frame through CameraX's
         // internal RenderScript-based YUV->RGBA converter -- confirmed
@@ -684,7 +685,7 @@ class MainActivity : FlutterActivity() {
 
         analysis.setAnalyzer(cameraExecutor) { proxy ->
             val now = System.currentTimeMillis()
-            if (now - lastFrameMs >= FRAME_INTERVAL_MS) {
+            if (AuroraService.canSampleCamera && now - lastFrameMs >= FRAME_INTERVAL_MS) {
                 lastFrameMs = now
                 val jpeg = proxy.toJpeg()
                 if (jpeg != null) AuroraService.provideCameraFrame(jpeg)
@@ -693,9 +694,14 @@ class MainActivity : FlutterActivity() {
             // runs on the front stream, and closes the proxy itself
             // (ML Kit detection is async) rather than falling through to
             // the unconditional proxy.close() below.
-            if (front && now - lastFaceDetectMs >= FACE_DETECT_INTERVAL_MS) {
+            if (front && AuroraService.canSampleFace && now - lastFaceDetectMs >= FACE_DETECT_INTERVAL_MS) {
                 lastFaceDetectMs = now
-                detectFace(proxy)
+                try {
+                    detectFace(proxy)
+                } catch (e: Exception) {
+                    Log.w(TAG, "face input unavailable: ${e.message}")
+                    proxy.close()
+                }
             } else {
                 proxy.close()
             }
@@ -826,7 +832,7 @@ class MainActivity : FlutterActivity() {
     // at AUDIO_PUSH_INTERVAL_MS, so the DSP/Chaquopy cost stays bounded
     // even though the underlying hardware stream is continuous.
     private fun startAmbientAudioCapture() {
-        if (audioCaptureRunning) return
+        if (audioRecord != null) return
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) return
 
@@ -865,45 +871,48 @@ class MainActivity : FlutterActivity() {
             return
         }
 
+        try {
+            record.startRecording()
+            check(record.recordingState == AudioRecord.RECORDSTATE_RECORDING)
+        } catch (e: Exception) {
+            record.release()
+            Log.w(TAG, "ambient audio could not start: ${e.message}")
+            return
+        }
         audioRecord = record
-        audioCaptureRunning = true
-        record.startRecording()
 
         audioExecutor.execute {
-            Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
-            val chunk = ShortArray(bufferBytes / 2)
-            while (audioCaptureRunning) {
-                val rec = audioRecord ?: break
-                val read = try {
-                    rec.read(chunk, 0, chunk.size)
-                } catch (e: Exception) {
-                    Log.w(TAG, "ambient audio read failed: ${e.message}")
-                    break
+            try {
+                val chunk = ShortArray(bufferBytes / 2)
+                var lastPushMs = 0L
+                while (audioRecord === record) {
+                    val read = record.read(chunk, 0, chunk.size)
+                    // A revoked/interrupted mic can return immediately on every read.
+                    if (read <= 0) break
+                    val now = android.os.SystemClock.elapsedRealtime()
+                    if (now - lastPushMs < AUDIO_PUSH_INTERVAL_MS) continue
+                    lastPushMs = now
+
+                    val bytes = ByteArray(read * 2)
+                    val bb = ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                    for (i in 0 until read) bb.putShort(chunk[i])
+                    AuroraService.provideAudioObservationRaw(bytes, sampleRate)
                 }
-                if (read <= 0) continue
-
-                val now = System.currentTimeMillis()
-                if (now - lastAudioPushMs < AUDIO_PUSH_INTERVAL_MS) continue
-                lastAudioPushMs = now
-
-                // Pack the read samples into little-endian 16-bit PCM bytes --
-                // matches provide_audio_observation_raw()'s expected format
-                // exactly (numpy.frombuffer(..., dtype="<i2")).
-                val bytes = ByteArray(read * 2)
-                val bb = ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN)
-                for (i in 0 until read) bb.putShort(chunk[i])
-                AuroraService.provideAudioObservationRaw(bytes, sampleRate)
+            } catch (e: Exception) {
+                Log.w(TAG, "ambient audio read failed: ${e.message}")
+            } finally {
+                try { record.stop() } catch (_: Exception) {}
+                record.release()
+                runOnUiThread { if (audioRecord === record) audioRecord = null }
             }
         }
     }
 
     private fun stopAmbientAudioCapture() {
-        audioCaptureRunning = false
-        try {
-            audioRecord?.stop()
-        } catch (_: Exception) {}
-        audioRecord?.release()
+        val record = audioRecord
         audioRecord = null
+        // Unblock read(). The capture worker owns release().
+        try { record?.stop() } catch (_: Exception) {}
     }
 
     // ── Service / overlay helpers ─────────────────────────────────────────────
@@ -941,6 +950,18 @@ class MainActivity : FlutterActivity() {
         startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+    override fun onStart() {
+        super.onStart()
+        AuroraService.activityVisible = true
+        startAmbientAudioCapture()
+    }
+
+    override fun onStop() {
+        AuroraService.activityVisible = false
+        stopAmbientAudioCapture()
+        super.onStop()
+    }
 
     override fun onDestroy() {
         super.onDestroy()

@@ -381,7 +381,12 @@ class PraxisMessenger:
         self.transcripts = self.root / TRANSCRIPT_DIR
         self.transcripts.mkdir(parents=True, exist_ok=True)
         self.cursor_path = self.root / "messenger_cursor.json"
-        self.cursor = self._load_cursor()
+        self.cursor = 0
+        self._inbox: Dict[int, Dict[str, Any]] = {}
+        self.read_ahead: set[int] = set()
+        self.failed_reads: Dict[str, Dict[str, Any]] = {}
+        self._inbox_dirty = False
+        self._load_cursor()
         self._stop = threading.Event()
         self._paused = threading.Event()
         self._thread: Optional[threading.Thread] = None
@@ -394,10 +399,6 @@ class PraxisMessenger:
         # contact -> {"message", "attempts", "last_attempt"}: the latest thing
         # said to her that she has not yet answered in her own words.
         self.pending: Dict[str, Dict[str, Any]] = {}
-        # A failed cognitive turn must not be marked read, but repeatedly
-        # replaying the same exception every three seconds wastes the phone.
-        # A fresh message for the contact can restart the combined reading.
-        self.failed_reads: Dict[str, Dict[str, Any]] = {}
         # Replies already composed in her own voice are kept as an outbox on
         # transport failure. Retrying POST must not repeat her entire cognition.
         self.outbox_path = self.root / "messenger_outbox.json"
@@ -433,9 +434,6 @@ class PraxisMessenger:
         self.last_pull_at = 0.0
         self.unread_waiting = 0
         self.unread_seen_at = 0.0
-        # Messages already read that sit beyond the shared cursor (another
-        # contact's earlier message is still unread) -- never read twice.
-        self.read_ahead: set = set()
         # She starts conversations herself when something of hers is
         # unresolved (aurora_praxis_initiative.py).
         try:
@@ -464,17 +462,41 @@ class PraxisMessenger:
 
     # -- persistence -----------------------------------------------------------
 
-    def _load_cursor(self) -> int:
+    def _load_cursor(self) -> None:
         try:
-            return int(json.loads(self.cursor_path.read_text(encoding="utf-8")).get("after", 0))
-        except Exception:
-            return 0
+            record = json.loads(self.cursor_path.read_text(encoding="utf-8"))
+            self.cursor = int(record.get("after", 0))
+            for raw in record.get("unread", []):
+                message = validate_incoming_message(raw)
+                if message["seq"] > self.cursor:
+                    self._inbox[message["seq"]] = message
+            self.read_ahead = {seq for seq in record.get("read_ahead", [])
+                               if type(seq) is int and seq > self.cursor}
+            self.failed_reads = {
+                pid: failure for pid, failure in record.get("failed_reads", {}).items()
+                if isinstance(failure, dict) and failure.get("seq") in self._inbox
+                and isinstance(failure.get("at"), (float, int))
+            }
+        except (OSError, ValueError, TypeError, AttributeError, MessengerContractBreach):
+            pass
 
     def _save_cursor(self) -> None:
+        # Keep the unread payload and read-ahead in the same atomic write.
+        # A restart can resume fetching later pages without redoing turns.
+        first_unread = min(self._inbox, default=None)
+        committed = max((seq for seq in self.read_ahead
+                         if first_unread is None or seq < first_unread), default=self.cursor)
+        read_ahead = {seq for seq in self.read_ahead if seq > committed}
         tmp = self.cursor_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps({"after": self.cursor, "updated_at": time.time()}),
-                       encoding="utf-8")
+        tmp.write_text(json.dumps({
+            "after": committed, "updated_at": time.time(),
+            "unread": list(self._inbox.values()), "read_ahead": sorted(read_ahead),
+            "failed_reads": self.failed_reads,
+        }, ensure_ascii=False), encoding="utf-8")
         tmp.replace(self.cursor_path)
+        self.cursor = committed
+        self.read_ahead = read_ahead
+        self._inbox_dirty = False
 
     def _save_outbox(self) -> None:
         temp = self.outbox_path.with_suffix(".tmp")
@@ -672,8 +694,9 @@ class PraxisMessenger:
             return []
         # Look for new incoming speech before retrying queued outgoing
         # deliveries; offline sends must not block contact discovery.
+        received_through = max(self.cursor, max(self._inbox, default=0), max(self.read_ahead, default=0))
         try:
-            payload = self.http("GET", f"/social/pull?after={self.cursor}&limit={PULL_LIMIT}", None)
+            payload = self.http("GET", f"/social/pull?after={received_through}&limit={PULL_LIMIT}", None)
         except Exception as exc:
             self.online, self.last_error = False, f"{type(exc).__name__}: {exc}"
             return []
@@ -683,51 +706,28 @@ class PraxisMessenger:
             return []
         self._retry_unsent()
         outcomes: List[Dict[str, Any]] = []
-        unread = [r for r in (payload.get("messages") or [])
-                  if isinstance(r, Mapping) and isinstance(r.get("seq"), int) and r["seq"] > self.cursor
-                  and r["seq"] not in getattr(self, "read_ahead", ())]
-        self.unread_waiting = len(unread)
-        self.unread_seen_at = time.time()
-        # Read a contact's backlog TOGETHER (Sunni, 2026-11-08: "it's like
-        # she's not even reading what is being said to her").  Answering five
-        # queued messages one by one put every reply against a question the
-        # contact had already moved past.  Everything a contact sent since her
-        # last reply is now one reading, answered once, in reply to the latest.
-        valid: List[Dict[str, Any]] = []
-        self.read_ahead = {q for q in self.read_ahead if q > self.cursor}
-        handled: set = set(self.read_ahead)
-        all_seqs: List[int] = []
         for raw in payload.get("messages") or []:
             seq = raw.get("seq") if isinstance(raw, Mapping) else None
-            if not isinstance(seq, int) or seq <= self.cursor:
+            if type(seq) is not int or seq <= received_through:
                 continue
-            all_seqs.append(seq)
-            if seq in self.read_ahead:
-                continue
+            self._inbox_dirty = True
             try:
-                valid.append(validate_incoming_message(raw))
+                self._inbox[seq] = validate_incoming_message(raw)
             except MessengerContractBreach as breach:
                 self.counters["breaches"] += 1
                 self.last_error = f"breach: {breach}"
-                handled.add(seq)                 # dropped whole; never re-read
+                self.read_ahead.add(seq)
+        if self._inbox_dirty:
+            self._save_cursor()
+
+        self.unread_waiting = len(self._inbox)
+        self.unread_seen_at = time.time()
+        # Read each contact's pending words together, in sequence order.
         groups: Dict[str, List[Dict[str, Any]]] = {}
-        for message in valid:
+        for seq in sorted(self._inbox):
+            message = self._inbox[seq]
             groups.setdefault(message["persona_id"], []).append(message)
 
-        def _advance() -> None:
-            # The cursor is shared by every contact: move it only across
-            # messages that have actually been read.
-            moved = False
-            for seq in sorted(all_seqs):
-                if seq <= self.cursor:
-                    continue
-                if seq not in handled:
-                    break
-                self.cursor, moved = seq, True
-            if moved:
-                self._save_cursor()
-
-        _advance()
         for group in sorted(groups.values(), key=lambda g: g[0]["seq"]):
             pid = group[-1]["persona_id"]
             failure = self.failed_reads.get(pid)
@@ -758,18 +758,22 @@ class PraxisMessenger:
                 self.counters["errors"] += 1
                 self.last_error = f"turn failed: {type(exc).__name__}: {exc}"[:300]
                 self.failed_reads[pid] = {"seq": group[-1]["seq"], "at": time.time()}
+                self._inbox_dirty = True
             finally:
                 if self.field_lock is not None:
                     self.field_lock.release()
             if not read_ok:
                 # Do not acknowledge a turn the cognitive path never finished.
                 # Back off instead of burning more compute on each poll.
+                self._save_cursor()
                 self.unread_waiting = max(0, self.unread_waiting - len(group))
                 continue
-            handled.update(m["seq"] for m in group)
-            self.read_ahead.update(m["seq"] for m in group)
-            _advance()
-            self.read_ahead = {q for q in self.read_ahead if q > self.cursor}
+            self._inbox_dirty = True
+            for item in group:
+                seq = item["seq"]
+                del self._inbox[seq]
+                self.read_ahead.add(seq)
+            self._save_cursor()
             self.unread_waiting = max(0, self.unread_waiting - len(group))
         outcomes.extend(self._reenter_pending())
         if self.initiative is not None:

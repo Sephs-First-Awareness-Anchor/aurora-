@@ -1,6 +1,5 @@
 package org.aurora.app
 
-import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,7 +8,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -21,7 +19,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
-import androidx.core.content.ContextCompat
+import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import io.flutter.plugin.common.EventChannel
@@ -30,6 +28,8 @@ import org.json.JSONObject
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.sqrt
 
 class AuroraService : Service() {
@@ -44,6 +44,12 @@ class AuroraService : Service() {
         // Stored so it can be replayed if Flutter subscribes after boot completes.
         @Volatile private var bootEvent: String? = null
         @Volatile var eventSink: EventChannel.EventSink? = null
+        @Volatile private var readyBridge: PyObject? = null
+        private val bootStarted = AtomicBoolean()
+        @Volatile var activityVisible = false
+        @Volatile var overlayVisible = false
+        @Volatile var latestAxisState: String? = null
+            private set
 
         /** Called by MainActivity's EventChannel onListen / onCancel. */
         fun onSinkConnected(sink: EventChannel.EventSink?) {
@@ -56,7 +62,15 @@ class AuroraService : Service() {
             }
         }
 
-        private var scope: CoroutineScope? = null
+        @Volatile private var scope: CoroutineScope? = null
+        private val cameraBusy = AtomicBoolean()
+        private val audioBusy = AtomicBoolean()
+        private val faceBusy = AtomicBoolean()
+
+        val canSampleCamera: Boolean
+            get() = readyBridge != null && activityVisible && !cameraBusy.get()
+        val canSampleFace: Boolean
+            get() = readyBridge != null && activityVisible && !faceBusy.get()
 
         fun uploadContent(bytes: ByteArray, filename: String, contentType: String, callback: (String) -> Unit) {
             // Repair R: mirrors sendMessage()'s exact async pattern above --
@@ -64,9 +78,13 @@ class AuroraService : Service() {
             // the caller's callback. provide_uploaded_content does its own
             // real dispatch (image/audio/text) and returns a JSON summary
             // of what she actually did with it, not just an ack.
-            scope?.launch(Dispatchers.IO) {
-                val py     = Python.getInstance()
-                val bridge = py.getModule("aurora_bridge")
+            val bridge = readyBridge
+            val worker = scope
+            if (bridge == null || worker == null) {
+                callback("{\"ok\":false,\"error\":\"Aurora is still starting\"}")
+                return
+            }
+            worker.launch {
                 val reply = try {
                     bridge.callAttr("provide_uploaded_content", bytes, filename, contentType).toString()
                 } catch (e: Exception) {
@@ -78,6 +96,12 @@ class AuroraService : Service() {
         }
 
         fun sendMessage(text: String, callback: (String) -> Unit) {
+            val bridge = readyBridge
+            val worker = scope
+            if (bridge == null || worker == null) {
+                callback("")
+                return
+            }
             // Sunni & Cael, review follow-up: the UI observation journal's
             // timeline previously only ever recorded 3 of the 5 promised
             // stages (input_submitted / response_available /
@@ -89,10 +113,7 @@ class AuroraService : Service() {
             // (entry of this function) and where Python processing
             // actually starts (immediately before handle_message()).
             markUiTransition("aurora_receives")
-            scope?.launch {
-                val py     = Python.getInstance()
-                val bridge = py.getModule("aurora_bridge")
-
+            worker.launch {
                 markUiTransition("python_processing_begins")
 
                 val reply = try {
@@ -106,6 +127,7 @@ class AuroraService : Service() {
                 val axisJson = try {
                     bridge.callAttr("get_axis_state").toString()
                 } catch (_: Exception) { null }
+                if (axisJson != null) latestAxisState = axisJson
 
                 withContext(Dispatchers.Main) {
                     callback(reply)
@@ -124,15 +146,19 @@ class AuroraService : Service() {
             }
         }
 
-        fun provideCameraFrame(jpegBytes: ByteArray) {
-            scope?.launch(Dispatchers.IO) {
-                try {
-                    Python.getInstance()
-                        .getModule("aurora_bridge")
-                        .callAttr("provide_camera_frame", jpegBytes)
-                } catch (_: Exception) {}
-            }
+        // Continuous observations can skip a stale sample while the previous
+        // one is still running. User uploads use their own lossless path.
+        private fun offerObservation(busy: AtomicBoolean, method: String, vararg args: Any) {
+            val bridge = readyBridge ?: return
+            val worker = scope ?: return
+            if (!activityVisible || !busy.compareAndSet(false, true)) return
+            worker.launch {
+                try { bridge.callAttr(method, *args) } catch (_: Exception) {}
+            }.invokeOnCompletion { busy.set(false) }
         }
+
+        fun provideCameraFrame(jpegBytes: ByteArray) =
+            offerObservation(cameraBusy, "provide_camera_frame", jpegBytes)
 
         // Repair Q (per Sunni, 2026-08-19): front-camera face detection
         // result -- detected=false with zeroed floats means "checked,
@@ -140,36 +166,21 @@ class AuroraService : Service() {
         // faceFraction: detected face's bounding-box area as a fraction
         // of total frame area, a real proximity proxy. offsetX/offsetY:
         // face center position, -1..1, for gaze/lean direction.
-        fun provideFaceObservation(detected: Boolean, faceFraction: Float, offsetX: Float, offsetY: Float) {
-            scope?.launch(Dispatchers.IO) {
-                try {
-                    Python.getInstance()
-                        .getModule("aurora_bridge")
-                        .callAttr("provide_face_observation", detected, faceFraction, offsetX, offsetY)
-                } catch (_: Exception) {}
-            }
-        }
+        fun provideFaceObservation(detected: Boolean, faceFraction: Float, offsetX: Float, offsetY: Float) =
+            offerObservation(faceBusy, "provide_face_observation", detected, faceFraction, offsetX, offsetY)
 
         // Section VI/VII (Sunni & Cael): the parallel, nonsemantic auditory
         // path. pcmBytes is little-endian 16-bit mono PCM from
         // MainActivity's AudioRecord capture loop -- never text, never a
         // transcript, entirely independent of SpeechRecognizer/STT.
-        fun provideAudioObservationRaw(pcmBytes: ByteArray, sampleRate: Int) {
-            scope?.launch(Dispatchers.IO) {
-                try {
-                    Python.getInstance()
-                        .getModule("aurora_bridge")
-                        .callAttr("provide_audio_observation_raw", pcmBytes, sampleRate)
-                } catch (_: Exception) {}
-            }
-        }
+        fun provideAudioObservationRaw(pcmBytes: ByteArray, sampleRate: Int) =
+            offerObservation(audioBusy, "provide_audio_observation_raw", pcmBytes, sampleRate)
 
         fun provideScreenObservation(payloadJson: String) {
+            val bridge = readyBridge ?: return
             scope?.launch(Dispatchers.IO) {
                 try {
-                    Python.getInstance()
-                        .getModule("aurora_bridge")
-                        .callAttr("provide_screen_observation", payloadJson)
+                    bridge.callAttr("provide_screen_observation", payloadJson)
                 } catch (e: Exception) {
                     Log.w(TAG, "screen observation error: ${e.message}")
                 }
@@ -178,88 +189,40 @@ class AuroraService : Service() {
 
         fun setState(state: String) {
             currentState = state
-            scope?.launch {
-                try {
-                    Python.getInstance()
-                        .getModule("aurora_bridge")
-                        .callAttr("set_state", state)
-                } catch (_: Exception) {}
-            }
         }
 
-        fun getSelfModel(callback: (String) -> Unit) {
-            scope?.launch {
-                val json = try {
-                    Python.getInstance()
-                        .getModule("aurora_bridge")
-                        .callAttr("get_self_model")
-                        .toString()
-                } catch (_: Exception) { "{}" }
+        fun getSelfModel(callback: (String) -> Unit) = callPythonString("get_self_model", callback)
+
+        fun getCognitiveStats(callback: (String) -> Unit) = callPythonString("get_cognitive_stats", callback)
+
+        fun getRoomState(callback: (String) -> Unit) = callPythonString("get_room_state", callback)
+
+        fun provideRoomCommand(cmdJson: String) = callPythonVoid("provide_room_command", cmdJson)
+
+        /** Call a Python bridge function and complete even before Aurora is ready. */
+        fun callPythonString(fn: String, callback: (String) -> Unit) =
+            readBridgeString(callback) { it.callAttr(fn).toString() }
+
+        fun callPythonStringArg(fn: String, arg: String, callback: (String) -> Unit) =
+            readBridgeString(callback) { it.callAttr(fn, arg).toString() }
+
+        private fun readBridgeString(callback: (String) -> Unit, read: (PyObject) -> String) {
+            val bridge = readyBridge
+            val worker = scope
+            if (bridge == null || worker == null) {
+                callback("{}")
+                return
+            }
+            worker.launch {
+                val json = try { read(bridge) } catch (_: Exception) { "{}" }
                 withContext(Dispatchers.Main) { callback(json) }
             }
         }
 
-        fun getCognitiveStats(callback: (String) -> Unit) {
+        fun callPythonVoid(fn: String, vararg args: Any) {
+            val bridge = readyBridge ?: return
             scope?.launch {
-                val json = try {
-                    Python.getInstance()
-                        .getModule("aurora_bridge")
-                        .callAttr("get_cognitive_stats")
-                        .toString()
-                } catch (_: Exception) { "{}" }
-                withContext(Dispatchers.Main) { callback(json) }
-            }
-        }
-
-        fun getRoomState(callback: (String) -> Unit) {
-            scope?.launch {
-                val json = try {
-                    Python.getInstance()
-                        .getModule("aurora_bridge")
-                        .callAttr("get_room_state")
-                        .toString()
-                } catch (_: Exception) { "{}" }
-                withContext(Dispatchers.Main) { callback(json) }
-            }
-        }
-
-        fun provideRoomCommand(cmdJson: String) {
-            scope?.launch {
-                try {
-                    Python.getInstance()
-                        .getModule("aurora_bridge")
-                        .callAttr("provide_room_command", cmdJson)
-                } catch (_: Exception) {}
-            }
-        }
-
-        /** Call a no-arg Python bridge function that returns a String. */
-        fun callPythonString(fn: String, callback: (String) -> Unit) {
-            scope?.launch {
-                val json = try {
-                    Python.getInstance().getModule("aurora_bridge")
-                        .callAttr(fn).toString()
-                } catch (_: Exception) { "{}" }
-                withContext(Dispatchers.Main) { callback(json) }
-            }
-        }
-
-        /** Call a Python bridge function with one String arg that returns a String. */
-        fun callPythonStringArg(fn: String, arg: String, callback: (String) -> Unit) {
-            scope?.launch {
-                val json = try {
-                    Python.getInstance().getModule("aurora_bridge")
-                        .callAttr(fn, arg).toString()
-                } catch (_: Exception) { "{}" }
-                withContext(Dispatchers.Main) { callback(json) }
-            }
-        }
-
-        /** Call a no-arg Python bridge function, ignore return. */
-        fun callPythonVoid(fn: String) {
-            scope?.launch {
-                try { Python.getInstance().getModule("aurora_bridge").callAttr(fn) }
-                catch (_: Exception) {}
+                try { bridge.callAttr(fn, *args) } catch (_: Exception) {}
             }
         }
 
@@ -271,14 +234,7 @@ class AuroraService : Service() {
         // whole-device MediaProjection (which needs fresh per-session user
         // consent and is far heavier than a diagnostic journal needs).
 
-        fun startUiObservationSession() {
-            scope?.launch {
-                try {
-                    Python.getInstance().getModule("aurora_bridge")
-                        .callAttr("start_ui_observation_session")
-                } catch (_: Exception) {}
-            }
-        }
+        fun startUiObservationSession() = callPythonVoid("start_ui_observation_session")
 
         /** Records this transition in the active session's timeline AND
          * triggers a real screenshot capture for it (best-effort -- a
@@ -301,22 +257,25 @@ class AuroraService : Service() {
          * call) have finished, so a caller that awaits it can safely stop
          * the session right after. */
         fun markUiTransition(transition: String, onDone: () -> Unit = {}) {
+            val bridge = readyBridge
+            val worker = scope
+            if (bridge == null || worker == null) {
+                onDone()
+                return
+            }
             val remaining = java.util.concurrent.atomic.AtomicInteger(2)
             val finishOne: () -> Unit = {
                 if (remaining.decrementAndGet() == 0) onDone()
             }
 
-            val timelineJob = scope?.launch {
+            worker.launch {
                 try {
-                    Python.getInstance().getModule("aurora_bridge")
-                        .callAttr(
-                            "record_ui_timeline_event",
-                            JSONObject().put("kind", "ui_transition").put("transition", transition).toString()
-                        )
+                    bridge.callAttr(
+                        "record_ui_timeline_event",
+                        JSONObject().put("kind", "ui_transition").put("transition", transition).toString()
+                    )
                 } catch (_: Exception) {}
-                finishOne()
-            }
-            if (timelineJob == null) finishOne()
+            }.invokeOnCompletion { finishOne() }
 
             ScreenObserverService.captureScreenshot(transition, finishOne)
         }
@@ -326,25 +285,19 @@ class AuroraService : Service() {
          * Python-side record_ui_screenshot() call has been attempted
          * (success or failure) -- see markUiTransition above. */
         fun provideUiScreenshot(pngBytes: ByteArray, transition: String, onDone: () -> Unit = {}) {
-            val job = scope?.launch(Dispatchers.IO) {
-                try {
-                    Python.getInstance().getModule("aurora_bridge")
-                        .callAttr("record_ui_screenshot", pngBytes, transition)
-                } catch (_: Exception) {}
+            val bridge = readyBridge
+            val worker = scope
+            if (bridge == null || worker == null) {
                 onDone()
+                return
             }
-            if (job == null) onDone()
+            worker.launch {
+                try { bridge.callAttr("record_ui_screenshot", pngBytes, transition) } catch (_: Exception) {}
+            }.invokeOnCompletion { onDone() }
         }
 
-        fun stopUiObservationSession(callback: (String) -> Unit) {
-            scope?.launch {
-                val json = try {
-                    Python.getInstance().getModule("aurora_bridge")
-                        .callAttr("stop_ui_observation_session").toString()
-                } catch (_: Exception) { "{}" }
-                withContext(Dispatchers.Main) { callback(json) }
-            }
-        }
+        fun stopUiObservationSession(callback: (String) -> Unit) =
+            callPythonString("stop_ui_observation_session", callback)
     }
 
     // ── Hardware body sensors ─────────────────────────────────────────────────
@@ -353,7 +306,7 @@ class AuroraService : Service() {
     //   motion   → movement / proprioception (is the body in motion?)
     //   light    → environment / ambient sense (how bright is the world?)
     private var sensorManager: SensorManager? = null
-    private val sensorReadings = mutableMapOf<String, Double>()
+    private val sensorReadings = ConcurrentHashMap<String, Double>()
     private var lastSensorPushMs = 0L
 
     private val hardwareSensorListener = object : SensorEventListener {
@@ -403,17 +356,12 @@ class AuroraService : Service() {
             IntentFilter(Intent.ACTION_BATTERY_CHANGED))
     }
 
-    private fun pushSensorsToPython() {
+    private fun pushSensorsToPython(bridge: PyObject) {
         if (sensorReadings.isEmpty()) return
-        scope?.launch(Dispatchers.IO) {
-            try {
-                val payload = JSONObject(sensorReadings.toMap<String, Any>()).toString()
-                Python.getInstance()
-                    .getModule("aurora_bridge")
-                    .callAttr("provide_hardware_sensors", payload)
-                Log.d(TAG, "Hardware sensors pushed: ${sensorReadings.keys}")
-            } catch (_: Exception) {}
-        }
+        try {
+            val payload = JSONObject(sensorReadings.toMap<String, Any>()).toString()
+            bridge.callAttr("provide_hardware_sensors", payload)
+        } catch (_: Exception) {}
     }
 
     // Diagnostic hardening (per Sunni: "she keeps crashing, no error, no
@@ -448,67 +396,21 @@ class AuroraService : Service() {
         }
     }
 
-    // Root cause found (per Sunni's real stack trace, finally): "Unable to
-    // create service org.aurora.app.AuroraService" -- thrown synchronously
-    // from the plain startForeground(id, notification) call below, on
-    // Android 14+ (this app targets SDK 34). That overload implicitly
-    // claims EVERY foreground service type declared in the manifest
-    // ("microphone|camera") in one shot, and Android 14 requires the
-    // corresponding runtime permission to already be *granted* at that
-    // exact moment for each type claimed -- not just requested. MainActivity.
-    // kt's configureFlutterEngine() calls startAuroraService() BEFORE
-    // requestRuntimePermissions(), so on any fresh install (nothing granted
-    // yet -- e.g. every time this CI's ephemeral debug keystore changes,
-    // forcing a full reinstall instead of an in-place update, which resets
-    // all permission grants), this throws immediately, before Python ever
-    // gets a chance to boot. Explains the exact intermittency observed:
-    // works when mic/camera happen to already be granted from a prior
-    // install, crashes here when they don't.
-    //
-    // Fixed at the source rather than by reordering MainActivity: request
-    // only the foreground service types this process actually, currently
-    // holds permission for, via the API 29+ three-arg overload. A type
-    // this call doesn't claim is a strict subset of what the manifest
-    // declares, which Android allows -- claiming none of them (both
-    // permissions ungranted) is exactly as valid as claiming both. This is
-    // correct regardless of what order MainActivity ends up calling things
-    // in, and regardless of whether the user ever grants either permission
-    // at all.
+    // Only MainActivity owns the camera and microphone. The core service
+    // also starts at device boot, when those while-in-use grants are inactive.
     private fun startForegroundSafely() {
         val notification = buildNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            var type = 0
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                    == PackageManager.PERMISSION_GRANTED) {
-                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
-            }
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                    == PackageManager.PERMISSION_GRANTED) {
-                type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-            }
-            // Review caught a real second bug here: Android 14 throws
-            // InvalidForegroundServiceTypeException if the type passed is
-            // FOREGROUND_SERVICE_TYPE_NONE (0) while the manifest declares
-            // non-none types -- passing 0 when neither permission is
-            // granted would have crashed in exactly the scenario this fix
-            // targets. dataSync (added to the manifest alongside
-            // microphone|camera) requires no runtime permission of its own,
-            // so it's used as the fallback instead of NONE.
-            if (type == 0) {
-                type = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-            }
-            startForeground(NOTIF_ID, notification, type)
+            startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         } else {
-            // Pre-Android 10 has no per-call type argument, and this whole
-            // "must already hold the permission" enforcement is a
-            // 14+-specific behavior change -- the plain overload is safe here.
             startForeground(NOTIF_ID, notification)
         }
     }
 
     override fun onCreate() {
-        installCrashHandler()
         super.onCreate()
+        val shouldBoot = bootStarted.compareAndSet(false, true)
+        if (shouldBoot) installCrashHandler()
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
         createNotificationChannel()
@@ -516,7 +418,7 @@ class AuroraService : Service() {
 
         initHardwareSensors()
 
-        scope!!.launch { bootPython() }
+        if (shouldBoot) scope!!.launch { bootPython() }
         scope!!.launch { pollPendingReport() }
         scope!!.launch { pollAxisState() }
     }
@@ -542,11 +444,13 @@ class AuroraService : Service() {
         // that drift instead of only ever seeing a snapshot from the last
         // sendMessage() call.
         while (true) {
-            kotlinx.coroutines.delay(1_000L)
+            delay(1_000L)
+            val bridge = readyBridge ?: continue
+            if (!activityVisible && !overlayVisible) continue
             try {
-                val axisJson = Python.getInstance()
-                    .getModule("aurora_bridge")
-                    .callAttr("get_axis_state").toString()
+                val axisJson = bridge.callAttr("get_axis_state").toString()
+                latestAxisState = axisJson
+                if (!activityVisible || eventSink == null) continue
                 val axisObj = JSONObject(axisJson)
                     .put("source", "aurora")
                     .put("type", "axis_state")
@@ -557,10 +461,9 @@ class AuroraService : Service() {
             // claiming "Kotlin polls this alongside axis_state" -- it
             // never actually did. Same loop, same cadence, same
             // best-effort skip-on-failure as axis_state directly above.
+            if (!activityVisible || eventSink == null) continue
             try {
-                val faceJson = Python.getInstance()
-                    .getModule("aurora_bridge")
-                    .callAttr("get_face_state").toString()
+                val faceJson = bridge.callAttr("get_face_state").toString()
                 val faceObj = JSONObject(faceJson)
                     .put("source", "aurora")
                     .put("type", "face_state")
@@ -574,18 +477,18 @@ class AuroraService : Service() {
         // proactive expressions, and training turn events.
         // Also pushes hardware sensor bundle to Python every 30 s.
         while (true) {
-            kotlinx.coroutines.delay(3_000L)
+            delay(3_000L)
+            val bridge = readyBridge ?: continue
 
             // Hardware body push — every 30 s so Python self-model stays current.
             val nowMs = System.currentTimeMillis()
             if (nowMs - lastSensorPushMs >= 30_000L) {
                 lastSensorPushMs = nowMs
-                pushSensorsToPython()
+                pushSensorsToPython(bridge)
             }
 
+            if (eventSink == null) continue
             try {
-                val bridge = Python.getInstance().getModule("aurora_bridge")
-
                 val report = bridge.callAttr("get_pending_report").toString()
                 if (report.isNotBlank()) {
                     withContext(Dispatchers.Main) {
@@ -800,10 +703,13 @@ class AuroraService : Service() {
                 jsonBuilder.put("previous_crash", previousCrash)
             }
             val json = jsonBuilder.toString()
+            if (!isError) readyBridge = bridge
             bootEvent = json
             try { stageMarkerFile().delete() } catch (_: Throwable) {}
             withContext(Dispatchers.Main) { eventSink?.success(json) }
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             // Throwable, not Exception -- an OutOfMemoryError or
             // StackOverflowError partway through boot must still reach

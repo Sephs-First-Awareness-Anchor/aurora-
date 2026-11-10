@@ -90,23 +90,27 @@ class _HubScreenState extends State<HubScreen> {
   String _gauntletStage   = '';
   List<Map<String, dynamic>> _gauntletLog = [];
   Timer? _gauntletTimer;
+  bool _gauntletRefreshInFlight = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.active) _refresh();
-    // Diagnostics are observation, not cognition. Sampling every four
-    // seconds previously queued four independent Python calls regardless
-    // of what Aurora was doing. Do not create overlapping refreshes.
-    _timer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (widget.active) _refresh();
-    });
+    _syncPolling();
   }
 
   @override
   void didUpdateWidget(covariant HubScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!oldWidget.active && widget.active) _refresh();
+    if (oldWidget.active != widget.active) _syncPolling();
+  }
+
+  void _syncPolling() {
+    _timer?.cancel();
+    _gauntletTimer?.cancel();
+    if (!widget.active) return;
+    _refresh();
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
+    if (_gauntletRunning) _startGauntletPolling();
   }
 
   @override
@@ -121,12 +125,15 @@ class _HubScreenState extends State<HubScreen> {
     _refreshInFlight = true;
     try {
       final stats = await AuroraBridge.getCognitiveStats();
+      if (!mounted || !widget.active) return;
       final roomRaw = await AuroraBridge.getRoomState();
+      if (!mounted || !widget.active) return;
       final roomJson = roomRaw['raw'] as String? ?? '{}';
       final room = jsonDecode(roomJson) as Map<String, dynamic>;
       final habitatReport = await HabitatBridge.integrityReport();
+      if (!mounted || !widget.active) return;
       final turnDiagnostics = await AuroraBridge.getLiveTurnDiagnostics();
-      if (mounted) {
+      if (mounted && widget.active) {
         setState(() {
           _stats    = stats;
           _room     = room;
@@ -197,10 +204,12 @@ class _HubScreenState extends State<HubScreen> {
   }
 
   Future<void> _refreshGauntlet() async {
+    if (!mounted || !widget.active || _gauntletRefreshInFlight) return;
+    _gauntletRefreshInFlight = true;
     try {
       final raw = await AuroraBridge.getGauntletStatus();
       final data = jsonDecode(raw) as Map<String, dynamic>;
-      if (!mounted) return;
+      if (!mounted || !widget.active) return;
       setState(() {
         _gauntletRunning = data['running'] as bool? ?? false;
         _gauntletStage   = data['stage']   as String? ?? '';
@@ -212,11 +221,16 @@ class _HubScreenState extends State<HubScreen> {
         _gauntletTimer?.cancel();
         _gauntletTimer = null;
       }
-    } catch (_) {}
+    } catch (_) {
+      // The next poll can retry.
+    } finally {
+      _gauntletRefreshInFlight = false;
+    }
   }
 
   void _startGauntletPolling() {
     _gauntletTimer?.cancel();
+    if (!widget.active) return;
     _gauntletTimer = Timer.periodic(
       const Duration(seconds: 2),
       (_) => _refreshGauntlet(),

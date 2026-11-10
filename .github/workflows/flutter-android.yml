@@ -11,10 +11,20 @@ on:
       - 'aurora_internal/**'
       - 'aurora_support_stack.py'
       - 'foundational_contract.py'
+      - '.github/workflows/flutter-android.yml'
+  pull_request:
+    paths:
+      - 'flutter_app/android/**'
+      - 'flutter_app/lib/**'
+      - 'flutter_app/pubspec.yaml'
+      - '*.py'
+      - 'aurora_internal/**'
+      - '.github/workflows/flutter-android.yml'
   workflow_dispatch:
 
 jobs:
   build:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -95,7 +105,15 @@ jobs:
       - name: List output for verification
         run: ls -lh *.apk
 
+      - name: Upload Android test APK
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aurora-Android-Test
+          path: aurora-release.apk
+
       - name: Create GitHub Release
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}

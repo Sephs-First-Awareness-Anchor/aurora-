@@ -363,6 +363,45 @@ def test_failed_processing_backs_off_then_retries_without_losing_message(tmp_pat
     assert not messenger.status()["failed_reads"]
 
 
+def test_failed_first_message_cannot_pin_later_pages_after_restart(tmp_path, monkeypatch):
+    class PagedPraxis(FakePraxis):
+        def __call__(self, method, path, payload):
+            result = super().__call__(method, path, payload)
+            if "messages" in result:
+                limit = int(path.split("limit=")[1])
+                result["messages"] = result["messages"][:limit]
+            return result
+
+    praxis = PagedPraxis([msg(1, "temporarily fails")] + [
+        msg(seq, f"observation {seq}", pid="gemini", name="Gemini")
+        for seq in range(2, 22)
+    ])
+    fail = True
+    calls = []
+
+    def read(message):
+        calls.append(message["seq"])
+        if fail and message["seq"] == 1:
+            raise RuntimeError("temporary failure")
+        return {"seq": message["seq"]}
+
+    first = M.PraxisMessenger({}, state_dir=str(tmp_path), http=praxis)
+    first.handle_message = read
+    assert first.pull_once() == [{"seq": 20}]
+    assert first.cursor == 0
+
+    restarted = M.PraxisMessenger({}, state_dir=str(tmp_path), http=praxis)
+    restarted.handle_message = read
+    assert restarted.pull_once() == [{"seq": 21}]
+    assert calls == [1, 20, 21]
+    assert restarted.cursor == 0
+
+    fail = False
+    monkeypatch.setattr(M, "REENTRY_AFTER_S", 0)
+    assert restarted.pull_once() == [{"seq": 1}]
+    assert restarted.cursor == 21
+
+
 def test_send_failure_persists_outbox_and_retries_without_rethinking(tmp_path, monkeypatch):
     class FlakyPraxis(FakePraxis):
         attempts = 0

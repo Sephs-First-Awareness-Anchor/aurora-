@@ -283,7 +283,7 @@ def test_on_surface_ready_defaults_to_none_for_every_existing_caller():
     new kwarg must see byte-for-byte identical behavior -- confirmed here
     by construction (default value), not merely assumed."""
     import inspect
-    sig_outer = inspect.signature(aurora.process_external_user_turn)
+    sig_outer = inspect.signature(aurora._process_external_user_turn_impl)
     assert sig_outer.parameters["on_surface_ready"].default is None
     sig_inner = inspect.signature(aurora._run_live_response_turn)
     assert sig_inner.parameters["on_surface_ready"].default is None

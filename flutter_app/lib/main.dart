@@ -34,8 +34,29 @@ class _AppShell extends StatefulWidget {
   State<_AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<_AppShell> {
+class _AppShellState extends State<_AppShell> with WidgetsBindingObserver {
   int _tab = 0;
+  bool _foreground = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = WidgetsBinding.instance.lifecycleState;
+    _foreground = state == null || state == AppLifecycleState.resumed;
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final foreground = state == AppLifecycleState.resumed;
+    if (_foreground != foreground) setState(() => _foreground = foreground);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   // Aurora Build 712, App Developmental Habitat: "Aurora | Hub" becomes
   // "Aurora | Space | Self | Hub" -- four different relationships
@@ -43,15 +64,15 @@ class _AppShellState extends State<_AppShell> {
   // not just two more screens. IndexedStack keeps all four alive so
   // Space/Self state survives tab switches without a re-fetch, same as
   // Aurora/Hub already relied on.
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D0F),
       body: IndexedStack(index: _tab, children: [
-        const HomeScreen(),
-        const SpaceScreen(),
-        const SelfScreen(),
-        HubScreen(active: _tab == 3),
+        TickerMode(enabled: _foreground && _tab == 0, child: const HomeScreen()),
+        SpaceScreen(active: _foreground && _tab == 1),
+        SelfScreen(active: _foreground && _tab == 2),
+        HubScreen(active: _foreground && _tab == 3),
       ]),
       bottomNavigationBar: NavigationBar(
         backgroundColor: const Color(0xFF111118),
