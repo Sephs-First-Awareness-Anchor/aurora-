@@ -2471,8 +2471,10 @@ class RuntimeUnderstandingContract:
         # validated must be the one Aurora gave in THIS conversation.  With
         # Sunni and several Praxis contacts talking to her, a single global
         # pending record let Gemma's message score her reply to Gemini.
+        _prof_started = time.perf_counter()
         self._activate_session_pending(session_id)
         before_state = copy.deepcopy(self.state)
+        _prof_snapshot_ms = round((time.perf_counter() - _prof_started) * 1000.0, 2)
         observation = self._derive_observation(user_text, understood)
         # Keep the application projection intact long enough to route the
         # receiver evidence back to the exact response that created it.
@@ -2607,6 +2609,8 @@ class RuntimeUnderstandingContract:
             "matched_expectation": bool(accuracy.get("matched_expectation")),
         }
         notes["contract_domains"] = contract_domains.get("domains", {})
+        _prof_derived_ms = round((time.perf_counter() - _prof_started) * 1000.0, 2)
+        _prof_genealogy_start = time.perf_counter()
         if accuracy.get("used"):
             self._record_genealogy_event(
                 systems,
@@ -2615,6 +2619,7 @@ class RuntimeUnderstandingContract:
                 after_state=self.state,
                 notes=notes,
             )
+        _prof_genealogy_ms = round((time.perf_counter() - _prof_genealogy_start) * 1000.0, 2)
 
         self._history_append(
             {
@@ -2640,6 +2645,18 @@ class RuntimeUnderstandingContract:
             }
         )
         self.save()
+        if isinstance(systems, dict):
+            systems["_last_understanding_profile"] = {
+                "snapshot_ms": _prof_snapshot_ms,
+                "derivation_including_snapshot_ms": _prof_derived_ms,
+                "genealogy_ms": _prof_genealogy_ms,
+                "history_and_save_ms": round(
+                    (time.perf_counter() - _prof_genealogy_start) * 1000.0
+                    - _prof_genealogy_ms, 2
+                ),
+                "total_ms": round((time.perf_counter() - _prof_started) * 1000.0, 2),
+                "genealogy_observed": bool(accuracy.get("used")),
+            }
         return {
             "time_index": int(self.state.get("time_index", 0) or 0),
             "observation": observation,
