@@ -47,6 +47,19 @@ class _Rel:
         self.relation_type = SimpleNamespace(value=kind)
 
 
+def _said(*statements, speaker="sunni", listener="aurora"):
+    """Her web after hearing these statements: (subject, relation, object[, negated])."""
+    from aurora_internal.aurora_propositional_understanding import integrate_form
+    from aurora_internal.aurora_ontological_scaffolding import OntologicalWeb
+    web = OntologicalWeb()
+    for st in statements:
+        subj, rel, obj = st[:3]
+        integrate_form(web, {"subject": subj, "relation": rel, "obj": obj, "negated": bool(st[3:] and st[3])},
+                       heard="", speaker=speaker, listener=listener,
+                       profile={"X": 0.2, "T": 0.2, "N": 0.2, "B": 0.2, "A": 0.2})
+    return web
+
+
 def _web(*rels, roles=None):
     nodes, by_source, relations = {}, {}, {}
     for i, r in enumerate(rels):
@@ -108,58 +121,74 @@ def test_no_live_abilities_means_no_preference():
 
 # -- the WHAT comes from her systems, the HOW shapes it ---------------------------
 
-def test_agency_then_affect(tmp_path):
-    abil = _abilities(_ability("N:A", "N", "operator_action:operator_on_a", "operator_action:operator_on_n",
-                               "complexity_axes:3", "complexity_slots:4", "generation_role:ADJACENT"))
-    text, rec = C.compose(_systems(_engine(tmp_path), abil, form=RIG), HEARD)
-    assert text == "I want to start with the rig test, and I am curious."
-    assert [c["system"] for c in rec["clauses"]] == ["communication", "affect"]
+SAY_N = ("operator_action:operator_on_a", "operator_action:operator_on_n",
+         "complexity_axes:3", "complexity_slots:4", "generation_role:ADJACENT")
 
 
-def test_existence_operator_voices_her_knowledge_instead(tmp_path):
-    web = _web(_Rel("rig", "has_a", "inverter"))
-    abil = _abilities(_ability("X:G", "X", "operator_action:operator_on_a", "operator_action:operator_on_x",
-                               "purpose_lane:admissibility_grounding", "complexity_axes:3",
-                               "complexity_slots:4", "generation_role:BRIDGE"))
-    text, rec = C.compose(_systems(_engine(tmp_path), abil, form=RIG, salient=["rig", "test"], web=web), HEARD)
-    assert text == "I want to start with the rig test, so rig has a inverter."
-    assert rec["clauses"][1]["system"] == "knowledge"
+def test_agency_then_what_was_said(tmp_path):
+    web = _said(("the inverter", "overheats", "the cables"))
+    abil = _abilities(_ability("N:A", "N", *SAY_N))
+    text, rec = C.compose(_systems(_engine(tmp_path), abil, form=RIG, salient=["inverter"], web=web), HEARD)
+    assert text == "I want to start with the rig test, and inverter overheats cables."
+    assert [c["system"] for c in rec["clauses"]] == ["communication", "knowledge"]
+
+
+def test_no_feeling_frame_and_no_relation_labels(tmp_path):
+    web = _web(_Rel("rig", "has_a", "inverter"), _Rel("test", "related_to", "garage"))  # nobody said these
+    abil = _abilities(_ability("N:A", "N", *SAY_N, "operator_action:operator_on_x"))
+    text, rec = C.compose(_systems(_engine(tmp_path), abil, form=RIG, salient=["rig", "test"], web=web,
+                                   tone="curious"), HEARD)
+    assert "curious" not in text and "related" not in text and "has a" not in text
+    assert text == "" and rec["why"] == "echo"      # only the speaker's own words were left: silence
+
+
+def test_choosing_follows_what_was_said_about_an_option(tmp_path):
+    web = _said(("the battery", "overheats", "the inverter"))
+    abil = _abilities(_ability("N:A", "N", *SAY_N, "operator_action:operator_on_b"))
+    text, _ = C.compose(_systems(_engine(tmp_path), abil, form=RIG, salient=["battery"], web=web), HEARD)
+    assert text == "I want the battery layout, and battery overheats inverter."
+
+
+def test_she_says_who_holds_it(tmp_path):
+    web = _said(("I", "love", "old soul records"))
+    abil = _abilities(_ability("X:G", "X", "operator_action:operator_on_x", "complexity_axes:2",
+                               "complexity_slots:4", "generation_role:PRIMARY"))
+    form = {"subject": "you", "relation": "think", "obj": "about records", "question": True}
+    text, _ = C.compose(_systems(_engine(tmp_path), abil, form=form, salient=["records"], web=web),
+                        "What do you think about records?", session_id="live")
+    assert text == "You love records."
+
+
+def test_a_denial_is_said_as_a_denial_and_contrasts(tmp_path):
+    web = _said(("the battery", "overheats", "the inverter", True), ("the battery", "overheats", "the inverter", True))
+    abil = _abilities(_ability("B:S", "B", "operator_action:operator_on_a", "operator_action:operator_on_b",
+                               "complexity_axes:3", "complexity_slots:4", "generation_role:SHEAR"))
+    form = dict(RIG, alternatives=[])
+    text, _ = C.compose(_systems(_engine(tmp_path), abil, form=form, salient=["battery"], web=web), HEARD)
+    assert text == "I want to start with the rig test, but battery does not overheat inverter."
 
 
 def test_distinction_chooses_the_option_she_knows_more_about(tmp_path):
-    web = _web(_Rel("battery", "part_of", "rig"), _Rel("layout", "related_to", "wiring", 0.9))
+    web = _said(("the layout", "feeds", "the wiring"))
     abil = _abilities(_ability("B:D", "B", "operator_action:operator_on_b", "operator_action:operator_on_a",
                                "purpose_lane:distinction_branching", "complexity_axes:3",
                                "complexity_slots:4", "generation_role:SHEAR"))
     text, rec = C.compose(_systems(_engine(tmp_path), abil, form=RIG, web=web), HEARD)
-    # "battery part_of rig" is not new to the speaker (they said "rig");
-    # "layout related_to wiring" is hers -- so the layout is what she knows more about.
     assert text.startswith("I want the battery layout")
     assert rec["clauses"][0]["role_sequence"] == ["agent", "action", "determiner", "object"]
 
 
-def test_contrast_she_knows_joins_with_but(tmp_path):
-    web = _web(_Rel("test", "opposite_of", "guess"))
-    abil = _abilities(_ability("B:S", "B", "operator_action:operator_on_a", "operator_action:operator_on_b",
-                               "complexity_axes:3", "complexity_slots:3", "generation_role:SHEAR"))
-    form = dict(RIG, alternatives=[])
-    text, _ = C.compose(_systems(_engine(tmp_path), abil, form=form, salient=["test"], web=web), HEARD)
-    assert text == "I want to start with the rig, but test is opposite of guess."   # 3 slots: shorter object
-
-
 def test_slots_from_abilities_limit_which_motifs_may_carry_a_clause(tmp_path):
-    eng = _engine(tmp_path, shapes=[(R.AGENT, R.ACTION, R.OBJECT, R.DESCRIPTOR), (R.AGENT, R.ACTION, R.DESCRIPTOR)])
-    wide = _abilities(_ability("A:W", "A", "operator_action:operator_on_a", "operator_action:operator_on_t",
-                               "operator_action:operator_on_n",
-                               "complexity_axes:3", "complexity_slots:4", "generation_role:ADJACENT"))
-    narrow = _abilities(_ability("A:N", "A", "operator_action:operator_on_a", "operator_action:operator_on_t",
-                                 "operator_action:operator_on_n",
-                                 "complexity_axes:3", "complexity_slots:3", "generation_role:ADJACENT"))
-    text, _ = C.compose(_systems(eng, wide, form=RIG, time_ref="tonight"), HEARD)
-    assert text == "I want to start with the rig test tonight, and I am curious."
-    text, rec = C.compose(_systems(eng, narrow, form=RIG, time_ref="tonight"), HEARD)
-    # 3 slots: no four-role shape may carry the stance; only her affect clause fits
-    assert [c["system"] for c in rec["clauses"]] == ["affect"]
+    web = _said(("the inverter", "overheats", "the cables"))
+    eng = _engine(tmp_path, shapes=[(R.AGENT, R.ACTION, R.OBJECT, R.DESCRIPTOR), (R.AGENT, R.ACTION, R.OBJECT)])
+    spec = ("operator_action:operator_on_a", "operator_action:operator_on_t", "operator_action:operator_on_n",
+            "complexity_axes:3", "generation_role:ADJACENT")
+    wide = _abilities(_ability("A:W", "A", *spec, "complexity_slots:4"))
+    narrow = _abilities(_ability("A:N", "A", *spec, "complexity_slots:3"))
+    text, _ = C.compose(_systems(eng, wide, form=RIG, salient=["inverter"], web=web, time_ref="tonight"), HEARD)
+    assert text == "I want to start with the rig test tonight, and inverter overheats cables."
+    _, rec = C.compose(_systems(eng, narrow, form=RIG, salient=["inverter"], web=web, time_ref="tonight"), HEARD)
+    assert all("tonight" not in c["text"] for c in rec["clauses"])     # no four-role shape fits 3 slots
 
 
 def test_promoted_motifs_come_first(tmp_path):
@@ -172,18 +201,30 @@ def test_promoted_motifs_come_first(tmp_path):
     assert rec["why"] == "echo"           # all of it was the speaker's own words: silence
 
 
+def test_time_qualifies_what_she_said_she_would_do_not_her_knowledge(tmp_path):
+    web = _said(("the rig", "powers", "the inverter"))
+    abil = _abilities(_ability("X:T", "X", "operator_action:operator_on_x", "operator_action:operator_on_t",
+                               "complexity_axes:2", "complexity_slots:4", "generation_role:PRIMARY"))
+    form = {"subject": "the rig", "relation": "", "obj": ""}
+    _, rec = C.compose(_systems(_engine(tmp_path), abil, form=form, salient=["rig"], web=web, time_ref="tonight"),
+                       "the rig tonight?")
+    assert all("tonight" not in c["text"] for c in rec.get("clauses") or [])
+
+
+def test_a_word_that_is_no_verb_to_her_is_not_her_act(tmp_path):
+    form = {"subject": "you", "relation": "witch", "obj": "for the tattoo", "question": True}
+    abil = _abilities(_ability("A:P", "A", "operator_action:operator_on_a", "complexity_axes:2",
+                               "complexity_slots:4", "generation_role:PRIMARY"))
+    _, rec = C.compose(_systems(_engine(tmp_path), abil, form=form),
+                       "Which witch would you pick for the tattoo?")
+    assert not rec["contributions"].get("stance")
+
+
 def test_echo_alone_is_silence(tmp_path):
     abil = _abilities(_ability("A:P", "A", "operator_action:operator_on_a", "complexity_axes:2",
                                "complexity_slots:4", "generation_role:PRIMARY"))
     text, rec = C.compose(_systems(_engine(tmp_path), abil, form=RIG, tone=""), HEARD)
     assert text == "" and rec["why"] == "echo"
-
-
-def test_internal_labels_never_spoken(tmp_path):
-    abil = _abilities(_ability("N:E", "N", "operator_action:operator_on_n", "complexity_axes:2",
-                               "complexity_slots:3", "generation_role:PRIMARY"))
-    text, rec = C.compose(_systems(_engine(tmp_path), abil, form=RIG, tone="explain"), HEARD)
-    assert "explain" not in text.lower()
 
 
 # -- her filler: reference words stand in for entities only ------------------------
@@ -203,13 +244,13 @@ def test_reference_anchor_still_resolves_an_entity():
 # -- the gate ----------------------------------------------------------------------
 
 def test_gate_speaks_the_confluence_and_traces_her_motif(tmp_path):
-    abil = _abilities(_ability("N:A", "N", "operator_action:operator_on_a", "operator_action:operator_on_n",
-                               "complexity_axes:3", "complexity_slots:4", "generation_role:ADJACENT"))
-    systems = _systems(_engine(tmp_path), abil, form=RIG)
+    web = _said(("the inverter", "overheats", "the cables"))
+    abil = _abilities(_ability("N:A", "N", *SAY_N))
+    systems = _systems(_engine(tmp_path), abil, form=RIG, salient=["inverter"], web=web)
     resp = SimpleNamespace(content="Here is a scripted thing.", src="constraint_seek", emotional_tone="curious")
     out = VG.apply_voice_gate(systems, resp, HEARD, session_id="t")
     assert out.src == "confluence"
-    assert out.content == "I want to start with the rig test, and I am curious."
+    assert out.content == "I want to start with the rig test, and inverter overheats cables."
     assert systems["_last_voice_gate"]["outcome"] == "confluence"
     assert systems["_last_voice_gate"]["abilities"] == ["N:A"]
     trace = systems["_last_grammar_trace"]
@@ -225,51 +266,36 @@ def test_gate_without_grammar_engine_falls_back(tmp_path):
     assert systems["_last_confluence"]["why"] == "no_grammar_engine"
 
 
-def test_affect_clause_never_loses_the_quality_it_carries(tmp_path):
-    eng = _engine(tmp_path, shapes=[(R.AGENT, R.ACTION), (R.AGENT, R.ACTION, R.OBJECT)])
-    abil = _abilities(_ability("N:E", "N", "operator_action:operator_on_a", "operator_action:operator_on_n",
-                               "complexity_axes:3", "complexity_slots:4", "generation_role:ADJACENT"))
-    text, rec = C.compose(_systems(eng, abil, form=RIG), HEARD)
-    assert "I am," not in text and not text.endswith("I am.")
-    assert [c["system"] for c in rec["clauses"]] == ["communication"]
-
-
-def test_function_words_are_not_things_she_relates(tmp_path):
-    web = _web(_Rel("already", "related_to", "connection"), _Rel("rig", "related_to", "both"),
-               _Rel("rig", "causes", "heat", 0.6))
-    abil = _abilities(_ability("X:G", "X", "operator_action:operator_on_a", "operator_action:operator_on_x",
-                               "complexity_axes:3", "complexity_slots:4", "generation_role:BRIDGE"))
-    text, rec = C.compose(_systems(_engine(tmp_path), abil, form=RIG, salient=["already", "rig"], web=web), HEARD)
-    assert text == "I want to start with the rig test, so rig causes heat."
-
-
-def test_typed_knowledge_outranks_words_that_merely_occurred_together():
-    web = _web(_Rel("rig", "related_to", "garage", 0.9), _Rel("rig", "has_a", "inverter", 0.6))
-    web.relations["r0"].source_of_knowledge = "co-occurrence"
-    known = C.knowledge({"oets": SimpleNamespace(web=web)}, ["rig"], "the rig", reach=1)
-    assert [k["target"] for k in known] == ["inverter", "garage"]
-
-
-def test_time_qualifies_what_she_said_she_would_do_not_her_knowledge(tmp_path):
-    web = _web(_Rel("rig", "has_a", "inverter"))
-    abil = _abilities(_ability("X:T", "X", "operator_action:operator_on_x", "operator_action:operator_on_t",
-                               "complexity_axes:2", "complexity_slots:4", "generation_role:PRIMARY"))
-    form = {"subject": "the rig", "relation": "", "obj": ""}
-    _, rec = C.compose(_systems(_engine(tmp_path), abil, form=form, salient=["rig"], web=web, time_ref="tonight"),
-                       "the rig tonight?")
-    assert all("tonight" not in c["text"] for c in rec.get("clauses") or [])
-
-
-def test_a_word_that_is_no_verb_to_her_is_not_her_act(tmp_path):
-    form = {"subject": "you", "relation": "witch", "obj": "for the tattoo", "question": True}
-    abil = _abilities(_ability("A:P", "A", "operator_action:operator_on_a", "complexity_axes:2",
-                               "complexity_slots:4", "generation_role:PRIMARY"))
-    _, rec = C.compose(_systems(_engine(tmp_path), abil, form=form),
-                       "Which witch would you pick for the tattoo?")
-    assert not rec["contributions"].get("stance")
-
-
 def test_what_was_done_in_the_sentence_is_not_a_thing_she_relates():
-    web = _web(_Rel("know", "related_to", "claims"), _Rel("meaning", "is_a", "relation"))
-    known = C.knowledge({"oets": SimpleNamespace(web=web)}, ["know", "meaning"], "I know the meaning", reach=1)
-    assert [k["source"] for k in known] == ["meaning"]
+    assert "know" in C._acts_in("I know the meaning")
+
+
+def test_what_she_voiced_rests_before_it_is_voiced_again(tmp_path):
+    web = _said(("the inverter", "overheats", "the cables"))
+    abil = _abilities(_ability("N:A", "N", *SAY_N))
+    systems = _systems(_engine(tmp_path), abil, form=RIG, salient=["inverter"], web=web)
+    first, _ = C.compose(systems, HEARD)
+    assert first.endswith("inverter overheats cables.")
+    again, rec = C.compose(systems, HEARD)
+    assert again == "" and rec["why"] == "echo"          # the statement rests; only the speaker's words remain
+    salient = systems["_last_pipeline_state"]["salient_concepts"]
+    systems["_last_pipeline_state"]["salient_concepts"] = []
+    for _ in range(C.REST_TURNS):
+        C.compose(systems, "something else entirely")
+    systems["_last_pipeline_state"]["salient_concepts"] = salient
+    assert C.compose(systems, HEARD)[0] == first
+
+
+def test_the_other_speakers_words_turn_over_with_perspective():
+    assert C._phrase("what I mean", limit=3, to_her=True) == "what you mean"
+    assert C._phrase("your rig", limit=3, to_her=True) == "my rig"
+
+
+def test_a_modal_said_is_kept():
+    from aurora_internal.aurora_propositional_understanding import lexicalize_assertion
+    web = _said()
+    from aurora_internal.aurora_propositional_understanding import integrate_form
+    integrate_form(web, {"subject": "the mechanism", "relation": "slot", "obj": "the engine", "modality": "could"},
+                   heard="", speaker="sunni", listener="aurora", profile={"X": 1})
+    rel = next(iter(web.relations.values()))
+    assert lexicalize_assertion(rel, speaker_now="sunni", self_now="aurora")["action"] == "could slot"

@@ -11764,6 +11764,22 @@ def get_cognitive_stats() -> str:
                                          f"{len(_cho.get('promoted') or [])} promoted by her") if _cho else ""
             stats["clone_patterns"] = (f"{int(_chu.get('added', 0) or 0)} new · {int(_chu.get('joined', 0) or 0)} joined · "
                                        f"words {int(_chc.get('added', 0) or 0)}+{int(_chc.get('joined', 0) or 0)}") if _chu else ""
+            # FIX-A113/A115: sentence shapes and what clones heard asserted.
+            _chm, _chq, _chk = (dict(_chr.get("motifs") or {}), dict(_chr.get("propositions") or {}),
+                                dict(_chr.get("concepts") or {}))
+            stats["clone_understanding"] = (
+                f"{int(_chq.get('absorbed', 0) or 0)} statements · {int(_chk.get('placed', 0) or 0)} concepts placed · "
+                f"{int(_chm.get('absorbed', 0) or 0)} shapes ({int(_chm.get('promoted', 0) or 0)} promoted)"
+            ) if (_chm or _chq or _chk) else ""
+            try:
+                from aurora_internal.aurora_confluence import _find_web as _uw_find
+                _uw = _uw_find(_systems) if _systems else None
+                stats["learn_statements"] = sum(1 for _r in dict(getattr(_uw, "relations", {}) or {}).values()
+                                                if getattr(_r, "assertion", None))
+                stats["learn_concepts_placed"] = sum(1 for _nd in dict(getattr(_uw, "nodes", {}) or {}).values()
+                                                     if int(getattr(_nd, "axis_samples", 0) or 0) > 0)
+            except Exception:
+                stats["learn_statements"], stats["learn_concepts_placed"] = 0, 0
             _lg = _systems.get("lexical_grounding") if _systems else None
             _lg_s = _lg.status() if _lg is not None and hasattr(_lg, "status") else {}
             stats["learn_lex_trials"] = int(_lg_s.get("trial_count", 0) or 0)

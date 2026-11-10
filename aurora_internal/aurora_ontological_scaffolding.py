@@ -269,6 +269,11 @@ class SemanticRelation:
     # point: a gap in understanding shows up as a pattern across many
     # different experiences, not as one bad relation.
     selection_signature: str = ""
+    # FIX-A115 (Sunni & Cael): what was actually SAID along this relation --
+    # predicates as asserted (counts, denials, modalities), who asserted them,
+    # when, and the X/T/N/B/A profile of what the statements meant.  Empty
+    # for relations nobody asserted (co-occurrence, seeds, inference).
+    assertion: Dict[str, Any] = field(default_factory=dict)
 
     def depth_contribution(self) -> float:
         """How much this relation contributes to ontological depth."""
@@ -384,6 +389,12 @@ class SemanticNode:
 
     # Non-computational ID (for alignment)
     noncomp_id: Optional[str] = None
+
+    # FIX-A115 (Sunni & Cael): where this concept sits in her own constraint
+    # space -- the running mean of the X/T/N/B/A meaning of every statement it
+    # lived in.  Empty until she has heard it in a statement.
+    axis_profile: Dict[str, float] = field(default_factory=dict)
+    axis_samples: int = 0
 
     # Learning history
     times_encountered: int = 0

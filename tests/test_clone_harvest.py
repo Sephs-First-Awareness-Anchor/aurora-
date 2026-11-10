@@ -242,3 +242,101 @@ def test_motif_evidence_alone_does_not_promote_a_thin_shape(tmp_path):
     eng._lineage._motifs.clear()
     out = eng.absorb_clone_motifs([{"seq": ["agent", "action"], "s": 9, "f": 0, "ctx": ["only"]}])
     assert out == {"absorbed": 1, "promoted": 0, "demoted": 0}       # one context: not composable yet
+
+
+def _said_web(*statements):
+    from aurora_internal.aurora_ontological_scaffolding import OntologicalWeb
+    from aurora_internal.aurora_propositional_understanding import integrate_form
+    web = OntologicalWeb()
+    for subj, rel, obj in statements:
+        integrate_form(web, {"subject": subj, "relation": rel, "obj": obj}, heard="", speaker="sunni",
+                       listener="aurora", profile={"X": 0.0, "T": 1.0, "N": 0.0, "B": 0.0, "A": 0.0})
+    return web
+
+
+def test_propositions_and_concept_positions_travel_from_clones(tmp_path):
+    """FIX-A115: what clones heard asserted, and where concepts sat, reaches her."""
+    from types import SimpleNamespace
+    from aurora_internal.aurora_ontological_scaffolding import OntologicalWeb
+    clone_web = _said_web(("I", "love", "records"))
+    start = CH.organ_snapshot({"oets": SimpleNamespace(web=OntologicalWeb())})
+    end = CH.organ_snapshot({"oets": SimpleNamespace(web=_said_web(("I", "love", "records"), ("I", "love", "records")))})
+    yd = {**y("c1", eps=["E1"]), "propositions": CH.proposition_deltas(start, end),
+          "concepts": CH.concept_deltas(start, end)}
+    assert yd["propositions"][0]["predicates"]["love"]["n"] == 2 and yd["propositions"][0]["by"] == {"sunni": 2}
+    harvest = CH.merge_yields([yd, {**yd, "clone_id": "c2", "episodes": ["E2"]}])
+    assert harvest["propositions"][0]["n"] == 4 and harvest["concepts"][0]["n"] == 4
+    hp = tmp_path / "h.jsonl.gz"
+    CH.write_harvest(str(hp), harvest)
+
+    her = OntologicalWeb()
+    her.add_node("records", "noun")
+    state = tmp_path / "state"
+    out = CH.absorb_harvest({"oets": SimpleNamespace(web=her), "state_dir": str(state)},
+                            harvest_path=str(hp), state_dir=str(state))
+    assert out["results"]["propositions"] == {"absorbed": 1, "created": 1}
+    rel = [r for r in her.relations.values() if r.source_word == "sunni"][0]
+    assert rel.assertion["predicates"]["love"]["n"] == 4 and rel.assertion["profile"]["T"] == 1.0
+    assert her.nodes["records"].axis_samples == 4 and her.nodes["records"].axis_profile["T"] == 1.0
+    del clone_web
+
+
+def test_each_run_is_a_segment_and_nothing_is_lost_before_the_phone_absorbs_it(tmp_path):
+    hp = tmp_path / "h.jsonl.gz"
+    run1 = CH.merge_yields([y("c1", [path(LAND_A)], eps=["E1"])])
+    CH.write_harvest(str(hp), run1)
+    state_a = tmp_path / "phone_a"                      # booted on run 1
+    sys_a = {"reasoning_paths": ReasoningPaths(state_dir=str(state_a)), "state_dir": str(state_a)}
+    assert CH.absorb_harvest(sys_a, harvest_path=str(hp), state_dir=str(state_a))["status"] == "absorbed"
+
+    run2 = CH.merge_yields([y("c2", [path(LAND_A)], eps=["E2"])], lived_before=["E1"])
+    CH.write_harvest(str(hp), run2)
+    assert [h["harvest_id"] for h in CH.read_headers(str(hp))] == [run1["harvest_id"], run2["harvest_id"]]
+    assert CH.read_header(str(hp))["lived_episodes"] == ["E1", "E2"]
+    CH.write_harvest(str(hp), run2)                     # the same run written twice stays one segment
+    assert len(CH.read_headers(str(hp))) == 2
+
+    out_a = CH.absorb_harvest(sys_a, harvest_path=str(hp), state_dir=str(state_a))
+    assert out_a["status"] == "absorbed" and out_a["harvest_id"] == run2["harvest_id"]
+    assert [x["status"] for x in out_a["segments"]] == ["already_absorbed", "absorbed"]
+
+    state_b = tmp_path / "phone_b"                      # never booted on run 1
+    sys_b = {"reasoning_paths": ReasoningPaths(state_dir=str(state_b)), "state_dir": str(state_b)}
+    out_b = CH.absorb_harvest(sys_b, harvest_path=str(hp), state_dir=str(state_b))
+    assert [x["status"] for x in out_b["segments"]] == ["absorbed", "absorbed"]
+    assert CH.absorbed_episodes(str(state_b)) == {"E1", "E2"}
+
+
+def test_a_relived_pass_for_new_organs_counts_nothing_twice(tmp_path):
+    """FIX-A115: history first lived before motifs/propositions/concepts
+    existed is lived again for those organs only; paths are not re-reported,
+    and the phone takes the new organs for conversations it already lived."""
+    from aurora_grammar_engine import GrammarEngine
+    hp = tmp_path / "h.jsonl.gz"
+    legacy = CH.merge_yields([y("c1", [path(LAND_A)], eps=["E1", "E2"])])
+    legacy.pop("organs")                                 # an old harvest names no organs
+    CH.write_harvest(str(hp), legacy)
+    head = CH.read_header(str(hp))
+    assert CH.lived_for(head, ("paths",)) == {"E1", "E2"}
+    assert CH.lived_for(head, ("motifs", "propositions", "concepts")) == set()
+
+    relived = CH.clone_yield({}, {"paths": {"p": {"weight": 0.5, "shape": "s", "centroid": {}, "landings": {}}},
+                                  "motifs": {"agent_action": {"seq": ["agent", "action"], "s": 3, "f": 0,
+                                                              "ctx": ["a", "b", "c"]}}},
+                             clone_id="c2", episodes=["E1"], counters={}, organs=("motifs",))
+    assert relived["paths"] == [] and relived["motifs"][0]["s"] == 3
+    run = CH.merge_yields([relived], lived_before=["E1", "E2"])
+    assert run["organs"] == ["motifs"]
+    CH.write_harvest(str(hp), run)
+    assert CH.lived_for(CH.read_header(str(hp)), ("motifs",)) == {"E1"}
+
+    state = tmp_path / "phone"
+    phone = {"reasoning_paths": ReasoningPaths(state_dir=str(state)), "grammar_engine": GrammarEngine(state_dir=str(state)),
+             "state_dir": str(state)}
+    phone["grammar_engine"]._lineage._motifs.clear()
+    CH.write_harvest(str(tmp_path / "only_legacy.jsonl.gz"), legacy)
+    CH.absorb_harvest(phone, harvest_path=str(tmp_path / "only_legacy.jsonl.gz"), state_dir=str(state))
+    out = CH.absorb_harvest(phone, harvest_path=str(hp), state_dir=str(state))
+    assert [x["status"] for x in out["segments"]] == ["already_absorbed", "absorbed"]
+    assert out["results"]["motifs"]["absorbed"] == 1 and "paths" not in out["results"] or \
+        out["results"].get("paths", {}).get("carved", 0) == 0

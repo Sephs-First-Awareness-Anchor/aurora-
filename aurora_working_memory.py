@@ -1930,6 +1930,15 @@ class WorkingMemory:
             match = re.search(pat, raw, re.IGNORECASE)
             if not match:
                 continue
+            # FIX-A114: "I didn't say my line work was rough" is a denial, not a
+            # fact; a field holding a demonstrative ("my plan that is ...") is a
+            # mis-split, not a thing the speaker owns.
+            lead = raw[:match.start()].lower()
+            lead_clause = re.split(r'[.!?;]', lead)[-1]
+            if re.search(r"\b(?:not|never|didn't|didnt|don't|dont|doesn't|wasn't|isn't|no)\b", lead_clause):
+                continue
+            if set(self._normalize_mention(match.group(1)).split()) & self._VAGUE_REFERENTS:
+                continue
             field = self._normalize_mention(match.group(1))
             value = str(match.group(2) or '').strip()
             value = re.split(r'[.?!](?:\s|$)', value, maxsplit=1)[0].strip()
@@ -2314,8 +2323,22 @@ class WorkingMemory:
         understood: dict | None = None,
         systems: Optional[Dict[str, Any]] = None,
     ) -> str:
+        """The speaker's own stated fact, when they ask about it.
+
+        FIX-A114 (Sunni, 2026-11-09 -- the repetition loop, fixed at the
+        source): this answered whenever two words of a stored field appeared
+        in what was said, so "your line work is rough." and "your plan that is
+        your thoughts on that." came back for 15+ turns of unrelated talk.
+        The speaker's fact is theirs: it is handed back only when they ask
+        about it -- a question, or "remember", naming "my <field>" (or their
+        name) -- the same rule FIX-A111 set for their words."""
         user_bucket = dict(self.stated_facts.get('user', {}) or {})
         if not user_bucket:
+            return ""
+        _t = str(user_text or '').strip().lower()
+        _asks = _t.endswith('?') or bool(re.match(r"(?:what|who|which|where|when|how|do|did|does|can|tell me|remind me)\b", _t)) \
+            or 'remember' in _t or 'recall' in _t
+        if not _asks:
             return ""
         if understood is None:
             try:
@@ -2343,6 +2366,8 @@ class WorkingMemory:
             score = 0.0
             if f"my {field_key}" in text_low:
                 score += 1.3
+            elif field_key != 'name':
+                continue                       # FIX-A114: they must name it as theirs
             field_terms = {
                 part for part in field_key.split()
                 if len(part) >= 3 and part not in self._WEAK_ANCHOR_LABELS
@@ -5332,271 +5357,98 @@ class WorkingMemory:
             return f"conflict; competing claims; {pair[0]}; {pair[1]}"
         return ""
 
+    # FIX-A114 (Sunni & Cael, 2026-11-09): how many turns a claim she
+    # answered with stays unavailable as an answer.  The coherence repair kept
+    # replacing every reply with the same stored claim for 15+ turns
+    # ("your line work is rough.", "your plan that is your thoughts on that.").
+    CLAIM_ANSWER_REST_TURNS = 3
+
     def answer_from_claims(
         self,
         user_text: str,
         understood: dict | None = None,
         systems: Optional[Dict[str, Any]] = None,
     ) -> str:
+        """A stored claim, when the question is about it -- in the claim's own
+        words, nothing else.
+
+        FIX-A114 (binding rules 1-2, fix at the source): this used to wrap the
+        claim in authored frames ("the part I meant is ...", "... which gives
+        later reasoning a stable path", "it works by linking ... so the next
+        step has a clear anchor", "both ... and ... can hold at the same time",
+        "uncertainty; resolving; ...").  Those were scripts.  Now it returns
+        only the claim itself (subject, relation, object as stored), and:
+          * the other speaker's claim is not handed back as her answer unless
+            they ask what was said (is_quote_request) or where something is
+            (their own located fact) -- same rule as FIX-A111;
+          * a claim she answered with in the last CLAIM_ANSWER_REST_TURNS turns
+            is not answered again (the repetition loop).
+        """
         if not user_text:
             return ""
-
         self.refresh_claim_conflicts(systems=systems, reason='claim_resolution_audit')
         t_low = str(user_text).lower()
-        if any(phrase in t_low for phrase in (
-            'uncertain about', 'not sure about', 'wrong about', 'was uncertain',
-        )) and self.last_uncertainty_focus:
-            return self._render_from_comprehension_intent(
-                systems,
-                core_claim=f"uncertainty; resolving; {self.last_uncertainty_focus}",
-                emotion_tone='precise',
-                certainty=0.78,
-                supporting_concepts=[self.last_uncertainty_focus],
-            )
-
-        conflict_words = ('contradict', 'conflict', 'inconsistent', 'wrong')
-        if any(word in t_low for word in conflict_words) and self.claim_conflicts:
-            pair = list((self.claim_conflicts[0] or {}).get('pair', ()))
-            if len(pair) >= 2:
-                return self._render_from_comprehension_intent(
-                    systems,
-                    core_claim=f"weighing; {pair[0]}; {pair[1]}; no alignment",
-                    emotion_tone='firm',
-                    certainty=0.9,
-                    supporting_concepts=pair[:2],
-                    constraints=['conflict'],
-                )
-            return ""
-        if any(word in t_low for word in conflict_words):
-            recent_relief = dict(self.last_conflict_relief or {})
-            relief_turn = int(recent_relief.get('turn', 0) or 0)
-            if (
-                recent_relief and
-                not self.claim_conflicts and
-                relief_turn > 0 and
-                (self.turn_count - relief_turn) <= 3
-            ):
-                active_summary = str(
-                    recent_relief.get('preferred_claim', '') or
-                    self._claim_to_text(self.last_response_anchor_claim or {})
-                ).strip()
-                core_claim = (
-                    f"that's resolved now — {active_summary}"
-                    if active_summary else
-                    "that tension resolved itself"
-                )
-                return self._render_from_comprehension_intent(
-                    systems,
-                    core_claim=core_claim,
-                    emotion_tone='precise',
-                    certainty=0.88,
-                    supporting_concepts=[active_summary] if active_summary else [],
-                    constraints=['conflict_relief'],
-                )
-            resolved = self.resolve_claims(user_text, understood)
-            candidate_claims = list(resolved.get('claims', []) or [])[:2]
-            if len(candidate_claims) >= 2:
-                left = dict(candidate_claims[0] or {})
-                right = dict(candidate_claims[1] or {})
-                if (
-                    left and right and
-                    self._subjects_match(left.get('subject', ''), right.get('subject', '')) and
-                    not self._claims_conflict(left, right)
-                ):
-                    left_summary = self._claim_to_text(left)
-                    right_summary = self._claim_to_text(right)
-                    return self._render_from_comprehension_intent(
-                        systems,
-                        core_claim=f"both {left_summary} and {right_summary} can hold at the same time",
-                        emotion_tone='precise',
-                        certainty=0.82,
-                        supporting_concepts=[left_summary, right_summary],
-                        constraints=['coexistence'],
-                    )
 
         callback_request = any(phrase in t_low for phrase in (
             'what did you mean', 'what do you mean', 'what you meant',
             'mean by that', 'what was missing', 'when you said',
         ))
+        locative_question = 'where' in t_low or 'check first' in t_low or 'look first' in t_low
+        asked_what_was_said = is_quote_request(user_text) or 'remember' in t_low
+
+        claim: Dict[str, Any] = {}
         if callback_request and self.last_response_anchor_claim:
             claim = self._copy_claim(self.last_response_anchor_claim)
-        else:
-            claim = {}
-
-        if ('where' in t_low or 'check first' in t_low or 'look first' in t_low) and not claim:
-            locative_candidates = [
-                dict(item)
-                for item in self.recent_claims
-                if str(item.get('relation', '')).startswith('located_')
-            ]
-            user_locative = [item for item in locative_candidates if item.get('source') == 'user']
-            if user_locative:
-                claim = user_locative[0]
-            elif locative_candidates:
-                claim = locative_candidates[0]
-
-        resolved = self.resolve_claims(user_text, understood)
+        if locative_question and not claim:
+            locative = [dict(item) for item in self.recent_claims
+                        if str(item.get('relation', '')).startswith('located_')]
+            user_locative = [item for item in locative if item.get('source') == 'user']
+            claim = (user_locative or locative or [{}])[0]
         if not claim:
-            _fc = resolved.get('focus_claim', {}) or {}
-            # Don't use user-source claims as Aurora's first-person memory.
-            if str(_fc.get('source', '')) != 'user':
-                claim = _fc
-        if not claim and 'where' in t_low:
-            for recent in self.recent_claims:
-                if str(recent.get('relation', '')).startswith('located_'):
-                    claim = dict(recent)
-                    break
+            resolved = self.resolve_claims(user_text, understood)
+            focus = dict(resolved.get('focus_claim', {}) or {})
+            if focus and (str(focus.get('source', '')) != 'user' or asked_what_was_said):
+                claim = focus
         if not claim:
+            return ""
+        if str(claim.get('source', '')) == 'user' and not (asked_what_was_said or locative_question):
             return ""
 
         summary = self._claim_to_text(claim)
-        relation = str(claim.get('relation', ''))
+        if not summary:
+            return ""
         subject = str(claim.get('subject', ''))
         obj = str(claim.get('object', ''))
-        proposition = {}
-        if self.proposition_substrate is not None:
-            proposition = self.proposition_substrate.node_for_claim(claim)
-        edge_summary = dict(proposition.get('edge_summary', {}) or {})
-        confidence = float(proposition.get('confidence', claim.get('confidence', 0.0)) or 0.0)
-        source = str(proposition.get('source', claim.get('source', '')) or '')
-        locative_relation = relation.startswith('located_')
-        locative_prep = relation.split('_', 1)[1] if locative_relation and '_' in relation else ''
-        copula = 'are' if self._looks_plural_subject(subject) else 'is'
-        core_claim = ""
-        tone = 'precise'
-        certainty_hint = 0.8
-        supporting = [subject, relation.replace('_', ' '), obj, summary]
-        constraints: List[str] = []
-
-        # Topic-relevance guard for the broad 'how'/'why' branches below.
-        # Those branches match any question containing the word, so without this
-        # guard they return the LAST stored claim regardless of topic -- causing
-        # meaning_momentum lock across unrelated turns.
-        # Only suppress when: claim subject/object shares NO words with the
-        # current question AND the question is not a callback/clarification.
-        _claim_content_words = set(
-            re.findall(r'[a-z]{3,}', (subject + ' ' + obj + ' ' + summary).lower())
-        ) - {'the', 'and', 'that', 'this', 'with', 'for', 'from', 'are', 'was',
-             'can', 'may', 'its', 'also', 'such', 'some', 'any', 'all', 'about'}
-        _query_content_words = set(
-            re.findall(r'[a-z]{3,}', t_low)
-        ) - {'how', 'why', 'what', 'does', 'that', 'this', 'then', 'there',
-             'tell', 'now', 'here', 'work', 'works', 'working', 'you', 'your',
-             'the', 'and', 'for', 'from', 'with', 'can', 'its', 'about'}
-        _claim_topic_relevant = (
-            bool(_claim_content_words & _query_content_words) or callback_request
-        )
-
-        if any(phrase in t_low for phrase in (
-            'what did you mean', 'what do you mean', 'what you meant',
-            'mean by that', 'what was missing', 'when you said',
-        )):
-            core_claim = f"the part I meant is {summary}"
-            tone = 'reflective'
-            certainty_hint = 0.84
-
-        elif any(phrase in t_low for phrase in (
-            'what object', 'what item', 'which object', 'which item',
-        )) and subject:
-            core_claim = f"{subject} is the object active in that thread"
-            tone = 'precise'
-            certainty_hint = 0.82
-
-        elif 'remember' in t_low or 'what did i say' in t_low or 'what did you say' in t_low:
-            # Only surface a stored claim if it's topically relevant to the query.
-            # Without this guard, any recent aurora claim leaks out for any "remember" query.
-            if _claim_topic_relevant:
-                core_claim = summary
-                tone = 'precise'
-                certainty_hint = 0.86
-
-        elif ('check first' in t_low or 'look first' in t_low) and locative_relation:
-            core_claim = f"the first place to check is {locative_prep} {obj}"
-            tone = 'firm'
-            certainty_hint = 0.84
-
-        elif 'where' in t_low and locative_relation:
-            core_claim = f"{subject} {copula} {locative_prep} {obj}"
-            tone = 'precise'
-            certainty_hint = 0.84
-
-        elif 'why' in t_low and _claim_topic_relevant:
-            if proposition and int(edge_summary.get('causal', 0)) > 0:
-                core_claim = (
-                    f"{summary} already sits inside {int(edge_summary.get('causal', 0))} causal paths"
-                )
-            elif relation in {'requires'}:
-                core_claim = f"{subject} requires {obj}, and without {obj} the chain stays disconnected"
-            elif relation in {'blocks', 'breaks', 'degrades'}:
-                core_claim = f"{subject} {relation.replace('_', ' ')} {obj}, so continuity breaks around {obj or subject}"
-            elif relation in {'anchors', 'grounds', 'tracks', 'connects_to', 'relates_to', 'wires', 'carries'}:
-                core_claim = f"{subject} {relation.replace('_', ' ')} {obj}, which gives later reasoning a stable path"
-            elif locative_relation:
-                core_claim = f"{subject} {copula} {locative_prep} {obj}, which gives you a concrete place to check first"
-            elif relation == 'is':
-                core_claim = f"{subject} is {obj}"
-            else:
-                core_claim = f"that comes down to {summary}"
-            tone = 'reflective'
-            certainty_hint = 0.82
-
-        elif 'how' in t_low and _claim_topic_relevant:
-            if proposition and int(edge_summary.get('revision', 0)) > 0:
-                core_claim = (
-                    f"{summary} stays revisable as a proposition instead of flattening into one static statement"
-                )
-            elif relation in {'connects_to', 'relates_to', 'anchors', 'grounds', 'tracks', 'wires', 'carries'}:
-                core_claim = f"it works by linking {subject} to {obj} so the next step has a clear anchor"
-            elif relation in {'requires'}:
-                core_claim = f"it works by making {obj} a dependency for {subject}"
-            elif relation in {'blocks', 'breaks', 'degrades'}:
-                core_claim = f"it works by making {obj} the failure point for {subject}"
-            elif locative_relation:
-                core_claim = f"it works by anchoring {subject} to a concrete location at {locative_prep} {obj}"
-            else:
-                # Only use summary text if it's concise (not a prior turn's full response).
-                # Long summaries > 5 words are almost certainly recycled Aurora responses.
-                _summary_str = str(summary or '')
-                _summary_words = len(_summary_str.split())
-                _summary_low = _summary_str.lower()
-                _social_starts = ('hey', 'hi ', 'hello', 'how are', 'how is',
-                                  'what\'s up', "what is up", 'greet', 'good morning',
-                                  'good afternoon', 'good evening')
-                _mech_chars = any(c in _summary_str for c in ('=', '{', '}'))
-                _is_social = any(_summary_low.startswith(s) for s in _social_starts)
-                if (_summary_words <= 5 and not _mech_chars and not _is_social
-                        and '?' not in _summary_str):
-                    core_claim = f"it works through {summary}"
-                # else: leave core_claim="" so the function returns "" instead of echoing
-            tone = 'reflective'
-            certainty_hint = 0.8
-
-        elif any(phrase in t_low for phrase in (
-            'stay connected', 'keep connected', 'stay anchored', 'keep anchored',
-        )):
-            core_claim = f"{summary} needs to stay connected through the next step"
-            tone = 'firm'
-            certainty_hint = 0.84
-
-        elif any(word in t_low for word in ('what', 'which')) and (
-            'missing' in t_low or 'that' in t_low or 'this' in t_low or 'claim' in t_low
-        ):
-            core_claim = summary
-            tone = 'precise'
-            certainty_hint = 0.8
-
-        if not core_claim:
+        claim_words = set(re.findall(r'[a-z]{3,}', (subject + ' ' + obj + ' ' + summary).lower()))
+        query_words = set(re.findall(r'[a-z]{3,}', t_low)) - {
+            'how', 'why', 'what', 'does', 'that', 'this', 'then', 'there', 'tell', 'now',
+            'here', 'you', 'your', 'the', 'and', 'for', 'from', 'with', 'can', 'its', 'about'}
+        relevant = bool(claim_words & query_words) or callback_request or locative_question
+        if not relevant:
             return ""
-        return self._render_from_comprehension_intent(
+
+        key = re.sub(r'[^a-z0-9 ]+', '', summary.lower()).strip()
+        recent = dict(getattr(self, '_claim_answer_turns', {}) or {})
+        last_turn = recent.get(key)
+        if last_turn is not None and (self.turn_count - int(last_turn)) < self.CLAIM_ANSWER_REST_TURNS:
+            return ""
+
+        rendered = self._render_from_comprehension_intent(
             systems,
-            core_claim=core_claim,
+            core_claim=summary,
             intent_type='statement',
-            emotion_tone=tone,
+            emotion_tone='precise',
             relationship_signal='neutral',
-            certainty=certainty_hint,
-            supporting_concepts=supporting,
-            constraints=constraints,
+            certainty=0.8,
+            supporting_concepts=[subject, str(claim.get('relation', '')).replace('_', ' '), obj],
+            constraints=['claim_recall'],
         )
+        if rendered:
+            recent[key] = self.turn_count
+            if len(recent) > 64:
+                recent = dict(sorted(recent.items(), key=lambda kv: kv[1])[-64:])
+            self._claim_answer_turns = recent
+        return rendered
 
     def _register_understood_mentions(self, understood: dict, source: str):
         topic = self.resolve_topic(understood)

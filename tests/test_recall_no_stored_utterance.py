@@ -115,3 +115,28 @@ def test_readdress_with_nothing_of_her_own_returns_nothing(monkeypatch):
 
     out = aurora._answer_from_session_readdress_request({"working_memory": WM()}, "go back to what I said")
     assert not out
+
+
+def test_speaker_fact_comes_back_only_when_they_ask_about_it():
+    """FIX-A114: the repetition loop -- 'your line work is rough.' answered
+    every turn that shared two words with the stored field."""
+    from aurora_working_memory import WorkingMemory
+    wm = WorkingMemory()
+    wm.note_user_owned_fact("line work", "rough", source="user")
+    wm._render_from_comprehension_intent = lambda systems, core_claim, **k: core_claim
+    assert wm.answer_from_speaker_owned_facts("Now that's clean line work, you did good work there") == ""
+    assert wm.answer_from_speaker_owned_facts("What's my line work like?") == "your line work is rough"
+
+
+def test_a_denial_or_a_demonstrative_is_not_a_fact():
+    from aurora_working_memory import WorkingMemory
+    wm = WorkingMemory()
+    assert wm.extract_user_owned_fact_assertion("I didn't say my line work was rough.") == {}
+    assert wm.extract_user_owned_fact_assertion("So my plan that is my thoughts on that") == {}
+    assert wm.extract_user_owned_fact_assertion("Actually, my line work is amazing.")["value"] == "amazing"
+
+
+def test_a_remembered_line_answers_only_what_it_is_about():
+    import aurora
+    assert not aurora._shares_content_word("rough is your line work", "What do you mean, birds like routes?")
+    assert aurora._shares_content_word("rough is your line work", "how was my line work?")

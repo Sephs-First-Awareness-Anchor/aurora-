@@ -597,7 +597,7 @@ def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
         confluent, conf_record = "", {}
         try:
             from aurora_internal.aurora_confluence import compose, put_on_grammar_trace
-            confluent, conf_record = compose(systems, heard)
+            confluent, conf_record = compose(systems, heard, session_id=channel)
             systems["_last_confluence"] = conf_record
         except Exception as exc:
             record["confluence_error"] = f"{type(exc).__name__}: {exc}"[:160]

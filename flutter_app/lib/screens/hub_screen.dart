@@ -673,6 +673,11 @@ class _HubScreenState extends State<HubScreen> {
         note('Last divergence', (_stats['learn_paths_last_divergence'] as String?) ?? ''),
       _statRow('Grammar patterns kept', '${n('learn_grammar_promoted')}',
           valueColor: n('learn_grammar_promoted') > 0 ? _green : _text),
+      // FIX-A115: who said what about what, and concepts with a place in X/T/N/B/A.
+      _statRow('Statements understood', '${n('learn_statements')}',
+          valueColor: n('learn_statements') > 0 ? _green : _text),
+      _statRow('Concepts placed', '${n('learn_concepts_placed')}',
+          valueColor: n('learn_concepts_placed') > 0 ? _green : _text),
       _statRow('Word meanings', '${n('learn_lex_promoted')} kept · ${n('learn_lex_trials')} trying'),
       _statRow('Facts by agreement', '${n('learn_corroborated')}'),
       _statRow('Contradictions found', '${n('learn_contradictions')}'),
@@ -795,6 +800,7 @@ class _HubScreenState extends State<HubScreen> {
           _statRow('Clone paths', (_stats['clone_paths'] as String?) ?? ''),
           _statRow('Clone operations', (_stats['clone_operations'] as String?) ?? ''),
           _statRow('Clone gaps', (_stats['clone_patterns'] as String?) ?? ''),
+          _statRow('Clone understanding', (_stats['clone_understanding'] as String?) ?? ''),
         ],
         // Codex review, PR #193: backfilled_through_event_index only ever
         // advances inside the one-time _backfill_lexical_grounding() catch-

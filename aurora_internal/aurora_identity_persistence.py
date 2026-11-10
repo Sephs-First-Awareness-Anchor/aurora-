@@ -546,6 +546,9 @@ class OETSPersistence:
                     "last_accessed": node.last_accessed,
                     "lineage": node.lineage,
                     "noncomp_id": node.noncomp_id,
+                    # FIX-A115: the concept's place in her constraint space
+                    "axis_profile": dict(getattr(node, "axis_profile", {}) or {}),
+                    "axis_samples": int(getattr(node, "axis_samples", 0) or 0),
                 }
 
             # Serialize relations
@@ -560,6 +563,8 @@ class OETSPersistence:
                     "confidence": rel.confidence,
                     "source_of_knowledge": rel.source_of_knowledge,
                     "timestamp": rel.timestamp,
+                    # FIX-A115: what was said along it (only when something was)
+                    **({"assertion": dict(rel.assertion)} if getattr(rel, "assertion", None) else {}),
                 }
 
             # Serialize research stats
@@ -763,6 +768,8 @@ class OETSPersistence:
                     )
                 node.primary_sense_id = ndata.get("primary_sense_id", "")
                 node.uncertain_token = bool(ndata.get("uncertain_token", False))
+                node.axis_profile = dict(ndata.get("axis_profile") or {})
+                node.axis_samples = int(ndata.get("axis_samples", 0) or 0)
 
                 web.nodes[word] = node
                 web._nodes_by_role[node.role].add(word)
@@ -795,6 +802,7 @@ class OETSPersistence:
                     confidence=rdata.get("confidence", 0.5),
                     source_of_knowledge=rdata.get("source_of_knowledge", "restored"),
                     timestamp=rdata.get("timestamp", time.time()),
+                    assertion=dict(rdata.get("assertion") or {}),
                 )
 
                 web.relations[rel_id] = relation

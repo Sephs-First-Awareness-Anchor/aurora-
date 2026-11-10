@@ -206,6 +206,7 @@ def _turn_view(systems: Mapping[str, Any], held: Mapping[str, Any]) -> Dict[str,
             "offered_path": ({"path_id": offer.get("path_id"), "weight": offer.get("weight"),
                               "resonance": offer.get("resonance")} if offer.get("path_id") else None),
             "voice_gate": str(gate.get("outcome", "") or gate.get("source", "") or ""),
+            "voice_src": str(gate.get("original_src", "") or ""),
             "unformed": {k: unformed.get(k) for k in ("status", "pattern_id", "departure", "residue") if k in unformed}}
 
 

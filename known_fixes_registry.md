@@ -11048,3 +11048,87 @@ confluence spoke 15 turns. Her web's co-occurrence knowledge is noisy
 ("Netflix is instance of minute") -- that is what she knows, said plainly.
 Seen but not touched: own_voice can loop on one line for 15+ turns
 ("your plan that is your thoughts on that."), with or without the confluence.
+
+## FIX-A114 (BINDING RULE 2) — Authored frames removed at their source; the repetition loop
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-09):** "address that reprtition issue" ... "I just see
+scripts in quotes?" ... "make the proper corrections".
+**Pattern:**
+- own_voice looped one line for 15+ turns ("your line work is rough.",
+  "your plan that is your thoughts on that."). Source: _repair_discourse_coherence
+  replaced her reply with working_memory.answer_from_claims() whenever the
+  discourse anchor was confident -- the same stored claim every turn, often the
+  OTHER speaker's own statement handed back, wrapped in authored frames
+  ("the part I meant is ...", "... which gives later reasoning a stable path",
+  "it works by linking ... so the next step has a clear anchor", ...).
+- _reason_from_active_claim's frames reached her voice under src "reasoning"
+  ("If that link weakens, meaning stops binding language to a stable referent").
+- The reasoner's ability branches spoke frames with internal labels
+  ("<topic> connects to: x (RelationType.RELATED_TO)", "... can be understood
+  as: ...", "... has competing definitions ... I hold both").
+- My own FIX-A113 confluence carried two: "I am <feeling>" and
+  "<x> is related to <y>" (internal relation-type names).
+**Correct Form:**
+- answer_from_claims returns only the claim in its own words; the other
+  speaker's claim only when they ask what was said / where something is
+  (FIX-A111 rule); a claim she answered with rests CLAIM_ANSWER_REST_TURNS (3).
+- _repair_discourse_coherence's three focus frames removed;
+  _reason_from_active_claim defers (returns ""); the reasoner's three ability
+  frames removed. No blocklist patch -- fixed where the text was written.
+- Confluence: affect sets tone, never a clause; knowledge is voiced only as
+  predicates people actually said (FIX-A115); type labels stay internal.
+Also at the source of the loop: answer_from_speaker_owned_facts answered "your
+<field> is <value>" whenever two words of a stored field appeared; it now
+answers only when the speaker asks about "my <field>" (question / remember).
+Fact extraction skips denials ("I didn't say my line work was rough") and
+demonstrative mis-splits ("my plan that is ..."). _deep_context_carryover_answer
+answers only with a line that shares a content word with the question. The
+confluence rests what it voiced for REST_TURNS (4) replies.
+**First Seen:** 2026-11-09 rehearsal measurement (same 47 messages, same seed):
+before, 15-18 consecutive turns of one line; after, none. Baseline (no
+confluence): silence 17, matches 3, score 0.19. With the scripted first
+confluence: silence 6, matches 9, score 0.26 -- inflated by the frames. With
+every frame removed and nothing repeating: silence 21, matches 5, score 0.21.
+The honest number is the last one.
+Note: the composer (own_composition) can still produce word salad
+("You understand bird. I do bird.") -- hers, not a script; not touched.
+
+## FIX-A115 (ARCHITECTURAL) — Understanding with more than two dimensions
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-09):** "make sure her understanding isnt as 2
+dimensional as it feels" ... "ensuring everything is wired and functioning as
+needed for her understanding and communication development and that her clones
+report everything needed to match that".
+**Pattern:** Her web held (word, word) links whose type came from the two
+words' parts of speech alone (infer_word_role calls almost everything a noun,
+so almost every pair got the noun+noun type: "Netflix is instance of minute").
+Nothing recorded who asserted what, the predicate, denial, modality, time, or
+what it meant; concepts had no place in her constraint space. Her relational
+form extractor also misparsed ("I love old soul records" -> subject "I love old
+soul", relation "records").
+**Correct Form:** aurora_internal/aurora_propositional_understanding.py.
+- statements_in(): subject / predicate / object per statement, read with her
+  RoleTagger, her verb forms and English auxiliaries/negators/modals/copulas;
+  subordinate clauses are their own statements; questions are not statements.
+- integrate_turn() (aurora.py, after the voice gate, early exits too): each
+  statement -> relation between subject and object heads with an `assertion`
+  record (predicates with counts/denials/modalities, `by` speaker, times,
+  meaning profile, contexts). I/you resolve to participants (sunni, aurora,
+  gpt; rehearsal and demo sessions mapped). Seed type by nearest fit of the
+  statement's MEANING profile, not the role pair. Same words from the same
+  speaker integrate once.
+- SemanticNode.axis_profile / axis_samples: each concept's running place in
+  X/T/N/B/A. SemanticRelation.assertion. Both persisted (OETSPersistence).
+- Confluence knowledge = assertions only, voiced as said ("you love records",
+  "battery does not overheat inverter", copula agrees), ranked by fit of the
+  concept's profile to the moment's meaning.
+- Clone harvest: propositions and concept positions (deltas, summed across
+  clones, absorbed count-weighted); motif lineage (FIX-A113).
+- Clone harvest file is SEGMENTED: each merge appends its run as a new segment
+  (same run id replaces nothing); the phone absorbs every segment it has not
+  absorbed; lived episodes are the union. A phone that skipped a build no
+  longer loses a run's output.
+- Hub: "Statements understood", "Concepts placed", "Clone understanding".
+**First Seen:** 2026-11-09. Live probe: "I love old soul records on a slow
+night." then "What do you think about records?" -> "I think about records, and
+you love records."

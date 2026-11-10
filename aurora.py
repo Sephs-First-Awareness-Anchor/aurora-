@@ -923,8 +923,11 @@ class ReasoningEngine:
                         _rtype = str(getattr(_rel, "relation_type", "") or "")
                         if _other and _other != topic:
                             _rels.append(f"{_other}" + (f" ({_rtype})" if _rtype else ""))
-                    if _rels:
-                        return f"{topic.capitalize()} connects to: {', '.join(_rels[:4])}."
+                    # FIX-A114: "<topic> connects to: a (RelationType.X), ..." was an
+                    # authored frame that also spoke internal relation labels.  Her
+                    # connect/bridge abilities shape HOW she speaks (FIX-A113 confluence);
+                    # they no longer write a sentence here.
+                    _rels = []
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
@@ -942,12 +945,9 @@ class ReasoningEngine:
                 if _rn and hasattr(_rn, "definitions") and len(_rn.definitions) > 1:
                     _d0 = str((_rn.definitions[0] or {}).get("text", "") or "")
                     _d1 = str((_rn.definitions[1] or {}).get("text", "") or "")
-                    if _d0 and _d1 and _d0[:60] != _d1[:60]:
-                        return (
-                            f"{topic.capitalize()} has competing definitions: "
-                            f"\"{_d0[:80]}\" vs \"{_d1[:80]}\". "
-                            f"I hold both without forcing a resolution."
-                        )
+                    # FIX-A114: the "<topic> has competing definitions: ... I hold both
+                    # without forcing a resolution." frame is gone (binding rule 2).
+                    _competing = bool(_d0 and _d1 and _d0[:60] != _d1[:60])
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
@@ -964,8 +964,8 @@ class ReasoningEngine:
                 _rcn = oets.web.get_node(topic) if hasattr(oets, "web") else None
                 if _rcn and hasattr(_rcn, "categories") and _rcn.categories:
                     _cats = [str(c) for c in list(_rcn.categories)[:3] if c]
-                    if _cats:
-                        return f"{topic.capitalize()} can be understood as: {', '.join(_cats)}."
+                    # FIX-A114: "<topic> can be understood as: ..." frame removed.
+                    _cats = _cats
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(),
@@ -1007,97 +1007,13 @@ class ReasoningEngine:
         understood: dict,
         working_memory: Any,
     ) -> str:
-        if working_memory is None:
-            return ""
-
-        try:
-            resolved = working_memory.resolve_claims(user_text, understood) or {}
-        except Exception as _aurora_boundary_exc:
-            _aurora_record_exception_from_locals(
-                locals(),
-                module=__name__,
-                operation="exception_handler:aurora.py:917",
-                exc=_aurora_boundary_exc,
-                context={"function": "_reason_from_active_claim", "handler_line": 917, "source_file": "aurora.py"},
-            )
-            resolved = getattr(working_memory, 'last_claim_resolution', {}) or {}
-        claim = dict(resolved.get('focus_claim', {}) or {})
-        if not claim:
-            return ""
-
-        summary = str(working_memory._claim_to_text(claim) or '').strip()
-        if not summary:
-            return ""
-        subject = str(claim.get('subject', '') or '').strip()
-        relation = str(claim.get('relation', '') or '').strip()
-        obj = str(claim.get('object', '') or '').strip()
-        t_low = str(user_text or '').lower()
-        locative_relation = relation.startswith('located_')
-        locative_prep = relation.split('_', 1)[1] if locative_relation and '_' in relation else ''
-
-        summary_low = summary.lower()
-        abstract_anchor = any(
-            marker in summary_low for marker in (
-                'ground', 'anchor', 'link', 'connect', 'coher', 'refer', 'meaning',
-            )
-        ) or any(
-            marker in str(obj or '').lower() for marker in (
-                'ground', 'anchor', 'link', 'connect', 'experience', 'reference',
-            )
-        )
-
-        if any(marker in t_low for marker in self._ABSTRACT_BREAK_MARKERS):
-            if any(marker in t_low for marker in self._DETACH_MARKERS) or abstract_anchor:
-                return (
-                    f"If {summary}, then breaking that link would strip later reasoning of a stable anchor, "
-                    f"so meaning continuity and coherence would start to fragment."
-                )
-            if relation == 'requires' and obj:
-                return (
-                    f"If {subject} loses {obj}, then the chain loses the anchor it depends on, "
-                    f"so coherence starts to break around {subject}."
-                )
-            if locative_relation and obj:
-                return (
-                    f"If that location claim stops holding, the next action loses its concrete target, "
-                    f"so the thread becomes less reliable."
-                )
-            return (
-                f"If that claim stops holding, later reasoning loses the thread it was built on."
-            )
-
-        if any(marker in t_low for marker in self._NEXT_STEP_MARKERS):
-            if relation == 'requires' and obj:
-                return f"Then the next step is keeping {obj} available, because {subject} depends on it."
-            if abstract_anchor:
-                return (
-                    f"Then the next step is preserving the link inside that claim, "
-                    f"so later reasoning stays grounded instead of drifting."
-                )
-            if locative_relation and obj:
-                return f"Then the next step is checking {locative_prep} {obj}, because that's the active location anchor."
-            return f"Then the next step is staying consistent with {summary}."
-
-        if any(marker in t_low for marker in self._CONNECTIVITY_MARKERS):
-            if abstract_anchor:
-                return f"What has to stay connected is the anchor inside this claim: {summary}."
-            return f"What has to stay connected is {summary}."
-
-        if (
-            bool((understood or {}).get('is_hypothetical')) or
-            t_low.startswith('if ') or
-            t_low.startswith('suppose ')
-        ):
-            if any(marker in t_low for marker in self._DETACH_MARKERS) or abstract_anchor:
-                return (
-                    f"If that link weakens, meaning stops binding language to a stable referent, "
-                    f"and coherence degrades because later steps have nothing solid to stay attached to."
-                )
-            if relation == 'requires' and obj:
-                return f"If {obj} drops out, {subject} loses a required support and the chain becomes unstable."
-            if locative_relation and obj:
-                return f"If that stays true, the practical next move is still to check {locative_prep} {obj}."
-
+        """FIX-A114 (Sunni & Cael, 2026-11-09; binding rule 2, fixed at the
+        source): this returned authored consequence frames around the active
+        claim ("If that link weakens, meaning stops binding language to a
+        stable referent, ...", "Then the next step is ...", "What has to stay
+        connected is ...") and they reached her voice under src "reasoning".
+        It now defers, like _reason_personal_perspective: the claim itself is
+        available through working_memory.answer_from_claims, in its own words."""
         return ""
 
     def _oets_property_lookup(self, subject: str, prop: str, oets) -> str:
@@ -8600,9 +8516,23 @@ def _deep_context_carryover_answer(
             systems=systems,
             understood=understood,
         )
-        if rendered:
+        # FIX-A114: a remembered line answers only what it is about.  "rough
+        # is your line work" came back for "What do you mean, birds like
+        # routes?" and a dozen other turns -- nothing in common but recall.
+        if rendered and _shares_content_word(rendered, user_text):
             return rendered
     return ""
+
+
+_RECALL_STOP = frozenset({"what", "that", "this", "with", "have", "about", "your", "you're", "there", "their",
+                          "they", "them", "then", "than", "when", "where", "which", "would", "could", "should",
+                          "were", "been", "being", "just", "like", "mean", "meant", "said", "know", "really",
+                          "from", "into", "over", "some", "more", "much", "very", "will", "does", "doing"})
+
+
+def _shares_content_word(answer: str, question: str) -> bool:
+    words = lambda t: {w for w in re.findall(r"[a-z']{4,}", str(t or "").lower()) if w not in _RECALL_STOP}
+    return bool(words(answer) & words(question))
 
 
 def _ability_guided_context_answer(
@@ -15593,49 +15523,13 @@ def _repair_discourse_coherence(
         return candidate, tone, conf, {}
 
     repaired = candidate
-    # Topic-relevance guard: only anchor/repair using focus_summary when the
-    # current question is actually about the same topic as the stored claim.
-    # Without this gate, 'how' and 'why' branches below replace ANY question
-    # response with the previous claim, locking meaning_momentum across turns.
-    _focus_words = set(re.findall(r'[a-z]{3,}', focus_summary.lower())) - {
-        'the', 'and', 'that', 'this', 'with', 'for', 'from', 'are', 'was',
-        'can', 'may', 'its', 'also', 'such', 'some', 'any', 'all',
-    } if focus_summary else set()
-    _query_words = set(re.findall(r'[a-z]{3,}', text_low)) - {
-        'how', 'why', 'what', 'does', 'that', 'this', 'then', 'there',
-        'tell', 'now', 'here', 'work', 'works', 'working', 'you', 'your',
-        'the', 'and', 'for', 'from', 'with', 'can', 'its',
-    }
-    _focus_relevant = bool(_focus_words & _query_words) or bool(anchor_ctx.get('callback_like'))
-    if focus_summary:
-        if any(phrase in text_low for phrase in ('what did you mean', 'mean by that', 'what was missing')):
-            repaired = _render_runtime_intent(
-                systems,
-                f"what I meant was {focus_summary}",
-                emotion_tone='precise',
-                certainty=0.8,
-                supporting_concepts=[focus_summary],
-            )
-        elif candidate_low.startswith('fair'):
-            repaired = _render_runtime_intent(
-                systems,
-                f"tell me where I went wrong about {focus_summary}",
-                emotion_tone='attentive',
-                relationship_signal='inquiry',
-                certainty=0.78,
-                supporting_concepts=[focus_summary],
-            )
-        elif candidate_low.startswith("i hear you"):
-            repaired = _render_runtime_intent(
-                systems,
-                f"I may have missed what you meant about {focus_summary}; tell me which part I got wrong",
-                emotion_tone='attentive',
-                relationship_signal='inquiry',
-                certainty=0.8,
-                supporting_concepts=[focus_summary],
-            )
-        # Thread/topic tracking is internal — do not append it to the response.
-
+    # FIX-A114 (Sunni & Cael, 2026-11-09; binding rule 2, fixed at the source):
+    # three authored frames used to replace her reply here -- "what I meant was
+    # <focus>", "tell me where I went wrong about <focus>", "I may have missed
+    # what you meant about <focus>; tell me which part I got wrong".  Scripts
+    # filled with the thread's summary.  Gone.  When she is asked what she
+    # meant, the claim itself (answer_from_claims above, in its own words, not
+    # repeated turn after turn) is the only repair; otherwise her reply stands.
     if repaired != candidate:
         return (
             repaired,
@@ -35418,6 +35312,11 @@ def _run_live_response_turn(
                                            record_gate_in_trace as _early_gate_trace)
             gated = _early_gate(systems, response, user_text, session_id=session_id)
             _early_gate_trace(systems, response, gated, user_text)
+            try:                                   # FIX-A115, early exits too
+                from aurora_internal.aurora_propositional_understanding import integrate_turn as _early_integrate
+                _early_integrate(systems, user_text, session_id=session_id)
+            except Exception:
+                pass
             return gated
         except Exception as _early_gate_exc:
             _aurora_record_exception_from_locals(
@@ -35693,6 +35592,20 @@ def _run_live_response_turn(
             locals(), module=__name__,
             operation="voice_gate:apply",
             exc=_voice_gate_exc,
+            context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
+        )
+
+    # FIX-A115: what she heard becomes understanding with more than two
+    # dimensions -- propositions (who asserted what predicate of what, denied
+    # or not, when, meaning what in X/T/N/B/A) and each concept's place in her
+    # constraint space.  After the reply is decided; never changes it.
+    try:
+        from aurora_internal.aurora_propositional_understanding import integrate_turn as _integrate_turn
+        _integrate_turn(systems, user_text, session_id=session_id)
+    except Exception as _prop_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__, operation="propositional_understanding:integrate",
+            exc=_prop_exc,
             context={"function": "_run_live_response_turn", "source_file": "aurora.py"},
         )
 

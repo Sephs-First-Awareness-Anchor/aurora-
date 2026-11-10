@@ -12,6 +12,11 @@ concepts, what it meant to her, how it moved her, when it was, what the turn
 obliged of her -- stayed internal.  Like a body whose organs all work but
 whose nerves only carry signal from one of them.
 
+(FIX-A114, Sunni 2026-11-09: the first version still carried two frames --
+"I am <feeling>" and "<x> is related to <y>" from internal relation-type
+names.  Both are gone: her affect sets tone, not words, and her knowledge is
+voiced only as predicates people actually said -- FIX-A115.)
+
 The confluence gathers what each system contributed this turn (WHAT), and
 reads the abilities that are actually live this turn out of her genealogy
 (HOW):
@@ -34,7 +39,7 @@ reads the abilities that are actually live this turn out of her genealogy
 Word order comes from her own motif lineage: promoted motifs first, and only
 when none fits, the motifs her lineage has the most success with.  Her filler
 places the tokens (with her own verb agreement).  The only words not drawn
-from her systems are closed-class grammar (I, you, the, and, but, so, is).
+from her systems are closed-class grammar (the, and, but, so, not).
 Nothing is a template; if a clause has no content from a system, it is not
 said.  If the result is an echo, a template, or too thin, she stays silent.
 
@@ -45,6 +50,7 @@ Sunni's real reply -- credits or penalizes the structure she actually used.
 
 from __future__ import annotations
 
+import math
 import re
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -81,12 +87,15 @@ RELATION_AXIS = {
 CONTRASTIVE_RELATIONS = frozenset({"opposite_of", "contrasts"})
 KNOWLEDGE_STRENGTH = 0.25
 MAX_CLAUSES = 3
+REST_TURNS = 4            # FIX-A114: replies before something she voiced may be voiced again
 
 _DEIXIS_TO_HER = {"you": "I", "your": "my", "yours": "mine", "yourself": "myself",
                   "you're": "I'm", "u": "I", "ur": "my"}
 _DEIXIS_TO_THEM = {"i": "you", "i'm": "you're", "im": "you're", "my": "your",
                    "me": "you", "mine": "yours", "myself": "yourself"}
-_LEADING_KEEP = frozenset({"to", "about", "with", "on", "in", "at", "for", "from", "of", "into"})
+_POSSESSIVES = frozenset({"my", "your", "our", "his", "her", "their", "ur"})
+_LEADING_KEEP = frozenset({"to", "about", "with", "on", "in", "at", "for", "from", "of", "into",
+                           "what", "how", "why", "where", "who", "when", "which"})
 _PRONOUN_AGENTS = frozenset({"i", "you", "we", "they", "he", "she", "it"})
 _TOKEN = re.compile(r"[A-Za-z][A-Za-z']*")
 
@@ -224,11 +233,13 @@ def _phrase(span: str, *, limit: int, to_her: bool) -> str:
     content = 0
     for i, tok in enumerate(toks):
         low = tok.lower()
-        if to_her and low in _DEIXIS_TO_HER:
+        # Perspective turns over: the speaker's "you" is her, their "I" is them
+        # ("you know what I mean" -> "I know what you mean").
+        if low in _DEIXIS_TO_HER:
             tok = _DEIXIS_TO_HER[low]
-        elif not to_her and low in _DEIXIS_TO_THEM:
+        elif low in _DEIXIS_TO_THEM:
             tok = _DEIXIS_TO_THEM[low]
-        if not out and not _is_content(tok) and low not in _LEADING_KEEP:
+        if not out and not _is_content(tok) and low not in _LEADING_KEEP and low not in _POSSESSIVES:
             continue
         if out and low in _LEADING_KEEP and content >= 2:
             break                                  # the phrase is whole; the next one starts here
@@ -261,13 +272,11 @@ CLOSED_CLASS = frozenset({
     "although", "because", "since", "while", "until", "unless", "whether", "either",
     "neither", "each", "every", "other", "another", "same", "such", "own", "only", "else",
     "thing", "things", "stuff", "way", "lot", "bit", "something", "anything", "nothing",
-    "everything", "someone", "anyone", "everyone", "currently", "later", "soon", "yes", "yeah",
+    "everything", "someone", "anyone", "everyone", "whatever", "whoever", "whenever", "wherever", "currently", "later", "soon", "yes", "yeah",
     "okay", "well", "first", "last", "next", "then", "than", "into", "onto", "upon", "without",
     "within", "through", "between", "among", "against", "around", "over", "under", "again",
 })
 NON_ENTITY_ROLES = frozenset({"verb", "adverb", "preposition", "pronoun", "determiner", "training_gap"})
-WEAK_KINDS = {"related_to": 0.5, "context_of": 0.5}
-WEAK_SOURCES = {"co-occurrence": 0.6, "co-expression": 0.6, "adjacency": 0.6, "backfill_role_heuristic": 0.7}
 
 
 def _closed_class() -> frozenset:
@@ -294,55 +303,66 @@ def _entity(web: Any, word: str) -> bool:
     return _is_content(low) and low not in _closed_class() and _node_role(web, low) not in NON_ENTITY_ROLES
 
 
-def _lexicalize(kind: str) -> str:
-    """Her web's own relation names, spoken: 'enables' -> 'enables',
-    'is_a' -> 'is a', 'part_of' -> 'is part of'.  Discovered kinds (component
-    ids) have no words yet and are not spoken."""
-    if kind not in RELATION_AXIS:
-        return ""
-    parts = kind.split("_")
-    if parts[0] in ("is", "has"):
-        return " ".join(parts)
-    if len(parts) == 1:
-        return parts[0]
-    return "is " + " ".join(parts)
-
-
 def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *,
-              reach: int) -> List[Dict[str, Any]]:
-    """What she already knows about the concepts in play: relations from them
-    to something the speaker did not say."""
+              reach: int, session_id: str = "") -> List[Dict[str, Any]]:
+    """What was ASSERTED about the concepts in play (FIX-A115): who said which
+    predicate of what, recalled from either end, voiced as it was said.  Where
+    a concept has a place in her constraint space, what she knows is ranked by
+    how well it fits what this moment means.  Links nobody asserted are not
+    voiced (FIX-A114): their type names are internal labels."""
     web = _find_web(systems)
     if web is None:
         return []
+    from aurora_internal.aurora_propositional_understanding import (
+        cosine, lexicalize_assertion, meaning_profile, participants)
     heard_set = {w.lower() for w in _words(heard)}
     acts = _acts_in(heard)
     by_source = getattr(web, "_relations_by_source", {}) or {}
+    by_target = getattr(web, "_relations_by_target", {}) or {}
     relations = getattr(web, "relations", {}) or {}
+    pipeline = dict(systems.get("_last_pipeline_state") or {}) if isinstance(systems, Mapping) else {}
+    moment = meaning_profile(pipeline)
+    speaker_now, self_now = participants(session_id, systems)
+    nodes = getattr(web, "nodes", {}) or {}
+
+    def fit(word: str) -> float:
+        prof = dict(getattr(nodes.get(word), "axis_profile", {}) or {})
+        return 0.75 + 0.5 * cosine(moment, prof) if moment and prof else 1.0
+
     found: List[Dict[str, Any]] = []
+    seen: set = set()
     for concept in concepts:
-        for rid in list(by_source.get(str(concept).lower(), ()) or ()):
+        concept = str(concept).lower()
+        rids = [(rid, "out") for rid in list(by_source.get(concept, ()) or ())] + \
+               [(rid, "in") for rid in list(by_target.get(concept, ()) or ())]
+        for rid, side in rids:
             rel = relations.get(rid)
-            if rel is None:
+            if rel is None or rid in seen:
                 continue
-            target = str(getattr(rel, "target_word", "") or "")
+            source_w = str(getattr(rel, "source_word", "") or "").lower()
+            target = str(getattr(rel, "target_word", "") or "").lower()
             kind = str(getattr(getattr(rel, "relation_type", None), "value", "") or "")
             strength = _f(getattr(rel, "strength", 0.0))
-            if strength < KNOWLEDGE_STRENGTH or target.lower() in heard_set:
+            asserted = bool(getattr(rel, "assertion", None))
+            if asserted:
+                # Something was said along it: who, and which predicate.  The
+                # thing may be what the speaker just named -- what she adds is
+                # who holds it and how.
+                lex = lexicalize_assertion(rel, speaker_now=speaker_now, self_now=self_now)
+                if lex is None or not _speakable(target) or source_w in heard_set and target in heard_set:
+                    continue
+                n = int(dict(rel.assertion).get("n", 1) or 1)
+                score = strength * _f(getattr(rel, "confidence", 1.0), 1.0) * (1.0 + 0.3 * math.log1p(n)) \
+                    * fit(target)
+                seen.add(rid)
+                found.append({"source": source_w, "kind": kind, "target": target, "strength": round(score, 4),
+                              "axis": RELATION_AXIS.get(kind, "X"), "learned_from": "assertion", "lex": lex})
                 continue
-            if not _speakable(target) or not _is_content(target) or not _lexicalize(kind):
-                continue
-            # She relates things: an entity on each side.  A verb or function
-            # word ("want", "already") is not something she can say a thing about.
-            if not _entity(web, concept) or not _entity(web, target) or str(concept).lower() in acts:
-                continue
-            # Typed, researched knowledge says more than words that merely
-            # occurred together; both are hers, the first is ranked higher.
-            source = str(getattr(rel, "source_of_knowledge", "") or "")
-            score = strength * _f(getattr(rel, "confidence", 1.0), 1.0) \
-                * WEAK_KINDS.get(kind, 1.0) * WEAK_SOURCES.get(source, 1.0)
-            found.append({"source": str(concept).lower(), "kind": kind, "target": target.lower(),
-                          "strength": round(score, 4), "axis": RELATION_AXIS[kind], "learned_from": source})
+            # FIX-A114: a link nobody asserted (co-occurrence, the role-pair
+            # type, a seed) is hers to reason with, but its type name ("is
+            # related to", "is instance of") is an internal label, not language.
+            # Only what was actually said is voiced.
+            continue
     found.sort(key=lambda r: (-r["strength"], r["source"], r["target"]))
     return found[: max(1, int(reach)) * 4]
 
@@ -370,7 +390,8 @@ def _is_verb(systems: Mapping[str, Any], word: str, heard: str) -> bool:
         return False
 
 
-def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any]) -> Dict[str, Any]:
+def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any], *,
+           session_id: str = "") -> Dict[str, Any]:
     gate = _gate()
     pipeline = dict(systems.get("_last_pipeline_state") or {}) if isinstance(systems, Mapping) else {}
     form = gate._relational_form(systems)
@@ -387,7 +408,10 @@ def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any]) -> Di
     if relation:
         agent = "I" if addressed else _phrase(str(form.get("subject") or ""), limit=2, to_her=False)
         if agent.lower() in _PRONOUN_AGENTS or (agent and all(_is_content(w) for w in agent.split())):
-            stance = {"agent": agent, "action": relation[0].lower(),
+            act = relation[0].lower()
+            if act.endswith("ing") and len(act) > 4:     # "introducing" is not finite: the copula carries it
+                act = ("am" if agent == "I" else "are" if agent.lower() in ("you", "we", "they") else "is") + " " + act
+            stance = {"agent": agent, "action": act,
                       "object": _phrase(" ".join(str(form.get(k) or "") for k in ("obj", "complement")),
                                         limit=obj_limit, to_her=True)}
     options = []
@@ -404,7 +428,7 @@ def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any]) -> Di
     salient = [str(c).lower() for c in list(pipeline.get("salient_concepts") or []) if _speakable(c)]
     # knowledge: what she already knows about it
     concepts = list(dict.fromkeys(salient + [w.lower() for o in options for w in _words(o) if _is_content(w)]))
-    known = knowledge(systems, concepts, heard, reach=int(how.get("reach", 1)))
+    known = knowledge(systems, concepts, heard, reach=int(how.get("reach", 1)), session_id=session_id)
     # affect: how it moved her
     surface = dict(pipeline.get("surface_reactive_emotion") or {})
     tone = str(surface.get("tone_bias") or "").lower()
@@ -440,8 +464,10 @@ def _option_knowledge(option: str, known: Sequence[Mapping[str, Any]]) -> float:
     return sum(_f(k.get("strength")) for k in known if k.get("source") in words)
 
 
-def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, prefer_axis: bool) -> Optional[Dict[str, Any]]:
-    pool = [k for k in known if (k["source"], k["target"]) not in used]
+def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, prefer_axis: bool,
+                      resting: Optional[set] = None) -> Optional[Dict[str, Any]]:
+    pool = [k for k in known if (k["source"], k["target"]) not in used
+            and (k["source"], k["target"]) not in (resting or set())]
     voiced = {s for s, _ in used} | {t for _, t in used}
     pool = [k for k in pool if k["source"] not in voiced and k["target"] not in voiced] or pool
     if prefer_axis:
@@ -450,8 +476,12 @@ def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, pref
         return None
     k = pool[0]
     used.add((k["source"], k["target"]))
-    return {"agent": k["source"], "action": _lexicalize(k["kind"]), "object": k["target"],
-            "determiner": "", "contrast": k["kind"] in CONTRASTIVE_RELATIONS,
+    lex = dict(k.get("lex") or {})
+    if not lex:
+        return None
+    # FIX-A115: what was said, as it was said -- who, the predicate, to what.
+    return {"agent": lex["agent"], "action": lex["action"], "object": lex["object"],
+            "determiner": "", "contrast": lex.get("denied") == "True",
             "system": "knowledge", "relation": dict(k)}
 
 
@@ -459,6 +489,7 @@ def plan(contrib: Mapping[str, Any], how: Mapping[str, Any]) -> List[Dict[str, A
     stance = dict(contrib.get("stance") or {})
     options = list(contrib.get("options") or [])
     known = list(contrib.get("knowledge") or [])
+    resting = set(contrib.get("resting") or ())
     used: set = set()
     clauses: List[Dict[str, Any]] = []
     budget = int(how.get("clauses", 1))
@@ -478,11 +509,6 @@ def plan(contrib: Mapping[str, Any], how: Mapping[str, Any]) -> List[Dict[str, A
         clause: Optional[Dict[str, Any]] = None
         if axis == "A" and stance and not stance_done:
             obj = chosen or stance.get("object", "")
-            if contrib.get("unknown_role") == "object":
-                filled = [k for k in known if k["source"] in {w.lower() for w in _words(obj)}]
-                if filled:
-                    obj = filled[0]["target"]
-                    used.add((filled[0]["source"], filled[0]["target"]))
             clause = {"agent": stance["agent"], "action": stance["action"], "object": obj,
                       "determiner": "the" if obj and obj == chosen and obj != stance.get("object") else "",
                       "contrast": False, "system": "communication"}
@@ -491,26 +517,24 @@ def plan(contrib: Mapping[str, Any], how: Mapping[str, Any]) -> List[Dict[str, A
             others = [o for o in options if o != (chosen or stance.get("object", ""))]
             if chosen and not stance_done and stance:
                 continue                                  # voiced inside the stance clause
-            k = _knowledge_clause(known, used, axis="B", prefer_axis=True)
+            k = _knowledge_clause(known, used, axis="B", prefer_axis=True, resting=resting)
             if k is not None and (k["contrast"] or not others):
                 clause = k
             elif others and k is not None:
                 clause = k
         elif axis == "X":
-            clause = _knowledge_clause(known, used, axis="X", prefer_axis=True)
+            clause = _knowledge_clause(known, used, axis="X", prefer_axis=True, resting=resting)
         elif axis == "N":
-            if contrib.get("affect"):
-                clause = {"agent": "I", "action": "is", "object": "", "descriptor": contrib["affect"],
-                          "determiner": "", "contrast": False, "system": "affect", "carries": "descriptor"}
-            else:
-                clause = _knowledge_clause(known, used, axis="N", prefer_axis=True)
+            # FIX-A114: no "I am <feeling>" frame -- that was my wording with one
+            # blank.  Her affect sets the tone of what she says; it is not a clause.
+            clause = _knowledge_clause(known, used, axis="N", prefer_axis=True, resting=resting)
         elif axis == "T":
             stance_clause = next((c for c in clauses if c.get("system") == "communication"), None)
             if contrib.get("time") and stance_clause is not None and not time_used:
                 stance_clause.setdefault("descriptor", contrib["time"])
                 time_used = True
                 continue                                  # time rides on what she said she'd do
-            clause = _knowledge_clause(known, used, axis="T", prefer_axis=True)
+            clause = _knowledge_clause(known, used, axis="T", prefer_axis=True, resting=resting)
         if clause is not None:
             clause["axis"] = axis
             clauses.append(clause)
@@ -591,7 +615,8 @@ def choose_motif(engine: Any, pool: Mapping[Any, List[str]], *, slots: int,
     return max(candidates, key=score), bool(promoted)
 
 
-def compose(systems: Dict[str, Any], heard: str, *, engine: Any = None) -> Tuple[str, Dict[str, Any]]:
+def compose(systems: Dict[str, Any], heard: str, *, engine: Any = None,
+            session_id: str = "") -> Tuple[str, Dict[str, Any]]:
     """(text, record).  text is '' when no system gave her anything to say
     that would survive the gate."""
     gate = _gate()
@@ -602,7 +627,17 @@ def compose(systems: Dict[str, Any], heard: str, *, engine: Any = None) -> Tuple
         record["why"] = "no_grammar_engine"
         return "", record
     how = ability_how(systems)
-    contrib = gather(systems, heard, how)
+    contrib = gather(systems, heard, how, session_id=session_id)
+    # FIX-A114: what she voiced in the last REST_TURNS replies rests -- the same
+    # remembered statement does not answer turn after turn.
+    turn = int(systems.get("_confluence_turn", 0) or 0) + 1 if isinstance(systems, dict) else 0
+    voiced_log = list(systems.get("_confluence_voiced") or []) if isinstance(systems, dict) else []
+    voiced_log = [v for v in voiced_log if turn - int(v[0]) <= REST_TURNS]
+    contrib["resting"] = {tuple(v[1]) for v in voiced_log if v[1]}
+    recent_texts = {str(v[2]) for v in voiced_log if len(v) > 2}
+    if isinstance(systems, dict):
+        systems["_confluence_turn"] = turn
+        systems["_confluence_voiced"] = voiced_log
     clauses = plan(contrib, how)
     record.update({"how": how, "contributions": {k: v for k, v in contrib.items() if v}})
     if not clauses:
@@ -646,12 +681,19 @@ def compose(systems: Dict[str, Any], heard: str, *, engine: Any = None) -> Tuple
     if text and text[-1] not in ".!?":
         text += "."
     why = gate.articulation_rejection(text, heard) or gate.parrot_reason(text, heard) \
-        or gate.scripted_reason("confluence", text, dm=True)
+        or gate.scripted_reason("confluence", text, dm=True) \
+        or ("repeat" if text.lower() in {t.lower() for t in recent_texts} else "")
     if why:
         record["why"] = why
         record["rejected"] = text[:200]
         return "", record
     record["text"] = text
+    if isinstance(systems, dict):
+        for c in clauses:
+            rel = dict(c.get("relation") or {})
+            if rel:
+                systems["_confluence_voiced"].append((turn, (rel.get("source"), rel.get("target")), text))
+        systems["_confluence_voiced"].append((turn, None, text))
     return text, record
 
 
