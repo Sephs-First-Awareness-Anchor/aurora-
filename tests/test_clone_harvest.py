@@ -340,3 +340,24 @@ def test_a_relived_pass_for_new_organs_counts_nothing_twice(tmp_path):
     assert [x["status"] for x in out["segments"]] == ["already_absorbed", "absorbed"]
     assert out["results"]["motifs"]["absorbed"] == 1 and "paths" not in out["results"] or \
         out["results"].get("paths", {}).get("carved", 0) == 0
+
+
+def test_listening_feeds_the_three_listening_organs_without_a_turn(monkeypatch):
+    from types import SimpleNamespace
+    from aurora_grammar_engine import GrammarEngine
+    from aurora_internal.aurora_ontological_scaffolding import OntologicalWeb
+    import aurora
+    import tempfile
+    monkeypatch.setattr(aurora, "_project_utterance_axes", lambda text, systems: {"X": 0.1, "T": 0.6, "N": 0.1, "B": 0.1, "A": 0.1})
+    web = OntologicalWeb()
+    web.add_node("records", "noun")
+    eng = GrammarEngine(state_dir=tempfile.mkdtemp())
+    eng._lineage._motifs.clear()
+    systems = {"oets": SimpleNamespace(web=web), "grammar_engine": eng}
+    first = {"actor": "assistant", "text": "What do you love?"}
+    reply = {"actor": "user", "text": "I love old soul records."}
+    out = CH.listen_to(systems, reply, first, CH.LISTEN_ORGANS)
+    assert out["statements"] == 2 and out["motifs"] == 1
+    rel = [r for r in web.relations.values() if r.source_word == "sunni"][0]
+    assert rel.assertion["by"] == {"sunni": 1}
+    assert CH.listen_to(systems, first, None, ("motifs",))["motifs"] == 0   # nothing it answered: no demonstration

@@ -11132,3 +11132,24 @@ soul", relation "records").
 **First Seen:** 2026-11-09. Live probe: "I love old soul records on a slow
 night." then "What do you think about records?" -> "I think about records, and
 you love records."
+
+## FIX-A116 (ARCHITECTURAL) — Clones that listen: the listening organs need no turn
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Rule (Sunni, 2026-11-09):** "why not just run it now" ... "if you just broke it
+up into separate chunked workflows it would be faster".
+**Pattern:** Re-living history for motifs/propositions/concepts ran a full
+Aurora turn per message per position: ~188 s/message/clone with 6 clones on 4
+cores (run 3: 9,911 messages in 100 clones x 5 h). More workflows would not
+help -- the account runs 20 jobs at once however they are split.
+**Correct Form:** aurora_clone_harvest.listen_to / run_listen, CLI and workflow
+`mode=listen`: a clone HEARS each message -- statements_in + integrate_form
+with her own axis projection (_project_utterance_axes), concept placement from
+her utterance parser's topic words, and each reply credited as a demonstration
+in the context it answered (observe_demonstration, the call rehearsal makes).
+~0.2 s/message. lived_for() is a union over organs, so organ groups are lived in
+separate passes and nothing is reported twice. Real-history parsing fixes in
+statements_in: curly apostrophes, commas/dashes close clauses, infinitive
+complements and particles/third persons are not things, progressives are the
+act ("I'm building a system"), RELATED_TO is not a meaning-profile fit.
+**First Seen:** 2026-11-09 local listen of 1,471 real messages: 4,702
+statements, 5,044 concept placements, 4,871 sentence shapes credited, 327 s.

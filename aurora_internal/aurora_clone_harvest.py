@@ -948,6 +948,140 @@ def run_clone(index: int, count: int, *, state_dir: str = "aurora_state", out_pa
     return y
 
 
+LISTEN_ORGANS = ("motifs", "propositions", "concepts")
+_LISTEN_SPEAKER = {"user": "sunni", "historical_user": "sunni",
+                   "assistant": "gpt", "historical_other_assistant": "gpt"}
+
+
+_PARSER: List[Any] = []
+
+
+def _parser() -> Any:
+    if not _PARSER:
+        from aurora_internal.aurora_utterance_parser import UtteranceParser
+        _PARSER.append(UtteranceParser())
+    return _PARSER[0]
+
+
+def listen_to(systems: Mapping[str, Any], event: Mapping[str, Any], previous: Optional[Mapping[str, Any]],
+              organs: Tuple[str, ...]) -> Dict[str, int]:
+    """One message of her history, heard -- no turn of her own.
+
+    What the three listening organs take from a message needs no reply from
+    her: who asserted which predicate of what (propositions), where the
+    concepts in it sit in X/T/N/B/A (concepts) -- both from her own utterance
+    parser and axis projection, the same ones her pipeline runs -- and, when
+    the message is a reply, its sentence shapes credited as a demonstration in
+    the context it answered (motifs) -- the same call rehearsal makes with the
+    real reply."""
+    import aurora as A
+    from aurora_internal import aurora_propositional_understanding as P
+    from aurora_internal.aurora_confluence import _find_web
+    out = {"statements": 0, "placed": 0, "motifs": 0}
+    text = str(event.get("text", "") or "").strip()
+    if not text:
+        return out
+    speaker = _LISTEN_SPEAKER.get(str(event.get("actor", "") or "").lower(), "sunni")
+    listener = "gpt" if speaker == "sunni" else "sunni"
+    web = _find_web(systems)
+    if web is not None and ("propositions" in organs or "concepts" in organs):
+        try:
+            profile = P._profile(A._project_utterance_axes(text[:2000], systems))
+        except Exception:
+            profile = {}
+        if "propositions" in organs:
+            acts = P._acts(text[:2000])
+            for st in P.statements_in(text, web=web):
+                out["statements"] += len(P.integrate_form(web, st, heard=text[:400], speaker=speaker,
+                                                          listener=listener, profile=profile, acts=acts))
+        if "concepts" in organs and profile:
+            try:
+                topics = list(_parser().parse(text[:2000]).get("topic_words", []) or [])[:8]
+            except Exception:
+                topics = []
+            for word in topics:
+                node = web.nodes.get(str(word).lower())
+                if node is not None:
+                    P.place_concept(node, profile, weight=0.5)
+                    out["placed"] += 1
+    if "motifs" in organs and previous is not None and str(previous.get("actor")) != str(event.get("actor")):
+        grammar = systems.get("grammar_engine")
+        if grammar is not None and hasattr(grammar, "observe_demonstration"):
+            out["motifs"] = int(grammar.observe_demonstration(
+                text, context_text=str(previous.get("text", "") or "")[:2000],
+                max_sentences=4 if speaker == "sunni" else 8) or 0)
+    return out
+
+
+def run_listen(index: int, count: int, *, state_dir: str = "aurora_state", out_path: str,
+               max_seconds: float = 18000.0, harvest_path: Optional[str] = None,
+               organs: Tuple[str, ...] = LISTEN_ORGANS, log=_log) -> Dict[str, Any]:
+    """A clone that HEARS her shard of history for the listening organs
+    (FIX-A115).  Minutes for the whole history, where rehearsing costs a full
+    turn per message per position."""
+    t0 = time.time()
+    organs = tuple(o for o in organs if o in LISTEN_ORGANS) or LISTEN_ORGANS
+    import aurora as A
+    from aurora_historical_experience_environment import HistoricalExperienceEnvironment
+    from aurora_internal import aurora_turn_persistence as TP
+    systems = A.boot_aurora(state_dir=state_dir, verbose=False)
+    env = HistoricalExperienceEnvironment(systems, state_dir=state_dir, initial_delay_s=0.0)
+    env._prepare()
+    try:
+        lived_set = lived_for(read_header(harvest_path or DEFAULT_HARVEST_PATH), organs)
+    except Exception:
+        lived_set = set()
+    ordered = [(eid, int(dict(rec).get("message_count", 1) or 1))
+               for eid, rec in env._episodes.items() if eid not in lived_set]
+    shard = plan_shards(ordered, count)[index]
+    mine = set(shard)
+    log(f"listen {index}/{count}: {len(shard)} conversations, {sum(n for e, n in ordered if e in mine)} messages, "
+        f"boot {time.time() - t0:.0f}s")
+    start = organ_snapshot(systems)
+    done: List[str] = []
+    totals = {"statements": 0, "placed": 0, "motifs": 0, "events": 0}
+    current, previous, stopped = "", None, ""
+    for event in _events(env):
+        eid = str(event.get("episode_id", "") or "")
+        if eid not in mine:
+            continue
+        if eid != current:
+            if current:
+                done.append(current)
+            if time.time() - t0 >= max_seconds:
+                stopped, current = "budget", ""
+                break
+            current, previous = eid, None
+        try:
+            for k, v in listen_to(systems, event, previous, organs).items():
+                totals[k] += v
+        except Exception as exc:
+            totals["errors"] = totals.get("errors", 0) + 1
+            log(f"listen error: {type(exc).__name__}: {exc}")
+        previous = event
+        totals["events"] += 1
+        if totals["events"] % 1000 == 0:
+            log(f"  {totals['events']} messages, {len(done)} conversations, {time.time() - t0:.0f}s, {totals}")
+    if current:
+        done.append(current)
+    try:
+        TP.flush_all()
+    except Exception:
+        pass
+    end = organ_snapshot(systems)
+    counters = {**totals, "conversations": len(done), "seconds": int(time.time() - t0), "mode": 0}
+    y = clone_yield(start, end, clone_id=f"listen-{index:03d}-of-{count}", episodes=done, counters=counters,
+                    organs=organs)
+    y["stopped"] = stopped
+    y["mode"] = "listen"
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)) or ".", exist_ok=True)
+    with gzip.open(out_path, "wt", encoding="utf-8") as fh:
+        json.dump(y, fh)
+    log(f"listen {index} done: {counters} motifs={len(y['motifs'])} propositions={len(y['propositions'])} "
+        f"concepts={len(y['concepts'])} stopped={stopped or 'no'}")
+    return y
+
+
 def load_yield(path: str) -> Dict[str, Any]:
     opener = gzip.open if str(path).endswith(".gz") else open
     with opener(path, "rt", encoding="utf-8") as fh:
@@ -1082,13 +1216,19 @@ def main(argv: Optional[List[str]] = None) -> int:
     c.add_argument("--max-seconds", type=float, default=18000.0)
     c.add_argument("--state-dir", default="aurora_state")
     c.add_argument("--organs", default="all", help="all, or a comma list of " + ",".join(ALL_ORGANS))
+    c.add_argument("--mode", default="rehearse", choices=["rehearse", "listen"],
+                   help="rehearse: live it with her turns; listen: hear it (motifs, propositions, concepts only)")
     m = sub.add_parser("merge")
     m.add_argument("--out", default=DEFAULT_HARVEST_PATH)
     m.add_argument("yields", nargs="+")
     args = ap.parse_args(argv)
     if args.cmd == "clone":
-        run_clone(args.index, args.count, state_dir=args.state_dir, out_path=args.out,
-                  max_seconds=args.max_seconds, organs=parse_organs(args.organs))
+        runner = run_listen if args.mode == "listen" else run_clone
+        organs = parse_organs(args.organs)
+        if args.mode == "listen" and str(args.organs).strip().lower() == "all":
+            organs = LISTEN_ORGANS
+        runner(args.index, args.count, state_dir=args.state_dir, out_path=args.out,
+               max_seconds=args.max_seconds, organs=organs)
         os._exit(0)                      # her background threads must not hold the job open
     yields = []
     for p in args.yields:

@@ -149,3 +149,20 @@ def test_the_copula_agrees_with_who_it_is_about():
                      heard="", speaker="sunni", listener="aurora", profile=AXIS_T)
     rel = web.relations[next(iter(web._relations_by_source["battery"]))]
     assert P.lexicalize_assertion(rel, speaker_now="sunni", self_now="aurora")["action"] == "is not"
+
+
+def test_real_history_is_read_as_written():
+    got = [(s["subject"], s["relation"], s["obj"], s["negated"]) for s in P.statements_in(
+        "I’m building a system to understand myself. You’re right, I told him to come back. "
+        "I don’t know, you tell me.")]
+    assert got == [("i", "building", "a system", False), ("you", "be", "right", False), ("i", "told", "him", False),
+                   ("i", "know", "", True), ("you", "tell", "me", False)]
+    assert P.heads("him", speaker="sunni", listener="aurora", acts=set()) == []
+
+
+def test_a_progressive_is_said_with_its_copula():
+    web = _web()
+    P.integrate_form(web, {"subject": "I", "relation": "building", "obj": "a system"}, heard="",
+                     speaker="sunni", listener="aurora", profile=AXIS_T)
+    rel = [r for r in web.relations.values() if r.source_word == "sunni"][0]
+    assert P.lexicalize_assertion(rel, speaker_now="sunni", self_now="aurora")["action"] == "are building"

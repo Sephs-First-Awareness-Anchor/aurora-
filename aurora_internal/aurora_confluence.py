@@ -107,8 +107,11 @@ def _f(value: Any, default: float = 0.0) -> float:
         return default
 
 
+_QUOTES = str.maketrans({"\u2019": "'", "\u2018": "'", "\u02bc": "'"})
+
+
 def _words(text: str) -> List[str]:
-    return _TOKEN.findall(str(text or ""))
+    return _TOKEN.findall(str(text or "").translate(_QUOTES))
 
 
 def _gate():

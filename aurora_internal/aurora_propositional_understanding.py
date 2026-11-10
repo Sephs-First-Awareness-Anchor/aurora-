@@ -61,8 +61,9 @@ PARTICIPANTS = frozenset({SELF, SUNNI, OTHER_AI})
 
 # Pronouns that ARE a participant.  Possessives ("my battery") are not: the
 # battery is the thing.
-_FIRST = frozenset({"i", "i'm", "im", "me", "myself", "we", "we're", "us", "ourselves"})
-_SECOND = frozenset({"you", "you're", "u", "yourself"})
+_FIRST = frozenset({"i", "i'm", "im", "me", "myself", "we", "we're", "us", "ourselves", "i've", "ive", "i'd",
+                    "i'll", "we've", "we'd", "we'll"})
+_SECOND = frozenset({"you", "you're", "u", "yourself", "you've", "you'd", "you'll"})
 _POSSESSIVE = frozenset({"my", "mine", "our", "ours", "your", "yours", "ur"})
 _NEGATORS = frozenset({"not", "no", "never", "don't", "dont", "doesn't", "doesnt", "didn't", "didnt", "can't",
                        "cant", "cannot", "won't", "wont", "isn't", "isnt", "aren't", "arent", "wasn't", "wasnt",
@@ -71,9 +72,16 @@ _MODALS = frozenset({"can", "could", "may", "might", "must", "shall", "should", 
                      "did", "gonna", "wanna", "gotta", "i'll", "we'll", "you'll", "i'd", "we'd", "you'd"})
 _COPULA = frozenset({"is", "are", "was", "were", "am", "be", "been", "being", "i'm", "it's", "that's",
                      "he's", "she's", "we're", "they're", "you're"})
+# Third persons and particles are not things in themselves ("told him",
+# "got out", "come back").
+_NOT_HEADS = frozenset({"him", "her", "them", "it", "itself", "themselves", "himself", "herself", "one",
+                        "out", "back", "off", "up", "down", "away", "over", "around", "right", "along",
+                        "something", "someone", "anything", "everything", "nothing", "stuff", "thing",
+                        "things", "way", "lot", "kind", "sort", "bit", "let", "let's", "lets", "gonna",
+                        "wanna", "gotta", "yeah", "okay", "ok", "yes", "nah", "uh", "um", "like", "just"})
 _SUBJECT_PRONOUNS = frozenset({"i", "we", "you", "they", "he", "she", "it", "u"})
 _PRONOUN_COPULA = {"i'm": "i", "im": "i", "we're": "we", "you're": "you", "they're": "they", "he's": "he",
-                   "she's": "she", "it's": "it"}
+                   "she's": "she", "it's": "it", "that's": "that"}
 _CLAUSE_BREAKS = frozenset({"when", "if", "because", "while", "since", "until", "although", "though", "unless",
                             "whereas", "after", "before", "but", "so", "and", "or", "then", "cause", "cuz"})
 _DETERMINERS = frozenset({"the", "a", "an", "this", "that", "these", "those", "some", "any", "every", "each",
@@ -88,8 +96,12 @@ def _f(v: Any, d: float = 0.0) -> float:
         return d
 
 
+_QUOTES = str.maketrans({"\u2019": "'", "\u2018": "'", "\u02bc": "'", "\u201c": '"', "\u201d": '"'})
+
+
 def _words(text: Any) -> List[str]:
-    return _TOKEN.findall(str(text or ""))
+    # Real history writes "you\u2019re": one word, not "you" + "re".
+    return _TOKEN.findall(str(text or "").translate(_QUOTES))
 
 
 # -----------------------------------------------------------------------------
@@ -152,7 +164,7 @@ def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = M
             cand = speaker
         elif tok in _SECOND:
             cand = listener
-        elif len(tok) >= 3 and "'" not in tok and tok not in closed and tok not in acts:
+        elif len(tok) >= 3 and "'" not in tok and tok not in closed and tok not in acts and tok not in _NOT_HEADS:
             cand = tok
         else:
             continue
@@ -195,17 +207,24 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
         sentence = sentence.strip()
         if not sentence or sentence.endswith("?"):
             continue
-        toks = [t.lower() for t in _words(sentence)]
+        # A comma, dash or colon closes a clause as surely as "when" does.
+        toks, cuts = [], []
+        for piece in re.split(r"[,;:()\u2014\u2013]|\s-\s", sentence):
+            toks.extend(t.lower() for t in _words(piece))
+            cuts.append(len(toks))
         if not toks or toks[0] in ("what", "why", "how", "who", "where", "when", "which", "do", "does", "did",
-                                   "are", "is", "can", "could", "would", "should", "will"):
+                                   "are", "is", "can", "could", "would", "should", "will", "let", "let's"):
             continue
         tagged = tagger.tag(" ".join(toks))
         tags = {i: role for i, (_, role) in enumerate(tagged)} if len(tagged) == len(toks) else {}
         start = 0
-        bounds = [i for i, t in enumerate(toks) if t in _CLAUSE_BREAKS] + [len(toks)]
-        for end in bounds:
+        bounds = sorted({(i, 1) for i, t in enumerate(toks) if t in _CLAUSE_BREAKS} |
+                        {(c, 0) for c in cuts if 0 < c})
+        for end, skip in bounds:
+            if end < start:
+                continue
             seg = list(range(start, end))
-            start = end + 1
+            start = end + skip
             if len(seg) < 2:
                 continue
             negated, modality, verb_at, copula = False, "", -1, False
@@ -213,6 +232,8 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                 continue                           # no subject before it: a fragment or imperative
             explicit, copula_at, tagged_at = -1, -1, -1
             after_aux = False
+            if toks[seg[0]] in _PRONOUN_COPULA:        # "you're right", "I'm watching"
+                copula_at = seg[0]
             for j, i in enumerate(seg):
                 if j == 0:
                     continue
@@ -258,12 +279,29 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
             subject = [toks[i] for i in seg if i < verb_at and toks[i] not in _NEGATORS and toks[i] not in _MODALS]
             if copula and toks[verb_at] in _PRONOUN_COPULA:   # "I'm watching", "we're close"
                 subject = [_PRONOUN_COPULA[toks[verb_at]]]
+            if copula:
+                # "I'm BUILDING a system": the progressive is the act, not a thing.
+                for i in seg:
+                    if i <= verb_at or toks[i] in closed or toks[i] in _NEGATORS:
+                        if toks[i] in _NEGATORS and i > verb_at:
+                            negated = True
+                        continue
+                    if toks[i].endswith("ing") and len(toks[i]) > 4:
+                        verb_at, copula = i, False
+                    break
             obj: List[str] = []
             content = 0
+            skip_next = False
             for i in seg:
                 if i <= verb_at:
                     continue
                 tok = toks[i]
+                if skip_next:
+                    skip_next = False
+                    continue
+                if tok == "to" and not content:
+                    skip_next = True               # "want to SAY": an infinitive, not a thing
+                    continue
                 if tok in _NEGATORS:
                     negated = True
                     continue
@@ -323,6 +361,8 @@ def relation_type_for(web: Any, profile: Mapping[str, float]):
         return RelationType.RELATED_TO
     best, score = RelationType.RELATED_TO, -1.0
     for rtype, prof in RELATION_TYPE_AXIS_PROFILES.items():
+        if rtype is RelationType.RELATED_TO:
+            continue                           # the flat catch-all fits every flat profile
         s = cosine(profile, prof)
         if s > score:
             best, score = rtype, s
@@ -508,6 +548,11 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str) -> Option
         m, c = max(modal_counts.items(), key=lambda kv: (kv[1], kv[0]))
         if c * 2 > int(p.get("n", 0)) and m not in ("do", "does", "did"):
             modal = m                          # "the mechanism could slot ..."
+    if predicate.endswith("ing") and len(predicate) > 4 and not modal:   # "you are building ..."
+        be = "am" if agent == "I" else ("are" if agent == "you" else "is")
+        verb = f"{be} {'not ' if denied else ''}{predicate}"
+        return {"agent": agent, "action": verb, "object": str(getattr(rel, "target_word", "") or ""),
+                "predicate": predicate, "n": str(int(p.get("n", 0))), "denied": str(denied)}
     if modal and predicate != "be":
         verb = f"{modal} {'not ' if denied else ''}{predicate}"
         return {"agent": agent, "action": verb, "object": str(getattr(rel, "target_word", "") or ""),
