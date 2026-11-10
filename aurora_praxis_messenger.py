@@ -134,6 +134,7 @@ except Exception:  # pragma: no cover - gate missing: the local lists still hold
 # Re-entry: an unanswered message is revisited while pressure builds.
 REENTRY_AFTER_S = 120.0
 SEND_RETRY_AFTER_S = 30.0  # Retry transport, never cognitive composition.
+PERMANENT_SEND_ERRORS = frozenset({"contract_breach", "unknown_contact"})
 MAX_ATTEMPTS = 3
 
 
@@ -480,10 +481,12 @@ class PraxisMessenger:
         temp.write_text(json.dumps(self.outbox, ensure_ascii=False), encoding="utf-8")
         temp.replace(self.outbox_path)
 
-    def _queue_unsent(self, persona_id: str, text: str, seq: int) -> None:
+    def _queue_unsent(self, persona_id: str, text: str, seq: int,
+                      *, blocked_reason: str = "") -> None:
         self.outbox[str(seq)] = {
             "persona_id": persona_id, "text": text,
             "in_reply_to": seq, "attempts": 0, "last_attempt": time.time(),
+            "blocked_reason": blocked_reason,
         }
         try:
             self._save_outbox()
@@ -492,12 +495,14 @@ class PraxisMessenger:
 
     def _retry_unsent(self) -> None:
         # Cheap network delivery, independent of the expensive field lock.
-        # Bounded per pass so a large offline outbox cannot starve new mail.
+        # One network retry per pass limits serial phone socket timeouts.
         now = time.time()
         attempted = 0
         for key, entry in list(self.outbox.items()):
-            if attempted >= 3:
+            if attempted >= 1:
                 break
+            if entry.get("blocked_reason"):
+                continue
             if now - float(entry.get("last_attempt", 0.0)) < SEND_RETRY_AFTER_S:
                 continue
             attempted += 1
