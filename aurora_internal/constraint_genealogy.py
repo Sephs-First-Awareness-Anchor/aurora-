@@ -2040,6 +2040,33 @@ def _build_closure_status_summary(
     }
 
 
+def _aggregate_link_curve_stats(links: Iterable[Any]) -> Tuple[int, float, Dict[str, int], Dict[str, float]]:
+    """One read of the live link collection shared by all six pressure curves.
+
+    The previous implementation took one global pass followed by five full
+    scans to construct per-axis subsets. Return the same global/per-axis
+    means in source order, including the old fallback of an unset axis to X.
+    No links or earned genealogy evidence are changed.
+    """
+    count = 0
+    total_depth = 0
+    axis_count = {axis: 0 for axis in AXES}
+    axis_depth = {axis: 0 for axis in AXES}
+    for link in links:
+        count += 1
+        total_depth += link.depth
+        axis = link.dominant_relief_axis or "X"
+        if axis in axis_count:
+            axis_count[axis] += 1
+            axis_depth[axis] += link.depth
+    mean = total_depth / count if count else 0.0
+    axis_means = {
+        axis: axis_depth[axis] / axis_count[axis] if axis_count[axis] else 0.0
+        for axis in AXES
+    }
+    return count, mean, axis_count, axis_means
+
+
 class ConstraintGenealogyLogger:
     """
     Core logger. Feed it (pressure_before, trace, pressure_after) every tick
@@ -2763,20 +2790,12 @@ class ConstraintGenealogyLogger:
             # iterated the links, then each of five axes filtered all links
             # again and summed its subset. The same order and arithmetic are
             # retained for each axis, including zero-link behavior.
-            all_links = list(self.links.values())
-            _axis_link_counts = {ax: 0 for ax in AXES}
-            _axis_depth_sums = {ax: 0 for ax in AXES}
-            _total_depth = 0
-            for _link in all_links:
-                _total_depth += _link.depth
-                _axis_key = _link.dominant_relief_axis or "X"
-                if _axis_key in _axis_link_counts:
-                    _axis_link_counts[_axis_key] += 1
-                    _axis_depth_sums[_axis_key] += _link.depth
-            mean_depth = _total_depth / len(all_links) if all_links else 0.0
+            _link_count, mean_depth, _axis_link_counts, _axis_link_means = (
+                _aggregate_link_curve_stats(self.links.values())
+            )
             self._complexity_curve.record_tick(
                 n_pairs_evaluated=n_pairs_eval,
-                n_links=len(all_links),
+                n_links=_link_count,
                 mean_link_depth=mean_depth,
                 tick=self.tick_count,
             )
@@ -2791,11 +2810,8 @@ class ConstraintGenealogyLogger:
                 ax_link_count = _axis_link_counts[ax]
                 # Pairs attributed to this axis: fraction of total pairs
                 ax_pair_load = int(n_pairs_eval * (ax_link_count + 1) /
-                                   max(1, len(all_links) + 1))
-                ax_mean_depth = (
-                    _axis_depth_sums[ax] / ax_link_count
-                    if ax_link_count else 0.0
-                )
+                                   max(1, _link_count + 1))
+                ax_mean_depth = _axis_link_means[ax]
                 self._axis_curves[ax].record_tick(
                     n_pairs_evaluated=ax_pair_load,
                     n_links=ax_link_count,
