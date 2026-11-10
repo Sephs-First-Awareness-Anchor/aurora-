@@ -5255,7 +5255,15 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                         )
 
                 print(f"AURORA_BRIDGE: Response: {response}")
-                _record_turn_state(_turn_id, "subsurface_integrated")
+                # Application projection is often completed AFTER Surface
+                # delivery. Record it at deep-turn completion, not as a stale
+                # value in the earlier Surface response diagnostic.
+                _record_turn_state(
+                    _turn_id, "subsurface_integrated",
+                    application_understanding_stages=dict(
+                        (_systems or {}).get("_last_application_understanding_profile") or {}
+                    ),
+                )
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
                     locals(), module=__name__,
