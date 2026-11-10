@@ -771,6 +771,18 @@ def start_praxis_messenger(systems: Dict[str, Any], *, state_dir: str,
                            live_idle: Optional[Callable[[], bool]] = None) -> PraxisMessenger:
     global _MESSENGER
     if _MESSENGER is not None:
+        # A stopped Android worker can be restarted without wiping the
+        # partner backlog, unfinished addressed pressure, initiative
+        # relationships, or re-entry attempts. Only a different Aurora
+        # instance / server connection warrants a fresh messenger.
+        same_owner = (
+            _MESSENGER.systems is systems
+            and _MESSENGER.endpoint == str(endpoint or DEFAULT_ENDPOINT).rstrip("/")
+            and _MESSENGER.root == Path(state_dir or "aurora_state") / "praxis"
+        )
+        if same_owner:
+            _MESSENGER.start()
+            return _MESSENGER
         _MESSENGER.stop()
     _MESSENGER = PraxisMessenger(systems, state_dir=state_dir, endpoint=endpoint,
                                  field_lock=field_lock, live_idle=live_idle)
