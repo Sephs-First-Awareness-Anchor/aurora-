@@ -729,6 +729,10 @@ class _HubScreenState extends State<HubScreen> {
     final withheld = _stats['messenger_withheld'] as int? ?? 0;
     final errors   = _stats['messenger_errors'] as int? ?? 0;
     final busy     = _stats['messenger_busy_skips'] as int? ?? 0;
+    final deliveryPending = _stats['messenger_delivery_pending'] as int? ?? 0;
+    final deliveryBlocked = _stats['messenger_delivery_blocked'] as int? ?? 0;
+    final unanswered = _stats['messenger_unanswered_contacts'] as int? ?? 0;
+    final pressure = (_stats['messenger_max_addressed_pressure'] as num?)?.toDouble() ?? 0.0;
     final lastHeld  = (_stats['messenger_last_withheld'] as String?) ?? '';
     final lastSpoke = (_stats['messenger_last_spoke'] as String?) ?? '';
     final lastError = (_stats['messenger_last_error'] as String?) ?? '';
@@ -757,6 +761,13 @@ class _HubScreenState extends State<HubScreen> {
                       : '$heard heard · $spoke said · $withheld held back'
                 '${busy > 0 ? ' · $busy busy' : ''}',
           valueColor: status == 'online' ? _green : _textDim),
+      if (unanswered > 0)
+        _statRow('Unanswered contact pressure',
+          '$unanswered contact(s) · peak ${pressure.toStringAsFixed(2)}', valueColor: _amber),
+      if (deliveryPending > 0)
+        _statRow('Replies awaiting delivery', '$deliveryPending', valueColor: _amber),
+      if (deliveryBlocked > 0)
+        _statRow('Replies refused by Praxis', '$deliveryBlocked', valueColor: _red),
       if (lastSpoke.isNotEmpty) note('Last said', lastSpoke, _text),
       if (lastHeld.isNotEmpty) note('Last held back', lastHeld, _amber),
       _statRow('She reached out',
