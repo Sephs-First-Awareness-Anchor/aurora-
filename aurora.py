@@ -34543,7 +34543,10 @@ def _run_live_response_turn(
     # One per-turn parser for attention, receiver observation, and synthesis.
     # Text-dependent cache; a grounded rewrite still gets a fresh parse.
     from aurora_internal.aurora_turn_parse_cache import TurnParseCache
-    _turn_parse_cache = TurnParseCache(lambda utterance: UtteranceParser().parse(utterance))
+    _turn_parse_cache = TurnParseCache(
+        lambda utterance: UtteranceParser().parse(utterance),
+        graph=_turn_ledger.computations,
+    )
     _live_profile_start = time.perf_counter()
     _live_profile_stages: Dict[str, float] = {}
 
@@ -35633,6 +35636,7 @@ def _run_live_response_turn(
         "turn_id": str(systems.get("_current_turn_id", "") or ""),
         "session_id": str(session_id or ""),
         "stages_ms": dict(_live_profile_stages),
+        "shared_computation": _turn_ledger.computations.status(),
     }
 
     # Build 774 (Android Surface/Subsurface Live-Turn Reconnection): resp_A
