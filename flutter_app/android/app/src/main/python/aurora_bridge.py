@@ -11822,6 +11822,9 @@ def get_cognitive_stats() -> str:
             stats["praxis_status"] = str(_praxis_status.get("status", "not_initialized") or "not_initialized")
             stats["praxis_online"] = bool(_praxis_status.get("online", False))
             stats["praxis_paused"] = bool(_praxis_status.get("paused", False))
+            stats["praxis_last_error"] = str(
+                _praxis_status.get("error") or _praxis_status.get("last_error") or ""
+            )[:240]
             stats["praxis_situations_witnessed"] = int(_praxis_status.get("situations_witnessed", 0) or 0)
             stats["praxis_pressure_injections"] = int(_praxis_status.get("pressure_injections", 0) or 0)
             stats["praxis_sediment_deposits"] = int(_praxis_status.get("sediment_deposits", 0) or 0)
@@ -11834,6 +11837,7 @@ def get_cognitive_stats() -> str:
             stats["praxis_status"] = "error"
             stats["praxis_online"] = False
             stats["praxis_paused"] = False
+            stats["praxis_last_error"] = f"{type(_praxis_stats_exc).__name__}: {_praxis_stats_exc}"[:240]
             stats["praxis_situations_witnessed"] = 0
             stats["praxis_pressure_injections"] = 0
             stats["praxis_sediment_deposits"] = 0
