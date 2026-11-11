@@ -1,0 +1,121 @@
+# Aurora Live-Turn Baseline and Findings — 2026-11-11
+
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Directive:** Unified Cognitive Architecture, Parts II, V, VI, XIII, XV (§43).
+**Method:** `scripts/measure_turn_baseline.py` boots Aurora against a copy of the
+repository's `aurora_state` and runs six fixed live turns through
+`process_external_user_turn` with the arguments her phone uses. Everything
+below was measured on those runs, on a 2-core development machine (not the
+phone), from the repository's state (not the phone's lived state).
+
+## 1. Every live turn on `main` was crashing (fixed — FIX-A119)
+
+Commit `5aaa303` (merged in #238, 2026-11-09) built the per-turn parse cache on
+`_turn_ledger.computations` sixty lines **above** the line that creates
+`_turn_ledger`. `_run_live_response_turn` raised `UnboundLocalError` on its
+first statement, for every turn. No test in CI runs a real turn, so it merged.
+
+Fixed by resetting the ledger first, as `reset_turn_ledger`'s own docstring
+requires. `tests/test_live_turn_smoke.py` now boots her and runs real turns in
+PR CI, with a static guard for this ordering.
+
+## 2. The last response stage raised NameError (fixed — FIX-A120)
+
+`_build_grounded_fallback_response` read `state.pipeline_state`, but `state` is
+not one of its parameters. Its lookup branches raised `NameError`, swallowed by
+the boundary handler in `_chain_down2_belief`. It now receives the turn's
+pipeline state as an argument. This removes the fault; it does **not** by
+itself make her speak (see §4).
+
+## 3. Baseline (after FIX-A119; before it, no turn completed)
+
+| Measure | Value |
+|---|---|
+| Boot | 14–22 s |
+| Peak memory | ~650–690 MB |
+| Six turns, unprofiled | 9.2–9.8 s total; first turn 2.7–3.0 s, later turns 0.6–2.1 s |
+| Function calls per warm turn (profiled) | ~9 million |
+| Shared compute graph per turn | 1 computation, 2 hits |
+
+Run-to-run, her replies to identical input differ (4 of 6 matched between two
+runs with a fixed hash seed). A before/after comparison therefore cannot use
+"same reply" as proof of no behavioural change; equivalence has to be shown at
+the level of the function being changed.
+
+## 4. Where a warm turn's time goes (five warm turns, profiled, 17.3 s)
+
+| Share | What | Evidence |
+|---|---|---|
+| ~18% | `ConstraintGenealogy.observe` — 17 calls per turn | 85 calls, 3.05 s; `_representation_index` rebuilt 62 times (1.62 s, 836k sort-key calls) |
+| ~15% | Grammar `observe_exchange` — 8–9 calls per turn, each logging relief to genealogy | 43 calls, 2.62 s; 2.16 s of it in `_log_relief_to_genealogy` |
+| ~14% | Whole-file JSON rewrites | 86 dumps, 2.37 s, 4.65M encoder calls; `aurora_expression_perception.py:626 save` alone 1.23 s for 5 calls; grammar `_save` 1.09 s |
+| ~7% | Lexical grounding gap submissions | 158 `observe_lexical_context`, 140 `_submit_gap`, 1.26 s |
+| one-time | Genealogy relevance index cold build | ~5 s, first turn after boot only (13.7k abilities); already incremental afterwards |
+
+## 5. Tried and reverted: sharing every parse through the turn graph
+
+The same user text is parsed 10–13 times per turn by readers that each build
+their own `UtteranceParser` (14–17 parses for 2–3 distinct texts). Routing all
+of them through the existing `TurnComputeGraph` cut parser runs from 77 to 20
+over five turns and produced identical parses — and **no measurable time
+change** (20.11 s → 20.09 s profiled; within noise unprofiled), because the
+expensive part of a parse is already memoised below it. Per the directive
+(complexity must show benefit), the change was **not kept**. The redundancy is
+real; it is not where the time is.
+
+## 6. Learning-integrity finding (not yet changed — needs a decision)
+
+`ExpressionComposer.absorb` forwards heard text to
+`GrammarEngine.observe_exchange("", text, success=True)`. Observed on real turns:
+
+- **Heard and unspoken text is credited as her successful production.** With
+  `success=True`, `observe_exchange` calls `_log_relief_to_genealogy`, whose
+  own docstring says it logs relief "when a grammatically clear sentence is
+  produced" (A = expression completed, agency exercised), and it credits
+  `_last_motif_id` — the last motif **she** applied. So each of the following
+  rewards her most recent expressive motif as if she had just spoken well:
+  the user's sentence (2–3 times per turn, two of them identical calls),
+  recalled memories, and her own internal candidates that were never said
+  (`"I am meaning."`, `"You do consciousness."`) on turns that ended in silence.
+- **One recalled sentence counts as several new contexts.** Recall re-absorbs
+  the stored sentence once per recall keyword, with the marker inside the text
+  (`"[recalled:fixing] I spent the morning…"`, `"[recalled:house] …"`). The
+  context hash is taken from that text, so each keyword is a distinct context.
+  Context diversity is the motif promotion gate (≥ 3 contexts).
+
+This is the directive's §26 and §23 exactly: consequences reinforcing
+representations that did not contribute, and counts growing without
+understanding. It is also the second-largest cost in §4.
+
+**Proposed repair (mechanism only, nothing scripted):** heard text still feeds
+the motif lineage as exposure, but (a) production relief is logged only for
+sentences she actually emitted, (b) a recalled sentence is absorbed with its
+marker stripped, so it shares the context it was first heard in, and (c) one
+sentence is absorbed once per turn.
+
+## 7. Other verified faults, not yet fixed
+
+- `aurora_consciousness_engine.py` (reality-warp routing) calls
+  `SimulationSession.run_epoch(topic=..., focus=...)`; `run_epoch` accepts
+  neither argument. `TypeError`, swallowed, 1–2 times per turn: severe
+  paradoxes never reach the simulation engine. Not "fixed" by simply dropping
+  the arguments — that would run a full 8×5-episode epoch inside a live turn.
+- **Direct greetings end in silence** (`src=silence`) on the repository state:
+  "Hey Aurora, how are you today?" produced no reply in every run. Candidates
+  are formed internally (`"I don't have a clear sense of that."`,
+  `"What do you mean by 'spent'?"`) and do not reach expression. Her own
+  communication-emergence record names the deficits ("no selected resolution
+  crossed into expression", "response obligation remained unresolved"). Where
+  the candidates are dropped has not been traced yet.
+
+## 8. Status
+
+| Item | Status |
+|---|---|
+| FIX-A119 turn-ledger ordering crash | Implemented and verified (live turns run; smoke test in CI) |
+| FIX-A120 fallback `NameError` | Implemented and verified (fault no longer recorded) |
+| `scripts/measure_turn_baseline.py` | Implemented; used for every number above |
+| Parse sharing | Tried, measured, reverted |
+| §6 learning-integrity repair | Not implemented — awaiting decision |
+| §4 genealogy index / persistence costs | Measured only |
+| §7 silence trace; reality-warp routing | Not yet investigated / not fixed |

@@ -11201,3 +11201,29 @@ second channel format or interpret a payload in the link.
 tests/test_strata_link.py (20 tests, incl. real HTTP and the daemon's own
 `_consume_surface_continuity_feed`). Not verified: Kotlin/Dart changes
 (uncompiled), `aurora_daemon` on native Windows, any real phone-to-laptop run.
+
+## FIX-A119 (ARCHITECTURAL) — Turn ledger must exist before anything is built on it
+**Category:** ARCHITECTURAL
+**Pattern:** In `aurora._run_live_response_turn`, `TurnParseCache(...,
+graph=_turn_ledger.computations)` was constructed above
+`_turn_ledger = reset_turn_ledger(...)`. Every live turn raised
+`UnboundLocalError` on its first statement (commit 5aaa303, merged #238).
+**Correct Form:** `reset_turn_ledger` is the FIRST thing the turn does after
+normalising the text ("Call ONCE, at the top ... before any parsing"). Anything
+that uses the turn's compute graph is constructed after it.
+**Why:** No CI test ran a real turn, so a crash on line one of the live path
+merged. `tests/test_live_turn_smoke.py` now does, and is in python-ci.
+**First Seen:** 2026-11-11 live baseline — the first boot-and-turn failed.
+
+## FIX-A120 (ARCHITECTURAL) — Helpers take the turn's pipeline state as an argument
+**Category:** ARCHITECTURAL
+**Pattern:** `_build_grounded_fallback_response` read `state.pipeline_state`
+with no `state` in scope; `NameError`, swallowed by the boundary handler in
+`_chain_down2_belief` (runtime fault `exception_handler:aurora.py:16002`).
+**Correct Form:** The function takes `pipeline_state=` and the caller passes
+`state.pipeline_state`. A module-level helper never reaches for a caller's
+local by name. When a boundary handler records a `NameError` or
+`UnboundLocalError`, that is a code defect to fix, never noise.
+**Why:** Boundary handlers keep her running but also hide dead pathways; the
+runtime fault log is where they show.
+**First Seen:** 2026-11-11 live baseline, `runtime_faults.jsonl` during a turn.

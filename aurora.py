@@ -10173,6 +10173,7 @@ def _build_grounded_fallback_response(
     systems: Dict[str, Any],
     understood: dict | None = None,
     auto_search_enabled: bool = True,
+    pipeline_state: Optional[Dict[str, Any]] = None,
 ) -> Tuple[str, str, float, Dict[str, Any]]:
     working_memory = systems.get('working_memory')
     _generative_only = _generative_only_responses_enabled(systems)
@@ -10566,14 +10567,14 @@ def _build_grounded_fallback_response(
                 _store_pending_hypothesis_offer(systems, anchor=anchor, source_text=user_text)
                 _stage_poedex_learning_request(
                     systems,
-                    state.pipeline_state if isinstance(state.pipeline_state, dict) else None,
+                    pipeline_state if isinstance(pipeline_state, dict) else None,
                     anchor,
                     source_text=user_text,
                     reason="offer_lookup_branch",
                 )
                 _stage_poedex_representation_request(
                     systems,
-                    state.pipeline_state if isinstance(state.pipeline_state, dict) else None,
+                    pipeline_state if isinstance(pipeline_state, dict) else None,
                     anchor,
                     source_text=user_text,
                     reason="offer_lookup_branch",
@@ -11093,14 +11094,14 @@ def _build_grounded_fallback_response(
         if _poedex_anchor:
             _stage_poedex_learning_request(
                 systems,
-                state.pipeline_state if isinstance(state.pipeline_state, dict) else None,
+                pipeline_state if isinstance(pipeline_state, dict) else None,
                 _poedex_anchor,
                 source_text=user_text,
                 reason="poedex_anchor_lookup",
             )
             _stage_poedex_representation_request(
                 systems,
-                state.pipeline_state if isinstance(state.pipeline_state, dict) else None,
+                pipeline_state if isinstance(pipeline_state, dict) else None,
                 _poedex_anchor,
                 source_text=user_text,
                 reason="poedex_anchor_lookup",
@@ -21695,12 +21696,17 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
             pass
     if not state.response_content:
         try:
+            # FIX-A120: the fallback stages Poedex requests into THIS turn's
+            # pipeline state.  It used to reach for a `state` it was never
+            # given, so its lookup branches raised NameError (swallowed just
+            # below) and the last response stage produced nothing.
             fb_text, fb_tone, fb_conf, fb_event = _build_grounded_fallback_response(
                 user_text,
                 state.intent,
                 systems,
                 understood=state.parsed or {},
                 auto_search_enabled=auto_search_enabled,
+                pipeline_state=state.pipeline_state,
             )
             if fb_text:
                 state.response_tone = str(fb_tone or "honest")
@@ -34540,12 +34546,23 @@ def _run_live_response_turn(
     user_text = _normalize_identity_followup_text(user_text, systems)
     user_text = _strip_vocative_address(user_text)
 
+    # Canonical per-turn ledger: single source of truth for this turn's
+    # parse, crest ranking, and chain-down trace. Replaces the previous
+    # pattern where systems["_pre_parsed_utterance"] was consumed-and-popped
+    # by whichever function happened to read it first, leaving every other
+    # consumer to silently reparse from scratch.
+    # FIX-A119: reset FIRST.  The parse cache below is built on this ledger's
+    # compute graph; commit 5aaa303 built the cache above the reset, so every
+    # live turn raised UnboundLocalError before doing anything at all.
+    from aurora_turn_ledger import reset_turn_ledger
+    _turn_ledger = reset_turn_ledger(systems, user_text, turn_tick=turn_tick)
+
     # One per-turn parser for attention, receiver observation, and synthesis.
     # Text-dependent cache; a grounded rewrite still gets a fresh parse.
     from aurora_internal.aurora_turn_parse_cache import TurnParseCache
     _turn_parse_cache = TurnParseCache(
         lambda utterance: UtteranceParser().parse(utterance),
-        graph=_turn_ledger.computations,
+        graph=getattr(_turn_ledger, "computations", None),
     )
     _live_profile_start = time.perf_counter()
     _live_profile_stages: Dict[str, float] = {}
@@ -34598,14 +34615,6 @@ def _run_live_response_turn(
     systems.pop("_last_gap_result", None)
     systems.pop("_last_rubric_evidence", None)
     systems.pop("_turn_input_state", None)
-
-    # Canonical per-turn ledger: single source of truth for this turn's
-    # parse, crest ranking, and chain-down trace. Replaces the previous
-    # pattern where systems["_pre_parsed_utterance"] was consumed-and-popped
-    # by whichever function happened to read it first, leaving every other
-    # consumer to silently reparse from scratch.
-    from aurora_turn_ledger import reset_turn_ledger
-    _turn_ledger = reset_turn_ledger(systems, user_text, turn_tick=turn_tick)
 
     # Measure the previous emitted response against the current receiver turn
     # before observation validation clears the pending contract record.  The
