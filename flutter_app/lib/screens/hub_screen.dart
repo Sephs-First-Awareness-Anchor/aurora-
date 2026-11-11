@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../aurora_bridge.dart';
 import '../habitat/habitat_bridge.dart';
 import '../praxis/praxis_bridge.dart';
@@ -585,6 +586,58 @@ class _HubScreenState extends State<HubScreen> {
     }
   }
 
+  // FIX-A118: the link to her Subsurface device.  Tap to paste the pairing
+  // line the laptop prints (http://host:port#secret).
+  static const _strataChannel = MethodChannel('org.aurora.app/bridge');
+
+  Future<void> _pairStrataLink() async {
+    final controller = TextEditingController();
+    final pairing = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Pair with Subsurface'),
+        content: TextField(
+          controller: controller,
+          autocorrect: false,
+          decoration: const InputDecoration(hintText: 'http://host:8791#secret'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: const Text('Pair')),
+        ],
+      ),
+    );
+    if (pairing == null || pairing.isEmpty) return;
+    try {
+      await _strataChannel.invokeMethod<String>('configureStrataLink', {'pairing': pairing});
+    } catch (_) {}
+  }
+
+  Widget _buildStrataLinkRow() {
+    final status   = (_stats['strata_link_status'] as String?) ?? 'not_configured';
+    final pending  = _stats['strata_link_pending'] as int? ?? 0;
+    final dropped  = _stats['strata_link_dropped'] as int? ?? 0;
+    final sent     = _stats['strata_link_sent'] as int? ?? 0;
+    final received = _stats['strata_link_received'] as int? ?? 0;
+    final rtt      = (_stats['strata_link_rtt_ms'] as num?)?.round() ?? 0;
+    final error    = (_stats['strata_link_error'] as String?) ?? '';
+    final detail = status == 'not_configured'
+        ? 'not paired · tap to pair'
+        : '${status.replaceAll('_', ' ')} · $sent up · $received down'
+          '${pending > 0 ? ' · $pending waiting' : ''}'
+          '${dropped > 0 ? ' · $dropped dropped' : ''}'
+          '${status == 'online' ? ' · ${rtt}ms' : ''}'
+          '${status == 'offline' && error.isNotEmpty ? ' · $error' : ''}';
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _pairStrataLink,
+      child: _statRow('Subsurface link', detail,
+          valueColor: status == 'online' ? _green : _textDim),
+    );
+  }
+
   Widget _buildPraxisRow() {
     final status    = (_stats['praxis_status'] as String?) ?? 'not_initialized';
     final paused    = _stats['praxis_paused'] == true;
@@ -640,6 +693,7 @@ class _HubScreenState extends State<HubScreen> {
           _statRow('Praxis fence breaches', '$breaches', valueColor: _red),
         ..._buildMessengerRows(),
         ..._buildLearningRows(),
+        _buildStrataLinkRow(),
       ]),
     );
   }

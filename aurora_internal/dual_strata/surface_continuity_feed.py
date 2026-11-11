@@ -15,7 +15,9 @@ but the organism does not absorb the moment.
 from __future__ import annotations
 from aurora_internal.aurora_runtime_faults import record_exception_from_locals as _aurora_record_exception_from_locals
 
+import functools
 import json
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -24,6 +26,20 @@ from typing import Any, Dict, List, Optional
 _FEED_FILENAME = "surface_continuity_feed.json"
 _MAX_PACKETS = 20
 
+# FIX-A118: every function here is a read-modify-write of one file.  Atomic
+# replace prevents torn JSON but not lost updates between threads of one
+# process (the phone's turn thread vs the strata link; the subsurface loop vs
+# the link server it hosts).  One in-process lock covers all of them.
+_FEED_LOCK = threading.RLock()
+
+
+def _feed_locked(fn):
+    @functools.wraps(fn)
+    def _wrapper(*args, **kwargs):
+        with _FEED_LOCK:
+            return fn(*args, **kwargs)
+    return _wrapper
+
 
 def _resolve(state_dir: Any) -> Path:
     if state_dir is not None:
@@ -31,6 +47,7 @@ def _resolve(state_dir: Any) -> Path:
     return Path(__file__).resolve().parents[2] / "aurora_state"
 
 
+@_feed_locked
 def write_continuity_packet(
     state_dir: Any,
     *,
@@ -120,6 +137,7 @@ def write_continuity_packet(
     return packet_id
 
 
+@_feed_locked
 def read_and_clear_continuity_packets(state_dir: Any) -> List[Dict[str, Any]]:
     """
     Atomically read all unconsumed continuity packets and mark them consumed.
@@ -173,3 +191,72 @@ def read_and_clear_continuity_packets(state_dir: Any) -> List[Dict[str, Any]]:
         pass
 
     return pending
+
+
+@_feed_locked
+def peek_continuity_packets(state_dir: Any) -> List[Dict[str, Any]]:
+    """Unconsumed packets, without consuming them (FIX-A118).
+
+    The strata link copies these into its durable outbox BEFORE consuming,
+    so a crash between the two steps repeats a packet rather than losing it
+    (the receiving side de-duplicates by packet_id).
+    """
+    feed_path = _resolve(state_dir) / _FEED_FILENAME
+    if not feed_path.exists():
+        return []
+    try:
+        raw = json.loads(feed_path.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    if not isinstance(raw, list):
+        return []
+    return [dict(p) for p in raw if isinstance(p, dict) and not bool(p.get("consumed", False))]
+
+
+@_feed_locked
+def deposit_continuity_packet(state_dir: Any, packet: Dict[str, Any]) -> bool:
+    """Deposit a packet a Surface on ANOTHER device already wrote (FIX-A118).
+
+    The packet keeps its own packet_id, created_at and content exactly as the
+    originating Surface recorded them; only consumption tracking is reset, so
+    this Subsurface's read_and_clear_continuity_packets() receives it like any
+    locally written packet.  A packet_id already in the feed is not deposited
+    twice.  Unlike write_continuity_packet, no unconsumed packet is ever
+    trimmed here: a backlog arriving after a long disconnect must all reach
+    the Subsurface.  Returns True when the packet was added.
+    """
+    if not isinstance(packet, dict):
+        return False
+    packet_id = str(packet.get("packet_id") or "")
+    if not packet_id:
+        return False
+    root = _resolve(state_dir)
+    root.mkdir(parents=True, exist_ok=True)
+    feed_path = root / _FEED_FILENAME
+    existing: List[Dict[str, Any]] = []
+    if feed_path.exists():
+        try:
+            raw = json.loads(feed_path.read_text(encoding="utf-8"))
+            if isinstance(raw, list):
+                existing = [p for p in raw if isinstance(p, dict)]
+        except Exception as _aurora_boundary_exc:
+            _aurora_record_exception_from_locals(
+                locals(),
+                module=__name__,
+                operation="exception_handler:aurora_internal/dual_strata/surface_continuity_feed.py:deposit_continuity_packet:read",
+                exc=_aurora_boundary_exc,
+                context={"function": "deposit_continuity_packet", "source_file": "aurora_internal/dual_strata/surface_continuity_feed.py"},
+            )
+            existing = []
+    if any(str(p.get("packet_id") or "") == packet_id for p in existing):
+        return False
+    deposited = dict(packet)
+    deposited["consumed"] = False
+    deposited["consumed_at"] = None
+    existing.append(deposited)
+    consumed = [p for p in existing if bool(p.get("consumed", False))][-_MAX_PACKETS:]
+    unconsumed = [p for p in existing if not bool(p.get("consumed", False))]
+    tmp = feed_path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(consumed + unconsumed, indent=2), encoding="utf-8")
+    tmp.replace(feed_path)
+    return True

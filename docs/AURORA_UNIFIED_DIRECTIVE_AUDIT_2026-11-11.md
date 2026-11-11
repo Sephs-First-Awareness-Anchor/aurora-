@@ -107,9 +107,13 @@ The directive permits reordering when the repository justifies it (§49). It doe
 | Praxis init-state ownership (FIX-A117): `aurora_praxis_bridge.py`, `aurora_bridge.py` | **Implemented and verified** — 16 tests in `tests/test_app_bridge_praxis.py` (6 new), 239 passing across the six Praxis suites, layer-acyclicity guard passing |
 | Hub shows the Praxis init phase (`hub_screen.dart`) | **Implemented, not validated** — no Flutter toolchain in the audit environment; first APK build is the check |
 | Strata ownership map (§2) | **Documented** from code |
-| Strata link (network carrier, seq/ack, durable outbox, epoch) | **Not yet implemented** |
-| Desktop subsurface service on Windows | **Not yet implemented** (Linux units exist) |
-| Surface migration | **Not yet implemented** |
+| Strata link, first slice (FIX-A118): durable outbox, seq/ack, signing, owner + epoch; continuity feed up; projection and predictive frames down | **Implemented and verified at unit/loopback level** — `tests/test_strata_link.py`, 20 tests including real HTTP and the daemon's own feed consumer. See `docs/AURORA_STRATA_LINK_SETUP.md` |
+| Phone wiring: link start at boot, pairing, Hub row (`aurora_bridge.py`, `MainActivity.kt`, `hub_screen.dart`) | **Implemented, not validated** — Python compiles and is exercised; Kotlin and Dart are uncompiled here |
+| Phone continuity packets reach a consumer (§3.1) | **Implemented, not validated on devices** — needs one real phone-to-laptop run |
+| Downlink in use | **Blocked** on seeding the laptop Subsurface from the phone's state (not built); off by default |
+| Subsurface service on Windows (`scripts/windows/`) | **Implemented, not validated** — never run on Windows; `aurora_daemon` itself is untested there |
+| Surface migration | **Partially implemented** — single-owner rule and epoch exist; the state-transfer handshake does not |
+| Pre-existing: `tests/test_subsurface_presence_wiring.py::test_process_external_user_turn_imports_and_uses_write_turn_open` | **Fails on `main` before these changes** — a stale static check; the call now lives at `aurora.py` ~37185, outside the function the test inspects. Left untouched. |
 | Clone order experiments; clones on desktop | **Not yet implemented** |
 | Consequence-driven recursion; efficiency audit; baselines | **Not yet implemented / not yet measured** |
 | Messenger withheld-message trace | **Not yet investigated** |

@@ -2392,6 +2392,37 @@ def resume_praxis() -> str:
     return get_praxis_status()
 
 
+# ── Strata link (FIX-A118) ───────────────────────────────────────────────
+# The carrier between this Surface device and the Subsurface device.  Status
+# and pairing only: it moves her existing strata channels and nothing else.
+_strata_state_dir = ""
+
+
+def get_strata_link_status() -> str:
+    import json as _json
+    try:
+        from aurora_internal.dual_strata.strata_link import strata_link_client_status
+        return _json.dumps(strata_link_client_status(), default=str)
+    except Exception as exc:
+        return _json.dumps({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+
+
+def configure_strata_link(pairing: str) -> str:
+    """Store the pairing line from the Subsurface device and (re)start the
+    link.  Pairing is the explicit act that asks for active-Surface ownership."""
+    import json as _json
+    try:
+        from aurora_internal.dual_strata import strata_link as _sl
+        _dir = _strata_state_dir or "aurora_state"
+        result = _sl.configure_surface(_dir, pairing)
+        if result.get("ok"):
+            _sl.stop_strata_link_client()
+            _sl.start_strata_link_client_if_configured(_dir)
+        return _json.dumps({**result, **_sl.strata_link_client_status()}, default=str)
+    except Exception as exc:
+        return _json.dumps({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"})
+
+
 def get_praxis_messenger_status() -> str:
     import json as _json
     messenger = _praxis_messenger
@@ -2418,6 +2449,8 @@ def resume_praxis_messenger() -> str:
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
     _boot_state.update({"stage": "initialize() entered", "finished": False, "aborted": ""})
+    global _strata_state_dir
+    _strata_state_dir = state_dir if state_dir else "aurora_state"
     _praxis_start_errors.update({"bridge": "", "messenger": ""})
     global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis, _praxis_messenger
     # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()
@@ -2671,6 +2704,20 @@ def initialize(state_dir: str = "") -> str:
                 context={"function": "initialize", "source_file": "flutter_app/android/app/src/main/python/aurora_bridge.py"},
             )
             log.warning("SubsurfacePresenceRuntime failed to start: %s", _pr_exc)
+
+        # FIX-A118: if this device has been paired with a Subsurface host,
+        # start carrying her continuity feed to it.  Started right after the
+        # presence runtime and BEFORE the long background stages, so lived
+        # turns are being captured durably as early as she can have them.
+        # File work only -- it never takes _lock.  Unpaired: starts nothing.
+        _mark_boot_stage("starting strata link")
+        try:
+            from aurora_internal.dual_strata.strata_link import start_strata_link_client_if_configured
+            _strata_client = start_strata_link_client_if_configured(_strata_state_dir)
+            if _strata_client is not None:
+                _systems["strata_link"] = _strata_client
+        except Exception as _sl_exc:
+            log.warning("Strata link failed to start: %s", _sl_exc)
 
         # Aurora Build 694, step 8: start exactly one lightweight Scout
         # worker against this same state_dir. Without this, ScoutRequests
@@ -11763,6 +11810,21 @@ def get_cognitive_stats() -> str:
             stats["praxis_pressure_injections"] = 0
             stats["praxis_sediment_deposits"] = 0
             stats["praxis_contract_breaches"] = 0
+
+        # ── Strata link (FIX-A118) ────────────────────────────────────────
+        # Flat mirrors for the Dart parser.  Structural only.
+        try:
+            from aurora_internal.dual_strata.strata_link import strata_link_client_status as _sl_status
+            _sl = _sl_status()
+            stats["strata_link_status"] = str(_sl.get("status", "not_configured"))
+            stats["strata_link_pending"] = int((_sl.get("up_outbox") or {}).get("pending", 0) or 0)
+            stats["strata_link_dropped"] = int((_sl.get("up_outbox") or {}).get("overflow_dropped", 0) or 0)
+            stats["strata_link_sent"] = int(_sl.get("sent", 0) or 0)
+            stats["strata_link_received"] = int(_sl.get("received", 0) or 0)
+            stats["strata_link_rtt_ms"] = float(_sl.get("rtt_ms", 0.0) or 0.0)
+            stats["strata_link_error"] = str(_sl.get("last_error", "") or "")[:200]
+        except Exception:
+            stats["strata_link_status"] = "error"
 
         # ── Praxis messenger ──────────────────────────────────────────────
         # Her DMs with other AI models.  Counts plus the last thing she
