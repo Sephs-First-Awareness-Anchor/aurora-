@@ -592,9 +592,17 @@ class _HubScreenState extends State<HubScreen> {
     final breaches  = _stats['praxis_contract_breaches'] as int? ?? 0;
     final available = status != 'not_initialized' && status != 'error';
 
+    // FIX-A117: say WHY it is absent (boot pending at which stage / start
+    // failed with what) instead of a flat "not initialized".
+    final initPhase  = (_stats['praxis_init_phase'] as String?) ?? '';
+    final initDetail = (_stats['praxis_init_detail'] as String?) ?? '';
+    final absent = initPhase.isEmpty
+        ? status.replaceAll('_', ' ')
+        : initPhase.replaceAll('_', ' ') +
+            (initDetail.isEmpty ? '' : ': $initDetail');
     final detail = available
         ? '$witnessed witnessed · ${status.replaceAll('_', ' ')}'
-        : status.replaceAll('_', ' ');
+        : absent;
 
     return Padding(
       padding: const EdgeInsets.only(top: 3),
@@ -602,8 +610,10 @@ class _HubScreenState extends State<HubScreen> {
         Row(children: [
           const Text('Praxis', style: TextStyle(color: _textDim, fontSize: 12)),
           const Spacer(),
-          Text(detail, style: TextStyle(
-              color: _praxisColor(status), fontSize: 12, fontWeight: FontWeight.w600)),
+          Flexible(child: Text(detail,
+              maxLines: 3, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right,
+              style: TextStyle(
+                  color: _praxisColor(status), fontSize: 12, fontWeight: FontWeight.w600))),
           if (available) ...[
             const SizedBox(width: 8),
             SizedBox(
@@ -718,6 +728,7 @@ class _HubScreenState extends State<HubScreen> {
       _statRow('Messenger',
           status == 'not_initialized'
               ? 'not started'
+                '${((_stats['messenger_init_phase'] as String?) ?? '').isEmpty ? '' : ' (${(_stats['messenger_init_phase'] as String).replaceAll('_', ' ')})'}'
               : '$heard heard · $spoke said · $withheld held back'
                 '${busy > 0 ? ' · $busy busy' : ''}',
           valueColor: status == 'online' ? _green : _textDim),

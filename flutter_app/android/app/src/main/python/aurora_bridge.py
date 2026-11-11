@@ -39,7 +39,16 @@ log = logging.getLogger("aurora_bridge")
 # the same mechanism one level deeper rather than inventing a new one.
 # Deliberately as cheap and defensive as possible: a stage marker must
 # never itself become a new crash.
+# FIX-A117: boot/start state the Praxis status calls read, owned here in one
+# place.  "not_initialized" used to mean four different things (boot has not
+# reached the Praxis stage yet / boot aborted before it / the start raised /
+# never attempted) and the Hub could not tell them apart.
+_boot_state = {"stage": "", "finished": False, "aborted": ""}
+_praxis_start_errors = {"bridge": "", "messenger": ""}
+
+
 def _mark_boot_stage(stage: str) -> None:
+    _boot_state["stage"] = str(stage)
     try:
         with open("last_boot_stage.txt", "w", encoding="utf-8") as f:
             f.write(f"time={int(time.time() * 1000)} stage={stage}")
@@ -2337,11 +2346,30 @@ def _praxis_endpoint(state_dir: str) -> str:
     return "http://127.0.0.1:8787"
 
 
+def _praxis_absent_status(kind: str) -> dict:
+    """FIX-A117: why a Praxis component (kind = "bridge" | "messenger") is
+    absent.  "status" stays "not_initialized" for every existing reader;
+    init_phase / init_detail say which of the four cases it actually is."""
+    error = str(_praxis_start_errors.get(kind) or "")
+    if error:
+        phase, detail = "start_failed", error
+    elif _boot_state.get("aborted"):
+        phase, detail = "boot_aborted", str(_boot_state.get("aborted") or "")
+    elif _boot_state.get("finished"):
+        phase, detail = "never_attempted", ""
+    elif _boot_state.get("stage"):
+        phase, detail = "boot_pending", str(_boot_state.get("stage") or "")
+    else:
+        phase, detail = "boot_not_begun", ""
+    return {"status": "not_initialized", "thread_alive": False,
+            "init_phase": phase, "init_detail": detail[:300]}
+
+
 def get_praxis_status() -> str:
     import json as _json
     bridge = _praxis
     if bridge is None:
-        return _json.dumps({"status": "not_initialized", "thread_alive": False})
+        return _json.dumps(_praxis_absent_status("bridge"))
     try:
         return _json.dumps(bridge.status(), default=str)
     except Exception as exc:
@@ -2368,7 +2396,7 @@ def get_praxis_messenger_status() -> str:
     import json as _json
     messenger = _praxis_messenger
     if messenger is None:
-        return _json.dumps({"status": "not_initialized", "thread_alive": False})
+        return _json.dumps(_praxis_absent_status("messenger"))
     try:
         return _json.dumps(messenger.status(), default=str)
     except Exception as exc:
@@ -2389,6 +2417,8 @@ def resume_praxis_messenger() -> str:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
+    _boot_state.update({"stage": "initialize() entered", "finished": False, "aborted": ""})
+    _praxis_start_errors.update({"bridge": "", "messenger": ""})
     global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim, _historical_experience, _praxis, _praxis_messenger
     # Diagnostic hardening, part 4 (per Sunni: build 734's boot_aurora()
     # tracing showed NO new markers at all -- confirmed still dying at the
@@ -2754,9 +2784,17 @@ def initialize(state_dir: str = "") -> str:
                 _systems["praxis_bridge"] = _praxis
                 log.info("Praxis bridge: %s", _praxis.status())
             else:
-                log.warning("Praxis bridge did not start")
+                # FIX-A117: the bridge module owns why its start failed.
+                try:
+                    from aurora_praxis_bridge import start_record as _praxis_start_record
+                    _praxis_start_errors["bridge"] = str(
+                        _praxis_start_record().get("error") or "start returned no bridge")
+                except Exception:
+                    _praxis_start_errors["bridge"] = "start returned no bridge"
+                log.warning("Praxis bridge did not start: %s", _praxis_start_errors["bridge"])
         except Exception as _praxis_exc:
             _praxis = None
+            _praxis_start_errors["bridge"] = f"{type(_praxis_exc).__name__}: {_praxis_exc}"
             _aurora_record_exception_from_locals(
                 locals(),
                 module=__name__,
@@ -2794,6 +2832,7 @@ def initialize(state_dir: str = "") -> str:
                 log.warning("Learning probe failed to start: %s", _probe_exc)
         except Exception as _messenger_exc:
             _praxis_messenger = None
+            _praxis_start_errors["messenger"] = f"{type(_messenger_exc).__name__}: {_messenger_exc}"
             _aurora_record_exception_from_locals(
                 locals(),
                 module=__name__,
@@ -2807,6 +2846,7 @@ def initialize(state_dir: str = "") -> str:
         # can show a warning without needing to parse _systems internals.
         # A degraded boot is better than no Aurora — physics is incomplete but
         # she can still respond.  Fatal boot exits before reaching here.
+        _boot_state["finished"] = True
         _missing_at_end = (_systems or {}).get("_boot_missing", [])
         if _missing_at_end:
             _missing_str = ",".join(_missing_at_end)
@@ -2819,6 +2859,7 @@ def initialize(state_dir: str = "") -> str:
         tb = traceback.format_exc()
         log.error("boot_aurora failed: %s\n%s", exc, tb)
         last_line = [l.strip() for l in tb.splitlines() if l.strip()][-1]
+        _boot_state["aborted"] = f"at stage '{_boot_state.get('stage', '')}': {last_line}"
         return f"error: {last_line}"
 
 
@@ -11699,8 +11740,10 @@ def get_cognitive_stats() -> str:
             if _praxis is not None:
                 _praxis_status = _praxis.status()
             else:
-                _praxis_status = {"status": "not_initialized"}
+                _praxis_status = _praxis_absent_status("bridge")
             stats["praxis"] = _praxis_status
+            stats["praxis_init_phase"] = str(_praxis_status.get("init_phase", "") or "")
+            stats["praxis_init_detail"] = str(_praxis_status.get("init_detail", "") or "")
             stats["praxis_status"] = str(_praxis_status.get("status", "not_initialized") or "not_initialized")
             stats["praxis_online"] = bool(_praxis_status.get("online", False))
             stats["praxis_paused"] = bool(_praxis_status.get("paused", False))
@@ -11730,6 +11773,9 @@ def get_cognitive_stats() -> str:
             stats["messenger_status"] = (
                 "not_initialized" if _praxis_messenger is None
                 else ("online" if _m.get("online") else "offline"))
+            _m_absent = _praxis_absent_status("messenger") if _praxis_messenger is None else {}
+            stats["messenger_init_phase"] = str(_m_absent.get("init_phase", "") or "")
+            stats["messenger_init_detail"] = str(_m_absent.get("init_detail", "") or "")
             for _key in ("heard", "spoke", "withheld", "errors", "busy_skips", "breaches"):
                 stats[f"messenger_{_key}"] = int(_m.get(_key, 0) or 0)
             _w = _m.get("last_withheld") or {}
