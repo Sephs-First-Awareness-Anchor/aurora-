@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../aurora_bridge.dart';
 import '../habitat/habitat_bridge.dart';
 import '../praxis/praxis_bridge.dart';
@@ -585,6 +586,58 @@ class _HubScreenState extends State<HubScreen> {
     }
   }
 
+  // FIX-A118: the link to her Subsurface device.  Tap to paste the pairing
+  // line the laptop prints (http://host:port#secret).
+  static const _strataChannel = MethodChannel('org.aurora.app/bridge');
+
+  Future<void> _pairStrataLink() async {
+    final controller = TextEditingController();
+    final pairing = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Pair with Subsurface'),
+        content: TextField(
+          controller: controller,
+          autocorrect: false,
+          decoration: const InputDecoration(hintText: 'http://host:8791#secret'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: const Text('Pair')),
+        ],
+      ),
+    );
+    if (pairing == null || pairing.isEmpty) return;
+    try {
+      await _strataChannel.invokeMethod<String>('configureStrataLink', {'pairing': pairing});
+    } catch (_) {}
+  }
+
+  Widget _buildStrataLinkRow() {
+    final status   = (_stats['strata_link_status'] as String?) ?? 'not_configured';
+    final pending  = _stats['strata_link_pending'] as int? ?? 0;
+    final dropped  = _stats['strata_link_dropped'] as int? ?? 0;
+    final sent     = _stats['strata_link_sent'] as int? ?? 0;
+    final received = _stats['strata_link_received'] as int? ?? 0;
+    final rtt      = (_stats['strata_link_rtt_ms'] as num?)?.round() ?? 0;
+    final error    = (_stats['strata_link_error'] as String?) ?? '';
+    final detail = status == 'not_configured'
+        ? 'not paired · tap to pair'
+        : '${status.replaceAll('_', ' ')} · $sent up · $received down'
+          '${pending > 0 ? ' · $pending waiting' : ''}'
+          '${dropped > 0 ? ' · $dropped dropped' : ''}'
+          '${status == 'online' ? ' · ${rtt}ms' : ''}'
+          '${status == 'offline' && error.isNotEmpty ? ' · $error' : ''}';
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _pairStrataLink,
+      child: _statRow('Subsurface link', detail,
+          valueColor: status == 'online' ? _green : _textDim),
+    );
+  }
+
   Widget _buildPraxisRow() {
     final status    = (_stats['praxis_status'] as String?) ?? 'not_initialized';
     final paused    = _stats['praxis_paused'] == true;
@@ -592,9 +645,17 @@ class _HubScreenState extends State<HubScreen> {
     final breaches  = _stats['praxis_contract_breaches'] as int? ?? 0;
     final available = status != 'not_initialized' && status != 'error';
 
+    // FIX-A117: say WHY it is absent (boot pending at which stage / start
+    // failed with what) instead of a flat "not initialized".
+    final initPhase  = (_stats['praxis_init_phase'] as String?) ?? '';
+    final initDetail = (_stats['praxis_init_detail'] as String?) ?? '';
+    final absent = initPhase.isEmpty
+        ? status.replaceAll('_', ' ')
+        : initPhase.replaceAll('_', ' ') +
+            (initDetail.isEmpty ? '' : ': $initDetail');
     final detail = available
         ? '$witnessed witnessed · ${status.replaceAll('_', ' ')}'
-        : status.replaceAll('_', ' ');
+        : absent;
 
     return Padding(
       padding: const EdgeInsets.only(top: 3),
@@ -602,8 +663,10 @@ class _HubScreenState extends State<HubScreen> {
         Row(children: [
           const Text('Praxis', style: TextStyle(color: _textDim, fontSize: 12)),
           const Spacer(),
-          Text(detail, style: TextStyle(
-              color: _praxisColor(status), fontSize: 12, fontWeight: FontWeight.w600)),
+          Flexible(child: Text(detail,
+              maxLines: 3, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right,
+              style: TextStyle(
+                  color: _praxisColor(status), fontSize: 12, fontWeight: FontWeight.w600))),
           if (available) ...[
             const SizedBox(width: 8),
             SizedBox(
@@ -630,6 +693,7 @@ class _HubScreenState extends State<HubScreen> {
           _statRow('Praxis fence breaches', '$breaches', valueColor: _red),
         ..._buildMessengerRows(),
         ..._buildLearningRows(),
+        _buildStrataLinkRow(),
       ]),
     );
   }
@@ -718,6 +782,7 @@ class _HubScreenState extends State<HubScreen> {
       _statRow('Messenger',
           status == 'not_initialized'
               ? 'not started'
+                '${((_stats['messenger_init_phase'] as String?) ?? '').isEmpty ? '' : ' (${(_stats['messenger_init_phase'] as String).replaceAll('_', ' ')})'}'
               : '$heard heard · $spoke said · $withheld held back'
                 '${busy > 0 ? ' · $busy busy' : ''}',
           valueColor: status == 'online' ? _green : _textDim),

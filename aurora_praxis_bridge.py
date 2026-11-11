@@ -1214,6 +1214,24 @@ class PraxisBridge:
 
 _bridge: Optional[PraxisBridge] = None
 
+# FIX-A117: the single owner of "did the bridge start, and if not, why".
+# Before this, a constructor failure returned None with the exception
+# discarded, so every caller could only report a flat "not_initialized" --
+# indistinguishable from "start was never attempted".  Phases:
+#   never_attempted -> starting -> started | start_failed ; stopped
+_start_record: Dict[str, Any] = {"phase": "never_attempted", "error": "", "at": 0.0}
+
+
+def _set_start_record(phase: str, error: str = "") -> None:
+    _start_record["phase"] = str(phase)
+    _start_record["error"] = str(error or "")[:300]
+    _start_record["at"] = time.time()
+
+
+def start_record() -> Dict[str, Any]:
+    """Structural start state only (phase / error / timestamp)."""
+    return dict(_start_record)
+
 
 def start_praxis_bridge(
     systems: Mapping[str, Any],
@@ -1227,16 +1245,19 @@ def start_praxis_bridge(
     global _bridge
     if _bridge is not None:
         return _bridge
+    _set_start_record("starting")
     try:
         bridge = PraxisBridge(
             systems, state_dir=state_dir, endpoint=endpoint,
             field_lock=field_lock, live_idle=live_idle,
             poll_interval_s=poll_interval_s,
         )
-    except Exception:
+        bridge.start()
+    except Exception as exc:
+        _set_start_record("start_failed", f"{type(exc).__name__}: {exc}")
         return None
-    bridge.start()
     _bridge = bridge
+    _set_start_record("started")
     return bridge
 
 
@@ -1246,7 +1267,9 @@ def get_bridge() -> Optional[PraxisBridge]:
 
 def praxis_status() -> Dict[str, Any]:
     if _bridge is None:
-        return {"status": "not_initialized", "thread_alive": False}
+        return {"status": "not_initialized", "thread_alive": False,
+                "init_phase": _start_record["phase"],
+                "init_detail": _start_record["error"]}
     return _bridge.status()
 
 
@@ -1267,3 +1290,4 @@ def stop_praxis_bridge(timeout: float = 3.0) -> None:
     if _bridge is not None:
         _bridge.stop(timeout=timeout)
         _bridge = None
+        _set_start_record("stopped")

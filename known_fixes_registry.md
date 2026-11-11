@@ -11153,3 +11153,51 @@ complements and particles/third persons are not things, progressives are the
 act ("I'm building a system"), RELATED_TO is not a meaning-profile fit.
 **First Seen:** 2026-11-09 local listen of 1,471 real messages: 4,702
 statements, 5,044 concept placements, 4,871 sentence shapes credited, 327 s.
+
+## FIX-A117 (ARCHITECTURAL) — Praxis "not_initialized" says which case it is
+**Category:** ARCHITECTURAL
+**Pattern:** One flat `{"status": "not_initialized"}` stood for four different
+states: boot has not yet reached the Praxis stage (it is the LAST stage of
+aurora_bridge.initialize(), after clone-harvest absorption under `_lock` and
+the historical-experience start), boot aborted before reaching it, the start
+raised, or it was never attempted. `start_praxis_bridge` also discarded the
+constructor exception (`except Exception: return None`), so "did not start"
+carried no reason anywhere.
+**Correct Form:** Start state has one owner per level.
+`aurora_praxis_bridge._start_record` / `start_record()` owns the bridge's own
+start outcome (never_attempted / starting / started / start_failed / stopped).
+`aurora_bridge._boot_state` + `_praxis_start_errors` own boot stage and
+per-component start errors; `_praxis_absent_status(kind)` is the only place an
+absent bridge or messenger is described. `status` stays `not_initialized` for
+existing readers; `init_phase` (boot_not_begun / boot_pending / boot_aborted /
+start_failed / never_attempted) and `init_detail` (the boot stage or the
+error) say why. Hub stats mirror them flat as `praxis_init_*` /
+`messenger_init_*`.
+**Why:** Initialization state must be owned and reported consistently; a status
+that cannot distinguish "still booting" from "failed" cannot be diagnosed from
+the phone.
+**First Seen:** 2026-11-11 unified-directive audit (Part XII). Verified by
+tests/test_app_bridge_praxis.py; the Dart Hub change is not compiled here.
+
+## FIX-A118 (ARCHITECTURAL) — Strata link: the existing channels, carried between two devices
+**Category:** ARCHITECTURAL
+**Pattern:** Surface and Subsurface could only be two strata of one Aurora
+when both shared one `aurora_state/` directory. The phone wrote a continuity
+packet every turn into a feed whose only reader (`aurora_daemon`) never runs on
+the phone: capped at 20, oldest dropped unread. Separately, every function in
+`surface_continuity_feed.py` was an unlocked read-modify-write.
+**Correct Form:** `aurora_internal/dual_strata/strata_link.py` moves the
+SAME channels between two state directories and adds only transport
+guarantees: durable outbox per side, per-record seq + ack, signed requests and
+responses, one owner + epoch held by the Subsurface. Channel content is always
+read/written through the owning module (`peek_continuity_packets`,
+`deposit_continuity_packet`, `PredictiveStager.push/pop`). The server runs
+INSIDE `aurora_daemon` so deposits share `_FEED_LOCK` with the consuming loop.
+Unpaired devices start nothing. Downlink stays off until
+`strata_link/downlink_enabled` exists on the Subsurface device. Never add a
+second channel format or interpret a payload in the link.
+**Why:** Distribution was a missing carrier, not missing cognition.
+**First Seen:** 2026-11-11 unified-directive Stage D first slice. Verified by
+tests/test_strata_link.py (20 tests, incl. real HTTP and the daemon's own
+`_consume_surface_continuity_feed`). Not verified: Kotlin/Dart changes
+(uncompiled), `aurora_daemon` on native Windows, any real phone-to-laptop run.

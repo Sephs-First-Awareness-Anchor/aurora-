@@ -175,3 +175,72 @@ def test_praxis_is_not_idle_while_sunni_was_just_answered(monkeypatch):
         monkeypatch.setattr(ab, "_systems", {})
     monkeypatch.setattr(ab, "_last_output_time", time.time())
     assert ab._praxis_live_idle() is False
+
+
+# ---------------------------------------------------------------------------
+# FIX-A117: "not_initialized" says which case it is
+# ---------------------------------------------------------------------------
+
+@pytest.fixture()
+def absent(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)  # _mark_boot_stage writes last_boot_stage.txt to cwd
+    monkeypatch.setattr(ab, "_praxis", None)
+    monkeypatch.setattr(ab, "_praxis_messenger", None)
+    monkeypatch.setattr(ab, "_boot_state", {"stage": "", "finished": False, "aborted": ""})
+    monkeypatch.setattr(ab, "_praxis_start_errors", {"bridge": "", "messenger": ""})
+
+
+def test_absent_before_boot_begins(absent):
+    payload = json.loads(ab.get_praxis_status())
+    assert payload["status"] == "not_initialized"
+    assert payload["init_phase"] == "boot_not_begun"
+
+
+def test_absent_while_boot_is_still_at_an_earlier_stage(absent):
+    ab._mark_boot_stage("absorbing clone harvest")
+    for call in (ab.get_praxis_status, ab.get_praxis_messenger_status):
+        payload = json.loads(call())
+        assert payload["init_phase"] == "boot_pending"
+        assert payload["init_detail"] == "absorbing clone harvest"
+
+
+def test_absent_because_boot_aborted_names_the_stage(absent):
+    ab._boot_state["aborted"] = "at stage 'device embodiment': RuntimeError: boom"
+    payload = json.loads(ab.get_praxis_status())
+    assert payload["init_phase"] == "boot_aborted"
+    assert "device embodiment" in payload["init_detail"]
+
+
+def test_a_failed_start_keeps_its_reason_per_component(absent):
+    ab._boot_state["finished"] = True
+    ab._praxis_start_errors["messenger"] = "OSError: read-only state dir"
+    messenger = json.loads(ab.get_praxis_messenger_status())
+    assert messenger["init_phase"] == "start_failed"
+    assert "OSError" in messenger["init_detail"]
+    # the bridge did not fail; boot finished without it ever being attempted
+    assert json.loads(ab.get_praxis_status())["init_phase"] == "never_attempted"
+
+
+def test_bridge_module_records_why_its_start_failed(monkeypatch, tmp_path):
+    import aurora_praxis_bridge as pb
+
+    monkeypatch.setattr(pb, "_bridge", None)
+    monkeypatch.setattr(pb, "_start_record", {"phase": "never_attempted", "error": "", "at": 0.0})
+    assert pb.praxis_status()["init_phase"] == "never_attempted"
+
+    blocker = tmp_path / "not_a_dir"
+    blocker.write_text("x", encoding="utf-8")  # state_dir is a file: mkdir must fail
+    assert pb.start_praxis_bridge({}, state_dir=str(blocker)) is None
+    status = pb.praxis_status()
+    assert status["status"] == "not_initialized"
+    assert status["init_phase"] == "start_failed"
+    assert status["init_detail"]
+
+    bridge = pb.start_praxis_bridge({}, state_dir=str(tmp_path / "ok"),
+                                    endpoint="http://127.0.0.1:9", poll_interval_s=60.0)
+    try:
+        assert bridge is not None
+        assert pb.start_record()["phase"] == "started"
+    finally:
+        pb.stop_praxis_bridge(timeout=2.0)
+    assert pb.start_record()["phase"] == "stopped"

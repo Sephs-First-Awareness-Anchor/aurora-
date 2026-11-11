@@ -341,6 +341,19 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    // Strata link (FIX-A118): status, and pairing with the
+                    // Subsurface device.  Flutter never sees channel content.
+                    "getStrataLinkStatus" -> {
+                        AuroraService.callPythonString("get_strata_link_status") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "configureStrataLink" -> {
+                        val pairing = call.argument<String>("pairing") ?: ""
+                        AuroraService.callPythonStringArg("configure_strata_link", pairing) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     "getRoomState" -> {
                         AuroraService.getRoomState { json ->
                             runOnUiThread { result.success(json) }

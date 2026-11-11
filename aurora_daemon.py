@@ -8915,6 +8915,26 @@ def run(systems: Dict[str, Any]) -> None:
             context={"function": "run", "source_file": "aurora_daemon.py"},
         )
 
+    # FIX-A118: when this machine has been paired as the Subsurface host
+    # (aurora_state/strata_link/secret.txt exists), accept the remote
+    # Surface's channel traffic.  Hosted in THIS process so deposits into the
+    # continuity feed share its in-process lock with _consume_surface_
+    # continuity() below.  Unpaired machines start nothing.
+    try:
+        from aurora_internal.dual_strata.strata_link import start_strata_link_server_if_configured
+        _strata_link_server = start_strata_link_server_if_configured(_STATE_DIR)
+        if _strata_link_server is not None:
+            systems["_strata_link_server"] = _strata_link_server
+            _log(f"Strata link listening on port {_strata_link_server.port}")
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(), module=__name__,
+            operation="exception_handler:aurora_daemon.py:run:start_strata_link_server",
+            exc=_aurora_boundary_exc,
+            context={"function": "run", "source_file": "aurora_daemon.py"},
+        )
+        _log(f"Strata link failed to start: {_aurora_boundary_exc}")
+
     # Enable proactive reach-out — Aurora should speak up on her own when she
     # has something to say (identity field pressure, novel sensory events, etc.)
     # Subsurface never owns outward communication (same delegation the
