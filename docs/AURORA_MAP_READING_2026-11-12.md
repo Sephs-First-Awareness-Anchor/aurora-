@@ -126,6 +126,67 @@ was changed for this trace.**
 development" to the surface. As built, what it sends is a status report in
 prewritten English plus a few numbers, and the surface uses none of it.
 
+## Trace 1b — the conscious frame arrives by another route
+
+The caution on Finding 1 turned out to matter, so it is recorded here rather
+than left as a caveat. Of the 11 subsurface signals with no reader on the
+pipeline state:
+
+- **`subsurface_conscious_frame`, `subsurface_conscious_crest`, `present_frame`
+  are redundant copies of information that does arrive.** The conscious frame
+  is produced by the DCE bridge (`dual_strata/dce_bridge.py`: subsystem crests
+  converge into a subsurface crest, then a conscious crest and frame) at the
+  end of each turn and stored on the `systems` bus as `_live_conscious_frame` /
+  `_live_conscious_crest`. From there it is read by the next turn's action
+  selection (`aurora.py` ~20397), CERS hesitation (~19988, ~27241), the
+  confluence (`aurora_confluence.py` 445), the activation field, the training
+  pulse and the daemon. `_present_frame_snapshot` is read by the crest's charge.
+- **The eight projection-derived signals are true dead ends** as traced above:
+  `subsurface_effects`, `subsurface_intuition`, `subsurface_intuition_signals`,
+  `subsurface_active_effects`, `subsurface_dominant_axis_hint`,
+  `subsurface_readiness_bias`, `pre_generation_subsurface_state`,
+  `dual_strata_runtime` (the last two not individually followed).
+
+So her conscious-sense carrier (the DCE frame) is connected and consumed. What
+is disconnected is the *projection*: the file-borne report from the subsurface
+daemon. That is also exactly what the strata link's downlink carries.
+
+**A limit of the map this exposed.** It watches the pipeline state live but
+only indexes the `systems` bus from source, so it cannot show on its own that
+one signal is a copy of another. Each "no reader" group still needs this kind
+of follow-through.
+
+## Placement — "hearing is not producing" (FIX-A123, PR #244)
+
+Placed on the map by hand, because the path runs inside organs.
+
+- **In:** heard text reaches `ExpressionPerceptionEngine.ingest_interaction`
+  from four call sites per turn — the gateway's first synthesis (the user's
+  words), the gateway's recall-enriched re-synthesis (the same words plus
+  `[recalled:…]` fragments), her articulation drafts, and the post-reply
+  persistent ingest.
+- **Through:** `SentenceComposer.absorb` → `GrammarEngine.observe_exchange`
+  → motif lineage (`record_success`, context hash) and, before the fix,
+  `_log_relief_to_genealogy`.
+- **Out, and who reads it:** the motif lineage feeds motif selection and the
+  promotion gate (≥ 3 contexts). The relief log is a genealogy observation
+  crediting `A:OUTLET_PUSH`, `B:INTERFACE_WEAKEN`, `T:ADVANCE_TICK`; the
+  genealogy learns ability relief from its observations, which feeds which
+  abilities are active in later turns.
+- **What the relief observation is.** Its "before" pressure is computed from
+  the clarity argument and its "after" pressure is all zeros, with fixed state
+  signatures. On the absorb path clarity is the constant 0.6. So every heard
+  sentence wrote the same synthetic full-relief observation.
+- **Standing decisions at this site.** FIX-A016: heard language feeds the
+  motif lineage — kept. Comm-credit Phase G (`tests/test_comm_credit_phase_g_live_wiring.py`):
+  immediate credit is replaced by delayed receiver evidence through
+  `record_motif_outcome` — the fix removes the one remaining immediate credit,
+  which is what that decision already called for.
+- **Verdict.** Consistent with both decisions; it removes a synthetic
+  observation and a triple ingest, and adds no knowledge to her. One part is
+  still open and deliberately untouched: her articulation drafts are absorbed
+  as heard language.
+
 ## What this means for work already done
 
 - **Strata link downlink (FIX-A118).** It carries the subsurface projection to
@@ -133,10 +194,8 @@ prewritten English plus a few numbers, and the surface uses none of it.
   reader. Turning the downlink on today would change nothing she says. The
   link was built before this map existed; the map says the surface's use of
   the projection has to be repaired first.
-- **Hearing is not producing (FIX-A123, PR #244).** Its path runs through
-  perception, the composer, the grammar lineage and the genealogy — inside
-  organs, which this map does not cover yet. It has **not** been validated
-  against the map.
+- **Hearing is not producing (FIX-A123, PR #244).** Placed by hand above
+  ("Placement"). Consistent with the standing decisions at its site.
 - **Relation-slot repair (FIX-A122).** Withdrawn; see the registry.
 
 ## Next, in order
