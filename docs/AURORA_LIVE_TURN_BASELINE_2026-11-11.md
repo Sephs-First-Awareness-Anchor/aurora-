@@ -138,6 +138,30 @@ own state derivation ("I am fear right now. ...") is blocked as a scripted
 source. Nothing currently lets a directly asked state question reach her own
 words.
 
+## 7b. Learning-integrity repair (FIX-A123, approved 2026-11-12)
+
+Implemented as proposed in §6, with one difference stated plainly: recalled
+fragments are no longer absorbed as heard language at all (rather than
+absorbed with the marker stripped). They only ever reached absorption because
+the recall-enriched copy of the turn's input was ingested a second time; that
+copy now still feeds perception and expression context but is not heard twice.
+
+Measured on the same two traced turns: exchange observations per turn went
+from 8 and 6 to 4 and 1, and none of them logs production relief. Credit for
+her speech now comes only from `record_motif_outcome()`, i.e. from what the
+receiver actually did next.
+
+**Latency:** no measurable change on this machine (six turns unprofiled:
+9.2–9.8 s before, 10.6–10.9 s after, on a host whose boot time alone varied
+between 14 s and 31 s across runs). The one-time genealogy index build moved
+from the first turn to the second, because the observation that used to
+trigger it early no longer exists.
+
+**Still open:** her unspoken articulation drafts ("You are meaning.", "You did
+consciousness.") are still absorbed as heard language, three per turn. They no
+longer earn relief, but she is still learning sentence structure from her own
+unsaid candidates.
+
 ## 8. Status
 
 | Item | Status |
@@ -146,7 +170,7 @@ words.
 | FIX-A120 fallback `NameError` | Implemented and verified (fault no longer recorded) |
 | `scripts/measure_turn_baseline.py` | Implemented; used for every number above |
 | Parse sharing | Tried, measured, reverted |
-| §6 learning-integrity repair | Not implemented — awaiting decision |
+| §6 learning-integrity repair (FIX-A123) | Implemented and verified by unit tests and live trace; no latency gain demonstrated |
 | §4 genealogy index / persistence costs | Measured only |
 | FIX-A122 relation-slot evidence | Implemented and verified on unit tests and a 5,000-sentence corpus comparison; effect on live expression unmeasured |
 | Silence trace | Done (§7a); state-question path is an open design decision |

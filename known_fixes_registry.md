@@ -11252,3 +11252,29 @@ obligation, grounding gaps and recorded assertions all inherit it.
 **First Seen:** 2026-11-12 voice-gate silence trace. Measured on 5,000
 sentences from her own corpus: 264 (5.3%) rebound, none lost a relation, and
 in all 17 cases where a listed verb changed the old binding was wrong.
+
+## FIX-A123 (ARCHITECTURAL) — Hearing is not producing; one utterance is heard once
+**Category:** ARCHITECTURAL
+**Pattern:** `SentenceComposer.absorb` forwarded heard text to
+`GrammarEngine.observe_exchange("", text, success=True)`, which logged
+`_log_relief_to_genealogy` -- "expression completed, agency exercised",
+crediting `_last_motif_id`, the last motif SHE applied. The speaker's
+sentence, recalled memories and her own unspoken drafts each rewarded her
+latest expressive motif and wrote a synthetic A:OUTLET_PUSH / B:INTERFACE_WEAKEN
+/ T:ADVANCE_TICK relief observation into her genealogy (8-9 per turn).
+Separately, `gateway._synthesize` re-ingested the turn's input when called a
+second time with recall appended ("...\n[recalled:x] ..."), still labelled
+source "user", and `_run_live_response_turn` ingested it a third time.
+**Correct Form:** `observe_exchange(..., produced=False)` for heard text:
+structure enters the motif lineage as exposure, no relief is logged. Credit for
+her own speech comes only through `record_motif_outcome()` (delayed receiver
+evidence). A caller re-presenting this turn's input passes
+`input_already_registered` (the contract the entropy stage already honours);
+`ingest_interaction` still feeds perception and context from it but does not
+`absorb` it again. `_run_reasoning_pipeline` marks the turn ledger
+(`perception:heard_input`) once the gateway has ingested the utterance.
+**Why:** Consequences must reinforce the representations that actually
+contributed (Unified Directive §26); recalled memory is not new speech.
+**First Seen:** 2026-11-12 live profile. On traced turns, exchange
+observations fell from 8 and 6 per turn to 4 and 1, none logging relief.
+Still open: her unspoken articulation drafts are absorbed as heard language.

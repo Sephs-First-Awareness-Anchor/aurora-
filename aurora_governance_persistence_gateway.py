@@ -1185,6 +1185,11 @@ class NSpaceGateway:
                 'tone': packet.metadata.get('tone', 'neutral'),
                 'i_state': 'i_is',
                 'source': packet.source,
+                # FIX-A123: the same contract the entropy stage already
+                # honours -- a caller that re-synthesises this turn's input
+                # says so, and it is not heard a second time.
+                'input_already_registered': bool(
+                    isinstance(extra_evidence, dict) and extra_evidence.get("input_already_registered")),
             }, mode="gateway")
 
         return result

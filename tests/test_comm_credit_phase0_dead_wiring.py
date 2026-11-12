@@ -85,7 +85,10 @@ def test_dead_comprehension_gap_alias_key_is_gone():
 
 def test_ingest_interaction_call_site_passes_a_dict_not_two_strings():
     block = _run_live_response_turn_block()
-    assert '_perc_a6.ingest_interaction({"input": user_text}, mode="persistent")' in block
+    # FIX-A123 added the already-heard flag to the dict; still a dict, still
+    # persistent mode, still never two positional strings.
+    assert '{"input": user_text, "input_already_registered": _a123_heard},' in block
+    assert 'mode="persistent")' in block[block.index("_perc_a6.ingest_interaction("):][:200]
     # the old broken call shape must not have silently come back
     assert "_perc_a6.ingest_interaction(user_text, _resp_text_p)" not in block
 
@@ -140,7 +143,7 @@ def test_ingest_interaction_call_site_only_reachable_with_a_real_response():
     content) is unchanged -- this fix only corrects the call's argument
     shape, not when it fires."""
     block = _run_live_response_turn_block()
-    call_idx = block.index('_perc_a6.ingest_interaction({"input": user_text}, mode="persistent")')
+    call_idx = block.index('_perc_a6.ingest_interaction(')
     gate_idx = block.rindex('if _perc_a6 and user_text and _resp_text_p:', 0, call_idx)
     assert call_idx - gate_idx < 1500, "the gate should immediately precede this call, not some earlier one"
 
