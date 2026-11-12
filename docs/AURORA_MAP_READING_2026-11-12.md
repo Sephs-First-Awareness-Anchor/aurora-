@@ -74,6 +74,58 @@ written only on paths the four turns did not take; two (`conscious_frame_reactiv
 96 keys are assigned and never read by name; 38 are read and never assigned by
 plain assignment (they may be set another way). Not yet examined.
 
+## Trace 1 — the subsurface group, followed to its intended consumer
+
+Step 2 of the plan, done for the first group. Each line is read from her code
+or her state file; none is inference about intent.
+
+**The design, as her own code states it.** `aurora._compress_at_crest` is the
+surface crest: every contribution is ranked by salience = pressure × (1 +
+charge), and "the subsurface crest enters as high-salience deep material".
+`_gather_subsurface_contributions` and `_is_speech_like` both state the rule
+for how: coherent guidance may enter as content; intuition signals "bias the
+field, never the surface text … it shapes salience, not words".
+
+**What actually happens.**
+
+1. *The content route yields nothing.* `_gather_subsurface_contributions` reads
+   `projection["conscious"]["guidance"]` or `projection["guidance"]`. The
+   projection the subsurface writes has neither key; its text is under
+   `surface_guidance`. Nothing from the subsurface reaches the crest as content.
+2. *The salience route does not exist.* `_contribution_charge` has four
+   sources of charge — relevance to the input, her emotional state, a question
+   mark, live sensory presence. None is the subsurface. The intuition signals
+   are copied into the turn state under three names
+   (`subsurface_intuition`, `subsurface_intuition_signals`,
+   `subsurface_intuition_signals_live`) and nothing reads any of them.
+3. *What the projection carries is mostly prewritten.* In
+   `dual_strata/subsurface_projection.py` the intuition signals are labels
+   (`clarify`, `hold`, `steady`, `slow_down`) with English summaries, selected
+   by thresholds; `surface_guidance` is a sentence chosen from fixed maps
+   ("Surface should feel careful around interpretation while subsurface
+   sharpens the boundary problem."). The parts that are her actual state are
+   numeric: the weights, `readiness_bias`, `dominant_axis_hint`,
+   `prediction_bias`.
+4. *The projection on file is six months old.* `aurora_state/subsurface_projection.json`
+   was generated 2026-05-17. The surface loads it from disk whenever no live
+   one exists, and nothing checks its age.
+
+**What follows for any repair.** Connecting route 1 as it stands would put
+prewritten sentences into her crest — the kind of source her voice gate blocks,
+and the kind of thing that may not enter her (hardening rule 8). Connecting
+route 2 with the labels would do the same in miniature. The faithful repair is
+for the subsurface's *own* state to reach the crest as pressure, which is what
+"shapes salience" names. Her code does not yet say which subsurface quantities
+those are; the candidate is the subsurface crest that
+`build_subsurface_projection` accepts as `subsurface_state_dict["subsurface_crest"]`.
+Finding that out means extending this map into the subsurface daemon. **No code
+was changed for this trace.**
+
+**Against the directive.** Part III says the subsurface contributes
+"accumulated understanding, predictive framing, memory, and deeper cognitive
+development" to the surface. As built, what it sends is a status report in
+prewritten English plus a few numbers, and the surface uses none of it.
+
 ## What this means for work already done
 
 - **Strata link downlink (FIX-A118).** It carries the subsurface projection to
@@ -92,7 +144,8 @@ plain assignment (they may be set another way). Not yet examined.
 1. Extend the map into the organs (what each organ takes from a turn and what
    it gives back), so FIX-A123 and the lexical-promotion question can be placed.
 2. For each dead-end group, read the purpose stated at its write site and find
-   the consumer that purpose names — her design, from her own code — starting
-   with the subsurface group.
+   the consumer that purpose names — her design, from her own code. Done for
+   the subsurface group (Trace 1); its next step is the subsurface daemon: what
+   the subsurface crest is, and what of her deep state it actually holds.
 3. Only then repair a connection, through the mechanism that already exists
    for it.
