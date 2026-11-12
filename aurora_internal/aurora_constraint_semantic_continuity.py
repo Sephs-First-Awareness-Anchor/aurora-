@@ -238,88 +238,27 @@ def _clause_has_verb(tokens: Sequence[str]) -> bool:
     return any(_looks_verb(t) for t in tokens) or _bare_verb_after_pronoun(tokens) >= 0
 
 
-def _strong_verb(token: Any) -> bool:
-    """Listed relation verbs and auxiliaries: form evidence that does not rest
-    on a suffix guess."""
-    low = str(token or "").lower()
-    return low in _RELATION_VERBS or low in _AUX
-
-
-# Words that can only introduce a noun phrase.  The demonstratives (this,
-# that, these, those) are left out on purpose: they also stand alone as
-# pronouns ("does that mean ..."), so they are not evidence of a nominal slot.
-_NOMINAL_INTRODUCERS = _DETERMINERS - {"this", "that", "these", "those"}
-
-
-def _in_nominal_slot(tokens: Sequence[str], idx: int) -> bool:
-    """A word directly after an article or possessive ("the morning", "my
-    work", "the posts") is standing where a noun stands.  Structural evidence
-    of the same kind as _bare_verb_after_pronoun -- position, never a gloss.
-    Auxiliaries are exempt: nothing nominal is spelled "is"."""
-    if idx <= 0:
-        return False
-    return (str(tokens[idx - 1] or "").lower() in _NOMINAL_INTRODUCERS
-            and str(tokens[idx] or "").lower() not in _AUX)
-
-
-def _plural_subject_before_verb(tokens: Sequence[str], idx: int) -> bool:
-    """A word whose ONLY verb evidence is a terminal -s, standing directly
-    before a listed verb or auxiliary ("posts were", "forests have", "APIs
-    are"), is that verb's subject, not the relation."""
-    low = str(tokens[idx] or "").lower()
-    if _strong_verb(low) or not low.endswith("s") or low.endswith(("ss", "ings", "eds")):
-        return False
-    return idx + 1 < len(tokens) and _strong_verb(tokens[idx + 1])
-
-
 def _first_relation_index(tokens: Sequence[str], start: int = 0) -> int:
-    """Which word occupies the relation slot.
-
-    FIX-A122.  Still the first verb-looking word, left to right -- but a word
-    no longer qualifies on a suffix alone when its position says it is a noun.
-    Before this, "The posts were rotten" bound relation="posts" with "were"
-    beside it, "The dogs chased the cat" bound "dogs", and "I spent the
-    morning fixing the fence" bound "morning".  And because those guesses
-    counted as "the scaffold found something", a relation role Aurora had
-    EARNED through consequence was never consulted for such sentences.
-
-    A verb-looking word is passed over when:
-      * it stands in a nominal slot (directly after an article/possessive);
-      * its only evidence is a terminal -s and a listed verb follows it;
-      * it is a bare -ing form (not finite) and a predicate slot directly
-        after a subject pronoun comes earlier ("I spent the morning fixing",
-        "I love going") -- that slot holds the relation instead.
-    Then, as before: her own promoted relation roles, then the predicate slot
-    after a subject pronoun.  The previous behaviour is the last resort, so no
-    sentence that bound a relation before now binds none.
-    """
-    begin = max(0, start)
-    count = len(tokens)
-    after_pronoun = _bare_verb_after_pronoun(tokens, start)
-    for idx in range(begin, count):
-        if not _looks_verb(tokens[idx]):
-            continue
-        if _in_nominal_slot(tokens, idx) or _plural_subject_before_verb(tokens, idx):
-            continue
-        low = str(tokens[idx] or "").lower()
-        if (not _strong_verb(low) and low.endswith("ing")
-                and 0 <= after_pronoun < idx
-                and not _in_nominal_slot(tokens, after_pronoun)):
-            return after_pronoun
-        return idx
-    if _CONSUME_LEXICAL_GROUNDING:
-        for idx in range(begin, count):
-            if (not _in_nominal_slot(tokens, idx)
-                    and _has_promoted_relation_role(str(tokens[idx] or "").lower())):
-                return idx
-    if after_pronoun >= 0:
-        return after_pronoun
-    return _first_relation_index_base(tokens, start)
+    found = _first_relation_index_base(tokens, start)
+    return found if found >= 0 else _bare_verb_after_pronoun(tokens, start)
 
 
 def _first_relation_index_base(tokens: Sequence[str], start: int = 0) -> int:
-    # The previous ordering, kept as the last resort of _first_relation_index
-    # (FIX-A122): scaffold heuristics by position first, then promoted roles.
+    # Build 771 PR 5: scaffold heuristics run first, across the WHOLE
+    # remaining span, before consumption gets any say at all. Codex review,
+    # PR #182: has_promoted_relation_role() has no notion of today's
+    # context (it can only ask "has this word EVER been promoted for the
+    # relation slot," not "is it the relation HERE") -- folding it into
+    # _looks_verb() directly let a word promoted as relation in one past
+    # context outrank a genuine scaffold verb sitting later in THIS
+    # sentence ("Glorp is blue": a prior "glorp"-as-relation promotion
+    # would have made this pick "Glorp" over the real relation "is").
+    # Scanning the scaffold-only pass across the entire span first means a
+    # real verb anywhere in the clause always wins; consumption only gets
+    # a turn on a second pass, and only when the scaffold found NOTHING
+    # anywhere in the span to work with -- still extension only, but
+    # scoped to "nothing else in this sentence could occupy the slot",
+    # not "this exact token already lost to the scaffold once."
     for idx in range(max(0, start), len(tokens)):
         if _looks_verb(tokens[idx]):
             return idx

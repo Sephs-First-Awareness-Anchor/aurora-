@@ -108,7 +108,7 @@ sentence is absorbed once per turn.
   crossed into expression", "response obligation remained unresolved"). Where
   the candidates are dropped has not been traced yet.
 
-## 7a. Silence trace (2026-11-12) and the relation-slot repair (FIX-A122)
+## 7a. Silence trace (2026-11-12)
 
 Silence is her voice gate working as designed (`aurora_voice_gate.py`,
 2026-11-07): scripted candidates are blocked, and she speaks only when her own
@@ -124,19 +124,23 @@ Tracing why nothing contributed led to the earliest stage of all:
 sentences ("The posts were rotten" -> relation "posts"; "My name is Sunni." ->
 subject "My", relation "name"). The confluence builds her stance from that
 relation and requires it to be a verb, so a misbound sentence can contribute
-no stance. FIX-A122 repairs the binding by position evidence (see the
-registry). Measured on 5,000 sentences from her own corpus: 264 rebound (5.3%),
-none lost a relation, and the sampled changes are corrections.
+no stance.
 
-**What this does not show.** Her live replies vary from run to run, and one
-run after the fix is not evidence that she now speaks more. The binding is
-measurably more correct; the effect on expression is unmeasured.
+**A repair was written and withdrawn (FIX-A122).** It corrected the binding by
+adding positional English rules to the scaffold. On 5,000 sentences from her
+corpus it rebound 264 and lost none. It was withdrawn because it was authored
+grammar placed in her by hand: such knowledge may exist in her only in the way
+it would if she had generated it herself (Sunni, 2026-11-12).
 
-**Still open, by design decision rather than defect:** "How are you?" binds
-relation "are" (a copula), which gives the confluence no content verb, and her
-own state derivation ("I am fear right now. ...") is blocked as a scripted
-source. Nothing currently lets a directly asked state question reach her own
-words.
+**What remains true and unaddressed:**
+- the misbinding itself;
+- a suffix guess outranks her own promoted relation roles, which are consulted
+  only when no guess exists anywhere in the clause;
+- on the repository state she has promoted zero relation words, so the route
+  by which she would earn this herself is not yet producing anything;
+- "How are you?" binds the copula "are", which gives the confluence no
+  content verb. Her confluence deliberately has no "I am <feeling>" frame
+  (FIX-A114: affect sets tone, it is not a clause), so that is not the repair.
 
 ## 7b. Learning-integrity repair (FIX-A123, approved 2026-11-12)
 
@@ -172,8 +176,8 @@ unsaid candidates.
 | Parse sharing | Tried, measured, reverted |
 | §6 learning-integrity repair (FIX-A123) | Implemented and verified by unit tests and live trace; no latency gain demonstrated |
 | §4 genealogy index / persistence costs | Measured only |
-| FIX-A122 relation-slot evidence | Implemented and verified on unit tests and a 5,000-sentence corpus comparison; effect on live expression unmeasured |
-| Silence trace | Done (§7a); state-question path is an open design decision |
+| FIX-A122 relation-slot repair | **Withdrawn** — scripted grammar; the misbinding finding stands (§7a) |
+| Silence trace | Done (§7a); the pathways it points at are not yet traced on a whole-system map |
 | Reality-warp routing fault | Not fixed |
 | Pre-existing failing test `test_interaction_event_action_handoff.py::...relationless_external_payloads` | Fails on `main` before these changes; untouched |
 | Python CI workflow | **Disabled manually since 2026-07-28** — no Python test has run on any PR since; the new smoke test only runs if it is re-enabled |

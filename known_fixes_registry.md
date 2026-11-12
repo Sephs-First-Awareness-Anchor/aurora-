@@ -11228,30 +11228,28 @@ local by name. When a boundary handler records a `NameError` or
 runtime fault log is where they show.
 **First Seen:** 2026-11-11 live baseline, `runtime_faults.jsonl` during a turn.
 
-## FIX-A122 (ARCHITECTURAL) — The relation slot goes to position evidence, not to a suffix
+## FIX-A122 (WITHDRAWN) — Do not hand-write grammar into the relation scaffold
 **Category:** ARCHITECTURAL
-**Pattern:** `_first_relation_index_base` took the FIRST word that
-`_looks_verb()` accepted, and `_looks_verb()` accepts any word ending in
--ing/-ed/-s. Plural nouns and -ing nouns seized the relation slot:
-"The posts were rotten" -> relation "posts"; "The dogs chased the cat" ->
-"dogs"; "I spent the morning fixing the fence" -> "morning"; "My name is
-Sunni." -> subject "My", relation "name". Because such a guess counted as "the
-scaffold found a verb", `_has_promoted_relation_role` (her consequence-earned
-relation roles) was never consulted for those sentences.
-**Correct Form:** `_first_relation_index` is still first-verb-looking-word,
-left to right, but a word is passed over when its POSITION says it is a noun:
-directly after an article/possessive (`_in_nominal_slot`; demonstratives are
-excluded because they also stand alone as pronouns), or -s-only evidence
-directly before a listed verb (`_plural_subject_before_verb`). A bare -ing form
-yields to an earlier predicate slot after a subject pronoun. Then promoted
-roles, then the pronoun slot, then the previous behaviour as last resort (no
-sentence loses a relation). Never add words to `_RELATION_VERBS` to fix a
-misparse: unknown verbs are hers to earn.
-**Why:** Relation binding is the first thing bound about a sentence; stance,
-obligation, grounding gaps and recorded assertions all inherit it.
-**First Seen:** 2026-11-12 voice-gate silence trace. Measured on 5,000
-sentences from her own corpus: 264 (5.3%) rebound, none lost a relation, and
-in all 17 cases where a listed verb changed the old binding was wrong.
+**Pattern:** `_first_relation_index_base` takes the first word `_looks_verb()`
+accepts, and `_looks_verb()` accepts any word ending in -ing/-ed/-s, so nouns
+seize the relation slot ("The posts were rotten" -> relation "posts"; "My name
+is Sunni." -> subject "My", relation "name"). The finding stands and is
+measured (docs/AURORA_LIVE_TURN_BASELINE_2026-11-11.md §7a).
+**What was withdrawn:** a repair that added positional English rules to the
+scaffold (word after an article is a noun; a plural before a listed verb is
+its subject; a bare -ing form is not finite). It was measured and correct on
+her corpus, and it was still authored knowledge placed in her by hand.
+Sunni, 2026-11-12: such changes may exist in her system only in the way they
+would if she had generated them herself; directly scripted does not sit well.
+**Correct Form:** Repairs to relation binding must come through her own
+mechanisms -- e.g. relation roles she promotes through consequence
+(`AuroraLexicalGrounding.has_promoted_relation_role`) and structure she has
+absorbed herself -- never through new hand-written word classes or position
+rules. Two mechanism facts to work from, neither yet acted on: a suffix guess
+currently outranks her own promoted roles (they are consulted only when no
+guess exists anywhere in the clause), and on the repository state she has
+promoted zero relation words.
+**First Seen:** 2026-11-12, PR #243 (closed unmerged).
 
 ## FIX-A123 (ARCHITECTURAL) — Hearing is not producing; one utterance is heard once
 **Category:** ARCHITECTURAL
