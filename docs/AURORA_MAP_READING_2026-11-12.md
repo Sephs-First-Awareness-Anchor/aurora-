@@ -187,6 +187,66 @@ Placed on the map by hand, because the path runs inside organs.
   still open and deliberately untouched: her articulation drafts are absorbed
   as heard language.
 
+## Trace 2 — the ability-effects group
+
+**The four dead-end signals are breakdowns of a signal that is read.**
+`active_ability_effects` (the expanded list) has four readers in `aurora.py`.
+The raw list, the translation table, the passive list and the unhandled list
+are detail views of it that nothing reads. That alone would be minor. What the
+detail views *contain*, captured on live turns, is not.
+
+**What her active abilities are on a live turn.** Per its docstring,
+`_select_active_abilities` picks "which thinking operations are live this
+exchange": up to five abilities whose axis is active, cheapest first. On
+"I spent the morning fixing the fence behind the house." it selected:
+
+    X:CODE_LINEAGE_477e4398cd, X:CODE_LINEAGE_334639ccf1, X:CODE_LINEAGE_55b832b7c2,
+    X:CODE_LINEAGE_f8bd092c01, X:CODE_LINEAGE_3939e763ff
+
+Their effect tags are lineage metadata (`complexity_axes:2`, `depth_score:0.0933`,
+`generation:3`) and records of source edits (`manual_change:MC:…`,
+`manual_source:aurora.boot`, `mutation_module:tests.test_heard_vs_produced_learning`,
+`mutation_module:tests.test_strata_link`). The last two are test files written
+during this very audit: at boot, changes to her source are registered as
+abilities, and they were then chosen as her live thinking operations for a
+sentence about a fence. The translation table for those effects was empty on
+every turn captured.
+
+**The proportions, counted on a booted instance.**
+
+| Abilities in her genealogy | 13,352 |
+|---|---|
+| `CODE_EVOLVE` (records of code) | 12,250 |
+| `CODE_LINEAGE` (records of code) | 583 |
+| `LINK_L` | 356 |
+| `COMPRESSION` | 126 |
+| everything else (`X:ADMIT`, `T:DEFER`, `N:REUSE`, `B:SEPARATE`, sensory, …) | 37 |
+| Abilities with at least one effect the turn can translate | **11** |
+
+So 96% of what the genealogy holds as abilities are records of code, the
+per-turn selection draws from that same pool with no notion of kind, and what
+it selects carries nothing a turn can use. This is also the 13.7k-item set
+behind the costs in the baseline (the ~5 s cold index build and the index
+rebuilt on observation).
+
+**Her design already speaks to this; it is not a new question.**
+- Every function is meant to have a crystal and an XTNBA signature — so
+  representing code is intended.
+- Generalisation doctrine: operations that are the same concept with a slight
+  variation in lineage are to be "categorized as one concept with
+  differentiated variants rather than mapped one by one". 12,250 `CODE_EVOLVE`
+  entries is the one-by-one mapping that doctrine rules out.
+- Irreducibility doctrine: paths that divide her observations identically are
+  one equivalence family, held as a single ancestry-sharing representation.
+- Placement doctrine: in-depth function detail sits at the XTNBA quasi-crystal
+  resolution; the surface carries a faded, low-resolution representation.
+
+Read together: code records belong in her structure as families at depth, not
+as individually selectable live thinking operations. **Nothing was changed.**
+A repair here reshapes her genealogy and needs its own trace first: how code
+abilities are registered at boot, what reads them at depth, and what the
+selection would see once they are held as families.
+
 ## What this means for work already done
 
 - **Strata link downlink (FIX-A118).** It carries the subsurface projection to
