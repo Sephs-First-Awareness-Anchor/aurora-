@@ -108,6 +108,36 @@ sentence is absorbed once per turn.
   crossed into expression", "response obligation remained unresolved"). Where
   the candidates are dropped has not been traced yet.
 
+## 7a. Silence trace (2026-11-12) and the relation-slot repair (FIX-A122)
+
+Silence is her voice gate working as designed (`aurora_voice_gate.py`,
+2026-11-07): scripted candidates are blocked, and she speaks only when her own
+composition, the confluence, or pressure articulation produces something.
+`systems["_last_voice_gate"]` records why each turn ended as it did. On eight
+live turns the blocked candidates were all scripted sources
+(`constraint_abstain`, `constraint_seek`, `constraint_semantic_derivation`) or
+a leaked internal label (`"pressure:turn_chain."`), and the confluence
+reported `nothing_contributed` on every turn it ran.
+
+Tracing why nothing contributed led to the earliest stage of all:
+`extract_relational_form`. It bound a noun as the relation in 9 of 11 plain
+sentences ("The posts were rotten" -> relation "posts"; "My name is Sunni." ->
+subject "My", relation "name"). The confluence builds her stance from that
+relation and requires it to be a verb, so a misbound sentence can contribute
+no stance. FIX-A122 repairs the binding by position evidence (see the
+registry). Measured on 5,000 sentences from her own corpus: 264 rebound (5.3%),
+none lost a relation, and the sampled changes are corrections.
+
+**What this does not show.** Her live replies vary from run to run, and one
+run after the fix is not evidence that she now speaks more. The binding is
+measurably more correct; the effect on expression is unmeasured.
+
+**Still open, by design decision rather than defect:** "How are you?" binds
+relation "are" (a copula), which gives the confluence no content verb, and her
+own state derivation ("I am fear right now. ...") is blocked as a scripted
+source. Nothing currently lets a directly asked state question reach her own
+words.
+
 ## 8. Status
 
 | Item | Status |
@@ -118,4 +148,8 @@ sentence is absorbed once per turn.
 | Parse sharing | Tried, measured, reverted |
 | §6 learning-integrity repair | Not implemented — awaiting decision |
 | §4 genealogy index / persistence costs | Measured only |
-| §7 silence trace; reality-warp routing | Not yet investigated / not fixed |
+| FIX-A122 relation-slot evidence | Implemented and verified on unit tests and a 5,000-sentence corpus comparison; effect on live expression unmeasured |
+| Silence trace | Done (§7a); state-question path is an open design decision |
+| Reality-warp routing fault | Not fixed |
+| Pre-existing failing test `test_interaction_event_action_handoff.py::...relationless_external_payloads` | Fails on `main` before these changes; untouched |
+| Python CI workflow | **Disabled manually since 2026-07-28** — no Python test has run on any PR since; the new smoke test only runs if it is re-enabled |

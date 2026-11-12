@@ -11227,3 +11227,28 @@ local by name. When a boundary handler records a `NameError` or
 **Why:** Boundary handlers keep her running but also hide dead pathways; the
 runtime fault log is where they show.
 **First Seen:** 2026-11-11 live baseline, `runtime_faults.jsonl` during a turn.
+
+## FIX-A122 (ARCHITECTURAL) — The relation slot goes to position evidence, not to a suffix
+**Category:** ARCHITECTURAL
+**Pattern:** `_first_relation_index_base` took the FIRST word that
+`_looks_verb()` accepted, and `_looks_verb()` accepts any word ending in
+-ing/-ed/-s. Plural nouns and -ing nouns seized the relation slot:
+"The posts were rotten" -> relation "posts"; "The dogs chased the cat" ->
+"dogs"; "I spent the morning fixing the fence" -> "morning"; "My name is
+Sunni." -> subject "My", relation "name". Because such a guess counted as "the
+scaffold found a verb", `_has_promoted_relation_role` (her consequence-earned
+relation roles) was never consulted for those sentences.
+**Correct Form:** `_first_relation_index` is still first-verb-looking-word,
+left to right, but a word is passed over when its POSITION says it is a noun:
+directly after an article/possessive (`_in_nominal_slot`; demonstratives are
+excluded because they also stand alone as pronouns), or -s-only evidence
+directly before a listed verb (`_plural_subject_before_verb`). A bare -ing form
+yields to an earlier predicate slot after a subject pronoun. Then promoted
+roles, then the pronoun slot, then the previous behaviour as last resort (no
+sentence loses a relation). Never add words to `_RELATION_VERBS` to fix a
+misparse: unknown verbs are hers to earn.
+**Why:** Relation binding is the first thing bound about a sentence; stance,
+obligation, grounding gaps and recorded assertions all inherit it.
+**First Seen:** 2026-11-12 voice-gate silence trace. Measured on 5,000
+sentences from her own corpus: 264 (5.3%) rebound, none lost a relation, and
+in all 17 cases where a listed verb changed the old binding was wrong.
