@@ -181,3 +181,48 @@ unsaid candidates.
 | Reality-warp routing fault | Not fixed |
 | Pre-existing failing test `test_interaction_event_action_handoff.py::...relationless_external_payloads` | Fails on `main` before these changes; untouched |
 | Python CI workflow | **Disabled manually since 2026-07-28** — no Python test has run on any PR since; the new smoke test only runs if it is re-enabled |
+
+---
+
+## Addendum 2026-11-13 — what the measurements justified (Task: measured optimization)
+
+Authors: Sunni (Sir) Morningstar & Cael Devo
+
+Per-turn profiles (cProfile, one profile per turn, six fixed turns on the
+boot copy of state) show the time is **not** steady redundant work. It is
+mostly first-touch cost and her own articulation:
+
+| Turn | Dominant cost (profiled) | Kind |
+|---|---|---|
+| 1 | genealogy `representation_gap_candidates` 1.9 s | first build of the representation index |
+| 2 | genealogy `flush_write_batch` 2.2 s | one 20 MB abilities rewrite (0.89 s unprofiled) |
+| 3 | voice gate `articulate_from_pressure` 3.0 s | her articulation |
+| 5 | evolution chamber `observe_external_evidence` → genealogy `observe` 1.2 s | chamber tick |
+
+Checked and **found not to be redundant**:
+
+- `representation_is_eligible` (712 entries in the organ map) costs ~0.00 s in total; the call count is not the cost.
+- The abilities file was written **once** in six turns (turn 2), not every turn; whole-file rewrites are already gated by the turn-persistence batch.
+- The representation index already rebuilds incrementally (Repairs K, L, M).
+
+Found and fixed (behaviour-preserving, equivalence pinned by tests):
+
+| Change | Evidence |
+|---|---|
+| effect-tag metadata filter uses tuple `startswith` | 11.3 M generator steps, 3.5 s cum (profiled) |
+| `_last_tag_value` scans in place in C | 260 k calls; ~7–9× on a hit in a long tag list, not slower on a miss |
+| lexicon save uses `dumps` (C encoder) not `dump` to file | 30 ms → 4 ms on the real 940 KB lexicon, byte-identical |
+
+Result: profiled calls 72.1 M → 54.3 M (−25 %); unprofiled wall for six turns
+8.59 s → 8.46 s, i.e. within run-to-run noise. The call-count drop is real; the
+wall-clock effect is small because the profiler inflates Python-level loops.
+
+Not changed, and why: the 20 MB abilities write (0.9 s once per dirty batch)
+uses `indent=2`, which forces the Python encoder; compacting it would change an
+on-disk format for under a second, so it stays until a measurement on the
+phone says otherwise. The 3 s voice-gate articulation on turn 3 is her
+generation path, not storage or bookkeeping; it needs its own trace.
+
+Replies on the six-turn script differ run to run on unchanged code, so reply
+identity was not used as a pass condition; 260 genealogy/representation tests
+and 6 + 3 new tests were.
