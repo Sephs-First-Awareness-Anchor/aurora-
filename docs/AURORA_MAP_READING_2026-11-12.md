@@ -320,6 +320,49 @@ Still unclassified (need a longer or sensor/dream-cycle watch, not a guess):
 - Task #11's sensory work needs a sensor-event watch, since the turn
   watch cannot see it.
 
+## Trace 4 — the Subsurface → Surface pathway, placed and repaired (FIX-A124)
+
+**Routes found, and what each does today** (traced on live turns, 2026-11-13):
+
+| Route | In | Reaches | State |
+|---|---|---|---|
+| Conscious crest → axis projection (`_project_utterance_axes`, "Repair J") | DCE crest `{axis, intensity}` | the Surface's axis pressure, weighted by the crest's own intensity | works |
+| Conscious frame → action selection / CERS / confluence | `_live_conscious_frame` | next-turn readers | works (Trace 1b) |
+| **Diff buffer → AttentionEngine** (salience, tension, meaning nucleus) | per-axis magnitudes | `_salience_pt`, `subsurface_tension`, `_meaning_nucleus` → `register_meaning_event` | **was fed a constant 0.5 — repaired (FIX-A124)** |
+| Daemon projection (`intuition_signals`, `readiness_bias`, `governor_mode`, `prediction_bias`) | `subsurface_projection.json` | `pipeline_state["subsurface_*"]` | no reader (Finding 1); file is from 2026-05, so it must not be given a reader without an age guard |
+| Crest-time ranking (`_gather_subsurface_contributions`) | `proj["guidance"]` | `_compress_at_crest` | reads a key the projection does not have (`surface_guidance`); empty by accident |
+| Presence frame (`crest`, `active_pressure`, `live_cognition`, `intuition_signals`, `surface_guidance`) | `write_presence_frame` | `pipeline_state["subsurface_active_pressure"]`… | **no producer in the code**: only the surface's own continuity packet and tests write it, the Surface→Subsurface→Surface echo carries interpretation fields only |
+| Predictive stager (anticipation) | `stage_passes_for_tick` in the daemon | `harvest_into_systems` → emission | works when the daemon runs; on the phone it needs the strata-link downlink (Task #11) |
+
+**What was repaired.** `_run_live_response_turn` fed the DifferenceHistoryBuffer
+from the conscious crest only, asking it for per-axis keys it does not carry, so
+every axis was 0.5 every turn. Measured before/after on two live turns:
+per-axis drift 0.0 → 0.001–0.024; tension EMA 7.5e-5 / 1.3e-4 → 4.1e-4 / 3.8e-3.
+The feed is now the same one the training pulse and daemon already use
+(identity-field axis pressure first, crest second), in one function.
+Nothing was added to what she says; the 0.55 resonance threshold for forming a
+meaning nucleus is untouched, so a nucleus still forms only on a strong surprise.
+
+**What was deliberately not done.**
+
+- `_gather_subsurface_contributions` was **not** pointed at `surface_guidance`.
+  That text is a prewritten sentence from the daemon's projection; wiring it in
+  would put canned guidance into her crest ranking, which the directive rules
+  out. Its current emptiness is the only thing keeping it out.
+- No reader was added for the projection numerics. The numbers are real, but
+  the one file here is six months old (`governor_mode: survival`), and a reader
+  that treats it as present state would be wrong. A reader needs an age gate,
+  and a decision on which of her own mechanisms the weights should press on.
+- Presence-frame `crest`/`active_pressure` have no producer. Deciding what deep
+  state the Subsurface computes for those fields is a Subsurface-side design
+  decision, not a Surface repair.
+
+**Reply identity as a gate.** Replies on the six-turn baseline differ run to run
+even on unchanged code (two runs of the same commit differ), so identical
+replies cannot be used as a pass condition. What was checked: no crash, the
+related tests (54 pass; one pre-existing failure, identical on main), six new
+tests, and turn time 9.29 s → 8.59 s (within noise).
+
 ## What this means for work already done
 
 - **Strata link downlink (FIX-A118).** It carries the subsurface projection to
