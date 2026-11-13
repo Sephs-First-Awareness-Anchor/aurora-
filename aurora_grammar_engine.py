@@ -1875,6 +1875,7 @@ class GrammarEngine:
         tone:        str   = "neutral",
         passion:     str   = "observant",
         drive:       str   = "steady",
+        produced:    bool  = True,
     ):
         """
         Observe a completed exchange and update motif fitness.
@@ -1882,6 +1883,16 @@ class GrammarEngine:
         - success=True  -> record_success + genealogy relief log
         - success=False -> record_fail
         - Updates discourse motifs for turn-type transitions
+
+        produced (FIX-A123): True when aurora_text is a sentence Aurora
+        actually produced.  Heard language (composer.absorb) passes False:
+        its structure still enters the motif lineage as exposure, but NO
+        relief is logged to the genealogy.  That relief means "expression
+        completed, agency exercised" and credits self._last_motif_id -- the
+        last motif SHE applied -- so logging it for heard text rewarded her
+        most recent expressive motif every time anyone else spoke.  Credit
+        for her own speech arrives through record_motif_outcome(), from the
+        receiver's actual response.
         """
         orientation, outlet = self._pressure_state()
 
@@ -1925,7 +1936,8 @@ class GrammarEngine:
             )
             # Pass the last applied motif so B/T relief is correctly scored
             last_m = self._lineage._motifs.get(self._last_motif_id) if self._last_motif_id else None
-            self._log_relief_to_genealogy(True, clarity, motif=last_m)
+            if produced:
+                self._log_relief_to_genealogy(True, clarity, motif=last_m)
             # Stamp active crystals when a motif just promoted
             if self._dps is not None:
                 _post_promoted = {k for k, m in self._lineage._motifs.items() if m.promoted}

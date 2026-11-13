@@ -2259,8 +2259,10 @@ class SentenceComposer:
             engine = getattr(self, "grammar_engine", None)
             if engine is not None and hasattr(engine, "observe_exchange"):
                 for _sent in (split_absorb_sentences(text) or [text]):
+                    # FIX-A123: heard, not produced -- exposure for the
+                    # motif lineage, no production relief.
                     engine.observe_exchange("", _sent, success=True,
-                                            clarity=0.6, tone=tone)
+                                            clarity=0.6, tone=tone, produced=False)
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
@@ -5873,8 +5875,14 @@ class ExpressionPerceptionEngine(WarpCapable):
         if context_words:
             self.composer.set_context(context_words)
 
-        # Absorb sentence patterns from what she hears
-        if text and len(text.split()) >= 3:
+        # Absorb sentence patterns from what she hears.
+        # FIX-A123: an interaction flagged input_already_registered is the
+        # SAME utterance arriving a second time this turn (the recall-
+        # enriched synthesis, or the post-reply persistent ingest).  It still
+        # feeds perception and context above, but it is not heard twice: its
+        # structure is absorbed once, and recalled fragments appended to it
+        # ("[recalled:x] ...") are memory, not new speech from the speaker.
+        if text and len(text.split()) >= 3 and not interaction.get('input_already_registered'):
             self.composer.absorb(text, tone)
 
         # OETS: Feed interaction to ontological web for structured understanding.

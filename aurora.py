@@ -25538,6 +25538,16 @@ def _run_reasoning_pipeline(
         processed = f"{prompt_context}\n\n{evidence_bundle}"
     try:
         gw.receive(user_text, mode=mode)
+        # FIX-A123: the gateway has now ingested this utterance as heard
+        # input.  Recorded on the turn ledger so later stages of this turn
+        # do not present the same words to perception as newly heard.
+        try:
+            from aurora_turn_ledger import current_turn_ledger as _a123_ledger
+            _a123 = _a123_ledger(systems)
+            if _a123 is not None:
+                _a123.mark_touched("perception:heard_input")
+        except Exception:
+            pass
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -36620,7 +36630,11 @@ def _run_live_response_turn(
                 # parameter, so _resp_text_p was never usable here anyway.
                 # mode="persistent" (not the default "sim"/BOUNDED) because
                 # this is genuine live dialogue, not a simulation episode.
-                _perc_a6.ingest_interaction({"input": user_text}, mode="persistent")
+                _a123_heard = "perception:heard_input" in list(
+                    getattr(_turn_ledger, "systems_touched", []) or [])
+                _perc_a6.ingest_interaction(
+                    {"input": user_text, "input_already_registered": _a123_heard},
+                    mode="persistent")
             _pic = int(systems.get("_perc_ingest_count", 0)) + 1
             systems["_perc_ingest_count"] = _pic
             if _pic % 5 == 0 and hasattr(_perc_a6, "consolidate"):

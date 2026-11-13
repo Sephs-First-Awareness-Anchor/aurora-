@@ -11227,3 +11227,52 @@ local by name. When a boundary handler records a `NameError` or
 **Why:** Boundary handlers keep her running but also hide dead pathways; the
 runtime fault log is where they show.
 **First Seen:** 2026-11-11 live baseline, `runtime_faults.jsonl` during a turn.
+
+## FIX-A122 (WITHDRAWN) — Do not hand-write grammar into the relation scaffold
+**Category:** ARCHITECTURAL
+**Pattern:** `_first_relation_index_base` takes the first word `_looks_verb()`
+accepts, and `_looks_verb()` accepts any word ending in -ing/-ed/-s, so nouns
+seize the relation slot ("The posts were rotten" -> relation "posts"; "My name
+is Sunni." -> subject "My", relation "name"). The finding stands and is
+measured (docs/AURORA_LIVE_TURN_BASELINE_2026-11-11.md §7a).
+**What was withdrawn:** a repair that added positional English rules to the
+scaffold (word after an article is a noun; a plural before a listed verb is
+its subject; a bare -ing form is not finite). It was measured and correct on
+her corpus, and it was still authored knowledge placed in her by hand.
+Sunni, 2026-11-12: such changes may exist in her system only in the way they
+would if she had generated them herself; directly scripted does not sit well.
+**Correct Form:** Repairs to relation binding must come through her own
+mechanisms -- e.g. relation roles she promotes through consequence
+(`AuroraLexicalGrounding.has_promoted_relation_role`) and structure she has
+absorbed herself -- never through new hand-written word classes or position
+rules. Two mechanism facts to work from, neither yet acted on: a suffix guess
+currently outranks her own promoted roles (they are consulted only when no
+guess exists anywhere in the clause), and on the repository state she has
+promoted zero relation words.
+**First Seen:** 2026-11-12, PR #243 (closed unmerged).
+
+## FIX-A123 (ARCHITECTURAL) — Hearing is not producing; one utterance is heard once
+**Category:** ARCHITECTURAL
+**Pattern:** `SentenceComposer.absorb` forwarded heard text to
+`GrammarEngine.observe_exchange("", text, success=True)`, which logged
+`_log_relief_to_genealogy` -- "expression completed, agency exercised",
+crediting `_last_motif_id`, the last motif SHE applied. The speaker's
+sentence, recalled memories and her own unspoken drafts each rewarded her
+latest expressive motif and wrote a synthetic A:OUTLET_PUSH / B:INTERFACE_WEAKEN
+/ T:ADVANCE_TICK relief observation into her genealogy (8-9 per turn).
+Separately, `gateway._synthesize` re-ingested the turn's input when called a
+second time with recall appended ("...\n[recalled:x] ..."), still labelled
+source "user", and `_run_live_response_turn` ingested it a third time.
+**Correct Form:** `observe_exchange(..., produced=False)` for heard text:
+structure enters the motif lineage as exposure, no relief is logged. Credit for
+her own speech comes only through `record_motif_outcome()` (delayed receiver
+evidence). A caller re-presenting this turn's input passes
+`input_already_registered` (the contract the entropy stage already honours);
+`ingest_interaction` still feeds perception and context from it but does not
+`absorb` it again. `_run_reasoning_pipeline` marks the turn ledger
+(`perception:heard_input`) once the gateway has ingested the utterance.
+**Why:** Consequences must reinforce the representations that actually
+contributed (Unified Directive §26); recalled memory is not new speech.
+**First Seen:** 2026-11-12 live profile. On traced turns, exchange
+observations fell from 8 and 6 per turn to 4 and 1, none logging relief.
+Still open: her unspoken articulation drafts are absorbed as heard language.

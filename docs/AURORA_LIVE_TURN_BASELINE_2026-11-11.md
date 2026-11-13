@@ -108,6 +108,64 @@ sentence is absorbed once per turn.
   crossed into expression", "response obligation remained unresolved"). Where
   the candidates are dropped has not been traced yet.
 
+## 7a. Silence trace (2026-11-12)
+
+Silence is her voice gate working as designed (`aurora_voice_gate.py`,
+2026-11-07): scripted candidates are blocked, and she speaks only when her own
+composition, the confluence, or pressure articulation produces something.
+`systems["_last_voice_gate"]` records why each turn ended as it did. On eight
+live turns the blocked candidates were all scripted sources
+(`constraint_abstain`, `constraint_seek`, `constraint_semantic_derivation`) or
+a leaked internal label (`"pressure:turn_chain."`), and the confluence
+reported `nothing_contributed` on every turn it ran.
+
+Tracing why nothing contributed led to the earliest stage of all:
+`extract_relational_form`. It bound a noun as the relation in 9 of 11 plain
+sentences ("The posts were rotten" -> relation "posts"; "My name is Sunni." ->
+subject "My", relation "name"). The confluence builds her stance from that
+relation and requires it to be a verb, so a misbound sentence can contribute
+no stance.
+
+**A repair was written and withdrawn (FIX-A122).** It corrected the binding by
+adding positional English rules to the scaffold. On 5,000 sentences from her
+corpus it rebound 264 and lost none. It was withdrawn because it was authored
+grammar placed in her by hand: such knowledge may exist in her only in the way
+it would if she had generated it herself (Sunni, 2026-11-12).
+
+**What remains true and unaddressed:**
+- the misbinding itself;
+- a suffix guess outranks her own promoted relation roles, which are consulted
+  only when no guess exists anywhere in the clause;
+- on the repository state she has promoted zero relation words, so the route
+  by which she would earn this herself is not yet producing anything;
+- "How are you?" binds the copula "are", which gives the confluence no
+  content verb. Her confluence deliberately has no "I am <feeling>" frame
+  (FIX-A114: affect sets tone, it is not a clause), so that is not the repair.
+
+## 7b. Learning-integrity repair (FIX-A123, approved 2026-11-12)
+
+Implemented as proposed in §6, with one difference stated plainly: recalled
+fragments are no longer absorbed as heard language at all (rather than
+absorbed with the marker stripped). They only ever reached absorption because
+the recall-enriched copy of the turn's input was ingested a second time; that
+copy now still feeds perception and expression context but is not heard twice.
+
+Measured on the same two traced turns: exchange observations per turn went
+from 8 and 6 to 4 and 1, and none of them logs production relief. Credit for
+her speech now comes only from `record_motif_outcome()`, i.e. from what the
+receiver actually did next.
+
+**Latency:** no measurable change on this machine (six turns unprofiled:
+9.2–9.8 s before, 10.6–10.9 s after, on a host whose boot time alone varied
+between 14 s and 31 s across runs). The one-time genealogy index build moved
+from the first turn to the second, because the observation that used to
+trigger it early no longer exists.
+
+**Still open:** her unspoken articulation drafts ("You are meaning.", "You did
+consciousness.") are still absorbed as heard language, three per turn. They no
+longer earn relief, but she is still learning sentence structure from her own
+unsaid candidates.
+
 ## 8. Status
 
 | Item | Status |
@@ -116,6 +174,10 @@ sentence is absorbed once per turn.
 | FIX-A120 fallback `NameError` | Implemented and verified (fault no longer recorded) |
 | `scripts/measure_turn_baseline.py` | Implemented; used for every number above |
 | Parse sharing | Tried, measured, reverted |
-| §6 learning-integrity repair | Not implemented — awaiting decision |
+| §6 learning-integrity repair (FIX-A123) | Implemented and verified by unit tests and live trace; no latency gain demonstrated |
 | §4 genealogy index / persistence costs | Measured only |
-| §7 silence trace; reality-warp routing | Not yet investigated / not fixed |
+| FIX-A122 relation-slot repair | **Withdrawn** — scripted grammar; the misbinding finding stands (§7a) |
+| Silence trace | Done (§7a); the pathways it points at are not yet traced on a whole-system map |
+| Reality-warp routing fault | Not fixed |
+| Pre-existing failing test `test_interaction_event_action_handoff.py::...relationless_external_payloads` | Fails on `main` before these changes; untouched |
+| Python CI workflow | **Disabled manually since 2026-07-28** — no Python test has run on any PR since; the new smoke test only runs if it is re-enabled |
