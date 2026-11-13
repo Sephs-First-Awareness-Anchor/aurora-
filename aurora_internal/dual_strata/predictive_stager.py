@@ -25,9 +25,11 @@ import json
 import math
 import os
 import re
+import threading
 import time
+from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 _BASE_DIR = Path(__file__).parent.parent.parent  # aurora_strata/
 _STATE_DIR = _BASE_DIR / "aurora_state"
@@ -317,6 +319,51 @@ def _save_queue(frames: List[Dict[str, Any]]) -> None:
         pass
 
 
+PredictionScope = Tuple[str, int, str]  # Surface ID, lease epoch, context revision
+
+
+class PushedPredictiveFrames:
+    """Keep the latest applicable batch received by the transport thread."""
+
+    def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
+        self._clock = clock
+        self._lock = threading.Lock()
+        self._scope: Optional[PredictionScope] = None
+        self._sequence = 0
+        self._expires_at = 0.0
+        self._frames: tuple[dict, ...] = ()
+
+    def bind(self, scope: Optional[PredictionScope]) -> None:
+        with self._lock:
+            if scope != self._scope:
+                self._scope, self._sequence = scope, 0
+                self._expires_at, self._frames = 0.0, ()
+
+    def offer(self, scope: PredictionScope, sequence: int, remaining_s: float,
+              newest_first: List[Dict[str, Any]]) -> bool:
+        if not math.isfinite(remaining_s) or remaining_s <= 0:
+            return False
+        with self._lock:
+            if self._scope is None or scope != self._scope or sequence <= self._sequence:
+                return False
+            self._frames = tuple(deepcopy(newest_first[:_MAX_FRAMES]))
+            self._sequence = sequence
+            self._expires_at = self._clock() + remaining_s
+            return True
+
+    def harvest(self, previous_version: Any, limit: int) -> tuple:
+        # Only the in-memory exchange is synchronized here. There is no I/O
+        # or condition wait on the Surface turn's path.
+        with self._lock:
+            if not self._frames or self._clock() >= self._expires_at:
+                return None, []
+            version = (self._scope, self._sequence, limit)
+            if version == previous_version:
+                return version, []
+            frames = self._frames[:limit]
+        return version, deepcopy(list(frames))
+
+
 # ---------------------------------------------------------------------------
 # PredictiveStager
 # ---------------------------------------------------------------------------
@@ -336,18 +383,21 @@ class PredictiveStager:
     @staticmethod
     def push_staged_frame(projection: Dict[str, Any]) -> None:
         """Push a validated subsurface projection as a staged candidate frame."""
-        frames = _load_queue()
         projection = dict(projection or {})
-        projection.setdefault("slot_projections", _extract_slot_projections(projection))
-        frame = {
-            "ts": time.time(),
-            "projection": projection,
-            "consumed": False,
-        }
-        frames.append(frame)
-        if len(frames) > _MAX_FRAMES:
-            frames = frames[-_MAX_FRAMES:]
-        _save_queue(frames)
+        if "slot_projections" not in projection:
+            projection["slot_projections"] = _extract_slot_projections(projection)
+        PredictiveStager._publish_frames({}, [projection])
+
+    @staticmethod
+    def _publish_frames(systems: Dict[str, Any], projections: List[Dict[str, Any]]) -> None:
+        publish = systems.get("_publish_predictive_frames")
+        if publish is not None:
+            publish(list(reversed(projections)))
+            return
+        frames = _load_queue()
+        now = time.time()
+        frames.extend({"ts": now, "projection": p, "consumed": False} for p in projections)
+        _save_queue(frames[-_MAX_FRAMES:])
 
     @staticmethod
     def pop_staged_frame(context_hash: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -404,7 +454,18 @@ class PredictiveStager:
         and the earlier call's values remain in systems untouched.
         """
         try:
-            frames = PredictiveStager.pop_all_recent_frames(max_frames=max_frames)
+            pushed = systems.get("_pushed_predictive_frames")
+            if pushed is None:
+                frames = PredictiveStager.pop_all_recent_frames(max_frames=max_frames)
+            else:
+                previous = systems.get("_pushed_predictive_version")
+                if not systems.get("_staged_subsurface_frames"):
+                    previous = None
+                version, frames = pushed.harvest(previous, max(1, int(max_frames or 1)))
+                systems["_pushed_predictive_version"] = version
+                if version is None:
+                    systems.pop("_staged_subsurface_frames", None)
+                    systems.pop("_staged_subsurface_frame", None)
             if frames:
                 systems["_staged_subsurface_frames"] = frames
                 systems["_staged_subsurface_frame"] = frames[0]
@@ -425,6 +486,9 @@ class PredictiveStager:
         working_memory: Any,
         conscious_frame: Any,
         perspective_index: int = 0,
+        *,
+        axis_snapshot: Optional[Dict[str, float]] = None,
+        collect: Optional[Callable[[Dict[str, Any]], None]] = None,
     ) -> bool:
         """Run one hypothesis cycle through the given pressure perspective and push the result.
 
@@ -439,12 +503,13 @@ class PredictiveStager:
             perspective = PRESSURE_PERSPECTIVES[perspective_index % len(PRESSURE_PERSPECTIVES)]
 
             # Snapshot current IVM axis polarities
-            vertices = getattr(lattice, "vertices", None)
-            axes = getattr(vertices, "axes", {}) if vertices else {}
-            axis_snapshot: Dict[str, float] = {
-                _axis_code(name): float(getattr(ax, "polarity", 0.0))
-                for name, ax in axes.items()
-            }
+            if axis_snapshot is None:
+                vertices = getattr(lattice, "vertices", None)
+                axes = getattr(vertices, "axes", {}) if vertices else {}
+                axis_snapshot = {
+                    _axis_code(name): float(getattr(ax, "polarity", 0.0))
+                    for name, ax in axes.items()
+                }
             transformed_axes = _apply_pressure_lens(axis_snapshot, perspective)
 
             # Lightweight working memory excerpt
@@ -492,7 +557,10 @@ class PredictiveStager:
                 "conscious_frame": cf_snapshot,
             }
             projection["slot_projections"] = _extract_slot_projections(projection)
-            PredictiveStager.push_staged_frame(projection)
+            if collect is None:
+                PredictiveStager._publish_frames(systems, [projection])
+            else:
+                collect(projection)
             return True
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
@@ -533,18 +601,20 @@ class PredictiveStager:
             dominant = _dominant_axis(axis_snapshot)
             n = n_passes_for_density(dominant)
 
-            staged = 0
+            staged: List[Dict[str, Any]] = []
             offset = int(perspective_offset or 0)
             for i in range(n):
                 idx = (offset + i) % len(PRESSURE_PERSPECTIVES)
-                if PredictiveStager.stage_hypothesis(
+                PredictiveStager.stage_hypothesis(
                     systems, working_memory, conscious_frame,
-                    perspective_index=idx,
-                ):
-                    staged += 1
+                    perspective_index=idx, axis_snapshot=axis_snapshot, collect=staged.append,
+                )
+
+            if staged:
+                PredictiveStager._publish_frames(systems, staged)
 
             next_offset = (offset + n) % len(PRESSURE_PERSPECTIVES)
-            return staged, next_offset
+            return len(staged), next_offset
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(
                 locals(),
