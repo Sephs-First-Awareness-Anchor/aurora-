@@ -217,32 +217,8 @@ class TrainingPulse:
             dhb = self._systems.get("_diff_history_buffer")
             if dhb is None:
                 return None
-            topo: Dict[str, float] = {}
-            try:
-                ifield = self._systems.get("identity_field")
-                if ifield is not None and hasattr(ifield, "status"):
-                    _st = ifield.status() or {}
-                    # NoncompField exposes 'axis_pressures' (live, moves under
-                    # waveform injection). 'pressure_topology' kept as legacy
-                    # fallback for older field implementations.
-                    topo = dict(_st.get("axis_pressures")
-                                or _st.get("pressure_topology") or {})
-            except Exception as _aurora_boundary_exc:
-                _aurora_record_exception_from_locals(
-                    locals(),
-                    module=__name__,
-                    operation="exception_handler:aurora_training_pulse.py:215",
-                    exc=_aurora_boundary_exc,
-                    context={"function": "_record_and_snapshot", "handler_line": 215, "source_file": "aurora_training_pulse.py"},
-                )
-                topo = {}
-            cc = dict(self._systems.get("_live_conscious_crest") or {})
-            mags: Dict[Any, float] = {}
-            for cname, ckey in _AXIS_MAP.items():
-                raw = topo.get(cname)
-                if raw is None:
-                    raw = cc.get(ckey, cc.get(cname, 0.5))
-                mags[getattr(Constraint, cname)] = min(1.0, max(0.0, float(raw or 0.5)))
+            from aurora_internal.aurora_difference_buffer import live_axis_magnitudes
+            mags = live_axis_magnitudes(self._systems)
             dhb.record(tick=self._tick, magnitudes=mags)
             snap = dhb.snapshot(tick=self._tick)
             self._systems["_last_diff_snapshot"] = snap

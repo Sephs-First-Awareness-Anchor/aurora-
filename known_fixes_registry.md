@@ -11276,3 +11276,27 @@ contributed (Unified Directive §26); recalled memory is not new speech.
 **First Seen:** 2026-11-12 live profile. On traced turns, exchange
 observations fell from 8 and 6 per turn to 4 and 1, none logging relief.
 Still open: her unspoken articulation drafts are absorbed as heard language.
+
+## FIX-A124 (ARCHITECTURAL) — The attention tick is fed the field's live axis pressure, from one place
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** `_run_live_response_turn` recorded the DifferenceHistoryBuffer from
+the conscious crest alone, looking up per-axis keys (`existence`, `X`, ...) the
+crest does not carry (it holds `{axis, intensity, label}`). Every axis was
+recorded as 0.5 on every turn: zero drift, `subsurface_tension` ~1e-4, and the
+AttentionEngine's salience and tension could not follow anything the
+subsurface or the field had done. The training pulse and the daemon already
+fed the buffer from the identity field's live axis pressure, so the live turn
+had drifted from its own mirror.
+**Correct Form:** one shared feed, `live_axis_magnitudes(systems)` in
+`aurora_internal/aurora_difference_buffer.py`: identity-field `axis_pressures`
+first, the conscious crest's per-axis value for an axis the field does not
+report, 0.5 only when neither says anything; 0.0 stays 0.0. Used by the live
+turn and by `TrainingPulse._record_and_snapshot`.
+**Why:** Salience is a surprise signal measured against what the field was
+tracking (Unified Directive: consequence-driven); a constant input cannot
+carry one. No content, threshold or rule was added -- only the existing
+sanctioned source was connected.
+**First Seen:** 2026-11-13 Subsurface->Surface trace. Measured on two live
+turns: per-axis drift 0.0 -> 0.001-0.024, tension EMA 7.5e-5/1.3e-4 ->
+4.1e-4/3.8e-3. `get_meaning_nucleus()` still requires resonance >= 0.55 (its own
+threshold, untouched), so FORMING is reachable only on a strong surprise.

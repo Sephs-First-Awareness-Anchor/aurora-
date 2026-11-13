@@ -34764,12 +34764,11 @@ def _run_live_response_turn(
         _dhb_pt = systems.get('_diff_history_buffer')
         _ae_pt = systems.get('_attention_engine')
         if _dhb_pt is not None:
-            _cc_pt = dict(systems.get('_live_conscious_crest') or {})
-            _axis_map_pt = {'X': 'existence', 'T': 'temporal', 'N': 'energy', 'B': 'boundary', 'A': 'agency'}
-            _mags_pt: dict = {}
-            for _cname_pt, _ckey_pt in _axis_map_pt.items():
-                _raw_pt = float(_cc_pt.get(_ckey_pt, _cc_pt.get(_cname_pt, 0.5)) or 0.5)
-                _mags_pt[getattr(Constraint, _cname_pt)] = min(1.0, max(0.0, _raw_pt))
+            # One shared feed (identity-field live axis pressure, conscious
+            # crest as secondary) -- see live_axis_magnitudes(). The earlier
+            # crest-only lookup recorded 0.5 on every axis every turn.
+            from aurora_internal.aurora_difference_buffer import live_axis_magnitudes as _live_axis_mags
+            _mags_pt = _live_axis_mags(systems)
             _dhb_pt.record(tick=turn_tick, magnitudes=_mags_pt)
             _diff_snap_pt = _dhb_pt.snapshot(tick=turn_tick)
             systems['_last_diff_snapshot'] = _diff_snap_pt
