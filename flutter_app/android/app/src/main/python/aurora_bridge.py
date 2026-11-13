@@ -24,6 +24,7 @@ import sys
 import threading
 import time
 import traceback
+from collections import deque
 from pathlib import Path
 from typing import Optional
 
@@ -433,28 +434,31 @@ _TURN_ADMISSION_TIMEOUT_S: float = 180.0
 # _proactive_expression so a late answer to what was just asked stays
 # diagnostically distinct from Aurora genuinely speaking unprompted, even
 # though both are delivered to Flutter through the same poll transport.
-_late_surface_response: str = ""
+# One slot used to silently overwrite another late answer when two
+# turns completed between Android's 3-second polls. Queue completed
+# responses in causal arrival order; bounded to protect an offline poller.
+_late_surface_responses = deque(maxlen=128)
 _late_surface_response_lock = threading.Lock()
 
 
 def _store_late_surface_response(turn_id: str, text: str) -> None:
-    global _late_surface_response
     if not text:
         return
     with _late_surface_response_lock:
-        _late_surface_response = text
-    log.info("Late surface response stored for %s (%d chars)", turn_id, len(text))
+        if len(_late_surface_responses) == _late_surface_responses.maxlen:
+            log.error("Late surface delivery queue full; oldest reply displaced")
+        _late_surface_responses.append((turn_id, text))
+    log.info("Late surface response queued for %s (%d chars)", turn_id, len(text))
 
 
 def get_late_surface_response() -> str:
-    """Called by AuroraService's polling loop, mirroring
-    get_proactive_expression(). Returns and clears any Surface response
-    that finished deciding after the Surface wait already timed out."""
-    global _late_surface_response
+    """Called by AuroraService's polling loop. Deliver late responses
+    one at a time without overwriting another turn's completed expression."""
     with _late_surface_response_lock:
-        val = _late_surface_response
-        _late_surface_response = ""
-    return val
+        if not _late_surface_responses:
+            return ""
+        _, text = _late_surface_responses.popleft()
+        return text
 
 
 # Build 774 PR3: turn diagnostics -- the ten observable states named by the
