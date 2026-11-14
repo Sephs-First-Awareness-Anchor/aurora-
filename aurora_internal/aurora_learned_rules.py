@@ -78,7 +78,7 @@ def _order_edges_scan(web: Any) -> Dict[Tuple[str, str], int]:
         for pred, p in dict(dict(a).get("predicates") or {}).items():
             n = int(dict(p).get("n", 0) or 0)
             denied = int(dict(p).get("denied", 0) or 0)
-            if n <= 0 or denied * 2 >= n:
+            if _verdict(p) != "held":
                 continue
             if pred in LATER_PREDICATES:
                 key = (tgt, src)
@@ -90,7 +90,8 @@ def _order_edges_scan(web: Any) -> Dict[Tuple[str, str], int]:
     return edges
 
 
-from aurora_internal.aurora_learned_index import memo as _memo   # FIX-A135: one resolution, many consumers
+from aurora_internal.aurora_learned_index import memo as _memo
+from aurora_internal.aurora_propositional_understanding import verdict as _verdict   # FIX-A135: one resolution, many consumers
 
 
 def order_edges(web: Any) -> Dict[Tuple[str, str], int]:
@@ -103,6 +104,68 @@ def kind_edges(web: Any) -> Dict[Tuple[str, str], int]:
 
 def end_edges(web: Any) -> Dict[Tuple[str, str], int]:
     return _memo(web, "ends", lambda: _end_edges_scan(web))
+
+
+def _order_verdicts_scan(web: Any) -> Dict[Tuple[str, str], str]:
+    """{(earlier, later): "held" | "denied" | "contested"} for every order she was told, including
+    the ones told NOT to be so (which are not edges, but are not nothing)."""
+    out: Dict[Tuple[str, str], str] = {}
+    rank = {"held": 3, "contested": 2, "denied": 1}
+    for rel in list(getattr(web, "relations", {}).values()):
+        a = getattr(rel, "assertion", None)
+        if not a:
+            continue
+        src = str(getattr(rel, "source_word", "") or "").lower()
+        tgt = str(getattr(rel, "target_word", "") or "").lower()
+        if not src or not tgt or src == tgt:
+            continue
+        for pred, p in dict(dict(a).get("predicates") or {}).items():
+            v = _verdict(p)
+            if v == "unsaid":
+                continue
+            if pred in LATER_PREDICATES:
+                key = (tgt, src)
+            elif pred in EARLIER_PREDICATES:
+                key = (src, tgt)
+            else:
+                continue
+            if rank[v] > rank.get(out.get(key, ""), 0):
+                out[key] = v
+    return out
+
+
+def order_verdicts(web: Any) -> Dict[Tuple[str, str], str]:
+    return _memo(web, "order_verdicts", lambda: _order_verdicts_scan(web))
+
+
+def _contradictions_scan(web: Any) -> List[Dict[str, Any]]:
+    found: List[Dict[str, Any]] = []
+    for rel in list(getattr(web, "relations", {}).values()):
+        a = getattr(rel, "assertion", None)
+        if not a:
+            continue
+        for pred, p in dict(dict(a).get("predicates") or {}).items():
+            if _verdict(p) == "contested":
+                found.append({"kind": "said both ways", "source": rel.source_word, "predicate": pred,
+                              "target": rel.target_word})
+    edges = order_edges(web)
+    for (x, y) in sorted(edges):
+        if x < y and (y, x) in edges:
+            found.append({"kind": "order both ways", "source": x, "predicate": "come before", "target": y})
+    return found
+
+
+def contradictions(web: Any) -> List[Dict[str, Any]]:
+    """What she holds that cannot all be so: a statement said and denied about equally (no correction
+    having settled it), or two words each told to come after the other.  Resolved once, shared."""
+    return _memo(web, "contradictions", lambda: _contradictions_scan(web), fresh=True)
+
+
+def _not_sure(subject: str, rel: str, obj: str) -> Dict[str, Any]:
+    return {"source": "aurora", "kind": "related_to", "target": subject, "strength": 1.3, "axis": "X",
+            "learned_from": "inference", "asked": True, "derived": ["contradicted"], "basis": "contested",
+            "lex": {"agent": "I", "action": "am not sure", "object": f"if {subject} is {rel} {obj}",
+                    "predicate": "know", "n": "1", "denied": "False"}}
 
 
 def _graph(edges: Mapping[Tuple[str, str], int]) -> Dict[str, List[str]]:
@@ -154,8 +217,8 @@ def _kind_edges_scan(web: Any) -> Dict[Tuple[str, str], int]:
         n, denied = int(dict(p).get("n", 0) or 0), int(dict(p).get("denied", 0) or 0)
         src = str(getattr(rel, "source_word", "") or "").lower()
         tgt = str(getattr(rel, "target_word", "") or "").lower()
-        if n > 0 and denied * 2 < n and src and tgt and src != tgt:
-            edges[(src, tgt)] = n - denied
+        if _verdict(p) == "held" and src and tgt and src != tgt:
+            edges[(src, tgt)] = max(1, n - denied)
     return edges
 
 
@@ -214,8 +277,8 @@ def _end_edges_scan(web: Any) -> Dict[Tuple[str, str], int]:
         tgt = str(getattr(rel, "target_word", "") or "").lower()
         for pred, p in dict(dict(a).get("predicates") or {}).items():
             n, denied = int(dict(p).get("n", 0) or 0), int(dict(p).get("denied", 0) or 0)
-            if pred in END_PREDICATES and n > 0 and denied * 2 < n and src and tgt and src != tgt:
-                edges[(src, tgt)] = n - denied
+            if pred in END_PREDICATES and _verdict(p) == "held" and src and tgt and src != tgt:
+                edges[(src, tgt)] = max(1, n - denied)
     return edges
 
 
@@ -365,7 +428,7 @@ def _rules_scan(web: Any) -> List[Dict[str, Any]]:
             continue
         for pred, p in dict(dict(a).get("predicates") or {}).items():
             n, denied = int(dict(p).get("n", 0) or 0), int(dict(p).get("denied", 0) or 0)
-            if n <= 0 or denied * 2 >= n:
+            if _verdict(p) != "held":
                 continue
             for cond in list(dict(p).get("when") or []):
                 out.append({"rel": rel, "predicate": pred, "when": dict(cond)})
@@ -455,7 +518,7 @@ def _answer(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
     if ask in ("ends", "ended_by"):
         return _derive_end(web, shape)
     edges = order_edges(web)
-    if not edges:
+    if not edges and not order_verdicts(web):        # (told-and-denied is something she holds, though it is no edge)
         return []
     if ask == "after":
         x = shape["of"]
@@ -472,9 +535,17 @@ def _answer(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
         a, b = (o, s) if rel == "after" else (s, o)          # a is earlier than b
         action = "is after" if rel == "after" else "is before"
         pred = "be after" if rel == "after" else "be before"
-        if b in later_than(edges, a):
+        direct = order_verdicts(web).get((a, b), "")
+        forward, backward = b in later_than(edges, a), a in later_than(edges, b)
+        # told both ways, or told one thing and its opposite is also in what she holds: not settled
+        if direct == "contested" or (forward and backward) or (direct == "denied" and forward):
+            return [_not_sure(s, shape["rel"], o)]
+        if forward:
             return [_item(s, o, action=action, predicate=pred, denied=False, chain=later_than(edges, a)[b])]
-        if a in later_than(edges, b):
+        if direct == "denied" and not backward:
+            return [_item(s, o, action=action.replace("is ", "is not ", 1), predicate=pred, denied=True,
+                          chain=["told"])]
+        if backward:
             # the other way round is what she was told: "a is not after d"
             return [_item(s, o, action=action.replace("is ", "is not ", 1), predicate=pred, denied=True,
                           chain=later_than(edges, b)[a])]

@@ -372,3 +372,72 @@ def test_what_she_herself_observed_is_held_as_observed_once_per_moment():
     assert P.observe(web, "aurora", "see", "cup") is False                    # the same look, not a second observation
     st = P.standing(_rel(web, "aurora", "cup"), "see")
     assert st["basis"] == {"observed": 1} and st["history"][0]["by"] == "aurora"
+
+
+# -- contradiction and revision (FIX-A138) ------------------------------------------
+
+def _ask(web, q):
+    return [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"])
+            for i in R.derive(web, q, speaker_now="sunni", self_now="aurora")]
+
+
+def test_the_same_fact_said_the_other_way_round_is_one_fact_not_a_contradiction():
+    web = _told(["The letter b comes after a.", "The letter a comes before b."])
+    assert R.contradictions(web) == [] and _ask(web, "Is b after a?") == [("b", "is after", "a")]
+
+
+def test_two_words_each_told_to_come_after_the_other_are_a_contradiction_she_does_not_resolve():
+    web = _told(["The letter b comes after a.", "The letter a comes after b."])
+    assert [c["kind"] for c in R.contradictions(web)] == ["order both ways"]
+    assert _ask(web, "Is b after a?") == [("I", "am not sure", "if b is after a")]
+    assert _ask(web, "Is a after b?") == [("I", "am not sure", "if a is after b")]
+
+
+def test_a_statement_told_and_then_denied_is_contested_until_corrected():
+    web = _told(["B comes after a.", "B does not come after a."])
+    assert [c["kind"] for c in R.contradictions(web)] == ["said both ways"]
+    assert _ask(web, "Is b after a?") == [("I", "am not sure", "if b is after a")]
+
+
+def _correct(web, line):
+    for st in P.statements_in(line):
+        P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={}, basis="corrected")
+
+
+def test_a_correction_settles_it_the_chain_that_depended_on_it_falls_and_the_history_stays():
+    web = _told(["B comes after a.", "C comes after b."])
+    assert _ask(web, "Is c after a?") == [("c", "is after", "a")]
+    _correct(web, "B does not come after a.")
+    assert _ask(web, "Is b after a?") == [("b", "is not after", "a")]
+    assert _ask(web, "Is c after a?") == [("I", "do not know", "if c is after a")]       # what rested on it is no longer held
+    st = P.standing(_rel(web, "b", "a"), "come after")
+    assert st["verdict"] == "denied" and st["n"] == 2 and R.contradictions(web) == []
+    assert [(e["b"], e["d"]) for e in st["history"]] == [("told", 0), ("corrected", 1)]     # nothing overwritten
+
+
+def test_a_later_correction_can_restore_it():
+    web = _told(["B comes after a."])
+    _correct(web, "B does not come after a.")
+    _correct(web, "Actually, b does come after a.")
+    st = P.standing(_rel(web, "b", "a"), "come after")
+    assert st["verdict"] == "held" and [e["b"] for e in st["history"]] == ["told", "corrected", "corrected"]
+
+
+@pytest.mark.parametrize("heard,basis", [
+    ("Actually, b does not come after a.", "corrected"),
+    ("No, b does not come after a.", "corrected"),
+    ("Correction: b does not come after a.", "corrected"),
+    ("B does not come after a.", "told"),
+])
+def test_a_turn_said_as_a_correction_is_recorded_as_one(heard, basis):
+    web = _told(["B comes after a."])
+    systems = {"oets": type("O", (), {"web": web})(), "perception": None}
+    P.integrate_turn(systems, heard, session_id="x")
+    assert P.standing(_rel(web, "b", "a"), "come after")["history"][-1]["b"] == basis
+
+
+def test_a_corrected_denial_is_voiced_as_denied():
+    web = _told(["B comes after a."])
+    _correct(web, "B does not come after a.")
+    lex = P.lexicalize_assertion(_rel(web, "b", "a"), speaker_now="sunni", self_now="aurora", predicate="come after")
+    assert "not" in lex["action"]

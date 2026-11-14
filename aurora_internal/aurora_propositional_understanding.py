@@ -234,6 +234,8 @@ def _is_verb_here(tok: str, nxt: str, tags: Mapping[int, Any], i: int, verb_form
 
 
 _CONDITION_LEADS = frozenset({"when", "if", "whenever"})
+_CORRECTION = re.compile(r"\s*(actually|correction|no|wrong|rather|i was wrong|that is wrong|that's wrong|i misspoke|"
+                         r"i mean|scratch that)\b[\s,:;-]", re.I)
 
 
 def _link_conditions(out: List[Dict[str, Any]], first: int) -> None:
@@ -338,8 +340,8 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                     continue
                 if tok in closed and tok not in verb_forms:
                     continue                         # FIX-A133: her verb forms ("follows") are closed-class for heads, not for the act
-                if i > 0 and toks[i - 1] in ("a", "an"):
-                    continue                         # FIX-A134: a word right after "a"/"an" is a noun, never the act ("a greeting")
+                if i > 0 and toks[i - 1] in ("a", "an") and (copula_at >= 0 or explicit >= 0):
+                    continue                         # FIX-A134: after the verb, a word right after "a"/"an" is a noun ("a greeting"); "the letter a comes" is not
                 if explicit < 0 and (after_aux or tok in verb_forms
                                      or _node_role(web, tok) == "verb"):
                     explicit = i
@@ -494,6 +496,30 @@ def _ensure_node(web: Any, word: str) -> Any:
         return None
 
 
+_INVERSE_PREDICATE = {"come after": "come before", "come before": "come after", "follow": "precede",
+                      "precede": "follow", "be after": "be before", "be before": "be after"}
+_INVERSE_WORD = {"after": "before", "before": "after", "follow": "precede", "follows": "precedes",
+                 "precede": "follow", "precedes": "follows", "followed": "preceded", "preceded": "followed"}
+
+
+def _inverse_surface(surface: str) -> str:
+    return " ".join(_INVERSE_WORD.get(w, w) for w in str(surface or "").split())
+
+
+def verdict(p: Mapping[str, Any]) -> str:
+    """How a predicate along a relation stands: "held", "denied", "contested" (said and denied about
+    equally) or "unsaid".  A CORRECTION settles it (the latest one decides) without touching the
+    history: what was told before stays, and so does that it was later corrected (FIX-A138)."""
+    p = dict(p or {})
+    n, d = int(p.get("n", 0) or 0), int(p.get("denied", 0) or 0)
+    if n <= 0:
+        return "unsaid"
+    settled = dict(p.get("settled") or {})
+    if settled:
+        return "denied" if settled.get("d") else "held"
+    return "held" if d * 2 < n else ("denied" if d * 2 > n else "contested")
+
+
 def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, modality: str,
                       speaker: str, time_ref: str, profile: Mapping[str, float], context: str,
                       when: Optional[Mapping[str, Any]] = None, phrase: str = "",
@@ -512,6 +538,8 @@ def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, 
     if len(hist) > MAX_HISTORY:
         hist = hist[:1] + hist[-(MAX_HISTORY - 1):]
     p["history"] = hist
+    if basis == "corrected":                  # the latest correction decides; everything before it stays in history
+        p["settled"] = {"d": 1 if negated else 0, "t": int(time.time()), "by": speaker}
     if phrase:                                # FIX-A134: the words it was said with, whatever the tagger made of them
         closed = _closed_class()
         said = [w.lower() for w in _words(phrase) if len(w) >= 3 and w.lower() not in closed and "'" not in w]
@@ -614,6 +642,10 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                     # FIX-A133: "comes after" is one predicate: the verb and its particle
                     pred_here = f"{predicate} {particle}" if particle else predicate
                     surf_here = f"{predicate_surface} {particle}" if particle else predicate_surface
+                    if (rel.source_word, rel.target_word) != (s, o) and pred_here in _INVERSE_PREDICATE:
+                        # the relation already runs the other way ("b after a" held, now "a after b"):
+                        # said of that relation it is the inverse predicate, not the same one again
+                        pred_here, surf_here = _INVERSE_PREDICATE[pred_here], _inverse_surface(surf_here)
                     _record_assertion(rel, predicate=pred_here, surface=surf_here,
                                       negated=bool(form.get("negated")), modality=str(form.get("modality") or ""),
                                       speaker=speaker, time_ref=time_ref, profile=profile,
@@ -667,11 +699,13 @@ def integrate_turn(systems: Mapping[str, Any], heard: str, *, session_id: str = 
     props: List[Dict[str, Any]] = []
     # FIX-A134: "When I greet you, you say hello." opens with a question word but is a statement.
     conditional = bool(re.match(r"\s*(when|whenever|if)\b", str(heard), re.I)) and "?" not in str(heard)
+    # FIX-A138: "Actually, ..." / "No, ..." / "Correction: ..." / "I was wrong, ..." -- said as a correction
+    basis = "corrected" if _CORRECTION.match(str(heard)) else "told"
     if (conditional or not form.get("question")) and (conditional or not form.get("directive")):
         acts = _acts(heard)
         for st in statements_in(heard, web=web):
             props.extend(integrate_form(web, st, heard=heard, speaker=speaker, listener=listener,
-                                        profile=profile, time_ref=time_ref, acts=acts))
+                                        profile=profile, time_ref=time_ref, acts=acts, basis=basis))
     placed = 0
     for concept in list(pipeline.get("salient_concepts") or [])[:8]:
         node = web.nodes.get(str(concept).lower())
@@ -691,8 +725,9 @@ def standing(rel: Any, predicate: str) -> Dict[str, Any]:
     p = dict(dict(dict(getattr(rel, "assertion", None) or {}).get("predicates") or {}).get(predicate) or {})
     n, denied = int(p.get("n", 0) or 0), int(p.get("denied", 0) or 0)
     hist = list(p.get("history") or [])
-    return {"n": n, "denied": denied, "held": n > 0 and denied * 2 < n,
-            "contested": n > 0 and denied > 0 and abs(n - 2 * denied) <= 1,
+    return {"n": n, "denied": denied, "held": verdict(p) == "held",
+            "verdict": verdict(p), "settled": dict(p.get("settled") or {}),
+            "contested": verdict(p) == "contested",
             "basis": dict(p.get("basis") or {}), "first": (hist[0] if hist else {}),
             "last": (hist[-1] if hist else {}), "history": hist}
 
@@ -745,7 +780,7 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
     _object = "me" if _target == self_now else ("you" if _target == speaker_now else _target)
     if predicate == "be" and source not in (speaker_now, self_now):
         _object = _target        # "name is Sunni": the name is not about who is listening
-    denied = int(p.get("denied", 0)) * 2 > int(p.get("n", 0))
+    denied = verdict(p) == "denied" or (not p.get("settled") and int(p.get("denied", 0)) * 2 > int(p.get("n", 0)))
     surface = str(p.get("surface") or predicate)
     if agent in ("I", "you") or source in PARTICIPANTS:
         verb = predicate

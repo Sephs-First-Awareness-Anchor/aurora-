@@ -33,6 +33,8 @@ import re
 import time
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
+from aurora_internal.aurora_propositional_understanding import verdict as _verdict
+
 # What a question may run.  Sensing and reading her own state only.
 READ_ONLY = frozenset({"time", "self_state", "schedule_read", "memory_read", "visual_analysis",
                        "audio_analysis", "calculator"})
@@ -101,7 +103,7 @@ def _told_with(web: Any) -> Dict[str, Set[str]]:
             continue
         for pred, p in dict(dict(a).get("predicates") or {}).items():
             n, denied = int(dict(p).get("n", 0) or 0), int(dict(p).get("denied", 0) or 0)
-            if n <= 0 or denied * 2 >= n or " " in str(pred):
+            if _verdict(p) != "held" or " " in str(pred):
                 continue
             said.setdefault(str(pred), set()).update(
                 _forms([getattr(rel, "target_word", "")] + list(dict(p).get("said_with") or [])))
