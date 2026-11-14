@@ -615,6 +615,74 @@ class _HubScreenState extends State<HubScreen> {
     } catch (_) {}
   }
 
+  // FIX-A125: long-press the link row to move state between devices.
+  Future<void> _strataTransfer(String command, String label) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(SnackBar(content: Text('$label: working...')));
+    String message;
+    try {
+      final raw = await _strataChannel.invokeMethod<String>(
+          'strataLinkTransfer', {'command': command});
+      final data = jsonDecode(raw ?? '{}') as Map<String, dynamic>;
+      final ok = data['ok'] == true;
+      final err = (data['error'] as String?) ?? '';
+      final token = (data['token'] as String?) ?? '';
+      message = ok
+          ? '$label: done${token.isEmpty ? '' : ' · token $token'}'
+          : '$label: ${err.isEmpty ? 'not completed' : err}';
+    } catch (e) {
+      message = '$label: failed ($e)';
+    }
+    if (!mounted) return;
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(
+        content: Text(message), duration: const Duration(seconds: 12)));
+  }
+
+  Future<void> _strataTransferMenu() async {
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Subsurface state'),
+        children: [
+          SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, 'seed'),
+              child: const Text('Seed Subsurface from this device')),
+          SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, 'handoff_checkpoint'),
+              child: const Text('Checkpoint for a new Surface device')),
+          SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, 'handoff_claim'),
+              child: const Text('Claim Surface here (needs token)')),
+          SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, 'verify'),
+              child: const Text('Verify state against Subsurface')),
+        ],
+      ),
+    );
+    if (choice == null || !mounted) return;
+    if (choice != 'handoff_claim') {
+      await _strataTransfer(choice, choice.replaceAll('_', ' '));
+      return;
+    }
+    final controller = TextEditingController();
+    final token = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Handoff token'),
+        content: TextField(controller: controller, autocorrect: false),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: const Text('Claim')),
+        ],
+      ),
+    );
+    if (token == null || token.isEmpty) return;
+    await _strataTransfer('handoff_claim:$token', 'claim surface');
+  }
+
   Widget _buildStrataLinkRow() {
     final status   = (_stats['strata_link_status'] as String?) ?? 'not_configured';
     final pending  = _stats['strata_link_pending'] as int? ?? 0;
@@ -633,6 +701,7 @@ class _HubScreenState extends State<HubScreen> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _pairStrataLink,
+      onLongPress: _strataTransferMenu,
       child: _statRow('Subsurface link', detail,
           valueColor: status == 'online' ? _green : _textDim),
     );

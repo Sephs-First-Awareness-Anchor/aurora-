@@ -11276,3 +11276,101 @@ contributed (Unified Directive §26); recalled memory is not new speech.
 **First Seen:** 2026-11-12 live profile. On traced turns, exchange
 observations fell from 8 and 6 per turn to 4 and 1, none logging relief.
 Still open: her unspoken articulation drafts are absorbed as heard language.
+
+## FIX-A124 (ARCHITECTURAL) — The attention tick is fed the field's live axis pressure, from one place
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** `_run_live_response_turn` recorded the DifferenceHistoryBuffer from
+the conscious crest alone, looking up per-axis keys (`existence`, `X`, ...) the
+crest does not carry (it holds `{axis, intensity, label}`). Every axis was
+recorded as 0.5 on every turn: zero drift, `subsurface_tension` ~1e-4, and the
+AttentionEngine's salience and tension could not follow anything the
+subsurface or the field had done. The training pulse and the daemon already
+fed the buffer from the identity field's live axis pressure, so the live turn
+had drifted from its own mirror.
+**Correct Form:** one shared feed, `live_axis_magnitudes(systems)` in
+`aurora_internal/aurora_difference_buffer.py`: identity-field `axis_pressures`
+first, the conscious crest's per-axis value for an axis the field does not
+report, 0.5 only when neither says anything; 0.0 stays 0.0. Used by the live
+turn and by `TrainingPulse._record_and_snapshot`.
+**Why:** Salience is a surprise signal measured against what the field was
+tracking (Unified Directive: consequence-driven); a constant input cannot
+carry one. No content, threshold or rule was added -- only the existing
+sanctioned source was connected.
+**First Seen:** 2026-11-13 Subsurface->Surface trace. Measured on two live
+turns: per-axis drift 0.0 -> 0.001-0.024, tension EMA 7.5e-5/1.3e-4 ->
+4.1e-4/3.8e-3. `get_meaning_nucleus()` still requires resonance >= 0.55 (its own
+threshold, untouched), so FORMING is reachable only on a strong surprise.
+
+## FIX-A125 (ARCHITECTURAL) — Whole-state transfer is hash-verified, resumable, and installs only what verified
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** The strata link carried live channels only. The Subsurface device
+could not be given the history the Surface had lived (so the downlink had to
+stay off), and a Surface could not move devices with its state: claiming the
+role from a second device started it from nothing. The sensory snapshot and
+guidance channels existed locally but did not cross the link.
+**Correct Form:** `strata_state_transfer.py` (no network, no cognition) selects
+the continuity files, snapshots them so hashes describe the bytes sent, stages
+incoming chunks, trusts a file only after its SHA-256 matches, and installs with
+a backup (`os.replace`, nothing half-written). `strata_link.py` carries it on the
+same signed exchange: **seed** (installs on the Subsurface, then the downlink
+condition is met) and **handoff** (checkpoint on the Subsurface; a claim without
+its token is refused while it waits; the new device pulls, verifies, installs,
+then confirms; epoch + 1). Transfer ids derive from content, so an interrupted
+transfer resumes. Sensory snapshot goes up (latest wins), guidance comes down
+(event ids preserved, never doubled).
+**Why:** State a device did not live must not enter it unverified, and a
+migration must not leave the role with a device that has none of the history.
+**First Seen:** 2026-11-13 Unified Directive, physical distribution. Verified on
+one machine only: real 251.9 MB state seeded over loopback HTTP in 28 s, 3,130/3,130
+verified, re-seed sent 0 bytes; no physical two-device run. A seeded daemon needs
+a restart (it holds state in memory).
+
+## FIX-A126 (ARCHITECTURAL) — Her own articulation candidates are perceived, not heard
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** `_articulate_user_response` fed every candidate it weighed
+(`decision.selected`, spoken or not) back through
+`perception.ingest_interaction` as if the speaker had said it. That call
+recorded the real pressure-relief feedback, but also learned from the text as
+heard language: vocabulary, expression context, `composer.absorb` structure, and
+OETS usage examples and co-occurrence relations. Measured on six live turns: her
+own drafts ("I am having consciousness. I had moment.") were absorbed as heard
+structure 5 times, so each draft primed the next.
+**Correct Form:** `ingest_interaction` honours `interaction['produced']`:
+`perceive()` (the feedback channel, with `features`) still runs, then it returns
+before any learning-from-the-world step. The gateway marks its articulation
+feedback `produced: True`. No wording, rule or class was added; only which events
+count as heard changed. Same distinction as FIX-A123.
+**Why:** Learning from the world needs the world; her own output is evidence of
+her state, not of language.
+**First Seen:** 2026-11-13, next-steps trace. Live check: absorbs of her own
+drafts 5 → 0, heard utterances unchanged (6 absorbed). NOT changed, flagged for
+Sir: training episodes in periodic maintenance feed scaffolding text (e.g.
+"[PRESSURE ROUTING] ...", directed-corpus templates) through the same ingest as
+heard, adding ~18 lexicon words in six turns; and a user turn on one run carried
+an appended "[Internal: ...]" string into ingest.
+
+## FIX-A127 (ARCHITECTURAL) — Scaffolding is perceived, never heard
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** Curriculum and bookkeeping text entered `ingest_interaction` as
+language heard from a speaker: directed-training wrappers ("A conflicting angle
+appears now. Hold both sides and resolve honestly: ..."), the pressure router's
+diagnostic label ("[PRESSURE ROUTING] ... training needed on ..."), and her own
+" [Internal: ...]" reasoning note appended to the turn text. Vocabulary,
+structure and OETS learned from them (16 lexicon words in six live turns came
+from heard-path ingests of this kind).
+**Correct Form:** (1) `without_scaffold()` in the directed corpus derives the
+wrapper-free material from the corpus's own two template tables; the simulation
+ingests only that. (2) `[PRESSURE ROUTING]` is a registered transport marker, now
+also recognized on spec prompt/follow-up candidates in `_shape_topic_for_turn`;
+episodes sourced `pressure`/`code` are ingested `internal=True` (perceived, not
+learned). (3) `strip_internal_annotation()` (one rule, shared with the
+constraint emitter) removes the trailing note before ingest. Nothing was added to
+her; the prompts she is given are unchanged, only what counts as heard.
+**Why:** The curriculum is the teacher's voice and the note is her own; learning
+language from either teaches her about the scaffold, not the world.
+**First Seen:** 2026-11-13, Sir: "no scaffolding". Not changed: `[AFTERTHOUGHT]`
+episodes (her own thought) still ingest as before, and other hand-authored
+prompt-shaping strings in `_shape_topic_for_turn` ("I am intentionally vague...")
+remain: a larger curriculum question for Sir. Voice-gate cost re-measured at
+0.04-0.05 s per call: the earlier "3 s" was profiler inflation, nothing to fix.
+Hub (Dart) transfer menu added (long-press the link row) but NOT compiled here.

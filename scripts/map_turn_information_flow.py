@@ -120,6 +120,94 @@ class WatchedState(dict):
 
 
 # ---------------------------------------------------------------------------
+# Organs: who calls whom, and what each one actually changed
+# ---------------------------------------------------------------------------
+
+class OrganWatch:
+    """Watches calls that cross INTO an organ (an object held in `systems`).
+
+    For each organ it records who called it (another organ, or the stage
+    function in aurora.py), which of its methods were entered, which other
+    organs it called in turn, and -- by comparing a shallow fingerprint of its
+    own attributes before and after each turn -- what it actually changed.
+    """
+
+    def __init__(self, systems: Dict[str, Any]) -> None:
+        self.by_id: Dict[int, str] = {}
+        self.objects: Dict[str, Any] = {}
+        for key, value in systems.items():
+            module = getattr(type(value), "__module__", "") or ""
+            if not module.startswith("aurora") or isinstance(value, (dict, list, tuple, set, str)):
+                continue
+            if id(value) in self.by_id:
+                continue
+            self.by_id[id(value)] = str(key)
+            self.objects[str(key)] = value
+        self.entered: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.called_by: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.calls_into: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.changed: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self._stack: List[Tuple[int, str]] = []
+        self._before: Dict[str, Dict[str, Any]] = {}
+
+    @staticmethod
+    def _fingerprint(obj: Any) -> Dict[str, Any]:
+        out: Dict[str, Any] = {}
+        try:
+            items = list(vars(obj).items())
+        except Exception:
+            return out
+        for name, value in items:
+            if isinstance(value, bool) or value is None:
+                out[name] = value
+            elif isinstance(value, (int, float, str)):
+                out[name] = value if not isinstance(value, str) else hash(value)
+            else:
+                try:
+                    out[name] = ("len", len(value))
+                except Exception:
+                    continue
+        return out
+
+    def turn_begins(self) -> None:
+        self._before = {name: self._fingerprint(obj) for name, obj in self.objects.items()}
+
+    def turn_ends(self) -> None:
+        for name, obj in self.objects.items():
+            before, after = self._before.get(name, {}), self._fingerprint(obj)
+            for attr, value in after.items():
+                if before.get(attr, "<absent>") != value:
+                    self.changed[name][attr] += 1
+
+    def _stage(self, frame: Any) -> str:
+        back = frame.f_back
+        hops = 0
+        while back is not None and hops < 40:
+            filename = back.f_code.co_filename
+            if filename.endswith("aurora.py"):
+                return "aurora." + back.f_code.co_name
+            back = back.f_back
+            hops += 1
+        return "(outside aurora.py)"
+
+    def hook(self, frame: Any, event: str, arg: Any) -> None:
+        if event == "call":
+            code = frame.f_code
+            if code.co_argcount and code.co_varnames[0] == "self":
+                organ = self.by_id.get(id(frame.f_locals.get("self")))
+                if organ is not None:
+                    caller = self._stack[-1][1] if self._stack else self._stage(frame)
+                    if caller != organ:
+                        self.entered[organ][code.co_name] += 1
+                        self.called_by[organ][caller] += 1
+                        if self._stack:
+                            self.calls_into[caller][organ] += 1
+                    self._stack.append((id(frame), organ))
+        elif event == "return" and self._stack and self._stack[-1][0] == id(frame):
+            self._stack.pop()
+
+
+# ---------------------------------------------------------------------------
 # Source index
 # ---------------------------------------------------------------------------
 
@@ -170,7 +258,11 @@ def index_sources():
 
 # ---------------------------------------------------------------------------
 
+ORGANS: Any = None
+
+
 def run_turns(state_dir: str) -> List[Dict[str, Any]]:
+    global ORGANS
     os.environ.setdefault("AURORA_SKIP_DEP_INSTALL", "1")
     work = Path(tempfile.mkdtemp(prefix="aurora_map_"))
     shutil.copytree(state_dir, work / "aurora_state")
@@ -194,16 +286,22 @@ def run_turns(state_dir: str) -> List[Dict[str, Any]]:
         return state
 
     aurora._extract_pipeline_signals = watched_extract
+    ORGANS = OrganWatch(systems)
     outcomes = []
     for text in TURNS:
         sys.stdout = io.StringIO()
+        ORGANS.turn_begins()
+        sys.setprofile(ORGANS.hook)
         try:
             result = aurora.process_external_user_turn(
                 systems, text, source_label="flutter_ui", session_id="map",
                 auto_search_enabled=False, record_exchange=True, update_interactive_state=True,
                 track_evolutionary_trace=True, run_periodic_maintenance=True, mode_name="BOUNDED")
         finally:
+            sys.setprofile(None)
             sys.stdout = real
+        ORGANS._stack.clear()
+        ORGANS.turn_ends()
         gate = dict(systems.get("_last_voice_gate") or {})
         outcomes.append({"said": text,
                          "reply": str(getattr(result.get("resp_A"), "content", "") or ""),
@@ -263,7 +361,24 @@ def main() -> int:
     bus_unread = [b for b in bus if b["writers"] and not b["readers"]]
     bus_unwritten = [b for b in bus if b["readers"] and not b["writers"]]
 
-    data = {"commit": os.popen(f"git -C {ROOT} rev-parse --short HEAD").read().strip(),
+    organs = []
+    n_turns = max(1, len(outcomes))
+    for name, obj in ORGANS.objects.items():
+        entered = ORGANS.entered.get(name, {})
+        organs.append({
+            "organ": name, "class": type(obj).__name__, "module": type(obj).__module__,
+            "entries": int(sum(entered.values())),
+            "methods": dict(sorted(entered.items(), key=lambda kv: -kv[1])[:8]),
+            "called_by": dict(sorted(ORGANS.called_by.get(name, {}).items(), key=lambda kv: -kv[1])[:8]),
+            "calls_into": dict(sorted(ORGANS.calls_into.get(name, {}).items(), key=lambda kv: -kv[1])[:8]),
+            "changed": dict(sorted(ORGANS.changed.get(name, {}).items(), key=lambda kv: -kv[1])[:10]),
+            "changed_count": len(ORGANS.changed.get(name, {})),
+        })
+    organs.sort(key=lambda o: -o["entries"])
+    silent = [o for o in organs if not o["entries"]]
+    inert = [o for o in organs if o["entries"] and not o["changed_count"]]
+
+    data = {"organs": organs, "commit": os.popen(f"git -C {ROOT} rev-parse --short HEAD").read().strip(),
             "generated_at": time.strftime("%Y-%m-%d"), "turns": outcomes, "stages": stages,
             "signals": signals, "never_read": [s["signal"] for s in never_read],
             "never_read_no_reader_possible": [s["signal"] for s in never_read if s.get("name_only_at_writer")],
@@ -364,6 +479,36 @@ def main() -> int:
         w(f"| `{s['signal']}` | {', '.join(s['writers'][:2])} | {', '.join(s['live_readers'][:3]) or '—'} | "
           f"{len(s['source_readers'])} |")
     w("")
+    w("## 7. Her organs on live turns")
+    w("")
+    w("An organ is an object held in `systems`. Counts are calls that cross INTO the "
+      f"organ from outside it, summed over the {n_turns} turns. \"Changed\" lists the "
+      "organ's own attributes whose size or value differed after a turn (a shallow "
+      "comparison: a change deep inside a nested structure of unchanged size is not seen).")
+    w("")
+    w(f"- Organs held in `systems`: **{len(organs)}**")
+    w(f"- Entered during the live turns: **{len(organs) - len(silent)}**")
+    w(f"- Never entered: **{len(silent)}**")
+    w(f"- Entered, with no visible change to their own state: **{len(inert)}**")
+    w("")
+    w("### 7a. Organs that took part")
+    w("")
+    w("| Organ (class) | Entries | Entered through | Called by | Calls into | What it changed |")
+    w("|---|---|---|---|---|---|")
+    for o in organs:
+        if not o["entries"]:
+            continue
+        fmt = lambda d, n=4: ", ".join(f"{k} ×{v}" for k, v in list(d.items())[:n]) or "—"
+        w(f"| `{o['organ']}` ({o['class']}) | {o['entries']} | {fmt(o['methods'])} | {fmt(o['called_by'])} | "
+          f"{fmt(o['calls_into'], 5)} | {', '.join(list(o['changed'])[:6]) or '**nothing visible**'} |")
+    w("")
+    w("### 7b. Organs never entered during a live turn")
+    w("")
+    w("| Organ | Class | Module |")
+    w("|---|---|---|")
+    for o in silent:
+        w(f"| `{o['organ']}` | {o['class']} | {o['module']} |")
+    w("")
     w("## 5. The `systems` bus: written and never read")
     w("")
     w("| Key | Written by |")
@@ -381,6 +526,8 @@ def main() -> int:
         w(f"| `{b['key']}` | {', '.join(b['readers'][:3])} |")
     w("")
     Path(args.out).write_text("\n".join(out), encoding="utf-8")
+    print(f"organs {len(organs)} · entered {len(organs) - len(silent)} · never entered {len(silent)} · "
+          f"entered but unchanged {len(inert)}")
     print(f"signals {len(signals)} · stages {len(stages)} · never read {len(never_read)} · "
           f"awaited {len(awaited)} · bus {len(bus)} (unread {len(bus_unread)}, unwritten {len(bus_unwritten)})")
     for t in outcomes:

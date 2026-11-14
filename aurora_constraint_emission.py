@@ -1324,13 +1324,8 @@ class ConstraintEmitter:
         Instead find the LAST occurrence of the marker (the pipeline only
         ever appends one, at the very end) and only strip from there,
         leaving any earlier occurrence in her own words untouched."""
-        text = text or ""
-        if text.endswith("]"):
-            marker = " [Internal:"
-            idx = text.rfind(marker)
-            if idx != -1:
-                return text[:idx].strip()
-        return text.strip()
+        from aurora_expression_perception import strip_internal_annotation
+        return strip_internal_annotation(text or "").strip()
 
     _AFFIRM_MARKERS = ("yes", "yeah", "yep", "right", "correct", "exactly", "that's it", "precisely")
     _NEGATE_MARKERS = ("no", "nope", "not quite", "not really", "wrong", "not exactly", "close but", "actually no")

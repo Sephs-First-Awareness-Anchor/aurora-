@@ -354,6 +354,13 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    // FIX-A125: seed / hand off / claim / verify state over the link.
+                    "strataLinkTransfer" -> {
+                        val command = call.argument<String>("command") ?: ""
+                        AuroraService.callPythonStringArg("strata_link_transfer_cmd", command) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     "getRoomState" -> {
                         AuroraService.getRoomState { json ->
                             runOnUiThread { result.success(json) }

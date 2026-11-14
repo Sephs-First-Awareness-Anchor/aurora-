@@ -247,6 +247,122 @@ A repair here reshapes her genealogy and needs its own trace first: how code
 abilities are registered at boot, what reads them at depth, and what the
 selection would see once they are held as families.
 
+## Trace 3 — the organs (Section 7 of the map)
+
+Read from `docs/AURORA_INFORMATION_CIRCULATION_MAP.md` §7 and the call sites
+in `aurora.py` / `aurora_runtime.py`. Four live turns were watched, so
+"never entered" means *not entered in four turns*, not *unused*.
+
+**What the 56 entered organs show.**
+
+- Load is concentrated in three places. `accountant` is entered 1,158 times
+  (976 from `chamber`), `genealogy` 862 times (714 from `working_memory`,
+  almost all through `representation_is_eligible`), and `working_memory`
+  239 times. Those are the organs whose cost Task #10 has to justify;
+  every other organ is entered under 200 times in four turns.
+- The experiential chain is real and visible: `perception` →
+  `grammar_engine` → `genealogy`; `lexical_grounding` → `warp_field` →
+  `language_field` → `tensor_expressions` → `identity_field`;
+  `consciousness` → `sedimemory`/`identity_field`/`dimensional`/`lattice`.
+  Each of these changes its own state on a turn, so what they hold is
+  carried to the next turn.
+- Nine organs are entered and change nothing visible
+  (`sensory_crystal`, `noncomp_manifold_directory`, `noncomp_manifold_router`,
+  `constraint_reasoner`, `solidification`, `constraint_emitter`,
+  `manual_code_lineage`, `core_identity`, `evolved_surfaces`). The watch
+  compares size/value one level deep, so this means "no visible change",
+  not "no effect". `sensory_crystal.get_state` is read 21 times by
+  `consciousness`, the chain and the live turn — it is a read-only
+  window, which is its design. `constraint_reasoner` runs `reason`/
+  `integrate` every turn and calls `warp_field`, but keeps no state of its
+  own that the map can see; whether its output reaches a reader belongs
+  to the signal map (Finding 1), not to this table.
+
+**What the 33 not-entered organs are.** Checked at their reference sites,
+they fall into four kinds — none of them "dead" on this evidence alone:
+
+1. *Cadence-gated, not per-turn.* `_pressure_router` and `_dpme_bridge` run
+   only when `turn_tick % 50 == 0` (aurora.py ~36528). Four turns cannot
+   reach them. They need a 50+ turn watch before anything is said.
+2. *Runtime-tick organs.* `_braided_substrate` is built in `aurora.py` but
+   read in `aurora_runtime.py` (~2604) on the runtime tick, under its own
+   registry attribute — a different path from a live turn.
+3. *Boot/persistence/hardware organs* — `state_persistence`,
+   `enhanced_persist`, `checkpoint`, `drive_sync`, `git_sync`,
+   `_connectivity_monitor`, `hardware`, `sensory`, `sensory_integration`,
+   `vision_bootstrap`: they act on save, sync, or sensor events, not on a
+   typed turn. This matters for Task #11: the **sensory organs are not
+   exercised by any typed turn**, so "expand sensory streaming" has to be
+   tested through a sensor event, not through the turn baseline.
+4. *Wired but intentionally stubbed.* `icc_ledger`, `strategic_horizon`,
+   `operator_composer` are constructed in `aurora.py` ~30887 under a
+   comment explaining that their feeding amount is not to be fabricated
+   into a hash-chained ledger; their only readers outside construction are
+   tests. This is a standing decision, so they stay as they are.
+
+Still unclassified (need a longer or sensor/dream-cycle watch, not a guess):
+`dream_orchestrator`, `autonomy`, `code_evolution_chamber`,
+`operational_synthesis`, `general_execution_foundry`,
+`noncomp_layer_compiler`, `primitive_extractor`, `variant_promoter`,
+`strand_lib`, `_strand_builder`, `contradiction_ledger`,
+`time_dilation_governor`, `_simulation_governor`, `_chain_bridge`.
+
+**What this changes in the plan.**
+
+- Task #9 (subsurface → surface) works through organs that *are* entered
+  every turn: `_attention_engine` (tick + meaning nucleus),
+  `_thought_braid`, `consciousness`, `identity_field`. `_attention_engine`
+  keeps `_salience_ema` and `_tension_ema`, so it already carries a
+  history the subsurface can feed — no new organ is needed.
+- Task #10 targets the three heavy callers, and must keep their
+  distinctions: the `representation_is_eligible` volume is the first
+  place to measure.
+- Task #11's sensory work needs a sensor-event watch, since the turn
+  watch cannot see it.
+
+## Trace 4 — the Subsurface → Surface pathway, placed and repaired (FIX-A124)
+
+**Routes found, and what each does today** (traced on live turns, 2026-11-13):
+
+| Route | In | Reaches | State |
+|---|---|---|---|
+| Conscious crest → axis projection (`_project_utterance_axes`, "Repair J") | DCE crest `{axis, intensity}` | the Surface's axis pressure, weighted by the crest's own intensity | works |
+| Conscious frame → action selection / CERS / confluence | `_live_conscious_frame` | next-turn readers | works (Trace 1b) |
+| **Diff buffer → AttentionEngine** (salience, tension, meaning nucleus) | per-axis magnitudes | `_salience_pt`, `subsurface_tension`, `_meaning_nucleus` → `register_meaning_event` | **was fed a constant 0.5 — repaired (FIX-A124)** |
+| Daemon projection (`intuition_signals`, `readiness_bias`, `governor_mode`, `prediction_bias`) | `subsurface_projection.json` | `pipeline_state["subsurface_*"]` | no reader (Finding 1); file is from 2026-05, so it must not be given a reader without an age guard |
+| Crest-time ranking (`_gather_subsurface_contributions`) | `proj["guidance"]` | `_compress_at_crest` | reads a key the projection does not have (`surface_guidance`); empty by accident |
+| Presence frame (`crest`, `active_pressure`, `live_cognition`, `intuition_signals`, `surface_guidance`) | `write_presence_frame` | `pipeline_state["subsurface_active_pressure"]`… | **no producer in the code**: only the surface's own continuity packet and tests write it, the Surface→Subsurface→Surface echo carries interpretation fields only |
+| Predictive stager (anticipation) | `stage_passes_for_tick` in the daemon | `harvest_into_systems` → emission | works when the daemon runs; on the phone it needs the strata-link downlink (Task #11) |
+
+**What was repaired.** `_run_live_response_turn` fed the DifferenceHistoryBuffer
+from the conscious crest only, asking it for per-axis keys it does not carry, so
+every axis was 0.5 every turn. Measured before/after on two live turns:
+per-axis drift 0.0 → 0.001–0.024; tension EMA 7.5e-5 / 1.3e-4 → 4.1e-4 / 3.8e-3.
+The feed is now the same one the training pulse and daemon already use
+(identity-field axis pressure first, crest second), in one function.
+Nothing was added to what she says; the 0.55 resonance threshold for forming a
+meaning nucleus is untouched, so a nucleus still forms only on a strong surprise.
+
+**What was deliberately not done.**
+
+- `_gather_subsurface_contributions` was **not** pointed at `surface_guidance`.
+  That text is a prewritten sentence from the daemon's projection; wiring it in
+  would put canned guidance into her crest ranking, which the directive rules
+  out. Its current emptiness is the only thing keeping it out.
+- No reader was added for the projection numerics. The numbers are real, but
+  the one file here is six months old (`governor_mode: survival`), and a reader
+  that treats it as present state would be wrong. A reader needs an age gate,
+  and a decision on which of her own mechanisms the weights should press on.
+- Presence-frame `crest`/`active_pressure` have no producer. Deciding what deep
+  state the Subsurface computes for those fields is a Subsurface-side design
+  decision, not a Surface repair.
+
+**Reply identity as a gate.** Replies on the six-turn baseline differ run to run
+even on unchanged code (two runs of the same commit differ), so identical
+replies cannot be used as a pass condition. What was checked: no crash, the
+related tests (54 pass; one pre-existing failure, identical on main), six new
+tests, and turn time 9.29 s → 8.59 s (within noise).
+
 ## What this means for work already done
 
 - **Strata link downlink (FIX-A118).** It carries the subsurface projection to
@@ -260,8 +376,7 @@ selection would see once they are held as families.
 
 ## Next, in order
 
-1. Extend the map into the organs (what each organ takes from a turn and what
-   it gives back), so FIX-A123 and the lexical-promotion question can be placed.
+1. ~~Extend the map into the organs~~ — done (Trace 3, map §7).
 2. For each dead-end group, read the purpose stated at its write site and find
    the consumer that purpose names — her design, from her own code. Done for
    the subsurface group (Trace 1); its next step is the subsurface daemon: what

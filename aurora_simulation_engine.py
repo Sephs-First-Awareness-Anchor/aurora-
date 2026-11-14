@@ -235,6 +235,9 @@ _INTERNAL_TRANSPORT_MARKERS: Dict[str, str] = {
     "[AFTERTHOUGHT]": "afterthought",
     "[CODE]": "code",
     "[PRESSURE]": "pressure",
+    # FIX-A127: the pressure router seeds fail-ledger records whose only
+    # "user turn" is a diagnostic label; the classroom replays it as a prompt.
+    "[PRESSURE ROUTING]": "pressure",
 }
 
 # Internal mechanism / bookkeeping labels that must never be admitted as a
@@ -246,6 +249,22 @@ _INTERNAL_MECHANISM_LABELS: Set[str] = {
     "afterthought", "pressure", "code", "simulation",
     "internal", "context", "pending",
 }
+
+
+# FIX-A127: episodes whose "prompt" is bookkeeping, not language from anyone.
+# (afterthought is deliberately absent: that is her own thought, a separate
+# question left for Sir.)
+_NON_LANGUAGE_EPISODE_SOURCES = frozenset({"pressure", "code"})
+
+
+def _heard_material(prompt: str) -> str:
+    """What of an episode prompt counts as language heard: the curriculum
+    wrapper (directed-training templates) is not."""
+    try:
+        from aurora_internal.aurora_directed_training_corpus import without_scaffold
+        return without_scaffold(prompt)
+    except Exception:
+        return str(prompt or "")
 
 
 def _strip_internal_transport_marker(prompt: str) -> Tuple[str, str]:
@@ -2384,6 +2403,12 @@ class SimulationSession:
             prompt = followup_candidates[(turn_index - 1) % len(followup_candidates)]
         else:
             prompt = str(topic.get("prompt", "") or "").strip()
+        # FIX-A127: a spec's prompt/follow-up candidates can carry a registered
+        # internal marker (the pressure router's diagnostic label); recognize it
+        # here as run_episode does for seed prompts, so it is bookkeeping, not speech.
+        prompt, _candidate_source = _strip_internal_transport_marker(prompt)
+        if _candidate_source:
+            topic["episode_source"] = _candidate_source
         behavior_modes = dict(spec.get("behavior_modes", {}) or {})
 
         if (
@@ -2651,10 +2676,11 @@ class SimulationSession:
             # Feed to perception pipeline
             if self.perception:
                 self.perception.ingest_interaction({
-                    'input': turn_topic['prompt'],
+                    'input': _heard_material(turn_topic['prompt']),
                     'tone': turn_topic['expected_tone'],
                     'i_state': selected.primary_concept.value,
                     'fitness': reaction['scaled_fitness'],
+                    'internal': turn_topic.get('episode_source') in _NON_LANGUAGE_EPISODE_SOURCES,
                 }, mode="sim")
 
             self.total_turns += 1
@@ -3003,9 +3029,10 @@ class SimulationSession:
                 try:
                     self.perception.ingest_interaction(
                         {
-                            'input': signal_text,
+                            'input': _heard_material(signal_text),
                             'tone': tone,
                             'i_state': concept_key,
+                            'internal': str(context.get('episode_source', '') or '') in _NON_LANGUAGE_EPISODE_SOURCES,
                         },
                         mode="sim",
                     )

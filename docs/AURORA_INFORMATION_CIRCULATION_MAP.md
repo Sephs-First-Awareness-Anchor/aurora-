@@ -1,7 +1,7 @@
 # Aurora — Information Circulation and Consequence Map
 
 **Authors:** Sunni (Sir) Morningstar & Cael Devo  
-**Generated:** 2026-11-12 at commit `98a48c0` by `scripts/map_turn_information_flow.py`
+**Generated:** 2026-11-13 at commit `54e4f4f` by `scripts/map_turn_information_flow.py`
 
 This document is produced by watching her run. Nothing in it is anyone's reading of how she is supposed to work. Regenerate it after any change; a fix is placed on this map before it is written.
 
@@ -22,7 +22,7 @@ This document is produced by watching her run. Nothing in it is anyone's reading
 | Hey Aurora, how are you today? | — | silence | silence · blocked: scripted_source:constraint_abstain · articulation: no_stance · confluence: nothing_contributed |
 | I spent the morning fixing the fence behind the house. | — | silence | silence · blocked: scripted_source:constraint_seek · articulation: echo · confluence: nothing_contributed |
 | What do you remember about what I was working on? | no memories on this yet. | generative | own_voice |
-| Do you like music? | I understand music. I want music. I did music. | composer_unified | own_voice |
+| Do you like music? | I understand music. I did music. I am music. I want music. | composer_unified | own_voice |
 
 ## Totals
 
@@ -135,9 +135,9 @@ This document is produced by watching her run. Nothing in it is anyone's reading
 | 13 | aurora._structure_current_turn_scout_evidence | `subsurface_response_evidence`, `external_grounding_evidence` |  |
 | 14 | aurora._stage_poedex_learning_request | `poedex_learning_concept`, `poedex_learning_request`, `poedex_learning_reason`, `poedex_learning_status` |  |
 | 15 | aurora._stage_poedex_representation_request | `poedex_representation_concept`, `poedex_representation_request`, `poedex_representation_reason`, `poedex_representation_status` |  |
-| 16 | aurora._chain_down1_information | `question_alignment` |  |
-| 17 | aurora._learning_worker | `poedex_learning_status` |  |
-| 18 | aurora._representation_worker | `poedex_representation_status` |  |
+| 16 | aurora._learning_worker | `poedex_learning_status` |  |
+| 17 | aurora._representation_worker | `poedex_representation_status` |  |
+| 18 | aurora._chain_down1_information | `question_alignment` |  |
 | 19 | aurora._finalize_articulation | `articulation_arbitration` |  |
 | 20 | aurora._apply_pipeline_modulation | `_problem_solving_drive` |  |
 | 21 | aurora._run_live_response_turn | `rubric_weak_dims`, `rubric_strong_dims`, `rubric_quality_alert` | FIX-A119 |
@@ -310,6 +310,114 @@ This document is produced by watching her run. Nothing in it is anyone's reading
 | `rubric_quality_alert` | aurora._run_live_response_turn | — | 0 |
 | `poedex_prefetch_concept` | aurora._stage_noncomp_prefetch | aurora._build_established_strata_evidence | 3 |
 | `poedex_prefetch_status` | aurora._stage_noncomp_prefetch, aurora._prefetch_worker | — | 3 |
+
+## 7. Her organs on live turns
+
+An organ is an object held in `systems`. Counts are calls that cross INTO the organ from outside it, summed over the 4 turns. "Changed" lists the organ's own attributes whose size or value differed after a turn (a shallow comparison: a change deep inside a nested structure of unchanged size is not seen).
+
+- Organs held in `systems`: **89**
+- Entered during the live turns: **56**
+- Never entered: **33**
+- Entered, with no visible change to their own state: **9**
+
+### 7a. Organs that took part
+
+| Organ (class) | Entries | Entered through | Called by | Calls into | What it changed |
+|---|---|---|---|---|---|
+| `accountant` (LayerEnergyAccountant) | 1158 | pool ×512, withdraw ×484, slot ×120, magnitudes ×18 | chamber ×976, aurora._capture_pressure_snapshot ×80, metabolizer ×37, worth_eval ×30 | — | _tick, _pool, _history, _aurora_evolved_reflections, _aurora_generic_evolution_state, _replenishment_log |
+| `genealogy` (ConstraintGenealogyLogger) | 862 | representation_is_eligible ×712, axis_relief_state ×52, pressure_orientation ×48, _outlet_fraction ×25 | working_memory ×714, grammar_engine ×63, aurora.project ×24, understanding_contract ×18 | function_lineage ×4 | tick_count, skipped_no_relief, _activity_log, _last_abilities_snapshot, _event_log, relief_event_count |
+| `working_memory` (WorkingMemory) | 239 | _normalize_mention ×53, resolve_referents ×18, _is_explicit_meaning_or_continuity_request ×14, resolve_concept_meaning ×12 | aurora._normalize_surface_anchor_label ×49, aurora._build_comprehension_response ×41, aurora._run_live_response_turn ×37, understanding_contract ×24 | genealogy ×714, conversation_memory ×4, sedimemory ×3, perception ×2 | turn_count, recent_user_utterances, semantic_anchor_pool, semantic_frames, active_contexts, stated_facts |
+| `identity_field` (NoncompField) | 178 | axis_pressure ×80, ingest_external_input ×32, ingest_sensory_event ×20, ingest_internal_signal ×16 | tensor_expressions ×60, consciousness ×24, aurora._extract_pipeline_signals ×20, pressure_pump ×20 | — | _internal_signals |
+| `system_introspection` (AuroraSystemIntrospection) | 114 | record_boundary_decision ×95, find_functions ×11, begin_episode ×4, finish_episode ×4 | perception ×55, aurora._run_reasoning_pipeline ×16, reflective_readdressing ×11, aurora._process_external_user_turn_impl ×8 | function_lineage ×29, understanding_contract ×8, manual_code_lineage ×4, quasiarch_observer ×4 | _systems, _episodes, _episode_order, _find_cache, _match_feature_cache |
+| `sedimemory` (SediMemory) | 80 | recall_semantic ×28, ingest_event ×28, recall ×8, dce_recall ×8 | consciousness ×24, aurora._run_reasoning_pipeline ×12, lexical_grounding ×9, aurora._build_established_strata_evidence ×8 | — | _event_log |
+| `perception` (ExpressionPerceptionEngine) | 73 | set_axis_context ×16, ingest_interaction ×15, express ×10, set_personality ×8 | aurora._run_reasoning_pipeline ×33, aurora._build_communication_contributors ×16, aurora._chain_up3_purpose ×8, aurora._build_comprehension_response ×8 | system_introspection ×55, grammar_engine ×20 | total_perceptions, total_expressions, _dominant_axis, _dominant_emotion, _axis_activation, _aurora_evolved_reflections |
+| `lattice` (IVMLattice) | 67 | heat_status ×17, get_global_heat ×16, admit ×12, get_global_polarity ×12 | aurora._capture_pressure_snapshot ×16, collective ×12, consciousness ×8, chamber ×6 | — | nodes, _spatial, _constitutive_mobility, _initial_total_energy, total_created, total_ticks |
+| `warp_field` (WarpField) | 66 | submit ×66 | lexical_grounding ×39, tensor_expressions ×12, aurora._run_live_response_turn ×6, communication_emergence ×4 | language_field ×41, dream_trainer ×5, communication_emergence ×4, sedimemory ×3 | _demands, _decisions, _demand_count, _pathway_counts, _anomaly_ledger |
+| `lexical_grounding` (AuroraLexicalGrounding) | 59 | observe_lexical_context ×45, drain_turn_consumption_trace ×8, has_promoted_relation_role ×5, flush_write_batch ×1 | recursive_causal_waveform ×23, aurora._run_observation_pipeline ×22, aurora._build_communication_contributors ×8, aurora.<lambda> ×5 | warp_field ×39, sedimemory ×9 | systems, _candidates, _pending_context, _tick, _warp_trials, _wb_pending |
+| `language_field` (LanguageField) | 54 | check_and_extend ×41, build_pragmatic_vector ×4, ignition_check ×4, extract_proto_language ×4 | warp_field ×41, aurora._build_comprehension_response ×8, aurora._run_live_response_turn ×5 | tensor_expressions ×8 | _tensor_confirmed |
+| `dimensional` (DimensionalSystems) | 44 | process_synthesis ×12, update_emotional_state ×12, get_stats ×8, _current_pressure_vec ×4 | consciousness ×16, aurora._run_reasoning_pipeline ×8, aurora._run_live_response_turn ×4, aurora._chain_up1_information ×4 | — | _last_signals |
+| `understanding_contract` (RuntimeUnderstandingContract) | 41 | snapshot ×12, attach_pending_contributors ×12, ingest_observation ×7, commit_application ×4 | aurora._run_live_response_turn ×19, system_introspection ×8, aurora._run_reasoning_pipeline ×4, aurora._process_external_user_turn_impl ×4 | working_memory ×24, genealogy ×18, sedimemory ×4 | _wb_pending, state, _wb_depth |
+| `function_lineage` (UniversalFunctionLineage) | 33 | lineage_for ×25, status ×8 | system_introspection ×29, genealogy ×4 | — | _systems |
+| `grammar_engine` (GrammarEngine) | 29 | observe_exchange ×20, suggest_discourse ×8, prepare_response_trace ×1 | perception ×20, aurora._chain_down5_understanding ×4, aurora._build_established_strata_evidence ×4, aurora._run_reasoning_pipeline ×1 | genealogy ×63 | _last_motif_id |
+| `field_balancer` (ConstraintFieldBalancer) | 28 | rebalanced_activation ×12, update ×8, status ×8 | aurora._chain_up3_purpose ×12, aurora._build_comprehension_response ×12, aurora._run_observation_pipeline ×4 | genealogy ×8 | _exchange_count |
+| `conversation_memory` (ConversationMemory) | 27 | memory_sweep_summary ×8, recall_about ×7, open_evolutionary_trace ×4, record_exchange ×4 | aurora._run_live_response_turn ×12, aurora._build_established_strata_evidence ×10, working_memory ×4, aurora._build_comprehension_response ×1 | — | entries, evolutionary_trace_log, mutation_ledger, topics_discussed |
+| `identity` (BehavioralIdentityEngine) | 24 | get_personality ×12, process_episode ×8, process_from_assembly ×4 | aurora._run_reasoning_pipeline ×24 | — | generation, _last_constraint_axis |
+| `sensory_crystal` (AuroraSensoryCrystal) | 21 | get_state ×21 | consciousness ×8, aurora._run_live_response_turn ×4, aurora._chain_up1_information ×4, aurora._chain_up3_purpose ×4 | — | **nothing visible** |
+| `quasiarch_observer` (AuroraQuasiArchObserver) | 18 | record_pressure_disturbance ×10, record_observation ×4, reason_about_event ×3, record_intervention_event ×1 | pressure_pump ×10, system_introspection ×4, aurora._emit_honest_abstain_and_seek ×2, aurora._flush_quasiarch_runtime_events ×2 | genealogy ×1 | issue_counts, issue_consultation_debt |
+| `tensor_expressions` (TensorExpressionLayer) | 16 | behavioral_state ×16 | language_field ×8, consciousness ×8 | identity_field ×60, warp_field ×12 | _cache_ts, _update_count, _cached_state |
+| `noncomp_manifold_directory` (ManifoldDirectory) | 16 | open ×8, entries_for_axis ×4, get_index_entry ×4 | noncomp_reflexive_interpreter ×16 | — | **nothing visible** |
+| `communication_emergence` (AuroraCommunicationEmergence) | 13 | prepare_semantic_state ×4, observe_turn ×4, check_and_extend ×4, flush_write_batch ×1 | aurora._chain_up3_purpose ×4, aurora._process_external_user_turn_impl ×4, warp_field ×4, aurora.process_external_user_turn ×1 | genealogy ×4, warp_field ×4 | systems, _pending, _tick, _families, _wb_pending, _wb_depth |
+| `perspective` (PrimitivePerspectiveEngine) | 12 | form ×12 | collective ×12 | — | formed |
+| `collective` (IStateCollective) | 12 | process ×12 | consciousness ×8, aurora._chain_up1_information ×4 | lattice ×12, perspective ×12 | synthesis_count, history |
+| `constraint_reasoner` (ConstraintReasoner) | 12 | reason ×4, to_process_context ×4, integrate ×4 | aurora._run_live_response_turn ×12 | warp_field ×3 | **nothing visible** |
+| `bias_engine` (LeverageBiasEngine) | 12 | band_position ×8, compute_nudges ×4 | aurora._advance_intake_pipeline ×4, metabolizer ×4, aurora._sync_noncomp_runtime_band ×4 | accountant ×4 | _window |
+| `interaction_processing` (InteractionProcessing) | 12 | route_interaction ×4, observe_interaction ×4, get_status ×4 | aurora._observe_interaction_runtime_turn ×8, aurora._apply_interaction_quasi_route ×4 | — | _bases |
+| `recursive_causal_waveform` (AuroraRecursiveCausalReasoningWaveform) | 12 | receive_disturbance ×4, prepare_semantic_state ×4, complete_cycle ×4 | aurora._process_external_user_turn_impl ×8, aurora._chain_up3_purpose ×4 | lexical_grounding ×23, genealogy ×9, system_introspection ×4, understanding_contract ×4, sedimemory ×1 | systems, _cycles, _pending_response_cycle_id, _active_cycle, _gap_counter, _warp_trials |
+| `pressure_pump` (WaveformPressurePump) | 10 | inject ×10 | aurora._run_live_response_turn ×6, aurora._chain_up1_information ×4 | identity_field ×20, quasiarch_observer ×10 | _trace_buffer |
+| `solidification` (SolidificationPipeline) | 9 | observe_recurrence ×5, drain_solidified ×4 | aurora._advance_intake_pipeline ×9 | — | **nothing visible** |
+| `relational_comparison` (RelationalComparisonEngine) | 9 | ground_to_self ×4, select_best_comparison_target ×3, compare ×2 | aurora._compute_peer_relation ×5, aurora._compute_self_relation ×4 | — | _history |
+| `dream_trainer` (DreamTrainer) | 9 | flush_lessons_to_simulation ×5, get_response_hints ×4 | warp_field ×5, aurora._chain_up5_understanding ×4 | — | _systems, _flush_call_count |
+| `reasoning_paths` (ReasoningPaths) | 9 | begin_turn ×4, end_turn ×4, flush_write_batch ×1 | aurora._run_reasoning_pipeline ×4, aurora._process_external_user_turn_impl ×4, aurora.process_external_user_turn ×1 | — | pending, _wb_pending, _wb_depth |
+| `reflective_readdressing` (AuroraReflectiveReaddressing) | 8 | prepare_turn ×4, capture_turn ×4 | aurora._process_external_user_turn_impl ×8 | system_introspection ×11 | _systems, _episodes, _last_decision_trace |
+| `consciousness` (ConsciousnessEngine) | 8 | process ×8 | aurora._run_reasoning_pipeline ×8 | sedimemory ×24, identity_field ×24, dimensional ×16, lattice ×8, tensor_expressions ×8 | _pending_warps, _mtsl_turn_counter |
+| `metabolizer` (IntakeMetabolizer) | 8 | receive ×4, advance ×4 | aurora._advance_intake_pipeline ×8 | accountant ×37, bias_engine ×4 | _live, _total_received, _promotion_queue, _total_promoted |
+| `noncomp_manifold_router` (ManifoldRouter) | 8 | update_band ×4, route_signal ×4 | aurora._sync_noncomp_runtime_band ×4, noncomp_reflexive_interpreter ×4 | — | **nothing visible** |
+| `noncomp_reflexive_interpreter` (ReflexiveInterpreter) | 8 | update_band ×4, interpret ×4 | aurora._sync_noncomp_runtime_band ×4, aurora._apply_noncomp_input_guidance ×4 | noncomp_manifold_directory ×16, noncomp_manifold_router ×4 | _history, _worth_histories |
+| `_attention_engine` (AttentionEngine) | 8 | tick ×4, get_meaning_nucleus ×4 | aurora._run_live_response_turn ×8 | — | history, _salience_ema, _tension_ema |
+| `_diff_history_buffer` (DifferenceHistoryBuffer) | 8 | record ×4, snapshot ×4 | aurora._run_live_response_turn ×8 | — | _history |
+| `metabolic_clock` (MetabolicClock) | 8 | turn ×8 | aurora.process_external_user_turn ×8 | — | _systems, _span_turns, _span_slots |
+| `chamber` (EvolutionaryChamber) | 7 | status ×4, tick ×2, observe_external_evidence ×1 | _surface_dispatcher ×4, aurora._run_live_response_turn ×3 | accountant ×976, genealogy ×8, lattice ×6 | tick_count, _prev_boundary_polarity, _aurora_evolved_reflections, _aurora_generic_evolution_state |
+| `_thought_braid` (ThoughtBraid) | 6 | tap ×4, feed_expression_back ×2 | aurora._run_live_response_turn ×6 | — | _braid_tick, _memory_stream, _sensory_stream, _predictive_stream, _emotion_stream, _last_expression_feedback |
+| `constraint_emitter` (ConstraintEmitter) | 5 | check_and_run_integration ×2, _emit_abstain ×2, _seek_gap ×1 | aurora._emit_honest_abstain_and_seek ×5 | — | **nothing visible** |
+| `simulation` (SimulationEngine) | 5 | run_epoch ×5 | consciousness ×5 | — | _systems, total_episodes |
+| `worth_eval` (CrossScaleWorthEvaluator) | 5 | evaluate ×5 | aurora._advance_intake_pipeline ×5 | accountant ×30 | _histories, _promoted_this_session |
+| `lineage_emergence_journal` (LiveLineageJournal) | 5 | observe_systems ×4, flush_write_batch ×1 | aurora._observe_live_lineage_emergence ×4, aurora.process_external_user_turn ×1 | — | seen_abilities, _wb_pending, _storage_mtime_ns, _wb_depth |
+| `unformed_patterns` (UnformedPatterns) | 5 | observe_turn ×4, flush_write_batch ×1 | aurora._process_external_user_turn_impl ×4, aurora.process_external_user_turn ×1 | — | pending, patterns, _wb_pending, last_residue, _wb_depth |
+| `comprehension_gap_system` (ComprehensionGapSystem) | 4 | process ×4 | aurora.dual_question_pipeline ×4 | — | _turn_count |
+| `entropy_detector` (EntropySaturationDetector) | 4 | measure ×4 | aurora._advance_intake_pipeline ×4 | accountant ×12 | _entropy_window, _prev_entropy |
+| `manual_code_lineage` (ManualCodeLineageAssimilator) | 4 | status ×4 | system_introspection ×4 | — | **nothing visible** |
+| `screen_observer` (ScreenObserver) | 4 | current_scene ×4 | aurora._chain_up1_information ×4 | — | _systems, _capture_fail_streak, last_claims, _capture_disabled |
+| `_surface_dispatcher` (SurfaceDispatcher) | 4 | tick ×4 | aurora._run_reasoning_pipeline ×4 | chamber ×4 | _tick_count |
+| `core_identity` (CoreRelationalIdentity) | 1 | get_entity ×1 | aurora._build_grounded_fallback_response ×1 | — | **nothing visible** |
+| `evolved_surfaces` (AuroraEvolvedSurfaceEngine) | 1 | __getattr__ ×1 | aurora.process_external_user_turn ×1 | — | **nothing visible** |
+
+### 7b. Organs never entered during a live turn
+
+| Organ | Class | Module |
+|---|---|---|
+| `contradiction_ledger` | ContradictionLedger | aurora_ivm |
+| `sensory` | SensoryCompetencyEngine | aurora_hardware_io |
+| `hardware` | HardwareInterface | aurora_hardware_io |
+| `sensory_integration` | SensoryIntegrationEngine | aurora_hardware_io |
+| `vision_bootstrap` | ImageIngestionProtocol | aurora_image_ingestion |
+| `_simulation_governor` | TimeDilationGovernor | aurora_simulation_engine |
+| `_chain_bridge` | ChainSimBridge | aurora_runtime |
+| `primitive_extractor` | PrimitiveExtractor | aurora_internal.aurora_primitive_extractor |
+| `variant_promoter` | VariantPromoter | aurora_internal.aurora_variant_promotion |
+| `strand_lib` | StrandLibrary | aurora_internal.aurora_dna_strand_schema |
+| `_strand_builder` | StrandBuilder | aurora_internal.aurora_dna_strand_schema |
+| `aurora` | GovernancePersistenceGateway | aurora_governance_persistence_gateway |
+| `state_persistence` | StatePersistence | aurora_governance_persistence_gateway |
+| `search_adapter` | SearchAdapter | aurora |
+| `dream_orchestrator` | DreamEvolutionOrchestrator | aurora_internal.aurora_dream_evolution_orchestrator |
+| `autonomy` | AutonomyEngine | aurora_autonomy |
+| `drive_sync` | DriveSync | aurora_persistence_utils |
+| `git_sync` | GitStateSync | aurora_persistence_utils |
+| `checkpoint` | CheckpointManager | aurora_checkpoint |
+| `enhanced_persist` | EnhancedStatePersistence | aurora_internal.aurora_identity_persistence |
+| `icc_ledger` | ICCLedger | aurora_internal.aurora_icc_ledger |
+| `strategic_horizon` | StrategicHorizonLayer | aurora_internal.aurora_strategic_horizon |
+| `operator_composer` | OperatorComposer | aurora_internal.aurora_operator_composer |
+| `code_evolution_chamber` | CodeEvolutionChamber | aurora_internal.aurora_code_evolution_chamber |
+| `operational_synthesis` | AuroraOperationalSynthesisChamber | aurora_internal.aurora_operational_synthesis |
+| `general_execution_foundry` | AuroraGeneralExecutionFoundry | aurora_internal.aurora_general_execution_foundry |
+| `noncomp_layer_compiler` | NonCompLayerCompiler | aurora_noncomp_layer_compiler |
+| `_pressure_router` | PressureRouter | aurora_internal.aurora_pressure_router |
+| `_dpme_bridge` | DPMEPressureBridge | aurora_internal.aurora_dpme_pressure_bridge |
+| `_braided_substrate` | BraidedSubstrateLayer | aurora_internal.aurora_braided_substrate |
+| `_connectivity_monitor` | ConnectivityMonitor | aurora_offline_resilience |
+| `_thought_braid_thread` | StreamingThoughtThread | aurora_thought_formation |
+| `time_dilation_governor` | TimeDilationGovernor | aurora_simulation_engine |
 
 ## 5. The `systems` bus: written and never read
 

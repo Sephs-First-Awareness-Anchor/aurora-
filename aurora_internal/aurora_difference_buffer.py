@@ -681,6 +681,59 @@ def verify_difference_buffer() -> Dict[str, object]:
 
 
 # ===========================================================================
+# SECTION — THE LIVE FEED (one source, shared by every caller)
+# ===========================================================================
+
+_LIVE_AXIS_CREST_KEYS = {
+    "X": "existence", "T": "temporal", "N": "energy", "B": "boundary", "A": "agency",
+}
+
+
+def live_axis_magnitudes(systems) -> Dict[Constraint, float]:
+    """Per-constraint magnitudes for DifferenceHistoryBuffer.record() on a live tick.
+
+    The magnitudes come from the identity field's live axis pressures -- the
+    state that everything pressed into her (waveform, sensory, subsurface
+    convergence) has actually moved. The conscious crest is the secondary
+    source for an axis the field does not report; 0.5 (the buffer's neutral
+    reference) only when neither says anything.
+
+    Why this exists: aurora.py's per-turn tick used to read the conscious crest
+    alone, but the crest carries {axis, intensity, label} and none of the
+    per-axis keys that tick looked up, so every axis was recorded as 0.5 on
+    every turn. The buffer then saw zero drift, subsurface tension stayed at
+    ~1e-4, and the attention engine's salience could not move with what the
+    subsurface had actually done. The training pulse and the daemon already
+    fed the buffer from the field; this is that same feed, in one place, so
+    the live turn and the pulse cannot drift apart again.
+    """
+    topo: Dict[str, float] = {}
+    try:
+        ifield = systems.get("identity_field") if isinstance(systems, dict) else None
+        if ifield is not None and hasattr(ifield, "status"):
+            st = ifield.status() or {}
+            topo = dict(st.get("axis_pressures") or st.get("pressure_topology") or {})
+    except Exception:
+        topo = {}
+    crest: Dict[str, object] = {}
+    try:
+        crest = dict(systems.get("_live_conscious_crest") or {}) if isinstance(systems, dict) else {}
+    except Exception:
+        crest = {}
+    mags: Dict[Constraint, float] = {}
+    for name, ckey in _LIVE_AXIS_CREST_KEYS.items():
+        raw = topo.get(name)
+        if raw is None:
+            raw = crest.get(ckey, crest.get(name))
+        try:
+            val = float(raw) if raw is not None else 0.5
+        except (TypeError, ValueError):
+            val = 0.5
+        mags[getattr(Constraint, name)] = min(1.0, max(0.0, val))
+    return mags
+
+
+# ===========================================================================
 # MAIN
 # ===========================================================================
 
