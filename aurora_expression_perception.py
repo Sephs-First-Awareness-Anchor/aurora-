@@ -5805,6 +5805,19 @@ class ExpressionPerceptionEngine(WarpCapable):
         }
         result = self.perceive(raw, ex_mode)
 
+        # FIX-A126: an interaction flagged produced=True is something SHE
+        # generated (an articulation candidate and its pressure feedback), not
+        # something she heard.  The perceive() above is the feedback channel
+        # and still runs.  Everything below is learning-from-the-world:
+        # lexicon growth, expression context, sentence-structure absorption,
+        # and OETS usage examples / co-occurrence relations.  Measured on
+        # live turns before this fix: her own unspoken drafts ("I am having
+        # consciousness. I had moment.") were absorbed as heard structure on
+        # 5 of 6 turns and fed OETS as conversation examples, so each draft
+        # reinforced the next.  Same heard/produced distinction as FIX-A123.
+        if interaction.get('produced'):
+            return result
+
         # Learn new words from input with role inference.
         # Authors: Sunni (Sir) Morningstar and Cael Devo
         #

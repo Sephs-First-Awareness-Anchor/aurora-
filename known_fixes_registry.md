@@ -11324,3 +11324,27 @@ migration must not leave the role with a device that has none of the history.
 one machine only: real 251.9 MB state seeded over loopback HTTP in 28 s, 3,130/3,130
 verified, re-seed sent 0 bytes; no physical two-device run. A seeded daemon needs
 a restart (it holds state in memory).
+
+## FIX-A126 (ARCHITECTURAL) — Her own articulation candidates are perceived, not heard
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** `_articulate_user_response` fed every candidate it weighed
+(`decision.selected`, spoken or not) back through
+`perception.ingest_interaction` as if the speaker had said it. That call
+recorded the real pressure-relief feedback, but also learned from the text as
+heard language: vocabulary, expression context, `composer.absorb` structure, and
+OETS usage examples and co-occurrence relations. Measured on six live turns: her
+own drafts ("I am having consciousness. I had moment.") were absorbed as heard
+structure 5 times, so each draft primed the next.
+**Correct Form:** `ingest_interaction` honours `interaction['produced']`:
+`perceive()` (the feedback channel, with `features`) still runs, then it returns
+before any learning-from-the-world step. The gateway marks its articulation
+feedback `produced: True`. No wording, rule or class was added; only which events
+count as heard changed. Same distinction as FIX-A123.
+**Why:** Learning from the world needs the world; her own output is evidence of
+her state, not of language.
+**First Seen:** 2026-11-13, next-steps trace. Live check: absorbs of her own
+drafts 5 → 0, heard utterances unchanged (6 absorbed). NOT changed, flagged for
+Sir: training episodes in periodic maintenance feed scaffolding text (e.g.
+"[PRESSURE ROUTING] ...", directed-corpus templates) through the same ingest as
+heard, adding ~18 lexicon words in six turns; and a user turn on one run carried
+an appended "[Internal: ...]" string into ingest.

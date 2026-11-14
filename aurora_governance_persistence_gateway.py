@@ -1543,6 +1543,8 @@ class NSpaceGateway:
                     'tone': tone,
                     'i_state': 'i_is',
                     'source': 'articulation_pressure_feedback',
+                    # FIX-A126: her own candidate, not heard speech.
+                    'produced': True,
                     'features': {
                         'articulation_accepted': 1.0 if decision.accepted else 0.0,
                         'pressure_relief': decision.pressure_relief,
