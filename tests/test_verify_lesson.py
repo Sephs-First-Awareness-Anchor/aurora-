@@ -46,3 +46,14 @@ def test_every_shipped_probe_file_parses_and_has_a_lesson():
 def test_terms_match_whole_words_so_a_letter_is_not_found_inside_comes():
     assert V.judge("after. comes.", [(["c"], True)]) == (True, [])
     assert V.judge("C comes after b.", [(["c"], False)]) == (True, [])
+
+
+def test_a_correction_block_is_said_after_the_lesson_proper():
+    text = "# n\nB comes after a.\n#@correction\nB does not come after a.\n"
+    assert V.parse_lesson_blocks(text) == {"teach": ["B comes after a."], "correction": ["B does not come after a."]}
+    assert V.parse_lesson(text) == ["B comes after a."]
+
+
+def test_after_correction_is_a_probe_section():
+    ps = V.parse_probes("[after-correction]\nIs b after a? => not after\n")
+    assert ps[0]["section"] == "after-correction"

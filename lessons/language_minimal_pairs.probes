@@ -1,0 +1,13 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
+# The question form asks what the statement form says; "not" flips it; what was never told is not known.
+[before]
+Does Devlin like rain? => !likes rain
+[after]
+Does Devlin like rain? => devlin likes rain
+Does Devlin like snow? => devlin does not like snow
+Does Marcus like snow? => marcus likes snow
+Does Marcus like rain? => do not know
+[after-correction]
+Does Devlin like snow? => devlin likes snow ;; !not like
+Does Devlin like rain? => devlin likes rain
+Does Marcus like snow? => marcus likes snow

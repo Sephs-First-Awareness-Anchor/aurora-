@@ -4,7 +4,9 @@
     python3 scripts/verify_lesson.py alphabet_order [--state-dir DIR] [--only after]
 
 A lesson is two files in lessons/:
-    <name>.txt     what is said to her, one utterance per line ('#' lines are not said)
+    <name>.txt     what is said to her, one utterance per line ('#' lines are not said).
+                   A line `#@correction` ends the lesson proper: the lines after it are said
+                   only after the [after] probes (a correction, as people make them).
     <name>.probes  what is asked afterwards, and what the answer must (or must not) contain
 
 The lesson is said the way a person says it: one turn at a time through
@@ -12,7 +14,8 @@ The lesson is said the way a person says it: one turn at a time through
 written into her web and no answer is ever fed to her.  A probe is a QUESTION
 (it must end in '?'), asked through the same path, and its reply is judged from
 her words only.  Probes under [before] are asked before the lesson (what she
-does not yet know); probes under [after] are asked once it has been said.
+does not yet know); probes under [after] are asked once it has been said; probes under [after-correction]
+once the correction block has been said too (they are skipped when there is none).
 
 .probes format ('#' lines and blank lines are ignored):
 
@@ -20,6 +23,8 @@ does not yet know); probes under [after] are asked once it has been said.
     What comes after b? => !c
     [after]
     What comes after b? => c
+    [after-correction]
+    Is b after a? => not after
     Is a after b? => not after | not sure ;; !is after a
 
     question => term ;; term ;; term      every term must hold
@@ -45,12 +50,27 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 ROOT = Path(__file__).resolve().parent.parent
 LESSONS = ROOT / "lessons"
-SECTIONS = ("before", "after")
+SECTIONS = ("before", "after", "after-correction")
+CORRECTION_MARK = "#@correction"
+
+
+def parse_lesson_blocks(text: str) -> Dict[str, List[str]]:
+    """{"teach": [...], "correction": [...]}: the line `#@correction` ends the lesson proper; what
+    follows is said only after the [after] probes, as people correct what they said."""
+    blocks: Dict[str, List[str]] = {"teach": [], "correction": []}
+    here = "teach"
+    for ln in (x.strip() for x in str(text).splitlines()):
+        if ln == CORRECTION_MARK:
+            here = "correction"
+        elif ln and not ln.startswith("#"):
+            blocks[here].append(ln)
+    return blocks
 
 
 def parse_lesson(text: str) -> List[str]:
-    """The utterances: every line that is not blank and not a '#' comment."""
-    return [ln.strip() for ln in str(text).splitlines() if ln.strip() and not ln.strip().startswith("#")]
+    """The utterances of the lesson proper: every line that is not blank and not a '#' comment,
+    up to a `#@correction` line."""
+    return parse_lesson_blocks(text)["teach"]
 
 
 def parse_probes(text: str) -> List[Dict[str, Any]]:
@@ -61,7 +81,7 @@ def parse_probes(text: str) -> List[Dict[str, Any]]:
         ln = raw.strip()
         if not ln or ln.startswith("#"):
             continue
-        m = re.fullmatch(r"\[(\w+)\]", ln)
+        m = re.fullmatch(r"\[([\w-]+)\]", ln)
         if m:
             section = m.group(1).lower()
             if section not in SECTIONS:
@@ -138,7 +158,8 @@ def _turn(aurora: Any, systems: Any, extract: Any, text: str) -> Dict[str, str]:
 
 
 def run(name: str, state_dir: Path, only: Optional[str] = None) -> Dict[str, Any]:
-    lesson = parse_lesson((LESSONS / f"{name}.txt").read_text(encoding="utf-8"))
+    blocks = parse_lesson_blocks((LESSONS / f"{name}.txt").read_text(encoding="utf-8"))
+    lesson, correction = blocks["teach"], blocks["correction"]
     probes = parse_probes((LESSONS / f"{name}.probes").read_text(encoding="utf-8"))
     aurora, systems, extract = _boot(state_dir)
     report: Dict[str, Any] = {"lesson": name, "said": len(lesson), "results": []}
@@ -156,6 +177,10 @@ def run(name: str, state_dir: Path, only: Optional[str] = None) -> Dict[str, Any
     for line in lesson:
         _turn(aurora, systems, extract, line)         # said, not recorded: her replies to teaching are not judged
     ask("after")
+    if correction:
+        for line in correction:
+            _turn(aurora, systems, extract, line)
+        ask("after-correction")
     report["failed"] = sum(1 for r in report["results"] if not r["ok"])
     return report
 

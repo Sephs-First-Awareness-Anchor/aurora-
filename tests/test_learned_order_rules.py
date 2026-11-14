@@ -447,3 +447,38 @@ def test_a_sentence_that_opens_with_the_letter_a_is_about_the_letter():
     web = _told(["A comes after b.", "C comes after a."])
     assert _ask(web, "Is a after b?") == [("a", "is after", "b")]
     assert _ask(web, "Is c after b?") == [("c", "is after", "b")]
+
+
+# -- questions about what someone was told does or does not do (FIX-A141) -------------
+
+def test_a_verb_after_does_not_is_the_act_even_when_it_is_also_a_preposition():
+    st = P.statements_in("Devlin does not like snow.")[0]
+    assert (st["subject"], st["relation"], st["obj"], st["negated"]) == ("devlin", "like", "snow", True)
+
+
+def test_a_fact_question_is_answered_from_what_was_told():
+    web = _told(["Devlin likes rain.", "Devlin does not like snow."])
+    assert _ask(web, "Does Devlin like rain?") == [("devlin", "likes", "rain")]
+    assert _ask(web, "Does Devlin like snow?") == [("devlin", "does not like", "snow")]
+    assert _ask(web, "Does Devlin like tea?") == [("I", "do not know", "if devlin likes tea")]
+
+
+def test_a_fact_question_about_someone_she_holds_nothing_about_is_left_alone():
+    web = _told(["Devlin likes rain."])
+    assert _ask(web, "Does Marcus like rain?") == [] and _ask(web, "Do you like rain?") == []
+
+
+def test_a_fact_told_and_denied_is_not_sure():
+    web = _told(["Devlin likes snow.", "Devlin does not like snow."])
+    assert _ask(web, "Does Devlin like snow?") == [("I", "am not sure", "if devlin likes snow")]
+
+
+def test_a_correction_said_with_does_is_still_voiced_in_the_third_person():
+    web = _told(["Devlin does not like snow."])
+    _correct(web, "Actually, Devlin does like snow.")
+    assert _ask(web, "Does Devlin like snow?") == [("devlin", "likes", "snow")]
+
+
+@pytest.mark.parametrize("verb,expected", [("like", "likes"), ("watch", "watches"), ("carry", "carries"), ("play", "plays")])
+def test_third_person_inflection(verb, expected):
+    assert P._third_person(verb) == expected

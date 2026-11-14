@@ -338,6 +338,10 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                     if copula_at < 0:
                         copula_at = i
                     continue
+                if (after_aux and explicit < 0 and toks[i - 1] in _MODALS | _NEGATORS
+                        and tok not in _DETERMINERS and tok not in _SUBJECT_PRONOUNS):
+                    explicit = i                     # the word right after "does not" / "can" is the act, even "like" (a closed-class word)
+                    break
                 if tok in closed and tok not in verb_forms:
                     continue                         # FIX-A133: her verb forms ("follows") are closed-class for heads, not for the act
                 if i > 0 and toks[i - 1] in ("a", "an") and (copula_at >= 0 or explicit >= 0):
@@ -614,7 +618,9 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
         predicate = _lemma(predicate_surface) if predicate_surface else ""
         particle = str(form.get("particle") or "").lower()
         closed = _closed_class()
-        if predicate and (predicate == "be" or predicate not in closed) and "'" not in predicate:
+        inflected_or_aux = (predicate_surface != predicate                      # "likes" is the verb; "like" alone may be a preposition
+                            or str(form.get("modality") or "").lower() in ("do", "does", "did"))   # "does not like"
+        if predicate and (predicate == "be" or predicate not in closed or inflected_or_aux) and "'" not in predicate:
             # what is being put in order, classed, or said is what it names (even "yes", "hello", "one")
             ordered = (particle in _ORDER_PARTICLES or particle in ("a", "an")
                        or predicate in ("follow", "precede", "say"))
@@ -757,6 +763,14 @@ def predicate_order(rel: Any) -> List[str]:
     return sorted(preds, key=lambda k: (int(dict(preds[k]).get("n", 0)), k), reverse=True)
 
 
+def _third_person(verb: str) -> str:
+    if verb.endswith(("s", "sh", "ch", "x", "z")):
+        return verb + "es"
+    if verb.endswith("y") and len(verb) > 1 and verb[-2] not in "aeiou":
+        return verb[:-1] + "ies"
+    return verb + "s"
+
+
 def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
                          predicate: Optional[str] = None) -> Optional[Dict[str, str]]:
     """How she can say what was asserted along this relation: who, the
@@ -812,6 +826,8 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
     elif denied:
         aux = "do" if agent in ("I", "you") else "does"
         verb = f"{aux} not {predicate}"
+    elif agent not in ("I", "you", "we", "they") and verb == predicate and predicate.isalpha():
+        verb = _third_person(predicate)          # "Actually, Devlin does like snow." is voiced "Devlin likes snow."
     return {"agent": agent, "action": verb, "object": _object,
             "predicate": predicate, "n": str(int(p.get("n", 0))), "denied": str(denied)}
 

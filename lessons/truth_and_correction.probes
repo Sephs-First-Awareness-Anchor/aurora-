@@ -1,0 +1,14 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
+[before]
+Is c after a? => !is after
+[after]
+Is b after a? => is after
+Is c after a? => is after
+Is e after a? => do not know
+Is x after w? => not sure
+Is w after x? => not sure
+[after-correction]
+Is b after a? => not after
+Is c after a? => do not know
+Is d after c? => is after
+Is x after w? => not sure
