@@ -30,6 +30,7 @@ SAFETY boundary on what a question may run, not vocabulary.
 from __future__ import annotations
 
 import re
+import time
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 # What a question may run.  Sensing and reading her own state only.
@@ -69,10 +70,22 @@ def _forms(words: Iterable[str]) -> Set[str]:
     return _content_forms(words)
 
 
+_CAPS: Dict[int, Dict[str, Dict[str, Set[str]]]] = {}
+_RUN_TTL = 2.0           # one observation serves every question in the same moment
+
+
 def capabilities() -> Dict[str, Dict[str, Set[str]]]:
-    """Her own capabilities as words: name parts and description words."""
+    """Her own capabilities as words: name parts and description words (read once per registry)."""
+    reg = _registry()
+    if len(reg) not in _CAPS:
+        _CAPS.clear()
+        _CAPS[len(reg)] = _capabilities_scan(reg)
+    return _CAPS[len(reg)]
+
+
+def _capabilities_scan(reg: Mapping[str, Any]) -> Dict[str, Dict[str, Set[str]]]:
     out: Dict[str, Dict[str, Set[str]]] = {}
-    for name, td in _registry().items():
+    for name, td in reg.items():
         parts = {p for p in str(name).lower().split("_") if p}
         desc = {w.lower() for w in _WORD.findall(str(getattr(td, "description", "") or ""))}
         out[str(name)] = {"name": _forms(parts), "desc": _forms(desc) - _forms(parts)}
@@ -96,9 +109,15 @@ def _told_with(web: Any) -> Dict[str, Set[str]]:
 
 
 def bindings(web: Any) -> Dict[str, List[str]]:
-    """predicate -> capabilities its teaching reaches."""
+    """predicate -> capabilities its teaching reaches: resolved once per state of what she
+    knows (FIX-A135), shared by the gate's check and the answer."""
     if web is None:
         return {}
+    from aurora_internal.aurora_learned_index import memo
+    return memo(web, ("bindings", len(_registry())), lambda: _bindings_scan(web))
+
+
+def _bindings_scan(web: Any) -> Dict[str, List[str]]:
     caps = capabilities()
     out: Dict[str, List[str]] = {}
     for pred, words in _told_with(web).items():
@@ -173,6 +192,57 @@ def answerable(web: Any, heard: str) -> bool:
     return any(allowed(n) for p in asked_predicates(heard, held) for n in held.get(p, []))
 
 
+_UNAVAILABLE_NOTES = ("not registered", "no state", "no memory", "unavailable", "not available")
+
+
+def outcome(result: Any) -> tuple:
+    """What a sense gave back, as three different things she can know about her own sensing:
+        ("seen", words)       it observed, and found these
+        ("empty", [])         it observed, and found nothing (an observation, not a failure)
+        ("unavailable", [])   there was no feed to observe with (no camera, no microphone)
+        ("failed", [])        the attempt itself went wrong, or could not be read
+    """
+    data = str(getattr(result, "data", "") or "")
+    note = str(getattr(result, "note", "") or "").lower()
+    if not getattr(result, "success", False):
+        if not note or any(m in note for m in _UNAVAILABLE_NOTES):
+            return ("unavailable", [])
+        return ("failed", [])
+    low = data.lower()
+    if "feed unavailable" in low or re.search(r"source:\s*none", low) or "no screen" in low:
+        return ("unavailable", [])
+    words = _sensed_words(data)
+    if words:
+        return ("seen", words)
+    if "no recognized objects" in low or not data.strip():
+        return ("empty", [])
+    return ("failed", [])            # it answered, but not in anything she can read
+
+
+_SAYING = {"unavailable": "cannot {p}", "failed": "could not {p}"}
+
+
+def _run(systems: Mapping[str, Any], name: str) -> Any:
+    """Run a read-only capability, once per moment: later questions in the same turn reuse it."""
+    from aurora_internal import tool_registry
+    cache = systems.get("_capability_runs") if isinstance(systems, dict) else None
+    now = time.time()
+    if isinstance(cache, dict) and name in cache and now - cache[name][0] < _RUN_TTL:
+        return cache[name][1]
+    result = tool_registry.call(name, systems=dict(systems or {}))
+    if isinstance(systems, dict):
+        systems.setdefault("_capability_runs", {})[name] = (now, result)
+    return result
+
+
+def _remember(systems: Mapping[str, Any], pred: str, ran: List[str], kind: str) -> None:
+    """Her own record of how her sensing has gone, so the difference between the cases stays knowable."""
+    if isinstance(systems, dict):
+        log = systems.setdefault("_capability_outcomes", [])
+        log.append({"predicate": pred, "tools": list(ran), "outcome": kind, "t": round(time.time(), 1)})
+        del log[:-32]
+
+
 def derive(systems: Mapping[str, Any], web: Any, heard: str, *, self_now: str = "") -> List[Dict[str, Any]]:
     """Statements from running the capability a question names, in the shape the
     confluence voices.  Empty when no taught word is asked about."""
@@ -182,30 +252,36 @@ def derive(systems: Mapping[str, Any], web: Any, heard: str, *, self_now: str = 
     asked = asked_predicates(heard, held)
     if not asked:
         return []
-    try:
-        from aurora_internal import tool_registry
-    except Exception:
-        return []
     items: List[Dict[str, Any]] = []
     for pred in asked:
         sensed: List[str] = []
+        kinds: List[str] = []
         ran: List[str] = []
         for name in held[pred]:
             if not allowed(name):
                 continue
-            result = tool_registry.call(name, systems=dict(systems or {}))
             ran.append(name)
-            if getattr(result, "success", False):
-                sensed += _sensed_words(getattr(result, "data", ""))
+            kind, words = outcome(_run(systems, name))
+            kinds.append(kind)
+            sensed += words
         if not ran:
             continue                                  # bound, but only to things a question may not run
+        # seen anywhere is seen; else observed-and-empty; else the attempt went wrong; else no feed
+        kind = ("seen" if sensed else "empty" if "empty" in kinds else
+                "failed" if "failed" in kinds else "unavailable")
+        _remember(systems, pred, ran, kind)
         base = {"source": "aurora", "kind": "related_to", "strength": 1.6, "axis": "X",
                 "learned_from": "capability", "asked": True, "derived": [pred] + ran}
-        if sensed:
+        base["outcome"] = kind
+        if kind == "seen":
             for w in dict.fromkeys(sensed):
                 items.append({**base, "target": w, "lex": {"agent": "I", "action": pred, "object": w,
                                                            "predicate": pred, "n": "1", "denied": "False"}})
-        else:
-            items.append({**base, "target": pred, "lex": {"agent": "I", "action": f"do not {pred}", "object": "",
-                                                          "predicate": pred, "n": "1", "denied": "True"}})
+        elif kind == "empty":                          # she looked, and there was nothing to find
+            items.append({**base, "target": "nothing", "lex": {"agent": "I", "action": pred, "object": "nothing",
+                                                               "predicate": pred, "n": "1", "denied": "False"}})
+        else:                                          # she could not: no feed, or the attempt went wrong
+            items.append({**base, "target": pred, "lex": {"agent": "I", "action": _SAYING[kind].format(p=pred),
+                                                          "object": "", "predicate": pred, "n": "1",
+                                                          "denied": "True"}})
     return items

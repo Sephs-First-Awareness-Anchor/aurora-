@@ -63,7 +63,7 @@ def _f(v: Any, d: float = 0.0) -> float:
 # What she was told about order
 # -----------------------------------------------------------------------------
 
-def order_edges(web: Any) -> Dict[Tuple[str, str], int]:
+def _order_edges_scan(web: Any) -> Dict[Tuple[str, str], int]:
     """{(earlier, later): times said} from the statements along her relations.
     A predicate said and denied about equally is not held."""
     edges: Dict[Tuple[str, str], int] = {}
@@ -88,6 +88,21 @@ def order_edges(web: Any) -> Dict[Tuple[str, str], int]:
                 continue
             edges[key] = edges.get(key, 0) + n - denied
     return edges
+
+
+from aurora_internal.aurora_learned_index import memo as _memo   # FIX-A135: one resolution, many consumers
+
+
+def order_edges(web: Any) -> Dict[Tuple[str, str], int]:
+    return _memo(web, "order", lambda: _order_edges_scan(web))
+
+
+def kind_edges(web: Any) -> Dict[Tuple[str, str], int]:
+    return _memo(web, "kinds", lambda: _kind_edges_scan(web))
+
+
+def end_edges(web: Any) -> Dict[Tuple[str, str], int]:
+    return _memo(web, "ends", lambda: _end_edges_scan(web))
 
 
 def _graph(edges: Mapping[Tuple[str, str], int]) -> Dict[str, List[str]]:
@@ -126,7 +141,7 @@ def earlier_than(edges: Mapping[Tuple[str, str], int], word: str) -> Dict[str, L
 # What she was told about kinds
 # -----------------------------------------------------------------------------
 
-def kind_edges(web: Any) -> Dict[Tuple[str, str], int]:
+def _kind_edges_scan(web: Any) -> Dict[Tuple[str, str], int]:
     """{(thing, kind): times said} from "<thing> is a <kind>"; denied is not held."""
     edges: Dict[Tuple[str, str], int] = {}
     for rel in list(getattr(web, "relations", {}).values()):
@@ -188,7 +203,7 @@ def apply_kind(web: Any, thing: str, kind: str) -> bool:
 END_PREDICATES = frozenset({"end"})
 
 
-def end_edges(web: Any) -> Dict[Tuple[str, str], int]:
+def _end_edges_scan(web: Any) -> Dict[Tuple[str, str], int]:
     """{(ender, ended): times said} from "<ender> ends <ended>"."""
     edges: Dict[Tuple[str, str], int] = {}
     for rel in list(getattr(web, "relations", {}).values()):
@@ -340,7 +355,7 @@ def _content_forms(words: Iterable[str]) -> set:
     return forms
 
 
-def rules(web: Any) -> List[Dict[str, Any]]:
+def _rules_scan(web: Any) -> List[Dict[str, Any]]:
     """Every "when" she was told: the relation (what she holds), its predicate,
     and the condition it was said to hold under."""
     out: List[Dict[str, Any]] = []
@@ -357,42 +372,61 @@ def rules(web: Any) -> List[Dict[str, Any]]:
     return out
 
 
+def rules(web: Any) -> List[Dict[str, Any]]:
+    return _memo(web, "rules", lambda: _rules_scan(web))
+
+
 def _words_of(*parts: Any) -> List[str]:
     return [t.lower() for part in parts for t in _TOKEN.findall(str(part or ""))]
 
 
+def _confirms(st: Mapping[str, Any], cond: Mapping[str, Any], speaker_now: str, self_now: str) -> bool:
+    """Is this heard statement the condition actually being so?  Same act, same thing said of
+    the same person, neither denied when the other is not -- and not a wish or a maybe."""
+    from aurora_internal.aurora_propositional_understanding import _lemma, heads
+    if bool(st.get("negated")) != bool(cond.get("negated")):
+        return False
+    act = lambda r: _lemma(str(r or "").split()[0].lower()) if str(r or "").split() else ""
+    if not act(cond.get("relation")) or act(st.get("relation")) != act(cond.get("relation")):
+        return False
+    need = _content_forms(_words_of(cond.get("obj")))
+    if need and not need <= _content_forms(_words_of(st.get("obj"))):
+        return False
+    who = [str(w) for w in (cond.get("who") or [])]
+    if who:
+        return bool(set(who) & set(heads(st.get("subject"), speaker=speaker_now, listener=self_now, acts=set())))
+    return _content_forms(_words_of(cond.get("subject"))) == _content_forms(_words_of(st.get("subject")))
+
+
 def fire(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") -> List[Dict[str, Any]]:
-    """What she holds under a condition that has just come up in what was heard.
-    The condition must be wholly there (its content words, in any form), and the
-    turn must not simply be the lesson saying it again."""
-    from aurora_internal.aurora_propositional_understanding import lexicalize_assertion
-    heard_forms = _content_forms(_words_of(heard))
-    if not heard_forms:
+    """What she holds under a condition that has just been CONFIRMED in what was heard.
+    A condition mentioned, asked about ("are you settled?"), supposed ("if you are settled"),
+    wished or denied does not hold; only a plain statement of it by someone who can say so does
+    (testimony: she was told, she did not observe it)."""
+    from aurora_internal.aurora_propositional_understanding import lexicalize_assertion, statements_in
+    held_rules = rules(web)
+    if not held_rules:
+        return []
+    stated = [st for st in statements_in(heard, web=web)
+              if not st.get("conditional") and not st.get("when") and not st.get("modality")]
+    if not stated:
         return []
     out: List[Dict[str, Any]] = []
-    for rule in rules(web):
+    for rule in held_rules:
         cond = rule["when"]
-        need = _content_forms(_words_of(cond.get("relation"), cond.get("obj"), cond.get("subject")))
-        if not need or not need <= heard_forms:
+        if not any(_confirms(st, cond, speaker_now, self_now) for st in stated):
             continue
         rel, pred = rule["rel"], rule["predicate"]
-        held = _content_forms(_words_of(getattr(rel, "source_word", ""), pred, getattr(rel, "target_word", "")))
-        if held and held <= heard_forms:
-            continue                                         # the lesson, said again
         lex = lexicalize_assertion(rel, speaker_now=speaker_now, self_now=self_now, predicate=pred)
         if lex is None:
             continue
         out.append({"source": str(rel.source_word).lower(), "kind": "related_to",
                     "target": str(rel.target_word).lower(), "strength": 1.4, "axis": "A",
-                    "learned_from": "rule", "asked": True,
+                    "learned_from": "rule", "asked": True, "basis": "told",
                     "derived": [str(cond.get("relation") or ""), str(cond.get("obj") or "")],
                     "lex": lex})
     return out
 
-
-# -----------------------------------------------------------------------------
-# What she can say from it
-# -----------------------------------------------------------------------------
 
 def _item(source: str, target: str, *, action: str, predicate: str, denied: bool, chain: Sequence[str]) -> Dict[str, Any]:
     return {"source": source, "kind": "precedes", "target": target, "strength": 1.5, "axis": "T",
@@ -401,7 +435,7 @@ def _item(source: str, target: str, *, action: str, predicate: str, denied: bool
                     "n": "1", "denied": str(bool(denied))}}
 
 
-def derive(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") -> List[Dict[str, Any]]:
+def _derive(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") -> List[Dict[str, Any]]:
     """Statements she can state from what she was told about order, for the
     question just asked.  Empty when the question is not about order or she
     holds nothing that answers it."""
@@ -440,6 +474,13 @@ def derive(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") -
             return [_item(s, o, action=action.replace("is ", "is not ", 1), predicate=pred, denied=True,
                           chain=later_than(edges, b)[a])]
     return []
+
+
+def derive(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") -> List[Dict[str, Any]]:
+    """Resolved once per (what was heard, who is speaking) for each state of what she knows;
+    the gate and the confluence read the same resolution."""
+    return _memo(web, ("derive", str(heard or ""), speaker_now, self_now),
+                 lambda: _derive(web, heard, speaker_now=speaker_now, self_now=self_now), fresh=True)
 
 
 def _derive_kind(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:

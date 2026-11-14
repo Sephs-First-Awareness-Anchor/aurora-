@@ -236,9 +236,10 @@ def _link_conditions(out: List[Dict[str, Any]], first: int) -> None:
     new = out[first:]
     for i, st in enumerate(new):
         if st.get("_lead") in _CONDITION_LEADS:
+            st["conditional"] = True              # said as the condition of another statement: not itself asserted
             main = new[1] if i == 0 and len(new) > 1 else (new[i - 1] if i else None)
             if main is not None and main.get("_lead") not in _CONDITION_LEADS and "when" not in main:
-                main["when"] = {k: st.get(k, "") for k in ("subject", "relation", "obj", "negated")}
+                main["when"] = {k: st.get(k, "") for k in ("subject", "relation", "obj", "negated", "modality")}
     for st in new:
         st.pop("_lead", None)
 
@@ -531,6 +532,26 @@ def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, 
     rel.assertion = a
 
 
+def _condition_of(form: Mapping[str, Any], speaker: str, listener: str, acts: set) -> Optional[Dict[str, Any]]:
+    """The condition a statement was said to hold under, with WHO it is about resolved
+    against the people in this conversation ("you" said by Sir is Aurora)."""
+    when = form.get("when")
+    if not when:
+        return None
+    cond = dict(when)
+    cond["who"] = heads(cond.get("subject"), speaker=speaker, listener=listener, acts=set())[:2]
+    return cond
+
+
+def _learned_changed(web: Any) -> None:
+    """What she holds along her relations changed: derived structures are stale (FIX-A135)."""
+    try:
+        from aurora_internal.aurora_learned_index import bump
+        bump(web)
+    except Exception:
+        pass
+
+
 def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: str, listener: str,
                    profile: Mapping[str, float], time_ref: str = "", acts: Optional[set] = None,
                    _depth: int = 0) -> List[Dict[str, Any]]:
@@ -572,7 +593,9 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                     _record_assertion(rel, predicate=pred_here, surface=surf_here,
                                       negated=bool(form.get("negated")), modality=str(form.get("modality") or ""),
                                       speaker=speaker, time_ref=time_ref, profile=profile,
-                                      context=str(heard or "")[:120], when=form.get("when"), phrase=obj_text)
+                                      context=str(heard or "")[:120], phrase=obj_text,
+                                      when=_condition_of(form, speaker, listener, acts))
+                    _learned_changed(web)
                     if pred_here == "be a" and not form.get("negated"):
                         try:
                             from aurora_internal.aurora_learned_rules import apply_kind
@@ -811,6 +834,7 @@ def absorb_clone_propositions(web: Any, records: List[Mapping[str, Any]]) -> Dic
         a["n"] = n0 + dn
         a["contexts"] = (list(a.get("contexts") or []) + list(rec.get("contexts") or []))[-5:]
         rel.assertion = a
+        _learned_changed(web)
         absorbed += 1
     return {"absorbed": absorbed, "created": created}
 

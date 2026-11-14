@@ -214,17 +214,41 @@ def test_the_condition_is_recorded_on_the_predicate_it_governs():
     assert len(R.rules(web)) == 1
 
 
-@pytest.mark.parametrize("heard,expected", [
-    ("I am settled.", [("I", "feel", "calm")]),
-    ("Are you settled and safe right now?", [("I", "feel", "calm")]),
-    ("It rained.", []),
-    ("You feel calm when you are settled and safe.", []),          # the lesson said again is not the condition coming up
+CALM = "You feel calm when you are settled and safe."
+
+
+def _fired(web, heard):
+    return [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"])
+            for i in R.derive(web, heard, speaker_now="sunni", self_now="aurora")]
+
+
+def test_what_she_holds_under_a_condition_is_said_when_it_is_confirmed():
+    web = _told([CALM])
+    got = R.derive(web, "You are settled and safe.", speaker_now="sunni", self_now="aurora")
+    assert [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"]) for i in got] == [("I", "feel", "calm")]
+    assert got[0]["basis"] == "told" and got[0]["learned_from"] == "rule"      # testimony, not observation
+
+
+@pytest.mark.parametrize("heard", [
+    "Are you settled and safe?",                    # asked about
+    "Are you settled and safe right now?",
+    "What if you are settled and safe?",            # supposed
+    "If you are settled and safe, tell me.",
+    "You might be settled and safe.",               # a maybe
+    "You are not settled and safe.",                # denied
+    "I am settled and safe.",                       # true of someone else
+    "It rained.",
+    "You feel calm when you are settled and safe.",  # the lesson said again
 ])
-def test_what_she_holds_under_a_condition_is_said_when_it_comes_up(heard, expected):
-    web = _told(["You feel calm when you are settled and safe."])
-    got = R.derive(web, heard, speaker_now="sunni", self_now="aurora")
-    assert [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"]) for i in got] == expected
-    assert all(i["learned_from"] == "rule" for i in got)
+def test_a_condition_that_is_mentioned_asked_supposed_denied_or_about_someone_else_does_not_hold(heard):
+    assert _fired(_told([CALM]), heard) == []
+
+
+def test_a_condition_is_about_the_person_it_was_said_of():
+    web = _told(["When I greet you, you say hello."])
+    assert _fired(web, "I greet you.") == [("I", "say", "hello")]            # sunni greeting
+    assert _fired(web, "You greet me.") == []                                 # aurora greeting is another matter
+    assert _fired(web, "Do I greet you?") == []
 
 
 def test_nothing_fires_without_a_rule():

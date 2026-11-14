@@ -63,8 +63,33 @@ def test_a_question_to_her_runs_the_sense_and_she_says_what_it_found(q):
     assert all(i["learned_from"] == "capability" for i in got)
 
 
-def test_when_the_sense_has_nothing_she_says_she_does_not_see():
-    assert _out(B.derive({"hardware": None}, _told(SEE), "What can you see?")) == [("do not see", "", "True")]
+def test_no_feed_an_empty_look_and_a_failed_attempt_are_three_different_things(monkeypatch):
+    web = _told(SEE)
+    ask = lambda hw: B.derive({"hardware": hw}, web, "What can you see?")
+    assert [(i["lex"]["action"], i["lex"]["object"], i["outcome"]) for i in ask(None)] == [("cannot see", "", "unavailable")]
+    class Empty:
+        def capture_visual(self):
+            return {"brightness": 0.5, "objects": [], "faces": [], "motion_detected": False}
+    assert [(i["lex"]["action"], i["lex"]["object"], i["outcome"]) for i in ask(Empty())] == [("see", "nothing", "empty")]
+    monkeypatch.setattr(T, "call", lambda name, **kw: T.ToolResult(name, "", False, "camera driver crashed"))
+    assert [(i["lex"]["action"], i["outcome"]) for i in ask(_Camera())] == [("could not see", "failed")]
+
+
+def test_how_her_sensing_has_gone_is_kept():
+    systems = {"hardware": None}
+    B.derive(systems, _told(SEE), "What can you see?")
+    assert systems["_capability_outcomes"][-1]["outcome"] == "unavailable"
+
+
+def test_one_observation_serves_every_question_in_the_same_moment(monkeypatch):
+    calls = []
+    real = T.call
+    monkeypatch.setattr(T, "call", lambda name, **kw: (calls.append(name), real(name, **kw))[1])
+    systems = {"hardware": _Camera()}
+    web = _told(SEE)
+    B.derive(systems, web, "What can you see?")
+    B.derive(systems, web, "Can you see anything?")
+    assert calls == ["visual_analysis"]
 
 
 def test_the_lesson_is_not_a_question_and_a_question_not_to_her_is_not_either():
@@ -103,7 +128,8 @@ def test_the_gate_knows_when_what_she_was_taught_can_answer():
     import aurora_voice_gate as G
     web = _told(SEE, "When I greet you, you say hello.")
     systems = {"oets": type("O", (), {"web": web})(), "perception": None}
-    assert G._worked_out(systems, "What can you see?") and G._worked_out(systems, "I greet you today.")
+    assert G._worked_out(systems, "What can you see?")
+    assert G._worked_out(systems, "I greet you today.", "sunni")
     assert not G._worked_out(systems, "It rained.")
     assert not G._worked_out({"oets": type("O", (), {"web": _told("You feel curious.")})()}, "What can you see?")
 
@@ -131,4 +157,41 @@ def test_what_a_report_says_is_voiced_in_her_taught_word(monkeypatch, teach, que
 
 def test_a_report_with_nothing_in_it_is_a_do_not(monkeypatch):
     _fake(monkeypatch, "", ok=False)
-    assert _out(B.derive({}, _told("You feel with your self state."), "What do you feel?")) == [("do not feel", "", "True")]
+    assert _out(B.derive({}, _told("You feel with your self state."), "What do you feel?")) == [("cannot feel", "", "True")]
+
+
+# -- one resolution, many consumers (FIX-A135) -------------------------------------
+
+def test_what_she_was_told_is_resolved_once_and_shared():
+    from aurora_internal import aurora_learned_index as X
+    from aurora_internal import aurora_learned_rules as R
+    web = _told(SEE, "When I greet you, you say hello.", "B comes after a.")
+    for _ in range(3):
+        B.bindings(web); R.rules(web); R.order_edges(web)
+    base = dict(X.STATS)
+    for _ in range(25):                                   # gate check, knowledge, answer ... all the same resolution
+        B.bindings(web); B.answerable(web, "What can you see?"); R.rules(web); R.order_edges(web)
+        R.derive(web, "What comes after a?", speaker_now="sunni", self_now="aurora")
+    assert X.STATS["built"] - base["built"] <= 1          # only the one new question, built once
+    assert X.STATS["reused"] - base["reused"] >= 25 * 4
+
+
+def test_the_resolution_is_rebuilt_only_when_what_she_knows_changes():
+    from aurora_internal import aurora_learned_rules as R
+    web = _told("B comes after a.")
+    assert R.later_than(R.order_edges(web), "a") == {"b": ["a", "b"]} or "b" in R.later_than(R.order_edges(web), "a")
+    before = R.order_edges(web)
+    assert R.order_edges(web) is before                   # same object: nothing rebuilt
+    for st in P.statements_in("C comes after b."):
+        P.integrate_form(web, st, heard="C comes after b.", speaker="sunni", listener="aurora", profile={})
+    after = R.order_edges(web)
+    assert after is not before and ("b", "c") in after    # a new statement was recorded: refreshed
+
+
+def test_a_derived_answer_cannot_be_changed_by_a_consumer():
+    from aurora_internal import aurora_learned_rules as R
+    web = _told("B comes after a.")
+    first = R.derive(web, "What comes after a?", speaker_now="sunni", self_now="aurora")
+    first[0]["lex"]["object"] = "corrupted"
+    again = R.derive(web, "What comes after a?", speaker_now="sunni", self_now="aurora")
+    assert again[0]["lex"]["object"] == "a"
