@@ -449,10 +449,13 @@ def stance_seed(form: Mapping[str, Any]) -> Tuple[str, List[str]]:
 
 
 def _echo_ratio(text: str, heard: str) -> float:
-    said = [t.lower() for t in _tokens(text) if len(t) >= 3]
+    heard_set = {t.lower() for t in _tokens(heard)}
+    # FIX-A133: a letter the speaker did not say is something new ("c comes after
+    # b" answers "what comes after b?"); "I" is perspective, not content.
+    said = [t.lower() for t in _tokens(text)
+            if len(t) >= 3 or (len(t) == 1 and t.lower() != "i" and t.lower() not in heard_set)]
     if not said:
         return 1.0
-    heard_set = {t.lower() for t in _tokens(heard)}
     return sum(1 for t in said if t in heard_set) / len(said)
 
 

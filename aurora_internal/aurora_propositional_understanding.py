@@ -88,6 +88,10 @@ _DETERMINERS = frozenset({"the", "a", "an", "this", "that", "these", "those", "s
                           "my", "your", "our", "his", "her", "their", "its"})
 _TOKEN = re.compile(r"[A-Za-z][A-Za-z']*")
 
+# FIX-A133: the particles that make a verb an ordering ("comes after", "is before").
+_ORDER_PARTICLES = frozenset({"after", "before"})
+_ORDER_VERB_BASES = frozenset({"come", "follow", "precede", "succeed"})     # "does not COME after"
+
 
 def _f(v: Any, d: float = 0.0) -> float:
     try:
@@ -157,8 +161,18 @@ def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = M
         return []
     out: List[str] = []
     closed = _closed_class()
-    for tok in toks:
+    # FIX-A133: a lone letter is what it names ("B follows A"), and a letter
+    # right after a thing labels it ("the letter b", "plan b", "point a").
+    if len(toks) == 1 and len(toks[0]) == 1 and toks[0] not in _FIRST:
+        return [toks[0]]
+    for i, tok in enumerate(toks):
         if tok in _POSSESSIVE:
+            continue
+        if len(tok) == 1 and i and tok not in _FIRST and len(toks[i - 1]) >= 3 and toks[i - 1] not in closed:
+            if toks[i - 1] in out:
+                out.remove(toks[i - 1])           # "the letter b" is about b; "letter" is what kind it is
+            if tok not in out:
+                out.append(tok)
             continue
         if tok in _FIRST:
             cand = speaker
@@ -195,6 +209,17 @@ def _is_verb_here(tok: str, nxt: str, tags: Mapping[int, Any], i: int, verb_form
     return bool(nxt) and nxt in _DETERMINERS and tok.endswith(("s", "ed"))
 
 
+def _order_particle_at(toks: List[str], i: int, verb_forms: set) -> bool:
+    """FIX-A133: "after"/"before" straight after a verb and in front of a phrase
+    ("b comes AFTER the letter a") is part of what is said of the subject, not the
+    start of a new clause ("... after I left")."""
+    if toks[i] not in _ORDER_PARTICLES or i < 1 or i + 1 >= len(toks):
+        return False
+    prev, nxt = toks[i - 1], toks[i + 1]
+    return (prev in verb_forms or prev in _COPULA or prev in _NEGATORS or prev in _ORDER_VERB_BASES) \
+        and nxt not in _SUBJECT_PRONOUNS
+
+
 def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
     """Subject / predicate / object of each statement in what was said, read
     with her own tagger, her verb forms and the auxiliaries / negators /
@@ -220,7 +245,8 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
         tagged = tagger.tag(" ".join(toks))
         tags = {i: role for i, (_, role) in enumerate(tagged)} if len(tagged) == len(toks) else {}
         start = 0
-        bounds = sorted({(i, 1) for i, t in enumerate(toks) if t in _CLAUSE_BREAKS} |
+        bounds = sorted({(i, 1) for i, t in enumerate(toks)
+                         if t in _CLAUSE_BREAKS and not _order_particle_at(toks, i, verb_forms)} |
                         {(c, 0) for c in cuts if 0 < c})
         for end, skip in bounds:
             if end < start:
@@ -256,8 +282,8 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                     if copula_at < 0:
                         copula_at = i
                     continue
-                if tok in closed:
-                    continue
+                if tok in closed and tok not in verb_forms:
+                    continue                         # FIX-A133: her verb forms ("follows") are closed-class for heads, not for the act
                 if explicit < 0 and (after_aux or tok in verb_forms
                                      or _node_role(web, tok) == "verb"):
                     explicit = i
@@ -294,12 +320,16 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
             obj: List[str] = []
             content = 0
             skip_next = False
+            particle = ""
             for i in seg:
                 if i <= verb_at:
                     continue
                 tok = toks[i]
                 if skip_next:
                     skip_next = False
+                    continue
+                if tok in _ORDER_PARTICLES and not obj and not particle:
+                    particle = tok                 # "comes AFTER the letter a": part of what is said of it
                     continue
                 if tok == "to" and not content:
                     skip_next = True               # "want to SAY": an infinitive, not a thing
@@ -308,6 +338,9 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                     negated = True
                     continue
                 is_content = len(tok) >= 3 and "'" not in tok and tok not in closed
+                if len(tok) == 1 and tok.isalpha() and obj and len(obj[-1]) >= 3 and obj[-1] not in closed:
+                    obj.append(tok)                # FIX-A133: "the letter B": a letter labels the thing before it
+                    continue
                 if not is_content and content and tok not in _DETERMINERS:
                     break                          # the phrase is whole ("records | on a slow night")
                 if is_content and content and tags.get(i) is not None and tok in closed:
@@ -316,8 +349,11 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                 if is_content or tok in _FIRST or tok in _SECOND:
                     content += 1
             surface = "be" if copula else toks[verb_at]
-            out.append({"subject": " ".join(subject), "relation": surface, "obj": " ".join(obj),
-                        "negated": negated, "modality": modality})
+            st = {"subject": " ".join(subject), "relation": surface, "obj": " ".join(obj),
+                  "negated": negated, "modality": modality}
+            if particle:
+                st["particle"] = particle
+            out.append(st)
     return out
 
 
@@ -448,6 +484,7 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
         relation_words = [w for w in _words(form.get("relation")) if len(w) >= 2]
         predicate_surface = relation_words[0].lower() if relation_words else ""
         predicate = _lemma(predicate_surface) if predicate_surface else ""
+        particle = str(form.get("particle") or "").lower()
         closed = _closed_class()
         if predicate and (predicate == "be" or predicate not in closed) and "'" not in predicate:
             subj = heads(form.get("subject"), speaker=speaker, listener=listener, acts=acts)
@@ -466,11 +503,14 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                         # An existing co-occurrence link of the same type now has
                         # something actually said along it.
                         rel.source_of_knowledge = ASSERTION_SOURCE
-                    _record_assertion(rel, predicate=predicate, surface=predicate_surface,
+                    # FIX-A133: "comes after" is one predicate: the verb and its particle
+                    pred_here = f"{predicate} {particle}" if particle else predicate
+                    surf_here = f"{predicate_surface} {particle}" if particle else predicate_surface
+                    _record_assertion(rel, predicate=pred_here, surface=surf_here,
                                       negated=bool(form.get("negated")), modality=str(form.get("modality") or ""),
                                       speaker=speaker, time_ref=time_ref, profile=profile,
                                       context=str(heard or "")[:120])
-                    out.append({"source": s, "predicate": predicate, "target": o,
+                    out.append({"source": s, "predicate": pred_here, "target": o,
                                 "negated": bool(form.get("negated")), "type": rtype.value})
             for concept in set(subj) | set(objs):
                 place_concept(web.nodes.get(concept), profile)
