@@ -11441,3 +11441,10 @@ direct self-state answer path is still open); (b) a direct question right after 
 spoke can stay silent: addressed pressure drops to 15% on speech, a question adds
 0.35, the threshold is 0.30; (c) possessives are dropped in heads, so "name is
 sunni" lacks "your".
+
+### FIX-A130: One speech path (confluence first, generative only as the fallback)
+**Category:** ARCHITECTURAL
+**Pattern:** `apply_voice_gate` let any reply that passed its checks leave as her own voice, and ran the confluence (FIX-A113) only when a reply was blocked or empty. So the reasoning pipeline's axis-vocabulary reply ("I am energy. I understand cost. I feel constraint.") pre-empted everything she had learned; and when a reply was blocked her composer's draft went ahead of the confluence ("I feel built you.").
+**Correct Form:** One order. The confluence composes first whenever she would speak at all (the reply stands, her composer has a draft, or she is moved to speak); the generative reply, then her composer's draft, then pressure articulation, then silence follow only when it has nothing. `_confluent_reply` is the single place that builds it. `CONFLUENCE_FIRST=False` restores the old order for a baseline. Pressure decides whether she speaks, not what an outgoing reply is made of, so a standing reply needs no threshold. Also: a statement already voiced in the sentence (stance clause or knowledge clause) is not voiced again (`_SAID`/`_said_key`).
+**Why:** Two composers that never saw each other meant what she knew only spoke when the other one failed.
+**First Seen:** 2026-11-14. Live on a scratch copy after teaching two lines by conversation: "How are you feeling?" old order "I am energy. I understand cost. I feel constraint."; one path "You envisioned me, and I feel calm, and I feel curious." Not fixed, for Sir: "Are you ever curious?" (a target word, not a predicate, is not treated as asked); when she has just voiced everything she knows, her rest rule leaves the confluence empty and the generative reply stands.

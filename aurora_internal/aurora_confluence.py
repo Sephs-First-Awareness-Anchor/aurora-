@@ -527,15 +527,25 @@ def _option_knowledge(option: str, known: Sequence[Mapping[str, Any]]) -> float:
     return sum(_f(k.get("strength")) for k in known if k.get("source") in words)
 
 
+_SAID = "\x00said"
+
+
+def _said_key(lex: Mapping[str, Any]) -> str:
+    """A statement as it is voiced: the same words twice are one statement."""
+    return "|".join(str(lex.get(f) or "").lower() for f in ("agent", "action", "object"))
+
+
 def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, prefer_axis: bool,
                       resting: Optional[set] = None) -> Optional[Dict[str, Any]]:
     # FIX-A129: what rests is a statement -- who, to what, which predicate --
     # not the whole pair; and what the speaker just asked about is not made to
     # rest at all, so a direct question can be answered again.
+    said = {t for s_, t in used if s_ == _SAID}
     pool = [k for k in known if (k["source"], k["target"]) not in used
+            and _said_key(dict(k.get("lex") or {})) not in said
             and (k.get("asked") or (k["source"], k["target"], str(dict(k.get("lex") or {}).get("predicate") or ""))
                  not in (resting or set()))]
-    voiced = {s for s, _ in used} | {t for _, t in used}
+    voiced = {s for s, _ in used if s != _SAID} | {t for s, t in used if s != _SAID}
     pool = [k for k in pool if k["source"] not in voiced and k["target"] not in voiced] or pool
     # FIX-A129: what the speaker's own words asked about is answered before
     # what her axes would rather say.
@@ -549,6 +559,7 @@ def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, pref
     lex = dict(k.get("lex") or {})
     if not lex:
         return None
+    used.add((_SAID, _said_key(lex)))
     # FIX-A115: what was said, as it was said -- who, the predicate, to what.
     return {"agent": lex["agent"], "action": lex["action"], "object": lex["object"],
             "determiner": "", "contrast": lex.get("denied") == "True",
@@ -583,6 +594,7 @@ def plan(contrib: Mapping[str, Any], how: Mapping[str, Any]) -> List[Dict[str, A
                       "determiner": "the" if obj and obj == chosen and obj != stance.get("object") else "",
                       "contrast": False, "system": "communication"}
             stance_done = True
+            used.add((_SAID, _said_key(clause)))
         elif axis == "B":
             others = [o for o in options if o != (chosen or stance.get("object", ""))]
             if chosen and not stance_done and stance:
