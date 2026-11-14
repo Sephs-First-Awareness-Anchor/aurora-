@@ -4810,6 +4810,20 @@ def json_dumps_safe(obj) -> str:
         return str(obj)
 
 
+def strip_internal_annotation(text: str) -> str:
+    """FIX-A127: drop the trailing " [Internal: ...]" reasoning note that
+    dual_question_pipeline appends to a turn's text.  Only the LAST marker, at
+    the very end, is removed (PR #172: an earlier quote of the marker inside
+    the speaker's own words stays).  Single source of truth; the constraint
+    emitter's ``_strip_internal_annotation`` delegates here."""
+    text = text or ""
+    if text.endswith("]"):
+        idx = text.rfind(" [Internal:")
+        if idx != -1:
+            return text[:idx].strip()
+    return text
+
+
 class ExpressionPerceptionEngine(WarpCapable):
     """FIX-A013 note: save_lexicon() below is called by corpus_runner.py at
     mid-pass cadence saves and at end-of-ingestion; it never existed on this
@@ -5793,6 +5807,12 @@ class ExpressionPerceptionEngine(WarpCapable):
     def ingest_interaction(self, interaction: Dict[str, Any],
                           mode: str = "sim") -> Dict[str, Any]:
         """Process an interaction through perception pipeline."""
+        # FIX-A127: her own internal reasoning note, appended to the turn text
+        # for the rest of that turn's processing, is not part of what was said.
+        _heard_input = interaction.get('input', '')
+        _clean_input = strip_internal_annotation(_heard_input)
+        if _clean_input != _heard_input:
+            interaction = {**interaction, 'input': _clean_input}
         ex_mode = ExistenceMode.PERSISTENT
         if mode == "sim":
             ex_mode = ExistenceMode.BOUNDED
@@ -5815,7 +5835,9 @@ class ExpressionPerceptionEngine(WarpCapable):
         # consciousness. I had moment.") were absorbed as heard structure on
         # 5 of 6 turns and fed OETS as conversation examples, so each draft
         # reinforced the next.  Same heard/produced distinction as FIX-A123.
-        if interaction.get('produced'):
+        # FIX-A127: 'internal' = curriculum/diagnostic bookkeeping, same
+        # treatment: perceived, never learned from as language.
+        if interaction.get('produced') or interaction.get('internal'):
             return result
 
         # Learn new words from input with role inference.

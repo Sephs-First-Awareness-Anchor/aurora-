@@ -77,6 +77,28 @@ _FOLLOWUP_TEMPLATES: Dict[str, str] = {
 }
 
 
+def without_scaffold(text: str) -> str:
+    """FIX-A127: the material inside a directed-training prompt, without the
+    instruction wrapper around it.
+
+    The wrapper ("Hold both sides and resolve honestly: ...") is the
+    curriculum talking, not language she hears from a speaker.  Derived from
+    the two template tables themselves, so no wording is kept elsewhere: a
+    text that starts with a template's literal head is returned as the
+    snippet that followed it; anything else is returned unchanged.
+    """
+    raw = str(text or "")
+    stripped = raw.strip()
+    for table in (_PROMPT_TEMPLATES, _FOLLOWUP_TEMPLATES):
+        for template in table.values():
+            head, _, tail = template.partition("{snippet}")
+            head = head.strip()
+            if head and stripped.startswith(head) and (not tail or stripped.endswith(tail.strip())):
+                end = len(stripped) - len(tail.strip()) if tail.strip() else len(stripped)
+                return stripped[len(head):end].strip()
+    return raw
+
+
 class DirectedTrainingCorpusBridge:
     def __init__(
         self,
