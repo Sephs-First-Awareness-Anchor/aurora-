@@ -322,8 +322,40 @@ def _entity(web: Any, word: str) -> bool:
     return _is_content(low) and low not in _closed_class() and _node_role(web, low) not in NON_ENTITY_ROLES
 
 
+def _ing_bases(word: str) -> List[str]:
+    """Base-form candidates for a progressive: feeling -> feel; making -> make;
+    running -> run.  Candidates only: they are matched against predicates she
+    actually holds, so a wrong guess matches nothing."""
+    w = str(word or "").lower()
+    if not w.endswith("ing") or len(w) < 6:
+        return []
+    stem = w[:-3]
+    out = [stem, stem + "e"]
+    if len(stem) > 2 and stem[-1] == stem[-2]:
+        out.append(stem[:-1])
+    return out
+
+
+def _same_feeling(a: str, b: str) -> bool:
+    """Her emotion's word and a word she was taught name one feeling when they
+    are the same word or share a stem ("curiosity" / "curious")."""
+    a, b = str(a or "").lower(), str(b or "").lower()
+    return bool(a and b) and (a == b or (min(len(a), len(b)) >= 5 and a[:5] == b[:5]))
+
+
+def moved_by(pipeline: Mapping[str, Any]) -> List[str]:
+    """FIX-A131: the emotions that are moving her now -- her surface reaction
+    and the deeper one carrying under it -- as the words her own state holds."""
+    out: List[str] = []
+    for key in ("surface_reactive_emotion", "deep_emotional_state"):
+        word = str(dict(pipeline.get(key) or {}).get("dominant") or "").lower()
+        if word and word != "neutral" and word not in out:
+            out.append(word)
+    return out
+
+
 def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *,
-              reach: int, session_id: str = "") -> List[Dict[str, Any]]:
+              reach: int, session_id: str = "", feeling: Sequence[str] = ()) -> List[Dict[str, Any]]:
     """What was ASSERTED about the concepts in play (FIX-A115): who said which
     predicate of what, recalled from either end, voiced as it was said.  Where
     a concept has a place in her constraint space, what she knows is ranked by
@@ -343,6 +375,7 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
             heard_forms.add(_lemma(_w))
         except Exception:
             pass
+        heard_forms.update(_ing_bases(_w))      # FIX-A131: "feeling" is "feel" being asked about
     acts = _acts_in(heard)
     by_source = getattr(web, "_relations_by_source", {}) or {}
     by_target = getattr(web, "_relations_by_target", {}) or {}
@@ -388,9 +421,18 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
                     if lex is None:
                         continue
                     surface = str(dict(said.get(pred) or {}).get("surface") or pred).lower()
-                    asked = pred.lower() in heard_forms or surface in heard_forms
+                    asked_pred = pred.lower() in heard_forms or surface in heard_forms
+                    # FIX-A131: the thing itself was named ("are you ever
+                    # curious?") -- what she holds about that thing is what was
+                    # asked, whichever predicate holds it.
+                    asked_thing = target in heard_forms
+                    asked = asked_pred or asked_thing
+                    # what she holds that is what is moving her now speaks first
+                    felt = any(_same_feeling(target, f) for f in feeling)
                     found.append({"source": source_w, "kind": kind, "target": target,
-                                  "strength": round(base * (1.5 if asked else 1.0), 4),
+                                  "strength": round(base * (1.5 if asked_pred else 1.0)
+                                                    * (1.5 if asked_thing else 1.0)
+                                                    * (1.3 if felt else 1.0), 4),
                                   "axis": RELATION_AXIS.get(kind, "X"), "learned_from": "assertion", "lex": lex,
                                   "asked": bool(asked)})
                 continue
@@ -491,7 +533,8 @@ def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any], *,
     if salient:
         named = [n for n in named if n in PARTICIPANTS]
     concepts = list(dict.fromkeys(concepts + named))
-    known = knowledge(systems, concepts, heard, reach=int(how.get("reach", 1)), session_id=session_id)
+    known = knowledge(systems, concepts, heard, reach=int(how.get("reach", 1)), session_id=session_id,
+                      feeling=moved_by(pipeline))
     # affect: how it moved her
     surface = dict(pipeline.get("surface_reactive_emotion") or {})
     tone = str(surface.get("tone_bias") or "").lower()
@@ -541,8 +584,12 @@ def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, pref
     # not the whole pair; and what the speaker just asked about is not made to
     # rest at all, so a direct question can be answered again.
     said = {t for s_, t in used if s_ == _SAID}
+
+    def _voiced(k: Mapping[str, Any]) -> bool:
+        key = _said_key(dict(k.get("lex") or {}))
+        return any(key == t or t.startswith(key + " ") for t in said)   # "feel calm right now" says "feel calm"
     pool = [k for k in known if (k["source"], k["target"]) not in used
-            and _said_key(dict(k.get("lex") or {})) not in said
+            and not _voiced(k)
             and (k.get("asked") or (k["source"], k["target"], str(dict(k.get("lex") or {}).get("predicate") or ""))
                  not in (resting or set()))]
     voiced = {s for s, _ in used if s != _SAID} | {t for s, t in used if s != _SAID}
@@ -594,7 +641,12 @@ def plan(contrib: Mapping[str, Any], how: Mapping[str, Any]) -> List[Dict[str, A
                       "determiner": "the" if obj and obj == chosen and obj != stance.get("object") else "",
                       "contrast": False, "system": "communication"}
             stance_done = True
-            used.add((_SAID, _said_key(clause)))
+            skey = _said_key(clause)
+            # a knowledge clause that said the same statement is carried by the stance clause
+            clauses[:] = [c for c in clauses
+                          if not (c.get("system") == "knowledge"
+                                  and (skey == _said_key(c) or skey.startswith(_said_key(c) + " ")))]
+            used.add((_SAID, skey))
         elif axis == "B":
             others = [o for o in options if o != (chosen or stance.get("object", ""))]
             if chosen and not stance_done and stance:
