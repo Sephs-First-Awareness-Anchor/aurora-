@@ -4825,6 +4825,12 @@ def strip_internal_annotation(text: str) -> str:
 
 
 _RECALL_MARKER_RE = re.compile(r"\[(?:recalled:)+[^\]\s]*\]\s*")
+# FIX-A132: a marker cut off by a length limit ("... [rec") is no more a word.
+_DANGLING_MARKER_RE = re.compile(
+    r"\s*\[(?:recalled:[^\]\s]*|" + "|".join(re.escape("recalled"[:i]) for i in range(7, 0, -1)) + r")\s*$")
+# FIX-A132: a leading all-caps label ("[AFTERTHOUGHT]", "[PRESSURE ROUTING]") says
+# which internal caller sent the text; it is not something anyone said.
+_TRANSPORT_LABEL_RE = re.compile(r"^\s*(?:\[[A-Z][A-Z _]*\]\s*)+")
 
 
 def strip_recall_markers(text: str) -> str:
@@ -4833,7 +4839,15 @@ def strip_recall_markers(text: str) -> str:
     marker says where the fragment came from; it is not a word anyone spoke.
     The remembered content itself is left as it was."""
     text = text or ""
-    return _RECALL_MARKER_RE.sub("", text) if "[recalled:" in text else text
+    text = _RECALL_MARKER_RE.sub("", text) if "[recalled:" in text else text
+    return _DANGLING_MARKER_RE.sub("", text) if "[" in text else text
+
+
+def strip_transport_labels(text: str) -> str:
+    """FIX-A132: drop a leading all-caps bracket label that names the internal
+    caller ("[AFTERTHOUGHT] <what was said>").  The words after it are kept."""
+    text = text or ""
+    return _TRANSPORT_LABEL_RE.sub("", text) if text.lstrip().startswith("[") else text
 
 
 class ExpressionPerceptionEngine(WarpCapable):
@@ -5822,7 +5836,7 @@ class ExpressionPerceptionEngine(WarpCapable):
         # FIX-A127: her own internal reasoning note, appended to the turn text
         # for the rest of that turn's processing, is not part of what was said.
         _heard_input = interaction.get('input', '')
-        _clean_input = strip_recall_markers(strip_internal_annotation(_heard_input))
+        _clean_input = strip_transport_labels(strip_recall_markers(strip_internal_annotation(_heard_input)))
         if _clean_input != _heard_input:
             interaction = {**interaction, 'input': _clean_input}
         ex_mode = ExistenceMode.PERSISTENT
