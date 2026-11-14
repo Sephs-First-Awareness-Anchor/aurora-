@@ -4824,6 +4824,18 @@ def strip_internal_annotation(text: str) -> str:
     return text
 
 
+_RECALL_MARKER_RE = re.compile(r"\[(?:recalled:)+[^\]\s]*\]\s*")
+
+
+def strip_recall_markers(text: str) -> str:
+    """FIX-A128: drop the "[recalled:<concept>]" transport prefix that a recall
+    packet puts in front of a remembered fragment (nested forms included).  The
+    marker says where the fragment came from; it is not a word anyone spoke.
+    The remembered content itself is left as it was."""
+    text = text or ""
+    return _RECALL_MARKER_RE.sub("", text) if "[recalled:" in text else text
+
+
 class ExpressionPerceptionEngine(WarpCapable):
     """FIX-A013 note: save_lexicon() below is called by corpus_runner.py at
     mid-pass cadence saves and at end-of-ingestion; it never existed on this
@@ -5810,7 +5822,7 @@ class ExpressionPerceptionEngine(WarpCapable):
         # FIX-A127: her own internal reasoning note, appended to the turn text
         # for the rest of that turn's processing, is not part of what was said.
         _heard_input = interaction.get('input', '')
-        _clean_input = strip_internal_annotation(_heard_input)
+        _clean_input = strip_recall_markers(strip_internal_annotation(_heard_input))
         if _clean_input != _heard_input:
             interaction = {**interaction, 'input': _clean_input}
         ex_mode = ExistenceMode.PERSISTENT

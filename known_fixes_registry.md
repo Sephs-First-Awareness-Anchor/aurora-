@@ -11374,3 +11374,25 @@ prompt-shaping strings in `_shape_topic_for_turn` ("I am intentionally vague..."
 remain: a larger curriculum question for Sir. Voice-gate cost re-measured at
 0.04-0.05 s per call: the earlier "3 s" was profiler inflation, nothing to fix.
 Hub (Dart) transfer menu added (long-press the link row) but NOT compiled here.
+
+## FIX-A128 (ARCHITECTURAL) — Recall markers are transport, not words
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** A recall packet prefixes remembered fragments with
+"[recalled:<concept>]". The recall-enriched text reached `ingest_interaction`
+and OETS `process_interaction` built nodes from the markers (nested forms such
+as "[recalled:recalled:recalled:meaning]" too) and related each to every
+co-occurring word. Measured in her saved web: 149 distinct marker tokens; a
+five-turn live conversation added 4 more. FIX-A123 only stopped the *structure*
+absorb of these fragments.
+**Correct Form:** `strip_recall_markers()` (next to `strip_internal_annotation`)
+removes the marker prefix at the top of `ingest_interaction`; the remembered
+content itself is unchanged. Same five-turn conversation after: +0 marker nodes.
+**Why:** The marker says where a fragment came from; nobody said it.
+**First Seen:** 2026-11-14 interactive conversation test. NOT done: the 149
+marker nodes already in her saved web are still there (a prune needs Sir's
+go-ahead and a backup); the nesting itself originates where recalled text is
+stored back into memory (aurora_dimensional_systems recall packet), untouched.
+Also observed, not changed: on "who built you?" her own composer held a correct
+answer from her creator record but the voice gate blocks that source as scripted,
+and her confluence has no concepts to look up when the turn's salient set is empty,
+so she says "I. built." Same on the pre-#246 build.
