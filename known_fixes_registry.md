@@ -11421,6 +11421,15 @@ Participant objects are voiced "me"/"you" (except a copula about a thing). And
 built me with intention and care.") through her own statement parser and the same
 `integrate_form` a spoken statement uses, once, at boot: the fact is stored as a
 learned relation, no sentence for her to say was written.
+Later the same day: participants are resolved whatever else is salient ("how are
+you feeling?" reaches what she was told about herself), and the perspective swap
+keeps the verb in agreement ("when you are settled" -> "when I am settled", not
+"I are"). Taught in plain conversation on a scratch copy ("You feel curious when
+you learn something new.", "You feel calm when you are settled and safe."), her
+confluence then composes "I feel calm when I am settled and safe, and you built
+me." Her generative path, when it passes the gate as her own voice, still answers
+first ("I am energy. I understand cost. I feel constraint."), so the confluence
+only speaks when that path is blocked or silent: an arbitration question for Sir.
 **Why:** A fact stored the way she would have learned it is hers to speak from;
 and a question should be answered from the matching knowledge, not the
 alphabetically-last one.

@@ -107,3 +107,8 @@ def test_a_participants_name_is_that_participant():
         P.integrate_form(web, form, heard="x", speaker="sunni", listener="aurora", profile={})
     pairs = {(r.source_word, r.target_word) for r in web.relations.values()}
     assert ("name", "aurora") in pairs and ("sunni", "aurora") in pairs
+
+
+def test_perspective_swap_keeps_the_verb_in_agreement():
+    assert C._phrase("when you are settled and safe", limit=4, to_her=True) == "when I am settled and safe"
+    assert C._phrase("when I am ready for winter", limit=4, to_her=False) == "when you are ready for winter"

@@ -228,6 +228,18 @@ def ability_how(systems: Mapping[str, Any]) -> Dict[str, Any]:
 # WHAT: each system's contribution this turn
 # -----------------------------------------------------------------------------
 
+def _agree_after_subject(verb: str, subject: str) -> str:
+    """The verb as it agrees with the subject the perspective swap just put in
+    front of it.  Only the copula and the verbs her grammar engine already
+    knows how to agree with "I"; anything else is left as it was."""
+    low = verb.lower()
+    if subject == "I":
+        from aurora_grammar_engine import SlotFiller
+        agreed = SlotFiller()._agree_verb(verb, "I")
+        return agreed if agreed.lower() in ("am", "have", "do") or agreed != verb and low in ("are", "is", "has", "does") else verb
+    return "are" if low == "am" else verb
+
+
 def _phrase(span: str, *, limit: int, to_her: bool) -> str:
     """The span, re-centred, trimmed after `limit` content words, keeping one
     leading preposition and the function words between kept content words."""
@@ -240,8 +252,12 @@ def _phrase(span: str, *, limit: int, to_her: bool) -> str:
         # ("you know what I mean" -> "I know what you mean").
         if low in _DEIXIS_TO_HER:
             tok = _DEIXIS_TO_HER[low]
+            if tok == "I" and i + 1 < len(toks):      # FIX-A129: "you are" -> "I am", not "I are"
+                toks[i + 1] = _agree_after_subject(toks[i + 1], "I")
         elif low in _DEIXIS_TO_THEM:
             tok = _DEIXIS_TO_THEM[low]
+            if tok == "you" and i + 1 < len(toks):    # "I am" -> "you are"
+                toks[i + 1] = _agree_after_subject(toks[i + 1], "you")
         if not out and not _is_content(tok) and low not in _LEADING_KEEP and low not in _POSSESSIVES:
             continue
         if out and low in _LEADING_KEEP and content >= 2:
@@ -466,12 +482,15 @@ def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any], *,
     salient = [str(c).lower() for c in list(pipeline.get("salient_concepts") or []) if _speakable(c)]
     # knowledge: what she already knows about it
     concepts = list(dict.fromkeys(salient + [w.lower() for o in options for w in _words(o) if _is_content(w)]))
-    if not salient:
-        # FIX-A129: nothing stood out, so nothing was looked up -- yet "who
-        # built you?" is about two participants.  Who "you" and "I" are comes
-        # from her own participant resolution; what else was named is looked
-        # up too.
-        concepts = list(dict.fromkeys(concepts + _named_in(systems, heard, session_id)))
+    # FIX-A129: "who built you?" and "how are you feeling?" are about the
+    # participants the words name.  Who "you" and "I" are comes from her own
+    # participant resolution, whatever else stood out.  When nothing stood out
+    # at all, the other entities named are looked up too.
+    from aurora_internal.aurora_propositional_understanding import PARTICIPANTS
+    named = _named_in(systems, heard, session_id)
+    if salient:
+        named = [n for n in named if n in PARTICIPANTS]
+    concepts = list(dict.fromkeys(concepts + named))
     known = knowledge(systems, concepts, heard, reach=int(how.get("reach", 1)), session_id=session_id)
     # affect: how it moved her
     surface = dict(pipeline.get("surface_reactive_emotion") or {})
