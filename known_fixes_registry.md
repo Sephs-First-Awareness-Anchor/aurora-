@@ -11300,3 +11300,27 @@ sanctioned source was connected.
 turns: per-axis drift 0.0 -> 0.001-0.024, tension EMA 7.5e-5/1.3e-4 ->
 4.1e-4/3.8e-3. `get_meaning_nucleus()` still requires resonance >= 0.55 (its own
 threshold, untouched), so FORMING is reachable only on a strong surprise.
+
+## FIX-A125 (ARCHITECTURAL) — Whole-state transfer is hash-verified, resumable, and installs only what verified
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** The strata link carried live channels only. The Subsurface device
+could not be given the history the Surface had lived (so the downlink had to
+stay off), and a Surface could not move devices with its state: claiming the
+role from a second device started it from nothing. The sensory snapshot and
+guidance channels existed locally but did not cross the link.
+**Correct Form:** `strata_state_transfer.py` (no network, no cognition) selects
+the continuity files, snapshots them so hashes describe the bytes sent, stages
+incoming chunks, trusts a file only after its SHA-256 matches, and installs with
+a backup (`os.replace`, nothing half-written). `strata_link.py` carries it on the
+same signed exchange: **seed** (installs on the Subsurface, then the downlink
+condition is met) and **handoff** (checkpoint on the Subsurface; a claim without
+its token is refused while it waits; the new device pulls, verifies, installs,
+then confirms; epoch + 1). Transfer ids derive from content, so an interrupted
+transfer resumes. Sensory snapshot goes up (latest wins), guidance comes down
+(event ids preserved, never doubled).
+**Why:** State a device did not live must not enter it unverified, and a
+migration must not leave the role with a device that has none of the history.
+**First Seen:** 2026-11-13 Unified Directive, physical distribution. Verified on
+one machine only: real 251.9 MB state seeded over loopback HTTP in 28 s, 3,130/3,130
+verified, re-seed sent 0 bytes; no physical two-device run. A seeded daemon needs
+a restart (it holds state in memory).

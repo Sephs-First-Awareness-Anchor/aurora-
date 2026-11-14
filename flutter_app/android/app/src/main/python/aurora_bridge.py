@@ -2423,6 +2423,36 @@ def configure_strata_link(pairing: str) -> str:
         return _json.dumps({"ok": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"})
 
 
+def strata_link_transfer(action: str, token: str = "") -> str:
+    """State transfer over the strata link, run on the paired Surface device.
+
+    action "seed"                 give the Subsurface device this device's continuity
+    action "handoff_checkpoint"   checkpoint it for the next Surface device (returns the token)
+    action "handoff_claim"        become the Surface with the checkpointed state (needs token)
+    action "verify"               how this device's state stands against the Subsurface's
+    Runs through the already-running link client, so it cannot race the sync loop."""
+    import json as _json
+    try:
+        from aurora_internal.dual_strata import strata_link as _sl
+        _dir = _strata_state_dir or "aurora_state"
+        client = _sl.start_strata_link_client_if_configured(_dir)
+        if client is None:
+            return _json.dumps({"ok": False, "error": "not paired with a Subsurface device"})
+        if action == "seed":
+            result = client.push_state("seed")
+        elif action == "handoff_checkpoint":
+            result = client.push_state("handoff")
+        elif action == "handoff_claim":
+            result = client.pull_handoff(token)
+        elif action == "verify":
+            result = client.verify_sync()
+        else:
+            result = {"ok": False, "error": f"unknown action: {action}"}
+        return _json.dumps(result, default=str)
+    except Exception as exc:
+        return _json.dumps({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+
+
 def get_praxis_messenger_status() -> str:
     import json as _json
     messenger = _praxis_messenger

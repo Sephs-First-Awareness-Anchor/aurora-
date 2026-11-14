@@ -12,7 +12,9 @@ cognition and adds no new channel formats.
 | Direction | Channel | Notes |
 |---|---|---|
 | phone → laptop | continuity feed (one packet per lived turn) | on as soon as paired |
-| laptop → phone | subsurface projection, predictive frames | **off until enabled** (below) |
+| phone → laptop | sensory snapshot (latest wins, sent only when it changed; over 1.5 MB is not sent) | on as soon as paired |
+| laptop → phone | subsurface projection, predictive frames, sensory guidance | **off until seeded** (see "Seeding") |
+| either way, on request | whole-state transfer: **seed** and **handoff** | see "Seeding" and "Moving the Surface to another device" |
 
 Turn events and the presence frame stay on the phone on purpose: that loop is
 latency-critical and the phone already runs it locally. The phone keeps her
@@ -65,19 +67,66 @@ Hub → **Subsurface link** row → tap → paste the pairing line → Pair.
 The row then shows `online · N up · M down · rtt`, or `offline` with the reason
 and how many turns are waiting.
 
-## Turning on the downlink
+## Seeding the laptop (once, before the downlink)
 
 A projection only means something when it comes from a Subsurface that has
-lived the same history as the Surface it colours. The laptop starts from its
-own copy of her state, not the phone's. **Do not enable the downlink until the
-laptop has been seeded with the phone's state.** That seeding step is not built
-yet. When it is, enabling is one empty file on the laptop:
+lived the same history as the Surface it colours. The phone is the one that has
+lived it, so the phone gives the laptop its continuity:
 
-    aurora_state\strata_link\downlink_enabled
+    python -m aurora_internal.dual_strata.strata_link seed --state-dir <phone state dir>
 
-Also to confirm before enabling: `PredictiveStager` resolves its queue path
-from the package directory, not from the state directory the app passes in;
-check where that lands on the phone.
+(In the app: the bridge call `strata_link_transfer("seed")`; there is no Hub
+button for it yet.) What happens:
+
+1. The phone flushes every lived turn to the laptop first, so the transfer
+   follows its own history.
+2. It snapshots its state files and hashes the *copies*, so the hashes describe
+   exactly the bytes sent.
+3. The laptop reports which files it already holds byte-for-byte; those are not
+   sent. The rest go in 1 MiB chunks, each file verified against its SHA-256
+   before it is trusted.
+4. Only when every file verifies does the laptop install them. A file it
+   replaces is first copied to `strata_link\backup\<transfer id>\`. Files the
+   laptop has that the phone does not are left alone.
+5. The laptop writes `strata_link\seeded.json` and creates
+   `strata_link\downlink_enabled` — the stated condition for the downlink is
+   now met and verified.
+
+An interrupted transfer resumes where it stopped (the transfer id is derived
+from the content). **Restart the laptop daemon after a seed:** it holds her
+state in memory and does not re-read the files it just received;
+`seeded.json` says `restart_required`.
+
+Not transferred: the link's own folder (secrets, outboxes, device identity),
+live channel files the link already carries, per-device heartbeats/status/
+locks, and the device's fault log. Everything else in the state directory is
+treated as continuity.
+
+Also to confirm before relying on the downlink: `PredictiveStager` resolves its
+queue path from the package directory, not from the state directory the app
+passes in; check where that lands on the phone.
+
+## Moving the Surface to another device (state-preserving)
+
+    # on the phone that is currently the Surface
+    ... strata_link handoff-checkpoint --state-dir <state dir>     # prints a token
+    # on the new device (already paired), within an hour
+    ... strata_link handoff-claim --state-dir <state dir> --token <token>
+
+The old Surface checkpoints everything it holds on the laptop. While a
+checkpoint is waiting, a claim without its token is refused (`handoff_pending`),
+so a stateless device cannot take the role out from under it. The new device
+claims with the token (epoch + 1), pulls every file, verifies each against its
+hash, installs with a backup, and only then tells the laptop the migration is
+complete. The old Surface learns it is `standby` on its next sync. A checkpoint
+that nobody claims expires after an hour. Restart the app on the new device
+after the pull (`restart_required`).
+
+    ... strata_link verify --state-dir <state dir>
+
+compares this device's state files against the laptop's, file by file, and
+reports what still matches, differs, or is missing. A live Surface changes files
+all the time, so right after a seed a few differ legitimately.
 
 ## Diagnostics
 
@@ -103,11 +152,26 @@ and the downlink outbox. On the phone the Hub row carries the same for its side.
 
 Real latency over a mobile network is unmeasured; the Hub row reports it live.
 
-## Not built yet
+## Measured (state transfer, loopback)
 
-- Seeding the laptop Subsurface from the phone's state (blocks the downlink).
-- The full migration handshake (transfer of surface-owned state between devices).
-- More channels: sensory snapshot up; sensory guidance, evidence bindings down.
+Her real state directory (3,130 transferable files, 251.9 MB) seeded to an
+empty directory through the real HTTP server: **28.3 s**, 3,130/3,130 files
+verified, `verify` 3,130 match / 0 differ / 0 missing in 1.7 s; seeding again
+sent **0 bytes** (5.2 s, all files recognised). Phone-to-laptop speed is
+unmeasured.
+
+## Not built yet / not verified
+
+- **No physical two-device run has been done.** Everything above is verified on
+  one machine (in-memory exchange between separate state directories, and the
+  real HTTP server on loopback).
+- No Hub button for seed/handoff; the bridge call `strata_link_transfer` and the
+  command line exist.
+- The laptop daemon does not reload state after a seed; a restart is needed.
+- Sensory *guidance* going down only works while the laptop's subsurface writes
+  guidance events; the sensory *snapshot* up only moves what the phone writes.
+  Camera/microphone streams themselves are not carried (a snapshot is a
+  description, not video).
 - Running `aurora_daemon` natively on Windows has **not been tested**. It was
   developed on Linux. If it fails to boot, the log above says where; WSL2 is
   the fallback that runs the existing Linux setup unchanged.
