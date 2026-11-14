@@ -156,7 +156,7 @@ def _acts(text: str) -> set:
 
 
 def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = MAX_HEADS,
-          ordered: bool = False) -> List[str]:
+          ordered: bool = False, letterish: bool = False) -> List[str]:
     """The things a phrase is about: participants for I / you, else its
     content words that are not closed-class and were not the act itself."""
     toks = [t.lower() for t in _words(phrase)]
@@ -172,13 +172,17 @@ def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = M
     # that is also a pronoun or an interjection ("two comes after one", "hello is a greeting").
     if ordered and len(toks) == 1 and toks[0] not in _FIRST and toks[0] not in _SECOND and toks[0] not in PARTICIPANTS:
         return [toks[0]]
+    # "I is a letter", "j comes after I": a third-person verb makes the lone "i" the letter, not the speaker
+    if ordered and letterish and len(toks) == 1 and toks[0] in ("i", "u"):
+        return [toks[0]]
     glyphs = [t for t in toks if len(t) == 1 and not t.isalpha()]
     if glyphs:
         return glyphs[:limit]                     # a mark mentioned in quotes is what the phrase is about
     for i, tok in enumerate(toks):
         if tok in _POSSESSIVE:
             continue
-        if len(tok) == 1 and i and tok not in _FIRST and len(toks[i - 1]) >= 3 and toks[i - 1] not in closed:
+        if len(tok) == 1 and i and (tok not in _FIRST or toks[i - 1] in ("letter", "letters")) \
+                and len(toks[i - 1]) >= 3 and toks[i - 1] not in closed:
             if toks[i - 1] in out:
                 out.remove(toks[i - 1])           # "the letter b" is about b; "letter" is what kind it is
             if tok not in out:
@@ -256,8 +260,10 @@ def _order_particle_at(toks: List[str], i: int, verb_forms: set) -> bool:
     if toks[i] not in _ORDER_PARTICLES or i < 1 or i + 1 >= len(toks):
         return False
     prev, nxt = toks[i - 1], toks[i + 1]
+    # (a lone "i"/"u" that ends the sentence is the letter, not the start of a clause)
+    ends = i + 2 >= len(toks) and nxt in ("i", "u")
     return (prev in verb_forms or prev in _COPULA or prev in _NEGATORS or prev in _ORDER_VERB_BASES) \
-        and nxt not in _SUBJECT_PRONOUNS
+        and (nxt not in _SUBJECT_PRONOUNS or ends)
 
 
 def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
@@ -399,7 +405,7 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
             if copula and not particle and len(obj) > 1 and obj[0] in ("a", "an"):
                 particle, obj = "a", obj[1:]          # FIX-A133: "b is A letter" says what kind of thing b is
             st = {"subject": _join_phrase(subject), "relation": surface, "obj": _join_phrase(obj),
-                  "negated": negated, "modality": modality}
+                  "negated": negated, "modality": modality, "verb": toks[verb_at]}
             if particle:
                 st["particle"] = particle
             st["_lead"] = lead_here
@@ -571,9 +577,12 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                        or predicate in ("follow", "precede", "say"))
             # the tagger sometimes calls a subject word an act ("seven comes after six"): the act is the relation
             acts = acts - {w.lower() for w in _words(form.get("subject"))}
-            subj = heads(form.get("subject"), speaker=speaker, listener=listener, acts=acts, ordered=ordered)
+            third = str(form.get("verb") or "").endswith("s")       # is / comes / follows: not "am" / "come"
+            subj = heads(form.get("subject"), speaker=speaker, listener=listener, acts=acts, ordered=ordered,
+                         letterish=third)
             obj_text = " ".join(str(form.get(k) or "") for k in ("obj", "complement"))
-            objs = heads(obj_text, speaker=speaker, listener=listener, acts=acts | {predicate_surface}, ordered=ordered)
+            objs = heads(obj_text, speaker=speaker, listener=listener, acts=acts | {predicate_surface},
+                         ordered=ordered, letterish=third)
             rtype = relation_type_for(web, profile)
             for s in subj:
                 for o in objs:

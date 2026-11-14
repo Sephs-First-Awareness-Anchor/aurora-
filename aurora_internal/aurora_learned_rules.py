@@ -444,6 +444,11 @@ def _derive(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") 
     shape = ask_shape(heard)
     if not shape:
         return fire(web, heard, speaker_now=speaker_now, self_now=self_now)
+    return _answer(web, shape) or _not_known(web, shape)
+
+
+def _answer(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
+    """What she can state from what she was told, for a question of a shape she can read."""
     ask = shape["ask"]
     if ask in ("kind", "kind_test"):
         return _derive_kind(web, shape)
@@ -474,6 +479,47 @@ def _derive(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") 
             return [_item(s, o, action=action.replace("is ", "is not ", 1), predicate=pred, denied=True,
                           chain=later_than(edges, b)[a])]
     return []
+
+
+def _held_words(web: Any, domain: str) -> set:
+    """The words she holds in a domain (order, kinds, marks): the things she was told about."""
+    edges = {"order": order_edges, "kinds": kind_edges, "ends": end_edges}[domain](web)
+    return {w for pair in edges for w in pair}
+
+
+def _not_known(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
+    """A question about something she holds, whose answer she was never told and cannot work
+    out, is answered that she does not know: not left to a fallback seed, and never guessed
+    (FIX-A136).  A word she holds nothing about is left alone: that is not this domain's question."""
+    ask = shape["ask"]
+    if ask in ("after", "before"):
+        domain, words, what = "order", [shape["of"]], f"what comes {ask} {shape['of']}"
+    elif ask == "test":
+        domain, words = "order", [shape["subject"], shape["object"]]
+        what = f"if {shape['subject']} is {shape['rel']} {shape['object']}"
+    elif ask == "kind":
+        domain, words, what = "kinds", [shape["of"]], f"what {shape['of']} is"
+    elif ask == "kind_test":
+        domain, words = "kinds", [shape["subject"]]
+        what = f"if {shape['subject']} is a {shape['kind']}"
+    elif ask == "ends":
+        domain, words, what = "ends", [shape["of"]], f"what {shape['of']} ends"
+    elif ask == "ended_by":
+        domain, words, what = "ends", [shape["of"]], f"what ends {shape['of']}"
+    else:
+        return []
+    held = _held_words(web, domain)
+    if not held:
+        return []
+    # An order question needs only that she holds some order: what is told about "tuesday" in
+    # no order she holds is not known (not a fallback seed).  Kinds and marks are claimed only
+    # for words she holds, since other knowledge may answer "what is love?".
+    if domain != "order" and not all(w in held for w in words):
+        return []
+    return [{"source": "aurora", "kind": "related_to", "target": words[0], "strength": 1.2, "axis": "X",
+             "learned_from": "inference", "asked": True, "derived": ["not told"], "basis": "unknown",
+             "lex": {"agent": "I", "action": "do not know", "object": what, "predicate": "know",
+                     "n": "1", "denied": "True"}}]
 
 
 def derive(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") -> List[Dict[str, Any]]:

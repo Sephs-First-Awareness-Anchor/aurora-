@@ -64,7 +64,9 @@ def test_questions_are_answered_from_chained_order(question, agent, action, obj)
 
 def test_she_says_nothing_about_order_she_was_not_told():
     web = _taught()
-    assert R.derive(web, "Is c after z?") == [] and R.derive(web, "What comes after d?") == []
+    assert [i["lex"]["action"] for i in R.derive(web, "Is c after z?")] == ["do not know"]   # z is in no order she holds
+    known = R.derive(web, "What comes after d?")                       # d she holds; what follows it she was not told
+    assert [(i["lex"]["agent"], i["lex"]["action"]) for i in known] == [("I", "do not know")]
     assert R.derive(OntologicalWeb(), "What comes after b?") == []
     assert R.derive(web, "What is a letter?") == []
 
@@ -114,7 +116,7 @@ def test_a_kind_statement_is_one_predicate_with_the_article_as_its_particle():
     ("Is b a letter?", [("b", "is a", "letter")]),
     ("Is b a symbol?", [("b", "is a", "symbol")]),
     ("Is c a letter?", [("c", "is a", "letter")]),
-    ("Is b a verb?", []),
+    ("Is b a verb?", [("I", "do not know", "if b is a verb")]),
     ("What is zzz?", []),
 ])
 def test_kinds_are_answered_and_inherited(question, expected):
@@ -295,3 +297,43 @@ def test_a_turn_that_opens_with_when_is_integrated_even_if_the_pipeline_calls_it
     assert [r["predicate"] for r in R.rules(web)] == ["say"]
     P.integrate_turn(systems, "When did you greet me?", session_id="x")          # a real question still is not
     assert len(R.rules(web)) == 1
+
+
+# -- honest not-knowing, and the letters that are also pronouns (FIX-A136) ----------
+
+import string as _string
+
+ALPHABET = ([f"The letter {_string.ascii_lowercase[i + 1]} comes after {_string.ascii_lowercase[i]}." for i in range(25)]
+            + [f"{c.upper()} is a letter." for c in _string.ascii_lowercase] + ["A letter is a symbol."]
+            + ['The mark "?" ends a question.'])
+
+
+def test_every_letter_is_a_letter_even_i_and_u():
+    web = _told(ALPHABET + ["I am a teacher.", "I come after you."])
+    edges = R.order_edges(web)
+    assert all((_string.ascii_lowercase[i], _string.ascii_lowercase[i + 1]) in edges for i in range(25))
+    assert ("i", "letter") in R.kind_edges(web) and ("u", "letter") in R.kind_edges(web)
+    assert ("sunni", "teacher") in R.kind_edges(web)                         # "I am" is still the speaker
+
+
+@pytest.mark.parametrize("question,expected", [
+    ("Is z after t?", [("z", "is after", "t")]),                              # a long chain, found
+    ("Does a come after b?", [("a", "is not after", "b")]),                   # known the other way round
+    ("What comes after z?", [("I", "do not know", "what comes after z")]),    # held, but never told
+    ("What comes before a?", [("I", "do not know", "what comes before a")]),
+    ("What is symbol?", [("I", "do not know", "what symbol is")]),
+    ("Is q a noun?", [("I", "do not know", "if q is a noun")]),               # not told: neither yes nor no
+    ("What ends a story?", []),                                               # a word she holds nothing about: left alone
+    ("What comes after tuesday?", [("I", "do not know", "what comes after tuesday")]),   # she holds some order, not this
+    ("What is love?", []),
+])
+def test_what_she_cannot_work_out_is_said_not_known_and_what_she_does_not_hold_is_left_alone(question, expected):
+    web = _told(ALPHABET)
+    got = [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"])
+           for i in R.derive(web, question, speaker_now="sunni", self_now="aurora")]
+    assert got == expected
+
+
+def test_a_not_known_answer_is_not_a_fact_and_says_so():
+    got = R.derive(_told(ALPHABET), "What comes after z?", speaker_now="sunni", self_now="aurora")
+    assert got[0]["basis"] == "unknown" and got[0]["derived"] == ["not told"]
