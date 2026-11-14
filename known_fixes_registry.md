@@ -11388,11 +11388,47 @@ absorb of these fragments.
 removes the marker prefix at the top of `ingest_interaction`; the remembered
 content itself is unchanged. Same five-turn conversation after: +0 marker nodes.
 **Why:** The marker says where a fragment came from; nobody said it.
-**First Seen:** 2026-11-14 interactive conversation test. NOT done: the 149
-marker nodes already in her saved web are still there (a prune needs Sir's
-go-ahead and a backup); the nesting itself originates where recalled text is
-stored back into memory (aurora_dimensional_systems recall packet), untouched.
-Also observed, not changed: on "who built you?" her own composer held a correct
-answer from her creator record but the voice gate blocks that source as scripted,
-and her confluence has no concepts to look up when the turn's salient set is empty,
-so she says "I. built." Same on the pre-#246 build.
+**First Seen:** 2026-11-14 interactive conversation test. Clean-up done with
+Sir's go-ahead: `scripts/prune_recall_marker_nodes.py` (dry run by default,
+backup, atomic write) removed the 149 marker nodes and the 419 relations touching
+them from the checkpoint web. Checked first: no code reads those nodes, none was
+ever used in expression, none is in a cluster. Devices need the same script run on
+their own state (`--state-dir <their aurora_state> --apply`). Not changed: nesting
+originates where recalled text is stored back into memory
+(aurora_dimensional_systems recall packet); 11 other bracket tokens
+("[afterthought]", "[user]", "[internal", ...) remain, unchecked.
+
+## FIX-A129 (ARCHITECTURAL) — She answers from what she knows, including who made her
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** Live conversation. (1) After "I built you ... I care about you" she
+held (sunni, built, aurora) and (sunni, care, aurora) but voiced "care":
+`lexicalize_assertion` broke ties between predicates alphabetically, not by what
+was asked. (2) With nothing salient, "who built you?" looked nothing up: "you"
+and "I" were never resolved to the participants whose relations she holds. (3) A
+participant's own name ("your name is Aurora") was never a head (her tagger lists
+"aurora" as closed-class), so that statement was dropped. (4) Her rest rule
+silenced a whole pair after any one statement about it. (5) Who made her lived
+only in a regex-triggered answer from core identity, which her voice gate refuses
+as a template, so she said "I. built.".
+**Correct Form:** All of it uses her existing stores and her own composer.
+`knowledge()` offers every predicate along a relation and marks the one the
+speaker's words (or their base forms) ask about; `_knowledge_clause` answers what
+was asked before her axis preference, and rests per statement (who, to what,
+predicate), never what was asked. `gather` resolves "you"/"I" to the participants
+when nothing is salient. `heads()` takes a participant's name as that participant.
+Participant objects are voiced "me"/"you" (except a copula about a thing). And
+`integrate_core_identity()` feeds her core identity record's own sentences ("Sunni
+built me with intention and care.") through her own statement parser and the same
+`integrate_form` a spoken statement uses, once, at boot: the fact is stored as a
+learned relation, no sentence for her to say was written.
+**Why:** A fact stored the way she would have learned it is hers to speak from;
+and a question should be answered from the matching knowledge, not the
+alphabetically-last one.
+**First Seen:** 2026-11-14. Live (same conversation, same lines): "who am I, and
+who built you?": before "I. built." (fragment); after "You built me, and name is
+sunni." Not fixed, for Sir: (a) "how are you feeling" now gets "You envisioned me,
+and you are creator." (grammatical, from her knowledge, but not about feeling; the
+direct self-state answer path is still open); (b) a direct question right after she
+spoke can stay silent: addressed pressure drops to 15% on speech, a question adds
+0.35, the threshold is 0.30; (c) possessives are dropped in heads, so "name is
+sunni" lacks "your".

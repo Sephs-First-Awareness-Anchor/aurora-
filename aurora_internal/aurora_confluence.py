@@ -317,8 +317,16 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
     if web is None:
         return []
     from aurora_internal.aurora_propositional_understanding import (
-        cosine, lexicalize_assertion, meaning_profile, participants)
+        _lemma, cosine, lexicalize_assertion, meaning_profile, participants, predicate_order)
     heard_set = {w.lower() for w in _words(heard)}
+    # FIX-A129: the words of the question, and their base forms, say which of
+    # the predicates held along a relation the moment is about.
+    heard_forms = set(heard_set)
+    for _w in heard_set:
+        try:
+            heard_forms.add(_lemma(_w))
+        except Exception:
+            pass
     acts = _acts_in(heard)
     by_source = getattr(web, "_relations_by_source", {}) or {}
     by_target = getattr(web, "_relations_by_target", {}) or {}
@@ -342,6 +350,8 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
             rel = relations.get(rid)
             if rel is None or rid in seen:
                 continue
+            if getattr(rel, "assertion", None):
+                seen.add(rid)          # FIX-A129: all its predicates are taken below
             source_w = str(getattr(rel, "source_word", "") or "").lower()
             target = str(getattr(rel, "target_word", "") or "").lower()
             kind = str(getattr(getattr(rel, "relation_type", None), "value", "") or "")
@@ -351,15 +361,22 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
                 # Something was said along it: who, and which predicate.  The
                 # thing may be what the speaker just named -- what she adds is
                 # who holds it and how.
-                lex = lexicalize_assertion(rel, speaker_now=speaker_now, self_now=self_now)
-                if lex is None or not _speakable(target) or source_w in heard_set and target in heard_set:
+                if not _speakable(target) or source_w in heard_set and target in heard_set:
                     continue
                 n = int(dict(rel.assertion).get("n", 1) or 1)
-                score = strength * _f(getattr(rel, "confidence", 1.0), 1.0) * (1.0 + 0.3 * math.log1p(n)) \
+                base = strength * _f(getattr(rel, "confidence", 1.0), 1.0) * (1.0 + 0.3 * math.log1p(n)) \
                     * fit(target)
-                seen.add(rid)
-                found.append({"source": source_w, "kind": kind, "target": target, "strength": round(score, 4),
-                              "axis": RELATION_AXIS.get(kind, "X"), "learned_from": "assertion", "lex": lex})
+                said = dict(dict(rel.assertion).get("predicates") or {})
+                for pred in predicate_order(rel):
+                    lex = lexicalize_assertion(rel, speaker_now=speaker_now, self_now=self_now, predicate=pred)
+                    if lex is None:
+                        continue
+                    surface = str(dict(said.get(pred) or {}).get("surface") or pred).lower()
+                    asked = pred.lower() in heard_forms or surface in heard_forms
+                    found.append({"source": source_w, "kind": kind, "target": target,
+                                  "strength": round(base * (1.5 if asked else 1.0), 4),
+                                  "axis": RELATION_AXIS.get(kind, "X"), "learned_from": "assertion", "lex": lex,
+                                  "asked": bool(asked)})
                 continue
             # FIX-A114: a link nobody asserted (co-occurrence, the role-pair
             # type, a seed) is hers to reason with, but its type name ("is
@@ -391,6 +408,24 @@ def _is_verb(systems: Mapping[str, Any], word: str, heard: str) -> bool:
         return any(tok.lower() == low and role is TokenRole.ACTION for tok, role in RoleTagger().tag(heard))
     except Exception:
         return False
+
+
+def _named_in(systems: Mapping[str, Any], heard: str, session_id: str) -> List[str]:
+    """The participants the words refer to ("you" -> her, "I" -> the speaker)
+    and the entities named in what was heard."""
+    from aurora_internal.aurora_propositional_understanding import _FIRST, _SECOND, participants
+    speaker, self_now = participants(session_id, systems)
+    found: List[str] = []
+    web = _find_web(systems)
+    for w in _words(heard):
+        low = w.lower()
+        if low in _SECOND and self_now:
+            found.append(self_now)
+        elif low in _FIRST and speaker:
+            found.append(speaker)
+        elif web is not None and _entity(web, low) and low in (getattr(web, "nodes", {}) or {}):
+            found.append(low)
+    return list(dict.fromkeys(found))
 
 
 def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any], *,
@@ -431,6 +466,12 @@ def gather(systems: Mapping[str, Any], heard: str, how: Mapping[str, Any], *,
     salient = [str(c).lower() for c in list(pipeline.get("salient_concepts") or []) if _speakable(c)]
     # knowledge: what she already knows about it
     concepts = list(dict.fromkeys(salient + [w.lower() for o in options for w in _words(o) if _is_content(w)]))
+    if not salient:
+        # FIX-A129: nothing stood out, so nothing was looked up -- yet "who
+        # built you?" is about two participants.  Who "you" and "I" are comes
+        # from her own participant resolution; what else was named is looked
+        # up too.
+        concepts = list(dict.fromkeys(concepts + _named_in(systems, heard, session_id)))
     known = knowledge(systems, concepts, heard, reach=int(how.get("reach", 1)), session_id=session_id)
     # affect: how it moved her
     surface = dict(pipeline.get("surface_reactive_emotion") or {})
@@ -469,10 +510,17 @@ def _option_knowledge(option: str, known: Sequence[Mapping[str, Any]]) -> float:
 
 def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, prefer_axis: bool,
                       resting: Optional[set] = None) -> Optional[Dict[str, Any]]:
+    # FIX-A129: what rests is a statement -- who, to what, which predicate --
+    # not the whole pair; and what the speaker just asked about is not made to
+    # rest at all, so a direct question can be answered again.
     pool = [k for k in known if (k["source"], k["target"]) not in used
-            and (k["source"], k["target"]) not in (resting or set())]
+            and (k.get("asked") or (k["source"], k["target"], str(dict(k.get("lex") or {}).get("predicate") or ""))
+                 not in (resting or set()))]
     voiced = {s for s, _ in used} | {t for _, t in used}
     pool = [k for k in pool if k["source"] not in voiced and k["target"] not in voiced] or pool
+    # FIX-A129: what the speaker's own words asked about is answered before
+    # what her axes would rather say.
+    pool = [k for k in pool if k.get("asked")] or pool
     if prefer_axis:
         pool = [k for k in pool if k["axis"] == axis] or pool
     if not pool:
@@ -695,7 +743,9 @@ def compose(systems: Dict[str, Any], heard: str, *, engine: Any = None,
         for c in clauses:
             rel = dict(c.get("relation") or {})
             if rel:
-                systems["_confluence_voiced"].append((turn, (rel.get("source"), rel.get("target")), text))
+                systems["_confluence_voiced"].append(
+                    (turn, (rel.get("source"), rel.get("target"),
+                            str(dict(rel.get("lex") or {}).get("predicate") or "")), text))
         systems["_confluence_voiced"].append((turn, None, text))
     return text, record
 
