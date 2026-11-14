@@ -12617,3 +12617,36 @@ def _handle_game_turn(text: str):
     if _game_machine.is_done:
         _game_machine = None
     return resp
+
+
+# ── Lessons: teaching by saying it (aurora_internal/lesson_replay.py) ───────────
+_lesson_state: dict = {"running": False, "said": 0, "total": 0}
+
+
+def teach_lesson(lesson_text: str, pace_seconds: float = 45.0) -> str:
+    """Say a lesson to her exactly as if typed: each line goes through
+    handle_message unchanged, with real time between lines.  Nothing is placed
+    in her state and nothing marks it as a lesson.  Returns a JSON status;
+    lesson_status() reports progress."""
+    import json as _json
+    import threading as _threading
+    if _lesson_state.get("running"):
+        return _json.dumps({"status": "already_running", **_lesson_state})
+    from aurora_internal.lesson_replay import parse_lesson, replay
+    lines = parse_lesson(lesson_text)
+    _lesson_state.update({"running": True, "said": 0, "total": len(lines)})
+
+    def _run() -> None:
+        try:
+            replay(handle_message, lines, pace_s=float(pace_seconds),
+                   on_turn=lambda i, line, reply: _lesson_state.update({"said": i + 1}))
+        finally:
+            _lesson_state["running"] = False
+
+    _threading.Thread(target=_run, name="lesson-replay", daemon=True).start()
+    return _json.dumps({"status": "started", "total": len(lines)})
+
+
+def lesson_status() -> str:
+    import json as _json
+    return _json.dumps(dict(_lesson_state))
