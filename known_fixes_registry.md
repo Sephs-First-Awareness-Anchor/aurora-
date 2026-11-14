@@ -11526,3 +11526,11 @@ sunni" lacks "your".
 **Why:** What she can answer after a lesson is the only evidence it took; the check must use the same path a person's question uses and must not be able to help her.
 **First Seen:** 2026-11-14, build 4 of the curriculum order. alphabet_order: 5/5 probes held (before: no "c" after b; after: "C comes after b.", "C is after a.", "A is not after c.", "I do not know what comes after z.").
 **Not fixed:** probes exist only for alphabet_order; other drafts await Sir's review before probes are written; no `[after-correction]` section yet for revision lessons.
+
+### FIX-A140: "does not come after" is a negated verb, not a verb "does" with the object "not come after"
+**Category:** ARCHITECTURAL
+**Pattern:** The utterance's relational form for "B does not come after a." carried relation "does" and object "not come after a" (negated False); the composer voiced the auxiliary as the verb and the "not" as part of the object: "I do not do not come after a." Separately, "A comes after b." was believed to be unreadable (the article rule); it had been fixed by FIX-A138's restriction of the "word after a/an is a noun" rule and is now pinned by a test.
+**Correct Form:** `_split_negated_auxiliary` in `aurora_internal/aurora_proposition_frame.py` turns (do/does/did, "not <verb> <rest>") into relation `<verb>`, object `<rest>`, `negated=True` inside `_frame_from_constraint_relation`; the composer's own `_negate_action_word` then says "I do not come after a." Tests: tests/test_frame_negated_auxiliary.py and the capital-A test in tests/test_learned_order_rules.py.
+**Why:** The composer already handled negated frames; the frame handed it the negation as content.
+**First Seen:** 2026-11-14, FIX-A138 live check (denial teaching turn). Live: "B does not come after a." -> "I do not come after a." (was "I do not do not come after a.").
+**Not fixed:** the teaching-turn reply is still an echo of the heard clause ("I do not come after a.") rather than an acknowledgement; "I do not like rain." -> "You envisioned me, and you are creator." (unrelated noise from the generative path).

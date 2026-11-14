@@ -441,3 +441,9 @@ def test_a_corrected_denial_is_voiced_as_denied():
     _correct(web, "B does not come after a.")
     lex = P.lexicalize_assertion(_rel(web, "b", "a"), speaker_now="sunni", self_now="aurora", predicate="come after")
     assert "not" in lex["action"]
+
+
+def test_a_sentence_that_opens_with_the_letter_a_is_about_the_letter():
+    web = _told(["A comes after b.", "C comes after a."])
+    assert _ask(web, "Is a after b?") == [("a", "is after", "b")]
+    assert _ask(web, "Is c after b?") == [("c", "is after", "b")]
