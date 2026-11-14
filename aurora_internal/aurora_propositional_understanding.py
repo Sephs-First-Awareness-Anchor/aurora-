@@ -52,7 +52,7 @@ ASSERTION_SOURCE = "assertion"
 NEW_STRENGTH = 0.35
 NEW_CONFIDENCE = 0.45
 MAX_PREDICATES = 12
-BASES = ("told", "observed", "corrected")      # how something came to be held (FIX-A137)
+BASES = ("told", "observed", "corrected", "supposed")      # how something came to be held (FIX-A137); "supposed" is never held (FIX-A142)
 MAX_HISTORY = 8                                # the first exposure, then the most recent events
 MAX_HEADS = 2
 
@@ -234,6 +234,11 @@ def _is_verb_here(tok: str, nxt: str, tags: Mapping[int, Any], i: int, verb_form
 
 
 _CONDITION_LEADS = frozenset({"when", "if", "whenever"})
+# FIX-A142: "Suppose that ...", "Imagine ...", "Pretend ...", "In a story, ..." -- said as an example, not as a fact.
+# It is kept (with its history) and can be asked about, but it is never held: nothing she reasons from rests on it.
+_SUPPOSE = re.compile(r"\s*(suppose|supposing|imagine|pretend|let's say|let us say|in a story|in a game|in an example|"
+                      r"for the sake of an example)\b[\s,:;-]*(that\b[\s,]*)?", re.I)
+
 _CORRECTION = re.compile(r"\s*(actually|correction|no|wrong|rather|i was wrong|that is wrong|that's wrong|i misspoke|"
                          r"i mean|scratch that)\b[\s,:;-]", re.I)
 
@@ -517,7 +522,7 @@ def verdict(p: Mapping[str, Any]) -> str:
     p = dict(p or {})
     n, d = int(p.get("n", 0) or 0), int(p.get("denied", 0) or 0)
     if n <= 0:
-        return "unsaid"
+        return "supposed" if int(p.get("supposed", 0) or 0) > 0 else "unsaid"
     settled = dict(p.get("settled") or {})
     if settled:
         return "denied" if settled.get("d") else "held"
@@ -548,13 +553,19 @@ def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, 
         closed = _closed_class()
         said = [w.lower() for w in _words(phrase) if len(w) >= 3 and w.lower() not in closed and "'" not in w]
         p["said_with"] = sorted(set(p.get("said_with") or []) | set(said))[:16]
-    if when:                                  # FIX-A133: what this is said to hold under (a few, newest last)
+    supposed = basis == "supposed"            # FIX-A142: an example is kept, never counted as said
+    if when and not supposed:                 # FIX-A133: what this is said to hold under (a few, newest last)
         held = [dict(w) for w in (p.get("when") or []) if dict(w) != dict(when)]
         p["when"] = (held + [dict(when)])[-3:]
-    p["n"] = int(p.get("n", 0)) + 1
-    if negated:
-        p["denied"] = int(p.get("denied", 0)) + 1
-    if modality:
+    if supposed:
+        p["supposed"] = int(p.get("supposed", 0)) + 1
+        if negated:
+            p["supposed_denied"] = int(p.get("supposed_denied", 0)) + 1
+    else:
+        p["n"] = int(p.get("n", 0)) + 1
+        if negated:
+            p["denied"] = int(p.get("denied", 0)) + 1
+    if modality and not supposed:
         modal = dict(p.get("modal") or {})
         modal[modality] = int(modal.get(modality, 0)) + 1
         p["modal"] = modal
@@ -707,7 +718,10 @@ def integrate_turn(systems: Mapping[str, Any], heard: str, *, session_id: str = 
     conditional = bool(re.match(r"\s*(when|whenever|if)\b", str(heard), re.I)) and "?" not in str(heard)
     # FIX-A138: "Actually, ..." / "No, ..." / "Correction: ..." / "I was wrong, ..." -- said as a correction
     basis = "corrected" if _CORRECTION.match(str(heard)) else "told"
-    if (conditional or not form.get("question")) and (conditional or not form.get("directive")):
+    cue = _SUPPOSE.match(str(heard))
+    if cue:                                   # said as an example: the whole turn is supposed, none of it held
+        basis, heard = "supposed", str(heard)[cue.end():]
+    if ((cue or conditional or not form.get("question")) and (cue or conditional or not form.get("directive"))):
         acts = _acts(heard)
         for st in statements_in(heard, web=web):
             props.extend(integrate_form(web, st, heard=heard, speaker=speaker, listener=listener,
@@ -761,6 +775,23 @@ def predicate_order(rel: Any) -> List[str]:
     later name, as lexicalize_assertion has always chosen)."""
     preds = dict(dict(getattr(rel, "assertion", None) or {}).get("predicates") or {})
     return sorted(preds, key=lambda k: (int(dict(preds[k]).get("n", 0)), k), reverse=True)
+
+
+_IRREGULAR_PLURALS = frozenset({"people", "children", "men", "women", "feet", "teeth", "mice", "geese"})
+
+
+def is_plural(word: str) -> bool:
+    """A plural noun ("greetings"), as far as the ending says; "this"/"class" and short words are not."""
+    w = str(word or "").lower()
+    if w in _IRREGULAR_PLURALS:
+        return True
+    return len(w) > 3 and w.endswith("s") and not w.endswith(("ss", "us", "is"))
+
+
+def fold_number(word: str) -> str:
+    """"greetings" and "greeting" are the same word for matching: the singular."""
+    w = str(word or "").lower()
+    return w[:-1] if is_plural(w) else w
 
 
 def _third_person(verb: str) -> str:
@@ -823,10 +854,13 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
             verb += " not"
         if predicate.startswith("be "):        # FIX-A133: "is a", "is after"
             verb += predicate[2:]
+            if verb.endswith(" a") and str(_object)[:1].lower() in "aeiou":
+                verb += "n"                    # "is an answer"
     elif denied:
-        aux = "do" if agent in ("I", "you") else "does"
+        aux = "do" if (agent in ("I", "you") or is_plural(agent)) else "does"
         verb = f"{aux} not {predicate}"
-    elif agent not in ("I", "you", "we", "they") and verb == predicate and predicate.isalpha():
+    elif (agent not in ("I", "you", "we", "they") and not is_plural(agent)
+          and verb == predicate and predicate.isalpha()):
         verb = _third_person(predicate)          # "Actually, Devlin does like snow." is voiced "Devlin likes snow."
     return {"agent": agent, "action": verb, "object": _object,
             "predicate": predicate, "n": str(int(p.get("n", 0))), "denied": str(denied)}

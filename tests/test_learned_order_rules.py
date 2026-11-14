@@ -277,7 +277,7 @@ def test_words_that_are_closed_class_can_still_be_named_and_classed():
     web = _told(["Hello is a greeting.", "Yes is an answer.", "Thanks is a courtesy."])
     got = lambda q: [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"]) for i in R.derive(web, q, speaker_now="sunni", self_now="aurora")]
     assert got("What is hello?") == [("hello", "is a", "greeting")]
-    assert got("Is yes an answer?") == [("yes", "is a", "answer")]
+    assert got("Is yes an answer?") == [("yes", "is an", "answer")]
     assert [st["relation"] for st in P.statements_in("Hello is a greeting.")] == ["be"]     # "greeting" is a thing here, not the act
 
 
@@ -482,3 +482,81 @@ def test_a_correction_said_with_does_is_still_voiced_in_the_third_person():
 @pytest.mark.parametrize("verb,expected", [("like", "likes"), ("watch", "watches"), ("carry", "carries"), ("play", "plays")])
 def test_third_person_inflection(verb, expected):
     assert P._third_person(verb) == expected
+
+
+# -- examples stay examples; number agreement; the paraphrase a lesson must survive (FIX-A142) -------
+
+def _supposed(web, line):
+    m = P._SUPPOSE.match(line)
+    assert m, line
+    for st in P.statements_in(line[m.end():]):
+        P.integrate_form(web, st, heard=line[m.end():], speaker="sunni", listener="aurora", profile={}, basis="supposed")
+
+
+def test_an_example_is_kept_and_voiced_as_only_supposed_never_as_fact():
+    web = _told([])
+    _supposed(web, "Suppose that Mara likes tea.")
+    _supposed(web, "Imagine that Teo does not like tea.")
+    assert _ask(web, "Does Mara like tea?") == [("I", "only suppose", "that mara likes tea")]
+    assert _ask(web, "Does Teo like tea?") == [("I", "only suppose", "that teo does not like tea")]
+    rel = _rel(web, "mara", "tea")
+    st = P.standing(rel, "like")
+    assert st["verdict"] == "supposed" and st["n"] == 0 and not st["held"]       # nothing she reasons from rests on it
+
+
+def test_a_told_statement_and_an_example_about_the_same_thing_do_not_mix():
+    web = _told(["Devlin likes rain."])
+    _supposed(web, "Imagine that Devlin does not like rain.")
+    assert _ask(web, "Does Devlin like rain?") == [("devlin", "likes", "rain")]
+    st = P.standing(_rel(web, "devlin", "rain"), "like")
+    assert st["verdict"] == "held" and st["n"] == 1
+
+
+def test_a_supposed_order_statement_gives_her_no_order():
+    web = _told([])
+    _supposed(web, "Suppose that the letter b comes after a.")
+    assert R.order_edges(web) == {} or not R.later_than(R.order_edges(web), "a")
+    assert _ask(web, "Is b after a?") == []
+
+
+@pytest.mark.parametrize("cue,rest", [("Suppose that ", "Mara likes tea."), ("Imagine ", "Mara likes tea."),
+                                     ("Pretend that ", "Mara likes tea."), ("In a story, ", "Mara likes tea.")])
+def test_the_example_cues(cue, rest):
+    m = P._SUPPOSE.match(cue + rest)
+    assert m and (cue + rest)[m.end():] == rest
+
+
+def test_plural_subjects_agree_and_singular_ones_do_too():
+    web = _told(["Greetings begin conversations.", "Devlin likes rain."])
+    assert _ask(web, "Do greetings begin conversations?") == [("greetings", "begin", "conversations")]
+    assert _ask(web, "Does Devlin like rain?") == [("devlin", "likes", "rain")]
+    assert _ask(web, "Do greetings end conversations?") == [("I", "do not know", "if greetings end conversations")]
+
+
+def test_a_question_with_an_article_and_singular_words_reads_the_plural_lesson():
+    web = _told(["Greetings begin conversations."])
+    assert _ask(web, "Does a greeting begin a conversation?") == [("greetings", "begin", "conversations")]
+
+
+def test_an_before_a_vowel_when_voicing_what_a_thing_is():
+    web = _told(["Maybe is an answer."])
+    assert _ask(web, "What is maybe?") == [("maybe", "is an", "answer")]
+
+
+def test_irregular_plurals_agree():
+    web = _told(["People feel joy."])
+    assert P.is_plural("people") and not P.is_plural("class") and not P.is_plural("this")
+    assert _ask(web, "Do people feel joy?") == [("people", "feel", "joy")]
+    assert _ask(web, "Do people feel pride?") == [("I", "do not know", "if people feel pride")]
+
+
+def test_do_you_know_that_is_the_same_question_as_does():
+    web = _told(["Devlin likes rain."])
+    _supposed(web, "Suppose that Mara likes tea.")
+    assert _ask(web, "Do you know that Devlin likes rain?") == [("devlin", "likes", "rain")]
+    assert _ask(web, "Do you know if Mara likes tea?") == [("I", "only suppose", "that mara likes tea")]
+
+
+def test_a_question_about_her_own_feeling_is_not_answered_from_what_was_told_about_people():
+    web = _told(["People feel joy."])
+    assert _ask(web, "Do you feel joy?") == []

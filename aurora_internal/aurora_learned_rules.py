@@ -121,7 +121,7 @@ def _order_verdicts_scan(web: Any) -> Dict[Tuple[str, str], str]:
             continue
         for pred, p in dict(dict(a).get("predicates") or {}).items():
             v = _verdict(p)
-            if v == "unsaid":
+            if v in ("unsaid", "supposed"):          # an example is not something she holds, for or against
                 continue
             if pred in LATER_PREDICATES:
                 key = (tgt, src)
@@ -384,9 +384,14 @@ def ask_shape(heard: str) -> Dict[str, str]:
 def _fact_shape(toks: Sequence[str]) -> Dict[str, str]:
     """"does devlin like rain?" -> {"ask": "fact", "subject": devlin, "verb": like, "object": rain}.
     A third party and one thing; "do you ..." / "does it ..." are other questions (her senses, her state)."""
+    if len(toks) > 4 and list(toks[:3]) == ["do", "you", "know"]:      # "Do you know that Mara likes tea?" asks the same
+        toks = ["does"] + list(toks[4:] if toks[3] in ("that", "if", "whether") else toks[3:])
     if toks[0] not in ("does", "do", "did") or len(toks) < 4:
         return {}
     closed = _closed_words()
+    toks = [toks[0]] + [t for i, t in enumerate(toks[1:], 1) if not (i == 1 and t in ("a", "an", "the"))]
+    if len(toks) < 4:
+        return {}
     subject, verb, rest = toks[1], toks[2], toks[3:]
     if subject in closed or verb in ("not", "n't") or subject in ("you", "i", "we", "it", "he", "she", "they"):
         return {}
@@ -640,25 +645,39 @@ def _derive_fact(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
     denied), not sure (told and denied), and "I do not know" when she holds things about devlin but not that.
     Nothing is claimed about a word she holds nothing about: other knowledge may answer it."""
     from aurora_internal.aurora_propositional_understanding import (
-        _lemma, lexicalize_assertion, standing)
+        _lemma, fold_number, is_plural, lexicalize_assertion, standing)
     subject, obj = shape["subject"], shape["object"]
+    fs, fo = fold_number(subject), fold_number(obj)                 # "a greeting" and "greetings" are the same word
     lemma = _lemma(shape["verb"])
     about_subject = False
     for rel in list(getattr(web, "relations", {}).values()):
-        if rel.source_word != subject or not getattr(rel, "assertion", None):
+        if fold_number(rel.source_word) != fs or not getattr(rel, "assertion", None):
             continue
         about_subject = True
-        if rel.target_word != obj:
+        subject = rel.source_word                                    # voiced as she was told it
+        if fold_number(rel.target_word) != fo:
             continue
+        obj = rel.target_word
         preds = dict(dict(rel.assertion).get("predicates") or {})
         if lemma not in preds:
             continue
         st = standing(rel, lemma)
+        if st["verdict"] == "supposed":
+            # said as an example ("Suppose that ..."): she keeps it and says so; she does not hold it
+            from aurora_internal.aurora_propositional_understanding import _third_person
+            p = dict(preds.get(lemma) or {})
+            denied = int(p.get("supposed_denied", 0) or 0) * 2 > int(p.get("supposed", 0) or 0)
+            plural = is_plural(subject)
+            verb = (f"do not {lemma}" if plural else f"does not {lemma}") if denied else (lemma if plural else _third_person(lemma))
+            return [{"source": subject, "kind": "related_to", "target": obj, "strength": 1.5, "axis": "X",
+                     "learned_from": "inference", "asked": True, "derived": ["supposed"], "basis": "supposed",
+                     "lex": {"agent": "I", "action": "only suppose", "object": f"that {subject} {verb} {obj}",
+                             "predicate": "suppose", "n": "1", "denied": "False"}}]
         item_base = {"source": subject, "kind": "related_to", "target": obj, "strength": 1.5, "axis": "X",
                      "learned_from": "inference", "asked": True, "derived": ["told"]}
         if st["verdict"] == "contested":
             return [dict(item_base, derived=["contradicted"], basis="contested",
-                         lex={"agent": "I", "action": "am not sure", "object": f"if {subject} {lemma}s {obj}",
+                         lex={"agent": "I", "action": "am not sure", "object": f"if {subject} {lemma if is_plural(subject) else lemma + 's'} {obj}",
                               "predicate": "know", "n": "1", "denied": "False"})]
         lex = lexicalize_assertion(rel, speaker_now="", self_now="", predicate=lemma)
         if lex:
@@ -667,14 +686,16 @@ def _derive_fact(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
         return []
     return [{"source": "aurora", "kind": "related_to", "target": subject, "strength": 1.2, "axis": "X",
              "learned_from": "inference", "asked": True, "derived": ["not told"], "basis": "unknown",
-             "lex": {"agent": "I", "action": "do not know", "object": f"if {subject} {lemma}s {obj}",
+             "lex": {"agent": "I", "action": "do not know",
+                     "object": f"if {subject} {lemma if is_plural(subject) else lemma + 's'} {obj}",
                      "predicate": "know", "n": "1", "denied": "True"}}]
 
 
 def _kind_item(thing: str, kind: str, chain: Sequence[str]) -> Dict[str, Any]:
     return {"source": thing, "kind": "instance_of", "target": kind, "strength": 1.5, "axis": "B",
             "learned_from": "inference", "asked": True, "derived": list(chain),
-            "lex": {"agent": thing, "action": "is a", "object": kind, "predicate": KIND_PREDICATE,
+            "lex": {"agent": thing, "action": "is an" if kind[:1].lower() in "aeiou" else "is a", "object": kind,
+                    "predicate": KIND_PREDICATE,
                     "n": "1", "denied": "False"}}
 
 

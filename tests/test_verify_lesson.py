@@ -57,3 +57,50 @@ def test_a_correction_block_is_said_after_the_lesson_proper():
 def test_after_correction_is_a_probe_section():
     ps = V.parse_probes("[after-correction]\nIs b after a? => not after\n")
     assert ps[0]["section"] == "after-correction"
+
+
+@pytest.mark.parametrize("line", [
+    "When I greet you, you say hello.", "If I ask you, you answer me.", "You comfort me if I feel sad.",
+    "You should always answer.", "I want you to be kind.", "You feel curious when you learn something new.",
+    "You like rain.", "My name is Sunni.", "Devlin is my brother.", "Aurora is not a person.", "I am Sunni.",
+])
+def test_lint_rejects_prescribed_behaviour_assigned_states_and_identity_stated_as_fact(line):
+    assert V.lint_lesson([line])
+
+
+@pytest.mark.parametrize("line", [
+    "Hello is a greeting.", "A greeting is a word people say to begin talking.",
+    "Suppose that my name is Rowan.", "Imagine that Mara is the sister of Teo.",
+    "Pretend that Teo does not like tea.", "People feel sad when they lose something.",
+    "The letter b comes after a.", "Actually, b does not come after a.",
+])
+def test_lint_lets_through_meaning_general_statements_and_explicit_examples(line):
+    assert V.lint_lesson([line]) == []
+
+
+def test_a_supposed_example_is_exempt_from_identity_rules_only():
+    assert V.lint_lesson(["Suppose that you like rain."])          # still assigns her a want
+
+
+def test_paraphrases_all_must_be_questions_and_are_kept():
+    ps = V.parse_probes("[after]\nIs b after a? || Does b come after a? => is after\n")
+    assert ps[0]["asks"] == ["Is b after a?", "Does b come after a?"]
+    with pytest.raises(ValueError):
+        V.parse_probes("[after]\nIs b after a? || B comes after a. => is after\n")
+
+
+def test_twin_maps_names_and_keeps_capitals_and_whole_words():
+    twin = V.parse_twin("[after]\n@twin mara=nia teo=omar tea=coffee\n")
+    assert twin == {"mara": "nia", "teo": "omar", "tea": "coffee"}
+    assert V.substitute("Mara likes tea. Teo steams.", twin) == "Nia likes coffee. Omar steams."
+    assert V.substitute_terms([(["mara likes tea"], False)], twin) == [(["nia likes coffee"], False)]
+
+
+def test_a_gap_section_exists_and_a_gap_fails_readiness():
+    ps = V.parse_probes("[gap]\nWho am I? => you are\n")
+    assert ps[0]["section"] == "gap"
+    base = {"lint": [], "failed": 0, "open_gaps": 1, "twin": {}}
+    assert V.status(base)[0] == 2
+    assert V.status(dict(base, open_gaps=0))[0] == 0
+    assert V.status(dict(base, open_gaps=0, failed=1))[0] == 1
+    assert V.status(dict(base, lint=[{"line": "x", "why": "y"}]))[0] == 3

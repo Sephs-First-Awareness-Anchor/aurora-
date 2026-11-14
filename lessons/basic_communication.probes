@@ -1,0 +1,18 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
+# Meaning and purpose are checked by asking about them. Nothing asks her to reply in a prescribed way, and no
+# probe expects a particular greeting back: that choice is hers.
+[before]
+What is goodbye? => !farewell
+[after]
+What is hello? || Is hello a greeting? => hello is a greeting
+What is goodbye? || Is goodbye a farewell? => goodbye is a farewell ;; !greeting
+Is thanks a courtesy? || What is thanks? => thanks is a courtesy
+Is maybe an answer? => maybe is an answer
+Do greetings begin conversations? || Does a greeting begin a conversation? => greetings begin conversations
+Do farewells end conversations? => farewells end conversations
+Do farewells begin conversations? => do not know | not sure
+Do courtesies show kindness? => courtesies show kindness
+[gap]
+# what a thing is FOR, asked directly, is not understood yet
+What do greetings do? => begin conversations
+@twin hello=hola goodbye=adieu thanks=cheers greetings=salutes greeting=salute farewells=partings conversations=chats conversation=chat courtesies=graces kindness=warmth

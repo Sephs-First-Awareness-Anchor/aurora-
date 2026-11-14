@@ -1,11 +1,19 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
-# Contrast: the same question, "who", answered differently depending on who asks and about whom.
+# [after]: examples stay examples -- she says so, and does not hold them as fact.
+# [gap]: what a lesson on identity must eventually let her do. They fail today and the lesson is NOT READY
+# until they hold: first-person identity, possessives, third-person relationships.
 [before]
-Who am I? => !sunni
+Does Mara like tea? => !only suppose
 [after]
-Who are you? => aurora
-# KNOWN GAPS found by the first run (not yet built -- possessives resolved per speaker, and "who am I / who is X"
-# answered from the names and kinship she was told). Uncomment as each is built:
-#   Who am I? => sunni
-#   Who is Devlin? => brother
-#   Is Devlin me? => devlin is not
+Does Mara like tea? || Do you know that Mara likes tea? => only suppose that mara likes tea
+Does Teo like tea? => only suppose that teo does not like tea
+Does Mara like milk? => do not know
+[gap]
+# first-person identity: what "I" refers to, from the example
+Who am I? => rowan ;; suppos
+# possessives: "my" is the speaker's
+Who is my sister? => mara ;; suppos
+# third-person relationship: from the example, in either direction
+Who is the brother of Mara? => teo ;; suppos
+Who is Teo? => brother
+@twin mara=nia teo=omar tea=coffee rowan=sam
