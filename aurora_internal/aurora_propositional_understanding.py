@@ -82,11 +82,13 @@ _NOT_HEADS = frozenset({"him", "her", "them", "it", "itself", "themselves", "him
 _SUBJECT_PRONOUNS = frozenset({"i", "we", "you", "they", "he", "she", "it", "u"})
 _PRONOUN_COPULA = {"i'm": "i", "im": "i", "we're": "we", "you're": "you", "they're": "they", "he's": "he",
                    "she's": "she", "it's": "it", "that's": "that"}
-_CLAUSE_BREAKS = frozenset({"when", "if", "because", "while", "since", "until", "although", "though", "unless",
+_CLAUSE_BREAKS = frozenset({"when", "whenever", "if", "because", "while", "since", "until", "although", "though", "unless",
                             "whereas", "after", "before", "but", "so", "and", "or", "then", "cause", "cuz"})
 _DETERMINERS = frozenset({"the", "a", "an", "this", "that", "these", "those", "some", "any", "every", "each",
                           "my", "your", "our", "his", "her", "their", "its"})
-_TOKEN = re.compile(r"[A-Za-z][A-Za-z']*")
+# FIX-A133: a punctuation mark MENTIONED in quotes ('The mark "?" ends a question.')
+# is a token, so she can be told what it is for; a mark used in running text is not.
+_TOKEN = re.compile(r"[A-Za-z][A-Za-z']*|(?<=\")[.?!,;:](?=\")")
 
 # FIX-A133: the particles that make a verb an ordering ("comes after", "is before").
 _ORDER_PARTICLES = frozenset({"after", "before"})
@@ -165,6 +167,9 @@ def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = M
     # right after a thing labels it ("the letter b", "plan b", "point a").
     if len(toks) == 1 and len(toks[0]) == 1 and toks[0] not in _FIRST:
         return [toks[0]]
+    glyphs = [t for t in toks if len(t) == 1 and not t.isalpha()]
+    if glyphs:
+        return glyphs[:limit]                     # a mark mentioned in quotes is what the phrase is about
     for i, tok in enumerate(toks):
         if tok in _POSSESSIVE:
             continue
@@ -209,6 +214,28 @@ def _is_verb_here(tok: str, nxt: str, tags: Mapping[int, Any], i: int, verb_form
     return bool(nxt) and nxt in _DETERMINERS and tok.endswith(("s", "ed"))
 
 
+_CONDITION_LEADS = frozenset({"when", "if", "whenever"})
+
+
+def _link_conditions(out: List[Dict[str, Any]], first: int) -> None:
+    """FIX-A133: "I feel calm WHEN you are settled": the clause after when/if is
+    the condition of the other one.  The condition stays a statement of its own
+    (as before); the main clause now also carries what it holds under."""
+    new = out[first:]
+    for i, st in enumerate(new):
+        if st.get("_lead") in _CONDITION_LEADS:
+            main = new[1] if i == 0 and len(new) > 1 else (new[i - 1] if i else None)
+            if main is not None and main.get("_lead") not in _CONDITION_LEADS and "when" not in main:
+                main["when"] = {k: st.get(k, "") for k in ("subject", "relation", "obj", "negated")}
+    for st in new:
+        st.pop("_lead", None)
+
+
+def _join_phrase(toks: List[str]) -> str:
+    """A phrase's words as text; a mark that was mentioned in quotes keeps its quotes."""
+    return " ".join(f'"{t}"' if len(t) == 1 and not t.isalpha() else t for t in toks)
+
+
 def _order_particle_at(toks: List[str], i: int, verb_forms: set) -> bool:
     """FIX-A133: "after"/"before" straight after a verb and in front of a phrase
     ("b comes AFTER the letter a") is part of what is said of the subject, not the
@@ -231,6 +258,8 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
     closed = _closed_class()
     out: List[Dict[str, Any]] = []
     for sentence in re.split(r"(?<=[.!?])\s+|\n+", str(text or "")):
+        sent_first = len(out)
+        pending_lead = ""
         sentence = sentence.strip()
         if not sentence or sentence.endswith("?"):
             continue
@@ -239,7 +268,8 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
         for piece in re.split(r"[,;:()\u2014\u2013]|\s-\s", sentence):
             toks.extend(t.lower() for t in _words(piece))
             cuts.append(len(toks))
-        if not toks or toks[0] in ("what", "why", "how", "who", "where", "when", "which", "do", "does", "did",
+        # (a sentence that opens with "when" and is not a question is a condition: FIX-A133)
+        if not toks or toks[0] in ("what", "why", "how", "who", "where", "which", "do", "does", "did",
                                    "are", "is", "can", "could", "would", "should", "will", "let", "let's"):
             continue
         tagged = tagger.tag(" ".join(toks))
@@ -252,6 +282,8 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
             if end < start:
                 continue
             seg = list(range(start, end))
+            lead_here = pending_lead                       # FIX-A133: the word that opened this clause
+            pending_lead = toks[end] if skip and end < len(toks) else ""
             start = end + skip
             if len(seg) < 2:
                 continue
@@ -349,11 +381,15 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                 if is_content or tok in _FIRST or tok in _SECOND:
                     content += 1
             surface = "be" if copula else toks[verb_at]
-            st = {"subject": " ".join(subject), "relation": surface, "obj": " ".join(obj),
+            if copula and not particle and len(obj) > 1 and obj[0] in ("a", "an"):
+                particle, obj = "a", obj[1:]          # FIX-A133: "b is A letter" says what kind of thing b is
+            st = {"subject": _join_phrase(subject), "relation": surface, "obj": _join_phrase(obj),
                   "negated": negated, "modality": modality}
             if particle:
                 st["particle"] = particle
+            st["_lead"] = lead_here
             out.append(st)
+        _link_conditions(out, sent_first)
     return out
 
 
@@ -435,10 +471,14 @@ def _ensure_node(web: Any, word: str) -> Any:
 
 
 def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, modality: str,
-                      speaker: str, time_ref: str, profile: Mapping[str, float], context: str) -> None:
+                      speaker: str, time_ref: str, profile: Mapping[str, float], context: str,
+                      when: Optional[Mapping[str, Any]] = None) -> None:
     a = dict(getattr(rel, "assertion", None) or {})
     preds = dict(a.get("predicates") or {})
     p = dict(preds.get(predicate) or {"n": 0, "denied": 0, "surface": surface, "modal": {}})
+    if when:                                  # FIX-A133: what this is said to hold under (a few, newest last)
+        held = [dict(w) for w in (p.get("when") or []) if dict(w) != dict(when)]
+        p["when"] = (held + [dict(when)])[-3:]
     p["n"] = int(p.get("n", 0)) + 1
     if negated:
         p["denied"] = int(p.get("denied", 0)) + 1
@@ -509,7 +549,13 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                     _record_assertion(rel, predicate=pred_here, surface=surf_here,
                                       negated=bool(form.get("negated")), modality=str(form.get("modality") or ""),
                                       speaker=speaker, time_ref=time_ref, profile=profile,
-                                      context=str(heard or "")[:120])
+                                      context=str(heard or "")[:120], when=form.get("when"))
+                    if pred_here == "be a" and not form.get("negated"):
+                        try:
+                            from aurora_internal.aurora_learned_rules import apply_kind
+                            apply_kind(web, s, o)         # FIX-A133: told what kind of word it is, it is that kind
+                        except Exception:
+                            pass
                     out.append({"source": s, "predicate": pred_here, "target": o,
                                 "negated": bool(form.get("negated")), "type": rtype.value})
             for concept in set(subj) | set(objs):
@@ -619,10 +665,12 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
         verb = f"{modal} {'not ' if denied else ''}{predicate}"
         return {"agent": agent, "action": verb, "object": _object,
                 "predicate": predicate, "n": str(int(p.get("n", 0))), "denied": str(denied)}
-    if predicate == "be":                      # the copula agrees with whoever it is about
+    if predicate == "be" or predicate.startswith("be "):   # the copula agrees with whoever it is about
         verb = "am" if agent == "I" else ("are" if agent == "you" else "is")
         if denied:
             verb += " not"
+        if predicate.startswith("be "):        # FIX-A133: "is a", "is after"
+            verb += predicate[2:]
     elif denied:
         aux = "do" if agent in ("I", "you") else "does"
         verb = f"{aux} not {predicate}"

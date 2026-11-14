@@ -88,3 +88,144 @@ def test_a_new_letter_in_the_answer_is_not_an_echo():
     import aurora_voice_gate as G
     assert G.parrot_reason("C comes after b.", "What comes after b?") == ""
     assert G.parrot_reason("You feel calm when you are settled.", "You feel calm when you are settled.") == "echo"
+
+
+# -- phase 2: kinds ----------------------------------------------------------------
+
+KINDS = ["B is a letter.", "A letter is a symbol.", "The letter c is a letter.", "Glorp is a verb."]
+
+
+def _told(lines):
+    web = OntologicalWeb()
+    for line in lines:
+        for st in P.statements_in(line):
+            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={})
+    return web
+
+
+def test_a_kind_statement_is_one_predicate_with_the_article_as_its_particle():
+    st = P.statements_in("B is a letter.")[0]
+    assert (st["subject"], st["relation"], st["obj"], st["particle"]) == ("b", "be", "letter", "a")
+    assert "particle" not in P.statements_in("My name is Sunni.")[0]          # an identity is not a kind
+
+
+@pytest.mark.parametrize("question,expected", [
+    ("What is b?", [("b", "is a", "letter"), ("b", "is a", "symbol")]),
+    ("Is b a letter?", [("b", "is a", "letter")]),
+    ("Is b a symbol?", [("b", "is a", "symbol")]),
+    ("Is c a letter?", [("c", "is a", "letter")]),
+    ("Is b a verb?", []),
+    ("What is zzz?", []),
+])
+def test_kinds_are_answered_and_inherited(question, expected):
+    got = R.derive(_told(KINDS), question)
+    assert [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"]) for i in got] == expected
+
+
+def test_told_what_role_a_word_has_the_word_has_it():
+    web = _told(["Glorp is a noun."])
+    assert web.nodes["glorp"].role == "noun" and "glorp" in web._nodes_by_role["noun"]
+    web = _told(["Glorp is a verb."])
+    assert web.nodes["glorp"].role == "verb"
+    assert "glorp" in web._nodes_by_role["verb"] and "glorp" not in web._nodes_by_role["noun"]
+    # a kind that is not a role leaves the role alone
+    before = _told(["B is a letter."]).nodes["b"].role
+    assert before not in ("letter",)
+
+
+def test_a_word_told_to_be_a_verb_is_no_longer_a_thing_she_talks_about():
+    web = _told(["Glorp is a noun."])
+    assert C._entity(web, "glorp")                      # a noun is something she can be about
+    web = _told(["Glorp is a noun.", "Glorp is a verb."])
+    assert not C._entity(web, "glorp")                  # a verb is something done, not a thing
+    assert C._node_role(web, "glorp") == "verb"
+
+
+def test_the_copula_with_a_particle_is_voiced_with_agreement():
+    web = _told(["B is a letter."])
+    rel = next(r for r in web.relations.values() if getattr(r, "assertion", None))
+    lex = P.lexicalize_assertion(rel, speaker_now="sunni", self_now="aurora")
+    assert (lex["agent"], lex["action"], lex["object"]) == ("b", "is a", "letter")
+
+
+def test_a_worked_out_answer_is_the_whole_answer():
+    web = _told(KINDS)
+    systems = {"oets": type("O", (), {"web": web})(), "perception": None}
+    known = C.knowledge(systems, ["b", "letter"], "Is c a letter?", reach=3, session_id="x")
+    clause = C._knowledge_clause(known, set(), axis="X", prefer_axis=False)
+    assert (clause["agent"], clause["object"]) == ("c", "letter")
+    used = {("c", "letter"), (C._SAID, C._said_key(clause))}
+    assert C._knowledge_clause(known, used, axis="X", prefer_axis=False) is None     # no unrelated extra fact
+
+
+# -- phase 3: punctuation ----------------------------------------------------------
+
+MARKS = ['The mark "?" ends a question.', 'The mark "." ends a statement.', 'The mark "!" ends an exclamation.']
+
+
+def test_a_mark_mentioned_in_quotes_is_what_the_statement_is_about():
+    st = P.statements_in(MARKS[0])[0]
+    assert st["subject"] == 'the mark "?"' and st["relation"] == "ends"
+    web = _told(MARKS[:1])
+    assert [(r.source_word, r.target_word) for r in web.relations.values() if getattr(r, "assertion", None)] == [("?", "question")]
+
+
+def test_a_mark_used_in_running_text_is_not_a_token():
+    assert P._words("Is it? Yes. Hello, you!") == ["Is", "it", "Yes", "Hello", "you"]
+    assert P._words('the mark "?" ends it') == ["the", "mark", "?", "ends", "it"]
+
+
+@pytest.mark.parametrize("question,expected", [
+    ('What does "?" end?', [("?", "ends", "question")]),
+    ("What ends a question?", [("?", "ends", "question")]),
+    ('What does "." end?', [(".", "ends", "statement")]),
+    ("What ends an exclamation?", [("!", "ends", "exclamation")]),
+    ("What ends a story?", []),
+])
+def test_what_a_mark_ends_is_answered_from_what_she_was_told(question, expected):
+    got = R.derive(_told(MARKS), question)
+    assert [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"]) for i in got] == expected
+
+
+def test_the_word_learner_makes_a_quoted_mark_a_word_but_not_running_punctuation(tmp_path):
+    from aurora_expression_perception import ExpressionPerceptionEngine
+    eng = ExpressionPerceptionEngine(state_dir=str(tmp_path))
+    eng.ingest_interaction({"input": 'The mark "?" ends a question. Is it so?'}, mode="gateway")
+    nodes = set(eng.oets.web.nodes)
+    assert "?" in nodes and "." not in nodes and "," not in nodes
+
+
+# -- phase 4: when-then rules ------------------------------------------------------
+
+def test_a_condition_stays_attached_to_what_holds_under_it():
+    after = P.statements_in("You feel calm when you are settled and safe.")
+    assert after[0]["when"]["relation"] == "be" and after[0]["when"]["obj"] == "settled"
+    assert "when" not in after[1]                                  # the condition is still a statement of its own
+    before = P.statements_in("When you feel sad I listen.")        # no comma, no clause: nothing is invented
+    assert not any("when" in st for st in before)
+    lead = P.statements_in("When you greet me, I say hello.")
+    assert lead[1]["when"]["relation"] == "greet"
+
+
+def test_the_condition_is_recorded_on_the_predicate_it_governs():
+    web = _told(["You feel calm when you are settled and safe."])
+    rel = next(r for r in web.relations.values() if r.target_word == "calm")
+    assert dict(rel.assertion["predicates"]["feel"])["when"][0]["obj"] == "settled"
+    assert len(R.rules(web)) == 1
+
+
+@pytest.mark.parametrize("heard,expected", [
+    ("I am settled.", [("I", "feel", "calm")]),
+    ("Are you settled and safe right now?", [("I", "feel", "calm")]),
+    ("It rained.", []),
+    ("You feel calm when you are settled and safe.", []),          # the lesson said again is not the condition coming up
+])
+def test_what_she_holds_under_a_condition_is_said_when_it_comes_up(heard, expected):
+    web = _told(["You feel calm when you are settled and safe."])
+    got = R.derive(web, heard, speaker_now="sunni", self_now="aurora")
+    assert [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"]) for i in got] == expected
+    assert all(i["learned_from"] == "rule" for i in got)
+
+
+def test_nothing_fires_without_a_rule():
+    assert R.derive(_told(["You feel calm."]), "I am settled.", speaker_now="sunni", self_now="aurora") == []

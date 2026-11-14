@@ -444,7 +444,7 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
     # FIX-A133: what she can work out from what she was told (order, chained).
     try:
         from aurora_internal.aurora_learned_rules import derive
-        found = derive(web, heard) + found
+        found = derive(web, heard, speaker_now=speaker_now, self_now=self_now) + found
     except Exception:
         pass
     found.sort(key=lambda r: (-r["strength"], r["source"], r["target"]))
@@ -590,6 +590,10 @@ def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, pref
     # not the whole pair; and what the speaker just asked about is not made to
     # rest at all, so a direct question can be answered again.
     said = {t for s_, t in used if s_ == _SAID}
+    # FIX-A133: when she has worked out the answer to what was asked, the answer
+    # is what she says -- not whatever else she happens to hold about the words.
+    if any(k.get("derived") for k in known):
+        known = [k for k in known if k.get("derived")]
 
     def _voiced(k: Mapping[str, Any]) -> bool:
         key = _said_key(dict(k.get("lex") or {}))

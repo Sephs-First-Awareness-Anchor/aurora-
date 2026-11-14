@@ -8,6 +8,14 @@ This module lets her REASON from what she was told:
 
     ORDER      later / earlier, chained:  b after a, c after b  =>  c after a
                answers "what comes after b?", "is c after a?"
+    RULES      "I feel calm when you are settled"  =>  when what holds the condition
+               comes up, she states what she holds under it
+    MARKS      'The mark "?" ends a question.'  =>  answers 'what does "?" end?',
+               "what ends a question?" (a mark mentioned in quotes is a word she can learn about)
+    KIND       "b is a letter", "a letter is a symbol"  =>  b is a symbol;
+               answers "what is b?", "is b a letter?"; and a word told to be a
+               noun / verb / adjective ... becomes one in her web (its role), so
+               her own statement reader finds it as the act of a sentence
 
 Everything it reads is her own learned relations (the ones carrying an
 ``assertion`` record, so only what someone actually said).  Nothing is placed:
@@ -29,11 +37,15 @@ import re
 from collections import deque
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
+# The roles her web already gives words (OETS node.role): a word told it is one is one.
+ROLE_NAMES = frozenset({"noun", "verb", "adjective", "adverb", "preposition", "pronoun", "determiner"})
+KIND_PREDICATE = "be a"
+
 # The subject is LATER than the object / EARLIER than the object.
 LATER_PREDICATES = frozenset({"follow", "come after", "be after", "succeed"})
 EARLIER_PREDICATES = frozenset({"precede", "come before", "be before"})
 
-_TOKEN = re.compile(r"[A-Za-z][A-Za-z']*")
+_TOKEN = re.compile(r"[A-Za-z][A-Za-z']*|(?<=\")[.?!,;:](?=\")")
 _QUESTION_WORDS = frozenset({"what", "which", "who"})
 _AUX = frozenset({"is", "are", "does", "do", "did", "was", "were", "will"})
 _FILLER = frozenset({"the", "a", "an", "letter", "letters", "word", "one", "thing", "that", "this",
@@ -111,10 +123,123 @@ def earlier_than(edges: Mapping[Tuple[str, str], int], word: str) -> Dict[str, L
 
 
 # -----------------------------------------------------------------------------
+# What she was told about kinds
+# -----------------------------------------------------------------------------
+
+def kind_edges(web: Any) -> Dict[Tuple[str, str], int]:
+    """{(thing, kind): times said} from "<thing> is a <kind>"; denied is not held."""
+    edges: Dict[Tuple[str, str], int] = {}
+    for rel in list(getattr(web, "relations", {}).values()):
+        a = getattr(rel, "assertion", None)
+        if not a:
+            continue
+        p = dict(dict(a).get("predicates") or {}).get(KIND_PREDICATE)
+        if not p:
+            continue
+        n, denied = int(dict(p).get("n", 0) or 0), int(dict(p).get("denied", 0) or 0)
+        src = str(getattr(rel, "source_word", "") or "").lower()
+        tgt = str(getattr(rel, "target_word", "") or "").lower()
+        if n > 0 and denied * 2 < n and src and tgt and src != tgt:
+            edges[(src, tgt)] = n - denied
+    return edges
+
+
+def kinds_of(edges: Mapping[Tuple[str, str], int], word: str) -> Dict[str, List[str]]:
+    """Every kind ``word`` is (told directly or through what its kind is), nearest first."""
+    g: Dict[str, List[str]] = {}
+    for thing, kind in edges:
+        g.setdefault(thing, []).append(kind)
+    word = str(word).lower()
+    seen: Dict[str, List[str]] = {}
+    queue = deque([(word, [word])])
+    while queue:
+        cur, path = queue.popleft()
+        for k in sorted(g.get(cur, ())):
+            if k in seen or k == word:
+                continue
+            seen[k] = path + [k]
+            queue.append((k, path + [k]))
+    return seen
+
+
+def set_role(web: Any, word: str, role: str) -> bool:
+    """Give a word a role in her web, keeping the web's role index in step."""
+    node = (getattr(web, "nodes", {}) or {}).get(str(word).lower())
+    if node is None or role not in ROLE_NAMES or getattr(node, "role", "") == role:
+        return False
+    index = getattr(web, "_nodes_by_role", None)
+    if index is not None:
+        index[getattr(node, "role", "")].discard(node.word)
+        index[role].add(node.word)
+    node.role = role
+    return True
+
+
+def apply_kind(web: Any, thing: str, kind: str) -> bool:
+    """She was told ``thing`` is a ``kind``.  When the kind is one of the roles a
+    word can have, the word has that role: "run is a verb" makes run a verb."""
+    return set_role(web, thing, str(kind).lower()) if str(kind).lower() in ROLE_NAMES else False
+
+
+# -----------------------------------------------------------------------------
+# What she was told about what things end (punctuation)
+# -----------------------------------------------------------------------------
+
+END_PREDICATES = frozenset({"end"})
+
+
+def end_edges(web: Any) -> Dict[Tuple[str, str], int]:
+    """{(ender, ended): times said} from "<ender> ends <ended>"."""
+    edges: Dict[Tuple[str, str], int] = {}
+    for rel in list(getattr(web, "relations", {}).values()):
+        a = getattr(rel, "assertion", None)
+        if not a:
+            continue
+        src = str(getattr(rel, "source_word", "") or "").lower()
+        tgt = str(getattr(rel, "target_word", "") or "").lower()
+        for pred, p in dict(dict(a).get("predicates") or {}).items():
+            n, denied = int(dict(p).get("n", 0) or 0), int(dict(p).get("denied", 0) or 0)
+            if pred in END_PREDICATES and n > 0 and denied * 2 < n and src and tgt and src != tgt:
+                edges[(src, tgt)] = n - denied
+    return edges
+
+
+def _end_shape(toks: Sequence[str]) -> Dict[str, str]:
+    """'what does "?" end?' -> {"ask": "ends", "of": "?"}; "what ends a question?" -> {"ask": "ended_by", "of": "question"}."""
+    if not toks or toks[0] not in _QUESTION_WORDS:
+        return {}
+    if len(toks) >= 4 and toks[1] in ("does", "do") and toks[-1] in ("end", "close", "finish"):
+        thing = _tail_word(toks[2:-1], _KIND_SKIP | {"mark"})
+        return {"ask": "ends", "of": thing} if thing else {}
+    if len(toks) >= 3 and toks[1] in ("ends", "end", "closes", "finishes"):
+        thing = _tail_word(toks[2:], _KIND_SKIP)
+        return {"ask": "ended_by", "of": thing} if thing else {}
+    return {}
+
+
+def _end_item(ender: str, ended: str) -> Dict[str, Any]:
+    return {"source": ender, "kind": "related_to", "target": ended, "strength": 1.5, "axis": "B",
+            "learned_from": "inference", "asked": True, "derived": [ender, ended],
+            "lex": {"agent": ender, "action": "ends", "object": ended, "predicate": "end",
+                    "n": "1", "denied": "False"}}
+
+
+def _derive_end(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
+    edges = end_edges(web)
+    thing = shape["of"]
+    if shape["ask"] == "ends":
+        return [_end_item(e, d) for (e, d) in sorted(edges) if e == thing][:2]
+    return [_end_item(e, d) for (e, d) in sorted(edges) if d == thing][:2]
+
+
+# -----------------------------------------------------------------------------
 # Reading an order question
 # -----------------------------------------------------------------------------
 
-def _tail_word(tokens: Sequence[str]) -> str:
+_KIND_SKIP = frozenset({"the", "a", "an", "that", "this", "one", "thing", "ever", "also", "really"})
+
+
+def _tail_word(tokens: Sequence[str], skip: frozenset = _FILLER) -> str:
     """The word a phrase is about: its last content word.  A lone letter is
     that letter ("after a"), as is one that labels the word before it ("the
     letter a"); "a" in front of a word is the article."""
@@ -125,7 +250,7 @@ def _tail_word(tokens: Sequence[str]) -> str:
             if len(toks) == 1 or (i and toks[i - 1] not in ("a", "an", "the")):
                 return tok
             continue
-        if tok not in _FILLER and tok not in _AUX:
+        if tok not in skip and tok not in _AUX:
             return tok
     return ""
 
@@ -153,7 +278,7 @@ def ask_shape(heard: str) -> Dict[str, str]:
             # "what follows b" asks for what is AFTER b; the key verb names the asked direction
             break
     if key < 0:
-        return {}
+        return _kind_shape(toks) or _end_shape(toks)
     first = toks[0]
     verb_key = toks[key] in ("follow", "follows", "precede", "precedes")
     if first in _QUESTION_WORDS:
@@ -176,6 +301,93 @@ def ask_shape(heard: str) -> Dict[str, str]:
     return {}
 
 
+def _kind_shape(toks: Sequence[str]) -> Dict[str, str]:
+    """"what is b?" -> {"ask": "kind", "of": b}; "is b a letter?" -> {"ask": "kind_test", ...}."""
+    if toks[0] in _QUESTION_WORDS and len(toks) >= 3 and toks[1] in ("is", "are"):
+        thing = _tail_word(toks[2:], _KIND_SKIP)
+        return {"ask": "kind", "of": thing} if thing and thing not in ("that", "this", "it") else {}
+    if toks[0] in ("is", "are") and len(toks) >= 4:
+        for idx in range(len(toks) - 2, 1, -1):
+            if toks[idx] in ("a", "an"):
+                subject, kind = _tail_word(toks[1:idx], _KIND_SKIP), _tail_word(toks[idx + 1:], _KIND_SKIP)
+                if subject and kind and subject != kind:
+                    return {"ask": "kind_test", "subject": subject, "kind": kind}
+    return {}
+
+
+# -----------------------------------------------------------------------------
+# What she was told holds WHEN something is so
+# -----------------------------------------------------------------------------
+
+def _content_forms(words: Iterable[str]) -> set:
+    """Content words, with their base forms; what a statement is about."""
+    from aurora_internal.aurora_propositional_understanding import _lemma
+    from aurora_internal.aurora_confluence import _closed_class, _ing_bases
+    closed = _closed_class()
+    forms: set = set()
+    for w in words:
+        w = str(w).lower()
+        if len(w) < 3 or w in closed or "'" in w:
+            continue
+        forms.add(w)
+        try:
+            forms.add(_lemma(w))
+        except Exception:
+            pass
+        forms.update(_ing_bases(w))
+    return forms
+
+
+def rules(web: Any) -> List[Dict[str, Any]]:
+    """Every "when" she was told: the relation (what she holds), its predicate,
+    and the condition it was said to hold under."""
+    out: List[Dict[str, Any]] = []
+    for rel in list(getattr(web, "relations", {}).values()):
+        a = getattr(rel, "assertion", None)
+        if not a:
+            continue
+        for pred, p in dict(dict(a).get("predicates") or {}).items():
+            n, denied = int(dict(p).get("n", 0) or 0), int(dict(p).get("denied", 0) or 0)
+            if n <= 0 or denied * 2 >= n:
+                continue
+            for cond in list(dict(p).get("when") or []):
+                out.append({"rel": rel, "predicate": pred, "when": dict(cond)})
+    return out
+
+
+def _words_of(*parts: Any) -> List[str]:
+    return [t.lower() for part in parts for t in _TOKEN.findall(str(part or ""))]
+
+
+def fire(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") -> List[Dict[str, Any]]:
+    """What she holds under a condition that has just come up in what was heard.
+    The condition must be wholly there (its content words, in any form), and the
+    turn must not simply be the lesson saying it again."""
+    from aurora_internal.aurora_propositional_understanding import lexicalize_assertion
+    heard_forms = _content_forms(_words_of(heard))
+    if not heard_forms:
+        return []
+    out: List[Dict[str, Any]] = []
+    for rule in rules(web):
+        cond = rule["when"]
+        need = _content_forms(_words_of(cond.get("relation"), cond.get("obj"), cond.get("subject")))
+        if not need or not need <= heard_forms:
+            continue
+        rel, pred = rule["rel"], rule["predicate"]
+        held = _content_forms(_words_of(getattr(rel, "source_word", ""), pred, getattr(rel, "target_word", "")))
+        if held and held <= heard_forms:
+            continue                                         # the lesson, said again
+        lex = lexicalize_assertion(rel, speaker_now=speaker_now, self_now=self_now, predicate=pred)
+        if lex is None:
+            continue
+        out.append({"source": str(rel.source_word).lower(), "kind": "related_to",
+                    "target": str(rel.target_word).lower(), "strength": 1.4, "axis": "A",
+                    "learned_from": "rule", "asked": True,
+                    "derived": [str(cond.get("relation") or ""), str(cond.get("obj") or "")],
+                    "lex": lex})
+    return out
+
+
 # -----------------------------------------------------------------------------
 # What she can say from it
 # -----------------------------------------------------------------------------
@@ -187,17 +399,23 @@ def _item(source: str, target: str, *, action: str, predicate: str, denied: bool
                     "n": "1", "denied": str(bool(denied))}}
 
 
-def derive(web: Any, heard: str) -> List[Dict[str, Any]]:
+def derive(web: Any, heard: str, *, speaker_now: str = "", self_now: str = "") -> List[Dict[str, Any]]:
     """Statements she can state from what she was told about order, for the
     question just asked.  Empty when the question is not about order or she
     holds nothing that answers it."""
-    shape = ask_shape(heard)
-    if not shape or web is None:
+    if web is None:
         return []
+    shape = ask_shape(heard)
+    if not shape:
+        return fire(web, heard, speaker_now=speaker_now, self_now=self_now)
+    ask = shape["ask"]
+    if ask in ("kind", "kind_test"):
+        return _derive_kind(web, shape)
+    if ask in ("ends", "ended_by"):
+        return _derive_end(web, shape)
     edges = order_edges(web)
     if not edges:
         return []
-    ask = shape["ask"]
     if ask == "after":
         x = shape["of"]
         nearest = _nearest(later_than(edges, x))
@@ -220,6 +438,26 @@ def derive(web: Any, heard: str) -> List[Dict[str, Any]]:
             return [_item(s, o, action=action.replace("is ", "is not ", 1), predicate=pred, denied=True,
                           chain=later_than(edges, b)[a])]
     return []
+
+
+def _derive_kind(web: Any, shape: Mapping[str, str]) -> List[Dict[str, Any]]:
+    edges = kind_edges(web)
+    if not edges:
+        return []
+    if shape["ask"] == "kind":
+        thing = shape["of"]
+        reach = kinds_of(edges, thing)
+        return [_kind_item(thing, k, path) for k, path in sorted(reach.items(), key=lambda kp: (len(kp[1]), kp[0]))[:2]]
+    thing, kind = shape["subject"], shape["kind"]
+    reach = kinds_of(edges, thing)
+    return [_kind_item(thing, kind, reach[kind])] if kind in reach else []
+
+
+def _kind_item(thing: str, kind: str, chain: Sequence[str]) -> Dict[str, Any]:
+    return {"source": thing, "kind": "instance_of", "target": kind, "strength": 1.5, "axis": "B",
+            "learned_from": "inference", "asked": True, "derived": list(chain),
+            "lex": {"agent": thing, "action": "is a", "object": kind, "predicate": KIND_PREDICATE,
+                    "n": "1", "denied": "False"}}
 
 
 def _nearest(reach: Mapping[str, List[str]]) -> List[Tuple[str, List[str]]]:
