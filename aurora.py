@@ -30788,6 +30788,22 @@ def boot_aurora(
         )
         pass
 
+    # FIX-A129: her identity record, stored as learned propositions (idempotent).
+    try:
+        from aurora_internal.aurora_propositional_understanding import integrate_core_identity as _integ_ci
+        from aurora_internal.aurora_confluence import _find_web as _ci_web
+        _ci_result = _integ_ci(_ci_web(systems), enhanced_persist.core_identity)
+        if verbose and _ci_result.get("propositions"):
+            print(f"  [IDENTITY] Stored {_ci_result['propositions']} identity propositions as learned relations")
+    except Exception as _aurora_boundary_exc:
+        _aurora_record_exception_from_locals(
+            locals(),
+            module=__name__,
+            operation="boot_aurora:integrate_core_identity",
+            exc=_aurora_boundary_exc,
+            context={"function": "boot_aurora", "source_file": "aurora.py"},
+        )
+
     if verbose:
         ci = enhanced_persist.core_identity
         sunni_name = ci.entities['sunni'].name

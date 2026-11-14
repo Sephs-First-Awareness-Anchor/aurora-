@@ -301,6 +301,7 @@ DISCHARGE_ON_SPEECH = 0.15        # fraction left after she speaks in her own wo
 HALF_LIFE_S = 30 * 60.0
 ARTICULATION_THRESHOLD = 0.30
 CONFLUENCE_ENABLED = True          # FIX-A113; off only for a measured baseline
+CONFLUENCE_FIRST = True            # FIX-A130; False restores generative-first, for the baseline
 PRESSURE_CAP = 1.0
 
 # Being addressed: called to act (A), to spend energy responding (N),
@@ -545,6 +546,36 @@ def own_composition(systems: Dict[str, Any], heard: str) -> str:
     return text
 
 
+def _confluent_reply(systems: Dict[str, Any], resp: Any, heard: str, channel: str,
+                     level: float, record: Dict[str, Any], pressure: Any) -> Any:
+    """The confluence's reply for this turn, or None when it has nothing."""
+    confluent, conf_record = "", {}
+    try:
+        from aurora_internal.aurora_confluence import compose, put_on_grammar_trace
+        confluent, conf_record = compose(systems, heard, session_id=channel)
+        systems["_last_confluence"] = conf_record
+    except Exception as exc:
+        record["confluence_error"] = f"{type(exc).__name__}: {exc}"[:160]
+        return None
+    if not confluent:
+        record["confluence"] = str(conf_record.get("why") or "")
+        return None
+    pressure.discharge(channel)
+    try:
+        put_on_grammar_trace(systems, conf_record)
+    except Exception:
+        pass
+    record.update({"outcome": "confluence", "src": "confluence",
+                   "abilities": list(dict(conf_record.get("how") or {}).get("abilities") or [])[:5]})
+    systems["_last_voice_gate"] = record
+    tone = str(getattr(resp, "emotional_tone", "") or "curious")
+    if tone in ("self-aware", "informative"):
+        tone = "curious"
+    return SimpleNamespace(content=confluent, emotional_tone=tone,
+                           confidence=round(min(0.9, 0.3 + 0.5 * level), 4),
+                           src="confluence")
+
+
 def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
                      session_id: str = "",
                      render: Optional[Callable[..., str]] = None) -> Any:
@@ -570,6 +601,26 @@ def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
     if isinstance(systems, dict):
         systems["_last_articulation_seed"] = ""
 
+    # FIX-A130: one speech path.  The confluence composes first whenever she is
+    # moved to speak -- from everything that touched the turn, including what
+    # she has learned.  The reasoning pipeline's reply stands only when the
+    # confluence has nothing to say (or she is not moved to speak), so a reply
+    # that merely passes the checks no longer pre-empts it.
+    # Pressure decides WHETHER she speaks, not what a reply that is already
+    # going out is made of, so a standing reply needs no threshold here.
+    tried_first = False
+    if reason:
+        record["blocked"] = reason
+    composed = own_composition(systems, heard) if reason else ""
+    # She would speak if the reply stands, if her composer has a draft, or if
+    # she is moved to speak; in each case the confluence composes it first.
+    if CONFLUENCE_FIRST and CONFLUENCE_ENABLED and (
+            not reason or composed or level >= ARTICULATION_THRESHOLD):
+        tried_first = True
+        first = _confluent_reply(systems, resp, heard, channel, level, record, pressure)
+        if first is not None:
+            return first
+
     if not reason:
         pressure.discharge(channel)
         record.update({"outcome": "own_voice", "src": src})
@@ -577,10 +628,10 @@ def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
         return resp
 
     record["blocked"] = reason
-    # Her composer's own draft for this turn comes first (2026-11-08): the
-    # arbitration graded it against the scripted candidate that was just
-    # blocked.  Same checks as any reply, and it must connect to what was said.
-    composed = own_composition(systems, heard)
+    # Her composer's own draft for this turn (2026-11-08): the arbitration
+    # graded it against the scripted candidate that was just blocked.  Same
+    # checks as any reply, and it must connect to what was said.  It speaks
+    # when the confluence had nothing (or, with CONFLUENCE_FIRST off, before it).
     if composed:
         pressure.discharge(channel)
         record.update({"outcome": "own_composition", "src": "composer_unified"})
@@ -593,30 +644,11 @@ def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
     # FIX-A113: the confluence -- every system that ran on this turn feeds
     # what she says, and her live abilities decide how.  Same pressure
     # condition as articulation: being addressed is what moves her to speak.
-    if level >= ARTICULATION_THRESHOLD and CONFLUENCE_ENABLED:
-        confluent, conf_record = "", {}
-        try:
-            from aurora_internal.aurora_confluence import compose, put_on_grammar_trace
-            confluent, conf_record = compose(systems, heard, session_id=channel)
-            systems["_last_confluence"] = conf_record
-        except Exception as exc:
-            record["confluence_error"] = f"{type(exc).__name__}: {exc}"[:160]
-        if confluent:
-            pressure.discharge(channel)
-            try:
-                put_on_grammar_trace(systems, conf_record)
-            except Exception:
-                pass
-            record.update({"outcome": "confluence", "src": "confluence",
-                           "abilities": list(dict(conf_record.get("how") or {}).get("abilities") or [])[:5]})
-            systems["_last_voice_gate"] = record
-            tone = str(getattr(resp, "emotional_tone", "") or "curious")
-            if tone in ("self-aware", "informative"):
-                tone = "curious"
-            return SimpleNamespace(content=confluent, emotional_tone=tone,
-                                   confidence=round(min(0.9, 0.3 + 0.5 * level), 4),
-                                   src="confluence")
-        record["confluence"] = str(conf_record.get("why") or "")
+    # (When it already ran above and had nothing, it is not run twice.)
+    if level >= ARTICULATION_THRESHOLD and CONFLUENCE_ENABLED and not tried_first:
+        second = _confluent_reply(systems, resp, heard, channel, level, record, pressure)
+        if second is not None:
+            return second
     articulated, why = ("", "below_threshold")
     if level >= ARTICULATION_THRESHOLD:
         articulated, why = articulate_from_pressure(

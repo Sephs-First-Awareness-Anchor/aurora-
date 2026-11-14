@@ -11374,3 +11374,77 @@ prompt-shaping strings in `_shape_topic_for_turn` ("I am intentionally vague..."
 remain: a larger curriculum question for Sir. Voice-gate cost re-measured at
 0.04-0.05 s per call: the earlier "3 s" was profiler inflation, nothing to fix.
 Hub (Dart) transfer menu added (long-press the link row) but NOT compiled here.
+
+## FIX-A128 (ARCHITECTURAL) — Recall markers are transport, not words
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** A recall packet prefixes remembered fragments with
+"[recalled:<concept>]". The recall-enriched text reached `ingest_interaction`
+and OETS `process_interaction` built nodes from the markers (nested forms such
+as "[recalled:recalled:recalled:meaning]" too) and related each to every
+co-occurring word. Measured in her saved web: 149 distinct marker tokens; a
+five-turn live conversation added 4 more. FIX-A123 only stopped the *structure*
+absorb of these fragments.
+**Correct Form:** `strip_recall_markers()` (next to `strip_internal_annotation`)
+removes the marker prefix at the top of `ingest_interaction`; the remembered
+content itself is unchanged. Same five-turn conversation after: +0 marker nodes.
+**Why:** The marker says where a fragment came from; nobody said it.
+**First Seen:** 2026-11-14 interactive conversation test. Clean-up done with
+Sir's go-ahead: `scripts/prune_recall_marker_nodes.py` (dry run by default,
+backup, atomic write) removed the 149 marker nodes and the 419 relations touching
+them from the checkpoint web. Checked first: no code reads those nodes, none was
+ever used in expression, none is in a cluster. Devices need the same script run on
+their own state (`--state-dir <their aurora_state> --apply`). Not changed: nesting
+originates where recalled text is stored back into memory
+(aurora_dimensional_systems recall packet); 11 other bracket tokens
+("[afterthought]", "[user]", "[internal", ...) remain, unchecked.
+
+## FIX-A129 (ARCHITECTURAL) — She answers from what she knows, including who made her
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** Live conversation. (1) After "I built you ... I care about you" she
+held (sunni, built, aurora) and (sunni, care, aurora) but voiced "care":
+`lexicalize_assertion` broke ties between predicates alphabetically, not by what
+was asked. (2) With nothing salient, "who built you?" looked nothing up: "you"
+and "I" were never resolved to the participants whose relations she holds. (3) A
+participant's own name ("your name is Aurora") was never a head (her tagger lists
+"aurora" as closed-class), so that statement was dropped. (4) Her rest rule
+silenced a whole pair after any one statement about it. (5) Who made her lived
+only in a regex-triggered answer from core identity, which her voice gate refuses
+as a template, so she said "I. built.".
+**Correct Form:** All of it uses her existing stores and her own composer.
+`knowledge()` offers every predicate along a relation and marks the one the
+speaker's words (or their base forms) ask about; `_knowledge_clause` answers what
+was asked before her axis preference, and rests per statement (who, to what,
+predicate), never what was asked. `gather` resolves "you"/"I" to the participants
+when nothing is salient. `heads()` takes a participant's name as that participant.
+Participant objects are voiced "me"/"you" (except a copula about a thing). And
+`integrate_core_identity()` feeds her core identity record's own sentences ("Sunni
+built me with intention and care.") through her own statement parser and the same
+`integrate_form` a spoken statement uses, once, at boot: the fact is stored as a
+learned relation, no sentence for her to say was written.
+Later the same day: participants are resolved whatever else is salient ("how are
+you feeling?" reaches what she was told about herself), and the perspective swap
+keeps the verb in agreement ("when you are settled" -> "when I am settled", not
+"I are"). Taught in plain conversation on a scratch copy ("You feel curious when
+you learn something new.", "You feel calm when you are settled and safe."), her
+confluence then composes "I feel calm when I am settled and safe, and you built
+me." Her generative path, when it passes the gate as her own voice, still answers
+first ("I am energy. I understand cost. I feel constraint."), so the confluence
+only speaks when that path is blocked or silent: an arbitration question for Sir.
+**Why:** A fact stored the way she would have learned it is hers to speak from;
+and a question should be answered from the matching knowledge, not the
+alphabetically-last one.
+**First Seen:** 2026-11-14. Live (same conversation, same lines): "who am I, and
+who built you?": before "I. built." (fragment); after "You built me, and name is
+sunni." Not fixed, for Sir: (a) "how are you feeling" now gets "You envisioned me,
+and you are creator." (grammatical, from her knowledge, but not about feeling; the
+direct self-state answer path is still open); (b) a direct question right after she
+spoke can stay silent: addressed pressure drops to 15% on speech, a question adds
+0.35, the threshold is 0.30; (c) possessives are dropped in heads, so "name is
+sunni" lacks "your".
+
+### FIX-A130: One speech path (confluence first, generative only as the fallback)
+**Category:** ARCHITECTURAL
+**Pattern:** `apply_voice_gate` let any reply that passed its checks leave as her own voice, and ran the confluence (FIX-A113) only when a reply was blocked or empty. So the reasoning pipeline's axis-vocabulary reply ("I am energy. I understand cost. I feel constraint.") pre-empted everything she had learned; and when a reply was blocked her composer's draft went ahead of the confluence ("I feel built you.").
+**Correct Form:** One order. The confluence composes first whenever she would speak at all (the reply stands, her composer has a draft, or she is moved to speak); the generative reply, then her composer's draft, then pressure articulation, then silence follow only when it has nothing. `_confluent_reply` is the single place that builds it. `CONFLUENCE_FIRST=False` restores the old order for a baseline. Pressure decides whether she speaks, not what an outgoing reply is made of, so a standing reply needs no threshold. Also: a statement already voiced in the sentence (stance clause or knowledge clause) is not voiced again (`_SAID`/`_said_key`).
+**Why:** Two composers that never saw each other meant what she knew only spoke when the other one failed.
+**First Seen:** 2026-11-14. Live on a scratch copy after teaching two lines by conversation: "How are you feeling?" old order "I am energy. I understand cost. I feel constraint."; one path "You envisioned me, and I feel calm, and I feel curious." Not fixed, for Sir: "Are you ever curious?" (a target word, not a predicate, is not treated as asked); when she has just voiced everything she knows, her rest rule leaves the confluence empty and the generative reply stands.

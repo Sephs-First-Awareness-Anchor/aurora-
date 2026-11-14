@@ -164,6 +164,8 @@ def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = M
             cand = speaker
         elif tok in _SECOND:
             cand = listener
+        elif tok in PARTICIPANTS:
+            cand = tok      # FIX-A129: a participant's own name is that participant ("your name is Aurora")
         elif len(tok) >= 3 and "'" not in tok and tok not in closed and tok not in acts and tok not in _NOT_HEADS:
             cand = tok
         else:
@@ -524,16 +526,36 @@ def integrate_turn(systems: Mapping[str, Any], heard: str, *, session_id: str = 
     return record
 
 
-def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str) -> Optional[Dict[str, str]]:
+def predicate_order(rel: Any) -> List[str]:
+    """The predicates said along a relation, most-said first (ties: the
+    later name, as lexicalize_assertion has always chosen)."""
+    preds = dict(dict(getattr(rel, "assertion", None) or {}).get("predicates") or {})
+    return sorted(preds, key=lambda k: (int(dict(preds[k]).get("n", 0)), k), reverse=True)
+
+
+def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
+                         predicate: Optional[str] = None) -> Optional[Dict[str, str]]:
     """How she can say what was asserted along this relation: who, the
-    predicate as it was said, and to what.  None if nothing was asserted."""
+    predicate as it was said, and to what.  None if nothing was asserted.
+
+    FIX-A129: a relation can carry several predicates ("built", "care"); the
+    caller may say which one the moment is about.  Default: the most said.
+    A participant in the object place is voiced as one ("me", "you"), the same
+    way the agent already is."""
     a = dict(getattr(rel, "assertion", None) or {})
     preds = dict(a.get("predicates") or {})
     if not preds:
         return None
-    predicate, p = max(preds.items(), key=lambda kv: (int(kv[1].get("n", 0)), kv[0]))
+    if predicate is not None and predicate in preds:
+        p = preds[predicate]
+    else:
+        predicate, p = max(preds.items(), key=lambda kv: (int(kv[1].get("n", 0)), kv[0]))
     source = str(getattr(rel, "source_word", "") or "")
     agent = "you" if source == speaker_now else ("I" if source == self_now else source)
+    _target = str(getattr(rel, "target_word", "") or "")
+    _object = "me" if _target == self_now else ("you" if _target == speaker_now else _target)
+    if predicate == "be" and source not in (speaker_now, self_now):
+        _object = _target        # "name is Sunni": the name is not about who is listening
     denied = int(p.get("denied", 0)) * 2 > int(p.get("n", 0))
     surface = str(p.get("surface") or predicate)
     if agent in ("I", "you") or source in PARTICIPANTS:
@@ -551,11 +573,11 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str) -> Option
     if predicate.endswith("ing") and len(predicate) > 4 and not modal:   # "you are building ..."
         be = "am" if agent == "I" else ("are" if agent == "you" else "is")
         verb = f"{be} {'not ' if denied else ''}{predicate}"
-        return {"agent": agent, "action": verb, "object": str(getattr(rel, "target_word", "") or ""),
+        return {"agent": agent, "action": verb, "object": _object,
                 "predicate": predicate, "n": str(int(p.get("n", 0))), "denied": str(denied)}
     if modal and predicate != "be":
         verb = f"{modal} {'not ' if denied else ''}{predicate}"
-        return {"agent": agent, "action": verb, "object": str(getattr(rel, "target_word", "") or ""),
+        return {"agent": agent, "action": verb, "object": _object,
                 "predicate": predicate, "n": str(int(p.get("n", 0))), "denied": str(denied)}
     if predicate == "be":                      # the copula agrees with whoever it is about
         verb = "am" if agent == "I" else ("are" if agent == "you" else "is")
@@ -564,8 +586,57 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str) -> Option
     elif denied:
         aux = "do" if agent in ("I", "you") else "does"
         verb = f"{aux} not {predicate}"
-    return {"agent": agent, "action": verb, "object": str(getattr(rel, "target_word", "") or ""),
+    return {"agent": agent, "action": verb, "object": _object,
             "predicate": predicate, "n": str(int(p.get("n", 0))), "denied": str(denied)}
+
+
+# -----------------------------------------------------------------------------
+# What her own identity record says (FIX-A129)
+# -----------------------------------------------------------------------------
+
+_THIRD_SUBJECT = re.compile(r"\b(?:He|he|She|she)\b")
+
+
+def integrate_core_identity(web: Any, identity: Any) -> Dict[str, Any]:
+    """Her core identity record, stored the way a heard statement is stored.
+
+    Who made her was a regex-triggered answer reading that record.  Nothing she
+    could compose from, and her voice gate rightly refuses a template.  The record's
+    own sentences ("Sunni built me with intention and care.") go through her own
+    statement parser and the same integrate_form a spoken one does, so the fact
+    lives where every learned fact lives and she says it in her own words.
+    Nothing is written for her to say: the sentences are the ones already in
+    the record; the only edit is naming the entity where the record says "he".
+
+    Speaker is herself (the record is in her voice: "me" is her).  Idempotent:
+    a sentence already stored as a context is not stored again."""
+    entities = dict(getattr(identity, "entities", {}) or {})
+    if web is None or not entities:
+        return {"status": "no_identity_or_web"}
+    stored: set = set()
+    for rel in list(getattr(web, "relations", {}).values()):
+        stored.update(dict(getattr(rel, "assertion", None) or {}).get("contexts") or [])
+    done = 0
+    skipped = 0
+    for key, entity in entities.items():
+        if str(getattr(entity, "role", "")) == "self":
+            continue
+        aliases = list(getattr(entity, "aliases", []) or [])
+        name = str(aliases[0] if aliases else key)
+        text = str(getattr(entity, "relationship_to_aurora", "") or "")
+        for sentence in re.split(r"(?<=[.!?])\s+", text):
+            sentence = _THIRD_SUBJECT.sub(name, sentence).strip()
+            if len(sentence.split()) < 3:
+                continue
+            if sentence[:120] in stored:
+                skipped += 1
+                continue
+            acts = _acts(sentence)
+            for form in statements_in(sentence, web=web):
+                if integrate_form(web, form, heard=sentence, speaker=SELF, listener=str(key).lower(),
+                                  profile={}, acts=acts):
+                    done += 1
+    return {"status": "ok", "propositions": done, "already_stored": skipped}
 
 
 # -----------------------------------------------------------------------------
