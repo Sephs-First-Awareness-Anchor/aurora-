@@ -838,8 +838,8 @@ def compose(systems: Dict[str, Any], heard: str, *, engine: Any = None,
     # FIX-A133: a statement she worked out from what she was told ("d is after a"
     # to "is d after a?") restates the question's words because that is what an
     # answer to it is; it is not a parrot.
-    if why == "echo" and any(dict(c.get("relation") or {}).get("derived") for c in clauses):
-        why = ("repeat" if text.lower() in {t.lower() for t in recent_texts} else "")
+    if why in ("echo", "repeat") and any(dict(c.get("relation") or {}).get("derived") for c in clauses):
+        why = ""       # FIX-A134: asked again, a worked-out answer is given again
     if why:
         record["why"] = why
         record["rejected"] = text[:200]

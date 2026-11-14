@@ -106,3 +106,29 @@ def test_the_gate_knows_when_what_she_was_taught_can_answer():
     assert G._worked_out(systems, "What can you see?") and G._worked_out(systems, "I greet you today.")
     assert not G._worked_out(systems, "It rained.")
     assert not G._worked_out({"oets": type("O", (), {"web": _told("You feel curious.")})()}, "What can you see?")
+
+
+# -- the other capabilities she can be taught to name (FIX-A134, part 2) ------------
+
+def _fake(monkeypatch, data, ok=True):
+    monkeypatch.setattr(T, "call", lambda name, **kw: T.ToolResult(name, data, ok))
+
+
+@pytest.mark.parametrize("teach,question,data,expected", [
+    ("You feel with your self state.", "What do you feel?",
+     "heat: 0.20; coherence: 0.62; stagnation: 0.10; camera: active", ["coherence", "stagnation", "heat", "camera"]),
+    ("You remember with your memory read.", "What do you remember?",
+     "active oets concepts: rain, rig", ["rain", "rig"]),
+    ("You tell time with your time.", "Can you tell the time?",
+     "Current date and time: Saturday, November 14 2026 — 06:36 AM", ["saturday", "november"]),
+])
+def test_what_a_report_says_is_voiced_in_her_taught_word(monkeypatch, teach, question, data, expected):
+    _fake(monkeypatch, data)
+    got = B.derive({}, _told(teach), question)
+    assert sorted(i["lex"]["object"] for i in got) == sorted(expected[:len(got)]) and got
+    assert {i["lex"]["action"] for i in got} == {teach.split()[1]}
+
+
+def test_a_report_with_nothing_in_it_is_a_do_not(monkeypatch):
+    _fake(monkeypatch, "", ok=False)
+    assert _out(B.derive({}, _told("You feel with your self state."), "What do you feel?")) == [("do not feel", "", "True")]

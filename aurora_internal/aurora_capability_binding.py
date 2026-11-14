@@ -134,11 +134,37 @@ def _sensed_words(text: str) -> List[str]:
             found += [w.lower() for w in re.split(r"[,\s]+", m.group(1)) if w.isalpha() and len(w) > 1]
         if found:
             break
+    if not found:
+        found = _from_report(body if obs else block)
     out: List[str] = []
     for w in found:
         if w not in out:
             out.append(w)
-    return out[:3]
+    return out[:4]
+
+
+_STATUS = frozenset({"active", "inactive", "on", "off", "true", "false", "none", "unknown"})
+_REPORT_WORDS = frozenset({"current", "date", "and", "the", "last", "ago", "unreadable", "status", "daemon"})
+
+
+def _from_report(text: str) -> List[str]:
+    """A plain "key: value; key: value" report (her state, memory, the time): the
+    value's words when it is words ("active oets concepts: rain, rig"), else the key
+    it measured ("coherence: 0.62" -> coherence)."""
+    out: List[str] = []
+    for seg in re.split(r"[;\n|]", str(text or "")):
+        if ":" not in seg:
+            continue
+        key, _, value = seg.partition(":")
+        key_words = [w.lower() for w in _WORD.findall(key)]
+        words = [w.lower() for w in _WORD.findall(value) if len(w) >= 3 and w.lower() not in ("and", "the")]
+        if words and not set(words) <= _STATUS:
+            out += [w for w in words if w not in _REPORT_WORDS][:3]
+        elif key_words:
+            out.append(key_words[-1])
+        if len(out) >= 4:
+            break
+    return [w for w in out if len(w) >= 3]
 
 
 def answerable(web: Any, heard: str) -> bool:
