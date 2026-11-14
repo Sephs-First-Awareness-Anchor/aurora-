@@ -10,6 +10,10 @@ belongs to a cluster; the only things attached are their own co-occurrence
 relations and a category listing.  This removes exactly those nodes, the
 relations that touch them, and their category entries.  Nothing else changes.
 
+FIX-A132 widened the rule to any bracket token ("[afterthought]", "[internal",
+"understanding.]", "[user]", "[rec"): brackets are punctuation, and the same checks
+held (never used in her expression, in no cluster, referenced nowhere else).
+
 Dry run by default.  --apply writes a ".pre_recall_prune_backup" copy first and
 replaces the file atomically (same checksum and write-then-rename idiom as
 aurora_vocabulary_seed_apply.py).  Safe to run again: a clean web is untouched.
@@ -31,7 +35,10 @@ from typing import Any, Dict
 
 
 def is_recall_marker(word: str) -> bool:
-    return "[recalled" in str(word)
+    """A bracket token: the "[recalled:<concept>]" markers (FIX-A128) and, since
+    FIX-A132, any other word the old tokenizer left a bracket on."""
+    word = str(word)
+    return "[recalled" in word or "[" in word or "]" in word
 
 
 def prune_web_dict(data: Dict[str, Any]) -> Dict[str, int]:

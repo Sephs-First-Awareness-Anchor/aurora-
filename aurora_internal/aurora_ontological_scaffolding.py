@@ -2736,7 +2736,8 @@ class OntologicalScaffoldingEngine:
         words = text.lower().split()
         clean_words = []
         for word in words:
-            clean = word.strip(".,!?;:'\"()-")
+            # FIX-A132: brackets are punctuation, not letters ("[user]", "[internal")
+            clean = word.strip(".,!?;:'\"()-[]{}")
             if clean and len(clean) > 1:
                 clean_words.append(clean)
 
