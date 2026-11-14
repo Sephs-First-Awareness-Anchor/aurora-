@@ -175,3 +175,14 @@ unmeasured.
 - Running `aurora_daemon` natively on Windows has **not been tested**. It was
   developed on Linux. If it fails to boot, the log above says where; WSL2 is
   the fallback that runs the existing Linux setup unchanged.
+
+
+## Hub controls (FIX-A125 follow-up)
+
+Long-press the "Subsurface link" row in the Hub for: seed Subsurface, checkpoint
+for a new Surface device (shows the token), claim Surface here (asks for the
+token), verify. Tap still pairs. This Dart/Kotlin code was written by mirroring the
+existing pairing flow and has **not been compiled or run**; the Python side it
+calls (`strata_link_transfer_cmd`) is tested.
+
+Authors: Sunni (Sir) Morningstar & Cael Devo

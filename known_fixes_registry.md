@@ -11348,3 +11348,29 @@ Sir: training episodes in periodic maintenance feed scaffolding text (e.g.
 "[PRESSURE ROUTING] ...", directed-corpus templates) through the same ingest as
 heard, adding ~18 lexicon words in six turns; and a user turn on one run carried
 an appended "[Internal: ...]" string into ingest.
+
+## FIX-A127 (ARCHITECTURAL) — Scaffolding is perceived, never heard
+**Authors:** Sunni (Sir) Morningstar & Cael Devo
+**Pattern:** Curriculum and bookkeeping text entered `ingest_interaction` as
+language heard from a speaker: directed-training wrappers ("A conflicting angle
+appears now. Hold both sides and resolve honestly: ..."), the pressure router's
+diagnostic label ("[PRESSURE ROUTING] ... training needed on ..."), and her own
+" [Internal: ...]" reasoning note appended to the turn text. Vocabulary,
+structure and OETS learned from them (16 lexicon words in six live turns came
+from heard-path ingests of this kind).
+**Correct Form:** (1) `without_scaffold()` in the directed corpus derives the
+wrapper-free material from the corpus's own two template tables; the simulation
+ingests only that. (2) `[PRESSURE ROUTING]` is a registered transport marker, now
+also recognized on spec prompt/follow-up candidates in `_shape_topic_for_turn`;
+episodes sourced `pressure`/`code` are ingested `internal=True` (perceived, not
+learned). (3) `strip_internal_annotation()` (one rule, shared with the
+constraint emitter) removes the trailing note before ingest. Nothing was added to
+her; the prompts she is given are unchanged, only what counts as heard.
+**Why:** The curriculum is the teacher's voice and the note is her own; learning
+language from either teaches her about the scaffold, not the world.
+**First Seen:** 2026-11-13, Sir: "no scaffolding". Not changed: `[AFTERTHOUGHT]`
+episodes (her own thought) still ingest as before, and other hand-authored
+prompt-shaping strings in `_shape_topic_for_turn` ("I am intentionally vague...")
+remain: a larger curriculum question for Sir. Voice-gate cost re-measured at
+0.04-0.05 s per call: the earlier "3 s" was profiler inflation, nothing to fix.
+Hub (Dart) transfer menu added (long-press the link row) but NOT compiled here.

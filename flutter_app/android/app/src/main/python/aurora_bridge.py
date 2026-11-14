@@ -2453,6 +2453,13 @@ def strata_link_transfer(action: str, token: str = "") -> str:
         return _json.dumps({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
 
 
+def strata_link_transfer_cmd(command: str) -> str:
+    """One-string form of strata_link_transfer for the Kotlin bridge:
+    "action" or "action:token" (a handoff token contains no colon)."""
+    action, _, token = str(command or "").partition(":")
+    return strata_link_transfer(action.strip(), token.strip())
+
+
 def get_praxis_messenger_status() -> str:
     import json as _json
     messenger = _praxis_messenger

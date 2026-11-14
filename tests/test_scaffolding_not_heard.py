@@ -76,3 +76,17 @@ def test_spec_candidate_with_pressure_label_is_marked_internal():
         fake, {"prompt_candidates": ["Does the fence hold?"], "episode_source": "ordinary"},
         0, {"behavior_modes": {}}, [])
     assert plain["episode_source"] == "ordinary" and plain["prompt"] == "Does the fence hold?"
+
+
+def test_bridge_command_string_splits_action_and_token():
+    import importlib.util, pathlib
+    path = pathlib.Path("flutter_app/android/app/src/main/python/aurora_bridge.py")
+    src = path.read_text()
+    start = src.index("def strata_link_transfer_cmd")
+    block = src[start:src.index("\ndef ", start + 10)]
+    seen = []
+    ns = {"strata_link_transfer": lambda a, t="": seen.append((a, t)) or "{}"}
+    exec(block, ns)
+    ns["strata_link_transfer_cmd"]("handoff_claim: tok123 ")
+    ns["strata_link_transfer_cmd"]("seed")
+    assert seen == [("handoff_claim", "tok123"), ("seed", "")]
