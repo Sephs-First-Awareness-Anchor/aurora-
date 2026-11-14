@@ -229,3 +229,45 @@ def test_what_she_holds_under_a_condition_is_said_when_it_comes_up(heard, expect
 
 def test_nothing_fires_without_a_rule():
     assert R.derive(_told(["You feel calm."]), "I am settled.", speaker_now="sunni", self_now="aurora") == []
+
+
+# -- numbers and basic communication (FIX-A134) ------------------------------------
+
+NUMBERS = ["Two comes after one.", "Three comes after two.", "Four comes after three.",
+           "Five comes after four.", "Six comes after five.", "Seven comes after six.",
+           "One is a number.", "Seven is a number.", "A number is a symbol."]
+
+
+def test_number_words_are_ordered_even_when_a_pronoun_or_misread_as_an_act():
+    web = _told(NUMBERS)                               # "one" is a pronoun; the tagger calls "seven" an act
+    got = lambda q: [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"]) for i in R.derive(web, q, speaker_now="sunni", self_now="aurora")]
+    assert got("What comes after one?") == [("two", "comes after", "one")]
+    assert got("Is seven after two?") == [("seven", "is after", "two")]
+    assert got("Is two after seven?") == [("two", "is not after", "seven")]
+    assert ("seven", "is a", "symbol") in got("What is seven?")           # kinds chain across lessons
+
+
+def test_words_that_are_closed_class_can_still_be_named_and_classed():
+    web = _told(["Hello is a greeting.", "Yes is an answer.", "Thanks is a courtesy."])
+    got = lambda q: [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"]) for i in R.derive(web, q, speaker_now="sunni", self_now="aurora")]
+    assert got("What is hello?") == [("hello", "is a", "greeting")]
+    assert got("Is yes an answer?") == [("yes", "is a", "answer")]
+    assert [st["relation"] for st in P.statements_in("Hello is a greeting.")] == ["be"]     # "greeting" is a thing here, not the act
+
+
+def test_what_she_says_when_greeted_comes_from_the_rule_she_was_told():
+    web = _told(["When I greet you, you say hello.", "When I thank you, you say welcome."])
+    got = lambda h: [(i["lex"]["agent"], i["lex"]["action"], i["lex"]["object"]) for i in R.derive(web, h, speaker_now="sunni", self_now="aurora")]
+    assert got("I greet you.") == [("I", "say", "hello")]
+    assert got("I thank you today.") == [("I", "say", "welcome")]
+    assert got("I like rain.") == []
+
+
+def test_a_turn_that_opens_with_when_is_integrated_even_if_the_pipeline_calls_it_a_question():
+    web = OntologicalWeb()
+    systems = {"oets": type("O", (), {"web": web})(), "perception": None,
+               "_last_pipeline_state": {"constraint_semantic_state": {"relational_form": {"question": True}}}}
+    P.integrate_turn(systems, "When I greet you, you say hello.", session_id="x")
+    assert [r["predicate"] for r in R.rules(web)] == ["say"]
+    P.integrate_turn(systems, "When did you greet me?", session_id="x")          # a real question still is not
+    assert len(R.rules(web)) == 1

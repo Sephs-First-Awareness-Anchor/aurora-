@@ -549,6 +549,21 @@ def own_composition(systems: Dict[str, Any], heard: str) -> str:
     return text
 
 
+def _worked_out(systems: Dict[str, Any], heard: str) -> bool:
+    """Can what she was taught answer this turn (a derived order/kind/mark/rule, or a
+    taught word bound to a read-only capability)?  Checked without running anything."""
+    try:
+        from aurora_internal.aurora_confluence import _find_web
+        from aurora_internal.aurora_learned_rules import derive
+        from aurora_internal.aurora_capability_binding import answerable
+        web = _find_web(systems)
+        if web is None:
+            return False
+        return bool(derive(web, heard)) or answerable(web, heard)
+    except Exception:
+        return False
+
+
 def _confluent_reply(systems: Dict[str, Any], resp: Any, heard: str, channel: str,
                      level: float, record: Dict[str, Any], pressure: Any) -> Any:
     """The confluence's reply for this turn, or None when it has nothing."""
@@ -617,8 +632,9 @@ def apply_voice_gate(systems: Dict[str, Any], resp: Any, heard: str, *,
     composed = own_composition(systems, heard) if reason else ""
     # She would speak if the reply stands, if her composer has a draft, or if
     # she is moved to speak; in each case the confluence composes it first.
+    # FIX-A134: she also speaks when what she was taught lets her work out an answer to what was said.
     if CONFLUENCE_FIRST and CONFLUENCE_ENABLED and (
-            not reason or composed or level >= ARTICULATION_THRESHOLD):
+            not reason or composed or level >= ARTICULATION_THRESHOLD or _worked_out(systems, heard)):
         tried_first = True
         first = _confluent_reply(systems, resp, heard, channel, level, record, pressure)
         if first is not None:

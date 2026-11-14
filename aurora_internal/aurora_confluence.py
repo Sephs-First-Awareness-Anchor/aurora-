@@ -447,6 +447,12 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
         found = derive(web, heard, speaker_now=speaker_now, self_now=self_now) + found
     except Exception:
         pass
+    # FIX-A134: a word she was taught that names a capability she owns is answered by using it.
+    try:
+        from aurora_internal.aurora_capability_binding import derive as _capability
+        found = _capability(systems, web, heard, self_now=self_now) + found
+    except Exception:
+        pass
     found.sort(key=lambda r: (-r["strength"], r["source"], r["target"]))
     return found[: max(1, int(reach)) * 4]
 
@@ -628,6 +634,8 @@ def plan(contrib: Mapping[str, Any], how: Mapping[str, Any]) -> List[Dict[str, A
     options = list(contrib.get("options") or [])
     known = list(contrib.get("knowledge") or [])
     resting = set(contrib.get("resting") or ())
+    if any(k.get("derived") for k in known):
+        stance = {}            # FIX-A134: a worked-out answer is not contradicted by her stance on the verb asked
     used: set = set()
     clauses: List[Dict[str, Any]] = []
     budget = int(how.get("clauses", 1))

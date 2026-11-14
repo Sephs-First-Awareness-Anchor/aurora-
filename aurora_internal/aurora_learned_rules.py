@@ -244,6 +244,8 @@ def _tail_word(tokens: Sequence[str], skip: frozenset = _FILLER) -> str:
     that letter ("after a"), as is one that labels the word before it ("the
     letter a"); "a" in front of a word is the article."""
     toks = list(tokens)
+    if len(toks) == 1 and toks[0] not in _AUX and toks[0] not in ("a", "an", "the"):
+        return toks[0]                       # "after one": a lone word is what it names, filler or not
     for i in range(len(toks) - 1, -1, -1):
         tok = toks[i]
         if len(tok) == 1 and tok.isalpha():

@@ -155,7 +155,8 @@ def _acts(text: str) -> set:
     return _acts_in(text)
 
 
-def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = MAX_HEADS) -> List[str]:
+def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = MAX_HEADS,
+          ordered: bool = False) -> List[str]:
     """The things a phrase is about: participants for I / you, else its
     content words that are not closed-class and were not the act itself."""
     toks = [t.lower() for t in _words(phrase)]
@@ -166,6 +167,10 @@ def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = M
     # FIX-A133: a lone letter is what it names ("B follows A"), and a letter
     # right after a thing labels it ("the letter b", "plan b", "point a").
     if len(toks) == 1 and len(toks[0]) == 1 and toks[0] not in _FIRST:
+        return [toks[0]]
+    # FIX-A134: what is being put in order, classed or said is what it names, even a word
+    # that is also a pronoun or an interjection ("two comes after one", "hello is a greeting").
+    if ordered and len(toks) == 1 and toks[0] not in _FIRST and toks[0] not in _SECOND and toks[0] not in PARTICIPANTS:
         return [toks[0]]
     glyphs = [t for t in toks if len(t) == 1 and not t.isalpha()]
     if glyphs:
@@ -204,10 +209,17 @@ def _node_role(web: Any, word: str) -> str:
     return str(getattr(node, "role", "") or "") if node is not None else ""
 
 
-def _is_verb_here(tok: str, nxt: str, tags: Mapping[int, Any], i: int, verb_forms: set, web: Any) -> bool:
+def _is_verb_here(tok: str, nxt: str, tags: Mapping[int, Any], i: int, verb_forms: set, web: Any,
+                  prev: str = "") -> bool:
     from aurora_grammar_engine import TokenRole
     if tok in verb_forms or tags.get(i) is TokenRole.ACTION:
         return True
+    # FIX-A134: a content word between a person-pronoun and a content word is its act
+    # ("I feel sad": her tagger reads "i feel" as context, so the act was lost).
+    if (prev in _FIRST or prev in _SECOND or prev in ("we", "they")) and nxt:
+        closed = _closed_class()
+        if tok not in closed and nxt not in closed and tok not in _NEGATORS and tok not in _MODALS:
+            return True
     if _node_role(web, tok) == "verb":
         return True
     # a word right before a determiner, after a thing, is acting on it
@@ -316,11 +328,13 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                     continue
                 if tok in closed and tok not in verb_forms:
                     continue                         # FIX-A133: her verb forms ("follows") are closed-class for heads, not for the act
+                if i > 0 and toks[i - 1] in ("a", "an"):
+                    continue                         # FIX-A134: a word right after "a"/"an" is a noun, never the act ("a greeting")
                 if explicit < 0 and (after_aux or tok in verb_forms
                                      or _node_role(web, tok) == "verb"):
                     explicit = i
                     break
-                if tagged_at < 0 and copula_at < 0 and _is_verb_here(tok, nxt, tags, i, verb_forms, web):
+                if tagged_at < 0 and copula_at < 0 and _is_verb_here(tok, nxt, tags, i, verb_forms, web, toks[i - 1] if i else ""):
                     tagged_at = i
                     if toks[i - 1] in _SUBJECT_PRONOUNS:
                         break                        # "I want ...": the act right after its doer
@@ -346,8 +360,8 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                         if toks[i] in _NEGATORS and i > verb_at:
                             negated = True
                         continue
-                    if toks[i].endswith("ing") and len(toks[i]) > 4:
-                        verb_at, copula = i, False
+                    if toks[i].endswith("ing") and len(toks[i]) > 4 and toks[i - 1] not in ("a", "an"):
+                        verb_at, copula = i, False          # (FIX-A134: "a greeting" is a thing)
                     break
             obj: List[str] = []
             content = 0
@@ -472,10 +486,14 @@ def _ensure_node(web: Any, word: str) -> Any:
 
 def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, modality: str,
                       speaker: str, time_ref: str, profile: Mapping[str, float], context: str,
-                      when: Optional[Mapping[str, Any]] = None) -> None:
+                      when: Optional[Mapping[str, Any]] = None, phrase: str = "") -> None:
     a = dict(getattr(rel, "assertion", None) or {})
     preds = dict(a.get("predicates") or {})
     p = dict(preds.get(predicate) or {"n": 0, "denied": 0, "surface": surface, "modal": {}})
+    if phrase:                                # FIX-A134: the words it was said with, whatever the tagger made of them
+        closed = _closed_class()
+        said = [w.lower() for w in _words(phrase) if len(w) >= 3 and w.lower() not in closed and "'" not in w]
+        p["said_with"] = sorted(set(p.get("said_with") or []) | set(said))[:16]
     if when:                                  # FIX-A133: what this is said to hold under (a few, newest last)
         held = [dict(w) for w in (p.get("when") or []) if dict(w) != dict(when)]
         p["when"] = (held + [dict(when)])[-3:]
@@ -527,9 +545,14 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
         particle = str(form.get("particle") or "").lower()
         closed = _closed_class()
         if predicate and (predicate == "be" or predicate not in closed) and "'" not in predicate:
-            subj = heads(form.get("subject"), speaker=speaker, listener=listener, acts=acts)
+            # what is being put in order, classed, or said is what it names (even "yes", "hello", "one")
+            ordered = (particle in _ORDER_PARTICLES or particle in ("a", "an")
+                       or predicate in ("follow", "precede", "say"))
+            # the tagger sometimes calls a subject word an act ("seven comes after six"): the act is the relation
+            acts = acts - {w.lower() for w in _words(form.get("subject"))}
+            subj = heads(form.get("subject"), speaker=speaker, listener=listener, acts=acts, ordered=ordered)
             obj_text = " ".join(str(form.get(k) or "") for k in ("obj", "complement"))
-            objs = heads(obj_text, speaker=speaker, listener=listener, acts=acts | {predicate_surface})
+            objs = heads(obj_text, speaker=speaker, listener=listener, acts=acts | {predicate_surface}, ordered=ordered)
             rtype = relation_type_for(web, profile)
             for s in subj:
                 for o in objs:
@@ -549,7 +572,7 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                     _record_assertion(rel, predicate=pred_here, surface=surf_here,
                                       negated=bool(form.get("negated")), modality=str(form.get("modality") or ""),
                                       speaker=speaker, time_ref=time_ref, profile=profile,
-                                      context=str(heard or "")[:120], when=form.get("when"))
+                                      context=str(heard or "")[:120], when=form.get("when"), phrase=obj_text)
                     if pred_here == "be a" and not form.get("negated"):
                         try:
                             from aurora_internal.aurora_learned_rules import apply_kind
@@ -594,7 +617,9 @@ def integrate_turn(systems: Mapping[str, Any], heard: str, *, session_id: str = 
     # so "I love old soul records" is (I, love, records) and not
     # (I love old soul, records, -).
     props: List[Dict[str, Any]] = []
-    if not form.get("question") and not form.get("directive"):
+    # FIX-A134: "When I greet you, you say hello." opens with a question word but is a statement.
+    conditional = bool(re.match(r"\s*(when|whenever|if)\b", str(heard), re.I)) and "?" not in str(heard)
+    if (conditional or not form.get("question")) and (conditional or not form.get("directive")):
         acts = _acts(heard)
         for st in statements_in(heard, web=web):
             props.extend(integrate_form(web, st, heard=heard, speaker=speaker, listener=listener,
