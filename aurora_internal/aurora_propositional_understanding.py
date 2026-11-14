@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import math
 import re
+import time
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 AXES = ("X", "T", "N", "B", "A")
@@ -51,6 +52,8 @@ ASSERTION_SOURCE = "assertion"
 NEW_STRENGTH = 0.35
 NEW_CONFIDENCE = 0.45
 MAX_PREDICATES = 12
+BASES = ("told", "observed", "corrected")      # how something came to be held (FIX-A137)
+MAX_HISTORY = 8                                # the first exposure, then the most recent events
 MAX_HEADS = 2
 
 # Participants as nodes of her web.
@@ -493,10 +496,22 @@ def _ensure_node(web: Any, word: str) -> Any:
 
 def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, modality: str,
                       speaker: str, time_ref: str, profile: Mapping[str, float], context: str,
-                      when: Optional[Mapping[str, Any]] = None, phrase: str = "") -> None:
+                      when: Optional[Mapping[str, Any]] = None, phrase: str = "",
+                      basis: str = "told") -> None:
     a = dict(getattr(rel, "assertion", None) or {})
     preds = dict(a.get("predicates") or {})
     p = dict(preds.get(predicate) or {"n": 0, "denied": 0, "surface": surface, "modal": {}})
+    # FIX-A137: how it came to be held and when, appended and never overwritten.  The counts above
+    # are the running verdict; the history is how she got there (first exposure kept, then the latest).
+    basis = basis if basis in BASES else "told"
+    counts = dict(p.get("basis") or {})
+    counts[basis] = int(counts.get(basis, 0)) + 1
+    p["basis"] = counts
+    hist = [dict(e) for e in (p.get("history") or [])]
+    hist.append({"t": int(time.time()), "by": speaker, "d": 1 if negated else 0, "b": basis})
+    if len(hist) > MAX_HISTORY:
+        hist = hist[:1] + hist[-(MAX_HISTORY - 1):]
+    p["history"] = hist
     if phrase:                                # FIX-A134: the words it was said with, whatever the tagger made of them
         closed = _closed_class()
         said = [w.lower() for w in _words(phrase) if len(w) >= 3 and w.lower() not in closed and "'" not in w]
@@ -560,7 +575,7 @@ def _learned_changed(web: Any) -> None:
 
 def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: str, listener: str,
                    profile: Mapping[str, float], time_ref: str = "", acts: Optional[set] = None,
-                   _depth: int = 0) -> List[Dict[str, Any]]:
+                   _depth: int = 0, basis: str = "told") -> List[Dict[str, Any]]:
     """Every proposition asserted in one relational form (and its clauses)."""
     out: List[Dict[str, Any]] = []
     form = dict(form or {})
@@ -602,7 +617,7 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                     _record_assertion(rel, predicate=pred_here, surface=surf_here,
                                       negated=bool(form.get("negated")), modality=str(form.get("modality") or ""),
                                       speaker=speaker, time_ref=time_ref, profile=profile,
-                                      context=str(heard or "")[:120], phrase=obj_text,
+                                      context=str(heard or "")[:120], phrase=obj_text, basis=basis,
                                       when=_condition_of(form, speaker, listener, acts))
                     _learned_changed(web)
                     if pred_here == "be a" and not form.get("negated"):
@@ -618,7 +633,8 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
     if _depth < 2:
         for clause in list(form.get("clauses") or []):
             out.extend(integrate_form(web, dict(clause or {}), heard=heard, speaker=speaker, listener=listener,
-                                      profile=profile, time_ref=time_ref, acts=acts, _depth=_depth + 1))
+                                      profile=profile, time_ref=time_ref, acts=acts, _depth=_depth + 1,
+                                      basis=basis))
     return out
 
 
@@ -667,6 +683,36 @@ def integrate_turn(systems: Mapping[str, Any], heard: str, *, session_id: str = 
     if isinstance(systems, dict):
         systems["_last_propositions"] = record
     return record
+
+
+def standing(rel: Any, predicate: str) -> Dict[str, Any]:
+    """How a held statement stands: said how often and denied how often, on what basis, since when,
+    and whether it is contested (told and denied about equally).  Read-only."""
+    p = dict(dict(dict(getattr(rel, "assertion", None) or {}).get("predicates") or {}).get(predicate) or {})
+    n, denied = int(p.get("n", 0) or 0), int(p.get("denied", 0) or 0)
+    hist = list(p.get("history") or [])
+    return {"n": n, "denied": denied, "held": n > 0 and denied * 2 < n,
+            "contested": n > 0 and denied > 0 and abs(n - 2 * denied) <= 1,
+            "basis": dict(p.get("basis") or {}), "first": (hist[0] if hist else {}),
+            "last": (hist[-1] if hist else {}), "history": hist}
+
+
+def observe(web: Any, subject_word: str, predicate: str, obj: str, *, within: float = 30.0) -> bool:
+    """She herself did something and saw a result: ("I", see, cup) is recorded as OBSERVED, in the
+    same place and shape as anything she is told.  The same observation inside ``within`` seconds is
+    one observation.  Returns whether it was recorded."""
+    if web is None or not predicate or not obj:
+        return False
+    now = int(time.time())
+    for rel in list(getattr(web, "relations", {}).values()):
+        if rel.source_word == subject_word and rel.target_word == obj:
+            last = standing(rel, predicate).get("last") or {}
+            if last.get("b") == "observed" and now - int(last.get("t", 0) or 0) < within:
+                return False
+    form = {"subject": "i", "relation": predicate, "obj": obj, "negated": False, "modality": ""}
+    props = integrate_form(web, form, heard=f"I {predicate} {obj}", speaker=subject_word, listener="",
+                           profile={}, acts={predicate}, basis="observed")
+    return bool(props)
 
 
 def predicate_order(rel: Any) -> List[str]:

@@ -337,3 +337,38 @@ def test_what_she_cannot_work_out_is_said_not_known_and_what_she_does_not_hold_i
 def test_a_not_known_answer_is_not_a_fact_and_says_so():
     got = R.derive(_told(ALPHABET), "What comes after z?", speaker_now="sunni", self_now="aurora")
     assert got[0]["basis"] == "unknown" and got[0]["derived"] == ["not told"]
+
+
+# -- basis and history (FIX-A137) --------------------------------------------------
+
+def _rel(web, a, b):
+    return next(r for r in web.relations.values() if r.source_word == a and r.target_word == b)
+
+
+def test_every_statement_records_how_and_when_it_came_to_be_held_and_history_only_grows():
+    web = _told(["B comes after a."] * 3 + ["B does not come after a."])
+    st = P.standing(_rel(web, "b", "a"), "come after")
+    assert (st["n"], st["denied"], st["held"]) == (4, 1, True)                # the running verdict
+    assert st["basis"] == {"told": 4} and len(st["history"]) == 4             # how she got there
+    assert [e["d"] for e in st["history"]] == [0, 0, 0, 1] and st["first"]["by"] == "sunni"
+
+
+def test_history_keeps_the_first_exposure_and_the_latest_and_is_bounded():
+    web = _told(["B comes after a."] * 20)
+    hist = P.standing(_rel(web, "b", "a"), "come after")["history"]
+    assert len(hist) == P.MAX_HISTORY
+    assert P.standing(_rel(web, "b", "a"), "come after")["n"] == 20            # the verdict still counts all 20
+
+
+def test_a_statement_said_both_ways_is_contested_not_overwritten():
+    web = _told(["B comes after a.", "B does not come after a."])
+    st = P.standing(_rel(web, "b", "a"), "come after")
+    assert st["contested"] and not st["held"] and st["n"] == 2 and st["denied"] == 1
+
+
+def test_what_she_herself_observed_is_held_as_observed_once_per_moment():
+    web = OntologicalWeb()
+    assert P.observe(web, "aurora", "see", "cup") is True
+    assert P.observe(web, "aurora", "see", "cup") is False                    # the same look, not a second observation
+    st = P.standing(_rel(web, "aurora", "cup"), "see")
+    assert st["basis"] == {"observed": 1} and st["history"][0]["by"] == "aurora"

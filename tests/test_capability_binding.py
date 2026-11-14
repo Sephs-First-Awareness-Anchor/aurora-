@@ -195,3 +195,12 @@ def test_a_derived_answer_cannot_be_changed_by_a_consumer():
     first[0]["lex"]["object"] = "corrupted"
     again = R.derive(web, "What comes after a?", speaker_now="sunni", self_now="aurora")
     assert again[0]["lex"]["object"] == "a"
+
+
+def test_what_she_saw_is_kept_as_observed_where_she_keeps_what_she_was_told():
+    web = _told(SEE)
+    B.derive({"hardware": _Camera()}, web, "What can you see?")
+    cup = next(r for r in web.relations.values() if r.source_word == "aurora" and r.target_word == "cup")
+    assert dict(cup.assertion["predicates"]["see"]["basis"]) == {"observed": 1}
+    B.derive({"hardware": None}, web, "What can you see?")                   # nothing seen: nothing is recorded
+    assert dict(cup.assertion["predicates"]["see"]["basis"]) == {"observed": 1}

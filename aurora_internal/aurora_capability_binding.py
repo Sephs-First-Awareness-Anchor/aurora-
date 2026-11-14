@@ -270,6 +270,13 @@ def derive(systems: Mapping[str, Any], web: Any, heard: str, *, self_now: str = 
         kind = ("seen" if sensed else "empty" if "empty" in kinds else
                 "failed" if "failed" in kinds else "unavailable")
         _remember(systems, pred, ran, kind)
+        if kind == "seen":                                # what she herself saw is held as OBSERVED (FIX-A137)
+            try:
+                from aurora_internal.aurora_propositional_understanding import SELF, observe
+                for w in dict.fromkeys(sensed):
+                    observe(web, SELF, pred, w)
+            except Exception:
+                pass
         base = {"source": "aurora", "kind": "related_to", "strength": 1.6, "axis": "X",
                 "learned_from": "capability", "asked": True, "derived": [pred] + ran}
         base["outcome"] = kind
