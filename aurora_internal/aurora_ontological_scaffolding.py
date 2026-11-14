@@ -2738,7 +2738,12 @@ class OntologicalScaffoldingEngine:
         for word in words:
             # FIX-A132: brackets are punctuation, not letters ("[user]", "[internal")
             clean = word.strip(".,!?;:'\"()-[]{}")
-            if clean and len(clean) > 1:
+            if not clean and len(word) >= 3 and word[0] == '"' and word[1] in ".,!?;:" and word.strip('"') in ".,!?;:" \
+                    and len(word.strip('"')) == 1:
+                clean = word[1]            # FIX-A133: a mark mentioned in quotes is a word about the mark
+            # FIX-A133: a single letter is a word too ("a", "I", the letters of
+            # the alphabet); only empty and non-letter scraps are not.
+            if clean and (len(clean) > 1 or clean.isalpha() or clean in ".,!?;:"):
                 clean_words.append(clean)
 
         # Ensure all words exist in the web

@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import math
 import re
+import time
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 AXES = ("X", "T", "N", "B", "A")
@@ -51,6 +52,8 @@ ASSERTION_SOURCE = "assertion"
 NEW_STRENGTH = 0.35
 NEW_CONFIDENCE = 0.45
 MAX_PREDICATES = 12
+BASES = ("told", "observed", "corrected")      # how something came to be held (FIX-A137)
+MAX_HISTORY = 8                                # the first exposure, then the most recent events
 MAX_HEADS = 2
 
 # Participants as nodes of her web.
@@ -82,11 +85,17 @@ _NOT_HEADS = frozenset({"him", "her", "them", "it", "itself", "themselves", "him
 _SUBJECT_PRONOUNS = frozenset({"i", "we", "you", "they", "he", "she", "it", "u"})
 _PRONOUN_COPULA = {"i'm": "i", "im": "i", "we're": "we", "you're": "you", "they're": "they", "he's": "he",
                    "she's": "she", "it's": "it", "that's": "that"}
-_CLAUSE_BREAKS = frozenset({"when", "if", "because", "while", "since", "until", "although", "though", "unless",
+_CLAUSE_BREAKS = frozenset({"when", "whenever", "if", "because", "while", "since", "until", "although", "though", "unless",
                             "whereas", "after", "before", "but", "so", "and", "or", "then", "cause", "cuz"})
 _DETERMINERS = frozenset({"the", "a", "an", "this", "that", "these", "those", "some", "any", "every", "each",
                           "my", "your", "our", "his", "her", "their", "its"})
-_TOKEN = re.compile(r"[A-Za-z][A-Za-z']*")
+# FIX-A133: a punctuation mark MENTIONED in quotes ('The mark "?" ends a question.')
+# is a token, so she can be told what it is for; a mark used in running text is not.
+_TOKEN = re.compile(r"[A-Za-z][A-Za-z']*|(?<=\")[.?!,;:](?=\")")
+
+# FIX-A133: the particles that make a verb an ordering ("comes after", "is before").
+_ORDER_PARTICLES = frozenset({"after", "before"})
+_ORDER_VERB_BASES = frozenset({"come", "follow", "precede", "succeed"})     # "does not COME after"
 
 
 def _f(v: Any, d: float = 0.0) -> float:
@@ -149,7 +158,8 @@ def _acts(text: str) -> set:
     return _acts_in(text)
 
 
-def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = MAX_HEADS) -> List[str]:
+def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = MAX_HEADS,
+          ordered: bool = False, letterish: bool = False) -> List[str]:
     """The things a phrase is about: participants for I / you, else its
     content words that are not closed-class and were not the act itself."""
     toks = [t.lower() for t in _words(phrase)]
@@ -157,8 +167,29 @@ def heads(phrase: Any, *, speaker: str, listener: str, acts: set, limit: int = M
         return []
     out: List[str] = []
     closed = _closed_class()
-    for tok in toks:
+    # FIX-A133: a lone letter is what it names ("B follows A"), and a letter
+    # right after a thing labels it ("the letter b", "plan b", "point a").
+    if len(toks) == 1 and len(toks[0]) == 1 and toks[0] not in _FIRST:
+        return [toks[0]]
+    # FIX-A134: what is being put in order, classed or said is what it names, even a word
+    # that is also a pronoun or an interjection ("two comes after one", "hello is a greeting").
+    if ordered and len(toks) == 1 and toks[0] not in _FIRST and toks[0] not in _SECOND and toks[0] not in PARTICIPANTS:
+        return [toks[0]]
+    # "I is a letter", "j comes after I": a third-person verb makes the lone "i" the letter, not the speaker
+    if ordered and letterish and len(toks) == 1 and toks[0] in ("i", "u"):
+        return [toks[0]]
+    glyphs = [t for t in toks if len(t) == 1 and not t.isalpha()]
+    if glyphs:
+        return glyphs[:limit]                     # a mark mentioned in quotes is what the phrase is about
+    for i, tok in enumerate(toks):
         if tok in _POSSESSIVE:
+            continue
+        if len(tok) == 1 and i and (tok not in _FIRST or toks[i - 1] in ("letter", "letters")) \
+                and len(toks[i - 1]) >= 3 and toks[i - 1] not in closed:
+            if toks[i - 1] in out:
+                out.remove(toks[i - 1])           # "the letter b" is about b; "letter" is what kind it is
+            if tok not in out:
+                out.append(tok)
             continue
         if tok in _FIRST:
             cand = speaker
@@ -185,14 +216,59 @@ def _node_role(web: Any, word: str) -> str:
     return str(getattr(node, "role", "") or "") if node is not None else ""
 
 
-def _is_verb_here(tok: str, nxt: str, tags: Mapping[int, Any], i: int, verb_forms: set, web: Any) -> bool:
+def _is_verb_here(tok: str, nxt: str, tags: Mapping[int, Any], i: int, verb_forms: set, web: Any,
+                  prev: str = "") -> bool:
     from aurora_grammar_engine import TokenRole
     if tok in verb_forms or tags.get(i) is TokenRole.ACTION:
         return True
+    # FIX-A134: a content word between a person-pronoun and a content word is its act
+    # ("I feel sad": her tagger reads "i feel" as context, so the act was lost).
+    if (prev in _FIRST or prev in _SECOND or prev in ("we", "they")) and nxt:
+        closed = _closed_class()
+        if tok not in closed and nxt not in closed and tok not in _NEGATORS and tok not in _MODALS:
+            return True
     if _node_role(web, tok) == "verb":
         return True
     # a word right before a determiner, after a thing, is acting on it
     return bool(nxt) and nxt in _DETERMINERS and tok.endswith(("s", "ed"))
+
+
+_CONDITION_LEADS = frozenset({"when", "if", "whenever"})
+_CORRECTION = re.compile(r"\s*(actually|correction|no|wrong|rather|i was wrong|that is wrong|that's wrong|i misspoke|"
+                         r"i mean|scratch that)\b[\s,:;-]", re.I)
+
+
+def _link_conditions(out: List[Dict[str, Any]], first: int) -> None:
+    """FIX-A133: "I feel calm WHEN you are settled": the clause after when/if is
+    the condition of the other one.  The condition stays a statement of its own
+    (as before); the main clause now also carries what it holds under."""
+    new = out[first:]
+    for i, st in enumerate(new):
+        if st.get("_lead") in _CONDITION_LEADS:
+            st["conditional"] = True              # said as the condition of another statement: not itself asserted
+            main = new[1] if i == 0 and len(new) > 1 else (new[i - 1] if i else None)
+            if main is not None and main.get("_lead") not in _CONDITION_LEADS and "when" not in main:
+                main["when"] = {k: st.get(k, "") for k in ("subject", "relation", "obj", "negated", "modality")}
+    for st in new:
+        st.pop("_lead", None)
+
+
+def _join_phrase(toks: List[str]) -> str:
+    """A phrase's words as text; a mark that was mentioned in quotes keeps its quotes."""
+    return " ".join(f'"{t}"' if len(t) == 1 and not t.isalpha() else t for t in toks)
+
+
+def _order_particle_at(toks: List[str], i: int, verb_forms: set) -> bool:
+    """FIX-A133: "after"/"before" straight after a verb and in front of a phrase
+    ("b comes AFTER the letter a") is part of what is said of the subject, not the
+    start of a new clause ("... after I left")."""
+    if toks[i] not in _ORDER_PARTICLES or i < 1 or i + 1 >= len(toks):
+        return False
+    prev, nxt = toks[i - 1], toks[i + 1]
+    # (a lone "i"/"u" that ends the sentence is the letter, not the start of a clause)
+    ends = i + 2 >= len(toks) and nxt in ("i", "u")
+    return (prev in verb_forms or prev in _COPULA or prev in _NEGATORS or prev in _ORDER_VERB_BASES) \
+        and (nxt not in _SUBJECT_PRONOUNS or ends)
 
 
 def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
@@ -206,6 +282,8 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
     closed = _closed_class()
     out: List[Dict[str, Any]] = []
     for sentence in re.split(r"(?<=[.!?])\s+|\n+", str(text or "")):
+        sent_first = len(out)
+        pending_lead = ""
         sentence = sentence.strip()
         if not sentence or sentence.endswith("?"):
             continue
@@ -214,18 +292,22 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
         for piece in re.split(r"[,;:()\u2014\u2013]|\s-\s", sentence):
             toks.extend(t.lower() for t in _words(piece))
             cuts.append(len(toks))
-        if not toks or toks[0] in ("what", "why", "how", "who", "where", "when", "which", "do", "does", "did",
+        # (a sentence that opens with "when" and is not a question is a condition: FIX-A133)
+        if not toks or toks[0] in ("what", "why", "how", "who", "where", "which", "do", "does", "did",
                                    "are", "is", "can", "could", "would", "should", "will", "let", "let's"):
             continue
         tagged = tagger.tag(" ".join(toks))
         tags = {i: role for i, (_, role) in enumerate(tagged)} if len(tagged) == len(toks) else {}
         start = 0
-        bounds = sorted({(i, 1) for i, t in enumerate(toks) if t in _CLAUSE_BREAKS} |
+        bounds = sorted({(i, 1) for i, t in enumerate(toks)
+                         if t in _CLAUSE_BREAKS and not _order_particle_at(toks, i, verb_forms)} |
                         {(c, 0) for c in cuts if 0 < c})
         for end, skip in bounds:
             if end < start:
                 continue
             seg = list(range(start, end))
+            lead_here = pending_lead                       # FIX-A133: the word that opened this clause
+            pending_lead = toks[end] if skip and end < len(toks) else ""
             start = end + skip
             if len(seg) < 2:
                 continue
@@ -256,13 +338,19 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                     if copula_at < 0:
                         copula_at = i
                     continue
-                if tok in closed:
-                    continue
+                if (after_aux and explicit < 0 and toks[i - 1] in _MODALS | _NEGATORS
+                        and tok not in _DETERMINERS and tok not in _SUBJECT_PRONOUNS):
+                    explicit = i                     # the word right after "does not" / "can" is the act, even "like" (a closed-class word)
+                    break
+                if tok in closed and tok not in verb_forms:
+                    continue                         # FIX-A133: her verb forms ("follows") are closed-class for heads, not for the act
+                if i > 0 and toks[i - 1] in ("a", "an") and (copula_at >= 0 or explicit >= 0):
+                    continue                         # FIX-A134: after the verb, a word right after "a"/"an" is a noun ("a greeting"); "the letter a comes" is not
                 if explicit < 0 and (after_aux or tok in verb_forms
                                      or _node_role(web, tok) == "verb"):
                     explicit = i
                     break
-                if tagged_at < 0 and copula_at < 0 and _is_verb_here(tok, nxt, tags, i, verb_forms, web):
+                if tagged_at < 0 and copula_at < 0 and _is_verb_here(tok, nxt, tags, i, verb_forms, web, toks[i - 1] if i else ""):
                     tagged_at = i
                     if toks[i - 1] in _SUBJECT_PRONOUNS:
                         break                        # "I want ...": the act right after its doer
@@ -288,18 +376,22 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                         if toks[i] in _NEGATORS and i > verb_at:
                             negated = True
                         continue
-                    if toks[i].endswith("ing") and len(toks[i]) > 4:
-                        verb_at, copula = i, False
+                    if toks[i].endswith("ing") and len(toks[i]) > 4 and toks[i - 1] not in ("a", "an"):
+                        verb_at, copula = i, False          # (FIX-A134: "a greeting" is a thing)
                     break
             obj: List[str] = []
             content = 0
             skip_next = False
+            particle = ""
             for i in seg:
                 if i <= verb_at:
                     continue
                 tok = toks[i]
                 if skip_next:
                     skip_next = False
+                    continue
+                if tok in _ORDER_PARTICLES and not obj and not particle:
+                    particle = tok                 # "comes AFTER the letter a": part of what is said of it
                     continue
                 if tok == "to" and not content:
                     skip_next = True               # "want to SAY": an infinitive, not a thing
@@ -308,6 +400,9 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                     negated = True
                     continue
                 is_content = len(tok) >= 3 and "'" not in tok and tok not in closed
+                if len(tok) == 1 and tok.isalpha() and obj and len(obj[-1]) >= 3 and obj[-1] not in closed:
+                    obj.append(tok)                # FIX-A133: "the letter B": a letter labels the thing before it
+                    continue
                 if not is_content and content and tok not in _DETERMINERS:
                     break                          # the phrase is whole ("records | on a slow night")
                 if is_content and content and tags.get(i) is not None and tok in closed:
@@ -316,8 +411,15 @@ def statements_in(text: str, *, web: Any = None) -> List[Dict[str, Any]]:
                 if is_content or tok in _FIRST or tok in _SECOND:
                     content += 1
             surface = "be" if copula else toks[verb_at]
-            out.append({"subject": " ".join(subject), "relation": surface, "obj": " ".join(obj),
-                        "negated": negated, "modality": modality})
+            if copula and not particle and len(obj) > 1 and obj[0] in ("a", "an"):
+                particle, obj = "a", obj[1:]          # FIX-A133: "b is A letter" says what kind of thing b is
+            st = {"subject": _join_phrase(subject), "relation": surface, "obj": _join_phrase(obj),
+                  "negated": negated, "modality": modality, "verb": toks[verb_at]}
+            if particle:
+                st["particle"] = particle
+            st["_lead"] = lead_here
+            out.append(st)
+        _link_conditions(out, sent_first)
     return out
 
 
@@ -398,11 +500,57 @@ def _ensure_node(web: Any, word: str) -> Any:
         return None
 
 
+_INVERSE_PREDICATE = {"come after": "come before", "come before": "come after", "follow": "precede",
+                      "precede": "follow", "be after": "be before", "be before": "be after"}
+_INVERSE_WORD = {"after": "before", "before": "after", "follow": "precede", "follows": "precedes",
+                 "precede": "follow", "precedes": "follows", "followed": "preceded", "preceded": "followed"}
+
+
+def _inverse_surface(surface: str) -> str:
+    return " ".join(_INVERSE_WORD.get(w, w) for w in str(surface or "").split())
+
+
+def verdict(p: Mapping[str, Any]) -> str:
+    """How a predicate along a relation stands: "held", "denied", "contested" (said and denied about
+    equally) or "unsaid".  A CORRECTION settles it (the latest one decides) without touching the
+    history: what was told before stays, and so does that it was later corrected (FIX-A138)."""
+    p = dict(p or {})
+    n, d = int(p.get("n", 0) or 0), int(p.get("denied", 0) or 0)
+    if n <= 0:
+        return "unsaid"
+    settled = dict(p.get("settled") or {})
+    if settled:
+        return "denied" if settled.get("d") else "held"
+    return "held" if d * 2 < n else ("denied" if d * 2 > n else "contested")
+
+
 def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, modality: str,
-                      speaker: str, time_ref: str, profile: Mapping[str, float], context: str) -> None:
+                      speaker: str, time_ref: str, profile: Mapping[str, float], context: str,
+                      when: Optional[Mapping[str, Any]] = None, phrase: str = "",
+                      basis: str = "told") -> None:
     a = dict(getattr(rel, "assertion", None) or {})
     preds = dict(a.get("predicates") or {})
     p = dict(preds.get(predicate) or {"n": 0, "denied": 0, "surface": surface, "modal": {}})
+    # FIX-A137: how it came to be held and when, appended and never overwritten.  The counts above
+    # are the running verdict; the history is how she got there (first exposure kept, then the latest).
+    basis = basis if basis in BASES else "told"
+    counts = dict(p.get("basis") or {})
+    counts[basis] = int(counts.get(basis, 0)) + 1
+    p["basis"] = counts
+    hist = [dict(e) for e in (p.get("history") or [])]
+    hist.append({"t": int(time.time()), "by": speaker, "d": 1 if negated else 0, "b": basis})
+    if len(hist) > MAX_HISTORY:
+        hist = hist[:1] + hist[-(MAX_HISTORY - 1):]
+    p["history"] = hist
+    if basis == "corrected":                  # the latest correction decides; everything before it stays in history
+        p["settled"] = {"d": 1 if negated else 0, "t": int(time.time()), "by": speaker}
+    if phrase:                                # FIX-A134: the words it was said with, whatever the tagger made of them
+        closed = _closed_class()
+        said = [w.lower() for w in _words(phrase) if len(w) >= 3 and w.lower() not in closed and "'" not in w]
+        p["said_with"] = sorted(set(p.get("said_with") or []) | set(said))[:16]
+    if when:                                  # FIX-A133: what this is said to hold under (a few, newest last)
+        held = [dict(w) for w in (p.get("when") or []) if dict(w) != dict(when)]
+        p["when"] = (held + [dict(when)])[-3:]
     p["n"] = int(p.get("n", 0)) + 1
     if negated:
         p["denied"] = int(p.get("denied", 0)) + 1
@@ -437,9 +585,29 @@ def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, 
     rel.assertion = a
 
 
+def _condition_of(form: Mapping[str, Any], speaker: str, listener: str, acts: set) -> Optional[Dict[str, Any]]:
+    """The condition a statement was said to hold under, with WHO it is about resolved
+    against the people in this conversation ("you" said by Sir is Aurora)."""
+    when = form.get("when")
+    if not when:
+        return None
+    cond = dict(when)
+    cond["who"] = heads(cond.get("subject"), speaker=speaker, listener=listener, acts=set())[:2]
+    return cond
+
+
+def _learned_changed(web: Any) -> None:
+    """What she holds along her relations changed: derived structures are stale (FIX-A135)."""
+    try:
+        from aurora_internal.aurora_learned_index import bump
+        bump(web)
+    except Exception:
+        pass
+
+
 def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: str, listener: str,
                    profile: Mapping[str, float], time_ref: str = "", acts: Optional[set] = None,
-                   _depth: int = 0) -> List[Dict[str, Any]]:
+                   _depth: int = 0, basis: str = "told") -> List[Dict[str, Any]]:
     """Every proposition asserted in one relational form (and its clauses)."""
     out: List[Dict[str, Any]] = []
     form = dict(form or {})
@@ -448,11 +616,22 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
         relation_words = [w for w in _words(form.get("relation")) if len(w) >= 2]
         predicate_surface = relation_words[0].lower() if relation_words else ""
         predicate = _lemma(predicate_surface) if predicate_surface else ""
+        particle = str(form.get("particle") or "").lower()
         closed = _closed_class()
-        if predicate and (predicate == "be" or predicate not in closed) and "'" not in predicate:
-            subj = heads(form.get("subject"), speaker=speaker, listener=listener, acts=acts)
+        inflected_or_aux = (predicate_surface != predicate                      # "likes" is the verb; "like" alone may be a preposition
+                            or str(form.get("modality") or "").lower() in ("do", "does", "did"))   # "does not like"
+        if predicate and (predicate == "be" or predicate not in closed or inflected_or_aux) and "'" not in predicate:
+            # what is being put in order, classed, or said is what it names (even "yes", "hello", "one")
+            ordered = (particle in _ORDER_PARTICLES or particle in ("a", "an")
+                       or predicate in ("follow", "precede", "say"))
+            # the tagger sometimes calls a subject word an act ("seven comes after six"): the act is the relation
+            acts = acts - {w.lower() for w in _words(form.get("subject"))}
+            third = str(form.get("verb") or "").endswith("s")       # is / comes / follows: not "am" / "come"
+            subj = heads(form.get("subject"), speaker=speaker, listener=listener, acts=acts, ordered=ordered,
+                         letterish=third)
             obj_text = " ".join(str(form.get(k) or "") for k in ("obj", "complement"))
-            objs = heads(obj_text, speaker=speaker, listener=listener, acts=acts | {predicate_surface})
+            objs = heads(obj_text, speaker=speaker, listener=listener, acts=acts | {predicate_surface},
+                         ordered=ordered, letterish=third)
             rtype = relation_type_for(web, profile)
             for s in subj:
                 for o in objs:
@@ -466,18 +645,34 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                         # An existing co-occurrence link of the same type now has
                         # something actually said along it.
                         rel.source_of_knowledge = ASSERTION_SOURCE
-                    _record_assertion(rel, predicate=predicate, surface=predicate_surface,
+                    # FIX-A133: "comes after" is one predicate: the verb and its particle
+                    pred_here = f"{predicate} {particle}" if particle else predicate
+                    surf_here = f"{predicate_surface} {particle}" if particle else predicate_surface
+                    if (rel.source_word, rel.target_word) != (s, o) and pred_here in _INVERSE_PREDICATE:
+                        # the relation already runs the other way ("b after a" held, now "a after b"):
+                        # said of that relation it is the inverse predicate, not the same one again
+                        pred_here, surf_here = _INVERSE_PREDICATE[pred_here], _inverse_surface(surf_here)
+                    _record_assertion(rel, predicate=pred_here, surface=surf_here,
                                       negated=bool(form.get("negated")), modality=str(form.get("modality") or ""),
                                       speaker=speaker, time_ref=time_ref, profile=profile,
-                                      context=str(heard or "")[:120])
-                    out.append({"source": s, "predicate": predicate, "target": o,
+                                      context=str(heard or "")[:120], phrase=obj_text, basis=basis,
+                                      when=_condition_of(form, speaker, listener, acts))
+                    _learned_changed(web)
+                    if pred_here == "be a" and not form.get("negated"):
+                        try:
+                            from aurora_internal.aurora_learned_rules import apply_kind
+                            apply_kind(web, s, o)         # FIX-A133: told what kind of word it is, it is that kind
+                        except Exception:
+                            pass
+                    out.append({"source": s, "predicate": pred_here, "target": o,
                                 "negated": bool(form.get("negated")), "type": rtype.value})
             for concept in set(subj) | set(objs):
                 place_concept(web.nodes.get(concept), profile)
     if _depth < 2:
         for clause in list(form.get("clauses") or []):
             out.extend(integrate_form(web, dict(clause or {}), heard=heard, speaker=speaker, listener=listener,
-                                      profile=profile, time_ref=time_ref, acts=acts, _depth=_depth + 1))
+                                      profile=profile, time_ref=time_ref, acts=acts, _depth=_depth + 1,
+                                      basis=basis))
     return out
 
 
@@ -508,11 +703,15 @@ def integrate_turn(systems: Mapping[str, Any], heard: str, *, session_id: str = 
     # so "I love old soul records" is (I, love, records) and not
     # (I love old soul, records, -).
     props: List[Dict[str, Any]] = []
-    if not form.get("question") and not form.get("directive"):
+    # FIX-A134: "When I greet you, you say hello." opens with a question word but is a statement.
+    conditional = bool(re.match(r"\s*(when|whenever|if)\b", str(heard), re.I)) and "?" not in str(heard)
+    # FIX-A138: "Actually, ..." / "No, ..." / "Correction: ..." / "I was wrong, ..." -- said as a correction
+    basis = "corrected" if _CORRECTION.match(str(heard)) else "told"
+    if (conditional or not form.get("question")) and (conditional or not form.get("directive")):
         acts = _acts(heard)
         for st in statements_in(heard, web=web):
             props.extend(integrate_form(web, st, heard=heard, speaker=speaker, listener=listener,
-                                        profile=profile, time_ref=time_ref, acts=acts))
+                                        profile=profile, time_ref=time_ref, acts=acts, basis=basis))
     placed = 0
     for concept in list(pipeline.get("salient_concepts") or [])[:8]:
         node = web.nodes.get(str(concept).lower())
@@ -526,11 +725,50 @@ def integrate_turn(systems: Mapping[str, Any], heard: str, *, session_id: str = 
     return record
 
 
+def standing(rel: Any, predicate: str) -> Dict[str, Any]:
+    """How a held statement stands: said how often and denied how often, on what basis, since when,
+    and whether it is contested (told and denied about equally).  Read-only."""
+    p = dict(dict(dict(getattr(rel, "assertion", None) or {}).get("predicates") or {}).get(predicate) or {})
+    n, denied = int(p.get("n", 0) or 0), int(p.get("denied", 0) or 0)
+    hist = list(p.get("history") or [])
+    return {"n": n, "denied": denied, "held": verdict(p) == "held",
+            "verdict": verdict(p), "settled": dict(p.get("settled") or {}),
+            "contested": verdict(p) == "contested",
+            "basis": dict(p.get("basis") or {}), "first": (hist[0] if hist else {}),
+            "last": (hist[-1] if hist else {}), "history": hist}
+
+
+def observe(web: Any, subject_word: str, predicate: str, obj: str, *, within: float = 30.0) -> bool:
+    """She herself did something and saw a result: ("I", see, cup) is recorded as OBSERVED, in the
+    same place and shape as anything she is told.  The same observation inside ``within`` seconds is
+    one observation.  Returns whether it was recorded."""
+    if web is None or not predicate or not obj:
+        return False
+    now = int(time.time())
+    for rel in list(getattr(web, "relations", {}).values()):
+        if rel.source_word == subject_word and rel.target_word == obj:
+            last = standing(rel, predicate).get("last") or {}
+            if last.get("b") == "observed" and now - int(last.get("t", 0) or 0) < within:
+                return False
+    form = {"subject": "i", "relation": predicate, "obj": obj, "negated": False, "modality": ""}
+    props = integrate_form(web, form, heard=f"I {predicate} {obj}", speaker=subject_word, listener="",
+                           profile={}, acts={predicate}, basis="observed")
+    return bool(props)
+
+
 def predicate_order(rel: Any) -> List[str]:
     """The predicates said along a relation, most-said first (ties: the
     later name, as lexicalize_assertion has always chosen)."""
     preds = dict(dict(getattr(rel, "assertion", None) or {}).get("predicates") or {})
     return sorted(preds, key=lambda k: (int(dict(preds[k]).get("n", 0)), k), reverse=True)
+
+
+def _third_person(verb: str) -> str:
+    if verb.endswith(("s", "sh", "ch", "x", "z")):
+        return verb + "es"
+    if verb.endswith("y") and len(verb) > 1 and verb[-2] not in "aeiou":
+        return verb[:-1] + "ies"
+    return verb + "s"
 
 
 def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
@@ -556,7 +794,7 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
     _object = "me" if _target == self_now else ("you" if _target == speaker_now else _target)
     if predicate == "be" and source not in (speaker_now, self_now):
         _object = _target        # "name is Sunni": the name is not about who is listening
-    denied = int(p.get("denied", 0)) * 2 > int(p.get("n", 0))
+    denied = verdict(p) == "denied" or (not p.get("settled") and int(p.get("denied", 0)) * 2 > int(p.get("n", 0)))
     surface = str(p.get("surface") or predicate)
     if agent in ("I", "you") or source in PARTICIPANTS:
         verb = predicate
@@ -579,13 +817,17 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
         verb = f"{modal} {'not ' if denied else ''}{predicate}"
         return {"agent": agent, "action": verb, "object": _object,
                 "predicate": predicate, "n": str(int(p.get("n", 0))), "denied": str(denied)}
-    if predicate == "be":                      # the copula agrees with whoever it is about
+    if predicate == "be" or predicate.startswith("be "):   # the copula agrees with whoever it is about
         verb = "am" if agent == "I" else ("are" if agent == "you" else "is")
         if denied:
             verb += " not"
+        if predicate.startswith("be "):        # FIX-A133: "is a", "is after"
+            verb += predicate[2:]
     elif denied:
         aux = "do" if agent in ("I", "you") else "does"
         verb = f"{aux} not {predicate}"
+    elif agent not in ("I", "you", "we", "they") and verb == predicate and predicate.isalpha():
+        verb = _third_person(predicate)          # "Actually, Devlin does like snow." is voiced "Devlin likes snow."
     return {"agent": agent, "action": verb, "object": _object,
             "predicate": predicate, "n": str(int(p.get("n", 0))), "denied": str(denied)}
 
@@ -698,6 +940,7 @@ def absorb_clone_propositions(web: Any, records: List[Mapping[str, Any]]) -> Dic
         a["n"] = n0 + dn
         a["contexts"] = (list(a.get("contexts") or []) + list(rec.get("contexts") or []))[-5:]
         rel.assertion = a
+        _learned_changed(web)
         absorbed += 1
     return {"absorbed": absorbed, "created": created}
 

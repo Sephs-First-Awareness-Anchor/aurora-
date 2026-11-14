@@ -441,6 +441,18 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
             # related to", "is instance of") is an internal label, not language.
             # Only what was actually said is voiced.
             continue
+    # FIX-A133: what she can work out from what she was told (order, chained).
+    try:
+        from aurora_internal.aurora_learned_rules import derive
+        found = derive(web, heard, speaker_now=speaker_now, self_now=self_now) + found
+    except Exception:
+        pass
+    # FIX-A134: a word she was taught that names a capability she owns is answered by using it.
+    try:
+        from aurora_internal.aurora_capability_binding import derive as _capability
+        found = _capability(systems, web, heard, self_now=self_now) + found
+    except Exception:
+        pass
     found.sort(key=lambda r: (-r["strength"], r["source"], r["target"]))
     return found[: max(1, int(reach)) * 4]
 
@@ -584,6 +596,10 @@ def _knowledge_clause(known: List[Dict[str, Any]], used: set, *, axis: str, pref
     # not the whole pair; and what the speaker just asked about is not made to
     # rest at all, so a direct question can be answered again.
     said = {t for s_, t in used if s_ == _SAID}
+    # FIX-A133: when she has worked out the answer to what was asked, the answer
+    # is what she says -- not whatever else she happens to hold about the words.
+    if any(k.get("derived") for k in known):
+        known = [k for k in known if k.get("derived")]
 
     def _voiced(k: Mapping[str, Any]) -> bool:
         key = _said_key(dict(k.get("lex") or {}))
@@ -618,6 +634,8 @@ def plan(contrib: Mapping[str, Any], how: Mapping[str, Any]) -> List[Dict[str, A
     options = list(contrib.get("options") or [])
     known = list(contrib.get("knowledge") or [])
     resting = set(contrib.get("resting") or ())
+    if any(k.get("derived") for k in known):
+        stance = {}            # FIX-A134: a worked-out answer is not contradicted by her stance on the verb asked
     used: set = set()
     clauses: List[Dict[str, Any]] = []
     budget = int(how.get("clauses", 1))
@@ -817,6 +835,11 @@ def compose(systems: Dict[str, Any], heard: str, *, engine: Any = None,
     why = gate.articulation_rejection(text, heard) or gate.parrot_reason(text, heard) \
         or gate.scripted_reason("confluence", text, dm=True) \
         or ("repeat" if text.lower() in {t.lower() for t in recent_texts} else "")
+    # FIX-A133: a statement she worked out from what she was told ("d is after a"
+    # to "is d after a?") restates the question's words because that is what an
+    # answer to it is; it is not a parrot.
+    if why in ("echo", "repeat") and any(dict(c.get("relation") or {}).get("derived") for c in clauses):
+        why = ""       # FIX-A134: asked again, a worked-out answer is given again
     if why:
         record["why"] = why
         record["rejected"] = text[:200]

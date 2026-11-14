@@ -298,6 +298,19 @@ def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
 
 
 
+_DO_AUX = frozenset({"do", "does", "did"})
+
+
+def _split_negated_auxiliary(relation_word: str, raw_obj: str) -> Optional[tuple]:
+    """("does", "not come after a") -> ("come", "after a"); None when it is not that shape."""
+    if str(relation_word or "").strip().lower() not in _DO_AUX:
+        return None
+    words = str(raw_obj or "").split()
+    if len(words) < 2 or words[0].lower() not in ("not", "n't"):
+        return None
+    return words[1], " ".join(words[2:])
+
+
 def _frame_from_constraint_relation(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
     """Highest-authority frame: the current utterance's preserved relation.
 
@@ -318,6 +331,14 @@ def _frame_from_constraint_relation(systems: Dict[str, Any]) -> Optional[Proposi
     complement = str(relation.get("complement", "") or "").strip()
     relation_word = str(relation.get("relation", "") or "").strip()
     unknown_role = str(relation.get("unknown_role", "") or "").strip()
+    negated = bool(relation.get("negated", False))
+    aux_split = _split_negated_auxiliary(relation_word, raw_obj)
+    if aux_split is not None:
+        # "B does not come after a." arrived as relation "does", object "not come after a": the
+        # composer then voiced the auxiliary and the "not" as if they were the verb and its object
+        # ("I do not do not come after a.").  The verb is "come", the clause is negated.
+        relation_word, raw_obj = aux_split
+        negated = True
     obj = _frame_object(raw_obj)
     if not any((subject, relation_word, obj, complement)):
         return None
@@ -329,7 +350,7 @@ def _frame_from_constraint_relation(systems: Dict[str, Any]) -> Optional[Proposi
         obj=obj,
         complement=complement,
         unknown_role=unknown_role,
-        negated=bool(relation.get("negated", False)),
+        negated=negated,
         stance=float(relation.get("confidence", 0.5) or 0.5),
         unresolved=[unknown_role] if unknown_role else [],
         topic=subject or obj or complement,
