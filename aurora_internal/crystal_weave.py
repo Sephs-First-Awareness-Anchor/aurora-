@@ -22,6 +22,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from aurora_internal import crystal_facets as _F
 from aurora_internal import crystal_convergence as _C
+from aurora_internal import crystal_maturity as _M
 from aurora_internal import evidence_qualification as _Q
 from aurora_internal.crystal_associations import AssociationStore, project_assertions, project_oets
 
@@ -199,6 +200,49 @@ def _read(state_dir: str, *parts: str) -> Any:
             return json.load(fh)
     except (OSError, ValueError):
         return None
+
+
+# -- what each crystal has been through, as the seven points; and the writer that lets that decide its growth -----------------------------------------
+
+_EXTERNAL_LIVED = {"tested", "acted", "perceived"}
+
+
+def maturity_points(concept: str, store: AssociationStore, book: _F.FacetBook) -> Dict[str, Any]:
+    """The crystal's points from counted evidence only: association from the counted ties it holds; abstraction from the distinct contexts the evidence came
+    from; recurrence from the distinct sessions; cognitive from the share of its witnessed consequences that were shown outside her own simulation (a lived
+    test, action or perception in the external world); recursive from how far the members it holds as `is_a` have themselves become composite.  Emotional
+    and polarity are not wired and stay unknown."""
+    occ = book.counted_occasions(concept)
+    contexts = {json.dumps(o["context"], sort_keys=True, default=str) for o in occ if o["context"]}
+    sessions = {str(o["context"]["session"]) for o in occ if isinstance(o["context"], dict) and o["context"].get("session")}
+    witnessed = [o for o in occ if o["consequence"]]
+    shown = [o for o in witnessed if o["basis"] == "observed" and o["occurrence_class"] in _EXTERNAL_LIVED
+             and isinstance(o["context"], dict) and o["context"].get("world") == "external"]
+    members = store.incoming(concept, "is_a")
+    promoted = sum(_M.memberships({"associative": _M.points_from_evidence(association_strengths=store.connections_for(m).values())["associative"]})[2]
+                   for m in members)
+    return _M.points_from_evidence(association_strengths=store.connections_for(concept).values(), contexts=len(contexts), sessions=len(sessions),
+                                   consequences_shown=len(shown), consequences_total=len(witnessed), members_promoted=promoted, members_total=len(members))
+
+
+def apply_maturity(store: AssociationStore, book: _F.FacetBook, concept_index: Mapping[str, str], crystals: Mapping[str, Any],
+                   dry_run: bool = True) -> Dict[str, Any]:
+    """Set `crystal.maturity` for every concept that has a crystal, so its growth follows what it has actually been through.  A concept with no counted
+    evidence is set with its points at zero (looked for and found nothing), which holds it where it is.  `dry_run` (default) changes nothing and reports
+    how many crystals would be ready to grow under the evidence and, for comparison, under the count rule they had."""
+    n = ready = held_by_counts = 0
+    for concept, cid in concept_index.items():
+        crystal = crystals.get(cid)
+        if crystal is None:
+            continue
+        pts = maturity_points(concept, store, book)
+        n += 1
+        r = _M.ready_to_grow(pts, int(crystal.level))
+        ready += bool(r)
+        held_by_counts += bool(not r and getattr(crystal, "maturity", None) is None and crystal.can_evolve())
+        if not dry_run:
+            crystal.maturity = pts
+    return {"crystals": n, "ready_to_grow": ready, "ready_by_counts_but_not_by_evidence": held_by_counts, "dry_run": bool(dry_run)}
 
 
 def weave(state_dir: str) -> Dict[str, Any]:

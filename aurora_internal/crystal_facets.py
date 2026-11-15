@@ -126,6 +126,18 @@ class FacetBook:
                 out[kind] = rows[:top] if top else rows
         return out
 
+    def counted_occasions(self, concept: str) -> List[Dict[str, Any]]:
+        """Every counted occasion held for a concept, across all its kinds and entries: {kind, key, source, basis, occurrence_class, context, consequence}.
+        Uncounted evidence is not returned."""
+        out: List[Dict[str, Any]] = []
+        for kind, entries in self._e.get(str(concept), {}).items():
+            for key, entry in entries.items():
+                for e in entry["evidence"].values():
+                    if e["basis"] in COUNTED_BASES:
+                        out.append({"kind": kind, "key": key, "source": e["source"], "basis": e["basis"], "occurrence_class": e["occurrence_class"],
+                                    "context": e["context"], "consequence": e["consequence"]})
+        return out
+
     def concepts(self) -> List[str]:
         return sorted(self._e)
 

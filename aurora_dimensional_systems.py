@@ -384,6 +384,11 @@ class Crystal:
     # of the occurrence when perspective data exists.
     perspective_profiles: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
+    # The seven maturity points as degrees, filled from counted evidence only (aurora_internal.crystal_weave.apply_maturity).  None: no one has looked at
+    # what this crystal has been through yet, so the earlier rule below still applies.  Present: its standing at each level decides growth, and the count
+    # of its facets and its usage no longer do.
+    maturity: Optional[Dict[str, Optional[float]]] = None
+
     def absorb_perspective(self, projection: Any) -> bool:
         """Fold ONE lineage's projection into that lineage's own profile.
 
@@ -497,7 +502,13 @@ class Crystal:
         return True
 
     def can_evolve(self) -> bool:
-        external = [f for f in self.facets.values() if not f.role.startswith("LAW_")]
+        if self.maturity is not None:
+            # Evidence, as degrees: it grows when it belongs more to the next level than not.  Facet and usage counts are not consulted.
+            from aurora_internal.crystal_maturity import ready_to_grow
+            return ready_to_grow(self.maturity, int(self.level))
+        # Not yet looked at: the earlier count rule, except that facets placed from the weave ("fk:") are derived records of what she has been through, not
+        # facets gained by use, so they never count toward it.
+        external = [f for f in self.facets.values() if not f.role.startswith(("LAW_", "fk:"))]
         if self.level == CrystalLevel.BASE:
             return len(external) >= 3 and self.usage_count >= 10
         elif self.level == CrystalLevel.COMPOSITE:
@@ -594,6 +605,7 @@ class Crystal:
             "axis_sample_count":   self.axis_sample_count,
             "failpoint_profile":   self.failpoint_profile,
             "perspective_profiles": self.perspective_profiles,
+            "maturity":            self.maturity,
         }
 
     @classmethod
@@ -612,6 +624,8 @@ class Crystal:
                                    (d.get("perspective_profiles") or {}).items()},
         )
         c.connections = dict(d.get("connections") or {})
+        _mat = d.get("maturity")
+        c.maturity = None if _mat is None else dict(_mat)
         for fid, fd in (d.get("facets") or {}).items():
             try:
                 c.facets[fid] = CrystalFacet.from_dict(fd)

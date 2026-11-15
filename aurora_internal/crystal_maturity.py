@@ -9,6 +9,7 @@ reference value (the count at which the degree is one half), so more occurrences
   * `points_from_evidence(...)`       associative, abstract, temporal, cognitive, recursive, polarity (signed), emotional (None = not wired).
   * `memberships(points)`             {level: membership}, nested (each level can be no more than the one below), level 1 always 1.0.
   * `expected_level(points)`          1 + the sum of the memberships: a continuous position between 1 and 4.
+  * `standing_next` / `ready_to_grow` how far it belongs to the next level, and the one place that standing is read as a class (more in than out).
 
 A point that is None is unknown and leaves the blend; a point that is 0.0 was looked for and found nothing, and holds the level down.
 """
@@ -85,3 +86,15 @@ def memberships(points: Mapping[str, Optional[float]]) -> Dict[int, float]:
 
 def expected_level(points: Mapping[str, Optional[float]]) -> float:
     return sum(memberships(points).values())
+
+
+def standing_next(points: Mapping[str, Optional[float]], level: int) -> float:
+    """How far the crystal already belongs to the level above `level`, in [0, 1]; 0.0 from the top level."""
+    return memberships(points).get(int(level) + 1, 0.0)
+
+
+def ready_to_grow(points: Mapping[str, Optional[float]], level: int) -> bool:
+    """A crystal's level is an integer, so the continuous standing has to be read once as a class: it moves up when it belongs more to the next level than
+    it falls short of it (`s > 1 - s`, the fuzzy-set reading of membership).  The standing itself, which is what everything else uses, stays a degree."""
+    s = standing_next(points, level)
+    return s > 1.0 - s
