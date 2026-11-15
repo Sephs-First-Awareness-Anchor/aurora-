@@ -33,6 +33,8 @@ def _group_of(role: str) -> str:
         return "evidence"
     if r.startswith("provenance:"):
         return "provenance"
+    if r.startswith("held:"):
+        return "held (given, never counted)"
     for head in ("lexicon", "oets", "hyp", "rep", "word", "sensory", "genealogy", "relief_event", "cers_visit", "topic"):
         if r == head or r.startswith(head + ":") or r.startswith(head + "_"):
             return head
