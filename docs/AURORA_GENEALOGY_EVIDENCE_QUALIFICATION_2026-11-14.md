@@ -2,7 +2,7 @@
 
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Date:** 2026-11-14
-**Directive:** Developmental Evidence, Simulated Experience, and Consequence-Grounded Promotion (Stages A and B done; C–F open, see §8)
+**Directive:** Developmental Evidence, Simulated Experience, and Consequence-Grounded Promotion (Stages A–F implemented; see §8 for what is isolated, integrated and device-validated)
 **Stack:** #251 (FIX-A143) ← #253 (this); #252 merges cleanly with this stack and the combined state passes 127 tests (§7).
 
 > Experience precedes dreaming. Dreaming may transform experience. Consequences determine development. Genealogy preserves the lineage.
@@ -383,6 +383,45 @@ Surface turn's consequences lived in that process's memory and were gone at rest
 * **Not covered:** the answers are not yet reachable from a conversation; only a caller of the observer (script, diagnostic) can ask.
   Giving her voice access to them would cross the substrate boundary and is Sir's decision.
 
+## 3m. Test 7, provenance integrity through the genealogy (directive VIII)
+
+`tests/test_provenance_integrity.py` (10 tests). A lived, a told-about, a read, a perceived, a derived (with `derived_from`), a dreamed
+and an overheard input each pass through the real logger. After promotion, restore from disk, journal consolidation and QuasiArch
+inquiry, each keeps its occurrence class and basis; none is rewritten into another. Inference must name its premise (`derived_from`), and
+an input without one stays `unknown`. The propositional store has no "inferred" basis of its own (only contract events do), so the test is
+layered: contract-level for inference, store-level for the bases the store has. Level: isolated plus integrated through the logger.
+
+## 3n. Test 9, comparative equivalence (scripts/compare_genealogy_equivalence.py, scripts/compare_architectures.py)
+
+Two measures, because live Aurora is not deterministic (background threads, hash order, timing).
+
+* **Deterministic, genealogy level** (`PYTHONHASHSEED=0`): the same experience fed to the original checkout (392d226), the new one, and
+  the new one with input identities supplied. Over lived turns, promotion, and distinct dreams the state digest is identical
+  (`5ebac7e7414c6dee9b2cf8e3`, two links promoted in each). Qualification adds records beside the learning; it does not change what is learned.
+* **Intended difference:** repeating one dream. The original promotes 3 links by repetition; the new code promotes 2, because identical
+  replay is not new evidence. That is the directive's requirement, not a regression.
+* **Live, 4 runs (2 per checkout, 12 matched turns):** replies identical, memory identical, developmental counters equal to the
+  run-to-run noise floor. The live runs do not prove equivalence; they found no difference larger than the difference between two runs of the same code.
+
+## 3o. Test 10, performance (what it costs, and where)
+
+| measure | original | new |
+|---|---|---|
+| foreground seconds per turn (two runs) | 5.59 / 6.43 | 5.64 / 5.84 |
+| main-thread genealogy observe, ms total | 45k / 55k | 45k / 47k |
+
+Foreground cost is unchanged within noise. The added work is not hidden by moving it:
+
+* Surface: writing a journal record costs 0.087 ms per observe and about 865 B per event (a flush is a write at the loop's flush points).
+* Subsurface: applying an event costs about 30 ms live (real graph) and about 2.6 ms in a synthetic ledger. This is added computation,
+  not relocated computation: the original did none of it. It runs bounded per call (`max_events`, `max_seconds`).
+* Synchronization: the applied marker is written last in `flush_files`; each consolidation call used to re-read and parse the whole journal
+  (185 ms read plus 55 ms ordering for an 8 MB / 25,952-event file). That cost is now removed: `read_since` keeps a byte cursor per journal,
+  consumes only complete lines, restarts on rotation or shrink, and keeps only unapplied records pending. An empty call costs 0.1 ms; 3000 events
+  applied in 15 calls of at most 200 (median 516 ms per call, first 930 ms including the initial read). Correctness still rests on the applied
+  ledger (idempotent), so a restart costs time, never double counting. Four mutations of the cursor logic were each caught by a test.
+* Did not suppress learning: the deterministic digest equals the original; the only difference is identical dream replay (3n).
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an
@@ -418,19 +457,20 @@ missing basis stays unknown. Remaining for Sir:
   `dream_replay → dreamed`); `system_event`, `exploration`, `self_reflection` are left unspecified rather than guessed.
 * What `consequence.target` names for a promoted link (a link id, a capability id) when Stage D wires it.
 
-## 6. Directive tests 1–7, at the contract level only
+## 6. Directive tests 1–10
 
 | # | Test | Where | Level |
 |---|---|---|---|
-| 1 | Experiential precedence | `test_experiential_precedence...`, `test_a_dream_does_not_create...` | isolated |
+| 1 | Experiential precedence | `test_experiential_precedence...`, `test_dream_ancestry.py` | isolated + logger |
 | 2 | Novel recombination | `test_novel_recombination...` | isolated |
-| 3 | Dream without grounding | `test_without_supported_ancestry...` | isolated |
-| 4 | Internal promotion ≠ external | `test_internal_promotion_evidence...` | isolated |
-| 5 | Simulation disagreement | `test_a_simulation_predicting_success...` | isolated |
-| 6 | Replay vs new consequence | `test_replaying_a_dream...`, `test_a_genuinely_new_interaction...` | isolated |
-| 7 | Provenance integrity | `test_every_basis_survives...`, store tests in `test_unknown_provenance.py` | isolated + store |
-
-Tests 8–10 (cross-device, comparative equivalence, performance) are **not done**.
+| 3 | Dream without grounding | `test_without_supported_ancestry...`, `test_qualified_promotion.py` | isolated + logger |
+| 4 | Internal promotion ≠ external | `test_qualified_promotion.py` | integrated (logger) |
+| 5 | Simulation disagreement | `test_qualified_promotion.py` | integrated (logger) |
+| 6 | Replay vs new consequence | `test_qualified_promotion.py`, `test_dream_ancestry.py` | integrated (logger) |
+| 7 | Provenance integrity | `test_provenance_integrity.py` (§3m) | integrated (logger) |
+| 8 | Cross-device consolidation | `test_evidence_journal.py` (26 + 3 incremental-read tests; §3k) | isolated + integrated; **no two-device run** |
+| 9 | Comparative equivalence | `scripts/compare_*.py` (§3n) | deterministic at genealogy level; live run indicative only |
+| 10 | Performance | `scripts/compare_architectures.py`, `scripts/measure_evidence_journal.py` (§3o) | measured on one machine |
 
 ## 7. Verification
 
@@ -442,27 +482,42 @@ Tests 8–10 (cross-device, comparative equivalence, performance) are **not done
   `basic_communication` did not finish inside the time I gave it, so it is not claimed.
 * Combined with #252 in a throwaway worktree: merges without conflict, 127 tests pass (#252's audit and index tests included).
 
-## 8. Status against the deliverables
+* Stages C–F and Tests 7–10: `test_qualified_promotion.py` 14, `test_evidence_journal.py` 29, `test_quasiarch_development_inquiry.py` 24,
+  `test_provenance_integrity.py` 10, `test_dream_ancestry.py`, `test_evidence_substrate_boundary.py`: 92 pass together
+  (`PYTHONHASHSEED=0`). Wider regressions at each stage: 846, 792, 613 and 895 (on the #252 trial merge) passed. Every rule in each new
+  module was mutation-checked; survivors were closed with added tests. Tests mutate runtime state files; they were reverted before commit.
+
+## 8. Status against the deliverables (final)
+
+Levels: **implemented** (code exists) / **isolated** (own unit tests) / **integrated** (exercised through the real logger and the wider
+suites) / **device** (run on actual devices). Nothing here is device-validated.
 
 | # | Deliverable | Status |
 |---|---|---|
-| 1 | Revised FIX-A144 contract | **implemented, isolated tests** |
-| 2 | Ancestry and context representation | **implemented in the contract, isolated tests**; not in any live record |
-| 3 | Provenance assignment and legacy handling | **implemented in the propositional store, isolated + related-suite tests, two lessons live**; genealogy side not started (§4.1) |
-| 4 | Dream ancestry preservation | contract only; the dream path was audited, not changed |
-| 5 | Qualified dream/simulation promotion | **not started** (audit only) |
-| 6 | Environmental genealogy processing | **not started** here (#252 holds the index work) |
-| 7 | QuasiArch ancestry retrieval | **not started** (`grounding`/`demonstration` are the retrieval it would call) |
-| 8 | Comparative developmental results | **not done** |
-| 9 | Performance | #252's measurements stand; nothing new |
+| 1 | Revised FIX-A144 contract | implemented, isolated |
+| 2 | Ancestry and context representation | implemented, integrated (rep ledger v3 persists input identities; `ancestry_of`) |
+| 3 | Provenance assignment and legacy handling | implemented, integrated; legacy records stay `unknown` |
+| 4 | Dream ancestry preservation | implemented, integrated (Stage C); replay guard on presented pressure |
+| 5 | Qualified dream/simulation promotion | implemented, integrated (Stage D); gates unchanged, no fixed discount |
+| 6 | Environmental genealogy processing | implemented, integrated (Stage E journal → Subsurface); #252 merged in a combined branch, its audit/index tests pass |
+| 7 | QuasiArch ancestry retrieval | implemented, isolated; read-only, `authoritative: False`, not called from cognition or speech |
+| 8 | Comparative developmental results | done (§3n); live runs are indicative, not proof |
+| 9 | Performance | measured (§3o); foreground unchanged within noise |
 | 10 | Limitations / rollback | below |
 
-No device validation of any kind. Nothing here is integrated into the genealogy or the dream path.
+**Rollback:** every stage is additive. Stage D: qualification is a snapshot on links plus ledgers beside the learning; removing the reads
+restores the old behavior, and `rep_ledger.json` v3 loads as before (older versions still load). Stage E: stop calling
+`consolidate_surface_journals` (two sites in `aurora_runtime.py`) and nothing consolidates; the journal file can be deleted. Stage F: delete
+`quasiarch_development_inquiry.py` and `investigate_development`; nothing calls them. FIX-A145: revert the default basis in
+`aurora_propositional_understanding.py` and the one `basis="told"` in `aurora_clone_harvest.py`. No stored state was rewritten.
 
-**Rollback:** FIX-A145 is isolated to `aurora_propositional_understanding.py` (default basis, `UNCOUNTED_BASES`, the unsaid guard)
-and one explicit `basis="told"` in `aurora_clone_harvest.py`; reverting those restores the old default. The contract module
-has no callers, so removing it changes nothing live. No stored state was rewritten.
-
-**Limitations:** the contract is proven against the propositional store, not against genealogy records, which do not yet
-carry the information (§4.1). `consequence.target` has no producer. Sensor uncertainty is not represented (no basis for a
-number). Bounded predicate history (8) is still bounded in the store; the event log must not cap it.
+**Limitations and incomplete validation:**
+* No actual two-device run. Cross-device behavior is shown with two loggers and a shared journal on one machine.
+* Live development is not deterministic; the live comparison shows no difference beyond noise, which is weaker than equivalence.
+* Journal consolidation applies about 30 ms per event live; a large backlog drains over many calls by design.
+* Restore does not reset tolerance state, so Surface evidence returns by boot-time restore only; there is no live refresh.
+* Input identity is only as good as the stream→occurrence mapping (sensor_data→perceived, synthetic_lineage→derived, dream_replay→dreamed
+  are not yet wired); unmapped inputs stay `unknown`. `mention` is treated as overheard.
+* Emotion (DER) is not wired into the shadow. `consequence.target` still has no producer. Sensor uncertainty is not represented.
+* Pre-existing unrelated failure on main 2e83a05: `test_cross_generational_representational_recombination`.
+* Not merged: #251, #252, #253 stay open on Sir's instruction.

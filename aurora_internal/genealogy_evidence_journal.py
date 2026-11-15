@@ -115,6 +115,57 @@ def read_records(path: str) -> Tuple[List[Dict[str, Any]], int]:
     return out, bad
 
 
+def _parse(lines: Iterable[bytes]) -> Tuple[List[Dict[str, Any]], int]:
+    out: List[Dict[str, Any]] = []
+    bad = 0
+    for raw in lines:
+        raw = raw.strip()
+        if not raw:
+            continue
+        try:
+            r = json.loads(raw.decode("utf-8"))
+            if isinstance(r, dict) and isinstance(r.get("origin"), str) and isinstance(r.get("seq"), int):
+                out.append(r)
+            else:
+                bad += 1
+        except Exception:
+            bad += 1
+    return out, bad
+
+
+def read_since(path: str, offset: int, inode: Optional[int] = None) -> Tuple[List[Dict[str, Any]], int, int, int, bool]:
+    """Records appended to `path` after byte `offset`, so a consumer need not parse the whole journal every call.
+    Returns (records, malformed, new_offset, inode, restarted).  Only complete lines are consumed (a line still being written is
+    left for next time).  If the file was replaced (rotation) or shrank, the read restarts from the beginning of the rotated copy and
+    the current file (`restarted` is True); anything already applied is skipped by the applied ledger, so a restart only costs time."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return [], 0, 0, 0, False
+    restarted = bool(offset) and (st.st_size < offset or (inode is not None and st.st_ino != inode))
+    if restarted:
+        offset = 0
+    recs: List[Dict[str, Any]] = []
+    bad = 0
+    if offset == 0 and os.path.exists(path + ".1"):
+        try:
+            with open(path + ".1", "rb") as fh:
+                r, b = _parse(fh.read().splitlines())
+            recs += r
+            bad += b
+        except Exception:
+            bad += 1
+    try:
+        with open(path, "rb") as fh:
+            fh.seek(offset)
+            chunk = fh.read()
+    except Exception:
+        return recs, bad + 1, offset, st.st_ino, restarted
+    end = chunk.rfind(b"\n") + 1                                   # complete lines only
+    r, b = _parse(chunk[:end].splitlines())
+    return recs + r, bad + b, offset + end, st.st_ino, restarted
+
+
 def ordered(records: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Per origin in seq order; origins in the order they first appear; an event present twice appears once."""
     seen: Dict[Tuple[str, int], Dict[str, Any]] = {}

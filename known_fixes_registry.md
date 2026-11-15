@@ -11589,3 +11589,10 @@ sunni" lacks "your".
 **Correct Form:** `BASES` gains `"unknown"`; the default is `"unknown"`. `UNCOUNTED_BASES = ("supposed", "unknown")` get the FIX-A143 treatment: kept on the predicate (basis count, history), never counted in `n`/`denied`, never strengthening or source-marking a relation, no relation-level counters, no role change, no concept placement. `lexicalize_assertion` returns None for an `unsaid` predicate. Every production caller states its basis (harvested text and the identity record say `"told"` explicitly, by decision). Standing that predates provenance (`n` above the counted bases) is untouched and reported as unattributed by `evidence_qualification.qualification_of_predicate`; later genuine evidence clarifies it.
 **Why:** unattributed information must not become testimony, and nothing she already holds may be disabled by migration.
 **First Seen:** 2026-11-14, directive V. Tests: tests/test_unknown_provenance.py (10, including an AST test that no production caller relies on a default); 22 fixtures that teach by testimony now say `basis="told"`. Decision for Sir: whether the identity record deserves a finer basis than "told".
+
+### FIX-A144 (Stages D–F, Tests 7, 9, 10): qualified promotion, Surface→Subsurface journal, QuasiArch inquiry
+**Category:** ARCHITECTURAL
+**Pattern:** Promotion counted repetition, including identical dream replay; Surface evidence had no ordered, idempotent return; consolidation re-parsed the whole journal each call.
+**Correct Form:** qualification snapshot on links (`internal_only`, `externally_demonstrated`); replay guard keyed on presented pressure; journal (origin, seq) consolidated ordered/idempotent/gap-aware with `read_since` byte cursor; `PYTHONHASHSEED=0` for deterministic digests; investigative QuasiArch is read-only and `authoritative: False`.
+**Why:** a dream is a real occurrence with a hypothetical world; only demonstrated consequence promotes.
+**First Seen:** PR #253 (docs/AURORA_GENEALOGY_EVIDENCE_QUALIFICATION_2026-11-14.md §3j–§3o, §8)

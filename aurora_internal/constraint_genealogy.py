@@ -2183,6 +2183,7 @@ class ConstraintGenealogyLogger:
         self._journal_seq: int = 0
         self._journal_suspended: bool = False
         self._journal_malformed: int = 0
+        self._journal_cursor: Dict[str, Dict[str, Any]] = {}      # per journal path: how far it has been read, and what is still to apply
         self._applied = self._load_applied()
 
         # Compact rolling event file (replaces unbounded events.jsonl)
@@ -4478,9 +4479,13 @@ class ConstraintGenealogyLogger:
         recorded as a gap and never stops later events; an event already applied is skipped; an event arriving after later
         ones is applied once and counted `late`.  `max_seconds` bounds the time one call may take (measured live at about 30 ms an
         event), always applying at least one event so progress is certain; the rest stays for the next call.  Returns what happened."""
-        from aurora_internal.genealogy_evidence_journal import ordered, read_records
+        from aurora_internal.genealogy_evidence_journal import ordered, read_since
         path = path or self._journal_path()
-        records, bad = read_records(path)
+        cur = self._journal_cursor.setdefault(path, {"offset": 0, "inode": None, "pending": []})
+        fresh, bad, cur["offset"], cur["inode"], restarted = read_since(path, cur["offset"], cur["inode"])
+        if restarted:
+            cur["pending"] = []                                       # the file was replaced: what was read is re-read whole
+        records = cur["pending"] + fresh
         self._journal_malformed += bad
         out = {"applied": 0, "duplicates_skipped": 0, "late": 0, "gaps": 0, "malformed": bad, "remaining": 0}
         with self._concurrency_lock:
@@ -4509,6 +4514,7 @@ class ConstraintGenealogyLogger:
                 led.mark(o, q)
                 out["applied"] += 1
                 budget -= 1
+            cur["pending"] = [r for r in records if not led.is_applied(r["origin"], r["seq"])]   # only what is still to do is kept
         return out
 
     def consolidate_surface_journals(self, max_events: int = 200, max_seconds: Optional[float] = 0.25) -> Dict[str, Any]:

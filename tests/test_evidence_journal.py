@@ -168,8 +168,10 @@ def test_consolidating_again_applies_nothing_and_changes_nothing(world):
     canon.consolidate_journal(surf._journal_path())
     before = development(canon)
     again = canon.consolidate_journal(surf._journal_path())
-    assert again["applied"] == 0 and again["duplicates_skipped"] == surf._journal_seq
-    assert development(canon) == before
+    assert again["applied"] == 0 and development(canon) == before              # nothing new was read; nothing is applied again
+    fresh = mk(canon.output_dir + "_other", "canon_other")                      # a consumer with no cursor reads it all, and skips it
+    fresh._applied = canon._applied
+    assert fresh.consolidate_journal(surf._journal_path())["duplicates_skipped"] == surf._journal_seq
 
 
 def test_the_applied_record_survives_a_restart_so_nothing_is_applied_twice(world, tmp_path):
@@ -271,6 +273,53 @@ def test_a_dream_replayed_on_the_surface_is_still_one_occurrence_in_the_subsurfa
     surf.flush_journal()
     canon.consolidate_journal(surf._journal_path())
     assert canon._replays_skipped == 4 and canon._rep_ledger[a]["by"]["hypothetical"]["n_inputs"] == 1
+
+
+# -- incremental reading ---------------------------------------------------------------------------------------------------------------
+
+def test_a_call_parses_only_what_was_appended_since_the_last_one_and_the_result_is_the_same(world, monkeypatch):
+    _, canon, surf, ref = world
+    drive(surf, upto=6)
+    drive(ref)
+    canon.consolidate_journal(surf._journal_path())
+    sizes = []
+    real = J.read_since
+    monkeypatch.setattr("aurora_internal.genealogy_evidence_journal.read_since",
+                        lambda *a, **k: (lambda r: (sizes.append(len(r[0])), r)[1])(real(*a, **k)))
+    canon.consolidate_journal(surf._journal_path())                             # nothing appended: nothing read
+    drive(surf, start=6)
+    out = canon.consolidate_journal(surf._journal_path())
+    assert sizes[0] == 0 and sizes[1] == surf._journal_seq - 6 and out["applied"] == surf._journal_seq - 6
+    assert development(canon) == development(ref)
+
+
+def test_a_line_still_being_written_is_left_until_it_is_complete(world, tmp_path):
+    _, canon, surf, ref = world
+    drive(surf)
+    ls = lines(surf)
+    p = tmp_path / "growing.jsonl"
+    p.write_text("\n".join(ls[:5]) + "\n" + ls[5][:40])                         # the sixth is half written
+    out = canon.consolidate_journal(str(p))
+    assert out["applied"] == 5 and out["malformed"] == 0
+    p.write_text("\n".join(ls) + "\n")                                          # completed, and the rest appended
+    out2 = canon.consolidate_journal(str(p))
+    assert out2["applied"] == len(ls) - 5 and canon._applied.through("surf_1") == len(ls)
+
+
+def test_a_replaced_journal_is_read_again_from_the_start_and_nothing_is_applied_twice(world, tmp_path):
+    _, canon, surf, ref = world
+    drive(surf)
+    drive(ref)
+    ls = lines(surf)
+    p = tmp_path / "rot.jsonl"
+    p.write_text("\n".join(ls[:8]) + "\n")
+    canon.consolidate_journal(str(p))
+    p.write_text("\n".join(ls[8:]) + "\n")                                      # replaced by a shorter file (rotation)
+    os.replace(str(p), str(tmp_path / "x"))
+    os.replace(str(tmp_path / "x"), str(p))
+    out = canon.consolidate_journal(str(p))
+    assert canon._applied.through("surf_1") == len(ls) and out["applied"] == len(ls) - 8
+    assert development(canon) == development(ref)
 
 
 # -- the return: no stale overwrite -----------------------------------------------------------------------------------------------
