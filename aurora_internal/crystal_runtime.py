@@ -45,17 +45,22 @@ def _read(state_dir: str, *parts: str) -> Any:
 
 
 def word_profiles(crystals: Mapping[str, Any], state_dir: str) -> _S.ContextProfiles:
-    """Her word-use profiles: what her lexical structure has kept live, plus any older conversation text still stored."""
+    """Her word-use profiles: her kept use of words (conversation she took part in), else what her lexical structure kept, plus older stored text."""
+    from aurora_internal import aurora_word_use as _U
     prof = _S.ContextProfiles()
-    for c in crystals.values():
-        for f in getattr(c, "facets", {}).values():
-            if str(getattr(f, "role", "")) == LEX_ROLE:
-                try:
-                    st = json.loads(str(f.content)) if not isinstance(f.content, dict) else f.content
-                    if st.get("contexts"):
-                        prof.restore(st["contexts"])
-                except Exception:
-                    pass
+    use = _U.load_profiles(state_dir)
+    if use is not None:
+        prof.merge(use.state())
+    else:                                   # the kept use counts the live turns; the lexical feed would count them a second time
+        for c in crystals.values():
+            for f in getattr(c, "facets", {}).values():
+                if str(getattr(f, "role", "")) == LEX_ROLE:
+                    try:
+                        st = json.loads(str(f.content)) if not isinstance(f.content, dict) else f.content
+                        if st.get("contexts"):
+                            prof.merge(st["contexts"])
+                    except Exception:
+                        pass
     mem = _read(state_dir, "aurora_conversation_memory.json") or {}
     for e in mem.get("entries") or []:
         for field in ("user_said", "aurora_said"):

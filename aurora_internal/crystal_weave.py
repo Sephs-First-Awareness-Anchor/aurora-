@@ -211,7 +211,8 @@ def maturity_points(concept: str, store: AssociationStore, book: _F.FacetBook) -
     """The crystal's points from counted evidence only: association from the counted ties it holds; abstraction from the distinct contexts the evidence came
     from; recurrence from the distinct sessions; cognitive from the share of its witnessed consequences that were shown outside her own simulation (a lived
     test, action or perception in the external world); recursive from how far the members it holds as `is_a` have themselves become composite.  Emotional
-    and polarity are not wired and stay unknown."""
+    is how many of its counted occasions carried a feeling (a recorded tone that is not neutral), as a degree; it is unknown (None) when none of its counted
+    occasions recorded a tone at all, since then nothing was looked at.  Polarity is not wired and stays unknown."""
     occ = book.counted_occasions(concept)
     contexts = {json.dumps(o["context"], sort_keys=True, default=str) for o in occ if o["context"]}
     sessions = {str(o["context"]["session"]) for o in occ if isinstance(o["context"], dict) and o["context"].get("session")}
@@ -221,8 +222,12 @@ def maturity_points(concept: str, store: AssociationStore, book: _F.FacetBook) -
     members = store.incoming(concept, "is_a")
     promoted = sum(_M.memberships({"associative": _M.points_from_evidence(association_strengths=store.connections_for(m).values())["associative"]})[2]
                    for m in members)
+    tones = [t for t in (str(o["context"].get("tone") or "").strip().lower() for o in occ if isinstance(o["context"], dict)) if t]        # an empty tone recorded nothing
+    felt = sum(1 for t in tones if t not in _M.NEUTRAL_TONES)
+    emotional = _M.degree(felt, _M.REF_EMOTIONAL) if tones else None
     return _M.points_from_evidence(association_strengths=store.connections_for(concept).values(), contexts=len(contexts), sessions=len(sessions),
-                                   consequences_shown=len(shown), consequences_total=len(witnessed), members_promoted=promoted, members_total=len(members))
+                                   consequences_shown=len(shown), consequences_total=len(witnessed), members_promoted=promoted, members_total=len(members),
+                                   emotional=emotional)
 
 
 def apply_maturity(store: AssociationStore, book: _F.FacetBook, concept_index: Mapping[str, str], crystals: Mapping[str, Any],

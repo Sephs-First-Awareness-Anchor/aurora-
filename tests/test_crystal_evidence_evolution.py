@@ -140,3 +140,45 @@ def test_the_writer_sets_the_points_and_a_dry_run_changes_nothing():
     W.apply_maturity(s, b, {"tea": "c1", "idle": "c2"}, cs, dry_run=False)
     assert c1.maturity["associative"] > 20.0 and c2.maturity["associative"] == 0.0
     assert c1.can_evolve() is True and c2.can_evolve() is False                                    # evidence now decides: counts no longer carry c2
+
+
+# -- the emotional point: how many counted occasions carried a feeling ---------------------------------------------------------------------------------
+
+def test_the_emotional_point_counts_occasions_that_carried_a_tone_other_than_neutral():
+    s, b = AssociationStore(), F.FacetBook()
+    for i, tone in enumerate(("warm", "gentle", "neutral", "Curious")):
+        ev(b, "tea", f"k{i}", ctx={"session": "s", "tone": tone})
+    assert W.maturity_points("tea", s, b)["emotional"] == pytest.approx(M.degree(3, M.REF_EMOTIONAL))
+    ev(b, "tea", "k9", ctx={"session": "s", "tone": "playful"})
+    assert W.maturity_points("tea", s, b)["emotional"] == pytest.approx(M.degree(4, M.REF_EMOTIONAL))            # each further occasion raises it, no cut-off
+
+
+def test_neutral_occasions_make_it_known_at_zero_and_no_recorded_tone_leaves_it_unknown():
+    s, b = AssociationStore(), F.FacetBook()
+    ev(b, "flat", "k1", ctx={"session": "s", "tone": "neutral"})
+    ev(b, "flat", "k2", ctx={"session": "s", "tone": "none"})
+    assert W.maturity_points("flat", s, b)["emotional"] == 0.0                              # looked at, nothing felt
+    ev(b, "silent", "k1", ctx={"session": "s"})
+    ev(b, "silent", "k2", ctx=None)
+    ev(b, "silent", "k3", ctx={"session": "s", "tone": "  "})                               # an empty tone recorded nothing
+    assert W.maturity_points("silent", s, b)["emotional"] is None                           # nothing recorded a tone: not looked at
+    assert W.maturity_points("nothing", s, b)["emotional"] is None
+
+
+def test_a_feeling_that_was_only_supposed_or_overheard_is_not_counted():
+    s, b = AssociationStore(), F.FacetBook()
+    ev(b, "tea", "k1", ctx={"session": "s", "tone": "warm"}, basis="supposed", occ="imagined")
+    ev(b, "tea", "k2", ctx={"session": "s", "tone": "warm"}, basis="overheard", occ="overheard")
+    assert W.maturity_points("tea", s, b)["emotional"] is None
+    ev(b, "tea", "k3", ctx={"session": "s", "tone": "warm"}, basis="told", occ="heard")
+    assert W.maturity_points("tea", s, b)["emotional"] == pytest.approx(M.degree(1, M.REF_EMOTIONAL))
+
+
+def test_the_emotional_point_reaches_the_crystal_and_does_not_change_when_it_grows():
+    s, b = AssociationStore(), F.FacetBook()
+    ev(b, "tea", "k1", ctx={"session": "s", "tone": "warm"})
+    before = {k: v for k, v in W.maturity_points("tea", s, b).items() if k != "emotional"}
+    ev(b, "tea", "k2", ctx={"session": "s", "tone": "gentle"})
+    after = W.maturity_points("tea", s, b)
+    assert after["emotional"] > M.degree(1, M.REF_EMOTIONAL) and {k: v for k, v in after.items() if k != "emotional"}["associative"] == before["associative"]
+    assert M.memberships(after)[3] == M.memberships({**after, "emotional": None})[3]       # recorded, not yet a requirement of any level

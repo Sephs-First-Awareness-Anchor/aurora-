@@ -21,6 +21,8 @@ from typing import Dict, Iterable, Mapping, Optional
 REF_ASSOCIATIVE = {2: 5.0, 3: 10.0, 4: 12.0}
 REF_ABSTRACT = 5.0        # distinct contexts the crystal has appeared in
 REF_TEMPORAL = 3.0        # distinct sessions it has recurred across
+REF_EMOTIONAL = 5.0       # counted occasions that carried a feeling (a tone other than neutral)
+NEUTRAL_TONES = frozenset({"neutral", "none"})
 
 POINTS = ("emotional", "polarity", "associative", "abstract", "temporal", "cognitive", "recursive")
 

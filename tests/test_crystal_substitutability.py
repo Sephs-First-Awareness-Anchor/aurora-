@@ -148,7 +148,7 @@ def test_it_imports_nothing_from_aurora_nothing_running_imports_it_and_no_degree
         if any(x in base for x in (".git", "tests", "scripts", "aurora_state", "node_modules")):
             continue
         for f in files:
-            if f.endswith(".py") and f not in ("crystal_substitutability.py", "aurora_lexical_structure.py", "crystal_runtime.py") and re.search(r"(from|import)\s+[\w.]*crystal_substitutability", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
+            if f.endswith(".py") and f not in ("crystal_substitutability.py", "aurora_lexical_structure.py", "crystal_runtime.py", "aurora_word_use.py") and re.search(r"(from|import)\s+[\w.]*crystal_substitutability", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
                 hits.append(f)
     assert hits == []
 

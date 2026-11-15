@@ -70,11 +70,29 @@ class ContextProfiles:
                 if len(d[side]) > self._max_ctx + self._max_ctx // 4:
                     for k in sorted(d[side], key=lambda x: (d[side][x], x))[: len(d[side]) - self._max_ctx]:
                         del d[side][k]
+        self._prune_words()
+        return len(ws)
+
+    def _prune_words(self) -> None:
         if len(self._n) > self._max_words + self._max_words // 4:
             for w in sorted(self._n, key=lambda x: (self._n[x], x))[: len(self._n) - self._max_words]:
                 self._n.pop(w, None)
                 self._ctx.pop(w, None)
-        return len(ws)
+
+    def merge(self, state: Mapping[str, Any]) -> None:
+        """Add another profile's counts to this one (the same bounds apply afterwards)."""
+        for w, n in (state.get("n") or {}).items():
+            w = str(w)
+            self._n[w] = self._n.get(w, 0) + int(n)
+        for w, d in (state.get("ctx") or {}).items():
+            mine = self._ctx.setdefault(str(w), {"L": {}, "R": {}})
+            for side in ("L", "R"):
+                for c, k in (d.get(side) or {}).items():
+                    mine[side][str(c)] = mine[side].get(str(c), 0) + int(k)
+                if len(mine[side]) > self._max_ctx + self._max_ctx // 4:
+                    for k in sorted(mine[side], key=lambda x: (mine[side][x], x))[: len(mine[side]) - self._max_ctx]:
+                        del mine[side][k]
+        self._prune_words()
 
     # -- reading ----------------------------------------------------------------------------------------------------------------------------
     def count(self, word: str) -> int:

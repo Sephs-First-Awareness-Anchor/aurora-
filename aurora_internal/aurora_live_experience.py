@@ -128,6 +128,8 @@ def _observe(systems: Any, role: str, session_id: str, text: str, now: Optional[
         warp_field=systems.get("warp_field"),
         tokens=tokens_of(text),
     )
+    if hasattr(ledger, "note_word_use"):             # how her words are used, from conversation she took part in
+        ledger.note_word_use(text, f"live_{'aurora' if role == 'aurora' else 'user'}")
     if result.get("observed"):
         exchange.after_event(int(result["event_index"]), stream=LIVE_STREAM, tokens=tokens_of(text))
         if int(result["event_index"]) % 200 == 0:

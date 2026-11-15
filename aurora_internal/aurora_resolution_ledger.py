@@ -342,6 +342,7 @@ class AuroraResolutionLedger:
         self.state_dir = str(state_dir or "aurora_state")
         self.persist = bool(persist)
         self.storage_path = Path(self.state_dir) / "resolution_ledger.json"
+        self._word_use: Any = None
 
         self._streams: Dict[str, _Stream] = {}
         self._raw: Dict[str, _Running] = {}      # "<subject>:<root>" -> that subject's own running distribution
@@ -1094,7 +1095,19 @@ class AuroraResolutionLedger:
             self._stats.setdefault(subject, {})[key] = {k: float(v) for k, v in dict(rec.get("st") or {}).items()}
         self._last_sync = sum(self._n_obs.values())
 
+    def note_word_use(self, text: str, source: str) -> int:
+        """Conversation she took part in, kept as how its words are used (see aurora_word_use).  Never raises."""
+        try:
+            if self._word_use is None:
+                from aurora_internal.aurora_word_use import WordUse
+                self._word_use = WordUse(self.state_dir, persist=self.persist)
+            return self._word_use.observe_text(text, source)
+        except Exception:
+            return 0
+
     def save(self, force: bool = False) -> bool:
+        if self._word_use is not None:
+            self._word_use.save(force=force)
         if self._crystals is not None:
             self.sync_crystals(force=force)
             return True                      # the crystals are the record: no file of our own
