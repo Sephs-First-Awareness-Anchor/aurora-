@@ -81,6 +81,14 @@ assertions, no letter concepts) the field of `sunni` has 230 members and of `aur
 identifications and the real letters case need live data. Synthetic fixture: 26 letters found by `is_a`, letters converge with numbers through a shared
 symbol association, converge with nothing through labels alone, and converge with fruit not at all.
 
+**P3, built and measured (isolated, not wired).** `aurora_internal/crystal_maturity.py`: counts become degrees by x/(x+k) with the spec's numbers as k (the count
+at which the degree is one half); level standing is nested memberships (L2 needs association; L3 adds abstraction, recurrence across sessions and demonstrated
+consequence; L4 adds promoted members), each held by its weakest requirement and lifted by how well the rest are met; unknown points (emotional) leave the
+blend, a point looked for and found empty holds it at nothing; polarity keeps its sign. 82 tests with the convergence and association suites, 14 mutants killed
+(one nesting guard is currently implied by the spec's reference counts, kept in case they change). Finding: the live facet points (`resonance`, `sensitivity`…)
+are seeded with `random.uniform(0.3, 0.7)`, so they are not evidence of anything; the seven spec points do not exist in live code and must be computed from
+occurrences as above. On the snapshot only 391 of 5,977 crystals carry any counted association, and stored levels today are L1 5,689 / L2 259 / L3 29.
+
 **P3, points from real occurrences.** Facet points are filled from what exists: polarity from signed axis displacement (never `abs()`);
 associative from P1; abstract from the number of distinct contexts a crystal has appeared in; temporal from recurrence across sessions;
 cognitive from consequence demonstrated outside the system's own simulation (the Stage D qualification); recursive from the share of members that are
