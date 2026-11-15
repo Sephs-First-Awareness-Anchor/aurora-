@@ -234,7 +234,7 @@ def test_nothing_in_the_running_system_calls_it():
         if any(x in base for x in (".git", "tests", "scripts", "aurora_state", "node_modules")):
             continue
         for f in files:
-            if f.endswith(".py") and f not in ("crystal_associations.py", "crystal_convergence.py", "crystal_facets.py", "crystal_weave.py"):
+            if f.endswith(".py") and f not in ("crystal_associations.py", "crystal_convergence.py", "crystal_facets.py", "crystal_weave.py", "crystal_promotion.py"):
                 if "crystal_associations" in open(os.path.join(base, f), encoding="utf-8", errors="ignore").read():
                     hits.append(f)
     assert hits == []

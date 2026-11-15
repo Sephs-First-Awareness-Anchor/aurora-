@@ -22,6 +22,9 @@ ALLOWED = {
                                                 ("aurora_input_identity", "occurrence_class"),
                                                 ("aurora_input_identity", "is_external_occurrence")},
     "aurora.py": {("aurora_input_identity", "begin_input"), ("aurora_input_identity", "end_input")},
+    # The crystal weave is substrate too: offline, it builds crystals from stored data and must honour the contract exactly (counted vs uncounted).
+    # It is not cognition or speech and nothing running imports it.
+    "aurora_internal/crystal_weave.py": {("evidence_qualification", "*")},
 }
 SKIP_DIRS = {"tests", "scripts", ".git", "node_modules", "__pycache__"}
 
@@ -85,6 +88,6 @@ def test_nothing_in_cognition_or_speech_reads_the_input_identity_off_an_observat
         text = p.read_text(encoding="utf-8", errors="ignore")
         if ("input_event" in text or "_input_events" in text) and rel not in (
                 "aurora_internal/constraint_genealogy.py", "aurora_internal/aurora_input_identity.py",
-                "aurora_internal/evidence_qualification.py"):
+                "aurora_internal/evidence_qualification.py", "aurora_internal/crystal_weave.py"):
             readers.append(rel)
     assert readers == []
