@@ -334,3 +334,37 @@ def test_nothing_running_imports_the_weave_and_it_never_writes():
             if f.endswith(".py") and f != "crystal_weave.py" and re.search(r"(from|import)\s+[\w.]*crystal_weave", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
                 hits.append(f)
     assert hits == []
+
+
+# -- the recorded turn id joins a conversation to the input it answered ---------------------------------------------------------------------------
+
+def test_a_conversation_with_a_turn_id_is_held_under_that_turn_and_one_without_keeps_session_and_time():
+    b = F.FacetBook()
+    W.place_conversation(b, [dict(ENTRY, turn_id="turn_abc")], ["sunni"])
+    assert "turn_abc" in b._e["sunni"]["episode_ref"] and "s1:100" not in b._e["sunni"]["episode_ref"]
+    ev = next(iter(b._e["sunni"]["episode_ref"]["turn_abc"]["evidence"].values()))
+    assert ev["context"]["turn_id"] == "turn_abc"
+    b2 = F.FacetBook()
+    W.place_conversation(b2, [dict(ENTRY, turn_id="")], ["sunni"])
+    assert list(b2._e["sunni"]["episode_ref"]) == ["s1:100"] and "turn_id" not in next(iter(b2._e["sunni"]["episode_ref"]["s1:100"]["evidence"].values()))["context"]
+
+
+def test_turns_are_joined_by_their_recorded_id_never_by_the_clock():
+    es = [dict(ENTRY, turn_id="turnA"), dict(ENTRY, turn_id="", timestamp=101.0, user_said="sunni again"), dict(ENTRY, turn_id="turnB", user_said="nothing known", aurora_said="")]
+    got = W.turn_concepts_of(es, ["sunni", "mind"])
+    assert got == {"turnA": ["mind", "sunni"]}                                   # no id: left out; no known concept: left out
+    row = {"by": {"lived": {"inputs": ["i1"]}}}
+    assert W.concepts_of_inputs(row, {"i1": {"subject": "input|turnA|-"}}, got) == {"i1": ["mind", "sunni"]}
+
+
+def test_the_memory_writer_records_the_turn_and_it_survives_save_and_load():
+    from aurora_internal.aurora_identity_persistence import ConversationMemory
+    m = ConversationMemory()
+    m.record_exchange(tone="warm", topic="t", session_id="s1", turn_id="turn_xyz")
+    m.record_exchange(tone="warm", topic="t", session_id="s1")                   # none was live: recorded as none, not guessed
+    d = m.to_dict()
+    assert [e["turn_id"] for e in d["entries"]] == ["turn_xyz", ""]
+    back = ConversationMemory.from_dict(d)
+    assert [e.turn_id for e in back.entries] == ["turn_xyz", ""]
+    old = {k: v for k, v in d["entries"][0].items() if k != "turn_id"}           # a file written before this field existed still loads
+    assert ConversationMemory.from_dict({"entries": [old]}).entries[0].turn_id == ""

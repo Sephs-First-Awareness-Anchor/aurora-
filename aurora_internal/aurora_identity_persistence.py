@@ -1011,6 +1011,7 @@ class MemoryEntry:
     importance: float = 0.5    # 0-1 how important this exchange was
     session_id: str = ""
     trace_id: str = ""
+    turn_id: str = ""   # the input turn this exchange answers (same id as input|<turn_id>|-); "" when none was live
     user_said: str = ""   # legacy compat only — never written
     aurora_said: str = "" # legacy compat only — never written
 
@@ -1231,7 +1232,8 @@ class ConversationMemory:
     def record_exchange(self, user_text: str = "", aurora_text: str = "",
                         tone: str = "neutral", topic: str = "",
                         importance: float = 0.5, session_id: str = "",
-                        input_nc: dict = None, response_nc: dict = None):
+                        input_nc: dict = None, response_nc: dict = None,
+                        turn_id: str = ""):
         """Record a memorable exchange — stores constraint-native only, discards English."""
         _ = user_text   # not stored — FGAE translates at intake
         _ = aurora_text # not stored — FGAE translates at output
@@ -1250,6 +1252,7 @@ class ConversationMemory:
             importance=importance,
             session_id=session_id,
             trace_id=trace_id,
+            turn_id=str(turn_id or ""),
         )
         self.entries.append(entry)
 
@@ -1656,6 +1659,7 @@ class ConversationMemory:
                     "importance": e.importance,
                     "session_id": e.session_id,
                     "trace_id": e.trace_id,
+                    "turn_id": getattr(e, "turn_id", ""),
                 }
                 for e in self.entries
             ],
@@ -1689,6 +1693,7 @@ class ConversationMemory:
                 importance=edata.get("importance", 0.5),
                 session_id=edata.get("session_id", ""),
                 trace_id=edata.get("trace_id", ""),
+                turn_id=str(edata.get("turn_id", "") or ""),
             ))
 
         memory.topics_discussed = data.get("topics_discussed", {})

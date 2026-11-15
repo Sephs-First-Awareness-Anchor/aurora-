@@ -80,12 +80,15 @@ def place_conversation(book: _F.FacetBook, entries: Iterable[Mapping[str, Any]],
     n = 0
     for e in entries:
         ts, sess = e.get("timestamp"), str(e.get("session_id") or "")
-        eid = f"{sess}:{int(ts)}" if ts is not None else ""
+        turn = str(e.get("turn_id") or "")                                # the recorded input turn: the same id as the event subject `input|<turn>|-`
+        eid = turn or (f"{sess}:{int(ts)}" if ts is not None else "")
         if not eid:
             continue
         weight = e.get("importance")
         weight = 1.0 if weight is None else max(0.0, min(1.0, float(weight)))
         ctx = {"session": sess, "topic": e.get("topic"), "tone": e.get("emotional_tone")}
+        if turn:
+            ctx["turn_id"] = turn
         for position, field, basis in (("heard", "user_said", "told"), ("spoke", "aurora_said", "observed")):
             text = str(e.get(field) or "")
             words = {w.strip(".,!?;:\"'()").lower() for w in text.split()}
@@ -93,6 +96,23 @@ def place_conversation(book: _F.FacetBook, entries: Iterable[Mapping[str, Any]],
                 n += bool(book.add(known[w], "episode_ref", eid, {"id": eid, "time": ts, "summary": text[:160]}, ref=f"conv:{eid}:{position}:{known[w]}",
                                    source="conversation", basis=basis, strength=weight, occurrence_class=position, context=ctx))
     return n
+
+
+def turn_concepts_of(entries: Iterable[Mapping[str, Any]], known_concepts: Iterable[str]) -> Dict[str, List[str]]:
+    """Turn id -> the known concepts that turn's record mentioned (either side), for the join in `concepts_of_inputs`.  Only records that carry a turn id are
+    joined; one without is left out, never matched by the clock."""
+    known = {str(c).lower(): str(c) for c in known_concepts}
+    out: Dict[str, List[str]] = {}
+    for e in entries:
+        turn = str(e.get("turn_id") or "")
+        if not turn:
+            continue
+        words = {w.strip(".,!?;:\"'()").lower() for f in ("user_said", "aurora_said") for w in str(e.get(f) or "").split()}
+        hit = sorted(known[w] for w in words & set(known))
+        if hit:
+            out.setdefault(turn, [])
+            out[turn] = sorted(set(out[turn]) | set(hit))
+    return out
 
 
 def place_development(book: _F.FacetBook, concepts: Iterable[str], *, rep_id: str, record: Mapping[str, Any], input_event: Mapping[str, Any],

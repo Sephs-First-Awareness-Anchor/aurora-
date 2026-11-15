@@ -35908,6 +35908,7 @@ def _run_live_response_turn(
                 session_id=session_id,
                 response_nc=_response_nc,
                 input_nc=dict(systems.get("_last_noncomp_input") or {}),
+                turn_id=str(systems.get("_current_turn_id", "") or ""),
             )
             if session_id and getattr(conversation_memory, 'sessions', None):
                 conversation_memory.sessions[-1]["turns"] = turn_tick
