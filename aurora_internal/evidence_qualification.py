@@ -76,18 +76,26 @@ ANCESTRY_STATUS = ("traced", "partial", "unattributed")
 
 # The stream a trace item came through says where it ORIGINATED (occurrence), never how its contents are
 # supported: a user_input stream is heard -- what was said is testimony, supposition or correction by its content.
+# Vocabularies seen in the code (measured by scripts/measure_stream_provenance.py and read in the source):
+#   gateway StreamType values: user_input, knowledge_feed, sensor_data, system_event, exploration, self_reflection;
+#   the genealogy's documented extras: simulation, corpus, dream;  the lineage compiler writes "synthetic_lineage".
+# Only origins that name an occurrence unambiguously are mapped; the rest stay "" (unspecified), which is visible and
+# never guessed.  `internal_origin` (gateway metadata) outranks the stream: dream replay arrives as knowledge_feed.
 OCCURRENCE_OF_STREAM: Dict[str, str] = {
-    "user_input": "heard", "knowledge_feed": "read", "corpus": "read", "simulation": "simulated", "dream": "dreamed"}
+    "user_input": "heard", "knowledge_feed": "read", "corpus": "read", "sensor_data": "perceived",
+    "simulation": "simulated", "dream": "dreamed", "synthetic_lineage": "derived"}
+OCCURRENCE_OF_INTERNAL_ORIGIN: Dict[str, str] = {"dream_replay": "dreamed"}
 
 
 class EvidenceConflict(ValueError):
     """Two events with the same id say different things.  Neither is dropped; the caller must decide."""
 
 
-def occurrence_of_stream(stream_type: str) -> str:
-    """`EnvironmentVector.stream_type` -> occurrence.  An unrecognised or empty stream is "" (unspecified): the
-    producer did not say, and that stays visible; it is not guessed."""
-    return OCCURRENCE_OF_STREAM.get(str(stream_type or ""), "")
+def occurrence_of_stream(stream_type: str, internal_origin: str = "") -> str:
+    """`EnvironmentVector.stream_type` (+ the gateway's `internal_origin`) -> occurrence.  An unrecognised or empty
+    stream is "" (unspecified): the producer did not say, and that stays visible; it is not guessed."""
+    origin = OCCURRENCE_OF_INTERNAL_ORIGIN.get(str(internal_origin or ""))
+    return origin or OCCURRENCE_OF_STREAM.get(str(stream_type or ""), "")
 
 
 def _clean_basis(basis: Any) -> str:

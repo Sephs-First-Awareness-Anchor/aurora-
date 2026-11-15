@@ -317,3 +317,16 @@ def test_order_independence_and_idempotence_hold_with_every_axis_present():
         shuffled = list(evs)
         rng.shuffle(shuffled)
         assert Q.fold(evs) == Q.fold(shuffled) == Q.fold(evs + evs)
+
+
+def test_the_streams_the_code_really_has_map_to_occurrences_and_the_unclear_ones_stay_unspecified():
+    assert Q.occurrence_of_stream("sensor_data") == "perceived" and Q.occurrence_of_stream("knowledge_feed") == "read"
+    assert Q.occurrence_of_stream("synthetic_lineage") == "derived"
+    for unclear in ("system_event", "exploration", "self_reflection", "", "neither"):
+        assert Q.occurrence_of_stream(unclear) == "", unclear
+    # dream replay arrives as a knowledge_feed with internal_origin="dream_replay" (aurora_dream_trainer): the origin wins
+    assert Q.occurrence_of_stream("knowledge_feed", "dream_replay") == "dreamed"
+    assert Q.occurrence_of_stream("knowledge_feed", "something_else") == "read"
+    # and a dreamed occurrence can never then carry told/observed content
+    with pytest.raises(ValueError):
+        Q.make_event("a|b|c", "told", t=1, occurrence=Q.occurrence_of_stream("knowledge_feed", "dream_replay"))
