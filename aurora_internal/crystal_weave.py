@@ -250,10 +250,25 @@ def apply_maturity(store: AssociationStore, book: _F.FacetBook, concept_index: M
     return {"crystals": n, "ready_to_grow": ready, "ready_by_counts_but_not_by_evidence": held_by_counts, "dry_run": bool(dry_run)}
 
 
+def _one_store(web: Dict[str, Any]) -> Dict[str, Any]:
+    """A word under a bookkeeping label is the word (see crystal_store): its node and the relations that mention it are placed at the word."""
+    from aurora_internal.crystal_store import bare_of
+    nodes: Dict[str, Any] = {}
+    for key, node in (web.get("nodes") or {}).items():
+        bare = bare_of(key)
+        if bare in nodes and bare != key:
+            continue
+        nodes[bare] = dict(node, word=bare_of(node.get("word"))) if isinstance(node, dict) and node.get("word") else node
+    rels = {}
+    for rid, r in (web.get("relations") or {}).items():
+        rels[rid] = dict(r, source_word=bare_of(r.get("source_word", "")), target_word=bare_of(r.get("target_word", ""))) if isinstance(r, dict) else r
+    return dict(web, nodes=nodes, relations=rels)
+
+
 def weave(state_dir: str) -> Dict[str, Any]:
     """Run every adapter over what is in `state_dir`.  Returns {'book', 'store', 'summary'}.  Reads only."""
     book, summary = _F.FacetBook(), {}
-    web = _read(state_dir, "aurora_oets_web.json") or {}
+    web = _one_store(_read(state_dir, "aurora_oets_web.json") or {})
     for node in (web.get("nodes") or {}).values():
         _F.place_oets_node(book, node)
     store = project_assertions(web.get("relations") or {}, project_oets(web.get("relations") or {}))

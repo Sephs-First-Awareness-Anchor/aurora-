@@ -511,8 +511,8 @@ class Crystal:
             from aurora_internal.crystal_maturity import ready_to_grow
             return ready_to_grow(self.maturity, int(self.level))
         # Not yet looked at: the earlier count rule, except that facets placed from the weave ("fk:") are derived records of what she has been through, not
-        # facets gained by use, so they never count toward it.
-        external = [f for f in self.facets.values() if not f.role.startswith(("LAW_", "fk:"))]
+        # facets gained by use, so they never count toward it, and neither does the provenance of a name (`provenance:`), which says how a word arrived, not what has been learned of it.
+        external = [f for f in self.facets.values() if not f.role.startswith(("LAW_", "fk:", "provenance:"))]
         if self.level == CrystalLevel.BASE:
             return len(external) >= 3 and self.usage_count >= 10
         elif self.level == CrystalLevel.COMPOSITE:
@@ -916,6 +916,20 @@ class CrystalProcessingSystem(WarpCapable):
         cid = self.concept_index.get(concept)
         if cid and cid in self.crystals:
             return self.crystals[cid]
+        # One crystal store: a word under a bookkeeping label (`learned:come`) is the crystal of the word (`come`), with the label kept as provenance.
+        prefix = None
+        try:
+            from aurora_internal.crystal_store import canonical as _canonical, _note_provenance
+            bare, prefix = _canonical(concept)
+            if prefix is not None:
+                existing = self.crystals.get(self.concept_index.get(bare, ""))
+                if existing is None:
+                    existing = self._get_or_create(bare)
+                self.concept_index[concept] = existing.crystal_id
+                _note_provenance(existing, prefix)
+                return existing
+        except Exception:
+            prefix = None
         cid = hashlib.md5(concept.encode()).hexdigest()[:12]
         crystal = Crystal(crystal_id=cid, concept=concept)
         crystal._unlock_failpoints()  # BASE dimensions active from birth
@@ -925,6 +939,14 @@ class CrystalProcessingSystem(WarpCapable):
 
     def get_crystal(self, concept: str) -> Optional[Crystal]:
         cid = self.concept_index.get(concept)
+        if cid is None:
+            try:
+                from aurora_internal.crystal_store import canonical as _canonical
+                bare, prefix = _canonical(concept)
+                if prefix is not None:
+                    cid = self.concept_index.get(bare)
+            except Exception:
+                cid = None
         return self.crystals.get(cid) if cid else None
 
     # ── WARP Universalization Directive Phase 1 (2026-07-24) ────────────

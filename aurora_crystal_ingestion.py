@@ -45,6 +45,15 @@ from aurora_internal.aurora_runtime_faults import record_exception_from_locals a
 
 from typing import Any, Dict
 
+
+def _bare_word(word: Any) -> str:
+    """A word under a bookkeeping label (`learned:come`) is the word (`come`): one crystal store."""
+    try:
+        from aurora_internal.crystal_store import bare_of
+        return bare_of(word)
+    except Exception:
+        return str(word)
+
 # ── Tunable thresholds ──────────────────────────────────────────────────────
 
 PRESSURE_CRYSTAL_MIN_WORTH  = 0.48   # experiences below this skip DPS
@@ -511,7 +520,7 @@ def seed_dps_from_lexicon_and_oets(dps: Any, systems: Dict[str, Any]) -> int:
                 crystal = dps._get_or_create(str(word))
                 crystal.add_facet(
                     role=f"lexicon:{role}",
-                    content=nid or word,
+                    content=nid or _bare_word(word),
                     confidence=conf,
                 )
                 crystal.evolve()
