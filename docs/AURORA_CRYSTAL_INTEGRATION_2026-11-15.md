@@ -82,3 +82,16 @@ Authors: Sunni (Sir) Morningstar and Cael Devo.
 * `crystal_runtime.word_profiles` reads the kept use; the lexical feed is the fallback only when no kept use exists (so the same turns are never counted twice). `ContextProfiles.merge` adds counts under the same bounds. The file does not exist in the current state until she speaks again, so `and`, `or`, `a`, `that` get their crystals as that corpus grows.
 * Emotional point: `maturity_points` now sets `emotional` = degree (REF_EMOTIONAL = 5) of her counted occasions whose recorded tone is not neutral. It is None when no counted occasion recorded a tone at all (nothing looked at), 0.0 when tones were recorded and all neutral. Supposed, overheard and scaffold occasions do not count. It is recorded on the crystal but is not yet a requirement of any level (`memberships` is unchanged). On the real state 256 crystals get an emotional point (max 0.98).
 * `Full Crystal System Realized Potential.zip` (Aug 2025 design: threshold evolution at 0.5/0.6, keyword emotional resonance, L4 dimensional layers, ghost relics, concept embedding) read as ancestry. Ideas worth carrying forward later, as gradients: attraction dimensions (emotional, practical, conceptual, personal, network, temporal) as maturity points, inward growth at the top level instead of new crystals, faded layers as ghost relics.
+
+## Inward growth (quasi-recursive interior)
+
+Authors: Sunni (Sir) Morningstar and Cael Devo.
+
+Sir, 2026-11-15: more complex crystals grow inward rather than spawning more crystals; the ghost-relic idea of the 2025 design is superseded by the resolution behaviour (so no relic layer is kept: a layer that is no longer carried fades through the resolution ledger, and the pass only ever adds).
+
+* `crystal_interior` (14+3 tests, every rule mutation-checked, `Crystal.interior` persisted, loads old saves). A concept's ties fall into aspects: ties that are tied to the same things as one another. Those aspects are held INSIDE the crystal as inner layers; each layer can fall into finer layers by the same step, so it is quasi-recursive.
+* Resolution gets finer with depth: members bind when they match by `1 - 0.5 ** (depth + 1)` (a half, three quarters, seven eighths). `MAX_DEPTH = 3`, `MAX_LAYERS = 6` and `FAN = 24` only bound work and memory.
+* How far a crystal grows inward is its standing at the top level (`memberships(points)[4]`), used as a multiplier, never as a class. A layer's weight = how single its members are x how much of the crystal's ties it holds (x / (x + 3)) x that standing. A crystal with no standing at the top level gets no interior.
+* `crystal_runtime.run_pass` calls it right after maturity (additive: stronger value wins, existing layers and members kept). It spawns no crystal.
+* On the real state no crystal stands at the top level yet (none has a consequence shown outside her own simulation, so the cognitive point is 0 everywhere), so no interior forms yet. It forms as lived, externally shown evidence arrives.
+* Not rerouted yet: crystals spawned elsewhere for the aspects of one concept (`tensor_variant:*` in `dual_strata/semantic_variant_registry.py`, sensory crystals). Those carry their own promotion gates and would need a decision per place.
