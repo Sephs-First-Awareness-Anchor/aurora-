@@ -331,7 +331,7 @@ def test_nothing_running_imports_the_weave_and_it_never_writes():
         if any(x in base for x in (".git", "tests", "scripts", "aurora_state", "node_modules")):
             continue
         for f in files:
-            if f.endswith(".py") and f != "crystal_weave.py" and re.search(r"(from|import)\s+[\w.]*crystal_weave", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
+            if f.endswith(".py") and f not in ("crystal_weave.py", "crystal_runtime.py") and re.search(r"(from|import)\s+[\w.]*crystal_weave", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
                 hits.append(f)
     assert hits == []
 

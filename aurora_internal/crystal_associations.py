@@ -69,6 +69,18 @@ class AssociationStore:
     def __init__(self) -> None:
         # key -> {"evidence": {ref: {"basis", "source", "strength", "confidence"}}}
         self._links: Dict[Tuple[str, str, str], Dict[str, Dict[str, Any]]] = {}
+        self._idx: Dict[str, List[Tuple[str, str, str]]] = {}   # concept -> its keys, in insertion order; rebuilt whenever the set of keys has changed
+        self._idx_n = 0
+
+    def _keys_for(self, concept: str) -> List[Tuple[str, str, str]]:
+        if self._idx_n != len(self._links):
+            idx: Dict[str, List[Tuple[str, str, str]]] = {}
+            for key in self._links:
+                idx.setdefault(key[0], []).append(key)
+                if key[1] != key[0]:
+                    idx.setdefault(key[1], []).append(key)
+            self._idx, self._idx_n = idx, len(self._links)
+        return self._idx.get(str(concept), [])
 
     # ---- writing ----------------------------------------------------------------------------------------------------
     def add(self, a: str, b: str, rtype: str, *, ref: str, source: str,
@@ -120,7 +132,7 @@ class AssociationStore:
     def incoming(self, concept: str, rtype: str) -> Dict[str, float]:
         """Concepts x with a counted association x --rtype--> concept, and its strength: for `is_a` these are what the concept holds."""
         c, out = str(concept), {}
-        for (a, b, t) in self._links:
+        for (a, b, t) in self._keys_for(c):
             if t == rtype and b == c and a != c:
                 s = self.strength(a, b, t)
                 if s > 0.0:
@@ -131,9 +143,7 @@ class AssociationStore:
         """neighbour concept -> counted strength (the strongest across types), for neighbours with any counted strength."""
         out: Dict[str, float] = {}
         c = str(concept)
-        for (a, b, rtype) in self._links:
-            if c not in (a, b):
-                continue
+        for (a, b, rtype) in self._keys_for(c):
             other = b if a == c else a
             s = self.strength(a, b, rtype)
             if s > out.get(other, 0.0):
@@ -260,7 +270,7 @@ def apply_to_crystals(store: AssociationStore, concept_index: Mapping[str, str],
             continue
         conns = store.connections_for(concept)
         ranked: List[Tuple[str, float]] = []
-        for other, s in sorted(conns.items(), key=lambda kv: -kv[1]):
+        for other, s in sorted(conns.items(), key=lambda kv: (-kv[1], kv[0])):
             ocid = concept_index.get(other)
             if ocid and ocid in crystals and ocid != cid:
                 ranked.append((ocid, s))

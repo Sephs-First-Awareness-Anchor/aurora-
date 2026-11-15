@@ -141,6 +141,6 @@ def test_no_degree_is_compared_with_a_cut_off_and_nothing_running_imports_it():
         if any(x in base for x in (".git", "tests", "scripts", "aurora_state", "node_modules")):
             continue
         for f in files:
-            if f.endswith(".py") and f != "crystal_promotion.py" and re.search(r"(from|import)\s+[\w.]*crystal_promotion", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
+            if f.endswith(".py") and f not in ("crystal_promotion.py", "crystal_runtime.py") and re.search(r"(from|import)\s+[\w.]*crystal_promotion", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
                 hits.append(f)
     assert hits == []

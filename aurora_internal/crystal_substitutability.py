@@ -50,7 +50,10 @@ def _js_similarity(p: Mapping[Any, float], q: Mapping[Any, float]) -> float:
 
 
 class ContextProfiles:
-    def __init__(self) -> None:
+    def __init__(self, max_words: int = 4000, max_contexts: int = 64) -> None:
+        """`max_words` and `max_contexts` only bound memory: when a limit is passed by a quarter, the least-seen words (or a word's least-seen contexts) are
+        dropped, as her word-class finder bounds its own vocabulary."""
+        self._max_words, self._max_ctx = int(max_words), int(max_contexts)
         self._n: Dict[str, int] = {}
         self._ctx: Dict[str, Dict[str, Dict[str, int]]] = {}
 
@@ -64,6 +67,13 @@ class ContextProfiles:
             d = self._ctx.setdefault(w, {"L": {}, "R": {}})
             for side, c in (("L", padded[i - 1]), ("R", padded[i + 1])):
                 d[side][c] = d[side].get(c, 0) + 1
+                if len(d[side]) > self._max_ctx + self._max_ctx // 4:
+                    for k in sorted(d[side], key=lambda x: (d[side][x], x))[: len(d[side]) - self._max_ctx]:
+                        del d[side][k]
+        if len(self._n) > self._max_words + self._max_words // 4:
+            for w in sorted(self._n, key=lambda x: (self._n[x], x))[: len(self._n) - self._max_words]:
+                self._n.pop(w, None)
+                self._ctx.pop(w, None)
         return len(ws)
 
     # -- reading ----------------------------------------------------------------------------------------------------------------------------
@@ -130,13 +140,21 @@ def class_degree(profiles: ContextProfiles, exemplar: str, members: Mapping[str,
     return _degree(mass, REF_MASS) * unity
 
 
-def exemplar_classes(profiles: ContextProfiles, vocabulary: Optional[Iterable[str]] = None, top: Optional[int] = None,
-                     fan: int = 16) -> List[Tuple[str, float, Dict[str, float]]]:
-    """(exemplar, class degree, {word: similarity}) strongest class first.  Each word is tried as the exemplar of the words that substitute for it."""
+def neighbours(profiles: ContextProfiles, vocabulary: Optional[Iterable[str]] = None) -> Dict[str, Dict[str, float]]:
+    """word -> {other word: similarity} over the vocabulary, computed once so classes and links can share it."""
     pool = sorted(set(vocabulary) if vocabulary is not None else profiles.vocabulary())
+    return {w: {o: s for o, s in profiles.substitutes(w, pool)} for w in pool}
+
+
+def exemplar_classes(profiles: ContextProfiles, vocabulary: Optional[Iterable[str]] = None, top: Optional[int] = None,
+                     fan: int = 16, near: Optional[Mapping[str, Mapping[str, float]]] = None) -> List[Tuple[str, float, Dict[str, float]]]:
+    """(exemplar, class degree, {word: similarity}) strongest class first.  Each word is tried as the exemplar of the words that substitute for it.
+    `near` is a precomputed `neighbours(...)`."""
+    pool = sorted(set(vocabulary) if vocabulary is not None else profiles.vocabulary())
+    near = near if near is not None else neighbours(profiles, pool)
     rows = []
     for h in pool:
-        members = {w: s for w, s in profiles.substitutes(h, pool)}
+        members = dict(near.get(h) or {})
         d = class_degree(profiles, h, members, fan)
         if d > 0.0:
             rows.append((h, d, members))
@@ -151,12 +169,15 @@ def class_members(exemplar: str, members: Mapping[str, float]) -> Dict[str, floa
     return out
 
 
-def place_substitutes(store: Any, profiles: ContextProfiles, vocabulary: Optional[Iterable[str]] = None, per_word: int = 8) -> int:
+def place_substitutes(store: Any, profiles: ContextProfiles, vocabulary: Optional[Iterable[str]] = None, per_word: int = 8,
+                      near: Optional[Mapping[str, Mapping[str, float]]] = None) -> int:
     """`substitutes_for` links as counted association evidence (source `lexical_class`), each word to its `per_word` strongest substitutes at its
     similarity.  `per_word` only limits how many links each word gets."""
     pool = sorted(set(vocabulary) if vocabulary is not None else profiles.vocabulary())
     n = 0
     for w in pool:
-        for other, s in profiles.substitutes(w, pool, top=per_word):
+        ranked = sorted(((o, s) for o, s in (near[w] if near is not None and w in near else dict(profiles.substitutes(w, pool))).items()),
+                        key=lambda kv: (-kv[1], kv[0]))[:per_word]
+        for other, s in ranked:
             n += bool(store.add(w, other, "substitutes_for", ref=f"subst:{min(w, other)}:{max(w, other)}", source="lexical_class", strength=s))
     return n

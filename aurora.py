@@ -38519,6 +38519,17 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
         try:
             state_dir = str(getattr(aurora, 'state_dir',
                                     systems.get('_state_dir', 'aurora_state')))
+            try:
+                # Weave every subsystem's stored data into the crystals it belongs to (additive, fail-safe, rate-limited;
+                # AURORA_CRYSTAL_WEAVE=0 turns it off) just before the registry is persisted.
+                from aurora_internal import crystal_runtime as _crystal_runtime
+                _crystal_report = _crystal_runtime.run_pass(dimensional.dps, state_dir)
+                if verbose and _crystal_report.get("ok"):
+                    print(f"  [SAVE] Crystal weave: {_crystal_report.get('links', {}).get('links', 0)} links, "
+                          f"{_crystal_report.get('facets', {}).get('facets', 0)} facets, "
+                          f"{_crystal_report.get('generalizations', 0)} generalizations ({_crystal_report.get('seconds')}s)")
+            except Exception:
+                pass
             ok = dimensional.save_state(state_dir)
             if verbose:
                 n = len(getattr(dimensional.dps, 'crystals', {}) or {})

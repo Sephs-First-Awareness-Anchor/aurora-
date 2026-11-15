@@ -53,6 +53,10 @@ class LexicalStructure:
         self._wave_n: List[int] = [0] * LEX_SLOTS
         self._events = 0
         self._stale: List[int] = [0] * LEX_SLOTS     # rounds a held class has gone unconfirmed
+        # Where each word turns up (what comes just before and after it, in order): the signal for the diffuse words the follower profiles above cannot
+        # class.  Read by aurora_internal.crystal_substitutability; it influences nothing here.
+        from aurora_internal.crystal_substitutability import ContextProfiles
+        self.contexts = ContextProfiles(max_words=1500, max_contexts=24)
 
     # ---------------------------------------------------------------- intake
     def _sample(self, words: List[str]) -> List[str]:
@@ -63,7 +67,9 @@ class LexicalStructure:
 
     def observe(self, tokens: Iterable[str], stream: str, episode_id: str) -> Tuple[Tuple[int, ...], bool]:
         """Admit one event's words.  Returns (class bits for this event, classes changed)."""
-        full = [str(t) for t in dict.fromkeys(tokens or []) if len(str(t)) >= 2]
+        tokens = list(tokens or [])
+        self.contexts.observe([str(t) for t in tokens if len(str(t)) >= 2])
+        full = [str(t) for t in dict.fromkeys(tokens) if len(str(t)) >= 2]
         sample = self._sample(full)
         prev = self._last.get(str(stream))
         if prev is not None and prev[0] == str(episode_id) and prev[1] and sample:
@@ -219,7 +225,7 @@ class LexicalStructure:
 
     def state(self) -> Dict[str, Any]:
         return {"v": 2, "members": [sorted(m) for m in self._members], "epochs": list(self._epochs),
-                "wave": self._wave, "wave_n": self._wave_n}
+                "wave": self._wave, "wave_n": self._wave_n, "contexts": self.contexts.state()}
 
     def restore(self, state: Mapping[str, Any]) -> None:
         members = list(state.get("members") or [])
@@ -230,5 +236,7 @@ class LexicalStructure:
         self._stale = [0] * LEX_SLOTS
         wave = list(state.get("wave") or [])
         self._wave = [list(map(float, wave[k])) if k < len(wave) else [0.0] * 5 for k in range(LEX_SLOTS)]
+        if state.get("contexts"):
+            self.contexts.restore(state["contexts"])
         counts = list(state.get("wave_n") or [])
         self._wave_n = [int(counts[k]) if k < len(counts) else 0 for k in range(LEX_SLOTS)]

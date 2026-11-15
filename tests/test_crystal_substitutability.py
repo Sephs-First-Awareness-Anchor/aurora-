@@ -53,7 +53,7 @@ def test_a_word_that_has_hardly_been_seen_cannot_match_anything_yet_and_each_sig
 def test_similarity_rises_smoothly_as_the_contexts_two_words_share_grow():
     out = []
     for shared in range(0, 9):
-        p = S.ContextProfiles()
+        p = S.ContextProfiles(max_contexts=10000)
         for i in range(120):
             p.observe(["a%d" % (i % 8), "w1", "z%d" % (i % 8 if i % 8 < shared else 100 + i)])
             p.observe(["a%d" % (i % 8), "w2", "z%d" % (i % 8 if i % 8 < shared else 200 + i)])
@@ -148,7 +148,7 @@ def test_it_imports_nothing_from_aurora_nothing_running_imports_it_and_no_degree
         if any(x in base for x in (".git", "tests", "scripts", "aurora_state", "node_modules")):
             continue
         for f in files:
-            if f.endswith(".py") and f != "crystal_substitutability.py" and re.search(r"(from|import)\s+[\w.]*crystal_substitutability", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
+            if f.endswith(".py") and f not in ("crystal_substitutability.py", "aurora_lexical_structure.py", "crystal_runtime.py") and re.search(r"(from|import)\s+[\w.]*crystal_substitutability", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
                 hits.append(f)
     assert hits == []
 
@@ -207,3 +207,12 @@ def test_the_same_members_belonging_more_make_more_of_a_class_because_the_mass_i
     weak = S.class_degree(p, "w0", {"w1": 0.1, "w2": 0.1})
     strong = S.class_degree(p, "w0", {"w1": 0.9, "w2": 0.9})
     assert 0.0 < weak < strong < 1.0
+
+
+def test_memory_is_bounded_by_dropping_the_least_seen_and_the_most_seen_survive():
+    p = S.ContextProfiles(max_words=40, max_contexts=8)
+    for i in range(400):
+        p.observe(["common", "w%d" % i, "common"])
+        p.observe(["a%d" % i, "hub", "b%d" % i])
+    assert len(p.vocabulary()) <= 50 and p.count("common") == 800 and p.count("hub") == 400
+    assert p.distinct_contexts("hub") <= 2 * 10                                         # each side held to its limit (plus the quarter allowed before a trim)

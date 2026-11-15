@@ -59,3 +59,17 @@ Added: `turn_id` on conversation memory entries (joined by id, never the clock),
 Authors: Sunni (Sir) Morningstar and Cael Devo.
 
 Also added: `crystal_substitutability` (+ `scripts/measure_crystal_substitutability.py`), the `substitutes_for` link type, and per-member degrees in `crystal_grammar.place_classes`. See plan doc, P6 follow-up.
+
+## The whole pass is live (merged to main)
+
+Authors: Sunni (Sir) Morningstar and Cael Devo.
+
+`crystal_runtime.run_pass(dps, state_dir, force, clock, min_interval)` runs every writer in order: associations and facets (`crystal_weave`), grammar classes and substitutability (`crystal_grammar`, `crystal_substitutability`), promotion by group classification (`crystal_promotion`), then evidence-based maturity (`apply_maturity`). It is called once from `aurora.py::_full_save`, before `dimensional.save_state`.
+
+* Additive and fail-safe: an exception is caught and logged, never raised into the save. Rate-limited to once per 600 s (`MIN_INTERVAL`). Kill switch: `AURORA_CRYSTAL_WEAVE=0`.
+* Generalization crystals are created at level 1 and only raised by degree (`min(3, round(level_under))`), never lowered, never QUASI.
+* `LexicalStructure.contexts` is a bounded `ContextProfiles` (1500 words, 24 contexts) fed from her own turns; dictionary-sourced text stays out (it goes through her understanding development).
+* Speed: promotion caches profiles (`FAN = 40`) and `AssociationStore` has a per-concept index (identical results to a full scan; tie-breaks by name). Whole pass on real state: 31.6 s to about 3.3 s.
+* Trial on a copy of real state: 5,988 crystals given maturity, 176 ready to grow under evidence (0 under the old count rule), about 5,180 links over 437 crystals, 885 facets over 537 crystals, 11 new generalization crystals, `sunni` facets 4 to 6 and links 0 to 16. Known and benign: the link count varies by about 10 across hash seeds (zero-strength links), and maturity differs by about 1e-9.
+* Open: `and`, `or`, `a`, `that` have no crystals in this state yet; her own word classes are not found by `LexicalStructure` (diffuse words excluded by design); emotional maturity point not wired.
+* Pre-existing failures on main, unrelated: `test_build725_native_semantic_externalization` (collection error), `test_build694...canonical_turn_id`, `test_communication_integrity_repair...identity_seed`, `test_native_intermediate_resolution_audit...byte_identical`.

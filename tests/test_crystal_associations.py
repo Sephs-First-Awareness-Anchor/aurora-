@@ -234,7 +234,7 @@ def test_nothing_in_the_running_system_calls_it():
         if any(x in base for x in (".git", "tests", "scripts", "aurora_state", "node_modules")):
             continue
         for f in files:
-            if f.endswith(".py") and f not in ("crystal_associations.py", "crystal_convergence.py", "crystal_facets.py", "crystal_weave.py", "crystal_promotion.py", "crystal_grammar.py"):
+            if f.endswith(".py") and f not in ("crystal_associations.py", "crystal_convergence.py", "crystal_facets.py", "crystal_weave.py", "crystal_promotion.py", "crystal_grammar.py", "crystal_runtime.py", "crystal_substitutability.py"):
                 if "crystal_associations" in open(os.path.join(base, f), encoding="utf-8", errors="ignore").read():
                     hits.append(f)
     assert hits == []
@@ -302,3 +302,54 @@ def test_incoming_lists_what_a_concept_holds_with_the_degree_and_ignores_the_unc
     s.add("b", "letter", "is_a", ref="2", source="backfill_role_heuristic", strength=1.0)
     s.add("letter", "word", "is_a", ref="3", source="co-occurrence", strength=0.5)
     assert s.incoming("letter", "is_a") == {"a": pytest.approx(0.9)}
+
+
+# -- the per-concept index answers exactly what a scan of every link would -----------------------------------------------------------------------------
+
+def _scan_connections(s, c):
+    out = {}
+    for (a, b, rtype) in s._links:
+        if c not in (a, b):
+            continue
+        other = b if a == c else a
+        v = s.strength(a, b, rtype)
+        if v > out.get(other, 0.0):
+            out[other] = v
+    return out
+
+
+def _scan_incoming(s, c, rtype):
+    return {a: s.strength(a, b, t) for (a, b, t) in s._links if t == rtype and b == c and a != c and s.strength(a, b, t) > 0.0}
+
+
+def test_the_index_agrees_with_a_full_scan_through_interleaved_writes_and_a_load():
+    import random
+    rnd = random.Random(3)
+    s = AssociationStore()
+    names = [f"c{i}" for i in range(15)]
+    for step in range(120):
+        a, b = rnd.sample(names, 2)
+        s.add(a, b, rnd.choice(["is_a", "related_to", "causes"]), ref=f"r{step}", source=rnd.choice(["conversation", "seeded", "co-occurrence"]), strength=rnd.random())
+        if step % 7 == 0:                                                       # reads between writes, so the index is used while keys are still arriving
+            for c in names[:4]:
+                assert s.connections_for(c) == _scan_connections(s, c)
+    for c in names + ["nothing"]:
+        assert s.connections_for(c) == _scan_connections(s, c) and list(s.connections_for(c)) == list(_scan_connections(s, c))
+        assert s.incoming(c, "is_a") == _scan_incoming(s, c, "is_a")
+    back = AssociationStore.from_dict(s.to_dict())
+    assert all(back.connections_for(c) == _scan_connections(back, c) for c in names)
+    s.add("c0", "newcomer", "related_to", ref="late", source="conversation", strength=0.5)      # a key added after reads is seen at once
+    assert s.connections_for("newcomer") == {"c0": 0.5}
+
+
+def test_equal_strengths_are_chosen_by_name_so_a_pass_is_the_same_whatever_order_things_arrived_in():
+    class C:
+        connections = None
+    for order in (["a", "b", "c", "d"], ["d", "c", "b", "a"], ["c", "a", "d", "b"]):
+        s = AssociationStore()
+        for o in order:
+            s.add("hub", o, "related_to", ref=f"r{o}", source="conversation", strength=0.5)
+        crystals = {"H": C(), **{o: C() for o in "abcd"}}
+        idx = {"hub": "H", **{o: o for o in "abcd"}}
+        apply_to_crystals(s, idx, crystals, max_per_crystal=2, dry_run=False)
+        assert sorted(crystals["H"].connections) == ["a", "b"]
