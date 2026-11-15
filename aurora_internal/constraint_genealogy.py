@@ -39,7 +39,7 @@ import math
 import os
 import threading
 import time
-from collections import defaultdict, deque
+from collections import OrderedDict, defaultdict, deque
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
@@ -2151,6 +2151,8 @@ class ConstraintGenealogyLogger:
 
         # In-memory event log (ring buffer)
         self._event_log: Deque[ReliefRecord] = deque(maxlen=10_000)
+        # What each received input was, once per input (observation notes carry only the input's id)
+        self._input_events: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
 
         # Compact rolling event file (replaces unbounded events.jsonl)
         self._events_recent_path = os.path.join(output_dir, "events_recent.json")
@@ -2668,9 +2670,15 @@ class ConstraintGenealogyLogger:
         # Which received input this observation answers (identity only; changes no measurement).  A caller that already
         # named one keeps its own; an observation made outside any input carries none and stays unattributed.
         try:
-            from aurora_internal.aurora_input_identity import note_for_observe as _input_note
+            from aurora_internal.aurora_input_identity import (
+                note_for_observe as _input_note, summary_for_registry as _input_summary)
             for _k, _v in _input_note().items():
                 merged_notes.setdefault(_k, _v)
+            _inp = _input_summary()
+            if _inp and _inp["id"] not in self._input_events:         # said once per input, not on every observation
+                self._input_events[_inp.pop("id")] = _inp
+                while len(self._input_events) > 256:
+                    self._input_events.popitem(last=False)
         except Exception:
             pass
         if difference_snapshot is not None and hasattr(difference_snapshot, "to_dict"):
@@ -3259,6 +3267,9 @@ class ConstraintGenealogyLogger:
                 "total_count": int(self.relief_event_count),
                 "tick_count": int(self.tick_count),
                 "records": recent,
+                "inputs": {i: self._input_events[i] for i in
+                           {str((r.get("notes") or {}).get("input_event", "")) for r in recent}
+                           if i in self._input_events},
             })
         except Exception as _aurora_boundary_exc:
             _aurora_record_exception_from_locals(

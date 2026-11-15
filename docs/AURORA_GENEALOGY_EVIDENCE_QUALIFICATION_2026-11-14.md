@@ -171,8 +171,11 @@ The missing link found in 3d: genealogy `observe` notes carried no turn or input
 * `aurora_internal/aurora_input_identity.py` holds the identity of the input being processed in a ContextVar. The identity
   is an evidence-contract event (subject `input|<turn_id>|-`; occurrence from the address, so `direct` is `heard`, and
   `mention`/`ambient` would be `overheard`; `input_pressure` as the intake measured it, unknown when it loaded nothing).
-* `ConstraintGenealogyLogger._observe_impl` merges `{input_event, input_occurrence, turn_id, input_pressure}` into the
-  notes with `setdefault` (a caller that named its own keeps it). **Identity only: no measurement, gate or decision reads it.**
+* `ConstraintGenealogyLogger._observe_impl` merges **only the input's id** (`{"input_event": id}`) into the notes with
+  `setdefault` (a caller that named its own keeps it). What the input was (how it was addressed, the pressure it imposed,
+  its turn) is kept **once per input** in `_input_events` (bounded at 256) and written once per input into
+  `events_recent.json` under `"inputs"`, limited to inputs the persisted records still refer to. Nothing is repeated on
+  each observation. **Identity only: no measurement, gate or decision reads it.**
   Verified: relief, dominant axis, before/after pressure and cost are identical with and without an input set.
 * `aurora._process_external_user_turn_impl` begins the identity just before the turn's `try` and resets it in the `finally`.
 * A thread started by the turn does not inherit the ContextVar, so a background observation carries no identity: unattributed,
@@ -184,13 +187,14 @@ The missing link found in 3d: genealogy `observe` notes carried no turn or input
 8 distinct turn ids, 0 background-thread calls in that run. A longer run may show background observations; they would
 appear as unnamed, which is the honest answer.
 
-**Cost:** about 150 bytes of notes per relief record (`ReliefRecord.notes` is persisted). Not measured at scale; flagged.
+**Cost:** one short id per relief record (about 20 bytes) plus one small entry per input. (First version repeated the
+input's pressure, occurrence and turn on every observation; Sir's correction, "she shouldn't be repeating information", removed that.)
 
 **Not done:** only the direct-turn path names an input. The ambient listener does not call `observe`, so overheard speech has
 no genealogy observations to name (not measured beyond that). No producer yet builds consequences from these records
 in the live path; that is the next, separate step (read-only shadow through `_attribute_consequence`).
 
-Tests: `tests/test_input_identity.py` (10, including a source guard that the reset is a call inside a `finally`); six
+Tests: `tests/test_input_identity.py` (12, including a source guard that the reset is a call inside a `finally`); six
 mutants caught (one survived until the guard was tightened). 225 genealogy and live-turn tests pass.
 
 ## 4. Audit findings (read from the source; the live one measured)

@@ -51,9 +51,9 @@ def run(state_dir):
 
         def observe(self, *a, **kw):
             note = ident.note_for_observe()
-            calls.append({"named": bool(note), "turn_id": note.get("turn_id", ""),
+            calls.append({"named": bool(note), "turn_id": note.get("input_event", ""),
                           "thread": "main" if threading.current_thread() is threading.main_thread() else "background",
-                          "caller_named": bool((kw.get("notes") or {}).get("turn_id"))})
+                          "caller_named": bool((kw.get("notes") or {}).get("input_event"))})
             return orig(self, *a, **kw)
 
         G.observe = observe

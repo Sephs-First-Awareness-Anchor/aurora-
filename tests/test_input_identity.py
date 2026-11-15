@@ -42,11 +42,11 @@ def test_the_intakes_pressure_is_carried_and_unknown_pressure_is_not_zero():
 
 def test_the_note_exists_only_between_begin_and_end_and_nests_cleanly():
     outer = I.begin_input("outer", "a")
-    assert I.note_for_observe()["turn_id"] == "outer"
+    o = I.note_for_observe()["input_event"]
     inner = I.begin_input("inner", "b")
-    assert I.note_for_observe()["turn_id"] == "inner"
+    assert I.note_for_observe()["input_event"] != o
     I.end_input(inner)
-    assert I.note_for_observe()["turn_id"] == "outer"
+    assert I.note_for_observe()["input_event"] == o
     I.end_input(outer)
     assert I.note_for_observe() == {}
 
@@ -60,18 +60,45 @@ def test_a_thread_started_by_the_turn_carries_no_identity_it_is_unattributed_not
     assert seen == [{}]
 
 
-def test_observe_merges_the_identity_into_the_relief_records_notes(gen):
+def test_an_observation_carries_only_the_inputs_id_and_the_inputs_facts_are_kept_once(gen):
     bare = gen.observe(HI, [], LO)
     token = I.begin_input("turn_7", "scared", loads={"X": 1.0, "B": 0.5})
     try:
-        named = gen.observe(HI, [], LO)
+        many = [gen.observe(HI, [], LO) for _ in range(5)]
+        inp = I.current_event()
     finally:
         I.end_input(token)
     after = gen.observe(HI, [], LO)
     assert bare.notes == {} and after.notes == {}
-    ev = I.make_input_event("turn_7", "scared", loads={"X": 1.0, "B": 0.5}, t=0)           # same text/turn: nonce matches
-    assert named.notes["turn_id"] == "turn_7" and named.notes["input_occurrence"] == "heard"
-    assert named.notes["input_pressure"] == ev["input_pressure"] and isinstance(named.notes["input_event"], str)
+    assert all(r.notes == {"input_event": inp["id"]} for r in many)               # nothing else repeated on each one
+    assert list(gen._input_events) == [inp["id"]]                                    # the input's facts, once
+    assert gen._input_events[inp["id"]] == {"occurrence": "heard", "turn_id": "turn_7", "input_pressure": inp["input_pressure"]}
+
+
+def test_the_persisted_file_repeats_nothing_per_record_and_keeps_only_inputs_it_still_refers_to(gen):
+    import json
+    for k in range(3):
+        token = I.begin_input(f"t{k}", f"w{k}", loads={"X": 1.0})
+        try:
+            for _ in range(4):
+                gen.observe(HI, [], LO)
+        finally:
+            I.end_input(token)
+    gen._input_events["orphan"] = {"occurrence": "heard", "turn_id": "old"}
+    gen._write_events_recent_file()
+    data = json.loads(open(gen._events_recent_path).read())
+    assert len(data["records"]) == 12 and len(data["inputs"]) == 3 and "orphan" not in data["inputs"]
+    assert all(set(r["notes"]) == {"input_event"} and r["notes"]["input_event"] in data["inputs"] for r in data["records"])
+
+
+def test_the_registry_is_bounded(gen):
+    for k in range(300):
+        token = I.begin_input(f"t{k}", f"w{k}")
+        try:
+            gen.observe(HI, [], LO)
+        finally:
+            I.end_input(token)
+    assert len(gen._input_events) == 256 and "t0" not in {v["turn_id"] for v in gen._input_events.values()}
 
 
 def test_identity_changes_no_measurement(gen, tmp_path):
@@ -89,10 +116,10 @@ def test_identity_changes_no_measurement(gen, tmp_path):
 def test_a_caller_that_already_named_an_input_keeps_its_own(gen):
     token = I.begin_input("turn_1", "x")
     try:
-        r = gen.observe(HI, [], LO, notes={"turn_id": "mine"})
+        r = gen.observe(HI, [], LO, notes={"input_event": "mine"})
     finally:
         I.end_input(token)
-    assert r.notes["turn_id"] == "mine"
+    assert r.notes["input_event"] == "mine"
 
 
 def test_a_real_relief_record_becomes_a_consequence_that_effects_of_reads_back_to_its_input(gen):
