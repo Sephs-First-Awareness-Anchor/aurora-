@@ -17,7 +17,9 @@ ALLOWED = {
     "aurora_internal/evidence_qualification.py": None,                       # the contract itself
     "aurora_internal/aurora_input_identity.py": {"evidence_qualification"},  # builds the identity from the contract
     "aurora_internal/constraint_genealogy.py": {("aurora_input_identity", "note_for_observe"),
-                                                ("aurora_input_identity", "summary_for_registry")},
+                                                ("aurora_input_identity", "summary_for_registry"),
+                                                ("aurora_input_identity", "identity_from_notes"),
+                                                ("aurora_input_identity", "occurrence_class")},
     "aurora.py": {("aurora_input_identity", "begin_input"), ("aurora_input_identity", "end_input")},
 }
 SKIP_DIRS = {"tests", "scripts", ".git", "node_modules", "__pycache__"}

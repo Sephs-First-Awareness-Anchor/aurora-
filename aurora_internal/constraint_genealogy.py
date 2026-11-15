@@ -2158,6 +2158,12 @@ class ConstraintGenealogyLogger:
         # decision, gate, threshold or promotion; it exists to be compared with `consequence_profile`.
         self._input_effects: "OrderedDict[Tuple[str, str], Dict[str, Any]]" = OrderedDict()
         self._input_effects_unattributed: int = 0
+        # Per representation, what was demonstrated and under which kind of occurrence (lived / hypothetical / overheard),
+        # and which lived inputs it was credited under (its experiential ancestry).  Read-only alongside
+        # `consequence_profile`; persisted; a representation with no entry has unattributed ancestry, never invented.
+        self._rep_ledger: Dict[str, Dict[str, Any]] = {}
+        self._rep_ledger_path = os.path.join(output_dir, "rep_ledger.json")
+        self._load_rep_ledger()
 
         # Compact rolling event file (replaces unbounded events.jsonl)
         self._events_recent_path = os.path.join(output_dir, "events_recent.json")
@@ -2677,9 +2683,17 @@ class ConstraintGenealogyLogger:
         try:
             from aurora_internal.aurora_input_identity import (
                 note_for_observe as _input_note, summary_for_registry as _input_summary)
-            for _k, _v in _input_note().items():
-                merged_notes.setdefault(_k, _v)
-            _inp = _input_summary()
+            _inp = None
+            if _input_note():
+                for _k, _v in _input_note().items():
+                    merged_notes.setdefault(_k, _v)
+                _inp = _input_summary()
+            elif not merged_notes.get("input_event"):
+                # not a turn: a dream or simulation episode names itself in its own notes
+                from aurora_internal.aurora_input_identity import identity_from_notes as _notes_identity
+                _inp = _notes_identity(merged_notes)
+                if _inp:
+                    merged_notes["input_event"] = _inp["id"]
             if _inp and _inp["id"] not in self._input_events:         # said once per input, not on every observation
                 self._input_events[_inp.pop("id")] = _inp
                 while len(self._input_events) > 256:
@@ -3268,6 +3282,7 @@ class ConstraintGenealogyLogger:
         try:
             from pathlib import Path
             recent = [r.to_jsonl_dict() for r in list(self._event_log)[-500:]]
+            self._write_rep_ledger()
             atomic_write_json(Path(self._events_recent_path), {
                 "total_count": int(self.relief_event_count),
                 "tick_count": int(self.tick_count),
@@ -4185,8 +4200,77 @@ class ConstraintGenealogyLogger:
             row["crowd"] = max(int(row["crowd"]), int(n_active))
             for a in AXES:
                 row["relief"][a] += float(relief_dict.get(a, 0.0) or 0.0)
+            self._ledger_credit(str(target_id), input_id, relief_dict)
         except Exception:
             pass
+
+    _LEDGER_INPUTS_CAP = 16      # distinct input ids remembered per representation and occurrence class
+    _LEDGER_LIVED_CAP = 8        # most recent lived inputs kept as a representation's experiential ancestry
+
+    def _ledger_credit(self, rep_id: str, input_id: str, relief_dict: Dict[str, float]) -> None:
+        """Account one credited tick to (representation, kind of occurrence).  Ticks are not independent evidence:
+        `n_inputs` counts distinct inputs (a replayed episode is the same input), which is what recurrence is judged on."""
+        from aurora_internal.aurora_input_identity import occurrence_class as _occ_class
+        info = self._input_events.get(input_id) or {}
+        kind = _occ_class(str(info.get("occurrence", "")))
+        if not kind:
+            kind = "unclassified"
+        row = self._rep_ledger.setdefault(rep_id, {"by": {}, "lived": [], "lived_total": 0})
+        cls = row["by"].setdefault(kind, {"ticks": 0, "n_inputs": 0, "inputs": [], "relief": {a: 0.0 for a in AXES}})
+        cls["ticks"] += 1
+        for a in AXES:
+            cls["relief"][a] += float(relief_dict.get(a, 0.0) or 0.0)
+        if input_id not in cls["inputs"]:
+            cls["n_inputs"] += 1
+            cls["inputs"].append(input_id)
+            del cls["inputs"][:-self._LEDGER_INPUTS_CAP]
+            if kind == "lived":
+                row["lived_total"] += 1
+                row["lived"].append(input_id)
+                del row["lived"][:-self._LEDGER_LIVED_CAP]
+
+    def _load_rep_ledger(self) -> None:
+        try:
+            if os.path.exists(self._rep_ledger_path):
+                with open(self._rep_ledger_path, "r", encoding="utf-8") as fh:
+                    data = json.load(fh)
+                rows = data.get("reps") if isinstance(data, dict) else None
+                if isinstance(rows, dict):
+                    self._rep_ledger = {str(k): v for k, v in rows.items()
+                                        if isinstance(v, dict) and isinstance(v.get("by"), dict)}
+        except Exception:
+            self._rep_ledger = {}                     # an unreadable ledger is ancestry unattributed, never a crash
+
+    def _write_rep_ledger(self) -> None:
+        try:
+            from pathlib import Path
+            atomic_write_json(Path(self._rep_ledger_path), {"version": 1, "reps": self._rep_ledger})
+        except Exception:
+            pass
+
+    def representation_evidence(self, rep_id: str) -> Dict[str, Any]:
+        """What this representation has demonstrated, qualified by kind of occurrence, and its experiential ancestry.
+        A representation the ledger has never seen credited is reported `unattributed` (legacy or never credited): its
+        ancestry is not reconstructed or guessed."""
+        row = self._rep_ledger.get(str(rep_id))
+        if not row:
+            return {"rep": str(rep_id), "ancestry": "unattributed", "lived_inputs": [], "by_kind": {}}
+        return {"rep": str(rep_id), "ancestry": "traced" if row["lived"] else "unattributed",
+                "lived_inputs": list(row["lived"]), "lived_total": row["lived_total"],
+                "by_kind": {k: {"ticks": v["ticks"], "n_inputs": v["n_inputs"], "relief": dict(v["relief"]),
+                                "capped": v["n_inputs"] > len(v["inputs"])} for k, v in row["by"].items()}}
+
+    def ancestry_of(self, rep_ids: Iterable[str]) -> Dict[str, Any]:
+        """The experiential ancestry of a set of representations (e.g. a dream's trace): the lived inputs that credited
+        them.  `traced` for those with a recorded lived ancestry, `unattributed` for those with none; the dream is never
+        credited with supplying that history."""
+        traced, missing, lived = [], [], []
+        for r in dict.fromkeys(str(x) for x in rep_ids):
+            ev = self.representation_evidence(r)
+            (traced if ev["ancestry"] == "traced" else missing).append(r)
+            lived.extend(i for i in ev["lived_inputs"] if i not in lived)
+        status = "traced" if traced and not missing else ("partial" if traced else "unattributed")
+        return {"status": status, "traced": traced, "unattributed": missing, "lived_inputs": lived}
 
     def input_effects(self, input_id: str) -> List[Dict[str, Any]]:
         """The shadow's rows for one input (a copy): [{target, n, crowd, relief}] with relief summed over its ticks."""

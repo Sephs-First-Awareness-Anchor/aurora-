@@ -242,6 +242,34 @@ known ("I do not know if Mara likes tea"); that is the consequence of not having
 Tests: `tests/test_input_effect_shadow.py` (13, including a naturally promoted link and a skipped representation);
 six mutants caught. 787 tests pass across the evidence, identity, genealogy and live-turn suites.
 
+## 3i. Stage C: dream ancestry (directive VIII, tests 1, 2, 3, 6)
+
+* **Dream and simulation observations name themselves.** `identity_from_notes` builds an input identity from an observation's own
+  notes when it carries `source: dream_episode` (or `simulation`) and an episode id (`seed_lineage_id`/`episode_id`): occurrence
+  `dreamed` (or `simulated`), identity deterministic from the episode and never from the clock, so one episode is one
+  occurrence and replaying it is the same input. Notes that name no episode get no identity (nothing is guessed).
+* **A per-representation ledger** (`_rep_ledger`, persisted as `rep_ledger.json`, bounded) records, for each representation
+  genealogy credited, ticks / distinct inputs / relief **by kind of occurrence** (lived, hypothetical, overheard) and the
+  lived inputs that credited it (its experiential ancestry, most recent 8). It is written from the same place the real
+  attribution credits (`_apply`), so it is the same single developmental history, not a second system.
+* **`ancestry_of(rep_ids)`** answers "which lived inputs supplied this dream's material": `traced` / `partial` /
+  `unattributed`, listing the unattributed ones. A representation the ledger never saw credited (legacy, never credited) is
+  `unattributed`; nothing is reconstructed, and a dream never adds to a representation's lived history.
+* **Replay vs new:** ticks are kept but `n_inputs` counts distinct inputs, so the same dream replayed five times is one
+  independent occurrence (five ticks) and a different episode is a second.
+* **Tests** (`tests/test_dream_ancestry.py`, 12; eight mutants caught, one survived until the clock test was tightened):
+  test 1 (dream traces to the lived inputs; no lived history created), 2 (a relationship that first appears in a dream keeps
+  each constituent's own provenance), 3 (an element with no ancestry stays unattributed and no history is made), 6 (replay is
+  not new evidence; a new episode is), restart persistence, an unreadable ledger is unattributed (no crash), and the dream path
+  changes no real consequence profile.
+* **Live** (`scripts/measure_dream_ancestry.py`): after the 8 turns, 17 representations had lived ancestry; a dream episode
+  over two of them plus one never credited was `partial` (2 traced, 1 unattributed), the unattributed one had no lived history, and
+  lived totals were unchanged.
+* **Not covered:** the dream trainer's gateway replay (`_witness_directed_training_samples`, `internal_origin: dream_replay`)
+  produced **0** genealogy observations in the live measurement, so it credits nothing synchronously; whatever it does later is
+  not measured here. Legacy representations (everything credited before this change) are `unattributed`; their history is not
+  reconstructed. The ledger is capped (16 inputs per kind, 8 lived ancestors), so very long histories are marked `capped`.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an

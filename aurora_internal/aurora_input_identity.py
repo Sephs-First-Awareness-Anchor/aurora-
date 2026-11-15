@@ -70,3 +70,36 @@ def summary_for_registry() -> Optional[Dict[str, Any]]:
     """(id, facts) of the input being processed, for genealogy to keep once per input."""
     cur = _CURRENT.get()
     return {"id": cur["id"], **{k: (dict(v) if isinstance(v, dict) else v) for k, v in cur["summary"].items()}} if cur else None
+
+
+# -- inputs that do not arrive as a turn: dream and simulation evidence names itself in its observation notes -----------
+
+# note "source" -> the stream it came through (aurora_internal.aurora_dream_genealogy_bridge writes "dream_episode";
+# a simulation episode that reaches genealogy directly would write "simulation").
+STREAM_OF_NOTE_SOURCE = {"dream_episode": "dream", "simulation": "simulation"}
+
+
+def identity_from_notes(notes: Optional[Mapping[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Identity for an observation made on behalf of a dream or simulation episode, from what its own notes say.  One
+    episode is one occurrence, so the identity is deterministic from the episode (never from the clock): replaying the
+    same episode is the same input, a different episode is a different one.  Returns None when the notes name no such
+    episode (nothing is guessed from anything else)."""
+    notes = notes or {}
+    stream = STREAM_OF_NOTE_SOURCE.get(str(notes.get("source", "") or ""))
+    episode = str(notes.get("seed_lineage_id", "") or notes.get("episode_id", "") or "")
+    if not stream or not episode:
+        return None
+    ev = make_input_event(f"{stream}:{episode}", episode, address="", stream_type=stream, t=0)
+    return {"id": ev["id"], "occurrence": ev["occurrence"], "turn_id": f"{stream}:{episode}"}
+
+
+def occurrence_class(occurrence: str) -> str:
+    """lived (happened to her in the world, addressed), overheard, or hypothetical (imagined / simulated / dreamed);
+    "" for anything else.  The contract's own classification, so nothing here re-decides it."""
+    if occurrence in _Q.HYPOTHETICAL:
+        return "hypothetical"
+    if occurrence == "overheard":
+        return "overheard"
+    if occurrence in _Q.LIVED:
+        return "lived"
+    return ""
