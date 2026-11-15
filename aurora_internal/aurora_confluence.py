@@ -422,6 +422,10 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
                         continue
                     surface = str(dict(said.get(pred) or {}).get("surface") or pred).lower()
                     asked_pred = pred.lower() in heard_forms or surface in heard_forms
+                    if lex.get("basis") == "supposed" and not asked_pred:
+                        # FIX-A143: an example is voiced (as one) only when what it says was what was asked;
+                        # naming its subject or object is not asking for it.
+                        continue
                     # FIX-A131: the thing itself was named ("are you ever
                     # curious?") -- what she holds about that thing is what was
                     # asked, whichever predicate holds it.
@@ -434,7 +438,8 @@ def knowledge(systems: Mapping[str, Any], concepts: Sequence[str], heard: str, *
                                                     * (1.5 if asked_thing else 1.0)
                                                     * (1.3 if felt else 1.0), 4),
                                   "axis": RELATION_AXIS.get(kind, "X"), "learned_from": "assertion", "lex": lex,
-                                  "asked": bool(asked)})
+                                  "asked": bool(asked),
+                                  **({"basis": lex["basis"]} if lex.get("basis") else {})})
                 continue
             # FIX-A114: a link nobody asserted (co-occurrence, the role-pair
             # type, a seed) is hers to reason with, but its type name ("is

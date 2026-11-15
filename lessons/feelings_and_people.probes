@@ -14,6 +14,7 @@ Is comfort a kindness? => comfort is a kindness
 # 2. The question names a feeling, so what she holds about that feeling is added whoever it is about
 #    ("I feel joy, and people feel joy."): her answer about herself borrows what she was told about people.
 # This lesson is NOT READY until her answer about herself comes from her own state and from nothing she was
-# told about someone else.
-Do you feel sadness? || Do you feel hunger? => !i feel sadness ;; !i feel hunger ;; !people
+# told about someone else.  The probe needs an answer in the first person about feeling (not merely the absence of
+# the two defects), so a reply that says nothing relevant does not close the gap.
+Do you feel sadness? || Do you feel hunger? => !i feel sadness ;; !i feel hunger ;; !people ;; feel | know | sure
 @twin sadness=anger joy=pride curiosity=doubt calm=boredom comfort=help kindness=duty

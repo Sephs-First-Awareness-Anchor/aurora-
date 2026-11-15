@@ -99,8 +99,56 @@ def test_twin_maps_names_and_keeps_capitals_and_whole_words():
 def test_a_gap_section_exists_and_a_gap_fails_readiness():
     ps = V.parse_probes("[gap]\nWho am I? => you are\n")
     assert ps[0]["section"] == "gap"
-    base = {"lint": [], "failed": 0, "open_gaps": 1, "twin": {}}
+    base = {"lint": [], "failed": 0, "open_gaps": 1, "twin": {}, "control_run": True, "uninformative": 0}
     assert V.status(base)[0] == 2
     assert V.status(dict(base, open_gaps=0))[0] == 0
     assert V.status(dict(base, open_gaps=0, failed=1))[0] == 1
     assert V.status(dict(base, lint=[{"line": "x", "why": "y"}]))[0] == 3
+
+
+def test_a_probe_that_holds_untaught_or_a_skipped_control_cannot_be_ready():
+    ok = {"lint": [], "failed": 0, "open_gaps": 0, "twin": {}, "control_run": True, "uninformative": 0}
+    assert V.status(ok)[0] == 0
+    code, why = V.status(dict(ok, uninformative=2))
+    assert code == 2 and "hold even untaught" in why
+    code, why = V.status(dict(ok, control_run=False))
+    assert code == 2 and "control was not run" in why
+    assert V.status(dict(ok, uninformative=1, failed=1))[0] == 1          # a failure still outranks
+
+
+def test_the_run_marks_probes_that_hold_untaught_and_does_not_count_them(monkeypatch, tmp_path):
+    probes = [{"section": "after", "asks": ["Q1?"], "terms": []}]
+    main = [{"section": "after", "ask": "Do you know x?", "reply": "x", "src": "", "ok": True, "why": []},
+            {"section": "after", "ask": "What follows x?", "reply": "y", "src": "", "ok": True, "why": []}]
+    untaught = [dict(main[0])]                  # only the first one also holds with nothing taught
+    calls = []
+
+    def fake_play(aurora, systems, extract, probes_, lesson, correction, mapping, sections, teach=True):
+        calls.append(teach)
+        return [dict(r) for r in (main if teach else untaught)]
+
+    monkeypatch.setattr(V, "_boot", lambda d: (None, None, None))
+    monkeypatch.setattr(V, "_play", fake_play)
+    monkeypatch.setattr(V, "parse_probes", lambda text: probes)
+    monkeypatch.setattr(V, "parse_twin", lambda text: {})
+    monkeypatch.setattr(V, "lint_lesson", lambda lines: [])
+    monkeypatch.setattr(V, "parse_lesson_blocks", lambda text: {"teach": ["A line."], "correction": []})
+    monkeypatch.setattr(V, "LESSONS", tmp_path)
+    (tmp_path / "x.txt").write_text("A line.\n")
+    (tmp_path / "x.probes").write_text("[after]\nQ1? => x\n")
+    report = V.run("x", tmp_path)
+    assert calls == [True, False] and report["control_run"] is True
+    assert [bool(r.get("uninformative")) for r in report["results"]] == [True, False]
+    assert report["uninformative"] == 1 and report["failed"] == 0
+    assert V.status(report)[0] == 2
+    assert "1/2 probes held as evidence" in V.render(report)
+    quick = V.run("x", tmp_path, quick=True)
+    assert quick["control_run"] is False and V.status(quick)[0] == 2
+
+
+def test_every_shipped_gap_needs_a_positive_answer_so_silence_cannot_close_it():
+    """A [gap] made only of "must not say" terms is closed by any reply that says nothing relevant."""
+    for path in sorted(V.LESSONS.glob("*.probes")):
+        for p in V.parse_probes(path.read_text(encoding="utf-8")):
+            if p["section"] == "gap":
+                assert any(not negated for _alts, negated in p["terms"]), (path.name, p["asks"])

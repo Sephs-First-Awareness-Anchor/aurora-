@@ -576,6 +576,11 @@ def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, 
         keep = sorted(preds.items(), key=lambda kv: -int(kv[1].get("n", 0)))[:MAX_PREDICATES]
         preds = dict(keep)
     a["predicates"] = preds
+    if supposed:
+        # FIX-A143: the relation-level record is what was SAID along it (who, when, how often, in what
+        # tone).  An example is kept on its predicate only; it adds nothing to what was said.
+        rel.assertion = a
+        return
     by = dict(a.get("by") or {})
     by[speaker] = int(by.get(speaker, 0)) + 1
     a["by"] = by
@@ -621,6 +626,7 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                    _depth: int = 0, basis: str = "told") -> List[Dict[str, Any]]:
     """Every proposition asserted in one relational form (and its clauses)."""
     out: List[Dict[str, Any]] = []
+    supposed = basis == "supposed"
     form = dict(form or {})
     acts = set(acts if acts is not None else _acts(heard))
     if not form.get("question") and not form.get("directive"):
@@ -648,11 +654,21 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                 for o in objs:
                     if s == o or _ensure_node(web, s) is None or _ensure_node(web, o) is None:
                         continue
-                    rel = web.add_relation(s, o, rtype, strength=NEW_STRENGTH, confidence=NEW_CONFIDENCE,
-                                           knowledge_source=ASSERTION_SOURCE)
+                    if supposed:
+                        # FIX-A143: an example is kept on the relation it is about, but it does not strengthen
+                        # a held relation, mark a link as asserted, or count as said at the relation level.
+                        # A link it has to create is the honest weak one: the two words appeared together.
+                        _existing = web._find_existing_relation(s, o, rtype)
+                        rel = web.relations.get(_existing) if _existing else web.add_relation(
+                            s, o, rtype, strength=NEW_STRENGTH, confidence=NEW_CONFIDENCE,
+                            knowledge_source="co-occurrence")
+                    else:
+                        rel = web.add_relation(s, o, rtype, strength=NEW_STRENGTH, confidence=NEW_CONFIDENCE,
+                                               knowledge_source=ASSERTION_SOURCE)
                     if rel is None:
                         continue
-                    if getattr(rel, "source_of_knowledge", "") != ASSERTION_SOURCE and not getattr(rel, "assertion", None):
+                    if (not supposed and getattr(rel, "source_of_knowledge", "") != ASSERTION_SOURCE
+                            and not getattr(rel, "assertion", None)):
                         # An existing co-occurrence link of the same type now has
                         # something actually said along it.
                         rel.source_of_knowledge = ASSERTION_SOURCE
@@ -669,7 +685,7 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                                       context=str(heard or "")[:120], phrase=obj_text, basis=basis,
                                       when=_condition_of(form, speaker, listener, acts))
                     _learned_changed(web)
-                    if pred_here == "be a" and not form.get("negated"):
+                    if pred_here == "be a" and not form.get("negated") and not supposed:
                         try:
                             from aurora_internal.aurora_learned_rules import apply_kind
                             apply_kind(web, s, o)         # FIX-A133: told what kind of word it is, it is that kind
@@ -677,8 +693,9 @@ def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: st
                             pass
                     out.append({"source": s, "predicate": pred_here, "target": o,
                                 "negated": bool(form.get("negated")), "type": rtype.value})
-            for concept in set(subj) | set(objs):
-                place_concept(web.nodes.get(concept), profile)
+            if not supposed:             # FIX-A143: where a concept lives is moved by what she holds, not by an example
+                for concept in set(subj) | set(objs):
+                    place_concept(web.nodes.get(concept), profile)
     if _depth < 2:
         for clause in list(form.get("clauses") or []):
             out.extend(integrate_form(web, dict(clause or {}), heard=heard, speaker=speaker, listener=listener,
@@ -727,7 +744,7 @@ def integrate_turn(systems: Mapping[str, Any], heard: str, *, session_id: str = 
             props.extend(integrate_form(web, st, heard=heard, speaker=speaker, listener=listener,
                                         profile=profile, time_ref=time_ref, acts=acts, basis=basis))
     placed = 0
-    for concept in list(pipeline.get("salient_concepts") or [])[:8]:
+    for concept in ([] if basis == "supposed" else list(pipeline.get("salient_concepts") or [])[:8]):
         node = web.nodes.get(str(concept).lower())
         if node is not None and profile:
             place_concept(node, profile, weight=0.5)
@@ -819,6 +836,23 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
         p = preds[predicate]
     else:
         predicate, p = max(preds.items(), key=lambda kv: (int(kv[1].get("n", 0)), kv[0]))
+    if verdict(p) == "supposed":
+        # FIX-A143: an example is voiced as one by EVERY caller, not only by the fact-question handler.
+        # It is voiced exactly as the statement would have been (its own plural / negation), then
+        # carried inside "I only suppose that ...", so nothing downstream can mistake it for a fact.
+        as_said = dict(p)
+        as_said.update({"n": int(p.get("supposed", 0) or 0), "denied": int(p.get("supposed_denied", 0) or 0),
+                        "modal": {}, "settled": {}})
+        plain = _voice_predicate(rel, speaker_now=speaker_now, self_now=self_now, predicate=predicate, p=as_said)
+        return {"agent": "I", "action": "only suppose",
+                "object": f"that {plain['agent']} {plain['action']} {plain['object']}",
+                "predicate": "suppose", "n": "1", "denied": "False", "basis": "supposed", "of": predicate}
+    return _voice_predicate(rel, speaker_now=speaker_now, self_now=self_now, predicate=predicate, p=p)
+
+
+def _voice_predicate(rel: Any, *, speaker_now: str, self_now: str, predicate: str,
+                     p: Mapping[str, Any]) -> Dict[str, str]:
+    """How one predicate of an assertion is voiced, as it was said."""
     source = str(getattr(rel, "source_word", "") or "")
     agent = "you" if source == speaker_now else ("I" if source == self_now else source)
     _target = str(getattr(rel, "target_word", "") or "")

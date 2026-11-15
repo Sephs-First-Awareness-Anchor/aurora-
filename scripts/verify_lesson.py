@@ -42,14 +42,17 @@ Passing a few expected phrases is not evidence that a lesson took, so a run also
     transfer    `@twin mara=nia teo=omar`: the whole lesson is said again to a fresh copy with the
                 names/letters replaced, and the probes are asked with the same replacement.  What was
                 learned about Mara must be learned about Nia; a phrase memorised from the lesson would not.
-    control     the [after] probes are also asked of a fresh copy that was taught nothing; a positive
-                probe that already "holds" untaught is flagged -- it is not evidence.
+    control     the [after] probes are also asked of a fresh copy that was taught nothing; a probe that
+                already "holds" untaught is not evidence.  It is not counted as held, and a lesson with
+                one is NOT READY until the probe is made to ask something only the lesson can answer.
+                A run that skipped the control (--quick) cannot say READY.
     gaps        `[gap]` probes are things she should be able to do and cannot yet.  A lesson with a failing
                 gap is NOT READY (exit 2) however many other probes pass; a gap that now holds is flagged
                 so it can be promoted to [after].
 
 The run is on COPIES of the state directory; the original is never touched.
-Exit status: 0 ready, 1 a probe or transfer failed, 2 not ready (open gaps), 3 lint findings.
+Exit status: 0 ready, 1 a probe or transfer failed, 2 not ready (open gaps, a probe that holds
+untaught, or a control that was not run), 3 lint findings.
 """
 from __future__ import annotations
 
@@ -295,7 +298,7 @@ def run(name: str, state_dir: Path, only: Optional[str] = None, quick: bool = Fa
     probes, twin = parse_probes(probes_text), parse_twin(probes_text)
     report: Dict[str, Any] = {"lesson": name, "said": len(lesson) + len(correction), "results": [],
                               "lint": lint_lesson(lesson + correction), "twin": twin, "transfer": [],
-                              "control": []}
+                              "control": [], "control_run": False}
     if report["lint"]:
         return report                                     # nothing is said to her until it passes lint
     sections = [x for x in SECTIONS if not only or x == only]
@@ -304,9 +307,15 @@ def run(name: str, state_dir: Path, only: Optional[str] = None, quick: bool = Fa
     if not quick:
         # control: a fresh copy, taught nothing, asked what the lesson would have taught it
         a2, s2, e2 = _boot(state_dir)
+        report["control_run"] = True
         for r in _play(a2, s2, e2, probes, lesson, correction, {}, ("after",), teach=False):
             if r["ok"]:
                 report["control"].append(r)
+        # a probe that holds with nothing taught shows nothing about the lesson: it does not count as held
+        untaught = {r["ask"] for r in report["control"]}
+        for r in report["results"]:
+            if r["section"] == "after" and r["ask"] in untaught:
+                r["uninformative"] = True
         if twin:
             a3, s3, e3 = _boot(state_dir)
             report["transfer"] = _play(a3, s3, e3, probes, lesson, correction, twin,
@@ -314,6 +323,7 @@ def run(name: str, state_dir: Path, only: Optional[str] = None, quick: bool = Fa
     gaps = [r for r in report["results"] if r["section"] == "gap"]
     rest = [r for r in report["results"] if r["section"] != "gap"]
     report["failed"] = sum(1 for r in rest if not r["ok"]) + sum(1 for r in report["transfer"] if not r["ok"])
+    report["uninformative"] = sum(1 for r in rest if r.get("uninformative"))
     report["open_gaps"] = sum(1 for r in gaps if not r["ok"])
     report["gaps_now_held"] = sum(1 for r in gaps if r["ok"])
     return report
@@ -326,6 +336,11 @@ def status(report: Dict[str, Any]) -> Tuple[int, str]:
         return 1, "FAILED"
     if report["open_gaps"]:
         return 2, f"NOT READY: {report['open_gaps']} open gap(s)"
+    if report.get("uninformative"):
+        return 2, (f"NOT READY: {report['uninformative']} probe(s) hold even untaught -- they are not evidence "
+                   "(ask something only the lesson can answer)")
+    if not report.get("control_run"):
+        return 2, "NOT READY: the untaught control was not run, so nothing here shows the lesson did the work"
     return 0, "READY (probes held, transfer held, no open gaps)" if report["twin"] else "READY (no transfer twin declared -- generalization unchecked)"
 
 
@@ -335,6 +350,8 @@ def render(report: Dict[str, Any]) -> str:
         lines.append(f"  LINT  {f['line']}\n        -> {f['why']}")
     for r in report["results"]:
         mark = ("PASS" if r["ok"] else "GAP " if r["section"] == "gap" else "FAIL")
+        if r.get("uninformative"):
+            mark = "PASS but NOT EVIDENCE (holds untaught)"
         if r["section"] == "gap" and r["ok"]:
             mark = "PASS (gap now holds -- promote it to [after])"
         lines.append(f"  [{r['section']}] {mark}  {r['ask']}")
@@ -351,7 +368,8 @@ def render(report: Dict[str, Any]) -> str:
         lines.append(f"  CONTROL  holds even untaught (not evidence): {r['ask']}  ->  {r['reply']}")
     code, word = status(report)
     n = len([r for r in report["results"] if r["section"] != "gap"])
-    lines.append(f"{n - sum(1 for r in report['results'] if r['section'] != 'gap' and not r['ok'])}/{n} probes held; {word}")
+    held = sum(1 for r in report["results"] if r["section"] != "gap" and r["ok"] and not r.get("uninformative"))
+    lines.append(f"{held}/{n} probes held as evidence; {word}")
     return "\n".join(lines)
 
 

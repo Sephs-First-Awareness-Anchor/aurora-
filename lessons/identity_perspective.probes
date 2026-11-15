@@ -13,7 +13,8 @@ Does Mara like milk? => do not know
 Who am I? => rowan ;; suppos
 # possessives: "my" is the speaker's
 Who is my sister? => mara ;; suppos
-# third-person relationship: from the example, in either direction
+# third-person relationship: from the example, in either direction.  Each gap must ask for the answer AND that
+# it is only supposed: a fragment that happens to contain "brother" ("brother. mara.") is not an answer.
 Who is the brother of Mara? => teo ;; suppos
-Who is Teo? => brother
+Who is Teo? => brother ;; mara ;; suppos
 @twin mara=nia teo=omar tea=coffee rowan=sam
