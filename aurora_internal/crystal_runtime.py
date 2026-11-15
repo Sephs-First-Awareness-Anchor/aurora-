@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Mapping, Optional
 from aurora_internal import crystal_associations as _A
 from aurora_internal import crystal_facets as _F
 from aurora_internal import crystal_grammar as _G
+from aurora_internal import crystal_interior as _I
 from aurora_internal import crystal_promotion as _P
 from aurora_internal import crystal_substitutability as _S
 from aurora_internal import crystal_weave as _W
@@ -114,6 +115,7 @@ def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, 
         links = _A.apply_to_crystals(store, idx, crystals, dry_run=False)
         facets = _F.apply_to_crystals(book, idx, crystals, dry_run=False)
         mat = _W.apply_maturity(store, book, idx, crystals, dry_run=False)
+        interior = _I.apply_to_crystals(store, idx, crystals, dry_run=False)         # complex crystals deepen inward instead of spawning more
         # a generalization stands above what it holds, by the degree it classifies them (never to the top level: that is earned by evidence)
         levels = {c: float(int(crystals[i].level)) for c, i in idx.items() if i in crystals}
         raised = 0
@@ -127,7 +129,7 @@ def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, 
                 getattr(cr, "_unlock_failpoints", lambda: None)()
                 raised += 1
         _last["t"] = now
-        return {"ok": True, "seconds": round(time.time() - t0, 2), "links": links, "facets": facets, "maturity": mat, "classes": len(classes),
+        return {"ok": True, "seconds": round(time.time() - t0, 2), "links": links, "facets": facets, "maturity": mat, "interior": interior, "classes": len(classes),
                 "substitute_links": links_subst, "generalizations": len(hubs), "generalization_crystals_created": created, "generalizations_raised": raised}
     except Exception as exc:          # fail-safe: a failure here must never reach a turn or a save
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}

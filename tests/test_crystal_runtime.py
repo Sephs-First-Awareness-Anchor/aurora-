@@ -186,3 +186,17 @@ def test_the_class_she_finds_and_the_role_group_that_joins_it_reach_the_registry
     assert klass                                                                                  # the class is a crystal of its own
     assert any(dps.concept_index[k] in role.connections for k in klass)                           # and the role group joined it
     assert any(dps.concept_index[k] in dps.crystals[dps.concept_index["and"]].connections for k in klass)   # and the words she found hold it
+
+
+def test_the_pass_grows_the_interior_of_a_crystal_that_stands_at_the_top_level_and_spawns_nothing_for_it(tmp_path, monkeypatch):
+    from aurora_internal import crystal_interior as I
+    d = state(tmp_path)
+    plain, deep = dps_for(), dps_for()
+    R.run_pass(plain, d, force=True)
+    assert all(not c.interior for c in plain.crystals.values())                      # no standing at the top level yet: no interior
+    monkeypatch.setattr(I, "standing", lambda crystal: 0.8)
+    r = R.run_pass(deep, d, force=True)
+    assert r["interior"]["crystals_with_interior"] > 0 and r["interior"]["layers"] > 0 and r["interior"]["dry_run"] is False
+    with_interior = [c for c in deep.crystals.values() if c.interior]
+    assert with_interior and all(l["weight"] > 0 for c in with_interior for l in c.interior["layers"])
+    assert sorted(deep.crystals) == sorted(plain.crystals) and deep.concept_index == plain.concept_index              # the aspects are inside, not new crystals

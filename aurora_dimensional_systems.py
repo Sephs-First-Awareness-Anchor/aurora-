@@ -389,6 +389,10 @@ class Crystal:
     # of its facets and its usage no longer do.
     maturity: Optional[Dict[str, Optional[float]]] = None
 
+    # Inward growth (aurora_internal.crystal_interior): the aspects of a complex crystal, held inside it as inner layers (each of which can hold layers of its
+    # own) instead of becoming crystals of their own.  Empty until the crystal stands at the top level to some degree.
+    interior: Dict[str, Any] = field(default_factory=dict)
+
     def absorb_perspective(self, projection: Any) -> bool:
         """Fold ONE lineage's projection into that lineage's own profile.
 
@@ -606,6 +610,7 @@ class Crystal:
             "failpoint_profile":   self.failpoint_profile,
             "perspective_profiles": self.perspective_profiles,
             "maturity":            self.maturity,
+            "interior":            self.interior,
         }
 
     @classmethod
@@ -626,6 +631,7 @@ class Crystal:
         c.connections = dict(d.get("connections") or {})
         _mat = d.get("maturity")
         c.maturity = None if _mat is None else dict(_mat)
+        c.interior = dict(d.get("interior") or {})
         for fid, fd in (d.get("facets") or {}).items():
             try:
                 c.facets[fid] = CrystalFacet.from_dict(fd)
