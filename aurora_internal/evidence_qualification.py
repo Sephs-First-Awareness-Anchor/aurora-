@@ -635,14 +635,15 @@ def effects_of(events: Iterable[Mapping[str, Any]], event_id: str) -> Dict[str, 
 
 
 def consequence_from_relief(record: Any, *, target: str, change: str, attribution: Sequence[str] = (),
-                            attribution_complete: bool = False) -> Dict[str, Any]:
+                            attribution_complete: bool = False, measured_by: str = "") -> Dict[str, Any]:
     """Translate genealogy's own measurement into a consequence.  `record` is a ReliefRecord (or a dict with the same
     keys): pressure_before, pressure_after and, optionally, relief.  Nothing is computed here that the pressure
     system has not already measured; the shape is carried, not re-derived from anything else."""
     get = (lambda k: record.get(k)) if isinstance(record, Mapping) else (lambda k: getattr(record, k, None))
     return _clean_consequence({"target": target, "change": change, "attribution": attribution,
                                "attribution_complete": attribution_complete, "pressure_before": get("pressure_before"),
-                               "pressure_after": get("pressure_after"), "relief": get("relief")})
+                               "pressure_after": get("pressure_after"), "relief": get("relief"),
+                               **({"measured_by": measured_by} if measured_by else {})})
 
 
 # -- the live view: how finely a memory is held (directive: finer when it mattered) --------------------------------

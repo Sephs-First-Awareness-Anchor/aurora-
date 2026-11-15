@@ -37406,6 +37406,16 @@ def _process_external_user_turn_impl(
         _write_batch_targets = begin_write_batch(systems)
     except Exception:
         _write_batch_targets = []
+    # Which received input the pressure measured during this turn answers (FIX-A144 follow-on; identity only).
+    _input_identity_token = None
+    try:
+        from aurora_internal.aurora_input_identity import begin_input as _begin_input
+        _input_identity_token = _begin_input(
+            turn_id, user_text, address="direct", stream_type="user_input",
+            loads=_content_axis_loads(systems, user_text))
+    except Exception:
+        _input_identity_token = None
+
     try:
         result = _run_live_response_turn(
             systems=systems,
@@ -37655,6 +37665,12 @@ def _process_external_user_turn_impl(
         try:
             from aurora_internal.aurora_turn_persistence import end_write_batch
             end_write_batch(_write_batch_targets)
+        except Exception:
+            pass
+        try:
+            if _input_identity_token is not None:
+                from aurora_internal.aurora_input_identity import end_input as _end_input
+                _end_input(_input_identity_token)
         except Exception:
             pass
         # Build 613 (Reflective-Introspection Misrouting Repair B): a

@@ -2665,6 +2665,14 @@ class ConstraintGenealogyLogger:
         # AttributeError on .to_dict() -- treat anything without that method
         # as equivalent to "no snapshot supplied" rather than raising.
         merged_notes: Dict[str, Any] = dict(notes or {})
+        # Which received input this observation answers (identity only; changes no measurement).  A caller that already
+        # named one keeps its own; an observation made outside any input carries none and stays unattributed.
+        try:
+            from aurora_internal.aurora_input_identity import note_for_observe as _input_note
+            for _k, _v in _input_note().items():
+                merged_notes.setdefault(_k, _v)
+        except Exception:
+            pass
         if difference_snapshot is not None and hasattr(difference_snapshot, "to_dict"):
             merged_notes["difference_snapshot"] = difference_snapshot.to_dict()
         if tolerance_meta:

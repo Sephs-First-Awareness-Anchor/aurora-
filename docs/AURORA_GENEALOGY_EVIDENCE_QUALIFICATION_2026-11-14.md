@@ -164,6 +164,35 @@ never held as truth unless it is confirmed through the told route.
 
 Tests: `tests/test_evidence_overheard.py` (67); seven mutants caught.
 
+## 3f. Measured relief can now be traced to its input (Sir, 2026-11-14)
+
+The missing link found in 3d: genealogy `observe` notes carried no turn or input identity. Now:
+
+* `aurora_internal/aurora_input_identity.py` holds the identity of the input being processed in a ContextVar. The identity
+  is an evidence-contract event (subject `input|<turn_id>|-`; occurrence from the address, so `direct` is `heard`, and
+  `mention`/`ambient` would be `overheard`; `input_pressure` as the intake measured it, unknown when it loaded nothing).
+* `ConstraintGenealogyLogger._observe_impl` merges `{input_event, input_occurrence, turn_id, input_pressure}` into the
+  notes with `setdefault` (a caller that named its own keeps it). **Identity only: no measurement, gate or decision reads it.**
+  Verified: relief, dominant axis, before/after pressure and cost are identical with and without an input set.
+* `aurora._process_external_user_turn_impl` begins the identity just before the turn's `try` and resets it in the `finally`.
+* A thread started by the turn does not inherit the ContextVar, so a background observation carries no identity: unattributed,
+  never guessed.
+* `consequence_from_relief` takes `measured_by`; a real `ReliefRecord` now goes end to end: observe -> note -> consequence ->
+  `effects_of(log, input_event)` (tested).
+
+**Measured live** (`scripts/measure_input_attribution.py`, 8 scripted turns): 74 of 74 `observe` calls named their input,
+8 distinct turn ids, 0 background-thread calls in that run. A longer run may show background observations; they would
+appear as unnamed, which is the honest answer.
+
+**Cost:** about 150 bytes of notes per relief record (`ReliefRecord.notes` is persisted). Not measured at scale; flagged.
+
+**Not done:** only the direct-turn path names an input. The ambient listener does not call `observe`, so overheard speech has
+no genealogy observations to name (not measured beyond that). No producer yet builds consequences from these records
+in the live path; that is the next, separate step (read-only shadow through `_attribute_consequence`).
+
+Tests: `tests/test_input_identity.py` (10, including a source guard that the reset is a call inside a `finally`); six
+mutants caught (one survived until the guard was tightened). 225 genealogy and live-turn tests pass.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an
