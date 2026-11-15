@@ -348,6 +348,41 @@ Surface turn's consequences lived in that process's memory and were gone at rest
   uninterrupted run did not promote). Nothing here caused it; it bounds how closely any restart can match uninterrupted
   development, and is the reason the Surface return is not claimed to be magnitude-exact.
 
+## 3l. Stage F: QuasiArch developmental inquiry (directive VIII; investigative only)
+
+* **Where.** `aurora_internal/quasiarch_development_inquiry.py` (pure, read-only) and `AuroraQuasiArchObserver.investigate_development(question, **kw)`
+  (the observer's genealogy comes from its attached systems). Questions: `dream_ancestry(episode)`, `new_relationships(episode)`,
+  `consequential_changes(episode)`, `validation([reps])`, `uncertain()`. An episode may be named by input id or by its own name (a dream
+  lineage id, a turn id); a name that matches nothing is "not recorded", one that matches several is "ambiguous", never picked.
+* **Every answer** carries `authoritative: False`, `basis` (what it rests on) and `unknown` (what could not be determined, and why).
+* **No manufactured ancestry.** A dream's ancestral material is the union of what its representations' ledgers hold (lived ancestors named
+  with their occurrence kind and turn name; `traced` / `partial` / `unattributed` / `unknown`); "which ancestor supplied which combination"
+  is stated as not attributed and no one-to-one counterpart is assigned; a representation with no recorded ancestry is listed unattributed.
+  Ledger rows keep only their most recent inputs, so an old episode may be absent from capped rows; that is said, not hidden.
+* **Consequential = measured**, per representation and axis from the per-input effect shadow (relieved / loaded / none measured); where the
+  shadow no longer holds the episode (it is in memory), the answer says its own effect is not held rather than substituting totals.
+* **Validation:** `internal_only`, `external_supported`, `external_contradicted`, `external_mixed`, `lived_not_externally_demonstrated`
+  (heard, never tested in the world), and the internal verdict (supported / contradicted / no measured effect). The answer states that live
+  inputs are currently heard, so external validation is expected to be rare.
+* **Uncertain:** capabilities with no recorded ancestry, capped rows, links with no qualification (legacy), links resting only on
+  dreams/simulations, hypothetical-only capabilities, externally contradicted or mixed ones, open journal gaps, replays not counted.
+* **Persisted for this:** the ledger file now also keeps what each input was (kind and name, up to 256), so a restart keeps the names and
+  kinds of ancestors instead of leaving bare ids. Read-only accessors added to genealogy: `input_identity`, `find_inputs`,
+  `reps_credited_under`, `pairs_credited_under`.
+* **Investigative, not authoritative or fed back:** an AST test shows the module touches the genealogy only through read accessors and
+  assigns nothing on it; a state digest is identical before and after every question; a source test shows nothing in cognition or speech
+  calls it.
+* **Tests** (`tests/test_quasiarch_development_inquiry.py`, 23; mutants caught): ancestry traced/partial/unattributed and named, unknown and
+  ambiguous episodes, capped rows, only-dreamed vs also-lived relationships, a promoted dream-only link flagged internal-only, measured
+  relieved/loaded/none effects, validation groups incl. an external failure contradicting a simulation, uncertainty listing, read-only,
+  answers identical after restart and after Surface-journal consolidation versus direct experience.
+* **Live** (`scripts/measure_quasiarch_inquiry.py`, real observer, 8 turns + a dream episode): ancestry `traced` through 7 heard turns; 2
+  dream-only relationships (none promoted); both consequential changes relieved pressure; 15 of 17 examined capabilities heard-only, 2
+  internal-only, 0 externally validated; 356 legacy links report no qualification; genealogy state identical before and after the five
+  questions. (A representation id that is not a real ability gets no ledger credit, so it cannot appear as "unattributed" in this run.)
+* **Not covered:** the answers are not yet reachable from a conversation; only a caller of the observer (script, diagnostic) can ask.
+  Giving her voice access to them would cross the substrate boundary and is Sir's decision.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an

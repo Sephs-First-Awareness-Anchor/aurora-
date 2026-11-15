@@ -687,6 +687,19 @@ class AuroraQuasiArchObserver:
             },
         }
 
+    def investigate_development(self, question: str, **kw: Any) -> Dict[str, Any]:
+        """Investigate developmental evidence (directive VIII, Stage F): which experiences supplied a dream's ancestral material
+        (`dream_ancestry`, episode=), what relationships emerged (`new_relationships`), what was measurably consequential
+        (`consequential_changes`), which capabilities have internal / external validation (`validation`), and what remains
+        hypothetical or uncertain (`uncertain`).  Investigative only: read-only, reports evidence and what it cannot tell, is
+        not authoritative, and its answer is returned to the caller -- never fed into cognition, speech or pressure."""
+        genealogy = (self.systems or {}).get("genealogy")
+        if genealogy is None:
+            return {"question": str(question), "authoritative": False, "found": False, "basis": [],
+                    "unknown": ["no genealogy is attached to this observer"]}
+        from aurora_internal.quasiarch_development_inquiry import inquire
+        return inquire(genealogy, question, **kw)
+
     def get_doctrine_candidates(
         self,
         issue_category: str,

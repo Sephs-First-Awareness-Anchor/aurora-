@@ -4384,6 +4384,13 @@ class ConstraintGenealogyLogger:
                         left, _, right = str(k).partition("|")
                         if right and isinstance(v, dict) and isinstance(v.get("by"), dict):
                             self._pair_ledger[(left, right)] = v
+                inputs = data.get("inputs") if isinstance(data, dict) else None
+                if isinstance(inputs, dict):
+                    for k, v in inputs.items():                       # what each input was, so a restart keeps its kind and name
+                        if isinstance(v, dict) and k not in self._input_events:
+                            self._input_events[str(k)] = v
+                    while len(self._input_events) > 256:
+                        self._input_events.popitem(last=False)
                 seen = data.get("replay_seen") if isinstance(data, dict) else None
                 if isinstance(seen, list):
                     self._replay_seen = OrderedDict((str(x), None) for x in seen[-4096:])
@@ -4525,7 +4532,7 @@ class ConstraintGenealogyLogger:
         try:
             from pathlib import Path
             atomic_write_json(Path(self._rep_ledger_path), {
-                "version": 2, "reps": self._rep_ledger,
+                "version": 3, "reps": self._rep_ledger, "inputs": dict(self._input_events),
                 "pairs": {f"{l}|{r}": v for (l, r), v in self._pair_ledger.items()},
                 "replay_seen": list(self._replay_seen), "replays_skipped": self._replays_skipped})
         except Exception:
@@ -4561,6 +4568,40 @@ class ConstraintGenealogyLogger:
             lived.extend(i for i in ev["lived_inputs"] if i not in lived)
         status = "traced" if traced and not missing else ("partial" if traced else "unattributed")
         return {"status": status, "traced": traced, "unattributed": missing, "lived_inputs": lived}
+
+    # -- read-only accessors for investigation (QuasiArch); they never change anything ------------------------------------------
+
+    def input_identity(self, input_id: str) -> Optional[Dict[str, Any]]:
+        """What an input was (kind of occurrence, its own turn/episode name), or None when it is no longer retained."""
+        v = self._input_events.get(str(input_id))
+        return dict(v) if isinstance(v, dict) else None
+
+    def find_inputs(self, turn_id: str) -> List[str]:
+        """Ids of retained inputs named `turn_id` (an episode or turn name)."""
+        t = str(turn_id)
+        return [i for i, v in self._input_events.items() if isinstance(v, dict) and str(v.get("turn_id", "")) in (t, "dream:" + t, "simulation:" + t)]
+
+    def reps_credited_under(self, input_id: str) -> Dict[str, Any]:
+        """Representations whose ledger lists this input, by kind.  The ledger keeps the most recent inputs per kind, so absence
+        from a `capped` row does not prove the input never credited it; `capped_rows` says how many rows could be hiding it."""
+        iid, found, capped = str(input_id), {}, 0
+        for rep_id, row in self._rep_ledger.items():
+            for kind, v in row["by"].items():
+                if iid in v.get("inputs", ()):
+                    found.setdefault(rep_id, []).append(kind)
+                elif v.get("n_inputs", 0) > len(v.get("inputs", ())):
+                    capped += 1
+        return {"reps": found, "capped_rows": capped}
+
+    def pairs_credited_under(self, input_id: str) -> Dict[str, Any]:
+        iid, found, capped = str(input_id), {}, 0
+        for pair, row in self._pair_ledger.items():
+            for kind, v in row["by"].items():
+                if iid in v.get("inputs", ()):
+                    found.setdefault(pair, []).append(kind)
+                elif v.get("n_inputs", 0) > len(v.get("inputs", ())):
+                    capped += 1
+        return {"pairs": found, "capped_rows": capped}
 
     def input_effects(self, input_id: str) -> List[Dict[str, Any]]:
         """The shadow's rows for one input (a copy): [{target, n, crowd, relief}] with relief summed over its ticks."""
