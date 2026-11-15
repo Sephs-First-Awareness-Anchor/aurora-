@@ -2310,6 +2310,12 @@ class ConstraintGenealogyLogger:
         # itself, not just per-item computation. See _representation_index()
         # for the full reasoning.
         self._representation_index_known_ids: set = set()
+        # Repair O (2026-11-14, genealogy redistribution Stage 2): what the last build saw, so the next one can
+        # re-sort only the buckets that need it.  _representation_index_activity is {id: (last tick, count)}
+        # as of the last build; _representation_index_sig_of is {id: the bucket it is filed in}.
+        self._representation_index_activity: Dict[str, Tuple[int, int]] = {}
+        self._representation_index_sig_of: Dict[str, str] = {}
+        self._representation_index_profile: Dict[str, Any] = {}
         # Repair M (per Sunni, 2026-08-19): mark_representation_index_dirty()
         # is a genuinely broad signal -- called for consequence_profile
         # updates too, which fire continuously (measured live: 34 times in
@@ -4934,6 +4940,29 @@ class ConstraintGenealogyLogger:
         rather than on every dirty event regardless of relevance."""
         self._representation_identity_dirty_counter += 1
 
+    def _representation_observed_and_activity(self) -> Tuple[set, Dict[str, Tuple[int, int]]]:
+        """Every surviving promoted link and persisted ability remains reachable (per-item scan/candidate budgets
+        bound the work, so reachability does not require prior PairStats activity and does not become a Cartesian
+        cross), and for each id the (last tick, count) its pair and link records say it was last active at."""
+        observed_ids = set(self.links.keys()) | set(self.abilities.keys())
+        activity: Dict[str, Tuple[int, int]] = defaultdict(lambda: (0, 0))
+        for (left_id, right_id), pair_stats in self._pair_stats.items():
+            observed_ids.add(str(left_id))
+            observed_ids.add(str(right_id))
+            for iid in (str(left_id), str(right_id)):
+                prev_tick, prev_count = activity[iid]
+                activity[iid] = (
+                    max(int(prev_tick), int(pair_stats.last_seen_tick or 0)),
+                    max(int(prev_count), int(pair_stats.count or 0)),
+                )
+        for iid, link in self.links.items():
+            prev_tick, prev_count = activity[str(iid)]
+            activity[str(iid)] = (
+                max(int(prev_tick), int(link.created_at_tick or 0)),
+                max(int(prev_count), int(link.count or 0)),
+            )
+        return observed_ids, activity
+
     def _representation_index(self, active_ids: Optional[List[str]] = None) -> Dict[str, List[str]]:
         stamp = (
             len(self.links), len(self.abilities), len(self._pair_stats),
@@ -4979,48 +5008,51 @@ class ConstraintGenealogyLogger:
                 or not self._representation_index_cache
             )
 
-            # Every surviving promoted link and persisted ability remains
-            # reachable.  Per-item scan/candidate budgets below bound the
-            # work, so reachability does not require prior PairStats activity
-            # and does not become a Cartesian cross.
-            observed_ids = set(self.links.keys()) | set(self.abilities.keys())
-            activity: Dict[str, Tuple[int, int]] = defaultdict(lambda: (0, 0))
-            for (left_id, right_id), pair_stats in self._pair_stats.items():
-                observed_ids.add(str(left_id))
-                observed_ids.add(str(right_id))
-                for iid in (str(left_id), str(right_id)):
-                    prev_tick, prev_count = activity[iid]
-                    activity[iid] = (
-                        max(int(prev_tick), int(pair_stats.last_seen_tick or 0)),
-                        max(int(prev_count), int(pair_stats.count or 0)),
-                    )
-            for iid, link in self.links.items():
-                prev_tick, prev_count = activity[str(iid)]
-                activity[str(iid)] = (
-                    max(int(prev_tick), int(link.created_at_tick or 0)),
-                    max(int(prev_count), int(link.count or 0)),
-                )
+            observed_ids, activity = self._representation_observed_and_activity()
+            prior_activity = self._representation_index_activity
 
             if needs_full_rebuild:
                 scan_ids = sorted(observed_ids)
-                index: Dict[str, List[str]] = defaultdict(list)
+                index: Dict[str, List[str]] = {}
+                sig_of: Dict[str, str] = {}
+                touched = None                       # every bucket is sorted
             else:
                 scan_ids = sorted(observed_ids - self._representation_index_known_ids)
-                index = defaultdict(list, {sig: list(ids) for sig, ids in self._representation_index_cache.items()})
+                index = dict(self._representation_index_cache)      # a bucket is copied only when it changes
+                sig_of = dict(self._representation_index_sig_of)
+                # Repair O: a bucket's order is a pure function of its members' (last tick, count) and their ids,
+                # so it needs sorting only if a member's activity changed or a member was added.  Every other
+                # bucket is already in the order a full re-sort would give it.
+                changed = {iid for iid, act in activity.items() if prior_activity.get(iid, (0, 0)) != act}
+                changed |= {iid for iid, act in prior_activity.items() if activity.get(iid, (0, 0)) != act}
+                touched = {sig_of[iid] for iid in changed if iid in sig_of}
 
+            added_to: set = set()
             for iid in scan_ids:
                 if self.representation_is_eligible(iid):
-                    index[self._collision_signature_for_item(iid)].append(iid)
-            # Re-sorted every rebuild regardless of path, using the freshly
-            # rebuilt (cheap -- never the profiled bottleneck) activity
-            # dict, so incremental runs never serve stale ordering for
-            # ids whose recency/count changed without becoming newly
-            # eligible.
-            for bucket in index.values():
-                bucket.sort(key=lambda iid: (-activity[iid][0], -activity[iid][1], iid))
-            self._representation_index_cache = dict(index)
+                    sig = self._collision_signature_for_item(iid)
+                    if sig not in added_to:
+                        index[sig] = list(index.get(sig, []))
+                        added_to.add(sig)
+                    index[sig].append(iid)
+                    sig_of[iid] = sig
+            if touched is None:
+                resort = list(index)
+            else:
+                resort = sorted(touched | added_to)
+                for sig in resort:
+                    if sig not in added_to:
+                        index[sig] = list(index[sig])
+            for sig in resort:
+                index[sig].sort(key=lambda iid: (-activity[iid][0], -activity[iid][1], iid))
+            self._representation_index_cache = index
             self._representation_index_known_ids = set(observed_ids)
+            self._representation_index_activity = {iid: act for iid, act in activity.items() if act != (0, 0)}
+            self._representation_index_sig_of = sig_of
             self._representation_index_stamp = stamp
+            self._representation_index_profile = {
+                "mode": "full" if needs_full_rebuild else "incremental", "scanned": len(scan_ids),
+                "buckets": len(index), "resorted": len(resort)}
 
         index = {sig: list(ids) for sig, ids in self._representation_index_cache.items()}
         for iid in list(active_ids or []):
