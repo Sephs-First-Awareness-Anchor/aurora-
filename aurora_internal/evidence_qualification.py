@@ -473,3 +473,147 @@ def demonstration(events: Iterable[Mapping[str, Any]], target: str) -> Dict[str,
             "by_world": by_world, "internal_demonstrated": internal, "external_supported": ext_ok,
             "external_contradicted": ext_bad, "applicability": applicability, "domains": sorted(domains),
             "generalized": len(domains) >= 2, "attribution_open": open_attr}
+
+
+# -- the live view: how finely a memory is held (directive: finer when it mattered) --------------------------------
+#
+# The full event log is the authority and is never shrunk.  What active cognition holds is a VIEW of it, derived on
+# demand, whose fineness follows impact: an event that carries a consequence, is a correction, sits on the losing side
+# of a contradiction, was overruled, is the first exposure, the latest, the latest counted, or is named as ancestry /
+# premise / attribution by another event is held in full; ordinary repeats become counts.  Impact is read from the
+# events themselves, never from a flag or from how emphatically something was said (emphasis is testimony about
+# importance, not evidence).  Because impact appears later, the view is rebuilt from the log, so a memory that starts
+# to matter regains its detail.  `view_qualification` reads ONLY the view and must equal the qualification of the
+# whole log; `view_problems` says whether a view still matches its log.
+
+def _referenced_ids(evs: Sequence[Mapping[str, Any]]) -> Set[str]:
+    out: Set[str] = set()
+    for e in evs:
+        out.update(e.get("ancestry") or ())
+        out.update(e.get("derived_from") or ())
+        out.update((e.get("consequence") or {}).get("attribution") or ())
+    return out
+
+
+def impact(events: Iterable[Mapping[str, Any]], subject: str) -> Dict[str, List[str]]:
+    """Why each event of `subject` matters, by id.  An event absent from the result is an ordinary repeat."""
+    evs = merge(events)
+    subj = [e for e in evs if e["subject"] == subject]
+    referenced = _referenced_ids(evs)
+    why: Dict[str, List[str]] = {}
+
+    def add(e: Mapping[str, Any], reason: str) -> None:
+        why.setdefault(e["id"], []).append(reason)
+
+    if subj:
+        add(subj[0], "first")
+        add(subj[-1], "latest")
+    counted = [e for e in subj if counts(e)]
+    if counted:
+        add(counted[-1], "latest_counted")
+    n = len(counted)
+    d = sum(int(e["negated"]) for e in counted)
+    settled = {}
+    for e in counted:
+        if e["basis"] == CORRECTED:
+            settled = {"d": int(e["negated"])}
+    for e in subj:
+        if e["basis"] == CORRECTED:
+            add(e, "correction")
+        if e.get("consequence"):
+            add(e, "consequence")
+        if e["id"] in referenced:
+            add(e, "ancestor")
+        if counts(e) and e["basis"] != CORRECTED:
+            if settled and bool(e["negated"]) != bool(settled["d"]):
+                add(e, "overruled")
+            if 0 < d < n and (d * 2 == n or (bool(e["negated"]) == (d * 2 < n))):
+                add(e, "contradiction")
+    return why
+
+
+def _key(e: Mapping[str, Any]) -> Dict[str, Any]:
+    return {"basis": e["basis"], "occurrence": e.get("occurrence", ""), "negated": bool(e["negated"]),
+            "carried": bool(e.get("carried"))}
+
+
+def _rollup(evs: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+    tally: Dict[str, Dict[str, Any]] = {}
+    for e in evs:
+        k = _key(e)
+        tally.setdefault(json.dumps(k, sort_keys=True), dict(k, count=0))["count"] += 1
+    return {"events": len(evs), "keys": [tally[k] for k in sorted(tally)],
+            "span": [min(e["t"] for e in evs), max(e["t"] for e in evs)] if evs else []}
+
+
+def live_view(events: Iterable[Mapping[str, Any]], subject: str, *, budget: int = 8) -> Dict[str, Any]:
+    """What active cognition holds of `subject`: impactful events in full, the `budget` most recent ordinary ones in
+    full, and everything else as counts.  The log is not touched."""
+    evs = merge(events)
+    subj = [e for e in evs if e["subject"] == subject]
+    why = impact(evs, subject)
+    ordinary = [e for e in subj if e["id"] not in why]
+    recent = {e["id"] for e in ordinary[max(0, len(ordinary) - max(0, int(budget))):]}
+    detailed = [e for e in subj if e["id"] in why or e["id"] in recent]
+    rest = [e for e in subj if e["id"] not in why and e["id"] not in recent]
+    reasons = {e["id"]: (why.get(e["id"]) or ["recent"]) for e in detailed}
+    return {"subject": subject, "total": len(subj), "detailed": detailed, "reasons": reasons, "rollup": _rollup(rest)}
+
+
+def view_qualification(view: Mapping[str, Any]) -> Dict[str, Any]:
+    """The qualification, computed from the view alone.  Must equal `qualification(fold(all events of the subject))`."""
+    rec: Dict[str, Any] = {"subject": view["subject"], "n": 0, "denied": 0, "carried": 0, "carried_denied": 0,
+                           "supposed": 0, "supposed_denied": 0, "inferred": 0, "unknown": 0, "recalled": 0,
+                           "basis": {}, "occurrence": {}, "settled": {}, "history": []}
+
+    def absorb(k: Mapping[str, Any], c: int) -> None:
+        rec["basis"][k["basis"]] = rec["basis"].get(k["basis"], 0) + c
+        if k.get("occurrence"):
+            rec["occurrence"][k["occurrence"]] = rec["occurrence"].get(k["occurrence"], 0) + c
+        neg = int(bool(k["negated"])) * c
+        if k.get("occurrence") in NON_EVIDENCE:
+            rec["recalled"] += c
+        elif k["basis"] in COUNTED:
+            rec["n"] += c
+            rec["denied"] += neg
+        elif k["basis"] == SUPPOSED:
+            rec["supposed"] += c
+            rec["supposed_denied"] += neg
+        elif k["basis"] == INFERRED:
+            rec["inferred"] += c
+        elif k.get("carried"):
+            rec["carried"] += c
+            rec["carried_denied"] += neg
+        else:
+            rec["unknown"] += c
+
+    for k in view["rollup"]["keys"]:
+        absorb(k, int(k["count"]))
+    for e in view["detailed"]:
+        absorb(_key(e), 1)
+        rec["history"].append(e)
+        if e["basis"] == CORRECTED and e.get("occurrence", "") not in NON_EVIDENCE:
+            rec["settled"] = {"d": int(e["negated"]), "t": e["t"], "by": e["by"]}
+    rec["history"].sort(key=lambda e: (e["t"], e["id"]))
+    return qualification(rec)
+
+
+def view_problems(view: Mapping[str, Any], events: Iterable[Mapping[str, Any]]) -> List[str]:
+    """Whether a view still matches the log it came from: it may not invent or alter an event, and detail plus counts
+    must account for every event of the subject exactly once."""
+    evs = {e["id"]: e for e in merge(events)}
+    subj = [e for e in evs.values() if e["subject"] == view["subject"]]
+    out: List[str] = []
+    for e in view["detailed"]:
+        held = evs.get(e["id"])
+        if held is None:
+            out.append(f"view holds event {e['id']} that is not in the log")
+        elif validate(e) != held:
+            out.append(f"view holds event {e['id']} differently from the log")
+    shown = {e["id"] for e in view["detailed"]}
+    if len(shown) + int(view["rollup"]["events"]) != len(subj) or int(view["total"]) != len(subj):
+        out.append("view does not account for every event of the subject exactly once")
+    elif _rollup(sorted((e for e in subj if e["id"] not in shown), key=lambda e: (e["t"], e["id"]))) != view["rollup"]:
+        out.append("view's counts do not match the events it summarises")
+    return out
+

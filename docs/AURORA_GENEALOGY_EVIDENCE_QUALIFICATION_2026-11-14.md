@@ -56,6 +56,28 @@ contradiction preservation (a correction settles the verdict, what it settled st
 * Standing that predates provenance is untouched and reported as unattributed.
 * 23 test fixtures that teach by testimony now say `basis="told"`.
 
+## 3b. How finely a memory is held: the live view (Sir, 2026-11-14)
+
+A memory that mattered should be held more finely than one that did not. The rule, in `evidence_qualification.py`:
+
+* **The log is the authority and is never shrunk.** Active cognition holds a *view* derived from it (`live_view`).
+* **Fineness follows impact, read from the events, never from a flag or from emphasis** (saying something emphatically is
+  testimony about importance, not evidence). Held in full: events carrying a **consequence**, **corrections**, the losing
+  side of a **contradiction**, events **overruled** by a correction, events relied on as **ancestry / premise / attribution**
+  by another event, and the **first**, **latest** and **latest counted** event. Ordinary repeats become counts; the `budget`
+  most recent ordinary events stay in full.
+* **Importance shows up late**, so the view is rebuilt from the log: a compacted memory that is later cited as ancestry
+  regains its detail. (Detail already thrown away could not be regained, which is why the log is never shrunk.)
+* **Shrinking is lossless for the evidence.** `view_qualification` reads only the view and equals the whole log's
+  qualification on 120 random logs x 4 budgets; `view_problems` catches an invented, altered, relabelled, miscounted or
+  dropped entry; building a view leaves the log untouched and `violations()` empty.
+* **Named limitation:** the propositional store trims its history by position (first + latest 7), not impact, so a
+  correction in the middle of a long history is evicted from `history` (its effect survives in `settled`). A test records
+  this; adopting impact-aware trimming in the store is a separate change, not made here.
+* **Not available as a signal:** "how often a memory changed her answers" has no producer yet; `consequence` is the only
+  impact evidence the model has. The identity record would be held finer as per-statement events (who, when, corrected or not,
+  what it changed), not by a firmer basis label.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an
@@ -107,7 +129,7 @@ Tests 8–10 (cross-device, comparative equivalence, performance) are **not done
 
 ## 7. Verification
 
-* 82 contract tests + 10 store tests; six contract mutants and four store mutants each caught (one more store mutant, the
+* 211 contract tests (axes 42, base 40, live view 129) + 10 store tests; fifteen contract mutants and four store mutants each caught (one more store mutant, the
   recorder's own default, survived until a direct test was added).
 * 384 tests across every file touching the knowledge path pass; the single failure (`test_build694` turn-id source
   check) fails identically on clean `main`.
