@@ -22,6 +22,11 @@ ONE EVENT, SEVEN QUESTIONS (they are kept apart; none stands in for another)
   consequence  What actually changed (target + change).  A genuine internal consequence is a genuine event even
                when its represented circumstances are hypothetical.
   scope        Where a capability has demonstrated effectiveness -- computed by `demonstration`, never asserted.
+  pressure     (optional) The per-axis pressure the RECEIVED or environmental input itself imposed when it arrived
+               (`input_pressure`, as measured by the intake: aurora_input_pressure.content_axis_loads for an utterance),
+               and, on a consequence, the relief each lower subsystem (`measured_by`: emotion, development, ...) was
+               measured to undergo.  Both are in the one 5-axis language her subsystems are measured in, and an effect names
+               the input event it answers (`attribution`), so impact is tied to what was received, never asserted.
 
 WHAT COUNTS toward how a statement stands: told, observed, corrected -- unless the occurrence is a recollection
 (a recollection never adds evidence; the original did).  supposed, inferred and unknown are kept and never
@@ -131,6 +136,23 @@ def _axes(v: Any, what: str) -> Dict[str, float]:
     return {a: round(float(v.get(a, 0.0)), RELIEF_DECIMALS) + 0.0 for a in AXES}
 
 
+def _loads(v: Any, what: str) -> Dict[str, float]:
+    """Per-axis pressure an input imposed: non-negative, finite, over X/T/N/B/A.  Absent means unknown, never zero."""
+    if hasattr(v, "to_dict"):
+        v = v.to_dict()
+    v = dict(v)
+    extra = set(v) - set(AXES)
+    if extra:
+        raise ValueError(f"{what} has unknown axes {sorted(extra)}; the axes are {AXES}")
+    out = {}
+    for a in AXES:
+        x = float(v.get(a, 0.0))
+        if not (x >= 0.0) or x == float("inf"):
+            raise ValueError(f"{what} must be finite and non-negative on every axis, got {a}={x!r}")
+        out[a] = round(x, RELIEF_DECIMALS) + 0.0
+    return out
+
+
 def _clean_consequence(c: Any) -> Dict[str, Any]:
     """A consequence names what changed and how, and may carry the SHAPE of the change in the system's own physics:
     the 5-axis pressure before and after (higher = worse) and the relief between them (before - after, positive means
@@ -144,6 +166,9 @@ def _clean_consequence(c: Any) -> Dict[str, Any]:
         raise ValueError("a consequence names what changed (target) and how (change)")
     out: Dict[str, Any] = {"target": target, "change": change, "attribution": _ids(c.get("attribution")),
                            "attribution_complete": bool(c.get("attribution_complete", False))}
+    by = str(c.get("measured_by", "") or "").strip().lower()
+    if by:
+        out["measured_by"] = by
     before, after, relief = c.get("pressure_before"), c.get("pressure_after"), c.get("relief")
     if (before is None) != (after is None):
         raise ValueError("pressure_before and pressure_after come together")
@@ -164,7 +189,7 @@ def make_event(subject: str, basis: Optional[str] = None, *, negated: bool = Fal
                derived_from: Sequence[str] = (), nonce: str = "", event_id: Optional[str] = None,
                occurrence: str = "", context: Optional[Mapping[str, Any]] = None, ancestry: Sequence[str] = (),
                ancestry_status: str = "", consequence: Optional[Mapping[str, Any]] = None,
-               carried: bool = False) -> Dict[str, Any]:
+               carried: bool = False, input_pressure: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
     """One piece of evidence about `subject`.  The id is a hash of what it says, so the same utterance replayed is
     the same event and a genuinely separate occurrence (a different time, or a `nonce`) is a different one.  Fields
     left at their defaults are not part of the hash, so an event written before a field existed keeps its id.
@@ -192,6 +217,8 @@ def make_event(subject: str, basis: Optional[str] = None, *, negated: bool = Fal
         ev["consequence"] = cons
     if carried:
         ev["carried"] = True
+    if input_pressure is not None:
+        ev["input_pressure"] = _loads(input_pressure, "input_pressure")
     ev["id"] = str(event_id) if event_id else hashlib.blake2b(
         json.dumps(ev, sort_keys=True).encode("utf-8"), digest_size=10).hexdigest()
     return validate(ev)
@@ -245,6 +272,10 @@ def validate(ev: Mapping[str, Any]) -> Dict[str, Any]:
         out.pop("consequence", None)
     if out["basis"] == INFERRED and not out["derived_from"]:
         raise ValueError("an inference must say what it was derived from")
+    if out.get("input_pressure") is not None:
+        out["input_pressure"] = _loads(out["input_pressure"], "input_pressure")
+    else:
+        out.pop("input_pressure", None)
     if out.get("carried"):
         if out["basis"] != UNKNOWN or occ:
             raise ValueError("carried (legacy) evidence is unattributed: basis unknown, no occurrence")
@@ -454,7 +485,7 @@ def consequence_signature(ev: Mapping[str, Any]) -> str:
         raise ValueError("event has no consequence")
     ctx = dict(ev.get("context") or {})
     blob = json.dumps([c["target"], c["change"], c["attribution"], ctx.get("world", ""), ctx.get("domain", ""),
-                       bool(ev.get("negated")), ev.get("occurrence", ""), ev.get("basis", "")])
+                       bool(ev.get("negated")), ev.get("occurrence", ""), ev.get("basis", ""), c.get("measured_by", "")])
     return hashlib.blake2b(blob.encode("utf-8"), digest_size=8).hexdigest()
 
 
@@ -525,6 +556,56 @@ def shape_of(ev: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
             "pattern": "".join("+" if relief[a] > 0 else ("-" if relief[a] < 0 else "0") for a in AXES)}
 
 
+def input_shape_of(ev: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
+    """The pressure the input imposed on arrival, or None when the intake measured none (unknown, not zero: the
+    utterance loaded no axis, or the producer did not measure).  `dominant` is the axis (or axes, in X/T/N/B/A order)
+    at the peak; `profile` marks the loaded axes ("X.N..")."""
+    loads = ev.get("input_pressure")
+    if loads is None:
+        return None
+    peak = max(loads.values())
+    return {"loads": dict(loads), "peak": peak,
+            "dominant": "".join(a for a in AXES if peak > 0 and loads[a] == peak),
+            "profile": "".join(a if loads[a] > 0 else "." for a in AXES)}
+
+
+def effects_of(events: Iterable[Mapping[str, Any]], event_id: str) -> Dict[str, Any]:
+    """What a received (or environmental) input did, as each lower subsystem measured it: the consequences that name
+    it in their attribution, grouped by `measured_by`, one per independent signature (a re-run reproducing the same
+    consequence is not a second effect; the first occurrence stands for it).  `unmeasured` counts effects recorded
+    with no shape.  The input's own pressure is returned beside them so the pair, what came in and what it did, is read
+    in one place."""
+    evs = merge(events)
+    by_id = {e["id"]: e for e in evs}
+    if event_id not in by_id:
+        raise KeyError(event_id)
+    sigs: Dict[str, Mapping[str, Any]] = {}
+    for e in evs:
+        c = e.get("consequence")
+        if c and event_id in c.get("attribution", ()) and e.get("occurrence", "") not in NON_EVIDENCE:
+            sigs.setdefault(consequence_signature(e), e)
+    groups: Dict[str, Dict[str, Any]] = {}
+    unmeasured = 0
+    for e in sigs.values():
+        name = e["consequence"].get("measured_by", "")
+        g = groups.setdefault(name, {"effects": 0, "samples": 0, "relief": {a: 0.0 for a in AXES}})
+        g["effects"] += 1
+        sh = shape_of(e)
+        if sh is None:
+            unmeasured += 1
+            continue
+        g["samples"] += 1
+        for a in AXES:
+            g["relief"][a] = round(g["relief"][a] + sh["relief"][a], RELIEF_DECIMALS)
+    for g in groups.values():
+        n = g["samples"]
+        g["effect"] = {a: round(g["relief"][a] / n, RELIEF_DECIMALS) for a in AXES} if n else {}
+        mag = sum(abs(v) for v in g["relief"].values())
+        g["pattern"] = "".join("+" if g["relief"][a] > 0 else ("-" if g["relief"][a] < 0 else "0") for a in AXES) if mag > 0 else ""
+    return {"event": event_id, "input": input_shape_of(by_id[event_id]), "independent": len(sigs),
+            "unmeasured": unmeasured, "by_subsystem": groups}
+
+
 def consequence_from_relief(record: Any, *, target: str, change: str, attribution: Sequence[str] = (),
                             attribution_complete: bool = False) -> Dict[str, Any]:
     """Translate genealogy's own measurement into a consequence.  `record` is a ReliefRecord (or a dict with the same
@@ -548,11 +629,22 @@ def consequence_from_relief(record: Any, *, target: str, change: str, attributio
 # whole log; `view_problems` says whether a view still matches its log.
 
 def _referenced_ids(evs: Sequence[Mapping[str, Any]]) -> Set[str]:
+    """Events relied on as ancestry or premise by another event."""
     out: Set[str] = set()
     for e in evs:
         out.update(e.get("ancestry") or ())
         out.update(e.get("derived_from") or ())
-        out.update((e.get("consequence") or {}).get("attribution") or ())
+    return out
+
+
+def _attributed_effects(evs: Sequence[Mapping[str, Any]]) -> Dict[str, List[Mapping[str, Any]]]:
+    """For each event, the consequences that name it in their attribution (what it is said to have done)."""
+    out: Dict[str, List[Mapping[str, Any]]] = {}
+    for e in evs:
+        c = e.get("consequence")
+        if c and e.get("occurrence", "") not in NON_EVIDENCE:
+            for ident in c.get("attribution", ()):
+                out.setdefault(ident, []).append(e)
     return out
 
 
@@ -561,6 +653,7 @@ def impact(events: Iterable[Mapping[str, Any]], subject: str) -> Dict[str, List[
     evs = merge(events)
     subj = [e for e in evs if e["subject"] == subject]
     referenced = _referenced_ids(evs)
+    attributed = _attributed_effects(evs)
     why: Dict[str, List[str]] = {}
 
     def add(e: Mapping[str, Any], reason: str) -> None:
@@ -585,6 +678,12 @@ def impact(events: Iterable[Mapping[str, Any]], subject: str) -> Dict[str, List[
             add(e, "consequence")                  # shape unknown: kept, never read as "nothing happened"
         if e["id"] in referenced:
             add(e, "ancestor")
+        # Held by what it did: an input whose recorded effects include one measured to have changed something, or
+        # one never measured, matters; one whose every recorded effect was measured as nil does not (unknown is
+        # not zero; nil is nil).
+        effects = attributed.get(e["id"], [])
+        if effects and any((shape_of(x) is None) or shape_of(x)["magnitude"] > 0 for x in effects):
+            add(e, "effect")
         if counts(e) and e["basis"] != CORRECTED:
             if settled and bool(e["negated"]) != bool(settled["d"]):
                 add(e, "overruled")
@@ -616,7 +715,14 @@ def _rollup(evs: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
         tally.setdefault(json.dumps(k, sort_keys=True), dict(k, count=0))["count"] += 1
     relief = {a: 0.0 for a in AXES}
     shaped = 0
+    inp = {a: 0.0 for a in AXES}
+    measured_in = 0
     for e in evs:
+        ish = input_shape_of(e)
+        if ish is not None:
+            measured_in += 1
+            for a in AXES:
+                inp[a] = round(inp[a] + ish["loads"][a], RELIEF_DECIMALS)
         sh = shape_of(e)
         if sh is not None:
             shaped += 1
@@ -624,7 +730,26 @@ def _rollup(evs: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
                 relief[a] = round(relief[a] + sh["relief"][a], RELIEF_DECIMALS)
     return {"events": len(evs), "keys": [tally[k] for k in sorted(tally)],
             "span": [min(e["t"] for e in evs), max(e["t"] for e in evs)] if evs else [],
-            "shaped": shaped, "relief": relief}
+            "shaped": shaped, "relief": relief, "input": {"measured": measured_in, "loads": inp}}
+
+
+def view_input_shape(view: Mapping[str, Any]) -> Dict[str, Any]:
+    """The summed pressure the received inputs behind this view imposed (roll-up plus detailed events).  It equals the
+    whole log's, so compaction keeps what came in as well as what it did."""
+    base = dict(view["rollup"].get("input") or {"measured": 0, "loads": {a: 0.0 for a in AXES}})
+    loads, measured = dict(base["loads"]), int(base["measured"])
+    for e in view["detailed"]:
+        ish = input_shape_of(e)
+        if ish is not None:
+            measured += 1
+            for a in AXES:
+                loads[a] = round(loads[a] + ish["loads"][a], RELIEF_DECIMALS)
+    return {"measured": measured, "loads": loads}
+
+
+def log_input_shape(events: Iterable[Mapping[str, Any]], subject: str) -> Dict[str, Any]:
+    return view_input_shape({"rollup": {"input": {"measured": 0, "loads": {a: 0.0 for a in AXES}}},
+                             "detailed": [e for e in merge(events) if e["subject"] == subject]})
 
 
 def view_shape(view: Mapping[str, Any]) -> Dict[str, Any]:

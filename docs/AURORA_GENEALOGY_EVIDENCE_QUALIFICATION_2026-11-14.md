@@ -103,6 +103,46 @@ How finely a memory is held should follow the **shape** of what it did, and that
   `ConstraintGenealogyLogger._attribute_consequence`, which already attributes measured relief per ability; wiring it is
   Stage D/E work and has not been done or measured.
 
+## 3d. Impact is tied to the received or environmental input (Sir, 2026-11-14)
+
+Sir's correction: her lower subsystems (emotion, development) are all measured through pressure, so an event's impact
+should be tied directly to the input she received, not asserted. The contract now does this without adding a second
+language.
+
+* **What came in.** An event may carry `input_pressure`: the per-axis load (0..1 on X, T, N, B, A) that
+  `aurora_input_pressure.content_axis_loads` measured for that input. It is carried, never recomputed. `None` from the
+  intake (no word loaded any axis) means *unknown*, and the field is omitted; `{}` means measured and loaded nothing.
+  Non-finite, negative or off-axis values raise. It joins the event id only when set, so existing ids do not move.
+  `input_shape_of(event)` gives dominant axis, profile string and peak.
+* **What it did.** A consequence names the subsystem that measured it (`measured_by`, e.g. `emotion`, `development`) and
+  the input it answers (`attribution`). `effects_of(log, input_id)` groups the independent measured consequences per
+  subsystem (relief per axis, pattern, samples). The same relief measured by two subsystems is two effects; a re-run of
+  one effect is one; a `recalled` occurrence is not an effect (nothing was measured).
+* **Fineness follows effect.** `impact` gains an `effect` reason: an input is held finely when something measured a
+  non-nil effect, or when an effect exists but its shape is unknown. An input whose every recorded effect was measured
+  nil does not earn a place on that ground. Being relied on as ancestry stays its own, separate reason.
+* **Compaction keeps what came in.** The rollup sums input pressure per axis for what it compacted, and
+  `view_input_shape(view) == log_input_shape(log)`; `view_problems` catches a view that lost any of it.
+* **Pressure never changes evidence status.** 40 randomised logs: qualification is identical with and without
+  `input_pressure`. A dream that imposes pressure is still a dream and counts as nothing said.
+
+Tests: `tests/test_evidence_input_impact.py` (115, using the real `content_axis_loads` with a stub lexicon); seven mutants caught
+(effect tiering both ways, `measured_by` in the signature, rollup input sums, attribution check, replay/recall guard, input validation).
+
+**Measured on the live path (`scripts/measure_input_impact.py`, 8 scripted turns), reported with its limits:**
+
+* The intake produced axis loads for 7 of 8 turns; "Hello Aurora." loaded nothing (unknown, not zero).
+* Emotion (DER) moved on every turn, but only `fear` moved appreciably (0.48, 0.30, 0.19 on turns 2-4, which carried
+  B/X load); later turns, including the one with the highest-valence content ("terrible ... scared"), moved only `calm` by about 0.03.
+  So the correlation between input load and emotion movement is **not clean on 8 turns**; I do not claim one.
+* Genealogy relief summed per turn (`observe` pressure/relief) mixes every source in the turn (4 to 17 `observe` calls per
+  turn). `observe` notes carry **no turn or input identity**, so relief cannot be attributed to the input that caused it.
+  That is the missing link: until the turn/input id is threaded through, `effects_of` has nothing live to read.
+* Consistent with the earlier finding: 233 of 233 live trace items have an empty EnvironmentVector.
+
+**Not done:** no live producer. The proposed next step is a read-only shadow producer through
+`_attribute_consequence`, after turn/input identity is added to the observe note (both are Stage D, separate commits).
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an
@@ -154,7 +194,7 @@ Tests 8–10 (cross-device, comparative equivalence, performance) are **not done
 
 ## 7. Verification
 
-* 340 contract tests (axes 42, base 40, live view 129, pressure shape 129) + 10 store tests; twenty-five contract mutants and four store mutants each caught (one more store mutant, the
+* 455 contract tests (axes 42, base 40, live view 129, pressure shape 129, input impact 115) + 10 store tests; thirty-two contract mutants and four store mutants each caught (one more store mutant, the
   recorder's own default, survived until a direct test was added).
 * 384 tests across every file touching the knowledge path pass; the single failure (`test_build694` turn-id source
   check) fails identically on clean `main`.
