@@ -82,6 +82,36 @@ def _role_lookup() -> Dict[str, str]:
         return {}
 
 
+REPORT_FILE = "crystal_pass_report.json"
+REPORT_HISTORY = 24
+
+
+def _write_report(state_dir: str, report: Mapping[str, Any], at: float) -> None:
+    """Keep the latest pass report, and a short history of the passes before it, for the hub to read.  Fail-safe: never reaches a turn or a save."""
+    try:
+        path = os.path.join(str(state_dir), REPORT_FILE)
+        history: List[Any] = []
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                old = json.load(fh)
+            history = [h for h in (old.get("history") or []) if isinstance(h, dict)]
+        except (OSError, ValueError, AttributeError):
+            pass
+        brief = {"at": at, "seconds": report.get("seconds")}
+        brief.update({k: v for k, v in report.items() if isinstance(v, (int, float)) and not isinstance(v, bool) and k not in brief})
+        for key, sub_key in (("links", "links"), ("facets", "facets"), ("held", "facets")):          # the counts inside a part's own report
+            part = report.get(key)
+            if isinstance(part, Mapping) and isinstance(part.get(sub_key), (int, float)):
+                brief[key] = part[sub_key]
+        history = (history + [brief])[-REPORT_HISTORY:]
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump({"at": at, "report": report, "history": history}, fh, default=str)
+        os.replace(tmp, path)
+    except Exception:
+        pass
+
+
 def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, min_interval: float = MIN_INTERVAL) -> Dict[str, Any]:
     """Weave and write into `dps.crystals` / `dps.concept_index`.  Returns a report; never raises."""
     if not enabled():
@@ -139,7 +169,9 @@ def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, 
                 getattr(cr, "_unlock_failpoints", lambda: None)()
                 raised += 1
         _last["t"] = now
-        return {"ok": True, "seconds": round(time.time() - t0, 2), "links": links, "facets": facets, "held": held, "folded": folded, "maturity": mat, "interior": interior, "classes": len(classes),
+        report = {"ok": True, "seconds": round(time.time() - t0, 2), "links": links, "facets": facets, "held": held, "folded": folded, "maturity": mat, "interior": interior, "classes": len(classes),
                 "substitute_links": links_subst, "generalizations": len(hubs), "generalization_crystals_created": created, "sensory_crystals_created": sensory_made, "generalizations_raised": raised}
+        _write_report(state_dir, report, now)
+        return report
     except Exception as exc:          # fail-safe: a failure here must never reach a turn or a save
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
