@@ -67,6 +67,9 @@ class ConceptWeb:
     def from_state_dir(cls, state_dir: str) -> "ConceptWeb":
         return cls.from_file(os.path.join(state_dir, "dps_crystals.json"))
 
+    def crystals(self) -> Mapping[str, Mapping[str, Any]]:
+        return self._c
+
     def __len__(self) -> int:
         return len(self._c)
 

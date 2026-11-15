@@ -67,7 +67,7 @@ def test_neighborhood_is_bounded_and_carries_the_ties_among_its_nodes():
 
 
 def test_it_never_writes_and_imports_nothing_of_the_stack():
-    allowed = {"aurora_internal.crystal_web", "aurora_internal.crystal_store", "aurora_internal.crystal_web_page", "aurora_internal.crystal_maturity"}
+    allowed = {"aurora_internal.crystal_web", "aurora_internal.crystal_store", "aurora_internal.crystal_web_page", "aurora_internal.crystal_maturity", "aurora_internal.hub_panels"}
     for mod in (W, S):
         src = open(mod.__file__).read()
         mods = set()

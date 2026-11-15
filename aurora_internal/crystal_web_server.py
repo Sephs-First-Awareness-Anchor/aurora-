@@ -1,5 +1,5 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
-"""Serve the concept web (read-only) from the desktop subsurface: `python -m aurora_internal.crystal_web_server --state-dir aurora_state`.
+"""Serve the subsurface hub (read-only): the concept web and the ledger, strata link and pass panels from the desktop subsurface: `python -m aurora_internal.crystal_web_server --state-dir aurora_state`.
 
 Standard library only; GET only; reads `dps_crystals.json` and reloads it when the file changes.  It binds to the loopback address unless told otherwise.  To reach it from
 the phone over the private tunnel, give `--host <tunnel address>` and a `--token`: every request must then carry `t=<token>` (the page passes its own through).
@@ -16,6 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
+import aurora_internal.hub_panels as _P
 from aurora_internal.crystal_web import ConceptWeb
 
 FILE = "dps_crystals.json"
@@ -25,7 +26,8 @@ class WebSource:
     """The current `ConceptWeb`, reloaded when the store's file changes (checked on every request, not on a timer)."""
 
     def __init__(self, state_dir: str) -> None:
-        self.path = os.path.join(str(state_dir), FILE)
+        self.state_dir = str(state_dir)
+        self.path = os.path.join(self.state_dir, FILE)
         self._lock = threading.Lock()
         self._stamp: Optional[Tuple[float, int]] = None
         self._web = ConceptWeb({})
@@ -86,6 +88,12 @@ def make_handler(source: WebSource, token: str = ""):
                 return self._json(200, web.overview(_int(q, "top", 40, 1, 200)))
             if u.path == "/api/search":
                 return self._json(200, {"results": web.search((q.get("q") or [""])[0], _int(q, "limit", 20, 1, 100))})
+            if u.path == "/api/ledger":
+                return self._json(200, _P.ledger_panel(web.crystals(), _int(q, "top", 40, 1, 200)))
+            if u.path == "/api/strata":
+                return self._json(200, _P.strata_panel(source.state_dir))
+            if u.path == "/api/pass":
+                return self._json(200, _P.pass_panel(source.state_dir))
             name = (q.get("name") or [""])[0]
             if u.path == "/api/concept":
                 card = web.lookup(name, _int(q, "ties", 40, 1, 200))

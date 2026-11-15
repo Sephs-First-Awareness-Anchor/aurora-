@@ -4,16 +4,18 @@ value from the store is written with textContent (never as markup)."""
 
 PAGE = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aurora · concept web</title>
+<title>Aurora · subsurface hub</title>
 <style>
 :root{--bg:#0f1218;--panel:#171c25;--line:#2a3140;--ink:#e6e9ef;--mute:#8d96a8;--accent:#8fb4ff;--l1:#6b7a99;--l2:#e0b25c;--l3:#e07a8f;--l4:#9be0b0}
 @media (prefers-color-scheme:light){:root{--bg:#f6f7fa;--panel:#fff;--line:#d9dde6;--ink:#1c2030;--mute:#5d667a;--accent:#2f5fd0;--l1:#7d8aa6;--l2:#b9831e;--l3:#c24a67;--l4:#2f9460}}
 *{box-sizing:border-box}html,body{height:100%;margin:0}body{background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif;display:flex;flex-direction:column}
 header{display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
 header h1{font-size:14px;margin:0 8px 0 0;font-weight:600}
+nav{display:flex;gap:4px}nav button.on{border-color:var(--accent);color:var(--accent)}#panel{display:block;overflow:auto;padding:12px 16px;flex:1}#panel[hidden]{display:none}#panel h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:16px 0 6px}
+table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}th{color:var(--mute);font-weight:500}.ok{color:var(--l4)}.off{color:var(--mute)}.bad{color:var(--l3)}
 input,select,button{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit}
 input{flex:1;min-width:160px}button{cursor:pointer}
-main{flex:1;display:flex;min-height:0}
+main{flex:1;display:flex;min-height:0}main[hidden]{display:none}
 #left{width:230px;border-right:1px solid var(--line);overflow:auto;background:var(--panel)}
 #left h2,#card h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:10px 10px 4px}
 .row{padding:5px 10px;cursor:pointer;display:flex;justify-content:space-between;gap:6px;border-bottom:1px solid var(--line)}
@@ -27,10 +29,11 @@ main{flex:1;display:flex;min-height:0}
 .bar{height:6px;background:var(--line);border-radius:3px;margin:2px 10px 6px}.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
 @media (max-width:900px){main{flex-direction:column}#left,#card{width:auto;max-height:34%;border:0;border-top:1px solid var(--line)}#left{order:3}}
 </style></head><body>
-<header><h1>Aurora · concept web</h1><input id="q" placeholder="search a word or concept" autocomplete="off">
+<header><h1>Aurora · subsurface hub</h1><nav id="tabs"><button data-t="web" class="on">Concepts</button><button data-t="ledger">Ledger</button><button data-t="strata">Strata link</button><button data-t="pass">Crystal pass</button></nav><input id="q" placeholder="search a word or concept" autocomplete="off">
 <select id="depth"><option value="1" selected>1 step</option><option value="2">2 steps</option><option value="3">3 steps</option></select>
 <button id="reset">whole-store hubs</button></header>
-<main><div id="left"><h2 id="lt">Most connected</h2><div id="list"></div></div>
+<main id="panel" hidden></main>
+<main id="webmain"><div id="left"><h2 id="lt">Most connected</h2><div id="list"></div></div>
 <div id="stage"><canvas id="cv"></canvas><div id="note"></div></div>
 <div id="card"><div class="big">Pick a concept</div></div></main>
 <script>
@@ -97,6 +100,28 @@ let tm=0;$('q').addEventListener('input',()=>{clearTimeout(tm);tm=setTimeout(sea
 $('q').addEventListener('keydown',async ev=>{if(ev.key==='Enter'){const r=await api('/api/search',{q:$('q').value.trim(),limit:1});if(r&&r.results[0])show(r.results[0].concept,true)}});
 $('depth').onchange=()=>{if(root)web(byId[root]?byId[root].concept:'')};
 $('reset').onclick=async()=>{$('q').value='';await search();const o=await api('/api/overview',{top:1});if(o&&o.hubs[0])show(o.hubs[0].concept,true)};
+
+function tbl(rows,heads){const t=el('table'),h=el('tr');for(const x of heads)h.append(el('th',null,x));t.append(h);for(const r of rows){const tr=el('tr');for(const v of r){const td=el('td',null,v===null||v===undefined?'–':String(v));tr.append(td)}t.append(tr)}return t}
+function kv(obj){return tbl(Object.entries(obj).map(([k,v])=>[k,typeof v==='object'&&v!==null?JSON.stringify(v):v]),['field','value'])}
+function flag(ok,yes,no){const s=el('span',ok?'ok':'off',ok?yes:no);return s}
+function ago(s){if(s===null||s===undefined)return '–';if(s<90)return Math.round(s)+' s ago';if(s<5400)return Math.round(s/60)+' min ago';if(s<172800)return Math.round(s/3600)+' h ago';return Math.round(s/86400)+' days ago'}
+async function renderPanel(t){const p=$('panel');p.replaceChildren(el('div','mono','loading…'));
+  if(t==='ledger'){const d=await api('/api/ledger',{top:60});p.replaceChildren();if(!d||!d.present){p.append(el('h2',null,'Resolution ledger'),el('div',null,'No ledger research is on the crystals yet (it keeps its state there as hyp: facets once it has observed).'));return}
+    p.append(el('h2',null,'Resolution ledger'),kv({'demands submitted':d.demands_submitted,'demands unsubmitted':d.demands_unsubmitted,'hypotheses held':d.hypotheses,'last emission':d.last_emission,'streams (next index)':d.streams,'word-class structure keys':d.lexical_structure_keys.join(', ')}),
+      el('h2',null,'Observations per subject'),tbl(Object.entries(d.subjects),['subject','observations']),
+      el('h2',null,'Paths under test (most evidence first)'),tbl(d.under_test.map(h=>[h.subject,h.path,h.crystal,h.observations,h.gain_per_obs,h.null_per_obs,h.blocks]),['subject','path','on crystal','obs','gain/obs','null/obs','blocks']));return}
+  if(t==='strata'){const d=await api('/api/strata');p.replaceChildren();if(!d){p.append(el('div',null,'unavailable'));return}
+    p.append(el('h2',null,'Link'));const l={};l['configured']=d.configured?'yes':'no';l['paired']=d.paired?'yes':'no';l['seeded']=d.seeded?'yes':'no';l['downlink (projection to phone)']=d.downlink_enabled?'on':'off';
+    if(d.server){l['epoch']=d.server.epoch;l['owner']=d.server.owner||'–';l['handoff pending']=d.server.handoff_pending?'yes':'no';l['migrations']=d.server.migrations}
+    if(d.client){l['client down applied']=d.client.down_applied;l['client holds a link key']=d.client.has_link_key?'yes':'no'}p.append(kv(l));
+    if(d.server){p.append(el('h2',null,'Surfaces seen'),tbl(Object.keys(d.server.last_seen_seconds_ago).map(k=>[k,ago(d.server.last_seen_seconds_ago[k]),d.server.applied[k]]),['surface','last seen','records applied']))}
+    p.append(el('h2',null,'Queues'),tbl([['uplink (phone → laptop)',d.up_outbox?d.up_outbox.pending:'–',d.up_outbox?d.up_outbox.overflow_dropped:'–'],['downlink (laptop → phone)',d.down_outbox?d.down_outbox.pending:'–',d.down_outbox?d.down_outbox.overflow_dropped:'–']],['queue','pending','dropped on overflow']));
+    p.append(el('h2',null,'Processes'),tbl(Object.entries(d.processes).map(([k,v])=>[k,v===null?'no pid file':(v?'running':'not running')]),['process','state']));
+    if(d.frame)p.append(el('h2',null,'Present frame (last saved '+ago(d.frame.saved_seconds_ago)+')'),kv({crest:d.frame.crest,action:d.frame.action,mode:d.frame.mode,readiness:d.frame.readiness,coherence:d.frame.coherence}));return}
+  if(t==='pass'){const d=await api('/api/pass');p.replaceChildren();p.append(el('h2',null,'Crystal pass'));if(!d||!d.present){p.append(el('div',null,'No pass has been recorded yet (it runs on her saves and writes its report here).'));return}
+    const r=d.report;p.append(kv(Object.fromEntries(Object.entries(r).map(([k,v])=>[k,v]))),el('h2',null,'Recent passes'));
+    const keys=['seconds','links','facets','generalizations','generalizations_raised','sensory_crystals_created'];p.append(tbl(d.history.slice().reverse().map(h=>[new Date(h.at*1000).toLocaleString()].concat(keys.map(k=>h[k]))),['when'].concat(keys)))}}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));const t=b.dataset.t,web=t==='web';$('webmain').hidden=!web;$('panel').hidden=web;$('q').style.visibility=web?'visible':'hidden';$('depth').style.visibility=web?'visible':'hidden';$('reset').style.visibility=web?'visible':'hidden';if(!web)renderPanel(t);else size()});
 size();search();requestAnimationFrame(step);
 </script></body></html>
 """
