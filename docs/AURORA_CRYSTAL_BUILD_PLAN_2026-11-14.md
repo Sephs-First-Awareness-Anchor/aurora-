@@ -22,7 +22,7 @@
 
 | Spec | Live |
 |---|---|
-| Associative links between crystals | `Crystal.connections` exists and `_compound_signature` reads it on promotion, but **nothing writes it** (0 of 5,977 crystals have one) |
+| Associative links between crystals | `Crystal.connections` exists and `_compound_signature` reads it on promotion, but **nothing writes it** (0 of 5,977 crystals have one). Separately, the DPS keeps `crystal_links`: a geometric-similarity graph (cosine of crystal vectors, top 8, in memory only, not saved, read by nothing yet), rebuilt by a scan over every crystal each time one is added. It is resonance, not recurrence, and with the signatures collapsing into 4 buckets it cannot tell concepts apart |
 | Promotion from association and points | `can_evolve`: facet count and `usage_count` (3/10, 5/25, 8/50) |
 | Relation, cause, effect and similar facets | absent; facets are `lexicon:*`, `oets:*`, `topic`, `entity`, `relief_event`, `action`, `emotion`, `genealogy:*` |
 | Dimensional home | `axis_mean` set on 3 crystals; `constraint_signature` on 1,522 |
@@ -45,9 +45,16 @@ Absolute cost today is small; the benefit grows with the number of crystals. One
 **P0, baseline (mapping done: see `AURORA_CRYSTAL_CATEGORY_MAPPING_2026-11-15.md`; categories adjusted there).** Still open: count how many reasoning cycles she actually runs on live state (the repository snapshot holds one recorded cycle, with no promoted or trial wavelets). Read-only audit: map each store (genealogy ledgers, propositional store, lessons, journal) to the crystal level it would
 correspond to, or mark it as having none. Record lookup and foreground timings with `scripts/compare_architectures.py` as the reference.
 
-**P1, association links.** When crystals are active in the same occurrence, a bounded, decaying link accrues in `connections`. Provenance
-rides with it through the evidence contract: a link formed only inside dreams is marked hypothetical and does not count as lived; replay of an
-identical occurrence is not new evidence. Lookups go through the vectorised matrix path.
+**P1, association links. Built (isolated), not wired.** `aurora_internal/crystal_associations.py`, `tests/test_crystal_associations.py` (37 tests, ten rules mutation-checked, one
+survivor closed), `scripts/measure_crystal_associations.py`. One record per association holding its evidence (recording the same evidence again changes nothing), so
+a concept is viewed once with everything attached. Only recurrence-based evidence counts toward `connections`; heuristic, looked-up, seeded, unattributed and unknown evidence is
+kept with its source and counts for nothing until recurrence earns it. `apply_to_crystals` is the only writer, is a dry run by default, adds only to crystals that exist, never replaces
+a stronger existing value, and is bounded per crystal. Nothing in the running system imports it (a test enforces that), and it is separate from the DPS `crystal_links` graph.
+Measured on the repository snapshot (read-only): OETS's 17,284 relations become 13,845 association records; 6,815 count and 7,030 are kept uncounted. Evidence by basis: recurrence 9,116,
+heuristic 6,450, looked-up 1,411, unattributed 228, unknown 59, seeded 20. Of 944 OETS concepts, 565 have a crystal; a dry run would give 382 crystals 4,272 links, and the other 5,595
+crystals (mostly word and quoted-turn crystals outside OETS) would have none. The single view of one concept ("sunni") shows 10 counted associations, all the generic `related_to` type.
+That last point is the limit: OETS types are mostly `related_to` (10,659) and `enables` (5,885); comparisons, implications and identifications barely exist there (opposite_of 4, causes 3, implies 3,
+contrasts 2). The richer types have to come from the waveform paths, the propositional store and the genealogy, which is what P2 and P3 draw on.
 
 **P2, members and convergence.** A crystal gets a member set that emerges from its links (letters are discovered, not typed: her
 `alphabet_order` evidence is the acceptance case). When separate webs overlap (shared members and neighbours) beyond a recurrence bound,
