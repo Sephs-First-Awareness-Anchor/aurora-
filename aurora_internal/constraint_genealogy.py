@@ -4544,7 +4544,8 @@ class ConstraintGenealogyLogger:
         ancestry is not reconstructed or guessed."""
         row = self._rep_ledger.get(str(rep_id))
         if not row:
-            return {"rep": str(rep_id), "ancestry": "unattributed", "lived_inputs": [], "by_kind": {}}
+            return {"rep": str(rep_id), "ancestry": "unattributed", "lived_inputs": [], "lived_total": 0,
+                    "applicability": "none", "by_kind": {}}
         pos = sum(int(v.get("ext_pos", 0)) for v in row["by"].values())
         neg = sum(int(v.get("ext_neg", 0)) for v in row["by"].values())
         hypo = "hypothetical" in row["by"]

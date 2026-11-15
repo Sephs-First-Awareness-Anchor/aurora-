@@ -192,6 +192,11 @@ def test_an_external_test_that_failed_is_reported_as_contradicting_what_a_dream_
     assert v["groups"]["external_contradicted"] == [r[7]] and v["internal_validation"][r[7]] == "supported"
 
 
+def test_asking_about_a_capability_the_ledger_never_saw_is_answered_not_a_crash(g):
+    v = Q.validation(g, ["X:NEVER_SEEN"])
+    assert v["groups"]["none"] == ["X:NEVER_SEEN"] and v["n_examined"] == 1
+
+
 def test_an_external_success_is_external_validation(g):
     r = reps(g)
     lived(g, "test_1", [r[7]], stream="sensor_data")

@@ -26,7 +26,8 @@ _CURRENT: contextvars.ContextVar = contextvars.ContextVar("aurora_current_input"
 
 
 def make_input_event(turn_id: str, text: str, *, address: str = "direct", stream_type: str = "user_input",
-                     loads: Optional[Mapping[str, float]] = None, t: Optional[int] = None, by: str = "") -> Dict[str, Any]:
+                     loads: Optional[Mapping[str, float]] = None, t: Optional[int] = None, by: str = "",
+                     derived_from: Optional[Any] = None) -> Dict[str, Any]:
     """The evidence event for one received input.  Its subject names the turn, not a proposition: propositions drawn from
     the input cite this event in their ancestry; consequences measured because of it attribute to its id."""
     occ = _Q.occurrence_of_address(address, stream_type) or "heard"
@@ -34,6 +35,8 @@ def make_input_event(turn_id: str, text: str, *, address: str = "direct", stream
     kw: Dict[str, Any] = {}
     if loads:
         kw["input_pressure"] = {a: float(loads.get(a, 0.0) or 0.0) for a in _Q.AXES}
+    if derived_from:
+        kw["derived_from"] = list(derived_from)                              # an inference must say what it came from
     return _Q.make_event(f"input|{turn_id}|-", occurrence=occ, t=int(time.time() if t is None else t),
                          nonce=digest, by=by, **kw)
 
