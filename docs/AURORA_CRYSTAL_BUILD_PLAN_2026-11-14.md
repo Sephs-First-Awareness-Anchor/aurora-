@@ -81,6 +81,23 @@ assertions, no letter concepts) the field of `sunni` has 230 members and of `aur
 identifications and the real letters case need live data. Synthetic fixture: 26 letters found by `is_a`, letters converge with numbers through a shared
 symbol association, converge with nothing through labels alone, and converge with fruit not at all.
 
+**Facet placement, built and measured (isolated, not wired).** `aurora_internal/crystal_facets.py`: a `FacetBook` holds each fact ONCE per concept under a key and
+attaches every occasion (source, basis, strength, context, consequence, ancestry) to that one entry, so repeats add occasions, never copies. An entry's degree is
+a gradient: 1-prod(1-w) over counted evidence, times the same for evidence against, so denial lowers it in proportion; uncounted bases (looked_up, seeded,
+heuristic, overheard, dreamed, unstated) are kept and earn nothing. Placement rules: association types land by meaning (is_a → generalization/particular,
+causes → effect/cause, enables/implies → effect/condition, context_of → relation/context, opposite_of/contrasts → comparison, anything said → relation with
+direction); a contested association also places an `open` entry as strong as it is contested; nodes place definitions, valence, and the category a part-of-speech
+label gave (kept, uncounted); a recorded use of the word becomes an `expression` (her own use, fitness as consequence) or an `episode_ref` (a turn met, one entry,
+every time attached) or an `example`; waveform cycles place what the understanding became (relation at both ends), an episode reference and what she said with
+its alignment as the consequence, never the wavelet machinery, and return the signed axis delta, completeness and coherence for the P3 points. Substrate, frame
+and instrument stores route outside. Added kind: `comparison` (alongside `expression`, `episode_ref`, `open`). One writer (`apply_to_crystals`: one `fk:<kind>`
+facet per kind, counted entries only, additive, dry-run by default); note `can_evolve` counts facets, so writing these would change evolution until P3 memberships
+replace that gate. 114 tests, 20 mutants run, all killed after two added tests. Snapshot: 944 concepts, 33,004 entries held once for 43,702 occasions; only
+`relation` entries carry counted evidence (13,630 of 15,262); everything else is held and uncounted because its source is placed, heuristic or unstated (5,799 of
+5,885 `enables` links are `backfill_role_heuristic`; usage examples carry no source). A dry run would give 391 crystals 2,727 entries. The one waveform cycle in
+the snapshot has no developed relation, so it places nothing. Missing for counting: the input-identity occurrence class (told / observed / overheard) on usage
+examples, which exists on the #253 branch and is not on this one.
+
 **P3, built and measured (isolated, not wired).** `aurora_internal/crystal_maturity.py`: counts become degrees by x/(x+k) with the spec's numbers as k (the count
 at which the degree is one half); level standing is nested memberships (L2 needs association; L3 adds abstraction, recurrence across sessions and demonstrated
 consequence; L4 adds promoted members), each held by its weakest requirement and lifted by how well the rest are met; unknown points (emotional) leave the

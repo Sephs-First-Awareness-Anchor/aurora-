@@ -87,6 +87,10 @@ class AssociationStore:
     def __len__(self) -> int:
         return len(self._links)
 
+    def records(self) -> List[Tuple[str, str, str]]:
+        """Every (a, b, type) held, counted or not, in a stable order."""
+        return sorted(self._links)
+
     def evidence(self, a: str, b: str, rtype: str) -> Dict[str, Dict[str, Any]]:
         return dict(self._links.get(_key(a, b, rtype), {}))
 
