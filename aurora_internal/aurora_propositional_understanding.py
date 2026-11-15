@@ -52,7 +52,11 @@ ASSERTION_SOURCE = "assertion"
 NEW_STRENGTH = 0.35
 NEW_CONFIDENCE = 0.45
 MAX_PREDICATES = 12
-BASES = ("told", "observed", "corrected", "supposed")      # how something came to be held (FIX-A137); "supposed" is never held (FIX-A142)
+BASES = ("told", "observed", "corrected", "supposed", "unknown")   # how something came to be held (FIX-A137); "supposed" is never held (FIX-A142)
+# FIX-A145: "unknown" is kept and never held.  A statement whose provenance nobody recorded is not testimony; it is
+# kept on its predicate (what, when, by whom), changes nothing she holds, and a later genuine statement clarifies it.
+# Standing that was held before provenance existed (n above the counted bases) is left exactly as it was.
+UNCOUNTED_BASES = ("supposed", "unknown")
 MAX_HISTORY = 8                                # the first exposure, then the most recent events
 MAX_HEADS = 2
 
@@ -532,13 +536,13 @@ def verdict(p: Mapping[str, Any]) -> str:
 def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, modality: str,
                       speaker: str, time_ref: str, profile: Mapping[str, float], context: str,
                       when: Optional[Mapping[str, Any]] = None, phrase: str = "",
-                      basis: str = "told") -> None:
+                      basis: str = "unknown") -> None:
     a = dict(getattr(rel, "assertion", None) or {})
     preds = dict(a.get("predicates") or {})
     p = dict(preds.get(predicate) or {"n": 0, "denied": 0, "surface": surface, "modal": {}})
     # FIX-A137: how it came to be held and when, appended and never overwritten.  The counts above
     # are the running verdict; the history is how she got there (first exposure kept, then the latest).
-    basis = basis if basis in BASES else "told"
+    basis = basis if basis in BASES else "unknown"        # FIX-A145: never silently testimony
     counts = dict(p.get("basis") or {})
     counts[basis] = int(counts.get(basis, 0)) + 1
     p["basis"] = counts
@@ -554,18 +558,19 @@ def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, 
         said = [w.lower() for w in _words(phrase) if len(w) >= 3 and w.lower() not in closed and "'" not in w]
         p["said_with"] = sorted(set(p.get("said_with") or []) | set(said))[:16]
     supposed = basis == "supposed"            # FIX-A142: an example is kept, never counted as said
-    if when and not supposed:                 # FIX-A133: what this is said to hold under (a few, newest last)
+    uncounted = basis in UNCOUNTED_BASES      # FIX-A145: so is a statement of unknown provenance
+    if when and not uncounted:                 # FIX-A133: what this is said to hold under (a few, newest last)
         held = [dict(w) for w in (p.get("when") or []) if dict(w) != dict(when)]
         p["when"] = (held + [dict(when)])[-3:]
     if supposed:
         p["supposed"] = int(p.get("supposed", 0)) + 1
         if negated:
             p["supposed_denied"] = int(p.get("supposed_denied", 0)) + 1
-    else:
+    elif not uncounted:
         p["n"] = int(p.get("n", 0)) + 1
         if negated:
             p["denied"] = int(p.get("denied", 0)) + 1
-    if modality and not supposed:
+    if modality and not uncounted:
         modal = dict(p.get("modal") or {})
         modal[modality] = int(modal.get(modality, 0)) + 1
         p["modal"] = modal
@@ -576,9 +581,10 @@ def _record_assertion(rel: Any, *, predicate: str, surface: str, negated: bool, 
         keep = sorted(preds.items(), key=lambda kv: -int(kv[1].get("n", 0)))[:MAX_PREDICATES]
         preds = dict(keep)
     a["predicates"] = preds
-    if supposed:
+    if uncounted:
         # FIX-A143: the relation-level record is what was SAID along it (who, when, how often, in what
-        # tone).  An example is kept on its predicate only; it adds nothing to what was said.
+        # tone).  An example (and, FIX-A145, a statement of unknown provenance) is kept on its predicate only;
+        # it adds nothing to what was said.
         rel.assertion = a
         return
     by = dict(a.get("by") or {})
@@ -623,10 +629,13 @@ def _learned_changed(web: Any) -> None:
 
 def integrate_form(web: Any, form: Mapping[str, Any], *, heard: str, speaker: str, listener: str,
                    profile: Mapping[str, float], time_ref: str = "", acts: Optional[set] = None,
-                   _depth: int = 0, basis: str = "told") -> List[Dict[str, Any]]:
-    """Every proposition asserted in one relational form (and its clauses)."""
+                   _depth: int = 0, basis: str = "unknown") -> List[Dict[str, Any]]:
+    """Every proposition asserted in one relational form (and its clauses).  `basis` says how it came to be held
+    (told / observed / corrected); a caller that does not say gets "unknown" (FIX-A145), which is kept and never held,
+    the same way an example ("supposed") is."""
     out: List[Dict[str, Any]] = []
-    supposed = basis == "supposed"
+    basis = basis if basis in BASES else "unknown"
+    supposed = basis in UNCOUNTED_BASES
     form = dict(form or {})
     acts = set(acts if acts is not None else _acts(heard))
     if not form.get("question") and not form.get("directive"):
@@ -847,6 +856,8 @@ def lexicalize_assertion(rel: Any, *, speaker_now: str, self_now: str,
         return {"agent": "I", "action": "only suppose",
                 "object": f"that {plain['agent']} {plain['action']} {plain['object']}",
                 "predicate": "suppose", "n": "1", "denied": "False", "basis": "supposed", "of": predicate}
+    if verdict(p) == "unsaid":
+        return None          # FIX-A145: kept (provenance unknown), but nothing she holds: never voiced as a statement
     return _voice_predicate(rel, speaker_now=speaker_now, self_now=self_now, predicate=predicate, p=p)
 
 
@@ -943,8 +954,11 @@ def integrate_core_identity(web: Any, identity: Any) -> Dict[str, Any]:
                 continue
             acts = _acts(sentence)
             for form in statements_in(sentence, web=web):
+                # FIX-A145: her identity record was given to her (it is what she was told about who matters to her);
+                # said explicitly so the unknown-provenance rule does not silently disable it.  Whether this record
+                # deserves a finer basis is Sir's call.
                 if integrate_form(web, form, heard=sentence, speaker=SELF, listener=str(key).lower(),
-                                  profile={}, acts=acts):
+                                  profile={}, acts=acts, basis="told"):
                     done += 1
     return {"status": "ok", "propositions": done, "already_stored": skipped}
 

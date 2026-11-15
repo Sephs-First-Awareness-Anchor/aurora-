@@ -26,7 +26,7 @@ def _web(lines=()):
     web = OntologicalWeb()
     for line in lines:
         for st in P.statements_in(line):
-            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={})
+            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={}, basis="told")
     return web
 
 

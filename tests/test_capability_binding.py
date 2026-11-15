@@ -22,7 +22,7 @@ def _told(*lines):
     web = OntologicalWeb()
     for line in lines:
         for st in P.statements_in(line):
-            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={})
+            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={}, basis="told")
     return web
 
 
@@ -183,7 +183,7 @@ def test_the_resolution_is_rebuilt_only_when_what_she_knows_changes():
     before = R.order_edges(web)
     assert R.order_edges(web) is before                   # same object: nothing rebuilt
     for st in P.statements_in("C comes after b."):
-        P.integrate_form(web, st, heard="C comes after b.", speaker="sunni", listener="aurora", profile={})
+        P.integrate_form(web, st, heard="C comes after b.", speaker="sunni", listener="aurora", profile={}, basis="told")
     after = R.order_edges(web)
     assert after is not before and ("b", "c") in after    # a new statement was recorded: refreshed
 

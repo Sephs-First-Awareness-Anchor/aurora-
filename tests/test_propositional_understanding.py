@@ -33,7 +33,7 @@ def test_a_statement_becomes_who_asserted_which_predicate_of_what():
     web = _web()
     form = {"subject": "I", "relation": "love", "obj": "old soul records"}
     props = P.integrate_form(web, form, heard="I love old soul records", speaker="sunni", listener="aurora",
-                             profile=AXIS_T, time_ref="tonight")
+                             profile=AXIS_T, time_ref="tonight", basis="told")
     assert [(p["source"], p["predicate"], p["target"]) for p in props] == [
         ("sunni", "love", "soul"), ("sunni", "love", "records")]
     rel = web.relations[next(iter(web._relations_by_source["sunni"]))]
@@ -50,7 +50,7 @@ def test_denial_and_repetition_are_kept():
     web = _web()
     for neg in (True, True, False):
         P.integrate_form(web, {"subject": "the battery", "relation": "overheats", "obj": "the rig", "negated": neg},
-                         heard="", speaker="sunni", listener="aurora", profile=AXIS_T)
+                         heard="", speaker="sunni", listener="aurora", profile=AXIS_T, basis="told")
     rel = web.relations[next(iter(web._relations_by_source["battery"]))]
     p = rel.assertion["predicates"]["overheat"]
     assert (p["n"], p["denied"], p["surface"]) == (3, 2, "overheats")
@@ -61,7 +61,7 @@ def test_denial_and_repetition_are_kept():
 def test_questions_are_not_facts():
     web = _web()
     props = P.integrate_form(web, {"subject": "you", "relation": "like", "obj": "music", "question": True},
-                             heard="Do you like music?", speaker="sunni", listener="aurora", profile=AXIS_T)
+                             heard="Do you like music?", speaker="sunni", listener="aurora", profile=AXIS_T, basis="told")
     assert props == [] and not web.relations
 
 
@@ -69,16 +69,16 @@ def test_clauses_are_propositions_too():
     web = _web()
     form = {"subject": "we", "relation": "push", "obj": "the rig",
             "clauses": [{"subject": "I'm", "relation": "worried", "obj": "the battery"}]}
-    props = P.integrate_form(web, form, heard="", speaker="sunni", listener="aurora", profile=AXIS_T)
+    props = P.integrate_form(web, form, heard="", speaker="sunni", listener="aurora", profile=AXIS_T, basis="told")
     assert ("sunni", "worried", "battery") in [(p["source"], p["predicate"], p["target"]) for p in props]
 
 
 def test_a_concept_gets_a_place_in_her_constraint_space():
     web = _web()
     P.integrate_form(web, {"subject": "I", "relation": "love", "obj": "records"}, heard="",
-                     speaker="sunni", listener="aurora", profile=AXIS_T)
+                     speaker="sunni", listener="aurora", profile=AXIS_T, basis="told")
     P.integrate_form(web, {"subject": "I", "relation": "sell", "obj": "records"}, heard="",
-                     speaker="sunni", listener="aurora", profile={"X": 1.0, "T": 0, "N": 0, "B": 0, "A": 0})
+                     speaker="sunni", listener="aurora", profile={"X": 1.0, "T": 0, "N": 0, "B": 0, "A": 0}, basis="told")
     node = web.nodes["records"]
     assert node.axis_samples == 2
     assert node.axis_profile["T"] == 0.3 and node.axis_profile["X"] == 0.55
@@ -88,7 +88,7 @@ def test_she_says_what_was_asserted_back_as_said(tmp_path):
     from tests.test_confluence import _engine, _ability, _abilities
     web = _web()
     P.integrate_form(web, {"subject": "I", "relation": "love", "obj": "old soul records"}, heard="",
-                     speaker="sunni", listener="aurora", profile=AXIS_T)
+                     speaker="sunni", listener="aurora", profile=AXIS_T, basis="told")
     abil = _abilities(_ability("X:G", "X", "operator_action:operator_on_x", "operator_action:operator_on_n",
                                "complexity_axes:3", "complexity_slots:4", "generation_role:ADJACENT"))
     systems = {"grammar_engine": _engine(tmp_path), "genealogy": abil[0], "_last_active_ability_ids": abil[1],
@@ -106,7 +106,7 @@ def test_persistence_round_trip(tmp_path):
     from aurora_internal.aurora_ontological_scaffolding import OntologicalScaffoldingEngine
     eng = OntologicalScaffoldingEngine()
     P.integrate_form(eng.web, {"subject": "I", "relation": "love", "obj": "records"}, heard="",
-                     speaker="sunni", listener="aurora", profile=AXIS_T)
+                     speaker="sunni", listener="aurora", profile=AXIS_T, basis="told")
     store = OETSPersistence(state_dir=str(tmp_path))
     assert store.save_web(eng)
     fresh = OntologicalScaffoldingEngine()
@@ -146,7 +146,7 @@ def test_possessives_are_not_the_speaker():
 def test_the_copula_agrees_with_who_it_is_about():
     web = _web()
     P.integrate_form(web, {"subject": "the battery", "relation": "be", "obj": "the problem", "negated": True},
-                     heard="", speaker="sunni", listener="aurora", profile=AXIS_T)
+                     heard="", speaker="sunni", listener="aurora", profile=AXIS_T, basis="told")
     rel = web.relations[next(iter(web._relations_by_source["battery"]))]
     assert P.lexicalize_assertion(rel, speaker_now="sunni", self_now="aurora")["action"] == "is not"
 
@@ -163,6 +163,6 @@ def test_real_history_is_read_as_written():
 def test_a_progressive_is_said_with_its_copula():
     web = _web()
     P.integrate_form(web, {"subject": "I", "relation": "building", "obj": "a system"}, heard="",
-                     speaker="sunni", listener="aurora", profile=AXIS_T)
+                     speaker="sunni", listener="aurora", profile=AXIS_T, basis="told")
     rel = [r for r in web.relations.values() if r.source_word == "sunni"][0]
     assert P.lexicalize_assertion(rel, speaker_now="sunni", self_now="aurora")["action"] == "are building"

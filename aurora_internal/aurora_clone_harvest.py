@@ -992,8 +992,10 @@ def listen_to(systems: Mapping[str, Any], event: Mapping[str, Any], previous: Op
         if "propositions" in organs:
             acts = P._acts(text[:2000])
             for st in P.statements_in(text, web=web):
+                # FIX-A145: harvested text is testimony (said to her by its speaker); say so rather than rely on a default
                 out["statements"] += len(P.integrate_form(web, st, heard=text[:400], speaker=speaker,
-                                                          listener=listener, profile=profile, acts=acts))
+                                                          listener=listener, profile=profile, acts=acts,
+                                                          basis="told"))
         if "concepts" in organs and profile:
             try:
                 topics = list(_parser().parse(text[:2000]).get("topic_words", []) or [])[:8]

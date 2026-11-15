@@ -250,7 +250,7 @@ def _said_web(*statements):
     web = OntologicalWeb()
     for subj, rel, obj in statements:
         integrate_form(web, {"subject": subj, "relation": rel, "obj": obj}, heard="", speaker="sunni",
-                       listener="aurora", profile={"X": 0.0, "T": 1.0, "N": 0.0, "B": 0.0, "A": 0.0})
+                       listener="aurora", profile={"X": 0.0, "T": 1.0, "N": 0.0, "B": 0.0, "A": 0.0}, basis="told")
     return web
 
 

@@ -21,7 +21,7 @@ def _taught(lines=LESSON):
     web = OntologicalWeb()
     for line in lines:
         for st in P.statements_in(line):
-            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={})
+            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={}, basis="told")
     return web
 
 
@@ -75,7 +75,7 @@ def test_a_denied_order_is_not_held():
     web = OntologicalWeb()
     for line in ("The letter b comes after the letter a.", "The letter b does not come after the letter a."):
         for st in P.statements_in(line):
-            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={})
+            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={}, basis="told")
     assert R.order_edges(web) == {}
 
 
@@ -101,7 +101,7 @@ def _told(lines):
     web = OntologicalWeb()
     for line in lines:
         for st in P.statements_in(line):
-            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={})
+            P.integrate_form(web, st, heard=line, speaker="sunni", listener="aurora", profile={}, basis="told")
     return web
 
 

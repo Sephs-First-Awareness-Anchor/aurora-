@@ -16,7 +16,7 @@ def _taught():
     web = OntologicalWeb()
     for thing in ("curious", "calm"):
         P.integrate_form(web, {"subject": "you", "relation": "feel", "obj": thing},
-                         heard=f"You feel {thing}.", speaker="sunni", listener="aurora", profile={})
+                         heard=f"You feel {thing}.", speaker="sunni", listener="aurora", profile={}, basis="told")
     systems = {"oets": type("O", (), {"web": web})(), "perception": None}
     return systems
 

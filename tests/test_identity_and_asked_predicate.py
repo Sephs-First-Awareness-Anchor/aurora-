@@ -23,7 +23,7 @@ def _web_with_two_predicates():
     web = OntologicalWeb()
     for said in ("built", "care"):
         P.integrate_form(web, {"subject": "i", "relation": said, "obj": "you"},
-                         heard=f"I {said} you.", speaker="sunni", listener="aurora", profile={})
+                         heard=f"I {said} you.", speaker="sunni", listener="aurora", profile={}, basis="told")
     return web
 
 
@@ -72,7 +72,7 @@ def test_identity_record_is_stored_as_learned_relations_once():
 def test_a_copula_about_a_thing_keeps_the_participant_as_named():
     web = OntologicalWeb()
     for form in P.statements_in("My name is Sunni.", web=web):
-        P.integrate_form(web, form, heard="My name is Sunni.", speaker="sunni", listener="aurora", profile={})
+        P.integrate_form(web, form, heard="My name is Sunni.", speaker="sunni", listener="aurora", profile={}, basis="told")
     rel = web.relations[next(iter(web._relations_by_source["name"]))]
     lex = P.lexicalize_assertion(rel, speaker_now="sunni", self_now="aurora")
     assert lex["object"] == "sunni"
@@ -104,7 +104,7 @@ def test_a_participants_name_is_that_participant():
     assert P.heads("aurora", speaker="sunni", listener="aurora", acts=set()) == ["aurora"]
     web = OntologicalWeb()
     for form in P.statements_in("I built you, and your name is Aurora.", web=web):
-        P.integrate_form(web, form, heard="x", speaker="sunni", listener="aurora", profile={})
+        P.integrate_form(web, form, heard="x", speaker="sunni", listener="aurora", profile={}, basis="told")
     pairs = {(r.source_word, r.target_word) for r in web.relations.values()}
     assert ("name", "aurora") in pairs and ("sunni", "aurora") in pairs
 

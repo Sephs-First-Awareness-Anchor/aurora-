@@ -173,11 +173,11 @@ def test_the_contract_agrees_with_the_propositional_store_on_what_it_already_kee
     assert theirs["verdict"] == P.verdict(_stored(events))
 
 
-def test_what_the_propositional_store_does_not_yet_keep_apart_is_named_here_so_it_cannot_be_forgotten():
-    """The store records a missing or unrecognised basis as `told` (an upgrade of unknown evidence into testimony)
-    and has no `inferred` basis.  An event log built on this contract must not inherit that.  If the store is
-    changed, this test is the thing that says the contract and the store now agree."""
-    stored = _stored([types.SimpleNamespace(**{"basis": "hearsay", "negated": False, "by": "sunni"}).__dict__])
-    assert stored["basis"] == {"told": 1} and stored["n"] == 1                 # the upgrade, today
+def test_the_store_no_longer_upgrades_unattributed_evidence_to_testimony():
+    """FIX-A145 (directive V): a missing or unrecognised basis is "unknown": kept on the predicate, not counted, not
+    voiced as held.  The contract and the store agree."""
+    stored = _stored([{"basis": "hearsay", "negated": False, "by": "sunni"}])
+    assert stored["basis"] == {"unknown": 1} and stored["n"] == 0
     rec = Q.fold([Q.make_event("x|y|z", "hearsay", t=1)])
-    assert rec["n"] == 0 and rec["basis"] == {"unknown": 1}                    # the contract does not
+    assert rec["n"] == 0 and rec["basis"] == {"unknown": 1}
+    assert P.verdict(stored) == Q.verdict(rec) == "unsaid"

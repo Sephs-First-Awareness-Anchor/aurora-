@@ -56,7 +56,7 @@ def _said(*statements, speaker="sunni", listener="aurora"):
         subj, rel, obj = st[:3]
         integrate_form(web, {"subject": subj, "relation": rel, "obj": obj, "negated": bool(st[3:] and st[3])},
                        heard="", speaker=speaker, listener=listener,
-                       profile={"X": 0.2, "T": 0.2, "N": 0.2, "B": 0.2, "A": 0.2})
+                       profile={"X": 0.2, "T": 0.2, "N": 0.2, "B": 0.2, "A": 0.2}, basis="told")
     return web
 
 
@@ -296,6 +296,6 @@ def test_a_modal_said_is_kept():
     web = _said()
     from aurora_internal.aurora_propositional_understanding import integrate_form
     integrate_form(web, {"subject": "the mechanism", "relation": "slot", "obj": "the engine", "modality": "could"},
-                   heard="", speaker="sunni", listener="aurora", profile={"X": 1})
+                   heard="", speaker="sunni", listener="aurora", profile={"X": 1}, basis="told")
     rel = next(iter(web.relations.values()))
     assert lexicalize_assertion(rel, speaker_now="sunni", self_now="aurora")["action"] == "could slot"
