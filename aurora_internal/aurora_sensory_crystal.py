@@ -1683,53 +1683,26 @@ class AuroraSensoryCrystal:
         count_use: bool = True,
     ) -> None:
         """
-        Inject a promoted SensoryNode into the DPS crystal order ladder.
+        A promoted node reaches the ONE crystal of its facet, not a crystal of its own (one crystal architecture and store, Sir 2026-11-15).
 
-        Creates or deepens a DPS Crystal for this concept, adds facets that
-        encode sensory domain, cross-modal links, and fitness — then calls
-        crystal.evolve() so it can climb BASE→COMPOSITE→FULL_CONCEPT→QUASI.
+        The facet's crystal (`sensory:<domain>:<facet>`) is the one `_dps_route_observation` keeps.  What a node is, and how much she has observed it, reaches
+        that crystal as counted evidence when the crystal pass reads this crystal's saved state (`aurora_internal/crystal_sensory.py`): the node is a particular
+        held inside the facet, held by its observations and the independent sessions they came from.  So nothing is made per node, and nothing here counts:
+        this only makes sure the facet's crystal exists.
         """
         if self._dps_ref is None:
             return
         try:
-            self._ensure_node_name(domain, facet_name, node)
-            concept = f"sensory:{domain}:{facet_name}:{node.node_id}"
-            crystal = self._dps_ref._get_or_create(concept)
-            if count_use:
-                crystal.use()
-            crystal.add_facet("sensory_domain", domain, confidence=node.confidence)
-            crystal.add_facet("sensory_facet", facet_name, confidence=node.confidence)
-            crystal.add_facet("sensory_identity", node.name or node.node_id[:12], confidence=node.confidence)
-            crystal.add_facet("sensory_stage", node.stage, confidence=node.confidence)
-            crystal.add_facet("sensory_generation", f"gen:{node.generation}", confidence=node.confidence)
-            crystal.add_facet("sensory_lineage", node.lineage_id or node.node_id[:12], confidence=node.confidence)
-            crystal.add_facet("sensory_usage_band", _bucket_count(node.usage_count, CONCEPT_PROMOTION_USAGE, CONCEPT_PROMOTION_USAGE * 2), confidence=node.confidence)
-            crystal.add_facet("sensory_session_band", _bucket_count(node.session_count, CONCEPT_PROMOTION_SESSIONS, CONCEPT_PROMOTION_SESSIONS * 3), confidence=node.confidence)
-            crystal.add_facet("sensory_confidence_band", _bucket_level(node.confidence), confidence=node.confidence)
-            crystal.add_facet("sensory_fitness_band", _bucket_level(node.fitness), confidence=node.confidence)
-            crystal.add_facet("sensory_maturity_band", _bucket_level(node.maturity), confidence=node.confidence)
-            crystal.add_facet("sensory_cross_modal_count", _bucket_count(len(node.cross_modal_links), 1, 3), confidence=node.confidence)
-            for idx, link_id in enumerate(node.cross_modal_links[:4]):
-                crystal.add_facet(
-                    role=f"cross_modal_link_{idx}",
-                    content=f"cross_modal:{link_id}",
-                    confidence=node.confidence * 0.80,
-                )
-            evolved = crystal.evolve()
-            if evolved:
-                logger.info("[SensoryCrystal→DPS] %s:%s:%s  DPS level→%s",
-                            domain, facet_name, node.node_id[:8],
-                            getattr(crystal.level, "name", str(crystal.level)))
+            self._dps_ref._get_or_create(f"sensory:{domain}:{facet_name}")
         except Exception as _e:
             _aurora_record_exception_from_locals(
                 locals(),
                 module=__name__,
-                operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:1107",
+                operation="exception_handler:aurora_internal/aurora_sensory_crystal.py:_inject_to_dps",
                 exc=_e,
-                context={"function": "_inject_to_dps", "handler_line": 1107, "source_file": "aurora_internal/aurora_sensory_crystal.py"},
+                context={"function": "_inject_to_dps", "source_file": "aurora_internal/aurora_sensory_crystal.py"},
             )
-            logger.debug("[SensoryCrystal] DPS injection failed for %s:%s: %s",
-                         domain, facet_name, _e)
+            logger.debug("[SensoryCrystal] DPS facet crystal failed for %s:%s: %s", domain, facet_name, _e)
 
     def _inject_semantic_to_dps(
         self,

@@ -21,6 +21,7 @@ from aurora_internal import crystal_associations as _A
 from aurora_internal import crystal_facets as _F
 from aurora_internal import crystal_grammar as _G
 from aurora_internal import crystal_interior as _I
+from aurora_internal import crystal_sensory as _SN
 from aurora_internal import crystal_promotion as _P
 from aurora_internal import crystal_store as _CS
 from aurora_internal import crystal_substitutability as _S
@@ -114,6 +115,11 @@ def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, 
             if hub not in idx and make is not None:
                 make(hub)
                 created += 1
+        sensory_made = 0
+        for concept in _SN.concepts_with_evidence(book):       # a sensory facet that counted perception stands behind is a crystal (one per facet)
+            if concept not in idx and make is not None:
+                make(concept)
+                sensory_made += 1
         idx = _CS.primary_index(dps)                          # (a generalization crystal just made is in it)
         links = _A.apply_to_crystals(store, idx, crystals, dry_run=False)
         facets = _F.apply_to_crystals(book, idx, crystals, dry_run=False)
@@ -134,6 +140,6 @@ def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, 
                 raised += 1
         _last["t"] = now
         return {"ok": True, "seconds": round(time.time() - t0, 2), "links": links, "facets": facets, "held": held, "folded": folded, "maturity": mat, "interior": interior, "classes": len(classes),
-                "substitute_links": links_subst, "generalizations": len(hubs), "generalization_crystals_created": created, "generalizations_raised": raised}
+                "substitute_links": links_subst, "generalizations": len(hubs), "generalization_crystals_created": created, "sensory_crystals_created": sensory_made, "generalizations_raised": raised}
     except Exception as exc:          # fail-safe: a failure here must never reach a turn or a save
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}

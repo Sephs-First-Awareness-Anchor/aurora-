@@ -26,6 +26,7 @@ from aurora_internal import crystal_maturity as _M
 from aurora_internal import evidence_qualification as _Q
 from aurora_internal.crystal_associations import AssociationStore, project_assertions, project_oets
 from aurora_internal import crystal_lexicon as _L
+from aurora_internal import crystal_sensory as _SN
 
 # One exposure (two representations used together, or one distinct input) is worth this much; n exposures add up as 1 - (1 - w)^n, so more always means more.
 PAIR_EXPOSURE = 0.1
@@ -279,6 +280,7 @@ def weave(state_dir: str) -> Dict[str, Any]:
     pairs, links = _read(state_dir, "genealogy", "pair_stats.json") or {}, _read(state_dir, "genealogy", "links.json") or {}
     genealogy_associations(pairs, links, store)
     summary["genealogy"] = {"pairs": len(pairs), "links": len(links), "links_with_qualification": sum(1 for v in links.values() if v.get("evidence_qualification"))}
+    summary["sensory"] = _SN.place(book, store, state_dir, _accrued)      # perception: counted observation, held at the facet's one crystal
     _F.place_associations(book, store)
     mem = _read(state_dir, "aurora_conversation_memory.json") or {}
     summary["conversations"] = {"records": len(mem.get("entries") or []),
