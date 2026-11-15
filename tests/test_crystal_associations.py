@@ -234,7 +234,71 @@ def test_nothing_in_the_running_system_calls_it():
         if any(x in base for x in (".git", "tests", "scripts", "aurora_state", "node_modules")):
             continue
         for f in files:
-            if f.endswith(".py") and f != "crystal_associations.py":
+            if f.endswith(".py") and f not in ("crystal_associations.py", "crystal_convergence.py"):
                 if "crystal_associations" in open(os.path.join(base, f), encoding="utf-8", errors="ignore").read():
                     hits.append(f)
     assert hits == []
+
+
+# -- what was said (the propositional store's assertion records) ------------------------------------------------------------------------
+
+def said(rid, src, tgt, preds, **kw):
+    return {rid: {"relation_id": rid, "source_word": src, "target_word": tgt, "relation_type": "related_to",
+                  "source_of_knowledge": "assertion", "strength": 1.0, "confidence": 1.0, "assertion": {"predicates": preds}, **kw}}
+
+
+def test_a_predicate_said_between_two_things_is_an_association_from_subject_to_object():
+    from aurora_internal.crystal_associations import project_assertions
+    s = project_assertions(said("r1", "mara", "tea", {"like": {"n": 4, "denied": 0, "basis": {"told": 4}}}))
+    assert s.strength("mara", "tea", "like") == pytest.approx(1.0)
+    assert s.strength("tea", "mara", "like") == 0.0                      # it runs one way
+    assert s.view("mara")["counted"]["like"][0]["direction"] == "out" and s.view("tea")["counted"]["like"][0]["direction"] == "in"
+
+
+def test_being_denied_weakens_an_association_in_proportion_and_contests_it():
+    from aurora_internal.crystal_associations import project_assertions
+    vals, cont = [], []
+    for denied in range(0, 5):
+        s = project_assertions(said("r1", "mara", "tea", {"like": {"n": 4, "denied": denied, "basis": {"told": 4}}}))
+        vals.append(s.strength("mara", "tea", "like"))
+        cont.append(s.contested("mara", "tea", "like"))
+    assert vals == [pytest.approx(1.0), pytest.approx(0.5), 0.0, 0.0, 0.0]               # (held - denied) over all the times it was said, floored at 0
+    assert cont == [0.0, pytest.approx(0.5), pytest.approx(1.0), pytest.approx(0.5), 0.0]   # argued over most when split evenly, not at the ends
+
+
+def test_a_correction_decides_and_what_came_before_stays_in_the_relations_own_history():
+    from aurora_internal.crystal_associations import project_assertions
+    p = {"like": {"n": 5, "denied": 1, "basis": {"told": 4, "corrected": 1}, "settled": {"d": 1, "t": 1, "by": "sunni"}}}
+    s = project_assertions(said("r1", "mara", "tea", p))
+    assert s.strength("mara", "tea", "like") == 0.0
+    ev = s.evidence("mara", "tea", "like")
+    assert len(ev) == 1 and next(iter(ev.values()))["basis"] == "corrected"
+
+
+def test_the_basis_is_how_it_came_to_be_held():
+    from aurora_internal.crystal_associations import project_assertions
+    s = project_assertions(said("r1", "a", "b", {"be a": {"n": 3, "denied": 0, "basis": {"observed": 3}}}))
+    assert next(iter(s.evidence("a", "b", "be a").values()))["basis"] == "observed"
+    s2 = project_assertions(said("r1", "a", "b", {"be a": {"n": 3, "denied": 0}}))              # no basis recorded: told
+    assert next(iter(s2.evidence("a", "b", "be a").values()))["basis"] == "told"
+
+
+def test_projecting_assertions_twice_is_the_same_as_once_and_empty_predicates_add_nothing():
+    from aurora_internal.crystal_associations import project_assertions
+    w = said("r1", "a", "b", {"like": {"n": 2, "denied": 1, "basis": {"told": 2}}, "ghost": {"n": 0}})
+    once = project_assertions(w)
+    assert project_assertions(w, project_assertions(w)).to_dict() == once.to_dict()
+    assert "ghost" not in str(once.to_dict())
+
+
+def test_a_relation_with_nothing_said_along_it_adds_nothing_here():
+    from aurora_internal.crystal_associations import project_assertions
+    assert len(project_assertions(web(rel("r1", "a", "b")))) == 0
+
+
+def test_incoming_lists_what_a_concept_holds_with_the_degree_and_ignores_the_uncounted():
+    s = AssociationStore()
+    s.add("a", "letter", "is_a", ref="1", source="co-occurrence", strength=0.9)
+    s.add("b", "letter", "is_a", ref="2", source="backfill_role_heuristic", strength=1.0)
+    s.add("letter", "word", "is_a", ref="3", source="co-occurrence", strength=0.5)
+    assert s.incoming("letter", "is_a") == {"a": pytest.approx(0.9)}

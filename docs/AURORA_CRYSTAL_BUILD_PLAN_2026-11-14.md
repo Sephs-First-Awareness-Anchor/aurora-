@@ -71,12 +71,23 @@ understanding. The plan uses that record as the association source:
 * facets record what the understanding became and what it caused, never the wavelet machinery (she experiences effects, not architecture).
 Failed wavelets dissolve and so leave no crystal. Cycle records are read, not rewritten.
 
+**P2, built and measured (isolated, not wired).** `aurora_internal/crystal_convergence.py` reads the P1 store: `members_of` (what a hub holds, found
+from `is_a` associations, never listed); `field_of` (degree of belonging = 1-(1-direct)(1-convergence), so being tied to the hub and sharing its associations
+reinforce each other); `convergence` (weighted cosine of two concepts' counted associations, leaving out the tie between them); `whole_convergence` (two wholes
+by their fields); `general_field` (the weighted blend that is the more general whole). `project_assertions` in P1's module turns the propositional store's
+`assertion` records into directed associations: times held and times denied are weighted evidence of opposite sign, so a disputed association weakens
+in proportion and `contested()` is highest when split evenly; a settled correction decides. 61 tests, 14 mutants killed. On the snapshot (OETS web, no
+assertions, no letter concepts) the field of `sunni` has 230 members and of `aurora` 314, with degrees spread continuously from 1.0 down to about 0.015; the
+identifications and the real letters case need live data. Synthetic fixture: 26 letters found by `is_a`, letters converge with numbers through a shared
+symbol association, converge with nothing through labels alone, and converge with fruit not at all.
+
 **P3, points from real occurrences.** Facet points are filled from what exists: polarity from signed axis displacement (never `abs()`);
 associative from P1; abstract from the number of distinct contexts a crystal has appeared in; temporal from recurrence across sessions;
 cognitive from consequence demonstrated outside the system's own simulation (the Stage D qualification); recursive from the share of members that are
 themselves promoted. Emotional is not wired today (DER is not connected to the shadow); it stays `unknown` until it is. Promotion
-reads the points. The spec's numbers (associative ≥5, ≥10, ≥12; abstract ≥0.7; temporal and cognitive ≥0.8) are the starting values,
-not decided ones (see §6).
+reads the points **as degrees, not as bars**: a crystal's membership in each level is a continuous value in [0,1] that rises with the points (soft
+level memberships), replacing the count gates in `can_evolve`. The spec's numbers (associative ≥5, ≥10, ≥12; abstract ≥0.7; temporal and cognitive ≥0.8)
+are reference values for where memberships are expected to be near full, never cut-offs.
 
 **P4, speed.** Cached matrix of signatures, updated incrementally; bucket index only once signatures discriminate.
 
@@ -88,6 +99,9 @@ real outcomes. Last, because it depends on everything above.
 
 ## 5. Constraints (binding)
 
+* **Gradient rule (Sir, 2026-11-15).** No quantity is compared with a bar to decide what counts. Everything is a degree in [0,1] that rises and falls
+  continuously with the pressures on it. The only limits are on capacity (how many results are returned or stored), never on what belongs. Tests assert
+  monotonicity and no cliffs; a test reads the convergence module's source and fails if it compares a degree with a non-zero constant.
 * No scripted learning; no rule that turns dream or simulation into reality; promotion from dream-derived evidence needs demonstrated consequence.
 * Information reaches her only through her understanding development. Anything read from Poedex or QuasiArch while investigating stays with the investigator.
 * QuasiArch stays investigative and read-only (`authoritative: False`); not called from cognition or speech.
@@ -98,7 +112,7 @@ real outcomes. Last, because it depends on everything above.
 
 ## 6. Decisions for Sir
 
-1. Keep the spec's fixed example thresholds as the first values, or derive promotion from the distribution of points?
+1. ~~Fixed example thresholds or derived promotion?~~ Settled by Sir (2026-11-15): nothing is a threshold; everything is a gradient between pressures and their representations (see §5).
 2. Which stores move onto crystals first (P0 will list candidates)?
 3. ~~`l3_quasicrystal.py` calls a 12-sided crystal "quasi"; the PDF puts quasi at L4.~~ Settled by Sir (2026-11-15): L4 is quasi.
 4. Is the emotional point to be wired from DER before P3 or left `unknown`?

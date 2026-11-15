@@ -35,12 +35,15 @@ SOURCE_BASIS: Dict[str, str] = {
     "adjacency": "unattributed",          # derived without a stated premise
     "axis_embodiment": "unattributed",
     "definition_analysis": "unattributed",
+    "told": "told",                       # said to her (the propositional store's own bases)
+    "observed": "observed",
+    "corrected": "corrected",
 }
-COUNTED_BASES = frozenset({"recurrence"})
+COUNTED_BASES = frozenset({"recurrence", "told", "observed", "corrected"})
 UNKNOWN = "unknown"
 
-# Types whose meaning has a direction (a enables b is not b enables a); the rest are symmetric.
-DIRECTED_TYPES = frozenset({"enables", "is_a", "causes", "implies", "context_of"})
+# Types that mean the same from either end; every other type (including every predicate said between two things) runs from a to b.
+SYMMETRIC_TYPES = frozenset({"related_to", "opposite_of", "contrasts"})
 
 
 def basis_of(source: str) -> str:
@@ -49,7 +52,7 @@ def basis_of(source: str) -> str:
 
 def _key(a: str, b: str, rtype: str) -> Tuple[str, str, str]:
     a, b, rtype = str(a), str(b), str(rtype)
-    if rtype not in DIRECTED_TYPES and b < a:
+    if rtype in SYMMETRIC_TYPES and b < a:
         a, b = b, a
     return (a, b, rtype)
 
@@ -63,7 +66,7 @@ class AssociationStore:
 
     # ---- writing ----------------------------------------------------------------------------------------------------
     def add(self, a: str, b: str, rtype: str, *, ref: str, source: str,
-            strength: float = 1.0, confidence: float = 1.0) -> bool:
+            strength: float = 1.0, confidence: float = 1.0, polarity: int = 1, weight: float = 1.0) -> bool:
         """Record one piece of evidence for an association.  `ref` identifies the evidence itself, so recording it again is a no-op.
         Returns True if it was new."""
         if not a or not b or str(a) == str(b) or not ref:
@@ -75,6 +78,8 @@ class AssociationStore:
             "basis": basis_of(source), "source": str(source),
             "strength": max(0.0, min(1.0, float(strength))),
             "confidence": max(0.0, min(1.0, float(confidence))),
+            "polarity": -1 if int(polarity) < 0 else 1,          # -1: said NOT to hold
+            "weight": max(0.0, float(weight)),                    # how many exposures this record stands for (1 for a single observation)
         }
         return True
 
@@ -86,12 +91,31 @@ class AssociationStore:
         return dict(self._links.get(_key(a, b, rtype), {}))
 
     def strength(self, a: str, b: str, rtype: str) -> float:
-        """What counts: the mean strength of the recurrence-based evidence for this association, scaled by its confidence.
-        0.0 if there is none, however much uncounted evidence exists."""
+        """What counts: the weighted mean, over the counted evidence, of strength x confidence with its sign (evidence that it does NOT hold pulls
+        down, continuously), floored at 0.  0.0 if there is no counted evidence, however much uncounted evidence exists."""
         counted = [e for e in self._links.get(_key(a, b, rtype), {}).values() if e["basis"] in COUNTED_BASES]
-        if not counted:
+        w = sum(e.get("weight", 1.0) for e in counted)
+        if w <= 0.0:
             return 0.0
-        return sum(e["strength"] * e["confidence"] for e in counted) / len(counted)
+        return max(0.0, sum(e.get("polarity", 1) * e["strength"] * e["confidence"] * e.get("weight", 1.0) for e in counted) / w)
+
+    def contested(self, a: str, b: str, rtype: str) -> float:
+        """0 when the counted evidence all points one way, up to 1 when it is split evenly: how much it is argued over."""
+        ev = [e for e in self._links.get(_key(a, b, rtype), {}).values() if e["basis"] in COUNTED_BASES]
+        pos = sum(e["strength"] * e["confidence"] * e.get("weight", 1.0) for e in ev if e.get("polarity", 1) > 0)
+        neg = sum(e["strength"] * e["confidence"] * e.get("weight", 1.0) for e in ev if e.get("polarity", 1) < 0)
+        tot = pos + neg
+        return 0.0 if tot <= 0 else 2.0 * min(pos, neg) / tot
+
+    def incoming(self, concept: str, rtype: str) -> Dict[str, float]:
+        """Concepts x with a counted association x --rtype--> concept, and its strength: for `is_a` these are what the concept holds."""
+        c, out = str(concept), {}
+        for (a, b, t) in self._links:
+            if t == rtype and b == c and a != c:
+                s = self.strength(a, b, t)
+                if s > 0.0:
+                    out[a] = s
+        return out
 
     def connections_for(self, concept: str) -> Dict[str, float]:
         """neighbour concept -> counted strength (the strongest across types), for neighbours with any counted strength."""
@@ -119,7 +143,7 @@ class AssociationStore:
             if s > 0.0:
                 by_type.setdefault(rtype, []).append({
                     "with": other, "strength": round(s, 4),
-                    "direction": ("out" if a == c else "in") if rtype in DIRECTED_TYPES else "both",
+                    "direction": "both" if rtype in SYMMETRIC_TYPES else ("out" if a == c else "in"),
                     "evidence": sum(1 for e in ev.values() if e["basis"] in COUNTED_BASES),
                 })
             for e in ev.values():
@@ -181,6 +205,35 @@ def project_oets(relations: Mapping[str, Mapping[str, Any]], store: Optional[Ass
         store.add(r.get("source_word"), r.get("target_word"), r.get("relation_type") or "related_to",
                   ref=str(r.get("relation_id") or rid), source=r.get("source_of_knowledge") or "",
                   strength=r.get("strength", 0.0) or 0.0, confidence=r.get("confidence", 0.0) or 0.0)
+    return store
+
+
+def project_assertions(relations: Mapping[str, Mapping[str, Any]], store: Optional[AssociationStore] = None) -> AssociationStore:
+    """Add what was SAID between things (the propositional store's `assertion` records on OETS relations): each predicate becomes a typed association
+    from subject to object.  Said-to-hold and said-NOT-to-hold are separate evidence of opposite sign, each weighing as many times as it was said, so
+    an association argued over weakens smoothly (held minus denied, over all the times it was said) instead of flipping.  A latest correction decides (it stays as the only evidence; what came before stays in the
+    relation's own history).  The basis is how it came to be held (told, observed, corrected).  Running it again adds nothing."""
+    store = store if store is not None else AssociationStore()
+    for rid, r in (relations or {}).items():
+        a = r.get("assertion") or {}
+        for pred, p in (a.get("predicates") or {}).items():
+            n = int(p.get("n", 0) or 0)
+            if n <= 0:
+                continue
+            bcounts = {k: int(v) for k, v in (p.get("basis") or {}).items() if v}
+            base = max(bcounts, key=lambda k: (bcounts[k], k == "told")) if bcounts else "told"
+            settled = p.get("settled")
+            src, tgt, ref = r.get("source_word"), r.get("target_word"), str(r.get("relation_id") or rid)
+            if settled:
+                store.add(src, tgt, pred, ref=f"{ref}:{pred}:settled", source="corrected", strength=1.0, confidence=1.0,
+                          polarity=-1 if int(settled.get("d", 0)) else 1)
+                continue
+            denied = max(0, min(n, int(p.get("denied", 0) or 0)))
+            held = n - denied
+            if held:
+                store.add(src, tgt, pred, ref=f"{ref}:{pred}:held", source=base, strength=1.0, confidence=1.0, polarity=1, weight=held)
+            if denied:
+                store.add(src, tgt, pred, ref=f"{ref}:{pred}:denied", source=base, strength=1.0, confidence=1.0, polarity=-1, weight=denied)
     return store
 
 
