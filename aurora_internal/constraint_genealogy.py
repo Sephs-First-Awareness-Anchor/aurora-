@@ -2153,6 +2153,11 @@ class ConstraintGenealogyLogger:
         self._event_log: Deque[ReliefRecord] = deque(maxlen=10_000)
         # What each received input was, once per input (observation notes carry only the input's id)
         self._input_events: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
+        # SHADOW (read-only, in memory): what each received input did to each representation, as this genealogy measured
+        # it.  Keyed (input id, trace item id); one aggregate per pair, never one record per tick.  Nothing reads it for any
+        # decision, gate, threshold or promotion; it exists to be compared with `consequence_profile`.
+        self._input_effects: "OrderedDict[Tuple[str, str], Dict[str, Any]]" = OrderedDict()
+        self._input_effects_unattributed: int = 0
 
         # Compact rolling event file (replaces unbounded events.jsonl)
         self._events_recent_path = os.path.join(output_dir, "events_recent.json")
@@ -4158,6 +4163,36 @@ class ConstraintGenealogyLogger:
             return 1.0
         return max(0.0, 1.0 / (1.0 + distinct_others))
 
+    def _shadow_input_effect(self, target_id: str, relief_dict: Dict[str, float], n_active: int,
+                             notes: Optional[Dict[str, Any]]) -> None:
+        """Record, per (input, representation), the relief this genealogy measured while that input was being processed.
+        READ-ONLY SHADOW, called from `_attribute_consequence`'s own `_apply`, so it records exactly the representations the
+        real attribution credits (a promoted link for a covered pair, individual abilities otherwise; never what it skips),
+        and nothing else.  Changes no measurement or decision.  An attribution that names no input is counted, not guessed.
+        Failure here never affects the observation."""
+        try:
+            input_id = str((notes or {}).get("input_event", "") or "")
+            if not input_id:
+                self._input_effects_unattributed += 1
+                return
+            row = self._input_effects.get((input_id, str(target_id)))
+            if row is None:
+                row = {"n": 0, "relief": {a: 0.0 for a in AXES}, "crowd": 1}
+                self._input_effects[(input_id, str(target_id))] = row
+                while len(self._input_effects) > 4096:
+                    self._input_effects.popitem(last=False)
+            row["n"] += 1
+            row["crowd"] = max(int(row["crowd"]), int(n_active))
+            for a in AXES:
+                row["relief"][a] += float(relief_dict.get(a, 0.0) or 0.0)
+        except Exception:
+            pass
+
+    def input_effects(self, input_id: str) -> List[Dict[str, Any]]:
+        """The shadow's rows for one input (a copy): [{target, n, crowd, relief}] with relief summed over its ticks."""
+        return [{"target": item, "n": r["n"], "crowd": r["crowd"], "relief": dict(r["relief"])}
+                for (inp, item), r in self._input_effects.items() if inp == str(input_id)]
+
     def _attribute_consequence(
         self,
         trace: List[TraceItem],
@@ -4297,6 +4332,7 @@ class ConstraintGenealogyLogger:
         def _apply(target_kind: str, target_id: str, existing_obj: Any, weight: float, tier: str, others_sig_ids: Iterable[str]) -> None:
             if weight <= 0.0:
                 return
+            self._shadow_input_effect(target_id, relief_dict, len(ids), notes)
             declared_axis = str(
                 existing_obj.axis if target_kind == "ability" else (existing_obj.dominant_relief_axis or "X")
             )

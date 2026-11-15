@@ -646,6 +646,24 @@ def consequence_from_relief(record: Any, *, target: str, change: str, attributio
                                **({"measured_by": measured_by} if measured_by else {})})
 
 
+def consequences_from_input_effects(input_event_id: str, rows: Iterable[Mapping[str, Any]], *, t: int = 0,
+                                    measured_by: str = "development") -> List[Dict[str, Any]]:
+    """Evidence events for what one input did, from genealogy's shadow rows ([{target, n, crowd, relief}]; relief summed
+    over the ticks it was measured).  One consequence per (input, representation); the number of ticks is NOT the number of
+    independent consequences.  A representation measured alone is a complete attribution; one measured alongside others is
+    not.  Nothing is computed that genealogy has not measured; the events only carry it in the contract's terms."""
+    out: List[Dict[str, Any]] = []
+    for r in rows:
+        relief = {a: round(float((r.get("relief") or {}).get(a, 0.0) or 0.0), RELIEF_DECIMALS) for a in AXES}
+        peak = max(AXES, key=lambda a: abs(relief[a]))
+        change = "unchanged" if all(v == 0.0 for v in relief.values()) else \
+            f"{'relieved' if relief[peak] > 0 else 'loaded'}:{peak}"
+        c = {"target": str(r["target"]), "change": change, "attribution": [str(input_event_id)],
+             "attribution_complete": int(r.get("crowd", 1) or 1) <= 1, "relief": relief, "measured_by": measured_by}
+        out.append(make_event(f"{r['target']}|relief|-", "observed", t=int(t), nonce=str(input_event_id), consequence=c))
+    return out
+
+
 # -- the live view: how finely a memory is held (directive: finer when it mattered) --------------------------------
 #
 # The full event log is the authority and is never shrunk.  What active cognition holds is a VIEW of it, derived on

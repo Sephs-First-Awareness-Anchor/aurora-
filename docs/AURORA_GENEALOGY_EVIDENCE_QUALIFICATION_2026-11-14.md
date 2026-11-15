@@ -217,6 +217,31 @@ result, but from her existing `relation_provenance` keys, not from this work.)
 What does change her experience is an *effect*, not a disclosure: FIX-A145 means an unattributed claim is not voiced as
 known ("I do not know if Mara likes tea"); that is the consequence of not having been told, not a statement about provenance.
 
+## 3h. Read-only shadow: what each input did to each representation (Sir, 2026-11-14)
+
+* `ConstraintGenealogyLogger._shadow_input_effect` is called from inside `_attribute_consequence`'s own `_apply`, so it
+  records exactly the representations the real attribution credits (a promoted link for a covered pair, individual
+  abilities otherwise; never ids the real one skips or zero-weight ticks), and nothing else. One aggregate per
+  (input, representation) in memory (bounded at 4096): ticks measured, relief summed over them, and how many were
+  active together. An attribution that names no input is counted (`_input_effects_unattributed`), never guessed.
+  **Nothing reads it for any decision, gate, threshold or promotion**; a failure in it never affects the observation.
+* `evidence_qualification.consequences_from_input_effects` turns the rows into contract consequences (one per input and
+  representation; the tick count is not the independent-consequence count; a representation measured alone is a
+  complete attribution, one measured with others is not). Genealogy itself does not import the contract (substrate boundary).
+* **First version was wrong and the live comparison caught it:** it counted every trace id and saw 8 samples where the
+  real attribution added 5 (a covered pair goes to its link; unknown ids and zero-weight ticks are skipped). Moved into `_apply`.
+* **Live, 8 turns:** shadow samples equal the real `consequence_profile` samples added, turn for turn
+  (0, 14, 11, 6, 14, 18, 10, 21), 0 unattributed.
+* **What it shows about impact, with its limits:** relief is now attributable to the input that caused it. The relation
+  between an input's own load and the relief attributed to it is **not clear on these 8 turns** ("What is a noun?",
+  X load 1.0, shows X relief 0.002 and T relief 8.3). Rows are per (input, representation) and share the same tick relief
+  across crowded items, so they are not additive across rows and not comparable across inputs of different trace size. A fair comparison needs
+  per-credited-item normalisation and more turns; I do not claim a correlation.
+* Not persisted (in memory only), not wired to emotion (DER) yet, not read by anything.
+
+Tests: `tests/test_input_effect_shadow.py` (13, including a naturally promoted link and a skipped representation);
+six mutants caught. 787 tests pass across the evidence, identity, genealogy and live-turn suites.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an

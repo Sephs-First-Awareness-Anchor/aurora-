@@ -47,9 +47,18 @@ def run(state_dir):
         finally:
             sys.stdout = real
         calls = []
+        gen_box = {}
         orig = G.observe
 
+        def samples(g):
+            tot = 0
+            for coll in (getattr(g, "abilities", {}), getattr(g, "links", {})):
+                for obj in coll.values():
+                    tot += int((getattr(obj, "consequence_profile", None) or {}).get("samples", 0) or 0)
+            return tot
+
         def observe(self, *a, **kw):
+            gen_box.setdefault("g", self)
             note = ident.note_for_observe()
             calls.append({"named": bool(note), "turn_id": note.get("input_event", ""),
                           "thread": "main" if threading.current_thread() is threading.main_thread() else "background",
@@ -60,7 +69,12 @@ def run(state_dir):
         per_turn = []
         try:
             for text in TURNS:
+                from aurora_internal.aurora_input_pressure import content_axis_loads as _cal
+                loads = _cal(systems.get("perception"), text)
                 n0 = len(calls)
+                g = gen_box.get("g")
+                s0 = samples(g) if g else 0
+                e0 = {k: v["n"] for k, v in getattr(g, "_input_effects", {}).items()} if g else {}
                 real = sys.stdout
                 sys.stdout = io.StringIO()
                 try:
@@ -75,7 +89,16 @@ def run(state_dir):
                          if w in blob]
                 mine = calls[n0:]
                 leaks += [f"id:{c['turn_id']}" for c in mine if c["turn_id"] and c["turn_id"].lower() in blob]
+                g = gen_box.get("g")
+                real_samples = (samples(g) - s0) if g else None
+                shadow = ({k: v["n"] - e0.get(k, 0) for k, v in g._input_effects.items() if v["n"] - e0.get(k, 0)} if g else {})
                 per_turn.append({"text": text, "observe_calls": len(mine), "leaks_in_result": leaks,
+                                 "real_profile_samples_added": real_samples, "shadow_samples": sum(shadow.values()),
+                                 "shadow_pairs": len(shadow),
+                                 "shadow_relief_by_axis": ({ax: round(sum(v["relief"][ax] for k, v in g._input_effects.items()
+                                                                          if k[0] in {c["turn_id"] for c in mine}), 3)
+                                                            for ax in ("X", "T", "N", "B", "A")} if g else None),
+                                 "input_loads": loads,
                                  "named": sum(c["named"] for c in mine),
                                  "by_thread": dict(collections.Counter((c["thread"], c["named"]) .__repr__() for c in mine))})
         finally:
@@ -83,7 +106,8 @@ def run(state_dir):
         tot = len(calls)
         return {"turns": per_turn, "total_observe": tot, "named": sum(c["named"] for c in calls),
                 "distinct_turn_ids": len({c["turn_id"] for c in calls if c["turn_id"]}),
-                "background_calls": sum(c["thread"] == "background" for c in calls)}
+                "background_calls": sum(c["thread"] == "background" for c in calls),
+                "unattributed_shadow": getattr(gen_box.get("g"), "_input_effects_unattributed", None)}
     finally:
         shutil.rmtree(scratch_root, ignore_errors=True)
 
