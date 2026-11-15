@@ -159,3 +159,15 @@ Promotion is not a count on one crystal. When related or commonly occurring crys
 No degree is compared with a cut-off (checked by an AST test). Counted evidence only. Snapshot: 7 of 668 concepts classify a group (force, bird, together, intelligent, marsupial, friendly, project), all low, because the `is_a` skeleton is mostly uncounted; this rises as `conversation` evidence arrives.
 
 Authors: Sunni (Sir) Morningstar and Cael Devo.
+
+## P3c. Growth follows counted evidence (Sir, 2026-11-15)
+
+`Crystal.maturity` holds the seven points as degrees, filled from counted evidence only by `crystal_weave.apply_maturity` (association from counted ties, abstraction from distinct contexts, recurrence from distinct sessions, cognitive from consequences shown outside her own simulation, recursive from how far the members it holds have grown). `Crystal.can_evolve` then asks whether the crystal belongs more to the next level than not (`crystal_maturity.ready_to_grow`, `s > 1 - s`); facet and usage counts are not consulted. A crystal nobody has woven yet keeps the earlier count rule, except that weave-placed `fk:` facets never count toward it. Trial on a copy of her state before this change: 49 crystals flipped to evolvable from facet count alone.
+
+## P6. Function words under joined generalizations (Sir, 2026-11-15)
+
+`aurora_internal/crystal_grammar.py` turns her three lexical records into association evidence, each at the standing it earned: the hand-authored role lookup (`_WORD_ROLES`, 119 words, 18 groups) is kept and **not counted**; word classes she finds herself (`LexicalStructure`) count at the degree their re-finding earns; grounding families (`AuroraLexicalGrounding`) count only through evidence earned by consequence. A role group falls into the class that holds it by the share of it covered, so groups of different roles that behave alike become one generalization, which `crystal_promotion` then promotes. No English gloss is stored as meaning.
+
+Snapshot: 131 scaffold links, 0 counted. The 12 grounding candidates carry no earned evidence and no word class has been found. Cause to address next: `LexicalStructure` builds profiles from distinctive followers (PMI beyond chance) and says outright that diffuse words carry no profile, so function words, the most diffuse words there are, can never form a class that way. They need a substitutability signal (shared left and right contexts), not a distinctive-follower one.
+
+Authors: Sunni (Sir) Morningstar and Cael Devo.

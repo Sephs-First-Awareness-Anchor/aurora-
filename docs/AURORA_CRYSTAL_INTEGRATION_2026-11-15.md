@@ -51,3 +51,9 @@
 Added `crystal_promotion.py` (12 tests, 10 mutants killed, `scripts/measure_crystal_promotion.py`). Not wired into the running system. It reads the same `AssociationStore` as the other crystal modules and its level is the generalization's, while P3 stays the crystal's own standing. See plan doc, P3b.
 
 Authors: Sunni (Sir) Morningstar and Cael Devo.
+
+## Evidence-based growth, turn id, function words
+
+Added: `turn_id` on conversation memory entries (joined by id, never the clock), `Crystal.maturity` and the evidence-based `can_evolve`, `crystal_weave.apply_maturity`, `crystal_grammar`, `scripts/trial_crystal_writers.py`, `scripts/measure_crystal_grammar.py`. These are on `ceph/crystal-integration-20261115`, not main. See plan doc P3c and P6.
+
+Authors: Sunni (Sir) Morningstar and Cael Devo.
