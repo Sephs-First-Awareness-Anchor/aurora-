@@ -45,3 +45,9 @@
 1. (Answered: operations live in the same crystals as the concepts they were exercised on.)
 2. (Answered by Sir, 2026-11-15: conversations are her lived experiential history; she witnesses them or is told, from either conversational position, including when rehearsing. Said TO her is told; what she herself said she witnessed; both count. A relation learned in conversation is told. Built: `place_conversation`.)
 3. Wiring: this branch changes nothing live. Which writer, if any, runs first on a copy of state?
+
+## Promotion by group classification
+
+Added `crystal_promotion.py` (12 tests, 10 mutants killed, `scripts/measure_crystal_promotion.py`). Not wired into the running system. It reads the same `AssociationStore` as the other crystal modules and its level is the generalization's, while P3 stays the crystal's own standing. See plan doc, P3b.
+
+Authors: Sunni (Sir) Morningstar and Cael Devo.

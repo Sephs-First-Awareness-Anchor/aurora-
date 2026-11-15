@@ -146,3 +146,16 @@ real outcomes. Last, because it depends on everything above.
 
 Contents of `Full Crystal System Realized Potential.zip`, `Core_Crystal_Systems.py` and `unified_crystal_engine.py` beyond their openings; the live device state (this is the repository snapshot);
 whether the 8 surface facets and the 9th nexus exist anywhere in the live code beyond what was grepped.
+
+## P3b. Promotion by associative group classification (Sir, 2026-11-15)
+
+Promotion is not a count on one crystal. When related or commonly occurring crystals can be classified by a single generalization, that generalization promotes to a higher-level crystal under it. `aurora_internal/crystal_promotion.py` (isolated, read-only):
+
+- `classification(store, g)`: crystals classified under g. What g holds as `is_a` at the strength held; peers (tied to the same things, never said to be one) in proportion to how closely their associations match the group's. The group's attributes are not members.
+- `unity(store, members, leave_out, weights)`: how closely members' associations match, leaving out g itself, weighted by classification.
+- `promotion_degree(store, g)`: `mass/(mass+5)` x unity. More members, stronger classification and greater likeness raise it; a heterogeneous or lone group stays low.
+- `level_under(store, g, levels)`: `1 + degree x mean member level`, clamped to 4, so a generalization sits above its members by its degree.
+
+No degree is compared with a cut-off (checked by an AST test). Counted evidence only. Snapshot: 7 of 668 concepts classify a group (force, bird, together, intelligent, marsupial, friendly, project), all low, because the `is_a` skeleton is mostly uncounted; this rises as `conversation` evidence arrives.
+
+Authors: Sunni (Sir) Morningstar and Cael Devo.
