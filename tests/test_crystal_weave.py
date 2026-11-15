@@ -113,6 +113,79 @@ def test_a_dreamed_imagined_simulated_or_overheard_rehearsal_is_kept_and_earns_n
     assert basis == ("overheard" if occ == "overheard" else "supposed")                 # kept for what it is, not as an unknown
 
 
+# -- conversations are lived history, from either position ---------------------------------------------------------------------------------------
+
+ENTRY = {"timestamp": 100.0, "session_id": "s1", "user_said": "My name is Sunni, nice to meet you!", "aurora_said": "I wonder about the bright mind.",
+         "topic": "creator", "emotional_tone": "playful", "importance": 0.8}
+
+
+def test_what_was_said_to_her_is_told_and_what_she_said_she_witnessed_and_both_count():
+    b = F.FacetBook()
+    assert W.place_conversation(b, [ENTRY], ["sunni", "mind", "tea"]) == 2
+    s = b._e["sunni"]["episode_ref"]["s1:100"]["evidence"]["conv:s1:100:heard:sunni"]
+    m = b._e["mind"]["episode_ref"]["s1:100"]["evidence"]["conv:s1:100:spoke:mind"]
+    assert s["basis"] == "told" and m["basis"] == "observed" and s["context"] == {"session": "s1", "topic": "creator", "tone": "playful"}
+    assert b.degree("sunni", "episode_ref", "s1:100") == pytest.approx(0.8) and b.degree("mind", "episode_ref", "s1:100") == pytest.approx(0.8)
+    assert "tea" not in b.concepts()
+
+
+def test_the_conversation_is_held_as_a_reference_not_a_copy_and_twice_is_once():
+    b = F.FacetBook()
+    long = dict(ENTRY, user_said="sunni " + "word " * 200)
+    W.place_conversation(b, [long], ["sunni"])
+    assert len(b.facets_for("sunni")["episode_ref"][0]["content"]["summary"]) <= 160
+    t = b.totals()
+    W.place_conversation(b, [long], ["sunni"])
+    assert b.totals() == t
+
+
+def test_how_much_a_conversation_weighs_follows_its_importance_and_an_unrecorded_one_is_full():
+    ds = []
+    for imp in (0.1, 0.5, 0.9, None):
+        b = F.FacetBook()
+        W.place_conversation(b, [dict(ENTRY, importance=imp)], ["sunni"])
+        ds.append(b.degree("sunni", "episode_ref", "s1:100"))
+    assert ds == [pytest.approx(0.1), pytest.approx(0.5), pytest.approx(0.9), pytest.approx(1.0)]
+    assert W.place_conversation(F.FacetBook(), [{"user_said": "sunni"}], ["sunni"]) == 0         # no time: no identity, nothing placed
+
+
+def test_a_word_is_matched_as_a_whole_word_not_inside_another():
+    b = F.FacetBook()
+    W.place_conversation(b, [dict(ENTRY, user_said="a mindful teacup", aurora_said="")], ["mind", "tea", "cup"])
+    assert b.concepts() == []                                                    # mindful, teacup: not mind, tea, cup
+
+
+def test_a_relation_learned_in_conversation_is_told():
+    s = AssociationStore()
+    s.add("a", "b", "is_a", ref="1", source="conversation", strength=0.9)
+    assert s.strength("a", "b", "is_a") == pytest.approx(0.9)
+
+
+# -- where and when a representation developed, and what was associated -------------------------------------------------------------------------
+
+LINK = {"parents": ["NC:N>N", "NC:N>T"], "created_at_tick": 65, "depth": 1, "dominant_relief_axis": "X",
+        "semantic_identity": {"operation_lineage": "OP:1", "origin_signature": "T^1*N^3"}}
+
+
+def test_a_development_carries_where_when_what_and_what_it_was_made_from():
+    b = F.FacetBook()
+    e = Q.make_event("input|turn9|-", occurrence="heard", t=500, nonce="x")
+    assert W.place_development(b, ["sunni", "tea"], rep_id="L:1", record=LINK, input_event=e, associated=["NC:T>N", "cup"], consequence=CONS) == 2
+    row = b.facets_for("tea")["operation"][0]
+    assert row["content"] == {"id": "L:1", "parents": ["NC:N>N", "NC:N>T"], "operation_lineage": "OP:1", "signature": "T^1*N^3", "dominant_relief_axis": "X"}
+    ev = next(iter(b._e["tea"]["operation"]["L:1"]["evidence"].values()))
+    assert ev["context"] == {"developed_at_tick": 65, "input_time": 500, "depth": 1, "associated": ["NC:T>N", "cup"]}
+    assert ev["ancestry"] == ["NC:N>N", "NC:N>T", e["id"]] and ev["basis"] == "observed"
+
+
+def test_the_inputs_of_a_ledger_row_join_to_the_concepts_of_their_turns_and_nothing_is_guessed():
+    row = {"by": {"lived": {"inputs": ["i1", "i2"]}, "hypothetical": {"inputs": ["i3"]}}}
+    events = {"i1": {"subject": "input|turnA|-"}, "i2": {"subject": "input|turnB|-"}, "i3": {"subject": "input|turnA|-"}}
+    got = W.concepts_of_inputs(row, events, {"turnA": ["sunni", "tea"]})
+    assert got == {"i1": ["sunni", "tea"], "i3": ["sunni", "tea"]}                  # turnB is unknown to the join: left out
+    assert W.concepts_of_inputs(row, {"i1": {"subject": "weird"}}, {"turnA": ["x"]}) == {}
+
+
 # -- a waveform cycle's operations ------------------------------------------------------------------------------------------------------------------
 
 def wcycle(admitted=False, **kw):
@@ -210,6 +283,15 @@ def test_weaving_a_state_directory_reads_every_store_and_changes_none(tmp_path):
     assert s["oets"] == {"nodes": 1, "relations": 2} and s["genealogy"] == {"pairs": 3, "links": 2, "links_with_qualification": 1}
     assert r["book"].facets_for("tea")["particular" if False else "generalization"][0]["content"]["other"] == "drink"
     assert r["book"].facets_for("A")["relation"] and r["store"].strength("A", "B", "used_with") > 0
+
+
+def test_weaving_includes_the_conversations_from_either_position(tmp_path):
+    import json
+    d = state(tmp_path)
+    (tmp_path / "aurora_conversation_memory.json").write_text(json.dumps({"entries": [dict(ENTRY, user_said="a nice tea", aurora_said="the cup is warm")]}))
+    r = W.weave(d)
+    assert r["summary"]["conversations"] == {"records": 1, "placements": 2}
+    assert r["book"].degree("tea", "episode_ref", "s1:100") == pytest.approx(0.8) and r["book"].degree("cup", "episode_ref", "s1:100") == pytest.approx(0.8)
 
 
 def test_a_missing_state_directory_weaves_nothing_rather_than_failing(tmp_path):

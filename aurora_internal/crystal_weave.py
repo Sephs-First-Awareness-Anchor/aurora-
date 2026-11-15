@@ -44,7 +44,8 @@ def place_event(book: _F.FacetBook, concept: str, kind: str, key: str, content: 
 
 
 def place_exercise(book: _F.FacetBook, concepts: Iterable[str], *, ability_id: str, input_event: Mapping[str, Any],
-                   consequence: Optional[Mapping[str, Any]] = None, ancestry: Iterable[str] = ()) -> int:
+                   consequence: Optional[Mapping[str, Any]] = None, ancestry: Iterable[str] = (), where: Optional[Mapping[str, Any]] = None,
+                   content: Optional[Mapping[str, Any]] = None) -> int:
     """She exercised an operation (an ability or a promoted link) while dealing with some concepts: it lands as an `operation` entry in the crystal of EACH of
     those concepts, in the same crystals as everything else about them, never in crystals of its own.  Each distinct input is one occasion, worth one
     exposure, so more occasions mean more.  How it counts follows how the input happened to her: a lived input (heard, read, perceived, acted, tested)
@@ -62,10 +63,66 @@ def place_exercise(book: _F.FacetBook, concepts: Iterable[str], *, ability_id: s
         basis = "unknown"
     n = 0
     for c in concepts:
-        n += bool(book.add(c, "operation", str(ability_id), {"id": str(ability_id)}, ref=f"exercise:{ability_id}:{input_event['id']}:{c}", source=occ,
-                           basis=basis, strength=PAIR_EXPOSURE, occurrence_class=occ, context=input_event.get("context"), consequence=consequence,
+        ctx = dict(input_event.get("context") or {})
+        ctx.update(dict(where or {}))                      # where and when it developed, and what was associated with it then
+        n += bool(book.add(c, "operation", str(ability_id), {"id": str(ability_id), **dict(content or {})},
+                           ref=f"exercise:{ability_id}:{input_event['id']}:{c}", source=occ,
+                           basis=basis, strength=PAIR_EXPOSURE, occurrence_class=occ, context=ctx or None, consequence=consequence,
                            ancestry=list(ancestry) + [str(input_event["id"])]))
     return n
+
+
+def place_conversation(book: _F.FacetBook, entries: Iterable[Mapping[str, Any]], known_concepts: Iterable[str]) -> int:
+    """Conversations are her lived experiential history, and she is in them from either position (Sir, 2026-11-15): what was said TO her is told, what she
+    herself said she witnessed.  Each record becomes an `episode_ref` (id, time, short summary) at every known concept either side mentioned, once, with
+    each occasion attached; the record's own importance is how strongly it weighs, and its tone, topic and session are its context.  The text is not copied."""
+    known = {str(c).lower(): str(c) for c in known_concepts}
+    n = 0
+    for e in entries:
+        ts, sess = e.get("timestamp"), str(e.get("session_id") or "")
+        eid = f"{sess}:{int(ts)}" if ts is not None else ""
+        if not eid:
+            continue
+        weight = e.get("importance")
+        weight = 1.0 if weight is None else max(0.0, min(1.0, float(weight)))
+        ctx = {"session": sess, "topic": e.get("topic"), "tone": e.get("emotional_tone")}
+        for position, field, basis in (("heard", "user_said", "told"), ("spoke", "aurora_said", "observed")):
+            text = str(e.get(field) or "")
+            words = {w.strip(".,!?;:\"'()").lower() for w in text.split()}
+            for w in sorted(words & set(known)):
+                n += bool(book.add(known[w], "episode_ref", eid, {"id": eid, "time": ts, "summary": text[:160]}, ref=f"conv:{eid}:{position}:{known[w]}",
+                                   source="conversation", basis=basis, strength=weight, occurrence_class=position, context=ctx))
+    return n
+
+
+def place_development(book: _F.FacetBook, concepts: Iterable[str], *, rep_id: str, record: Mapping[str, Any], input_event: Mapping[str, Any],
+                      associated: Iterable[str] = (), consequence: Optional[Mapping[str, Any]] = None) -> int:
+    """A representation (an ability or a promoted link) attaches to the crystals of the concepts it developed among, with where and when it developed (the
+    tick and time it was made, the input that exercised it), the operation it is (its lineage and signature), what it was made from (its parents are its
+    ancestry), and the associated information present when it did (`associated`: the other representations and concepts it co-occurred with)."""
+    sem = record.get("semantic_identity") or {}
+    where = {"developed_at_tick": record.get("created_at_tick"), "input_time": input_event.get("t"), "depth": record.get("depth"),
+             "associated": sorted(str(a) for a in associated)}
+    content = {"parents": [str(p) for p in record.get("parents") or []], "operation_lineage": sem.get("operation_lineage"),
+               "signature": sem.get("origin_signature"), "dominant_relief_axis": record.get("dominant_relief_axis")}
+    return place_exercise(book, concepts, ability_id=rep_id, input_event=input_event, consequence=consequence,
+                          ancestry=[str(p) for p in record.get("parents") or []], where=where, content=content)
+
+
+def concepts_of_inputs(ledger_row: Mapping[str, Any], input_events: Mapping[str, Mapping[str, Any]],
+                       turn_concepts: Mapping[str, Iterable[str]]) -> Dict[str, List[str]]:
+    """For one representation's ledger row: input id -> the concepts of the turn that input was.  An input whose turn is not in `turn_concepts` is left
+    out (no join is guessed from the clock); the turn id is read from the input event's subject, `input|<turn>|-`."""
+    out: Dict[str, List[str]] = {}
+    for cls in (ledger_row.get("by") or {}).values():
+        for iid in cls.get("inputs") or []:
+            subject = str((input_events.get(iid) or {}).get("subject", ""))
+            parts = subject.split("|")
+            turn = parts[1] if len(parts) == 3 and parts[0] == "input" else ""
+            cs = list(turn_concepts.get(turn) or [])
+            if cs:
+                out[iid] = cs
+    return out
 
 
 def place_cycle_operations(book: _F.FacetBook, cycle: Mapping[str, Any], *, occurrence_class: str = "") -> int:
@@ -136,6 +193,9 @@ def weave(state_dir: str) -> Dict[str, Any]:
     genealogy_associations(pairs, links, store)
     summary["genealogy"] = {"pairs": len(pairs), "links": len(links), "links_with_qualification": sum(1 for v in links.values() if v.get("evidence_qualification"))}
     _F.place_associations(book, store)
+    mem = _read(state_dir, "aurora_conversation_memory.json") or {}
+    summary["conversations"] = {"records": len(mem.get("entries") or []),
+                                "placements": place_conversation(book, mem.get("entries") or [], list((web.get("nodes") or {}).keys()))}
     cyc = (_read(state_dir, "recursive_causal_reasoning_waveform.json") or {}).get("active_cycle") or {}
     summary["waveform_cycle"] = _F.place_cycle(book, cyc, occurrence_class="") if cyc else None
     summary["waveform_operations"] = place_cycle_operations(book, cyc, occurrence_class="") if cyc else 0

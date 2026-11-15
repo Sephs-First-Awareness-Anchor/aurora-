@@ -218,7 +218,7 @@ def place_oets_node(book: FacetBook, node: Mapping[str, Any]) -> int:
                                context=ctx, consequence=x.get("fitness")))
         elif ctx in ("conversation", "interaction"):          # a turn she met the word in: held as a reference, once, with every time attached
             n += bool(book.add(word, "episode_ref", k, {"id": k, "time": x.get("timestamp"), "summary": text[:160]}, ref=ref, source=x.get("source", ""),
-                               context=ctx))
+                               basis="observed", context=ctx))   # a conversation she was in: witnessed (Sir, 2026-11-15)
         else:                                                    # clarification and axis embodiment are examples of the word's meaning
             n += bool(book.add(word, "example", k, {"text": text, "context": ctx}, ref=ref, source=x.get("source", ""), context=ctx))
     if node.get("emotional_valence"):

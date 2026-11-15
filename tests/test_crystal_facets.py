@@ -360,6 +360,7 @@ def test_recorded_uses_go_where_they_belong_and_repeats_attach_to_one_entry():
     F.place_oets_node(b, node)
     k = b.facets_for("honesty", include_uncounted=True)
     assert [r["contexts"] for r in k["episode_ref"]] == [3] and len(k["episode_ref"]) == 1       # one entry, three times met
+    assert k["episode_ref"][0]["degree"] > 0.0 and b.facets_for("honesty")["episode_ref"]            # a conversation she was in was witnessed: it counts
     assert k["expression"][0]["contexts"] == 1 and "example" in k and set(k) == {"episode_ref", "expression", "example"}
     ev = next(iter(b._e["honesty"]["expression"].values()))["evidence"]
     assert next(iter(ev.values()))["consequence"] == 0.86
