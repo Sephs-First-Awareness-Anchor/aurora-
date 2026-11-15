@@ -68,12 +68,13 @@ OCCURRENCES: Dict[str, Set[str]] = {
     "imagined": {SUPPOSED},
     "simulated": {SUPPOSED},
     "dreamed": {SUPPOSED},
+    "overheard": {UNKNOWN},        # said near her, not to her and not with her: a lead she may follow, never testimony
     "recalled": set(BASES),
 }
 DEFAULT_BASIS: Dict[str, str] = {
     "heard": TOLD, "read": TOLD, "perceived": OBSERVED, "acted": OBSERVED, "tested": OBSERVED,
-    "derived": INFERRED, "imagined": SUPPOSED, "simulated": SUPPOSED, "dreamed": SUPPOSED}
-LIVED = frozenset({"heard", "read", "perceived", "acted", "tested"})        # happened to her in the world
+    "derived": INFERRED, "imagined": SUPPOSED, "simulated": SUPPOSED, "dreamed": SUPPOSED, "overheard": UNKNOWN}
+LIVED = frozenset({"heard", "read", "perceived", "acted", "tested", "overheard"})   # happened to her in the world
 HYPOTHETICAL = frozenset({"imagined", "simulated", "dreamed"})              # real events; imagined worlds
 NON_EVIDENCE = frozenset({"recalled"})                                       # a recollection adds no evidence
 WORLDS = ("external", "internal", "simulated", "dreamed", "imagined")
@@ -93,6 +94,15 @@ OCCURRENCE_OF_STREAM: Dict[str, str] = {
     "simulation": "simulated", "dream": "dreamed", "synthetic_lineage": "derived"}
 OCCURRENCE_OF_INTERNAL_ORIGIN: Dict[str, str] = {"dream_replay": "dreamed"}
 
+# TOLD MEANS ADDRESSED OR DIRECTLY INVOLVED (Sir, 2026-11-14).  Speech said to her, or in a conversation she is a
+# participant in, is testimony.  Speech she merely overhears (a television, a podcast, other people's conversation,
+# talk ABOUT her that she is not part of) is information gathered through curiosity: it is recorded as an occurrence
+# that happened to her ("overheard") but its content is never held as true.  It becomes held only when it is
+# confirmed through the told route, i.e. when someone addresses it to her, which is then an ordinary told event.
+# The address comes from the listener that heard it (aurora_daemon._classify_ambient: direct / mention / ambient).
+OVERHEARD_ADDRESSES = ("mention", "ambient")
+ADDRESSED = ("direct",)
+
 
 class EvidenceConflict(ValueError):
     """Two events with the same id say different things.  Neither is dropped; the caller must decide."""
@@ -103,6 +113,22 @@ def occurrence_of_stream(stream_type: str, internal_origin: str = "") -> str:
     stream is "" (unspecified): the producer did not say, and that stays visible; it is not guessed."""
     origin = OCCURRENCE_OF_INTERNAL_ORIGIN.get(str(internal_origin or ""))
     return origin or OCCURRENCE_OF_STREAM.get(str(stream_type or ""), "")
+
+
+def occurrence_of_address(address: str, stream_type: str = "", internal_origin: str = "") -> str:
+    """Occurrence of a heard utterance given how it was addressed.  `direct` is `heard` (testimony); `mention` and
+    `ambient` are `overheard`.  An address the listener did not give ("" or unrecognised) changes nothing: the stream's
+    own occurrence stands, and nothing is guessed.  Only speech is re-read by address: a read, perceived, simulated
+    or dreamed origin keeps its own occurrence."""
+    base = occurrence_of_stream(stream_type, internal_origin)
+    address = str(address or "").strip().lower()
+    if base not in ("", "heard"):
+        return base
+    if address in OVERHEARD_ADDRESSES:
+        return "overheard"
+    if address in ADDRESSED:
+        return "heard"
+    return base
 
 
 def _clean_basis(basis: Any) -> str:
@@ -384,6 +410,8 @@ def qualification(rec: Mapping[str, Any]) -> Dict[str, Any]:
         "corrected": bool(settled),
         "hypothetical_only": n == 0 and supposed > 0,
         "inferred_only": n == 0 and supposed == 0 and inferred > 0,
+        "overheard_only": n == 0 and int((rec.get("occurrence") or {}).get("overheard", 0) or 0) > 0,
+        "overheard_confirmed": n > 0 and int((rec.get("occurrence") or {}).get("overheard", 0) or 0) > 0,
     }
 
 

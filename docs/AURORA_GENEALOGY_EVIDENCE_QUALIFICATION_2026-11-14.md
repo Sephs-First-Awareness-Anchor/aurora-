@@ -143,6 +143,27 @@ Tests: `tests/test_evidence_input_impact.py` (115, using the real `content_axis_
 **Not done:** no live producer. The proposed next step is a read-only shadow producer through
 `_attribute_consequence`, after turn/input identity is added to the observe note (both are Stage D, separate commits).
 
+## 3e. Told versus overheard (Sir, 2026-11-14)
+
+Rule from Sir: *told* means addressed or directly involved; *overheard* is information gathered through curiosity and is
+never held as truth unless it is confirmed through the told route.
+
+* New occurrence `overheard` (a real, lived event: it happened to her) whose only allowed basis is `unknown`. It never
+  counts: any amount of it leaves `n == 0` and the verdict `unsaid`; an overheard denial does not deny and an overheard
+  correction does not correct. `qualification` reports `overheard_only` (a lead, never a fact) and `overheard_confirmed`
+  (a lead that someone later told her, as an ordinary told event, optionally citing the overheard event in its ancestry).
+* `occurrence_of_address(address, stream_type, internal_origin)`: `direct` is `heard` (testimony); `mention` and `ambient`
+  are `overheard`. Only speech is re-read by address; read, perceived, simulated and dreamed origins keep their own
+  occurrence. A missing or unrecognised address changes nothing (not guessed).
+* Decision for Sir: I put `mention` (speech about her that she is not part of) with `overheard`. If you count being
+  talked about as "directly involved", it is a one-word change in `OVERHEARD_ADDRESSES`.
+* Live finding: the daemon's ambient listener already classifies speech (`_classify_ambient`: direct / mention / ambient) but
+  passes it to working memory as `"[ambient:<class>] text"`. Measured: that tagging currently keeps ambient and mention speech out of
+  `stated_facts` (the same sentence untagged is learned). That is a protection by tag, not by rule, so
+  `tests/test_evidence_overheard.py` pins it. The address is **not yet** passed to the evidence layer; nothing in the daemon was changed.
+
+Tests: `tests/test_evidence_overheard.py` (67); seven mutants caught.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an
