@@ -290,8 +290,8 @@ def test_weaving_includes_the_conversations_from_either_position(tmp_path):
     d = state(tmp_path)
     (tmp_path / "aurora_conversation_memory.json").write_text(json.dumps({"entries": [dict(ENTRY, user_said="a nice tea", aurora_said="the cup is warm")]}))
     r = W.weave(d)
-    assert r["summary"]["conversations"] == {"records": 1, "placements": 2}
-    assert r["book"].degree("tea", "episode_ref", "s1:100") == pytest.approx(0.8) and r["book"].degree("cup", "episode_ref", "s1:100") == pytest.approx(0.8)
+    assert r["summary"]["conversations"] == {"records": 1, "placements": 1}                      # only `tea` is a known concept here; `cup` is not
+    assert r["book"].degree("tea", "episode_ref", "s1:100") == pytest.approx(0.8) and "episode_ref" not in r["book"].facets_for("cup", include_uncounted=True)
 
 
 def test_a_missing_state_directory_weaves_nothing_rather_than_failing(tmp_path):
