@@ -49,8 +49,9 @@ def test_an_unrecognised_basis_is_unknown_kept_and_never_upgraded_to_told():
     assert ev["basis"] == "unknown"
     rec = Q.fold([ev])
     assert rec["n"] == 0 and rec["unknown"] == 1 and Q.verdict(rec) == "unsaid"
-    assert Q.basis_of_stream("telepathy") == "unknown" and Q.basis_of_stream("") == "unknown"
-    assert Q.basis_of_stream("dream") == "supposed" and Q.basis_of_stream("user_input") == "observed"
+    # the stream says where it ORIGINATED, not how its contents are supported (directive VI)
+    assert Q.occurrence_of_stream("telepathy") == "" and Q.occurrence_of_stream("") == ""
+    assert Q.occurrence_of_stream("dream") == "dreamed" and Q.occurrence_of_stream("user_input") == "heard"
 
 
 # -- contradicted and corrected -------------------------------------------------------------------------------
