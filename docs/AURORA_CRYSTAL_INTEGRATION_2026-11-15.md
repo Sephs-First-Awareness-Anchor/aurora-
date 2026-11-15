@@ -30,6 +30,10 @@
 * Operations are not a separate kind of crystal (Sir, 2026-11-15): they are part of her lived history and live in the same crystals as the concepts she was dealing with when she exercised them. `place_exercise` places an operation entry in each of those concepts' crystals, one occasion per distinct input. What the genealogy's own ids (`NC:...`, `X:ADMIT`, `L:...`) need is the route from a credited input to the concepts of that turn; the pair ledger keeps the input ids, the conversation records keep the turn, and joining them is the next step. Until then the genealogy associations stay among representations, with no crystal to receive them.
 * Usage examples and valence carry no recorded occurrence, so they stay uncounted; the input-identity work records it from now on.
 
+## P0 answered: the waveform state Sir uploaded (2026-11-15)
+
+`recursive_causal_reasoning_waveform.json` and `_history.jsonl` hold exactly one cycle (`RCRW:c984155b81ae1ff0`, created 2026-08-22 08:47 UTC), identical to the file in the repository snapshot. Its raw input is empty, its effective relation has no subject, relation or object, completeness 0.25, response "I am tones"; promoted, trial and dissolved wavelets are all 0, and its representation experiment was not admitted as evidence (`inconclusive_causal_measurement`). So there is no recorded waveform history to climb from yet: either the waveform has run once (a probe) on this state, or live turns are not being recorded to it. Nothing placed from it, correctly. When a cycle does develop a relation, `place_cycle` places the relation at both concepts, an episode reference and what she said with its alignment, and `place_cycle_operations` places the operations that parented it in the same crystals, counted only if the cycle's own experiment was admitted.
+
 ## Decisions for Sir
 
 1. (Answered: operations live in the same crystals as the concepts they were exercised on.)

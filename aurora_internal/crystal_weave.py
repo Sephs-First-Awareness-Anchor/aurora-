@@ -68,6 +68,27 @@ def place_exercise(book: _F.FacetBook, concepts: Iterable[str], *, ability_id: s
     return n
 
 
+def place_cycle_operations(book: _F.FacetBook, cycle: Mapping[str, Any], *, occurrence_class: str = "") -> int:
+    """The operations that parented a waveform cycle's developed understanding (`genealogy_trace.parent_operation_ids`) land in the crystals of the concepts
+    that understanding was about (the subject and object of its effective relation), the cycle being the input.  The cycle's own admission rule decides
+    whether its effect was witnessed: a consequence is attached only when `representation_experiment_result.evidence_admitted` is true; otherwise the
+    operation is kept and not counted.  A cycle with no developed relation has no concepts to attach to and places nothing."""
+    eff = cycle.get("effective_interpretation") or {}
+    concepts = [c for c in (str(eff.get("subject") or ""), str(eff.get("obj") or "")) if c]
+    cid = str(cycle.get("cycle_id") or "")
+    if not (cid and concepts and str(eff.get("relation") or "")):
+        return 0
+    res = cycle.get("representation_experiment_result") or {}
+    ctrl = cycle.get("representation_experiment_control") or {}
+    consequence = ({"target": "representation_relation", "change": str(res.get("status") or ""), "marginal_l1": ctrl.get("marginal_l1")}
+                   if res.get("evidence_admitted") else None)
+    event = {"id": cid, "occurrence": occurrence_class}
+    n = 0
+    for op in (cycle.get("genealogy_trace") or {}).get("parent_operation_ids") or []:
+        n += place_exercise(book, concepts, ability_id=str(op), input_event=event, consequence=consequence)
+    return n
+
+
 def genealogy_associations(pair_stats: Mapping[str, Mapping[str, Any]], links: Mapping[str, Mapping[str, Any]],
                            store: Optional[AssociationStore] = None) -> AssociationStore:
     """Representations used together become `used_with` associations by recurrence (each pair's observed count, each exposure weak); a promoted link is
@@ -117,6 +138,7 @@ def weave(state_dir: str) -> Dict[str, Any]:
     _F.place_associations(book, store)
     cyc = (_read(state_dir, "recursive_causal_reasoning_waveform.json") or {}).get("active_cycle") or {}
     summary["waveform_cycle"] = _F.place_cycle(book, cyc, occurrence_class="") if cyc else None
+    summary["waveform_operations"] = place_cycle_operations(book, cyc, occurrence_class="") if cyc else 0
     summary["book"] = book.totals()
     summary["associations"] = {"records": len(store), "basis_counts": store.basis_counts()}
     return {"book": book, "store": store, "summary": summary}

@@ -113,6 +113,40 @@ def test_a_dreamed_imagined_simulated_or_overheard_rehearsal_is_kept_and_earns_n
     assert basis == ("overheard" if occ == "overheard" else "supposed")                 # kept for what it is, not as an unknown
 
 
+# -- a waveform cycle's operations ------------------------------------------------------------------------------------------------------------------
+
+def wcycle(admitted=False, **kw):
+    c = {"cycle_id": "RCRW:c1", "effective_interpretation": {"subject": "sunni", "relation": "make", "obj": "aurora"},
+         "genealogy_trace": {"parent_operation_ids": ["A:CHOOSE", "REFAB:N:OPERATOR:A"]},
+         "representation_experiment_result": {"evidence_admitted": admitted, "status": "measured"}, "representation_experiment_control": {"marginal_l1": 0.4}}
+    c.update(kw)
+    return c
+
+
+def test_the_operations_that_parented_a_cycle_land_in_the_crystals_of_what_it_was_about():
+    b = F.FacetBook()
+    assert W.place_cycle_operations(b, wcycle(admitted=True), occurrence_class="heard") == 4
+    assert set(b.concepts()) == {"sunni", "aurora"} and set(b.facets_for("sunni")["operation"][0]["content"]) == {"id"}
+    assert {r["content"]["id"] for r in b.facets_for("sunni")["operation"]} == {"A:CHOOSE", "REFAB:N:OPERATOR:A"}
+
+
+def test_a_cycle_whose_experiment_was_not_admitted_keeps_its_operations_uncounted():
+    b = F.FacetBook()
+    W.place_cycle_operations(b, wcycle(admitted=False), occurrence_class="heard")
+    assert b.facets_for("sunni") == {} and b.totals()["occasions"] == 4
+    b2 = F.FacetBook()
+    W.place_cycle_operations(b2, wcycle(admitted=True), occurrence_class="dreamed")
+    assert b2.facets_for("sunni") == {}
+
+
+def test_a_cycle_with_no_developed_relation_places_no_operations():
+    b = F.FacetBook()
+    assert W.place_cycle_operations(b, wcycle(effective_interpretation={"subject": "sunni", "relation": "", "obj": ""}), occurrence_class="heard") == 0 and b.totals()["entries"] == 0
+    assert W.place_cycle_operations(b, wcycle(effective_interpretation={"subject": "", "relation": "", "obj": ""}), occurrence_class="heard") == 0
+    assert W.place_cycle_operations(b, wcycle(effective_interpretation={"subject": "", "relation": "make", "obj": ""}), occurrence_class="heard") == 0
+    assert W.place_cycle_operations(b, wcycle(cycle_id=""), occurrence_class="heard") == 0
+
+
 # -- the genealogy as associations --------------------------------------------------------------------------------------------------------------
 
 PAIRS = {"A|B": {"left_id": "A", "right_id": "B", "count": 22}, "A|C": {"left_id": "A", "right_id": "C", "count": 1}, "X|Y": {"left_id": "X", "right_id": "Y", "count": 0}}
