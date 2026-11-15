@@ -64,14 +64,18 @@ def run(state_dir):
                 real = sys.stdout
                 sys.stdout = io.StringIO()
                 try:
-                    aurora.process_external_user_turn(
+                    result = aurora.process_external_user_turn(
                         systems, text, source_label="flutter_ui", session_id="attr", auto_search_enabled=False,
                         record_exchange=True, update_interactive_state=True, track_evolutionary_trace=True,
                         run_periodic_maintenance=True, mode_name="BOUNDED")
                 finally:
                     sys.stdout = real
+                blob = json.dumps(result, default=str).lower()
+                leaks = [w for w in ("input_event", "overheard", "evidence_qualification", "input_pressure")
+                         if w in blob]
                 mine = calls[n0:]
-                per_turn.append({"text": text, "observe_calls": len(mine),
+                leaks += [f"id:{c['turn_id']}" for c in mine if c["turn_id"] and c["turn_id"].lower() in blob]
+                per_turn.append({"text": text, "observe_calls": len(mine), "leaks_in_result": leaks,
                                  "named": sum(c["named"] for c in mine),
                                  "by_thread": dict(collections.Counter((c["thread"], c["named"]) .__repr__() for c in mine))})
         finally:

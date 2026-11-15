@@ -197,6 +197,26 @@ in the live path; that is the next, separate step (read-only shadow through `_at
 Tests: `tests/test_input_identity.py` (12, including a source guard that the reset is a call inside a `finally`); six
 mutants caught (one survived until the guard was tightened). 225 genealogy and live-turn tests pass.
 
+## 3g. Architecture, not awareness (Sir, 2026-11-14)
+
+"The effects of that information should be the thing she experiences; the architecture of it isn't reliant on her knowing
+it for it to be how things work." So the evidence contract, provenance, ancestry, the live view and the input identity are
+**substrate**. What she experiences is what the information *does*: the pressure it imposes and what her emotion and
+development subsystems measure. Nothing in her cognition or speech may read or speak the machinery.
+
+Held by `tests/test_evidence_substrate_boundary.py` (3 tests, 3 mutants caught):
+
+* Only the turn entry (`begin_input`/`end_input`) and genealogy's `observe` (`note_for_observe`/`summary_for_registry`) import it, and only for identity.
+* The substrate imports nothing of her cognition or speech (standard library and itself only).
+* Nothing outside genealogy and the substrate reads `input_event` / `_input_events` off an observation.
+
+Live check (`scripts/measure_input_attribution.py`, 8 turns): none of the turn results contained `input_event`,
+`overheard`, `evidence_qualification`, `input_pressure` or any observed input id. (The word "provenance" appears in every
+result, but from her existing `relation_provenance` keys, not from this work.)
+
+What does change her experience is an *effect*, not a disclosure: FIX-A145 means an unattributed claim is not voiced as
+known ("I do not know if Mara likes tea"); that is the consequence of not having been told, not a statement about provenance.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an
