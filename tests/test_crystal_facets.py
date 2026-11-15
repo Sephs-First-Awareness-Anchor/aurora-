@@ -323,14 +323,14 @@ def test_it_works_on_the_real_crystal_and_its_serialisation():
 def test_only_the_association_module_is_imported_and_nothing_running_imports_this():
     tree = ast.parse(open(F.__file__, encoding="utf-8").read())
     mods = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module and n.module.startswith("aurora")}
-    assert mods == {"aurora_internal.crystal_associations"}
+    assert mods == {"aurora_internal.crystal_associations", "aurora_internal.crystal_store"}      # (the store module is pure: names and bookkeeping prefixes only)
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     hits = []
     for base, _, files in os.walk(root):
         if any(x in base for x in (".git", "tests", "scripts", "aurora_state", "node_modules")):
             continue
         for f in files:
-            if f.endswith(".py") and f not in ("crystal_facets.py", "crystal_weave.py", "crystal_runtime.py") and re.search(r"(from|import)\s+[\w.]*crystal_facets", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
+            if f.endswith(".py") and f not in ("crystal_facets.py", "crystal_weave.py", "crystal_runtime.py", "crystal_lexicon.py") and re.search(r"(from|import)\s+[\w.]*crystal_facets", open(os.path.join(base, f), encoding="utf-8", errors="ignore").read()):
                 hits.append(f)
     assert hits == []
 

@@ -17,6 +17,7 @@ import os
 import tempfile
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
+from aurora_internal.crystal_store import is_placeholder_meaning
 from aurora_internal.crystal_associations import COUNTED_BASES, AssociationStore, basis_of
 
 VERSION = 1
@@ -110,6 +111,19 @@ class FacetBook:
             else:
                 miss_against *= 1.0 - w
         return (1.0 - miss_for) * miss_against
+
+    def held_for(self, concept: str, kinds: Iterable[str]) -> Dict[str, List[Dict[str, Any]]]:
+        """kind -> entries nothing counted stands behind (seeded, heuristic, derived without a premise): kept and visible, never counted."""
+        out: Dict[str, List[Dict[str, Any]]] = {}
+        for kind in kinds:
+            rows = []
+            for key, entry in self._e.get(str(concept), {}).get(kind, {}).items():
+                ev = entry["evidence"].values()
+                if ev and not any(e["basis"] in COUNTED_BASES for e in ev):
+                    rows.append({"key": key, "content": entry["content"], "bases": sorted({e["basis"] for e in ev})})
+            if rows:
+                out[kind] = sorted(rows, key=lambda r: r["key"])
+        return out
 
     def facets_for(self, concept: str, top: Optional[int] = None, include_uncounted: bool = False) -> Dict[str, List[Dict[str, Any]]]:
         """kind -> entries, strongest first.  `top` only limits how many are returned per kind."""
@@ -215,7 +229,7 @@ def place_oets_node(book: FacetBook, node: Mapping[str, Any]) -> int:
     n = 0
     for d in node.get("definitions") or []:
         text = d.get("text") or ""
-        if text:
+        if text and not is_placeholder_meaning(word, text):        # a bookkeeping label is never a definition
             k = content_key(text)
             src = d.get("source") or ""
             n += bool(book.add(word, "definition", k, {"text": text}, ref=f"def:{word}:{k}", source=src, basis=DEFINITION_BASIS.get(src) or basis_of(src),
@@ -332,3 +346,39 @@ def apply_to_crystals(book: FacetBook, concept_index: Mapping[str, str], crystal
                 existing.content = {"entries": sorted(merged.values(), key=lambda r: (-r["degree"], r["key"]))}
                 existing.confidence = max(float(existing.confidence), conf)
     return {"crystals_touched": touched, "facets": facets, "entries": entries, "dry_run": bool(dry_run)}
+
+
+HELD_KINDS = ("lexicon", "definition", "emotion")
+
+
+def apply_held_to_crystals(book: FacetBook, concept_index: Mapping[str, str], crystals: Mapping[str, Any], kinds: Iterable[str] = HELD_KINDS,
+                           dry_run: bool = True) -> Dict[str, Any]:
+    """What was given or derived rather than lived (a seeded meaning, a lineage-derived channel) goes into the crystal as `held:<kind>`: visible, with its
+    basis stated, confidence 0.0, and never read as growth.  A held entry that later gains counted evidence is written by `apply_to_crystals` instead and
+    leaves the held facet.  No crystal is created."""
+    kinds = tuple(kinds)
+    touched = facets = 0
+    for concept, cid in concept_index.items():
+        crystal = crystals.get(cid)
+        if crystal is None:
+            continue
+        held = book.held_for(concept, kinds)
+        for kind in kinds:
+            role = f"held:{kind}"
+            existing = next((f for f in crystal.facets.values() if f.role == role), None)
+            rows = held.get(kind)
+            if not rows:
+                if existing is not None and not dry_run:                  # earned since (or no longer held): the held copy is emptied
+                    existing.content = {"entries": []}
+                continue
+            facets += 1
+            if dry_run:
+                continue
+            content = {"entries": rows}
+            if existing is None:
+                crystal.add_facet(role, content, confidence=0.0)
+            else:
+                existing.content, existing.confidence = content, 0.0
+        touched += bool(held)
+    return {"crystals_touched": touched, "facets": facets, "dry_run": bool(dry_run)}
+

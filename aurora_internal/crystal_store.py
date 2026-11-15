@@ -24,6 +24,15 @@ PROVENANCE_ROLE = "provenance:"            # one facet per label, `provenance:<l
 LABEL_CONFIDENCE = 0.1
 
 
+def is_placeholder_meaning(word: str, text: Any) -> bool:
+    """True for text that is a bookkeeping label or a pointer, not something said about the word (`learned:come`, `def:come`, `oets:time`, the word itself,
+    empty, `unknown`).  A label never passes as meaning."""
+    t = " ".join(str(text or "").split()).lower()
+    if not t or t.startswith(tuple(PREFIXES) + ("def:", "oets:")):
+        return True
+    return t in {str(word).lower(), "unknown", "n/a", "tbd", "pending"}
+
+
 def canonical(concept: str) -> Tuple[str, Optional[str]]:
     """(bare name, prefix) when `concept` is a word under a bookkeeping label; (concept, None) otherwise (including a label with nothing after it)."""
     c = str(concept or "")

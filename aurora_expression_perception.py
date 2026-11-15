@@ -521,6 +521,11 @@ class LexicalMemory:
 
     def add_word(self, word: str, meaning: str, role: str,
                  valence: float = 0.0, lineage: str = "") -> LexicalEntry:
+        try:        # a word is one entry whatever bookkeeping label it arrives under
+            from aurora_internal.crystal_store import canonical as _canonical_word
+            word = _canonical_word(word)[0]
+        except Exception:
+            pass
         if word not in self.entries:
             entry = LexicalEntry(word, meaning, role, valence, lineage=lineage)
             self.entries[word] = entry
@@ -669,6 +674,11 @@ class LexicalMemory:
             with open(p) as f:
                 data = _j.load(f)
             entries = data.get("entries", {})
+            try:        # one entry per word: a word filed under a bookkeeping label (`learned:come`) is the word's own entry (one crystal architecture and store)
+                from aurora_internal.crystal_lexicon import fold_entries as _fold_lexicon
+                entries = _fold_lexicon(entries)[0]
+            except Exception:
+                pass
             loaded = 0
             for word, d in entries.items():
                 self.entries[word] = LexicalEntry(

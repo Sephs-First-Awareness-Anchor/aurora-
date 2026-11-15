@@ -25,6 +25,7 @@ from aurora_internal import crystal_convergence as _C
 from aurora_internal import crystal_maturity as _M
 from aurora_internal import evidence_qualification as _Q
 from aurora_internal.crystal_associations import AssociationStore, project_assertions, project_oets
+from aurora_internal import crystal_lexicon as _L
 
 # One exposure (two representations used together, or one distinct input) is worth this much; n exposures add up as 1 - (1 - w)^n, so more always means more.
 PAIR_EXPOSURE = 0.1
@@ -271,6 +272,8 @@ def weave(state_dir: str) -> Dict[str, Any]:
     web = _one_store(_read(state_dir, "aurora_oets_web.json") or {})
     for node in (web.get("nodes") or {}).values():
         _F.place_oets_node(book, node)
+    lexicon, lex_rep = _L.fold_entries(_L.read_entries(state_dir))          # one entry per word, whatever label it was filed under
+    summary["lexicon"] = dict(lex_rep, placed=_L.place(book, lexicon))
     store = project_assertions(web.get("relations") or {}, project_oets(web.get("relations") or {}))
     summary["oets"] = {"nodes": len(web.get("nodes") or {}), "relations": len(web.get("relations") or {})}
     pairs, links = _read(state_dir, "genealogy", "pair_stats.json") or {}, _read(state_dir, "genealogy", "links.json") or {}

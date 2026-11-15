@@ -41,6 +41,8 @@ SOURCE_BASIS: Dict[str, str] = {
     "told": "told",                       # said to her (the propositional store's own bases)
     "observed": "observed",
     "corrected": "corrected",
+    "lexicon_seed": "seeded",             # a word, role, channel or meaning the lexicon was given at the start
+    "lexicon_lineage": "unattributed",    # a lexicon mapping derived through an i-state lineage: no stated premise, so kept and visible, not counted
     "lexical_scaffold": "scaffold",       # the hand-authored word-role lookup: kept and visible, not experience, so never counted
     "lexical_class": "recurrence",        # a word class she found herself from how words follow one another
     "lexical_grounding": "observed",      # a structural role whose evidence she earned through consequence (never the inherited scaffold)

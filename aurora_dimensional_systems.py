@@ -512,7 +512,7 @@ class Crystal:
             return ready_to_grow(self.maturity, int(self.level))
         # Not yet looked at: the earlier count rule, except that facets placed from the weave ("fk:") are derived records of what she has been through, not
         # facets gained by use, so they never count toward it, and neither does the provenance of a name (`provenance:`), which says how a word arrived, not what has been learned of it.
-        external = [f for f in self.facets.values() if not f.role.startswith(("LAW_", "fk:", "provenance:"))]
+        external = [f for f in self.facets.values() if not f.role.startswith(("LAW_", "fk:", "held:", "provenance:"))]
         if self.level == CrystalLevel.BASE:
             return len(external) >= 3 and self.usage_count >= 10
         elif self.level == CrystalLevel.COMPOSITE:
