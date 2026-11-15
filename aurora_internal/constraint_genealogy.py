@@ -2176,6 +2176,14 @@ class ConstraintGenealogyLogger:
         self._replays_skipped: int = 0
         self._rep_ledger_path = os.path.join(output_dir, "rep_ledger.json")
         self._load_rep_ledger()
+        # Surface -> Subsurface evidence journal (Stage E).  A Surface logger (persist_scope "session_state") appends each
+        # observation, with a durable (origin, seq) identity, to its own journal; the canonical logger consolidates it
+        # through its own `observe`, once, in order, and records what it applied.  See genealogy_evidence_journal.py.
+        self._journal_writer = None
+        self._journal_seq: int = 0
+        self._journal_suspended: bool = False
+        self._journal_malformed: int = 0
+        self._applied = self._load_applied()
 
         # Compact rolling event file (replaces unbounded events.jsonl)
         self._events_recent_path = os.path.join(output_dir, "events_recent.json")
@@ -2527,6 +2535,8 @@ class ConstraintGenealogyLogger:
         _lock_wait_started = time.perf_counter()
         with self._concurrency_lock:
             _lock_wait_ms = (time.perf_counter() - _lock_wait_started) * 1000.0
+            if self.persist_scope == "session_state" and not self._journal_suspended:
+                self._journal_observation(pressure_before, trace, pressure_after, notes)
             _observe_started = time.perf_counter()
             try:
                 return self._observe_impl(
@@ -3193,6 +3203,7 @@ class ConstraintGenealogyLogger:
         self._write_couplings_file()
         self._write_pair_stats_file()
         self._write_tick_state_file()
+        self._write_journal_applied()        # last: what was consolidated is recorded only after its effects are on disk
 
     def _write_tick_state_file(self) -> None:
         """Persist tick_count and _last_promotion_tick so stagnation signal survives restarts."""
@@ -3232,6 +3243,7 @@ class ConstraintGenealogyLogger:
         if self.persist_scope == "canonical":
             self.flush_files()
         else:
+            self.flush_journal()
             self._write_tick_state_file()
 
     def restore_tick_state(self) -> bool:
@@ -3328,7 +3340,7 @@ class ConstraintGenealogyLogger:
         from pathlib import Path
         atomic_write_json(Path(path), out)
 
-    def restore_pair_stats(self) -> int:
+    def restore_pair_stats(self, directory: Optional[str] = None) -> int:
         """
         Load persisted pair_stats.json and merge into _pair_stats.
 
@@ -3339,7 +3351,7 @@ class ConstraintGenealogyLogger:
         Called by corpus_runner.boot_aurora() and _restore_genealogy_state()
         after links/abilities are restored.
         """
-        path = os.path.join(self.output_dir,
+        path = os.path.join(directory or self.output_dir,
                             getattr(self.cfg, "PAIR_STATS_FILE", "pair_stats.json"))
         if not os.path.exists(path):
             return 0
@@ -4354,10 +4366,13 @@ class ConstraintGenealogyLogger:
         except Exception:
             return False
 
-    def _load_rep_ledger(self) -> None:
+    def _load_rep_ledger(self, path: Optional[str] = None, *, reset: bool = False) -> None:
+        path = path or self._rep_ledger_path
+        if reset:
+            self._rep_ledger, self._pair_ledger, self._replay_seen = {}, OrderedDict(), OrderedDict()
         try:
-            if os.path.exists(self._rep_ledger_path):
-                with open(self._rep_ledger_path, "r", encoding="utf-8") as fh:
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as fh:
                     data = json.load(fh)
                 rows = data.get("reps") if isinstance(data, dict) else None
                 if isinstance(rows, dict):
@@ -4375,6 +4390,136 @@ class ConstraintGenealogyLogger:
                 self._replays_skipped = int((data.get("replays_skipped", 0) if isinstance(data, dict) else 0) or 0)
         except Exception:
             self._rep_ledger = {}                     # an unreadable ledger is ancestry unattributed, never a crash
+
+    # -- Stage E: durable evidence journal between Surface and Subsurface -----------------------------------------------------
+
+    def _journal_path(self) -> str:
+        from aurora_internal.genealogy_evidence_journal import JOURNAL_NAME
+        return os.path.join(self.output_dir, JOURNAL_NAME)
+
+    def _load_applied(self, directory: Optional[str] = None):
+        from aurora_internal.genealogy_evidence_journal import APPLIED_NAME, AppliedLedger
+        try:
+            with open(os.path.join(directory or self.output_dir, APPLIED_NAME), "r", encoding="utf-8") as fh:
+                return AppliedLedger.from_dict(json.load(fh))
+        except Exception:
+            return AppliedLedger()
+
+    def _write_journal_applied(self) -> None:
+        if self.persist_scope != "canonical" or not (self._applied.origins or self._applied.gaps):
+            return
+        try:
+            from pathlib import Path
+            from aurora_internal.genealogy_evidence_journal import APPLIED_NAME
+            atomic_write_json(Path(os.path.join(self.output_dir, APPLIED_NAME)), self._applied.to_dict())
+        except Exception:
+            pass
+
+    def _journal_observation(self, before, trace, after, notes) -> None:
+        """Append one observation, as it was presented, to this Surface logger's journal.  Never affects the observation."""
+        try:
+            from aurora_internal.genealogy_evidence_journal import JournalWriter, make_record
+            if self._journal_writer is None:
+                self._journal_writer = JournalWriter(self._journal_path())
+            w = self._journal_writer
+            named = dict(notes or {})
+            iid = self._register_input_identity(named)
+            self._journal_seq += 1
+            summary = None
+            if iid and iid not in w.sent_inputs:
+                summary = self._input_events.get(iid)
+                w.sent_inputs.add(iid)
+                if len(w.sent_inputs) > 4096:
+                    w.sent_inputs.clear()
+            w.append(make_record(self.run_id, self._journal_seq, time.time(), before.to_dict(), after.to_dict(),
+                                 list(trace or []), named, summary))
+        except Exception:
+            pass
+
+    def flush_journal(self) -> None:
+        w = self._journal_writer
+        if w is not None:
+            w.flush()
+
+    def _apply_journal_record(self, r: Dict[str, Any]) -> None:
+        """Replay one journal record through this logger's own `observe`, with the input it answered named and kept once."""
+        from aurora_internal.genealogy_evidence_journal import event_id
+        notes = dict(r.get("notes") or {})
+        iid = str(notes.get("input_event", "") or "")
+        inp = r.get("input")
+        if iid and isinstance(inp, dict) and iid not in self._input_events:
+            self._input_events[iid] = dict(inp)
+            while len(self._input_events) > 256:
+                self._input_events.popitem(last=False)
+        notes["journal_event"] = event_id(r["origin"], r["seq"])
+        notes["evidence_origin"] = r["origin"]
+        fields = ("module", "stream_type", "axis_context", "call_tag")
+        trace = [TraceItem(str(t.get("kind", "")), str(t.get("id", "")),
+                           EnvironmentVector(**{k: str(v) for k, v in (t.get("env") or {}).items() if k in fields}))
+                 for t in (r.get("trace") or []) if isinstance(t, dict)]
+        self.observe(PressureVec.from_dict(r.get("before") or {}), trace, PressureVec.from_dict(r.get("after") or {}), notes=notes)
+
+    def consolidate_journal(self, path: Optional[str] = None, max_events: int = 5000,
+                            max_seconds: Optional[float] = None) -> Dict[str, Any]:
+        """Subsurface: apply, once and in order, the Surface evidence not yet consolidated.  A seq the journal does not hold is
+        recorded as a gap and never stops later events; an event already applied is skipped; an event arriving after later
+        ones is applied once and counted `late`.  `max_seconds` bounds the time one call may take (measured live at about 30 ms an
+        event), always applying at least one event so progress is certain; the rest stays for the next call.  Returns what happened."""
+        from aurora_internal.genealogy_evidence_journal import ordered, read_records
+        path = path or self._journal_path()
+        records, bad = read_records(path)
+        self._journal_malformed += bad
+        out = {"applied": 0, "duplicates_skipped": 0, "late": 0, "gaps": 0, "malformed": bad, "remaining": 0}
+        with self._concurrency_lock:
+            led = self._applied
+            budget = int(max_events)
+            started = time.perf_counter()
+            for r in ordered(records):
+                o, q = r["origin"], r["seq"]
+                if led.is_applied(o, q):
+                    led.duplicates_skipped += 1
+                    out["duplicates_skipped"] += 1
+                    continue
+                if budget <= 0 or (max_seconds is not None and out["applied"] >= 1
+                                   and time.perf_counter() - started >= float(max_seconds)):
+                    out["remaining"] += 1
+                    continue
+                row = led.origins.get(o) or {"through": 0, "extra": []}
+                high = max([row["through"]] + list(row["extra"]))
+                if q > high + 1:
+                    led.note_gap(o, high + 1, q - 1)               # missing from the journal: stated, not filled in
+                    out["gaps"] += 1
+                elif q < high:
+                    led.late_applied += 1                          # arrived after later events: applied once, and said so
+                    out["late"] += 1
+                self._apply_journal_record(r)
+                led.mark(o, q)
+                out["applied"] += 1
+                budget -= 1
+        return out
+
+    def consolidate_surface_journals(self, max_events: int = 200, max_seconds: Optional[float] = 0.25) -> Dict[str, Any]:
+        """Subsurface entry point: consolidate the journal of the sibling Surface logger directory (`genealogy_surface`, next to
+        this canonical `genealogy` directory), a bounded amount per call so foreground work is never held up.  Nothing happens
+        for a logger that is not canonical or has no Surface sibling."""
+        if self.persist_scope != "canonical":
+            return {"applied": 0, "skipped": "not canonical"}
+        from aurora_internal.genealogy_evidence_journal import JOURNAL_NAME
+        sibling = os.path.join(os.path.dirname(os.path.abspath(self.output_dir)), "genealogy_surface", JOURNAL_NAME)
+        if not (os.path.exists(sibling) or os.path.exists(sibling + ".1")):
+            return {"applied": 0, "skipped": "no journal"}
+        return self.consolidate_journal(sibling, max_events=max_events, max_seconds=max_seconds)
+
+    def unconsolidated(self, canonical_dir: str) -> List[Dict[str, Any]]:
+        """Surface: this logger's own journalled events the canonical genealogy in `canonical_dir` has not yet applied.  What the
+        Subsurface has consolidated reaches the Surface at its next boot through the ordinary restore of canonical state; this says
+        what has not got there yet, so nothing is mistaken for already learned.  (A live logger is not refreshed from disk: the
+        restore is a boot-time operation, and per-tick state such as relief tolerance is not carried by it.)"""
+        from aurora_internal.genealogy_evidence_journal import ordered, read_records
+        self.flush_journal()
+        applied = self._load_applied(canonical_dir)
+        own = ordered([r for r in read_records(self._journal_path())[0] if r["origin"] == self.run_id])
+        return [r for r in own if not applied.is_applied(self.run_id, r["seq"])]
 
     def _write_rep_ledger(self) -> None:
         try:

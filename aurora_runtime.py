@@ -3900,6 +3900,7 @@ class UniverseSteerer:
         # Flush genealogy fossil record to disk
         if self._s.has("genealogy"):
             try:
+                self._s.genealogy.consolidate_surface_journals()      # Surface evidence, once and in order, before the flush
                 self._s.genealogy.flush_files()
             except Exception as _aurora_boundary_exc:
                 _aurora_record_exception_from_locals(
@@ -7047,6 +7048,7 @@ __all__ = ["AuroraEvolvedSurfaceEngine"]
         genealogy = self.systems.genealogy
         if genealogy is not None:
             try:
+                genealogy.consolidate_surface_journals()
                 genealogy.flush_files()
                 saved = True
                 if verbose:

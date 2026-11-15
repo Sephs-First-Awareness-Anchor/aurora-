@@ -303,6 +303,51 @@ six mutants caught. 787 tests pass across the evidence, identity, genealogy and 
   consequence profile's confidence is still tick-based for lived evidence; the dream trainer's gateway replay still credits nothing
   synchronously; legacy links stay without qualification.
 
+## 3k. Stage E: evidence from the Surface to the Subsurface (directive VIII; test 8)
+
+**What was found.** The Surface profile builds its own genealogy logger (`persist_scope = "session_state"`), restores the canonical
+state read-only and writes only its own session state. Nothing carried what the Surface observed to the canonical genealogy, so a
+Surface turn's consequences lived in that process's memory and were gone at restart. Stage E adds that transfer; it did not exist.
+
+* **Journal** (`aurora_internal/genealogy_evidence_journal.py`, no developmental state of its own). A Surface logger appends every
+  observation as presented (before/after pressure, trace with environment, scalar notes including `input_event`) to
+  `genealogy_surface/evidence_journal.jsonl`, each with a durable identity (`origin` = that logger run, `seq`). The facts of an input
+  are sent once (with its first observation), not on every one. Anything left out of a record's notes is named
+  (`notes_left_out`). A failing journal never affects an observation. Live (8 turns, surface profile): 35 events, 8 inputs each
+  described once, contiguous seqs, ~865 bytes/event, journaling cost 0.087 ms per observe (3 ms in total).
+* **Consolidation** (`consolidate_journal`, `consolidate_surface_journals`). The canonical logger replays records through its own
+  `observe` (the single authoritative history, with the input identity restored so each is credited by its true kind), per origin in
+  seq order, each event once. `AppliedLedger` (`journal_applied.json`, written last in `flush_files`) records what was applied: an
+  event applied again is skipped; a seq the journal does not hold is a stated **gap** that never blocks later events; an event that
+  arrives after later ones is applied once and counted `late` (and closes its gap). A torn or unreadable line is skipped and
+  counted. A rotated copy (8 MB) is read with the current file.
+* **Wiring.** The Subsurface runtime calls `consolidate_surface_journals()` before each genealogy flush (both sites). Each call is
+  bounded (200 events and 0.25 s, always at least one event so it advances): live consolidation ran at ~32 events/s (about 30 ms per
+  replayed observation), so an unbounded call would have held the runtime.
+* **The return.** What the Subsurface consolidated reaches the Surface at its next boot through the existing restore of canonical
+  state; the Surface logger writes nothing into the canonical directory (checked byte for byte). `unconsolidated(canonical_dir)`
+  says which of the Surface's own events have not yet been applied. **A live logger is not refreshed from disk**: a first version
+  did that and was removed because restoring into a running logger does not reset per-tick state (relief tolerance,
+  habituation), so a repeated refresh did not return to the same counts; the restore is a boot-time operation.
+* **Test 8** (`tests/test_evidence_journal.py`, 26; mutants caught): consolidated state equals what development would have been
+  (a reference logger given the same experience directly; profiles, pair stats, ledgers, ancestry and replay-skips all equal,
+  magnitudes included); consolidating twice, after a restart, from shuffled order, from a file holding every event twice, all give
+  the same state; gap / late arrival / torn line / rotation; a dream replayed on the Surface is one occurrence in the Subsurface;
+  ancestry and kind (heard, perceived, dreamed) arrive intact; the Surface develops identically with journaling on or off; the
+  Surface never writes the canonical directory; a Surface booted after consolidation has the effects once and starts a fresh
+  journal; bounded and zero-budget calls advance and equal all-at-once.
+* **Not covered / residual.** (1) Crash window: the applied marker is written after the state files, so a crash in the milliseconds
+  between them would re-apply that flush's batch (at most one bounded call) once after restart; writing the marker first would instead
+  lose learning, and no atomic write across the files exists. (2) The Surface's own in-memory consequences (its local effect of a
+  turn) are not corrected or merged with the canonical one until restart. (3) `difference_snapshot` and non-scalar notes are not
+  transferred (named, not silently dropped). (4) A journal not consolidated before two rotations is lost, and the loss shows as a
+  gap. (5) This is the isolated and integrated level only: two real loggers on one machine and the real Surface boot; no two-device
+  run was made.
+* **Finding (pre-existing, for Test 7/9):** restoring canonical state into a fresh logger and carrying on does not reproduce an
+  uninterrupted run (in the test sequence: attributed samples 8 vs 12 for one representation and a link promoted that the
+  uninterrupted run did not promote). Nothing here caused it; it bounds how closely any restart can match uninterrupted
+  development, and is the reason the Surface return is not claimed to be magnitude-exact.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an
