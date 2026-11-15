@@ -1,7 +1,7 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 """Genealogy redistribution, Stage 2 step 1: the representation index only re-sorts what changed.
 
-`_representation_index` was re-sorting EVERY bucket (68,670 key evaluations over 129 buckets per call on the
+`_representation_index` was re-sorting EVERY bucket (13,734 key evaluations over 129 buckets per call on the
 full profile) on every call whose stamp moved, i.e. nearly every observe.  It now re-sorts only the buckets in
 which a member was added or a member's (last tick, count) changed.  A bucket's order is a pure function of its
 members' activity and ids, so every other bucket is already in the order a full re-sort would give it.
