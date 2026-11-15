@@ -22,6 +22,7 @@ from aurora_internal import crystal_facets as _F
 from aurora_internal import crystal_grammar as _G
 from aurora_internal import crystal_interior as _I
 from aurora_internal import crystal_promotion as _P
+from aurora_internal import crystal_store as _CS
 from aurora_internal import crystal_substitutability as _S
 from aurora_internal import crystal_weave as _W
 
@@ -88,8 +89,9 @@ def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, 
     if not force and _last["t"] is not None and now - _last["t"] < min_interval:
         return {"skipped": "interval"}
     try:
-        crystals, idx = dps.crystals, dps.concept_index
         t0 = time.time()
+        folded = _CS.fold_duplicates(dps)                      # one crystal per word, whatever label it arrived under
+        crystals, idx = dps.crystals, _CS.primary_index(dps)
         r = _W.weave(state_dir)
         store, book = r["store"], r["book"]
         prof = word_profiles(crystals, state_dir)
@@ -112,6 +114,7 @@ def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, 
             if hub not in idx and make is not None:
                 make(hub)
                 created += 1
+        idx = _CS.primary_index(dps)                          # (a generalization crystal just made is in it)
         links = _A.apply_to_crystals(store, idx, crystals, dry_run=False)
         facets = _F.apply_to_crystals(book, idx, crystals, dry_run=False)
         mat = _W.apply_maturity(store, book, idx, crystals, dry_run=False)
@@ -129,7 +132,7 @@ def run_pass(dps: Any, state_dir: str, *, force: bool = False, clock=time.time, 
                 getattr(cr, "_unlock_failpoints", lambda: None)()
                 raised += 1
         _last["t"] = now
-        return {"ok": True, "seconds": round(time.time() - t0, 2), "links": links, "facets": facets, "maturity": mat, "interior": interior, "classes": len(classes),
+        return {"ok": True, "seconds": round(time.time() - t0, 2), "links": links, "facets": facets, "folded": folded, "maturity": mat, "interior": interior, "classes": len(classes),
                 "substitute_links": links_subst, "generalizations": len(hubs), "generalization_crystals_created": created, "generalizations_raised": raised}
     except Exception as exc:          # fail-safe: a failure here must never reach a turn or a save
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
