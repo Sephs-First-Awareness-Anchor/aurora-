@@ -43,6 +43,31 @@ def place_event(book: _F.FacetBook, concept: str, kind: str, key: str, content: 
                     context=event.get("context"), consequence=event.get("consequence"), ancestry=event.get("ancestry") or ())
 
 
+def place_exercise(book: _F.FacetBook, concepts: Iterable[str], *, ability_id: str, input_event: Mapping[str, Any],
+                   consequence: Optional[Mapping[str, Any]] = None, ancestry: Iterable[str] = ()) -> int:
+    """She exercised an operation (an ability or a promoted link) while dealing with some concepts: it lands as an `operation` entry in the crystal of EACH of
+    those concepts, in the same crystals as everything else about them, never in crystals of its own.  Each distinct input is one occasion, worth one
+    exposure, so more occasions mean more.  How it counts follows how the input happened to her: a lived input (heard, read, perceived, acted, tested)
+    with a consequence she witnessed counts as observed; a lived input with no consequence recorded is kept and not counted (the effect was not witnessed);
+    a rehearsal that was only imagined, simulated or dreamed is kept as supposed; overheard is kept as overheard.  A rehearsal she acted on or tested, or
+    that was addressed to her, is a lived occurrence and is classed as one; the contract's classification is used as it is."""
+    occ = str(input_event.get("occurrence", ""))
+    if occ in _Q.HYPOTHETICAL:
+        basis = "supposed"
+    elif occ == "overheard":
+        basis = "overheard"
+    elif occ in _Q.LIVED and consequence:
+        basis = "observed"
+    else:
+        basis = "unknown"
+    n = 0
+    for c in concepts:
+        n += bool(book.add(c, "operation", str(ability_id), {"id": str(ability_id)}, ref=f"exercise:{ability_id}:{input_event['id']}:{c}", source=occ,
+                           basis=basis, strength=PAIR_EXPOSURE, occurrence_class=occ, context=input_event.get("context"), consequence=consequence,
+                           ancestry=list(ancestry) + [str(input_event["id"])]))
+    return n
+
+
 def genealogy_associations(pair_stats: Mapping[str, Mapping[str, Any]], links: Mapping[str, Mapping[str, Any]],
                            store: Optional[AssociationStore] = None) -> AssociationStore:
     """Representations used together become `used_with` associations by recurrence (each pair's observed count, each exposure weak); a promoted link is

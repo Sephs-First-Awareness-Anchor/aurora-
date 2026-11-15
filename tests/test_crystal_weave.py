@@ -63,6 +63,56 @@ def test_the_same_event_twice_is_one_occasion():
     assert b.totals()["occasions"] == 1
 
 
+# -- operations live in the crystals of what she was dealing with ------------------------------------------------------------------------------------
+
+def exercise(book, occ, consequence=None, input_id="t1", concepts=("sunni", "aurora"), **kw):
+    e = Q.make_event(f"input|{input_id}|-", occurrence=occ, t=1, nonce=input_id, **kw)
+    return W.place_exercise(book, concepts, ability_id="X:ADMIT", input_event=e, consequence=consequence, ancestry=["NC:X>X"]), e
+
+
+CONS = {"target": "pressure", "change": "relieved"}
+
+
+def test_an_operation_lands_in_each_concepts_own_crystal_with_the_input_in_its_ancestry():
+    b = F.FacetBook()
+    n, e = exercise(b, "heard", CONS)
+    assert n == 2 and set(b.concepts()) == {"sunni", "aurora"}
+    ev = next(iter(b._e["sunni"]["operation"]["X:ADMIT"]["evidence"].values()))
+    assert ev["ancestry"] == ["NC:X>X", e["id"]] and ev["basis"] == "observed" and ev["consequence"] == CONS
+
+
+def test_more_inputs_exercising_it_means_more_and_the_same_input_twice_is_one():
+    b, ds = F.FacetBook(), []
+    for i in range(12):
+        exercise(b, "heard", CONS, input_id=f"t{i}", concepts=("sunni",))
+        ds.append(b.degree("sunni", "operation", "X:ADMIT"))
+    assert all(y > x for x, y in zip(ds, ds[1:])) and ds[0] == pytest.approx(0.1) and ds[-1] == pytest.approx(1 - 0.9 ** 12)
+    exercise(b, "heard", CONS, input_id="t0", concepts=("sunni",))
+    assert b.totals()["occasions"] == 12
+
+
+@pytest.mark.parametrize("occ", ["acted", "tested", "perceived", "read"])
+def test_a_rehearsal_that_is_lived_and_whose_effect_she_witnessed_counts(occ):
+    b = F.FacetBook()
+    exercise(b, occ, CONS, concepts=("sunni",))
+    assert b.degree("sunni", "operation", "X:ADMIT") == pytest.approx(0.1)
+
+
+def test_a_lived_exercise_with_no_witnessed_effect_is_kept_not_counted():
+    b = F.FacetBook()
+    exercise(b, "heard", None, concepts=("sunni",))
+    assert b.degree("sunni", "operation", "X:ADMIT") == 0.0 and b.totals()["occasions"] == 1
+
+
+@pytest.mark.parametrize("occ", ["dreamed", "imagined", "simulated", "overheard"])
+def test_a_dreamed_imagined_simulated_or_overheard_rehearsal_is_kept_and_earns_nothing(occ):
+    b = F.FacetBook()
+    exercise(b, occ, CONS, concepts=("sunni",))
+    assert b.degree("sunni", "operation", "X:ADMIT") == 0.0 and b.totals()["occasions"] == 1
+    basis = next(iter(b._e["sunni"]["operation"]["X:ADMIT"]["evidence"].values()))["basis"]
+    assert basis == ("overheard" if occ == "overheard" else "supposed")                 # kept for what it is, not as an unknown
+
+
 # -- the genealogy as associations --------------------------------------------------------------------------------------------------------------
 
 PAIRS = {"A|B": {"left_id": "A", "right_id": "B", "count": 22}, "A|C": {"left_id": "A", "right_id": "C", "count": 1}, "X|Y": {"left_id": "X", "right_id": "Y", "count": 0}}

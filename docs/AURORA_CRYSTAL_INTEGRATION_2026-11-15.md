@@ -20,18 +20,18 @@
 | Crystals that would gain any link | 382 of 5,977 (6.4%); 4,171 links |
 | Reach of `sunni` | 9 crystals in one step, 190 in two (3.2% of all crystals) |
 | Wholes formed by `is_a` from counted evidence | 0 (its 54 edges come from axis_embodiment, foundational, seeded, definition_analysis and `conversation`, none counted) |
-| Genealogy ids that have a crystal | 0 of 404 |
+| Genealogy ids that have a crystal | 0 of 404 (by design: they reach crystals through the concepts of the inputs that exercised them) |
 | Links with an evidence qualification | 0 of 356 (all predate FIX-A144 recording) |
 
 ## What this says about "the links would be consequential"
 
 * The mechanism is in place: weaving does place everything in its facet once with its occasions, and the links do form a web. On today's snapshot the web is thin because most of what she holds has no earned evidence behind it, not because the architecture cannot hold it.
 * The category skeleton (`is_a`) is entirely uncounted. Until her categories rest on occurrence, no whole forms by convergence. Her `conversation`-sourced `is_a` edges (10) have a source the evidence table does not map; they stay unknown rather than being read as told.
-* Representations and abilities (the genealogy) have no crystals at all. The facets can be placed in the book, but no crystal exists to receive them. Operation crystals for abilities (mapping A4) would create crystals, which nothing here does.
+* Operations are not a separate kind of crystal (Sir, 2026-11-15): they are part of her lived history and live in the same crystals as the concepts she was dealing with when she exercised them. `place_exercise` places an operation entry in each of those concepts' crystals, one occasion per distinct input. What the genealogy's own ids (`NC:...`, `X:ADMIT`, `L:...`) need is the route from a credited input to the concepts of that turn; the pair ledger keeps the input ids, the conversation records keep the turn, and joining them is the next step. Until then the genealogy associations stay among representations, with no crystal to receive them.
 * Usage examples and valence carry no recorded occurrence, so they stay uncounted; the input-identity work records it from now on.
 
 ## Decisions for Sir
 
-1. May operation crystals be created for abilities and promoted links (the only way genealogy data reaches a crystal)?
+1. (Answered: operations live in the same crystals as the concepts they were exercised on.)
 2. Is `conversation`-sourced evidence addressed (told) or not? The code does not say; it is not guessed.
 3. Wiring: this branch changes nothing live. Which writer, if any, runs first on a copy of state?
