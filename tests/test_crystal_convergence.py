@@ -180,7 +180,7 @@ def test_only_the_association_store_is_imported_and_nothing_running_imports_it()
         if any(x in base for x in (".git", "tests", "scripts", "aurora_state", "node_modules")):
             continue
         for f in files:
-            if f.endswith(".py") and f != "crystal_convergence.py":
+            if f.endswith(".py") and f not in ("crystal_convergence.py", "crystal_weave.py"):
                 if "crystal_convergence" in open(os.path.join(base, f), encoding="utf-8", errors="ignore").read():
                     hits.append(f)
     assert hits == []

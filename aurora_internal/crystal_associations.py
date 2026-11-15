@@ -35,6 +35,8 @@ SOURCE_BASIS: Dict[str, str] = {
     "adjacency": "unattributed",          # derived without a stated premise
     "axis_embodiment": "unattributed",
     "definition_analysis": "unattributed",
+    "supposed": "supposed",               # imagined, simulated or dreamed: kept, never counted
+    "overheard": "overheard",             # said near her, not to her: a lead, never testimony
     "told": "told",                       # said to her (the propositional store's own bases)
     "observed": "observed",
     "corrected": "corrected",
