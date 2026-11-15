@@ -57,3 +57,5 @@ Authors: Sunni (Sir) Morningstar and Cael Devo.
 Added: `turn_id` on conversation memory entries (joined by id, never the clock), `Crystal.maturity` and the evidence-based `can_evolve`, `crystal_weave.apply_maturity`, `crystal_grammar`, `scripts/trial_crystal_writers.py`, `scripts/measure_crystal_grammar.py`. These are on `ceph/crystal-integration-20261115`, not main. See plan doc P3c and P6.
 
 Authors: Sunni (Sir) Morningstar and Cael Devo.
+
+Also added: `crystal_substitutability` (+ `scripts/measure_crystal_substitutability.py`), the `substitutes_for` link type, and per-member degrees in `crystal_grammar.place_classes`. See plan doc, P6 follow-up.

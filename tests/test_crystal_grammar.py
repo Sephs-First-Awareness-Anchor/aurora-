@@ -128,3 +128,10 @@ def test_it_imports_only_the_association_store_and_nothing_running_imports_it_an
 def test_the_lexical_sources_have_the_standing_they_have_earned():
     assert SOURCE_BASIS["lexical_class"] in COUNTED_BASES and SOURCE_BASIS["lexical_grounding"] in COUNTED_BASES
     assert SOURCE_BASIS["lexical_scaffold"] not in COUNTED_BASES
+
+
+def test_a_class_member_is_held_at_the_degree_it_belongs_times_the_standing_of_the_class():
+    s = AssociationStore()
+    G.place_classes(s, {"S:and": {"and": 1.0, "or": 0.4, "x": 7.0, "y": -3.0}}, {"S:and": 3})                   # standing 0.75; out-of-range degrees are clamped
+    assert s.strength("and", "lexclass:S:and", "is_a") == pytest.approx(0.75) and s.strength("or", "lexclass:S:and", "is_a") == pytest.approx(0.3)
+    assert s.strength("x", "lexclass:S:and", "is_a") == pytest.approx(0.75) and s.strength("y", "lexclass:S:and", "is_a") == 0.0

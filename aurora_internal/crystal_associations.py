@@ -49,7 +49,7 @@ COUNTED_BASES = frozenset({"recurrence", "told", "observed", "corrected"})
 UNKNOWN = "unknown"
 
 # Types that mean the same from either end; every other type (including every predicate said between two things) runs from a to b.
-SYMMETRIC_TYPES = frozenset({"related_to", "opposite_of", "contrasts"})
+SYMMETRIC_TYPES = frozenset({"related_to", "opposite_of", "contrasts", "substitutes_for"})
 
 
 def basis_of(source: str) -> str:

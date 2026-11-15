@@ -170,4 +170,9 @@ Authors: Sunni (Sir) Morningstar and Cael Devo.
 
 Snapshot: 131 scaffold links, 0 counted. The 12 grounding candidates carry no earned evidence and no word class has been found. Cause to address next: `LexicalStructure` builds profiles from distinctive followers (PMI beyond chance) and says outright that diffuse words carry no profile, so function words, the most diffuse words there are, can never form a class that way. They need a substitutability signal (shared left and right contexts), not a distinctive-follower one.
 
+### P6 follow-up: substitutability (Sir, 2026-11-15)
+
+`aurora_internal/crystal_substitutability.py` (isolated, pure): `ContextProfiles` counts the words before and after every word (event edges included); `similarity(a, b)` is 1 - Jensen-Shannon divergence on each side, combined geometrically (alike on BOTH sides, so `and` is not mistaken for `runs`), times how well each has been seen; `breadth` / `function_likeness` are degrees of how many distinct places a word turns up in; `exemplar_classes` finds, for each word taken as exemplar, the words that substitute for it and how far they are one class (mass x likeness); `place_substitutes` writes counted `substitutes_for` links; `crystal_grammar.place_classes` takes the class with each member at its own degree. Measured on her 731 snapshot sentences: the broadest words are i, you, the, to, what, and, is, a, of (found, not listed); `because` is alike to though, but, so, and, yet; a verb class (think, am, feel, want) forms. Degrees are low because the corpus is small.
+
+
 Authors: Sunni (Sir) Morningstar and Cael Devo.

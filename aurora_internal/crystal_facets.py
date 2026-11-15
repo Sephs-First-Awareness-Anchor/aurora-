@@ -37,6 +37,7 @@ TYPE_KINDS = {
     "related_to": ("relation", "relation"),
     "opposite_of": ("comparison", "comparison"),
     "contrasts": ("comparison", "comparison"),
+    "substitutes_for": ("comparison", "comparison"),   # used in the same places: how two words compare in use
 }
 
 # Sources of definitions that were placed rather than learned.

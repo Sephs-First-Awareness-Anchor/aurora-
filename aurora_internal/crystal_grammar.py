@@ -50,13 +50,15 @@ def place_scaffold(store: AssociationStore, role_of: Mapping[str, str]) -> int:
     return n
 
 
-def place_classes(store: AssociationStore, classes: Mapping[str, Iterable[str]], confirmations: Optional[Mapping[str, int]] = None) -> int:
-    """Each word class she found (identity -> members), counted at the degree its re-finding earns: one finding is half, each further one more."""
+def place_classes(store: AssociationStore, classes: Mapping[str, Any], confirmations: Optional[Mapping[str, int]] = None) -> int:
+    """Each word class she found (identity -> members), counted at the degree its re-finding earns: one finding is half, each further one more.  Members
+    may be a plain list of words, or a mapping word -> how fully it belongs (each is then held at that degree of the class's standing)."""
     n = 0
     for identity, members in sorted(classes.items()):
         st = _degree((confirmations or {}).get(identity, 1))
-        for w in sorted({str(m) for m in members}):
-            n += bool(store.add(w, class_id(identity), "is_a", ref=f"class:{identity}:{w}", source="lexical_class", strength=st))
+        held = {str(w): float(d) for w, d in members.items()} if isinstance(members, Mapping) else {str(m): 1.0 for m in members}
+        for w in sorted(held):
+            n += bool(store.add(w, class_id(identity), "is_a", ref=f"class:{identity}:{w}", source="lexical_class", strength=st * max(0.0, min(1.0, held[w]))))
     return n
 
 
