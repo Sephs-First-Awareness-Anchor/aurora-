@@ -78,6 +78,31 @@ A memory that mattered should be held more finely than one that did not. The rul
   impact evidence the model has. The identity record would be held finer as per-statement events (who, when, corrected or not,
   what it changed), not by a firmer basis label.
 
+## 3c. The shape of an impact, in the pressure system's own terms (Sir, 2026-11-14)
+
+How finely a memory is held should follow the **shape** of what it did, and that shape already has a native form: the
+5-axis pressure vector (X/T/N/B/A, higher = worse) and the relief between before and after (`PressureVec.relief_from`,
+`ReliefRecord`). So:
+
+* A consequence carries `pressure_before`, `pressure_after` and `relief` (= before − after, positive means pressure dropped)
+  per axis, translated from a `ReliefRecord` by `consequence_from_relief` (nothing re-derived; a relief that contradicts
+  before/after is refused). Tests cross-check the arithmetic against the real `PressureVec`/`ReliefRecord`.
+* **Unknown shape is not zero.** A consequence with no measured shape is kept in full; a measured all-zero shape is ordinary.
+* **Harm matters as much as relief:** pressure that rose (negative relief) is a measured change and is kept.
+* **No arbitrary threshold.** "Impactful" is any measured change (the directive: a measurable change is a genuine event).
+  Redundancy is judged by form, not size: events repeating a shape already held (same target, same sign pattern over
+  X/T/N/B/A) are compacted into per-axis sums; the **first** and the **strongest** of each form stay in full.
+* **Compaction loses detail, never shape:** the roll-up carries per-axis relief sums, and `view_shape` equals the whole
+  log's shape (80 random logs x 3 budgets).
+* **Replay noise cannot inflate an effect:** a consequence's identity is what changed, not the measured quantity, and
+  relief is rounded (float noise does not make a replay a new event). `demonstration` reports `effect` (mean relief over
+  *independent* consequences; the first occurrence stands for a signature), `samples` and `distinct_contexts`, the same
+  quantities genealogy keeps in `AbilityProfile.consequence_profile`. It does not report a confidence: that needs a
+  rule for what volume and recurrence justify, which is not established here.
+* **Not yet connected:** nothing produces these consequences in the live path. The natural producer is
+  `ConstraintGenealogyLogger._attribute_consequence`, which already attributes measured relief per ability; wiring it is
+  Stage D/E work and has not been done or measured.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an
@@ -129,7 +154,7 @@ Tests 8–10 (cross-device, comparative equivalence, performance) are **not done
 
 ## 7. Verification
 
-* 211 contract tests (axes 42, base 40, live view 129) + 10 store tests; fifteen contract mutants and four store mutants each caught (one more store mutant, the
+* 340 contract tests (axes 42, base 40, live view 129, pressure shape 129) + 10 store tests; twenty-five contract mutants and four store mutants each caught (one more store mutant, the
   recorder's own default, survived until a direct test was added).
 * 384 tests across every file touching the knowledge path pass; the single failure (`test_build694` turn-id source
   check) fails identically on clean `main`.
