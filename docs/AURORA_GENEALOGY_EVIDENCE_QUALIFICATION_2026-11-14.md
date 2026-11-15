@@ -270,6 +270,39 @@ six mutants caught. 787 tests pass across the evidence, identity, genealogy and 
   not measured here. Legacy representations (everything credited before this change) are `unattributed`; their history is not
   reconstructed. The ledger is capped (16 inputs per kind, 8 lived ancestors), so very long histories are marked `capped`.
 
+## 3j. Stage D: qualified promotion (directive VIII; tests 4, 5, 6)
+
+* **Promotion gates are unchanged.** `_try_promote` still judges the same source-blind `PairStats` against the same dynamic
+  thresholds. Dream and simulation evidence takes part in that architecture and can promote a relationship, but only through the
+  consequence it demonstrates (distinct pressure results), not through a discount fraction and not through repetition.
+* **Pair ledger.** Each co-active pair now carries, beside its stats, a by-kind record (lived / hypothetical / overheard: ticks,
+  distinct inputs, relief). `ConstraintLink.evidence_qualification` snapshots it at minting: `ledger: recorded`, `by_kind`,
+  `internal_only` (only hypothetical evidence), `externally_demonstrated` (at least one tested/acted/perceived input),
+  `replays_skipped`. A pair the ledger never saw is `{"ledger": "unattributed"}`, never presumed. Legacy links load with the
+  field `None`; the field round-trips through `to_dict` / `constraint_link_from_dict`.
+* **Replay is not new evidence.** A hypothetical (dreamed/simulated) tick whose input, trace and *presented* pressure before/after
+  are identical to one already credited is recorded as an event but credits neither `PairStats` nor the consequence profile
+  (`_replays_skipped`). Presented pressure is used, not genealogy's derived relief, which varies with its own state. A different
+  episode, or the same episode with a different result, is new. Lived inputs are never treated as replays (six identical lived ticks
+  stay six). The replay memory is persisted with the ledger (`rep_ledger.json` v2).
+* **Simulation versus the world (test 5).** `representation_evidence(...)["applicability"]` is `internal_only` (hypothetical only),
+  `external_supported`, `external_contradicted`, `external_mixed` or `none`. External means an input she tested, acted on or
+  perceived; hearing something is lived but not external. The simulation history is retained untouched; only applicability moves.
+  An external tick that did **not** relieve pressure used to be dropped by the noise filter before attribution, so a failure in the
+  world was invisible; `_ledger_external_miss` now records it in the ledger only (no profile, gate or measurement change), which is
+  what lets an external contradiction revise a simulation's apparent success.
+* **Refactor:** the input-identity merge in `_observe_impl` moved into `_register_input_identity` (same behavior; also used by the
+  miss path). `is_external_occurrence` added to the boundary allowlist (a classification predicate; cognition still never reads it).
+* **Tests** (`tests/test_qualified_promotion.py`, 14; ten mutants caught): replay credits nothing (PairStats and profile), replay still
+  recorded as an event, new episode credited, lived never a replay, restart persistence, dream-only relationship promotes and says
+  it is internal, serialisation and legacy load, mixed lived+dreamed reports both, one dream replayed 300 times cannot promote,
+  unrecorded pair unattributed, test 5 (contradiction, support, mixed; simulation history retained; hearing is not external), and
+  lived-only sequences give identical profiles and pair stats to a genealogy without identity.
+* **Regression:** 846 passed across genealogy, dream, evidence, input, pressure and wiring suites.
+* **Not covered:** live external validation does not exist yet (live inputs are heard, so `n_external` is 0 in practice); the
+  consequence profile's confidence is still tick-based for lived evidence; the dream trainer's gateway replay still credits nothing
+  synchronously; legacy links stay without qualification.
+
 ## 4. Audit findings (read from the source; the live one measured)
 
 1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an

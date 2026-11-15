@@ -1473,6 +1473,10 @@ class ConstraintLink:
     # specific mechanism, and a promoted link is exactly as much a
     # representation as the ability that composed it.
     consequence_profile: Optional[Dict[str, Any]] = None
+    # Stage D (directive VIII): how this link's evidence stands, by kind of occurrence (lived / hypothetical / overheard),
+    # distinct inputs, external demonstrations and replays not credited, snapshotted when it was promoted.  Additive and
+    # optional: historical links omit it ("unattributed") and nothing reads it for any gate.
+    evidence_qualification: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict:
         d = {
@@ -1503,6 +1507,8 @@ class ConstraintLink:
             d["semantic_identity"] = dict(self.semantic_identity)
         if self.consequence_profile is not None:
             d["consequence_profile"] = dict(self.consequence_profile)
+        if self.evidence_qualification is not None:
+            d["evidence_qualification"] = dict(self.evidence_qualification)
         return d
 
     def current_semantic_value(self, key: str, default: Any = None) -> Any:
@@ -1575,6 +1581,7 @@ def constraint_link_from_dict(data: Dict[str, Any], fallback_id: str = "") -> Co
         representation_relation=(dict(rec.get("representation_relation") or {}) or None),
         semantic_identity=(dict(rec.get("semantic_identity") or {}) or None),
         consequence_profile=(dict(rec["consequence_profile"]) if isinstance(rec.get("consequence_profile"), dict) else None),
+        evidence_qualification=(dict(rec["evidence_qualification"]) if isinstance(rec.get("evidence_qualification"), dict) else None),
     )
 
 
@@ -2162,6 +2169,11 @@ class ConstraintGenealogyLogger:
         # and which lived inputs it was credited under (its experiential ancestry).  Read-only alongside
         # `consequence_profile`; persisted; a representation with no entry has unattributed ancestry, never invented.
         self._rep_ledger: Dict[str, Dict[str, Any]] = {}
+        # Per ordered pair, the same qualification (what PairStats, which is source-blind, cannot say), and the set of
+        # hypothetical observations already credited, so an identical replay is not credited twice.
+        self._pair_ledger: "OrderedDict[Tuple[str, str], Dict[str, Any]]" = OrderedDict()
+        self._replay_seen: "OrderedDict[str, None]" = OrderedDict()
+        self._replays_skipped: int = 0
         self._rep_ledger_path = os.path.join(output_dir, "rep_ledger.json")
         self._load_rep_ledger()
 
@@ -2590,6 +2602,7 @@ class ConstraintGenealogyLogger:
         # --- Noise filter ---
         if not self._is_relief_event(relief):
             self.skipped_no_relief += 1
+            self._ledger_external_miss(trace, raw_relief, notes)
             # Still update governor (low fitness signal)
             self.governor.tick()
             self._last_observe_details["no_relief_tick_ms"] = round(
@@ -2678,28 +2691,8 @@ class ConstraintGenealogyLogger:
         # AttributeError on .to_dict() -- treat anything without that method
         # as equivalent to "no snapshot supplied" rather than raising.
         merged_notes: Dict[str, Any] = dict(notes or {})
-        # Which received input this observation answers (identity only; changes no measurement).  A caller that already
-        # named one keeps its own; an observation made outside any input carries none and stays unattributed.
-        try:
-            from aurora_internal.aurora_input_identity import (
-                note_for_observe as _input_note, summary_for_registry as _input_summary)
-            _inp = None
-            if _input_note():
-                for _k, _v in _input_note().items():
-                    merged_notes.setdefault(_k, _v)
-                _inp = _input_summary()
-            elif not merged_notes.get("input_event"):
-                # not a turn: a dream or simulation episode names itself in its own notes
-                from aurora_internal.aurora_input_identity import identity_from_notes as _notes_identity
-                _inp = _notes_identity(merged_notes)
-                if _inp:
-                    merged_notes["input_event"] = _inp["id"]
-            if _inp and _inp["id"] not in self._input_events:         # said once per input, not on every observation
-                self._input_events[_inp.pop("id")] = _inp
-                while len(self._input_events) > 256:
-                    self._input_events.popitem(last=False)
-        except Exception:
-            pass
+        # Which received input this observation answers (identity only; changes no measurement).
+        self._register_input_identity(merged_notes)
         if difference_snapshot is not None and hasattr(difference_snapshot, "to_dict"):
             merged_notes["difference_snapshot"] = difference_snapshot.to_dict()
         if tolerance_meta:
@@ -2873,8 +2866,11 @@ class ConstraintGenealogyLogger:
             # its top evidence tier) is cleared below. Placed after the
             # noise filter above -- there is no consequence to attribute on
             # a tick that didn't qualify as a genuine relief event.
-            self._attribute_consequence(trace, relief, self.tick_count, notes=merged_notes)
-            rewritten = self._accumulate_pairs(trace, relief, cost_total, x_risk_total)
+            _replay = self._hypothetical_replay(merged_notes, trace, pressure_before, pressure_after)
+            if not _replay:
+                self._attribute_consequence(trace, relief, self.tick_count, notes=merged_notes)
+            rewritten = None if _replay else self._accumulate_pairs(trace, relief, cost_total, x_risk_total,
+                                                                    input_id=str(merged_notes.get("input_event", "") or ""))
         finally:
             self._active_relation_context = {}
         self._last_observe_details["pair_and_consequence_ms"] = round(
@@ -4178,6 +4174,51 @@ class ConstraintGenealogyLogger:
             return 1.0
         return max(0.0, 1.0 / (1.0 + distinct_others))
 
+    def _register_input_identity(self, notes: Dict[str, Any]) -> str:
+        """Name the input an observation answers in `notes["input_event"]` (a caller that already named one keeps its own;
+        an observation made outside any input carries none and stays unattributed) and keep what that input was, once.
+        Identity only: changes no measurement.  Returns the id or ""."""
+        try:
+            from aurora_internal.aurora_input_identity import (
+                note_for_observe as _input_note, summary_for_registry as _input_summary)
+            _inp = None
+            if _input_note():
+                for _k, _v in _input_note().items():
+                    notes.setdefault(_k, _v)
+                _inp = _input_summary()
+            elif not notes.get("input_event"):
+                # not a turn: a dream or simulation episode names itself in its own notes
+                from aurora_internal.aurora_input_identity import identity_from_notes as _notes_identity
+                _inp = _notes_identity(notes)
+                if _inp:
+                    notes["input_event"] = _inp["id"]
+            if _inp and _inp["id"] not in self._input_events:         # said once per input, not on every observation
+                self._input_events[_inp.pop("id")] = _inp
+                while len(self._input_events) > 256:
+                    self._input_events.popitem(last=False)
+        except Exception:
+            pass
+        return str(notes.get("input_event", "") or "")
+
+    def _ledger_external_miss(self, trace: List[TraceItem], raw_relief: PressureVec, notes: Optional[Dict[str, Any]]) -> None:
+        """A tick that did not relieve pressure never reaches `_attribute_consequence` (the noise filter returns first), so a
+        failure in the world would be invisible to the ledger and an external contradiction could never revise what a
+        simulation or dream had supported.  For an input she tested, acted on or perceived, such a tick is recorded in the
+        ledger (and only there) against each representation the real attribution would have credited.  Changes no profile,
+        gate or measurement; for any other kind of input nothing is recorded, as before."""
+        try:
+            from aurora_internal.aurora_input_identity import is_external_occurrence as _is_ext
+            tmp = dict(notes or {})
+            input_id = self._register_input_identity(tmp)
+            if not input_id or not _is_ext(str((self._input_events.get(input_id) or {}).get("occurrence", ""))):
+                return
+            rd = raw_relief.to_dict()
+            for item_id in dict.fromkeys(str(t.id) for t in (trace or []) if str(t.id)):
+                if item_id in self.abilities or item_id in self.links:
+                    self._ledger_credit(item_id, input_id, rd)
+        except Exception:
+            pass
+
     def _shadow_input_effect(self, target_id: str, relief_dict: Dict[str, float], n_active: int,
                              notes: Optional[Dict[str, Any]]) -> None:
         """Record, per (input, representation), the relief this genealogy measured while that input was being processed.
@@ -4207,27 +4248,111 @@ class ConstraintGenealogyLogger:
     _LEDGER_INPUTS_CAP = 16      # distinct input ids remembered per representation and occurrence class
     _LEDGER_LIVED_CAP = 8        # most recent lived inputs kept as a representation's experiential ancestry
 
-    def _ledger_credit(self, rep_id: str, input_id: str, relief_dict: Dict[str, float]) -> None:
-        """Account one credited tick to (representation, kind of occurrence).  Ticks are not independent evidence:
-        `n_inputs` counts distinct inputs (a replayed episode is the same input), which is what recurrence is judged on."""
+    def _ledger_kind(self, input_id: str) -> Tuple[str, str]:
+        """(kind, occurrence) of a registered input: lived / hypothetical / overheard, else "unclassified"."""
         from aurora_internal.aurora_input_identity import occurrence_class as _occ_class
-        info = self._input_events.get(input_id) or {}
-        kind = _occ_class(str(info.get("occurrence", "")))
-        if not kind:
-            kind = "unclassified"
-        row = self._rep_ledger.setdefault(rep_id, {"by": {}, "lived": [], "lived_total": 0})
-        cls = row["by"].setdefault(kind, {"ticks": 0, "n_inputs": 0, "inputs": [], "relief": {a: 0.0 for a in AXES}})
+        occ = str((self._input_events.get(input_id) or {}).get("occurrence", ""))
+        return (_occ_class(occ) or "unclassified"), occ
+
+    def _credit_class(self, cls: Dict[str, Any], input_id: str, occ: str, relief_dict: Optional[Dict[str, float]]) -> bool:
+        """Account one credited tick in one kind's record.  Ticks are not independent evidence: `n_inputs` counts distinct
+        inputs.  Returns True when this input is new to the record."""
+        from aurora_internal.aurora_input_identity import is_external_occurrence as _is_ext
         cls["ticks"] += 1
-        for a in AXES:
-            cls["relief"][a] += float(relief_dict.get(a, 0.0) or 0.0)
-        if input_id not in cls["inputs"]:
+        if relief_dict is not None:
+            for a in AXES:
+                cls["relief"][a] += float(relief_dict.get(a, 0.0) or 0.0)
+        new = input_id not in cls["inputs"]
+        if new:
             cls["n_inputs"] += 1
             cls["inputs"].append(input_id)
             del cls["inputs"][:-self._LEDGER_INPUTS_CAP]
-            if kind == "lived":
-                row["lived_total"] += 1
-                row["lived"].append(input_id)
-                del row["lived"][:-self._LEDGER_LIVED_CAP]
+            if _is_ext(occ):
+                cls["n_external"] = int(cls.get("n_external", 0)) + 1       # tested / acted / perceived in the world
+        if relief_dict is not None and _is_ext(occ):
+            net = sum(float(relief_dict.get(a, 0.0) or 0.0) for a in AXES)
+            if net > 0.0:
+                cls["ext_pos"] = int(cls.get("ext_pos", 0)) + 1             # an external tick that relieved pressure
+            elif net < 0.0:
+                cls["ext_neg"] = int(cls.get("ext_neg", 0)) + 1             # an external tick that loaded it
+        return new
+
+    def _ledger_credit(self, rep_id: str, input_id: str, relief_dict: Dict[str, float]) -> None:
+        """Account one credited tick to (representation, kind of occurrence)."""
+        kind, occ = self._ledger_kind(input_id)
+        row = self._rep_ledger.setdefault(rep_id, {"by": {}, "lived": [], "lived_total": 0})
+        cls = row["by"].setdefault(kind, {"ticks": 0, "n_inputs": 0, "inputs": [], "relief": {a: 0.0 for a in AXES}})
+        if self._credit_class(cls, input_id, occ, relief_dict) and kind == "lived":
+            row["lived_total"] += 1
+            row["lived"].append(input_id)
+            del row["lived"][:-self._LEDGER_LIVED_CAP]
+
+    def _pair_ledger_credit(self, key: Tuple[str, str], input_id: str) -> None:
+        """The same accounting per ordered pair: PairStats (what promotion judges) is source-blind, so what kind of occurrence
+        its ticks came from is kept here, beside it, and snapshotted onto the link when it is promoted."""
+        if not input_id:
+            self._pair_unattributed = getattr(self, "_pair_unattributed", 0) + 1
+            return
+        kind, occ = self._ledger_kind(input_id)
+        row = self._pair_ledger.get(key)
+        if row is None:
+            row = {"by": {}}
+            self._pair_ledger[key] = row
+            while len(self._pair_ledger) > 4096:
+                self._pair_ledger.popitem(last=False)
+        cls = row["by"].setdefault(kind, {"ticks": 0, "n_inputs": 0, "inputs": []})
+        self._credit_class(cls, input_id, occ, None)
+
+    def _pair_qualification(self, key: Tuple[str, str]) -> Dict[str, Any]:
+        """How a pair's evidence stands, by kind of occurrence.  A pair with no recorded ledger (legacy, or accumulated
+        outside any identified input) is `unattributed`, never presumed lived or hypothetical."""
+        row = self._pair_ledger.get(key)
+        if not row:
+            return {"ledger": "unattributed"}
+        by = {k: {"ticks": v["ticks"], "n_inputs": v["n_inputs"], "n_external": int(v.get("n_external", 0)),
+                  "capped": v["n_inputs"] > len(v["inputs"])} for k, v in row["by"].items()}
+        lived = by.get("lived", {"n_inputs": 0})["n_inputs"]
+        hypo = by.get("hypothetical", {"n_inputs": 0})["n_inputs"]
+        ext = sum(v["n_external"] for v in by.values())
+        return {"ledger": "recorded", "by_kind": by,
+                "internal_only": bool(hypo) and not lived and not ext,
+                "externally_demonstrated": ext > 0,
+                "replays_skipped": int(self._replays_skipped)}
+
+    def pair_evidence(self, left_id: str, right_id: str) -> Dict[str, Any]:
+        return self._pair_qualification((str(left_id), str(right_id)))
+
+    def _hypothetical_replay(self, notes: Optional[Dict[str, Any]], trace: List[TraceItem], before: PressureVec,
+                             after: PressureVec) -> bool:
+        """Is this observation a repeat of one already credited, from a dream or simulation (a hypothetical input)?  The same
+        episode with the same trace and the same presented result (pressure before and after) is the repeated presentation
+        of one result, not a new independent consequence, so it is not credited again (directive IV: no recursive
+        self-reward).  The result is identified by the pressures it presented, not by the relief genealogy derives from them
+        (that moves with genealogy's own state, so identical results would look new).  A different episode, a different
+        trace or a different result is a new consequence and is credited.  Lived inputs are never
+        treated as replays.  The observation itself is still recorded; only its crediting is skipped."""
+        try:
+            input_id = str((notes or {}).get("input_event", "") or "")
+            if not input_id:
+                return False
+            kind, _ = self._ledger_kind(input_id)
+            if kind != "hypothetical":
+                return False
+            bd, ad = before.to_dict(), after.to_dict()
+            sig = hashlib.blake2b(json.dumps([input_id, [str(t.id) for t in (trace or [])],
+                                              [round(float(bd.get(a, 0.0) or 0.0), 6) for a in AXES],
+                                              [round(float(ad.get(a, 0.0) or 0.0), 6) for a in AXES]]).encode("utf-8"),
+                                  digest_size=10).hexdigest()
+            if sig in self._replay_seen:
+                self._replays_skipped += 1
+                self._replay_seen.move_to_end(sig)
+                return True
+            self._replay_seen[sig] = None
+            while len(self._replay_seen) > 4096:
+                self._replay_seen.popitem(last=False)
+            return False
+        except Exception:
+            return False
 
     def _load_rep_ledger(self) -> None:
         try:
@@ -4238,13 +4363,26 @@ class ConstraintGenealogyLogger:
                 if isinstance(rows, dict):
                     self._rep_ledger = {str(k): v for k, v in rows.items()
                                         if isinstance(v, dict) and isinstance(v.get("by"), dict)}
+                pairs = data.get("pairs") if isinstance(data, dict) else None
+                if isinstance(pairs, dict):
+                    for k, v in pairs.items():
+                        left, _, right = str(k).partition("|")
+                        if right and isinstance(v, dict) and isinstance(v.get("by"), dict):
+                            self._pair_ledger[(left, right)] = v
+                seen = data.get("replay_seen") if isinstance(data, dict) else None
+                if isinstance(seen, list):
+                    self._replay_seen = OrderedDict((str(x), None) for x in seen[-4096:])
+                self._replays_skipped = int((data.get("replays_skipped", 0) if isinstance(data, dict) else 0) or 0)
         except Exception:
             self._rep_ledger = {}                     # an unreadable ledger is ancestry unattributed, never a crash
 
     def _write_rep_ledger(self) -> None:
         try:
             from pathlib import Path
-            atomic_write_json(Path(self._rep_ledger_path), {"version": 1, "reps": self._rep_ledger})
+            atomic_write_json(Path(self._rep_ledger_path), {
+                "version": 2, "reps": self._rep_ledger,
+                "pairs": {f"{l}|{r}": v for (l, r), v in self._pair_ledger.items()},
+                "replay_seen": list(self._replay_seen), "replays_skipped": self._replays_skipped})
         except Exception:
             pass
 
@@ -4255,9 +4393,16 @@ class ConstraintGenealogyLogger:
         row = self._rep_ledger.get(str(rep_id))
         if not row:
             return {"rep": str(rep_id), "ancestry": "unattributed", "lived_inputs": [], "by_kind": {}}
+        pos = sum(int(v.get("ext_pos", 0)) for v in row["by"].values())
+        neg = sum(int(v.get("ext_neg", 0)) for v in row["by"].values())
+        hypo = "hypothetical" in row["by"]
+        applicability = ("external_mixed" if pos and neg else "external_supported" if pos else
+                         "external_contradicted" if neg else "internal_only" if hypo else "none")
         return {"rep": str(rep_id), "ancestry": "traced" if row["lived"] else "unattributed",
-                "lived_inputs": list(row["lived"]), "lived_total": row["lived_total"],
+                "lived_inputs": list(row["lived"]), "lived_total": row["lived_total"], "applicability": applicability,
                 "by_kind": {k: {"ticks": v["ticks"], "n_inputs": v["n_inputs"], "relief": dict(v["relief"]),
+                                "n_external": int(v.get("n_external", 0)), "ext_pos": int(v.get("ext_pos", 0)),
+                                "ext_neg": int(v.get("ext_neg", 0)),
                                 "capped": v["n_inputs"] > len(v["inputs"])} for k, v in row["by"].items()}}
 
     def ancestry_of(self, rep_ids: Iterable[str]) -> Dict[str, Any]:
@@ -8731,6 +8876,7 @@ class ConstraintGenealogyLogger:
         relief: PressureVec,
         cost_total: Dict[str, float],
         x_risk: float,
+        input_id: str = "",
     ) -> Optional[List[TraceItem]]:
         """
         Extract adjacent pairs from the trace, update PairStats,
@@ -8761,6 +8907,10 @@ class ConstraintGenealogyLogger:
 
             ps = self._pair_stats[key]
             ps.update(relief, cost_total, x_risk, self.tick_count)
+            try:
+                self._pair_ledger_credit(key, input_id)       # what kind of occurrence this pair's evidence came from
+            except Exception:
+                pass
             # RELATIONAL PROMOTION JURISDICTION REPAIR: capture the actual
             # intact relation record _update_representation_relation()
             # already builds/updates from real observed coactivation --
@@ -9326,6 +9476,7 @@ class ConstraintGenealogyLogger:
             constraint_basis=constraint_basis,
             representation_relation=representation_relation,
             semantic_identity=semantic_identity,
+            evidence_qualification=self._pair_qualification(key),
         )
     def _generation_of_item(self, item_id: str, seen: Optional[set] = None) -> int:
         iid = str(item_id)

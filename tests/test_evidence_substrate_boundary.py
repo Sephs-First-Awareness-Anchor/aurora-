@@ -19,7 +19,8 @@ ALLOWED = {
     "aurora_internal/constraint_genealogy.py": {("aurora_input_identity", "note_for_observe"),
                                                 ("aurora_input_identity", "summary_for_registry"),
                                                 ("aurora_input_identity", "identity_from_notes"),
-                                                ("aurora_input_identity", "occurrence_class")},
+                                                ("aurora_input_identity", "occurrence_class"),
+                                                ("aurora_input_identity", "is_external_occurrence")},
     "aurora.py": {("aurora_input_identity", "begin_input"), ("aurora_input_identity", "end_input")},
 }
 SKIP_DIRS = {"tests", "scripts", ".git", "node_modules", "__pycache__"}

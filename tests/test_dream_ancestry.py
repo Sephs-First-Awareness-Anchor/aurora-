@@ -129,7 +129,8 @@ def test_replaying_a_dream_is_the_same_input_and_a_new_one_is_a_new_input(gen, b
     for _ in range(4):
         assert dream(gen, bridge, "epX", [a, b]) == first                  # the same episode: the same identity
     kind = gen.representation_evidence(a)["by_kind"]["hypothetical"]
-    assert kind["n_inputs"] == 1 and kind["ticks"] == 5                    # replayed five times, one independent occurrence
+    assert kind["n_inputs"] == 1 and kind["ticks"] == 1                    # replayed five times: one occurrence, credited once
+    assert gen._replays_skipped == 4
     dream(gen, bridge, "epY", [a, b], evidence_id="e2")
     assert gen.representation_evidence(a)["by_kind"]["hypothetical"]["n_inputs"] == 2
 

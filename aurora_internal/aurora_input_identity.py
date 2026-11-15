@@ -103,3 +103,9 @@ def occurrence_class(occurrence: str) -> str:
     if occurrence in _Q.LIVED:
         return "lived"
     return ""
+
+
+def is_external_occurrence(occurrence: str) -> bool:
+    """Did she test, act on or perceive it in the world (the contract's own external-support occurrences)?  Hearing or
+    reading something is lived but is not, by itself, an external demonstration of a capability."""
+    return occurrence in {"tested", "acted", "perceived"}
