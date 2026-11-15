@@ -1,112 +1,141 @@
-# Environmental genealogy must preserve how evidence is qualified
+# Evidence qualification for the environmental genealogy (FIX-A144 revised, FIX-A145)
 
 **Authors:** Sunni (Sir) Morningstar & Cael Devo
 **Date:** 2026-11-14
-**Status:** contract + tests. Nothing in the live path calls it yet; it is the acceptance check for Stage 3 (durable
-developmental evidence). Stacked on PR #251 (the "supposed" basis lives there).
+**Directive:** Developmental Evidence, Simulated Experience, and Consequence-Grounded Promotion (Stages A and B done; C–F open, see §8)
+**Stack:** #251 (FIX-A143) ← #253 (this); #252 merges cleanly with this stack and the combined state passes 127 tests (§7).
 
-> The future environmental genealogy system must preserve not just what was learned, but how the evidence is
-> qualified, including hypothetical, observed, inferred, contradicted, and corrected information. — Sir
+> Experience precedes dreaming. Dreaming may transform experience. Consequences determine development. Genealogy preserves the lineage.
 
-Moving genealogy out of the live turn means evidence will be reconstructed, attributed and consolidated somewhere,
-at some later time, from records. A reconstruction that keeps *what* was learned and loses *how it stands* has
-changed what she knows without anyone deciding to: an example becomes a belief, an inference becomes an
-observation, a contradiction is resolved by whichever copy arrived last, a correction can no longer be told from
-the thing it corrected. The directive's "no double counting", "uncertainty in attribution preserved" and "no
-self-rewarding loops" are all statements about this.
+## 1. One event, seven questions (`aurora_internal/evidence_qualification.py`)
 
-## 1. The vocabulary (`aurora_internal/evidence_qualification.py`)
+Kept apart, never collapsed into one label:
 
-| Basis | Meaning | Counts toward held / denied? |
+| Question | Field | Values |
 |---|---|---|
-| `observed` | she did it or saw it herself | yes |
-| `told` | said to her (testimony) | yes |
-| `corrected` | a correction of what was held; the **latest** settles the verdict, what it corrected stays in the history | yes |
-| `supposed` | hypothetical: an example, a story, a dream, a counterfactual, a proposed pair that has not acted together | **never** |
-| `inferred` | derived from other evidence; must name what from (`derived_from`) | **never** — an inference cannot raise confidence in its own premises |
-| `unknown` | the producer did not say | **never, and never upgraded** |
+| Where did it originate / what happened? | `occurrence` | heard, read, perceived, acted, tested, derived, imagined, simulated, dreamed, recalled |
+| How is its content supported? | `basis` | observed, told, corrected, supposed, inferred, unknown |
+| What did it develop from? | `ancestry`, `ancestry_status` | event ids; traced / partial / unattributed |
+| What world does it apply to? | `context` | world: external, internal, simulated, dreamed, imagined; plus a domain |
+| Which mechanisms contributed? | `consequence.attribution`, `attribution_complete` | event ids; incomplete is the default |
+| What actually changed? | `consequence` | target + change |
+| Where has it demonstrated effect? | computed by `demonstration()` | never asserted |
 
-*Verdict* (from counted events only): held / denied / contested / settled-by-correction / supposed / inferred /
-unsaid. *Contradicted* and *corrected* are flags: a correction settles the verdict and the contradiction it settled
-stays visible.
+The existing mechanisms are preserved: event identity (hash of content; replay is one event; fields at their defaults are
+not hashed, so events written before the new fields keep their ids), deterministic merge, replay idempotence,
+contradiction preservation (a correction settles the verdict, what it settled stays visible), conflict detection.
 
-## 2. What the code keeps today (checked in the source, not assumed)
+## 2. Rules the tests hold
 
-**Propositional store (what she was told / observed).** Keeps the basis of every statement, a history, and the
-latest correction. Gaps found while writing the contract:
+* An imagined, simulated or dreamed occurrence **cannot** carry told/observed/corrected content, and cannot claim the
+  external world. A dream is a real dream; it is not evidence the dreamed event occurred. A simulation is real
+  computation; it does not certify external effectiveness.
+* Hearing is an occurrence; what was said is testimony (`told`), supposition or correction by its content. A user_input
+  stream is **not** "observed fact".
+* A recollection never adds evidence (the original carried it). A recalled dream does not confirm its contents.
+* inferred and unknown never count; an inference must name its premises and cannot raise their confidence.
+* `carried` (legacy) evidence keeps the standing it had and is labelled unattributed; genuine evidence later clarifies it.
+  Nothing she developed is disabled by migration.
+* `violations(before, after)` names dropped events, rewritten events, laundered basis (a dream returning as an
+  observation) and **conflicting duplicate ids** (Codex P2 on #253: the earlier version let the last duplicate win).
+* `grounding()` follows ancestry/premises to lived roots and reports dangling and ungrounded ancestry. It invents
+  nothing: a dream element with no supported ancestry is reported as ungrounded, not given a history.
+* `demonstration()` counts **distinct consequences**, so a replay, or a re-run reproducing the same result, adds no
+  independent evidence; a different attribution or change is new evidence. External support needs a lived, observed
+  test or action in the external world. A failed external test is kept and revises applicability
+  (`external_contradicted` / `external_mixed`) without erasing the simulation's history.
+  (Bug found by its own test: testimony and a test of the same consequence shared a signature; the occurrence kind is now part of it.)
 
-* a missing or unrecognised basis is recorded as `told` (`_record_assertion`: `basis if basis in BASES else "told"`):
-  unknown evidence is upgraded to testimony. The contract does not do this; a test names the difference so it cannot be forgotten;
-* history is bounded (first exposure + latest 7), so the middle of a long history is gone. A durable log must not cap it;
-* `inferred` is not stored (answers are derived at read time). That is safe only while nothing stores a derived
-  statement as if it were told.
+## 3. Stage B: provenance at the source (FIX-A145)
 
-**Genealogy (lineage, abilities, pairs, links).** The native qualifier exists: every `TraceItem` carries an
-`EnvironmentVector` with a `stream_type` (`user_input`, `knowledge_feed`, `simulation`, `corpus`, `dream`).
-**It does not survive pair accumulation.** `PairStats` keeps `count`, `pos_count` and `last_seen_tick`, and
-`ConstraintLink` keeps `count`, means and tags; neither has a field for the stream the evidence came from
-(the stream is counted separately, per environment, in `_env_fire_count` / `_env_effectiveness`, not per pair).
-So a pair co-activated ten times in dreams and once lived is, after accumulation, the same record as eleven lived
-co-activations. The collision search's own docstring is the one place the hypothetical is kept apart ("without
-pretending the proposed pair has already acted together"), and a collision's `status: "unresolved"` is the one place
-an unresolved contradiction is kept.
+* The store defaulted a missing basis to `told`. Now `unknown`, kept on the predicate (basis count, history), never
+  counted, never strengthening a relation, marking a source, changing a word's role or placing a concept, and never
+  voiced as a statement (asked directly, she says she does not know).
+* Every production caller states its basis; an AST test fails if one relies on a default again. Harvested text and the
+  identity record say `told` **by decision**.
+* Standing that predates provenance is untouched and reported as unattributed.
+* 23 test fixtures that teach by testimony now say `basis="told"`.
 
-That is the starting point the redistribution must not make worse, and the durable evidence log should fix going
-forward: **qualify at write time**, when the stream is known, because it cannot be recovered afterwards.
+## 4. Audit findings (read from the source; the live one measured)
 
-## 3. Rules for the environmental genealogy
+1. **The genealogy's evidence-origin label is empty in practice.** `scripts/measure_stream_provenance.py`: in an
+   8-turn live script, **233 of 233** trace items carried an empty `EnvironmentVector` (76 `observe` calls from the
+   evolution chamber tick, the understanding contract, `_log_learning_relief`, `_log_modulation_event`,
+   `_inject_to_genealogy`). The documented "dream"/"simulation" labels are never produced there. Qualification has to
+   be created at the source; there is nothing to preserve yet.
+2. **Four unrelated stream vocabularies exist:** the gateway's `StreamType` (user_input, knowledge_feed, sensor_data,
+   system_event, exploration, self_reflection), the genealogy docstring's (adds simulation, corpus, dream), the lineage
+   compiler's `"synthetic_lineage"`, and `notes["stream_type"]` in the dimensional path (read; nothing found writing it).
+3. **Dream replay enters as `knowledge_feed`.** `aurora_dream_trainer._witness_directed_training_samples` sends replays
+   through `gateway.receive(stream_type=KNOWLEDGE_FEED, metadata={"internal_origin": "dream_replay"})`. The origin is only
+   in metadata, so a stream-based reading would call a replay read/testimony. `occurrence_of_stream(stream, internal_origin)`
+   lets the origin outrank the stream. Those replayed samples are *directed-training lesson attempts*, i.e. replays of
+   external lessons, not novel dream content; whether Aurora produces novel dream recombinations that reach memory is
+   not established by this audit.
+4. **Promotion gates are source-blind.** `_try_promote` judges `PairStats` (count, mean/positive relief, positive
+   fraction, stdev, x-risk); `PairStats` and `ConstraintLink` have no evidence-origin field, and the gates do not read
+   the representation relation. Whether dream or simulation traffic reaches `observe` was **not** measured (the dream
+   trainer was not run); no direct genealogy `observe` call was found in the dream trainer or simulation engine by grep.
+5. Promotion was not altered (directive: audit first). The existing numeric thresholds are unchanged and still
+   unexplained as to what they measure; the directive asks that be established before any dream/simulation weighting
+   is touched.
 
-1. **Every durable event carries its basis**, and for genealogy evidence the environment it came from, at the moment
-   it is produced. A reconstruction never assigns a basis; it carries one.
-2. **Counting is by basis.** Only `observed` / `told` / `corrected` evidence counts. A pair's `count` that feeds
-   promotion must be the count of *counted* evidence (decision for Sir: whether dream/simulation co-activation may
-   contribute to promotion at all, and with what weight).
-3. **Deferred reconstruction may add `inferred` events, never counted ones.** Re-attributing ancestry is inference
-   over existing evidence; it must not be able to raise the confidence of what it was derived from.
-4. **Consolidation is a union by event id.** The provisional effect applied in the live turn and the consolidated
-   effect applied later are *the same event id*: consolidation replaces or confirms, it never adds. (This is the
-   double-counting rule, expressed so it can be tested.)
-5. **Replay is not experience.** The same event twice is one event. The same id with different content is a
-   `EvidenceConflict` that is raised, never resolved by dropping one.
-6. **Nothing is silently dropped or laundered.** `violations(before, after)` reports every dropped event and every
-   event whose basis changed (an example that comes back as testimony). It must be empty at every deferral,
-   projection and device-handoff boundary.
-7. **A projection must carry qualification.** What the Subsurface exports to the Surface is not "counts": a
-   projection that carries only totals has already lost the distinction. A stale update cannot overwrite newer
-   local state because merging is a union by id.
-8. **Legacy counts migrate as `unknown`**, not as `observed`. They were real, but nobody recorded how; claiming they
-   were lived would be exactly the upgrade this document exists to prevent.
+## 5. Decisions made by the directive, and what remains Sir's
 
-## 4. Acceptance checks (`tests/test_evidence_qualification.py`, 40 tests)
+Decided by the directive: a simulation is an actual process with hypothetical contents; dream/simulation
+co-activation may contribute to promotion when it yields a demonstrated consequence (no fixed discount fractions);
+missing basis stays unknown. Remaining for Sir:
 
-* hypothetical evidence (100 examples) never becomes held; inference chains (50) never raise confidence, and an
-  inference without premises is rejected; unknown is kept and never upgraded;
-* told-and-denied is *contested* and flagged contradicted, not resolved; a correction settles the verdict (and a later
-  correction can reverse it) while the history it corrected stays;
-* the fold is independent of arrival order, replay adds nothing, merge is commutative / associative / idempotent,
-  the same id recorded two ways raises, `violations` catches a dropped event, a rewritten event and a supposed→told
-  laundering while allowing later evidence;
-* a record survives the JSON trip a durable log takes;
-* **agreement with the store she has today**: for 25 random sequences of told / observed / corrected / supposed
-  evidence, the contract's verdict, basis counts, latest basis, contradicted, corrected and hypothetical-only flags
-  equal those computed from a predicate record written by the propositional store's own recorder;
-* the tests can fail: four mutants of the contract (count supposed; upgrade unknown to told; drop the conflict check;
-  count inferred) are each caught.
+* The identity record and harvested text are `told` by decision here. Is the identity record better qualified?
+* Mappings added beyond the directive's table (`sensor_data → perceived`, `synthetic_lineage → derived`,
+  `dream_replay → dreamed`); `system_event`, `exploration`, `self_reflection` are left unspecified rather than guessed.
+* What `consequence.target` names for a promoted link (a link id, a capability id) when Stage D wires it.
 
-Stage 3's end-to-end live developmental sequence must include one of each basis through relocation, restart and
-replay, and assert `violations(...) == []` and an unchanged qualification at the end.
+## 6. Directive tests 1–7, at the contract level only
 
-## 5. Decisions for Sir
+| # | Test | Where | Level |
+|---|---|---|---|
+| 1 | Experiential precedence | `test_experiential_precedence...`, `test_a_dream_does_not_create...` | isolated |
+| 2 | Novel recombination | `test_novel_recombination...` | isolated |
+| 3 | Dream without grounding | `test_without_supported_ancestry...` | isolated |
+| 4 | Internal promotion ≠ external | `test_internal_promotion_evidence...` | isolated |
+| 5 | Simulation disagreement | `test_a_simulation_predicting_success...` | isolated |
+| 6 | Replay vs new consequence | `test_replaying_a_dream...`, `test_a_genuinely_new_interaction...` | isolated |
+| 7 | Provenance integrity | `test_every_basis_survives...`, store tests in `test_unknown_provenance.py` | isolated + store |
 
-1. `STREAM_BASIS` (proposed, not consumed): `user_input` → observed, `knowledge_feed`/`corpus` → told,
-   `simulation`/`dream` → supposed, anything else → unknown. Is a simulation hypothetical (lived, but not in the
-   world)? Is a dream always hypothetical?
-2. May hypothetical co-activation (dream, simulation) contribute to link promotion, or only lived evidence?
-3. The propositional store's "missing basis = told" is a live behaviour; changing it touches how every unqualified
-   statement is held. Not changed here.
+Tests 8–10 (cross-device, comparative equivalence, performance) are **not done**.
 
-## 6. Limitations
+## 7. Verification
 
-The contract is not wired into the live path or the genealogy; it proves the rules against the propositional
-record, not against genealogy records (which, as section 2 shows, do not yet carry the information). Genealogy-side
-agreement can only be tested once the evidence log exists.
+* 82 contract tests + 10 store tests; six contract mutants and four store mutants each caught (one more store mutant, the
+  recorder's own default, survived until a direct test was added).
+* 384 tests across every file touching the knowledge path pass; the single failure (`test_build694` turn-id source
+  check) fails identically on clean `main`.
+* Live: `alphabet_order` 5/5 held as evidence, READY; `identity_perspective` still takes its taught statements and keeps its 4 open gaps.
+  `basic_communication` did not finish inside the time I gave it, so it is not claimed.
+* Combined with #252 in a throwaway worktree: merges without conflict, 127 tests pass (#252's audit and index tests included).
+
+## 8. Status against the deliverables
+
+| # | Deliverable | Status |
+|---|---|---|
+| 1 | Revised FIX-A144 contract | **implemented, isolated tests** |
+| 2 | Ancestry and context representation | **implemented in the contract, isolated tests**; not in any live record |
+| 3 | Provenance assignment and legacy handling | **implemented in the propositional store, isolated + related-suite tests, two lessons live**; genealogy side not started (§4.1) |
+| 4 | Dream ancestry preservation | contract only; the dream path was audited, not changed |
+| 5 | Qualified dream/simulation promotion | **not started** (audit only) |
+| 6 | Environmental genealogy processing | **not started** here (#252 holds the index work) |
+| 7 | QuasiArch ancestry retrieval | **not started** (`grounding`/`demonstration` are the retrieval it would call) |
+| 8 | Comparative developmental results | **not done** |
+| 9 | Performance | #252's measurements stand; nothing new |
+| 10 | Limitations / rollback | below |
+
+No device validation of any kind. Nothing here is integrated into the genealogy or the dream path.
+
+**Rollback:** FIX-A145 is isolated to `aurora_propositional_understanding.py` (default basis, `UNCOUNTED_BASES`, the unsaid guard)
+and one explicit `basis="told"` in `aurora_clone_harvest.py`; reverting those restores the old default. The contract module
+has no callers, so removing it changes nothing live. No stored state was rewritten.
+
+**Limitations:** the contract is proven against the propositional store, not against genealogy records, which do not yet
+carry the information (§4.1). `consequence.target` has no producer. Sensor uncertainty is not represented (no basis for a
+number). Bounded predicate history (8) is still bounded in the store; the event log must not cap it.
