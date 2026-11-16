@@ -108,7 +108,6 @@ def test_kept_use_is_not_counted_twice_when_the_lexical_feed_saw_the_same_turns(
     assert R.word_profiles({"c": C()}, str(tmp_path)).count("dog") == 99
 
 
-
 def test_durable_word_use_does_not_recount_a_turn_from_conversation_memory(tmp_path):
     w = U.WordUse(str(tmp_path))
     w.observe_text("the dog ran", "live_user")
