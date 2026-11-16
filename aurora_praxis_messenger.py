@@ -133,6 +133,7 @@ except Exception:  # pragma: no cover - gate missing: the local lists still hold
 
 # Re-entry: an unanswered message is revisited while pressure builds.
 REENTRY_AFTER_S = 120.0
+SEND_RETRY_AFTER_S = 30.0  # Retry transport, never cognitive composition.
 MAX_ATTEMPTS = 3
 
 
@@ -392,6 +393,24 @@ class PraxisMessenger:
         # contact -> {"message", "attempts", "last_attempt"}: the latest thing
         # said to her that she has not yet answered in her own words.
         self.pending: Dict[str, Dict[str, Any]] = {}
+        # A failed cognitive turn must not be marked read, but repeatedly
+        # replaying the same exception every three seconds wastes the phone.
+        # A fresh message for the contact can restart the combined reading.
+        self.failed_reads: Dict[str, Dict[str, Any]] = {}
+        # Replies already composed in her own voice are kept as an outbox on
+        # transport failure. Retrying POST must not repeat her entire cognition.
+        self.outbox_path = self.root / "messenger_outbox.json"
+        try:
+            raw_outbox = json.loads(self.outbox_path.read_text(encoding="utf-8"))
+            self.outbox: Dict[str, Dict[str, Any]] = {
+                str(seq): dict(entry) for seq, entry in dict(raw_outbox).items()
+                if isinstance(entry, dict)
+                and isinstance(entry.get("persona_id"), str)
+                and isinstance(entry.get("text"), str)
+                and str(seq).isdigit()
+            }
+        except Exception:
+            self.outbox = {}
         # New phrasings: word pairs she says that no contact ever said to her.
         # A parrot only recombines what it heard; a learner produces pairs it
         # never heard (the "goed" signature).  Counted, not judged.
@@ -455,6 +474,60 @@ class PraxisMessenger:
         tmp.write_text(json.dumps({"after": self.cursor, "updated_at": time.time()}),
                        encoding="utf-8")
         tmp.replace(self.cursor_path)
+
+    def _save_outbox(self) -> None:
+        temp = self.outbox_path.with_suffix(".tmp")
+        temp.write_text(json.dumps(self.outbox, ensure_ascii=False), encoding="utf-8")
+        temp.replace(self.outbox_path)
+
+    def _queue_unsent(self, persona_id: str, text: str, seq: int) -> None:
+        self.outbox[str(seq)] = {
+            "persona_id": persona_id, "text": text,
+            "in_reply_to": seq, "attempts": 0, "last_attempt": time.time(),
+        }
+        try:
+            self._save_outbox()
+        except OSError as exc:
+            self.last_error = f"outbox persistence: {exc}"[:300]
+
+    def _retry_unsent(self) -> None:
+        # Cheap network delivery, independent of the expensive field lock.
+        # Bounded per pass so a large offline outbox cannot starve new mail.
+        now = time.time()
+        attempted = 0
+        for key, entry in list(self.outbox.items()):
+            if attempted >= 3:
+                break
+            if now - float(entry.get("last_attempt", 0.0)) < SEND_RETRY_AFTER_S:
+                continue
+            attempted += 1
+            entry["last_attempt"] = now
+            entry["attempts"] = int(entry.get("attempts", 0)) + 1
+            try:
+                response = self.http("POST", "/social/send", {
+                    "persona_id": entry["persona_id"], "text": entry["text"],
+                    "in_reply_to": int(entry["in_reply_to"]),
+                })
+            except Exception as exc:
+                response = {"error": f"{type(exc).__name__}: {exc}"}
+            if response and response.get("accepted"):
+                pid = entry["persona_id"]
+                self.counters["spoke"] += 1
+                self.last_spoke = {"to": pid, "text": entry["text"][:160],
+                                   "src": "outbox_retry", "at": time.time()}
+                self._log(pid, {"dir": "spoke_retry",
+                                "reply_to": entry["in_reply_to"],
+                                "text": entry["text"], "at": time.time()})
+                self.outbox.pop(key, None)
+            else:
+                self.counters["errors"] += 1
+                self.last_error = (
+                    f"outbox send refused: {(response or {}).get('error', 'no response')}"
+                )[:300]
+            try:
+                self._save_outbox()
+            except OSError as exc:
+                self.last_error = f"outbox persistence: {exc}"[:300]
 
     def _log(self, persona_id: str, record: Dict[str, Any]) -> None:
         safe = "".join(ch for ch in persona_id if ch.isalnum() or ch in "-_")
@@ -552,8 +625,12 @@ class PraxisMessenger:
             entry["last_attempt"] = time.time()
             self.pending[pid] = entry
             return outcome
-        response = self.http("POST", "/social/send", {
-            "persona_id": pid, "text": reply[:MAX_TEXT_CHARS], "in_reply_to": message["seq"]})
+        try:
+            response = self.http("POST", "/social/send", {
+                "persona_id": pid, "text": reply[:MAX_TEXT_CHARS],
+                "in_reply_to": message["seq"]})
+        except Exception as exc:
+            response = {"error": f"{type(exc).__name__}: {exc}"}
         outcome["sent"] = bool(response and response.get("accepted"))
         if outcome["sent"]:
             self.counters["spoke"] += 1
@@ -569,6 +646,11 @@ class PraxisMessenger:
         else:
             self.counters["errors"] += 1
             self.last_error = f"send refused: {(response or {}).get('error', 'no response')}"
+            self._queue_unsent(pid, reply[:MAX_TEXT_CHARS], int(message["seq"]))
+            # Her answer exists. Only its delivery failed, so do not re-enter
+            # the cognitive pipeline to compose it again.
+            self.pending.pop(pid, None)
+            outcome["reason"] = "delivery_queued"
         return outcome
 
     # -- one pass ------------------------------------------------------------------
@@ -580,6 +662,7 @@ class PraxisMessenger:
         # window first, so she never even looked.
         if self._paused.is_set():
             return []
+        self._retry_unsent()
         try:
             payload = self.http("GET", f"/social/pull?after={self.cursor}&limit={PULL_LIMIT}", None)
         except Exception as exc:
@@ -636,6 +719,14 @@ class PraxisMessenger:
 
         _advance()
         for group in sorted(groups.values(), key=lambda g: g[0]["seq"]):
+            pid = group[-1]["persona_id"]
+            failure = self.failed_reads.get(pid)
+            if (failure and failure.get("seq") == group[-1]["seq"]
+                    and time.time() - float(failure.get("at", 0.0)) < REENTRY_AFTER_S):
+                # Keep it unread for the next attempt without holding all
+                # other background work hostage during the retry cooldown.
+                self.unread_waiting = max(0, self.unread_waiting - len(group))
+                continue
             if not self.live_idle():
                 break                            # Sunni is here; he comes first
             acquired = True
@@ -645,19 +736,26 @@ class PraxisMessenger:
                 self.counters["busy_skips"] += 1
                 break                            # unread; next pass
             message = merge_backlog(group)
+            read_ok = False
             try:
                 outcomes.append(self.handle_message(message))
+                self.failed_reads.pop(pid, None)
+                read_ok = True
                 if len(group) > 1:
                     self.counters["heard"] += len(group) - 1
                     self.counters["backlogs_read_together"] = self.counters.get("backlogs_read_together", 0) + 1
             except Exception as exc:
                 self.counters["errors"] += 1
                 self.last_error = f"turn failed: {type(exc).__name__}: {exc}"[:300]
+                self.failed_reads[pid] = {"seq": group[-1]["seq"], "at": time.time()}
             finally:
                 if self.field_lock is not None:
                     self.field_lock.release()
-            # Past a reading once handled (even if her turn failed), so one bad
-            # message can never wedge the loop.
+            if not read_ok:
+                # Do not acknowledge a turn the cognitive path never finished.
+                # Back off instead of burning more compute on each poll.
+                self.unread_waiting = max(0, self.unread_waiting - len(group))
+                continue
             handled.update(m["seq"] for m in group)
             self.read_ahead.update(m["seq"] for m in group)
             _advance()
@@ -750,6 +848,8 @@ class PraxisMessenger:
                 "thread_alive": bool(self._thread and self._thread.is_alive()),
                 "cursor": self.cursor, "last_pull_at": self.last_pull_at,
                 "unread_waiting": int(getattr(self, "unread_waiting", 0) or 0),
+                "outbox_pending": len(self.outbox),
+                "failed_reads": {pid: int(e.get("seq", 0)) for pid, e in self.failed_reads.items()},
                 "last_error": self.last_error, **self.counters,
                 "withheld_reasons": dict(self.withheld_reasons),
                 "last_withheld": dict(self.last_withheld),

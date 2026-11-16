@@ -68,7 +68,7 @@ def _reset_bridge_state():
     aurora_bridge._capability_learning_mode = False
     aurora_bridge._capability_learning_context = {}
     aurora_bridge._pending_capability_gap = {}
-    aurora_bridge._late_surface_response = ""
+    aurora_bridge._late_surface_responses.clear()
     aurora_bridge._live_turn_diagnostics = {}
     aurora_bridge._last_output_time = 0.0
     aurora_bridge._void_pending = False
@@ -172,6 +172,14 @@ def test_surface_timeout_returns_empty_and_late_callback_delivers_exactly_once(m
     assert "late_completion" in _states(turn_id)
     assert aurora_bridge.get_late_surface_response() == "late surface answer"
     # Exactly once: a second read must come back empty, never re-deliver.
+    assert aurora_bridge.get_late_surface_response() == ""
+
+
+def test_multiple_late_responses_are_delivered_fifo_without_overwrite():
+    aurora_bridge._store_late_surface_response("turn_one", "first late reply")
+    aurora_bridge._store_late_surface_response("turn_two", "second late reply")
+    assert aurora_bridge.get_late_surface_response() == "first late reply"
+    assert aurora_bridge.get_late_surface_response() == "second late reply"
     assert aurora_bridge.get_late_surface_response() == ""
 
 
