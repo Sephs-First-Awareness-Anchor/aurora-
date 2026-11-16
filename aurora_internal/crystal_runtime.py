@@ -48,7 +48,7 @@ def _read(state_dir: str, *parts: str) -> Any:
 
 
 def word_profiles(crystals: Mapping[str, Any], state_dir: str) -> _S.ContextProfiles:
-    """Her word-use profiles: her kept use of words (conversation she took part in), else what her lexical structure kept, plus older stored text."""
+    """Her word-use profiles, without recounting a turn from both durable use and legacy conversation memory.  The legacy feeds are fallbacks only."""
     from aurora_internal import aurora_word_use as _U
     prof = _S.ContextProfiles()
     use = _U.load_profiles(state_dir)
@@ -64,13 +64,16 @@ def word_profiles(crystals: Mapping[str, Any], state_dir: str) -> _S.ContextProf
                             prof.merge(st["contexts"])
                     except Exception:
                         pass
-    mem = _read(state_dir, "aurora_conversation_memory.json") or {}
-    for e in mem.get("entries") or []:
-        for field in ("user_said", "aurora_said"):
-            for sent in re.split(r"[.!?;\n]+", str(e.get(field) or "")):
-                ws = _WORD.findall(sent.lower())
-                if ws:
-                    prof.observe(ws)
+        # Only reconstruct legacy conversation use when no durable WordUse exists.
+        # A saved conversation may also have reached WordUse on the live path;
+        # merging both would count one experienced utterance twice.
+        mem = _read(state_dir, "aurora_conversation_memory.json") or {}
+        for e in mem.get("entries") or []:
+            for field in ("user_said", "aurora_said"):
+                for sent in re.split(r"[.!?;\n]+", str(e.get(field) or "")):
+                    ws = _WORD.findall(sent.lower())
+                    if ws:
+                        prof.observe(ws)
     return prof
 
 
