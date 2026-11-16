@@ -108,6 +108,27 @@ def test_kept_use_is_not_counted_twice_when_the_lexical_feed_saw_the_same_turns(
     assert R.word_profiles({"c": C()}, str(tmp_path)).count("dog") == 99
 
 
+
+def test_durable_word_use_does_not_recount_a_turn_from_conversation_memory(tmp_path):
+    w = U.WordUse(str(tmp_path))
+    w.observe_text("the dog ran", "live_user")
+    assert w.save(force=True)
+    (tmp_path / "aurora_conversation_memory.json").write_text(
+        json.dumps({"entries": [{"user_said": "the dog ran", "aurora_said": "the bird flew"}]})
+    )
+    # These records overlap.  WordUse is the primary evidence once present:
+    # the saved conversation is not a second occurrence of the same turn.
+    prof = R.word_profiles({}, str(tmp_path))
+    assert prof.count("dog") == 1
+    assert prof.count("bird") == 0
+
+    # Older checkpoints with no durable WordUse still have their legacy fallback.
+    os.remove(os.path.join(str(tmp_path), U.FILENAME))
+    legacy = R.word_profiles({}, str(tmp_path))
+    assert legacy.count("dog") == 1
+    assert legacy.count("bird") == 1
+
+
 def test_only_conversation_sources_reach_it_and_the_live_feed_names_them():
     base = os.path.join(os.path.dirname(__file__), "..", "aurora_internal")
     assert U.SOURCES == {"live_user", "live_aurora", "history_user", "history_aurora"}
