@@ -32,6 +32,16 @@ from typing import Any, Dict, List, Optional, Tuple
 _BASE_DIR = Path(__file__).parent.parent.parent  # aurora_strata/
 _STATE_DIR = _BASE_DIR / "aurora_state"
 _QUEUE_PATH = _STATE_DIR / "predictive_frame_queue.json"
+
+
+def _queue_path() -> Path:
+    """Resolve the active state directory at I/O time, not import time.
+
+    Cross-device Surface instances may have different state directories.
+    Existing callers without an override retain the historical repo path.
+    """
+    configured = os.environ.get("AURORA_STATE_DIR", "").strip()
+    return (Path(configured).expanduser() if configured else _STATE_DIR) / "predictive_frame_queue.json"
 _MAX_FRAMES = 8
 
 # ---------------------------------------------------------------------------
@@ -286,8 +296,10 @@ def _extract_slot_projections(projection: Dict[str, Any]) -> List[Dict[str, Any]
 
 def _load_queue() -> List[Dict[str, Any]]:
     try:
-        if _QUEUE_PATH.exists():
-            return json.loads(_QUEUE_PATH.read_text()) or []
+        path = _queue_path()
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return data if isinstance(data, list) else []
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
@@ -302,10 +314,12 @@ def _load_queue() -> List[Dict[str, Any]]:
 
 def _save_queue(frames: List[Dict[str, Any]]) -> None:
     try:
-        tmp = str(_QUEUE_PATH) + ".tmp"
-        with open(tmp, "w") as f:
+        path = _queue_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = str(path) + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
             json.dump(frames, f, indent=2)
-        os.replace(tmp, str(_QUEUE_PATH))
+        os.replace(tmp, str(path))
     except Exception as _aurora_boundary_exc:
         _aurora_record_exception_from_locals(
             locals(),
