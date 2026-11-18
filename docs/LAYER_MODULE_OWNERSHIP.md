@@ -45,7 +45,7 @@ Not covered:
 
 | Higher order (subsystem) | Holds | Composites | Files in composites | Base files |
 |---|---|---|---|---|
-| Entry and runtime | Entry points, the turn loop, process orchestration, launchers and service units. | 1 | 7 | 22 |
+| Entry and runtime | Entry points, the turn loop, process orchestration, launchers and service units. | 1 | 7 | 21 |
 | Foundation and constraint layers | Foundational contract, IVM lattice, X/T/N/B/A constraint physics, NonComp, pressure and leverage. | 4 | 21 | 16 |
 | Beings and dimensional systems | I-State beings, dimensional systems, consciousness assembly and simulation (the L2 to L4 and L7 layer files). | 1 | 4 | 1 |
 | Crystal ops | The concept-crystal store, its evidence-based growth, ingestion and persistence, interaction crystals, and the crystal types QuasiArch shares with live processing. | 4 | 24 | 2 |
@@ -60,7 +60,7 @@ Not covered:
 | Bridges and external tools | Praxis, ACM, scouting, research dispatch and tool registries. | 3 | 9 | 8 |
 | Investigative and diagnostic | Observers, canaries, probes, shadows, audits, reports and test setup. Some observers run live and write their own records, as the QuasiArch observer and the learning probe do; the QuasiArch observer stays here. | 5 | 12 | 23 |
 | Tests | The pytest suite. Each test lists the files it exercises. | 2 | 4 | 461 |
-| Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 0 | 0 | 85 |
+| Scripts, tooling and prototypes | Maintenance, audit, migration and analysis scripts, and the HTML and JSX prototypes. | 0 | 0 | 86 |
 
 ## Quasi: Phone app
 
@@ -181,7 +181,7 @@ Every Python module in desktop Aurora's runtime was screened for who imports it 
 | `aurora_internal/aurora_fault_audit.py` | Investigative and diagnostic | – | AST audit for swallowed exceptions, used by the fault instrumentation script and tests. |
 | `aurora_internal/aurora_local_llm_bridge.py` | Governance, persistence and health | – | Fail-closed guard: the retired local-model adapter keeps its names so stale imports fail closed, and there is no model path. Only tests import it. |
 | `aurora_internal/aurora_pf1_5_instruments.py` | Perception and expression | Investigative and diagnostic | wellformed_and_coherent decides whether a candidate reply is accepted, in aurora.py and aurora_working_memory.py. Measuring PF1.5 is its second job. |
-| `aurora_internal/aurora_quasiarch_observer.py` | Investigative and diagnostic | – | The QuasiArch observer, a live organ: aurora.py boots it at L8+, it runs during boot and every turn, and it writes its own state (interventions, ghost relics). Its answers carry authoritative False and active steering is opt-in. |
+| `aurora_internal/aurora_quasiarch_observer.py` | Investigative and diagnostic | Entry and runtime | The QuasiArch observer, a live organ: aurora.py boots it at L8+, it runs during boot and every turn, and it writes its own state under aurora_state/quasiarch_observer (runtime_state.json, which aurora_hub.py and aurora_diag.py read; interventions; ghost relics). Its query answers carry authoritative False. In gated mode only (AURORA_QUASIARCH_MODE=gated; advisory is the default), advise_training_plan() writes qao_mutation_signal.json once doctrine confidence passes the gate, and the daemon's _select_discovery_driven_operator reads it, marks it consumed and may take its operator hint as the next code mutation. So it is an input to the daemon as well as an observer. |
 | `aurora_internal/aurora_runtime_health.py` | Governance, persistence and health | – | Readiness semantics (degraded is not ready unless a caller opts in). Not wired into the runtime: tests and the fault audit use it. |
 | `aurora_internal/aurora_semantic_probe_battery.py` | Identity and language | Investigative and diagnostic | Its function-word set _STRONG_FUNCTION_WORDS is used by aurora_proposition_frame.py and aurora_constraint_semantic_continuity.py, and its _parseable check by aurora_expression_perception.py. The probe battery itself is diagnostic. |
 | `aurora_internal/aurora_stack_trace_instrumentation.py` | Genealogy, lineage and evidence | Investigative and diagnostic | instrument_stack wraps runtime methods to record call lineage when AURORA_STACK_TRACE is on. Off by default. |
@@ -199,9 +199,9 @@ Every Python module in desktop Aurora's runtime was screened for who imports it 
 | `flutter_app/android/app/src/main/python/aurora_bridge.py` | On-device Python | – | Chaquopy entry point that AuroraService.kt calls. It boots the root aurora.py stack and exposes text in and text out, so audio stays on the Kotlin and Flutter side. |
 | `flutter_app/android/app/src/main/python/aurora_historical_experience_environment.py` | On-device Python | – | Rehearsal environment that scores her rehearsed reply against what was really said next. aurora.py's change lineage names it as a target file, and tests import it by module name, so desktop depends on it too. |
 | `flutter_app/android/app/src/main/python/cv2.py` | On-device Python | – | Android stand-in for opencv: numpy and Pillow versions of the cv2 calls her stack uses, with camera frames fed in from the Kotlin CameraX bridge. |
-| `reply_aurora.py` | Entry and runtime | – | Command-line entry point Sir runs by hand: it appends his reply to the correspondence loop's from_sunni.jsonl, which her runtime reads. No boot path reaches it, by design. |
+| `reply_aurora.py` | Scripts, tooling and prototypes | Reasoning and understanding | Command-line script Sir runs by hand from a terminal: it appends his reply to aurora_state/correspondence/from_sunni.jsonl using the correspondence loop's own helpers, and aurora_internal/aurora_correspondence_loop.py reads that file the next time the loop runs. No entry point, boot path or production importer reaches it, so it is tooling, not runtime; nothing imports it, and the loop and its test only name it in their docstrings. |
 | `run_full_competency_gauntlet.py` | Investigative and diagnostic | – | Script entry point for the competency gauntlet. It writes aurora_state/last_full_competency_gauntlet.json. Nothing in covered code imports it. |
-| `run_gauntlet.py` | Investigative and diagnostic | – | Script entry point that boots the daemon and runs the gauntlet. It writes aurora_state/daemon.log and its own results under aurora_state. Nothing in covered code imports it. |
+| `run_gauntlet.py` | Investigative and diagnostic | – | Script entry point that starts the daemon and runs the gauntlet. It opens aurora_state/daemon.log and hands it to the daemon process as stdout and stderr, as aurora_hub.py and the other launchers do, so the log's lines are the daemon's own output; aurora_metabolic_distiller.py reads and trims that log as one of its residue sources. It also writes its own results under aurora_state. Nothing in covered code imports it. |
 | `run_probe_battery.py` | Investigative and diagnostic | – | Script entry point for the semantic probe battery. It boots against a scratch copy of aurora_state and writes results to aurora_state/probe_battery/results/. Nothing in covered code imports it. |
 
 ## Composites
@@ -353,7 +353,6 @@ Composite is blank for a base file that no import joins to another file in its s
 | `deploy/aurora-strata-room.service` |  |  | location |
 | `deploy/aurora-subsurface.service` |  |  | location |
 | `deploy/aurora-surface.service` |  |  | location |
-| `reply_aurora.py` |  |  | reviewed |
 | `run_aurora.py` |  |  | name_and_docstring |
 | `run_chain.py` |  |  | name_and_docstring |
 | `run_corpus.py` | runtime.1 |  | name_and_docstring |
@@ -1260,6 +1259,7 @@ Composite is blank for a base file that no import joins to another file in its s
 |---|---|---|---|
 | `constraint_prototype.html` |  |  | location |
 | `constraint_prototype.jsx` |  |  | location |
+| `reply_aurora.py` |  |  | reviewed |
 | `scripts/analyze_cross_generational_representations.py` |  |  | location |
 | `scripts/analyze_native_representation_inquiries.py` |  |  | location |
 | `scripts/append_to_doc.py` |  |  | location |

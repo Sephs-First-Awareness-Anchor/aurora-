@@ -4475,13 +4475,15 @@
   "aurora_internal/aurora_quasiarch_observer.py": {
    "domain": "desktop",
    "subsystem": "investigative",
-   "also": [],
+   "also": [
+    "runtime"
+   ],
    "composite": "investigative.4",
    "layer": null,
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "The QuasiArch observer, a live organ: aurora.py boots it at L8+, it runs during boot and every turn, and it writes its own state (interventions, ghost relics). Its answers carry authoritative False and active steering is opt-in."
+   "duties": "The QuasiArch observer, a live organ: aurora.py boots it at L8+, it runs during boot and every turn, and it writes its own state under aurora_state/quasiarch_observer (runtime_state.json, which aurora_hub.py and aurora_diag.py read; interventions; ghost relics). Its query answers carry authoritative False. In gated mode only (AURORA_QUASIARCH_MODE=gated; advisory is the default), advise_training_plan() writes qao_mutation_signal.json once doctrine confidence passes the gate, and the daemon's _select_discovery_driven_operator reads it, marks it consumed and may take its operator hint as the next code mutation. So it is an input to the daemon as well as an observer."
   },
   "aurora_internal/aurora_reasoning_paths.py": {
    "domain": "desktop",
@@ -6846,14 +6848,16 @@
   },
   "reply_aurora.py": {
    "domain": "desktop",
-   "subsystem": "runtime",
-   "also": [],
+   "subsystem": "tooling",
+   "also": [
+    "reasoning"
+   ],
    "composite": null,
    "layer": null,
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "Command-line entry point Sir runs by hand: it appends his reply to the correspondence loop's from_sunni.jsonl, which her runtime reads. No boot path reaches it, by design."
+   "duties": "Command-line script Sir runs by hand from a terminal: it appends his reply to aurora_state/correspondence/from_sunni.jsonl using the correspondence loop's own helpers, and aurora_internal/aurora_correspondence_loop.py reads that file the next time the loop runs. No entry point, boot path or production importer reaches it, so it is tooling, not runtime; nothing imports it, and the loop and its test only name it in their docstrings."
   },
   "run_aurora.py": {
    "domain": "desktop",
@@ -6908,7 +6912,7 @@
    "layer_role": null,
    "language": "python",
    "basis": "reviewed",
-   "duties": "Script entry point that boots the daemon and runs the gauntlet. It writes aurora_state/daemon.log and its own results under aurora_state. Nothing in covered code imports it."
+   "duties": "Script entry point that starts the daemon and runs the gauntlet. It opens aurora_state/daemon.log and hands it to the daemon process as stdout and stderr, as aurora_hub.py and the other launchers do, so the log's lines are the daemon's own output; aurora_metabolic_distiller.py reads and trims that log as one of its residue sources. It also writes its own results under aurora_state. Nothing in covered code imports it."
   },
   "run_gui_linux_mac.sh": {
    "domain": "desktop",
